@@ -1,11 +1,303 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1100" width="1920" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Mockup 11: pizzerias and menus</title>
-  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
-<rect x="0" y="0" width="1920" height="1100" rx="0" fill="#f3f4f6"/>
-<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">11 · Pizzerias and menus (organiser)</text>
-<rect x="24" y="70" width="1400" height="1000" rx="12" fill="#f6f7fb" stroke="#e5e7eb" stroke-width="1.5"/><rect x="24" y="70" width="1400" height="52" rx="12" fill="#111827"/><rect x="24" y="110" width="1400" height="12" rx="0" fill="#111827"/><rect x="42" y="82" width="28" height="28" rx="7" fill="#3ddcff"/><text x="56" y="101" font-size="12" fill="#0b0d1a" font-weight="800" text-anchor="middle">DE</text><text x="80" y="102" font-size="17" fill="#ffffff" font-weight="700" text-anchor="start">Demo Event</text><text x="234" y="102" font-size="15" fill="#d1d5db" font-weight="500" text-anchor="start">Event ▾</text><text x="1404" y="102" font-size="14" fill="#d1d5db" font-weight="500" text-anchor="end">Health ok · Crew Member ▾</text><text x="52" y="162" font-size="24" fill="#111827" font-weight="700" text-anchor="start">Food</text><text x="92.0" y="202" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle">Orders</text><text x="240.5" y="202" font-size="15" fill="#2563eb" font-weight="700" text-anchor="middle">Pizzerias and menus</text><rect x="142" y="210" width="197" height="3" rx="0" fill="#2563eb"/><text x="416.0" y="202" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle">Daily record</text><text x="542.0" y="202" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle">Settings</text><rect x="52" y="213" width="1344" height="1" rx="0" fill="#e5e7eb"/><g transform="translate(0,50)"><text x="52" y="186" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">PIZZERIAS</text><rect x="48" y="200" width="300" height="60" rx="10" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="66" y="226" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Demo Pizzeria</text><text x="66" y="247" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Delivers · 24 items · own pizza</text><rect x="48" y="270" width="300" height="60" rx="10" fill="#eef2ff" stroke="#2563eb" stroke-width="1.5"/><text x="66" y="296" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Demo Trattoria</text><text x="66" y="317" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Delivers · 18 items · own pizza</text><rect x="48" y="340" width="300" height="60" rx="10" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="66" y="366" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Demo Corner Grill</text><text x="66" y="387" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Takeaway · 12 items</text><rect x="48" y="420" width="300" height="36" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="198.0" y="443.0" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+ Add a pizzeria</text><text x="52" y="490" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Loaded from the event profile</text><text x="52" y="508" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">(TG12: per event, from the event</text><text x="52" y="526" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">repo) and copied by</text><text x="52" y="544" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">clone-the-last-event; edited here</text><text x="52" y="562" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">after that.</text><rect x="372" y="170" width="1030" height="820" rx="10" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="396" y="206" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">NAME</text><rect x="396" y="214" width="300" height="38" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="408" y="239" font-size="15" fill="#111827" font-weight="400" text-anchor="start">Demo Trattoria</text><text x="726" y="206" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">PHONE (HOLDERS AND CREW ONLY)</text><rect x="726" y="214" width="260" height="38" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="738" y="239" font-size="15" fill="#111827" font-weight="400" text-anchor="start">000 000 0000</text><text x="1016" y="206" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">HOW FOOD COMES</text><rect x="1016" y="224" width="82.48" height="22" rx="11" fill="#2563eb"/><text x="1057.24" y="240" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle">Delivers</text><rect x="1112" y="224" width="82.48" height="22" rx="11" fill="#f3f4f6"/><text x="1153.24" y="240" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">Takeaway</text><text x="396" y="286" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">OWN PIZZA BASE (EMPTY: NO OWN PIZZA)</text><rect x="396" y="294" width="300" height="38" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="408" y="319" font-size="15" fill="#111827" font-weight="400" text-anchor="start">Own pizza (tomato, cheese)</text><text x="396" y="366" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">MENU · ONE ITEM PER LINE: NUMBER NAME: INGREDIENTS</text><rect x="396" y="374" width="560" height="300" rx="8" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1.5"/><text x="410" y="402" font-size="14" fill="#111827" font-weight="400" text-anchor="start">1 Margherita: tomato, cheese</text><text x="410" y="434" font-size="14" fill="#111827" font-weight="400" text-anchor="start">4 Quattro formaggi: four cheeses</text><text x="410" y="466" font-size="14" fill="#111827" font-weight="400" text-anchor="start">7 Funghi: mushroom</text><text x="410" y="498" font-size="14" fill="#111827" font-weight="400" text-anchor="start">12 Kebab: kebab, onion, jalapeño, garlic sauce</text><text x="410" y="530" font-size="14" fill="#111827" font-weight="400" text-anchor="start">14 Kebab special: kebab, feta, olives, chili</text><text x="410" y="562" font-size="14" fill="#111827" font-weight="400" text-anchor="start">20 Vegetariana: mushroom, pepper, olives, onion</text><text x="410" y="594" font-size="14" fill="#111827" font-weight="400" text-anchor="start">31 Kebab calzone: kebab, tomato, cheese</text><text x="410" y="626" font-size="14" fill="#111827" font-weight="400" text-anchor="start">…</text><text x="986" y="366" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start">TOPPINGS FOR OWN PIZZA</text><rect x="986" y="378" width="42.18" height="22" rx="11" fill="#f3f4f6"/><text x="1007.09" y="394" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">ham</text><rect x="1042" y="378" width="90.54" height="22" rx="11" fill="#f3f4f6"/><text x="1087.27" y="394" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">pineapple</text><rect x="1146" y="378" width="82.48" height="22" rx="11" fill="#f3f4f6"/><text x="1187.24" y="394" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">jalapeño</text><rect x="1242" y="378" width="66.36" height="22" rx="11" fill="#f3f4f6"/><text x="1275.18" y="394" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">salami</text><rect x="986" y="410" width="82.48" height="22" rx="11" fill="#f3f4f6"/><text x="1027.24" y="426" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">mushroom</text><rect x="1082" y="410" width="58.300000000000004" height="22" rx="11" fill="#f3f4f6"/><text x="1111.15" y="426" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">onion</text><rect x="1154" y="410" width="66.36" height="22" rx="11" fill="#f3f4f6"/><text x="1187.18" y="426" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">olives</text><rect x="1234" y="410" width="50.24" height="22" rx="11" fill="#f3f4f6"/><text x="1259.12" y="426" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">feta</text><rect x="1298" y="410" width="50.24" height="22" rx="11" fill="#f3f4f6"/><text x="1323.12" y="426" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">tuna</text><rect x="986" y="442" width="74.42" height="22" rx="11" fill="#f3f4f6"/><text x="1023.21" y="458" font-size="13" fill="#374151" font-weight="700" text-anchor="middle">chicken</text><rect x="1074" y="442" width="58.300000000000004" height="22" rx="11" fill="#eef2ff"/><text x="1103.15" y="458" font-size="13" fill="#2563eb" font-weight="700" text-anchor="middle">+ add</text><rect x="396" y="700" width="990" height="120" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/><text x="412" y="728" font-size="15" fill="#111827" font-weight="700" text-anchor="start">Preview of the change</text><text x="412" y="754" font-size="14" fill="#374151" font-weight="400" text-anchor="start">18 items · 2 changed · 1 removed: #9 Seafood is hidden from new orders; past orders keep the name they had.</text><text x="412" y="778" font-size="14" fill="#374151" font-weight="400" text-anchor="start">Toppings: &#x27;tuna&#x27; added. Nothing is lost: an item in an open order keeps its line as ordered.</text><text x="412" y="802" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start">Paste a JSON menu instead · Import from a photo (later, D10)</text><rect x="1256" y="846" width="130" height="36" rx="8" fill="#2563eb"/><text x="1321.0" y="869.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle">Save menu</text><rect x="1136" y="846" width="110" height="36" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/><text x="1191.0" y="869.0" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">Discard</text></g>
-<text x="1450" y="110" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Ported with changes</text><text x="1450" y="136" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The legacy admin (P9): name, phone, the</text><text x="1450" y="157" font-size="15" fill="#374151" font-weight="400" text-anchor="start">custom base name, the menu as text or JSON</text><text x="1450" y="178" font-size="15" fill="#374151" font-weight="400" text-anchor="start">with ingredients, the toppings per pizzeria.</text><text x="1450" y="199" font-size="15" fill="#374151" font-weight="400" text-anchor="start">New: delivers or takeaway, and a preview</text><text x="1450" y="220" font-size="15" fill="#374151" font-weight="400" text-anchor="start">before saving.</text>
-<text x="1450" y="330" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Snapshots, not live labels</text><text x="1450" y="356" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Legacy problem 16: the history followed live</text><text x="1450" y="377" font-size="15" fill="#374151" font-weight="400" text-anchor="start">menu data. A pizza row keeps its label,</text><text x="1450" y="398" font-size="15" fill="#374151" font-weight="400" text-anchor="start">number and ingredients as ordered, so a</text><text x="1450" y="419" font-size="15" fill="#374151" font-weight="400" text-anchor="start">later menu edit never rewrites a past order</text><text x="1450" y="440" font-size="15" fill="#374151" font-weight="400" text-anchor="start">or the record.</text>
-<text x="1450" y="550" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Removing is hiding</text><text x="1450" y="576" font-size="15" fill="#374151" font-weight="400" text-anchor="start">An item that leaves the menu is deactivated</text><text x="1450" y="597" font-size="15" fill="#374151" font-weight="400" text-anchor="start">(the legacy rule), never deleted.</text>
-<text x="1450" y="680" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Right</text><text x="1450" y="706" font-size="15" fill="#374151" font-weight="400" text-anchor="start">pizza.menu.write (D5). Prices: not shown</text><text x="1450" y="727" font-size="15" fill="#374151" font-weight="400" text-anchor="start">(D7).</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2300 1180" width="2300" height="1180" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 11 (plan): pizzerias and menus</title>
+<defs><clipPath id="ph42_150"><rect x="42" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph482_150"><rect x="482" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph922_150"><rect x="922" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph1362_150"><rect x="1362" y="150" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2300" height="1180" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">11 · Pizzerias and menus: the web page, the menu CSV with prices, the optional AI read (organiser)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Redrawn for the plan: D10 (a published CSV replaces the pasted text), D7 B (an optional price), D11 note (the web page), M3 (the AI reader).</text>
+<rect x="32" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="237" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">A · Pizzerias</text>
+<g clip-path="url(#ph42_150)">
+<rect x="42" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="76" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:04</text>
+<rect x="368" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="370" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="42" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="58" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="94" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="202" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="225" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="392" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="58" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ More</text>
+<text x="58" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Food</text>
+<text x="95.92" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Orders</text>
+<rect x="139.84" y="326" width="101.76" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="190.72" y="346" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Pizzerias</text>
+<text x="285.52" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Record</text>
+<text x="376" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Settings</text>
+<rect x="42" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="73" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="81" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="151" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="159" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="237" cy="934" r="15" fill="#3ddcff"/>
+<text x="237" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="307" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="315" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="385" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="393" y="964" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="170" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<text x="58" y="382" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">PIZZERIAS · 3</text>
+<rect x="58" y="394" width="358" height="84" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="74" y="422" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Pizzeria</text>
+<text x="74" y="444" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Delivers · 24 items · prices</text>
+<text x="74" y="465" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start">pizzeria.example ↗</text>
+<rect x="58" y="488" width="358" height="84" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="74" y="516" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Trattoria</text>
+<text x="74" y="538" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Delivers · 18 items · prices</text>
+<text x="74" y="559" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start">trattoria.example ↗</text>
+<rect x="58" y="582" width="358" height="84" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="74" y="610" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Corner Grill</text>
+<text x="74" y="632" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Takeaway · 12 items · no prices</text>
+<text x="74" y="653" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">No web page yet</text>
+<rect x="58" y="680" width="358" height="42" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="237" y="706.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">+ Add a pizzeria</text>
+<text x="58" y="756" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Loaded from the event profile; cloning</text>
+<text x="58" y="775" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">the event copies them.</text>
+</g>
+<rect x="472" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="677" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">B · A pizzeria and its menu</text>
+<g clip-path="url(#ph482_150)">
+<rect x="482" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="516" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:04</text>
+<rect x="808" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="810" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="482" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="498" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="534" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="642" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="665" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="832" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="832" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="832" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="498" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Pizzerias</text>
+<text x="498" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Trattoria</text>
+<text x="535.92" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Orders</text>
+<rect x="579.84" y="326" width="101.76" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="630.72" y="346" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Pizzerias</text>
+<text x="725.52" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Record</text>
+<text x="816" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Settings</text>
+<rect x="482" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="513" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="521" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="591" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="599" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="677" cy="934" r="15" fill="#3ddcff"/>
+<text x="677" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="747" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="755" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="825" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="833" y="964" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="610" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="498" y="372" width="358" height="166" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="400" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Phone</text>
+<text x="602" y="400" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">+000 000 0000</text>
+<text x="514" y="434" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Web page</text>
+<text x="602" y="434" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">https://trattoria.example</text>
+<text x="514" y="472" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Service</text>
+<rect x="602" y="452" width="92.56" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="648.28" y="471.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle">Delivers</text>
+<rect x="702.56" y="452" width="88.4" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="746.76" y="471.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle">Takeaway</text>
+<text x="514" y="514" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Own pizza</text>
+<text x="602" y="514" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">a base and 1–4 toppings</text>
+<rect x="800" y="500" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="829" cy="511" r="8" fill="#0b0d1a"/>
+<text x="498" y="564" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">MENU · 18 ITEMS</text>
+<rect x="498" y="574" width="101" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="548.5" y="593.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Import CSV</text>
+<rect x="607" y="574" width="86" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="650" y="593.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Download</text>
+<rect x="701" y="574" width="116" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="759" y="593.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Read a photo</text>
+<rect x="498" y="616" width="358" height="48" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="637" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">4  Margherita</text>
+<text x="514" y="655" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">tomato, mozzarella</text>
+<text x="840" y="646" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="end">€8.00</text>
+<rect x="498" y="670" width="358" height="48" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="691" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">7  Funghi</text>
+<text x="514" y="709" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">mushroom, mozzarella</text>
+<text x="840" y="700" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="end">€8.50</text>
+<rect x="498" y="724" width="358" height="48" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="745" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">12  Kebab</text>
+<text x="514" y="763" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">kebab, onion, chili</text>
+<text x="840" y="754" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="end">€9.50</text>
+<rect x="498" y="778" width="358" height="48" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="799" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">15  Quattro formaggi</text>
+<text x="514" y="817" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">four cheeses</text>
+<text x="840" y="808" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="end">€10.50</text>
+<rect x="498" y="832" width="358" height="48" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="514" y="853" font-size="14.5" fill="#a9b1d6" font-weight="600" text-anchor="start">21  Calzone</text>
+<text x="514" y="871" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">hidden: not in the last import</text>
+</g>
+<rect x="912" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1117" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">C · Importing a menu CSV: the preview</text>
+<g clip-path="url(#ph922_150)">
+<rect x="922" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="956" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:05</text>
+<rect x="1248" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1250" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="922" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="938" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="974" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1082" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1105" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="1272" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1272" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1272" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="938" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Demo Trattoria</text>
+<text x="938" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Import a menu</text>
+<text x="975.92" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Orders</text>
+<rect x="1019.84" y="326" width="101.76" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1070.72" y="346" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Pizzerias</text>
+<text x="1165.52" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Record</text>
+<text x="1256" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Settings</text>
+<rect x="922" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="953" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="961" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1031" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1039" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1117" cy="934" r="15" fill="#3ddcff"/>
+<text x="1117" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1187" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1195" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="1265" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1273" y="964" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1050" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="938" y="372" width="358" height="64" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="954" y="399" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">trattoria-menu.csv</text>
+<text x="954" y="420" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">19 rows · comma · UTF-8</text>
+<text x="1280" y="408" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="end">Change</text>
+<rect x="938" y="450" width="117.52" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="996.76" y="469.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle">Changes · 4</text>
+<rect x="1063.52" y="450" width="127.4" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1127.22" y="469.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle">All rows · 19</text>
+<rect x="938" y="494" width="358" height="56" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="954" y="518" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">7 Funghi</text>
+<text x="954" y="538" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start">price €8.00 → €8.50</text>
+<rect x="938" y="556" width="358" height="56" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="954" y="580" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">12 Kebab</text>
+<text x="954" y="600" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start">new description</text>
+<rect x="938" y="618" width="358" height="56" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="954" y="642" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">22 Pizza bianca</text>
+<text x="954" y="662" font-size="12.5" fill="#3ee39a" font-weight="400" text-anchor="start">new · €9.00</text>
+<rect x="938" y="680" width="358" height="56" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="954" y="704" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">21 Calzone</text>
+<text x="954" y="724" font-size="12.5" fill="#ffb454" font-weight="400" text-anchor="start">not in the file: hidden, old orders keep it</text>
+<rect x="938" y="744" width="358" height="62" rx="14" fill="#3a2e1a" stroke="#ffb454" stroke-width="1.5"/>
+<text x="954" y="770" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">Row 9: no price</text>
+<text x="954" y="790" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Saved without a price; even shares then.</text>
+<rect x="922" y="846" width="390" height="64" rx="0" fill="#1c2138"/>
+<line x1="922" y1="846" x2="1312" y2="846" stroke="#343c66"/>
+<text x="938" y="883" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">4 changes</text>
+<rect x="1226" y="859" width="70" height="38" rx="10" fill="#3ddcff"/>
+<text x="1261" y="883.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle">Apply</text>
+<rect x="1139.6" y="859" width="78.4" height="38" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1178.8" y="883.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Cancel</text>
+</g>
+<rect x="1352" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1557" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">D · Reading a menu photo (optional AI reader)</text>
+<g clip-path="url(#ph1362_150)">
+<rect x="1362" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1396" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:07</text>
+<rect x="1688" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1690" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1362" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1378" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1414" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1522" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1545" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="1712" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1712" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1712" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1378" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Demo Trattoria</text>
+<text x="1378" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Read a photo</text>
+<text x="1415.92" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Orders</text>
+<rect x="1459.84" y="326" width="101.76" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1510.72" y="346" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Pizzerias</text>
+<text x="1605.52" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Record</text>
+<text x="1696" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Settings</text>
+<rect x="1362" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1393" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1401" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1471" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1479" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1557" cy="934" r="15" fill="#3ddcff"/>
+<text x="1557" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1627" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1635" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="1705" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1713" y="964" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1490" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="1378" y="372" width="358" height="84" rx="14" fill="#3a2e1a" stroke="#ffb454" stroke-width="1.5"/>
+<text x="1394" y="398" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start">Read by an outside service</text>
+<text x="1394" y="420" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">The photo goes to Anthropic to be read.</text>
+<text x="1394" y="440" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Nothing else is sent; the photo is not kept.</text>
+<rect x="1378" y="468" width="358" height="166" rx="10" fill="#efe9dc"/>
+<text x="1557" y="494" font-size="15" fill="#3a2f25" font-weight="800" text-anchor="middle">DEMO TRATTORIA</text>
+<text x="1402" y="520" font-size="12" fill="#4a4038" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">4  Margherita ....... 8,00</text>
+<text x="1402" y="542" font-size="12" fill="#4a4038" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">7  Funghi .......... 8,50</text>
+<text x="1402" y="564" font-size="12" fill="#4a4038" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">12 Kebab ........... 9,50</text>
+<text x="1402" y="586" font-size="12" fill="#4a4038" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">15 Quattro formaggi . 10,50</text>
+<text x="1402" y="608" font-size="12" fill="#4a4038" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">22 Pizza bianca .... 9,00</text>
+<text x="1378" y="660" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start">Read 18 items · check them first</text>
+<rect x="1378" y="672" width="358" height="52" rx="14" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1394" y="697" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">4  Margherita</text>
+<text x="1394" y="717" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">tomato, mozzarella</text>
+<text x="1720" y="697" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€8.00</text>
+<rect x="1378" y="730" width="358" height="52" rx="14" fill="#161a2e" stroke="#ffb454" stroke-width="1.5"/>
+<text x="1394" y="755" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">12  Kebab</text>
+<text x="1394" y="775" font-size="12.5" fill="#ffb454" font-weight="400" text-anchor="start">unsure: check the price</text>
+<text x="1720" y="755" font-size="15" fill="#ffb454" font-weight="700" text-anchor="end">€9.50?</text>
+<text x="1378" y="814" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tap a row to fix it. Nothing is saved</text>
+<text x="1378" y="832" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">until the import&#x27;s preview is applied.</text>
+<rect x="1362" y="846" width="390" height="64" rx="0" fill="#1c2138"/>
+<line x1="1362" y1="846" x2="1752" y2="846" stroke="#343c66"/>
+<text x="1378" y="883" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">18 items</text>
+<rect x="1598.8" y="859" width="137.2" height="38" rx="10" fill="#3ddcff"/>
+<text x="1667.4" y="883.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle">Use as import</text>
+<rect x="1462" y="859" width="128.8" height="38" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1526.4" y="883.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Download CSV</text>
+</g>
+<circle cx="1815" cy="155" r="13" fill="#f59e0b"/>
+<text x="1815" y="160" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="1836" y="160" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The web page (D11 note)</text>
+<text x="1836" y="184" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Each pizzeria has a web page, in the event profile</text>
+<text x="1836" y="205" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">and here. The holder&#x27;s checklist and call mode</text>
+<text x="1836" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">link to it, for opening hours and today&#x27;s menu.</text>
+<circle cx="1815" cy="260" r="13" fill="#f59e0b"/>
+<text x="1815" y="265" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1836" y="265" font-size="16" fill="#111827" font-weight="700" text-anchor="start">A CSV, not pasted text (D10)</text>
+<text x="1836" y="289" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The menu import is a CSV whose spec is published</text>
+<text x="1836" y="310" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">in the pizza contract: pizzerias, items with menu</text>
+<text x="1836" y="331" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">numbers, names, descriptions and an optional price</text>
+<text x="1836" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(D7 B). Anyone can make one by hand or with their</text>
+<text x="1836" y="373" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">own AI tool from a photo or a web page.</text>
+<circle cx="1815" cy="407" r="13" fill="#f59e0b"/>
+<text x="1815" y="412" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="1836" y="412" font-size="16" fill="#111827" font-weight="700" text-anchor="start">A preview before anything changes</text>
+<text x="1836" y="436" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Rows match the menu by number. Changed, new and</text>
+<text x="1836" y="457" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">hidden items are listed. An item missing from the</text>
+<text x="1836" y="478" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">file is hidden, never deleted, and old orders keep</text>
+<text x="1836" y="499" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">what was ordered (D15). An error names its row and</text>
+<text x="1836" y="520" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">stops the import; a warning does not.</text>
+<circle cx="1815" cy="554" r="13" fill="#f59e0b"/>
+<text x="1815" y="559" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="1836" y="559" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Download</text>
+<text x="1836" y="583" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The same CSV of the current menu, to edit and</text>
+<text x="1836" y="604" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">import again. It replaces the legacy&#x27;s text</text>
+<text x="1836" y="625" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">editor.</text>
+<circle cx="1815" cy="659" r="13" fill="#f59e0b"/>
+<text x="1815" y="664" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="1836" y="664" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The optional AI read (M3, D10)</text>
+<text x="1836" y="688" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Shown only when an organiser has turned the reader</text>
+<text x="1836" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">on (mockup 17). The page says before sending that</text>
+<text x="1836" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the photo goes to an outside provider. The result</text>
+<text x="1836" y="751" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">is a menu CSV that goes through the same preview:</text>
+<text x="1836" y="772" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">nothing counts until a person applies it.</text>
+<circle cx="1815" cy="806" r="13" fill="#f59e0b"/>
+<text x="1815" y="811" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1836" y="811" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Right</text>
+<text x="1836" y="835" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">pizza.menu.write (D5).</text>
 </svg>
