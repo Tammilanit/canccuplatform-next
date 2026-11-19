@@ -6,7 +6,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { handleTenantEvent, handleZoneReplay } from "../src/consumer.js";
 import type { MomentRequest } from "../src/engine.js";
-import { lockMoment } from "../src/store.js";
+import { knownZones, lockMoment } from "../src/store.js";
 import { StatusTicker, tickAll, tickTenant } from "../src/tick.js";
 import { DATABASE_URL, T0, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
@@ -98,6 +98,30 @@ run("catching up after a restart", () => {
     for (const e of [removed, saved, waiting, placed])
       await w.tx("demo", () => handleZoneReplay(deps(), e));
     expect(await placement(id)).toBe("placed");
+  });
+
+  it("never brings back a zone Screen removed when a claims report of it comes after (#642)", async () => {
+    const id = await start();
+    const zones = () => w.tx("demo", (c) => knownZones(c));
+    // Screen's report of a zone can follow the zone's removal (a placement settling as the zone
+    // goes, or the boot replay running behind the live subscription): it is no zone again.
+    await w.tx("demo", () =>
+      handleTenantEvent(deps(), event("screen.zone.saved", { zone_key: "stage" })),
+    );
+    expect(await zones()).toEqual(["main", "stage"]);
+    await w.tx("demo", () =>
+      handleTenantEvent(deps(), event("screen.zone.removed", { zone_key: "stage" })),
+    );
+    const late = event("screen.claims.changed", {
+      zone_key: "stage",
+      placed: [{ override_id: id, role: "hero" }],
+      unplaced: [],
+      hidden: [],
+    });
+    await w.tx("demo", () => handleTenantEvent(deps(), late));
+    await w.tx("demo", () => handleZoneReplay(deps(), late));
+    expect(await zones()).toEqual(["main"]);
+    expect(await placement(id)).toBeUndefined();
   });
 
   it("ends every moment of an event archived while Moments was down, on the tick", async () => {

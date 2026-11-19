@@ -76,6 +76,8 @@ export async function page(
     crumb?: { href: string; label: string };
     /** Buttons beside the title. */
     actions?: Slot;
+    /** A collection or a board (amendment 3): up to 120rem of content; other pages keep 64rem. */
+    wide?: boolean;
   },
 ): Promise<FastifyReply> {
   const nonce = newNonce();
@@ -103,7 +105,7 @@ export async function page(
         : {}),
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     plain: o.plain ?? false,
-    width: "wide",
+    ...(o.wide === true ? { width: "wide" as const } : {}),
     ...(o.description === undefined ? {} : { description: o.description }),
     ...(o.tab === undefined
       ? {}

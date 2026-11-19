@@ -5,7 +5,7 @@
  * container, so a report that changes nothing writes nothing.
  */
 import type { SqlClient } from "@canccu/kit";
-import { addZone, titleOf, writeHistory } from "./store.js";
+import { titleOf, writeHistory } from "./store.js";
 import type { MomentRow } from "./store.js";
 
 export interface ClaimsReport {
@@ -47,6 +47,9 @@ type Ours = MomentRow & { override_id: string };
  * becomes (under the mark's row lock, so the live and the replay subscriptions apply it once).
  * Event ids are UUIDv7, ordered by time. The replay (`replayed`) applies only on a zone the live
  * subscription has marked (the mark outlives a replayed zone removal), so a first boot never replays the stream's whole past into the history.
+ * A report applies only on a zone Moments knows from Screen's zone events: Screen can report a
+ * zone after removing it (a placement settling as it goes, or the replay behind the live
+ * subscription), and a report that added its zone kept a removed zone on On air for good (#642).
  */
 export async function newerClaims(
   c: SqlClient,
@@ -54,7 +57,8 @@ export async function newerClaims(
   eventId: string,
   replayed: boolean,
 ): Promise<boolean> {
-  if (!replayed) await addZone(c, zone);
+  const known = await c.query(`SELECT 1 FROM moments_zones WHERE zone_key = $1`, [zone]);
+  if (known.rows.length === 0) return false;
   const { rows } = await c.query(
     replayed
       ? `UPDATE moments_claims_marks SET claims_event_id = $2
@@ -70,7 +74,6 @@ export async function newerClaims(
 
 export async function applyClaims(c: SqlClient, report: ClaimsReport, now: Date): Promise<void> {
   const zone = report.zone_key;
-  await addZone(c, zone);
   const states = new Map<string, { state: string; role: string | null }>();
   for (const p of report.placed) states.set(p.override_id, { state: "placed", role: p.role });
   // A hidden claim keeps its role (screen.md, Placement); the report names only the id.

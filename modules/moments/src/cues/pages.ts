@@ -72,6 +72,7 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
     return page(request, reply, deps, {
       title: "Cues",
       tab: "cues",
+      wide: sub === "library",
       description: "What a screen does, and sounds like, when something happens.",
       body: deskPage({
         sub,

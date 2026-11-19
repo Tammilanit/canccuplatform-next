@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { DEFAULT_ORDER } from "../src/arbiter.js";
 import { applyClaims } from "../src/placements.js";
+import { addZone } from "../src/store.js";
 import { DATABASE_URL, claims, freshDatabase } from "./helpers.js";
 import { appWorld, idOf } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -47,9 +48,10 @@ run("the Moments pages", () => {
       show: "message",
       title: "Waiting one",
     });
-    await w.tx("demo", (c) =>
-      applyClaims(c, claims("main", [[idOf(top), "hero"]], [idOf(low)]), w.now),
-    );
+    await w.tx("demo", async (c) => {
+      await addZone(c, "main");
+      await applyClaims(c, claims("main", [[idOf(top), "hero"]], [idOf(low)]), w.now);
+    });
     const page = await w.call("crew", "GET", "/on-air");
     expect(page.statusCode).toBe(200);
     expect(page.headers["content-security-policy"]).toContain("frame-src 'self'");
@@ -215,6 +217,29 @@ run("the Moments pages", () => {
     expect(page.body).toContain("In the history");
     expect(page.body).toContain('href="/api/moments/history.csv?origin=crew"');
     expect((await w.call("reader", "GET", "/history?origin=x")).statusCode).toBe(400);
+  });
+
+  it("draws only the collection and board pages wide (amendment 3); the rest keep 64rem", async () => {
+    const wide = async (path: string) => {
+      const page = await w.call("admin", "GET", path);
+      expect(page.statusCode, path).toBe(200);
+      return page.body.includes("canccu-main--wide");
+    };
+    for (const path of ["/on-air", "/storyboards", "/cues/library"]) {
+      expect(await wide(path), path).toBe(true);
+    }
+    for (const path of [
+      "/priorities",
+      "/history",
+      "/scenes",
+      "/cues",
+      "/cues/limits",
+      "/cues/log",
+      "/spotlight",
+      "/announce",
+    ]) {
+      expect(await wide(path), path).toBe(false);
+    }
   });
 
   it("serves the pages' own static files", async () => {

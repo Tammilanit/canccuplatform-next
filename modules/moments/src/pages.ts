@@ -71,6 +71,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       return page(request, reply, deps, {
         title: "Moments",
         tab: "on-air",
+        wide: true,
         description: "What every zone shows now, what waits, and why. Live.",
         body: onAirView({
           ...state,
