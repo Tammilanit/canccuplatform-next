@@ -1,0 +1,345 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1634" width="1900" height="1634" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Grids that scale 01 · The rule (amendment 3)</title>
+<rect x="0" y="0" width="1900" height="1634" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700">Grids that scale 01 · The rule (amendment 3)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" data-box="32 1868">Collections are one auto-fill grid with the shared class; panels sit in bands; wide pages stop at 120 rem. Numbers at a 16 px rem.</text>
+<rect x="32.0" y="110.0" width="906.0" height="490.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="58.0" cy="140.0" r="14" fill="#f59e0b"/>
+<text x="58.0" y="145.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="82.0" y="146.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="82.0 922.0">One pattern, three sizes: the card count follows the width</text>
+<text x="56.0" y="180.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="56.0 914.0">repeat(auto-fill, minmax(min(100%, var(--canccu-grid-min)), 1fr)), gap 1 rem (tiles 0.5 rem). Each strip is the</text>
+<text x="56.0" y="200.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="56.0 914.0">content&#x27;s width, drawn at 22 %.</text>
+<text x="56.0" y="234.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">Card 18 rem (min 288 px)</text>
+<rect x="56.0" y="242.0" width="78.8" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="246.0" width="78.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="144.8" y="256.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="144.8 434.8">phone (358 px): 1 × 358 px</text>
+<rect x="56.0" y="264.0" width="207.7" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="268.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="126.4" y="268.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="196.8" y="268.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="273.7" y="278.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="273.7 563.7">1280 (944 px): 3 × 304 px</text>
+<rect x="56.0" y="286.0" width="348.5" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="290.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="126.4" y="290.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="196.8" y="290.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="267.2" y="290.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="337.6" y="290.0" width="66.9" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="414.5" y="300.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="414.5 704.5">1920 (1584 px): 5 × 304 px</text>
+<rect x="56.0" y="308.0" width="422.4" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="127.0" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="198.0" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="269.0" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="339.9" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="410.9" y="312.0" width="67.5" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="488.4" y="322.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="488.4 778.4">2560 (1920 px): 6 × 307 px</text>
+<text x="56.0" y="350.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">Small 10 rem (min 160 px)</text>
+<rect x="56.0" y="358.0" width="78.8" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="362.0" width="37.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="97.1" y="362.0" width="37.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="144.8" y="372.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="144.8 434.8">phone (358 px): 2 × 171 px</text>
+<rect x="56.0" y="380.0" width="207.7" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="384.0" width="38.7" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="98.2" y="384.0" width="38.7" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="140.5" y="384.0" width="38.7" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="182.7" y="384.0" width="38.7" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="225.0" y="384.0" width="38.7" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="273.7" y="394.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="273.7 563.7">1280 (944 px): 5 × 176 px</text>
+<rect x="56.0" y="402.0" width="348.5" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="95.1" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="134.2" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="173.3" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="212.4" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="251.6" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="290.7" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="329.8" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="368.9" y="406.0" width="35.6" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="414.5" y="416.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="414.5 704.5">1920 (1584 px): 9 × 162 px</text>
+<rect x="56.0" y="424.0" width="422.4" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="94.7" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="133.4" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="172.2" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="210.9" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="249.6" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="288.3" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="327.0" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="365.8" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="404.5" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="443.2" y="428.0" width="35.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="488.4" y="438.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="488.4 778.4">2560 (1920 px): 11 × 160 px</text>
+<text x="56.0" y="466.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">Tile 7 rem (min 112 px)</text>
+<rect x="56.0" y="474.0" width="78.8" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="478.0" width="25.1" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="82.8" y="478.0" width="25.1" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="109.7" y="478.0" width="25.1" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="144.8" y="488.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="144.8 434.8">phone (358 px): 3 × 114 px</text>
+<rect x="56.0" y="496.0" width="207.7" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="85.9" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="115.8" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="145.8" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="175.7" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="205.6" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="235.5" y="500.0" width="28.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="273.7" y="510.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="273.7 563.7">1280 (944 px): 7 × 128 px</text>
+<rect x="56.0" y="518.0" width="348.5" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="82.9" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="109.9" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="136.8" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="163.8" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="190.7" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="217.6" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="244.6" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="271.5" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="298.5" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="325.4" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="352.4" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="379.3" y="522.0" width="25.2" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="414.5" y="532.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="414.5 704.5">1920 (1584 px): 13 × 114 px</text>
+<rect x="56.0" y="540.0" width="422.4" height="18.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="56.0" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="82.5" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="109.0" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="135.5" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="162.0" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="188.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="215.1" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="241.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="268.1" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="294.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="321.1" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="347.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="374.1" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="400.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="427.1" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="453.6" y="544.0" width="24.8" height="10.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="488.4" y="554.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="488.4 778.4">2560 (1920 px): 16 × 112 px</text>
+<rect x="962.0" y="110.0" width="906.0" height="490.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="988.0" cy="140.0" r="14" fill="#f59e0b"/>
+<text x="988.0" y="145.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1012.0" y="146.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="1012.0 1852.0">Wide screens: columns keep coming up to 120 rem of content</text>
+<text x="986.0" y="190.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">1280 px</text>
+<rect x="1062.0" y="176.0" width="147.2" height="64.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="1062.0" y="176.0" width="29.4" height="64.0" rx="4" fill="#e5e7eb"/>
+<rect x="1096.0" y="188.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1132.8" y="188.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1169.6" y="188.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="1219.2" y="214.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start">3 × 304</text>
+<text x="986.0" y="272.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">1920 px</text>
+<rect x="1062.0" y="258.0" width="220.8" height="64.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="1062.0" y="258.0" width="29.4" height="64.0" rx="4" fill="#e5e7eb"/>
+<rect x="1096.0" y="270.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1132.8" y="270.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1169.6" y="270.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1206.4" y="270.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1243.2" y="270.0" width="35.0" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="1292.8" y="296.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start">5 × 304</text>
+<text x="986.0" y="354.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">2560 px</text>
+<rect x="1062.0" y="340.0" width="294.4" height="64.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="1062.0" y="340.0" width="29.4" height="64.0" rx="4" fill="#e5e7eb"/>
+<rect x="1096.0" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1133.1" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1170.3" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1207.4" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1244.5" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1281.6" y="352.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<line x1="1316.8" y1="336.0" x2="1316.8" y2="408.0" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1366.4" y="378.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start">6 × 307</text>
+<text x="986.0" y="436.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start">3440 px</text>
+<rect x="1062.0" y="422.0" width="395.6" height="64.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="1062.0" y="422.0" width="29.4" height="64.0" rx="4" fill="#e5e7eb"/>
+<rect x="1096.0" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1133.1" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1170.3" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1207.4" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1244.5" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1281.6" y="434.0" width="35.3" height="40.0" rx="2" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<line x1="1316.8" y1="418.0" x2="1316.8" y2="490.0" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1467.6" y="460.0" font-size="13" fill="#111827" font-weight="400" text-anchor="start">6 × 307</text>
+<text x="986.0" y="508.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="986.0 1844.0">From 1100 px the menu takes 16 rem and the side padding is 2.5 rem. A wide page&#x27;s content stops at 120 rem (1,920</text>
+<text x="986.0" y="528.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="986.0 1844.0">px, the dashed line) and keeps the one left edge: at 2560 px and on an ultra-wide the rest stays empty, so the crew&#x27;s</text>
+<text x="986.0" y="548.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="986.0 1844.0">eye never travels more than a 1920 screen&#x27;s width and the counts match the venue&#x27;s own 1920 screens.</text>
+<rect x="32.0" y="624.0" width="906.0" height="330.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="58.0" cy="654.0" r="14" fill="#f59e0b"/>
+<text x="58.0" y="659.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="82.0" y="660.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="82.0 922.0">Unequal heights: rows align, no masonry</text>
+<rect x="56.0" y="694.0" width="70.0" height="120.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="64.0" y="798.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="91.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<rect x="134.0" y="694.0" width="70.0" height="120.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="142.0" y="798.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="169.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<rect x="212.0" y="694.0" width="70.0" height="120.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="220.0" y="798.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="247.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<rect x="56.0" y="822.0" width="70.0" height="110.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="64.0" y="916.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="91.0" y="842.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<rect x="134.0" y="822.0" width="70.0" height="110.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="142.0" y="916.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="169.0" y="842.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<rect x="212.0" y="822.0" width="70.0" height="110.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="220.0" y="916.0" width="54.0" height="8.0" rx="2" fill="#6366f1"/>
+<text x="247.0" y="842.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="56.0" y="944.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start">Rows align; actions at the foot</text>
+<rect x="322.0" y="694.0" width="70.0" height="120.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="357.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<rect x="400.0" y="694.0" width="70.0" height="60.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="435.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<rect x="478.0" y="694.0" width="70.0" height="80.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="513.0" y="714.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<rect x="400.0" y="762.0" width="70.0" height="70.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="435.0" y="782.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<rect x="478.0" y="782.0" width="70.0" height="110.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="513.0" y="802.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<rect x="322.0" y="822.0" width="70.0" height="50.0" rx="3" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
+<text x="357.0" y="842.0" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<line x1="316.0" y1="688.0" x2="554.0" y2="898.0" stroke="#dc2626" stroke-width="3"/>
+<line x1="554.0" y1="688.0" x2="316.0" y2="898.0" stroke="#dc2626" stroke-width="3"/>
+<text x="322.0" y="944.0" font-size="13" fill="#dc2626" font-weight="700" text-anchor="start">Masonry: the order jumps</text>
+<text x="572.0" y="700.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">An organiser reads a row across: zone beside</text>
+<text x="572.0" y="720.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">zone, sound beside sound. Rows that align keep</text>
+<text x="572.0" y="740.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">the reading order left to right, and every</text>
+<text x="572.0" y="760.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">card&#x27;s buttons line up at the row&#x27;s foot.</text>
+<text x="572.0" y="792.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">Masonry places a card under the shortest</text>
+<text x="572.0" y="812.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">column, so its place depends on the heights</text>
+<text x="572.0" y="832.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">above it. When a zone gets one more waiting</text>
+<text x="572.0" y="852.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">moment live, the cards after it change</text>
+<text x="572.0" y="872.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">columns while the crew aims at them.</text>
+<text x="572.0" y="904.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">A card&#x27;s own list shows at most 4 rows, then</text>
+<text x="572.0" y="924.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">“+n more”, so no card is far taller than its</text>
+<text x="572.0" y="944.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="572.0 914.0">row.</text>
+<rect x="962.0" y="624.0" width="906.0" height="330.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="988.0" cy="654.0" r="14" fill="#f59e0b"/>
+<text x="988.0" y="659.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1012.0" y="660.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="1012.0 1852.0">Panels go in bands above or below, never in a column beside</text>
+<rect x="986.0" y="690.0" width="250.0" height="18.0" rx="3" fill="#99f6e4"/>
+<text x="992.0" y="703.0" font-size="11" fill="#111827" font-weight="400" text-anchor="start">Crew actions · action band</text>
+<rect x="986.0" y="714.0" width="250.0" height="14.0" rx="3" fill="#e5e7eb"/>
+<text x="992.0" y="725.0" font-size="11" fill="#111827" font-weight="400" text-anchor="start">Summary · filters</text>
+<rect x="986.0" y="736.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1072.0" y="736.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1158.0" y="736.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="986.0" y="780.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1072.0" y="780.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1158.0" y="780.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="986.0" y="824.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1072.0" y="824.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1158.0" y="824.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="986.0" y="872.0" width="122.0" height="48.0" rx="3" fill="#fde68a"/>
+<rect x="1114.0" y="872.0" width="122.0" height="48.0" rx="3" fill="#fde68a"/>
+<text x="992.0" y="890.0" font-size="11" fill="#111827" font-weight="400" text-anchor="start">Panel band</text>
+<text x="986.0" y="944.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start">The rule</text>
+<rect x="1262.0" y="690.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1348.0" y="690.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1262.0" y="734.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1348.0" y="734.0" width="78.0" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="1438.0" y="690.0" width="74.0" height="230.0" rx="3" fill="#fde68a"/>
+<text x="1444.0" y="710.0" font-size="11" fill="#111827" font-weight="400" text-anchor="start">Side</text>
+<line x1="1258.0" y1="686.0" x2="1518.0" y2="924.0" stroke="#dc2626" stroke-width="3"/>
+<line x1="1518.0" y1="686.0" x2="1258.0" y2="924.0" stroke="#dc2626" stroke-width="3"/>
+<text x="1262.0" y="944.0" font-size="13" fill="#dc2626" font-weight="700" text-anchor="start">A side column (On air before)</text>
+<text x="1552.0" y="696.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">Above the collection: the page&#x27;s crew</text>
+<text x="1552.0" y="716.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">actions (one band, one row on a desk),</text>
+<text x="1552.0" y="736.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">then its summary and filters. Below it:</text>
+<text x="1552.0" y="756.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">related panels (Storyboards and Scenes</text>
+<text x="1552.0" y="776.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">on On air, Recent on Devices) in a band</text>
+<text x="1552.0" y="796.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">that wraps, each panel 22 to 48 rem</text>
+<text x="1552.0" y="816.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">wide, a row of panels as tall as its</text>
+<text x="1552.0" y="836.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">tallest.</text>
+<text x="1552.0" y="868.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">Only a master–detail page has a column</text>
+<text x="1552.0" y="888.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">beside its list, because the side shows</text>
+<text x="1552.0" y="908.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1844.0">the item picked in it.</text>
+<rect x="32.0" y="978.0" width="906.0" height="300.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="58.0" cy="1008.0" r="14" fill="#f59e0b"/>
+<text x="58.0" y="1013.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="82.0" y="1014.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="82.0 922.0">Few and none: one or two keep their width</text>
+<text x="56.0" y="1058.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start">auto-fill: 1 item</text>
+<rect x="56.0" y="1068.0" width="261.4" height="46.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="59.0" y="1072.0" width="50.2" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="341.4" y="1058.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start">auto-fill: 2 items</text>
+<rect x="341.4" y="1068.0" width="261.4" height="46.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="344.4" y="1072.0" width="50.2" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<rect x="397.2" y="1072.0" width="50.2" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="626.7" y="1058.0" font-size="13" fill="#dc2626" font-weight="700" text-anchor="start">auto-fit: 1 item</text>
+<rect x="626.7" y="1068.0" width="261.4" height="46.0" rx="4" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="629.7" y="1072.0" width="255.4" height="38.0" rx="3" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<line x1="626.7" y1="1066.0" x2="888.1" y2="1116.0" stroke="#dc2626" stroke-width="3"/>
+<line x1="888.1" y1="1066.0" x2="626.7" y2="1116.0" stroke="#dc2626" stroke-width="3"/>
+<text x="56.0" y="1146.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="56.0 914.0">auto-fill keeps the empty tracks, so a single card at 1920 px is 304 px wide, at the one left edge. auto-fit would</text>
+<text x="56.0" y="1166.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="56.0 914.0">stretch it across 1,584 px. None: the shared empty state (icon, title, one sentence, the main action) replaces the</text>
+<text x="56.0" y="1186.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="56.0 914.0">grid.</text>
+<rect x="962.0" y="978.0" width="906.0" height="300.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="988.0" cy="1008.0" r="14" fill="#f59e0b"/>
+<text x="988.0" y="1013.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="1012.0" y="1014.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="1012.0 1852.0">Phone: one column, crew actions first</text>
+<rect x="986.0" y="1040.0" width="120.0" height="30.0" rx="4" fill="#99f6e4"/>
+<text x="994.0" y="1060.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">Crew actions</text>
+<rect x="986.0" y="1076.0" width="120.0" height="30.0" rx="4" fill="#e5e7eb"/>
+<text x="994.0" y="1096.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">Summary · filters</text>
+<rect x="986.0" y="1112.0" width="120.0" height="30.0" rx="4" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="994.0" y="1132.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">Card 1</text>
+<rect x="986.0" y="1148.0" width="120.0" height="30.0" rx="4" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="994.0" y="1168.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">Card 2</text>
+<rect x="986.0" y="1184.0" width="120.0" height="30.0" rx="4" fill="#c7d2fe" stroke="#6366f1" stroke-width="1"/>
+<text x="994.0" y="1204.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">…</text>
+<rect x="986.0" y="1220.0" width="120.0" height="30.0" rx="4" fill="#fde68a"/>
+<text x="994.0" y="1240.0" font-size="12" fill="#111827" font-weight="400" text-anchor="start">Panels</text>
+<text x="1132.0" y="1050.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1132.0 1844.0">Under about 37 rem of content every card grid is one column; small items keep two and tiles</text>
+<text x="1132.0" y="1070.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1132.0 1844.0">three. The page&#x27;s order is the phone&#x27;s order, so a reader and a screen reader meet crew actions</text>
+<text x="1132.0" y="1090.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1132.0 1844.0">first.</text>
+<rect x="32.0" y="1302.0" width="1836.0" height="300.0" rx="12" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<circle cx="58.0" cy="1332.0" r="14" fill="#f59e0b"/>
+<text x="58.0" y="1337.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">7</text>
+<text x="82.0" y="1338.0" font-size="19" fill="#111827" font-weight="700" text-anchor="start" data-box="82.0 1852.0">Fixed columns stay where the layout means it</text>
+<rect x="56.0" y="1372.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="66.0" y="1384.0" width="50.0" height="12.0" rx="2" fill="#e5e7eb"/>
+<rect x="122.0" y="1382.0" width="104.0" height="16.0" rx="2" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="66.0" y="1406.0" width="50.0" height="12.0" rx="2" fill="#e5e7eb"/>
+<rect x="122.0" y="1404.0" width="104.0" height="16.0" rx="2" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+<text x="66.0" y="1442.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="64.0 234.0">A form</text>
+<text x="66.0" y="1457.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="64.0 234.0">label and field</text>
+<rect x="256.0" y="1372.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="266.0" y="1382.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="310.0" y="1382.0" width="70.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="384.0" y="1382.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="266.0" y="1396.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="310.0" y="1396.0" width="70.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="384.0" y="1396.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="266.0" y="1410.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="310.0" y="1410.0" width="70.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<rect x="384.0" y="1410.0" width="40.0" height="10.0" rx="1" fill="#e5e7eb"/>
+<text x="266.0" y="1442.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="264.0 434.0">A table</text>
+<text x="266.0" y="1457.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="264.0 434.0">columns line up</text>
+<rect x="456.0" y="1372.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="466.0" y="1382.0" width="60.0" height="40.0" rx="2" fill="#e5e7eb"/>
+<rect x="532.0" y="1382.0" width="94.0" height="40.0" rx="2" fill="#c7d2fe"/>
+<text x="466.0" y="1442.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="464.0 634.0">Master–detail</text>
+<text x="466.0" y="1457.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="464.0 634.0">list and the picked item</text>
+<rect x="56.0" y="1482.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="66.0" y="1502.0" width="30.0" height="14.0" rx="2" fill="#e5e7eb"/>
+<rect x="100.0" y="1502.0" width="90.0" height="14.0" rx="2" fill="#e5e7eb"/>
+<rect x="194.0" y="1502.0" width="32.0" height="14.0" rx="2" fill="#99f6e4"/>
+<text x="66.0" y="1552.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="64.0 234.0">A row&#x27;s own parts</text>
+<text x="66.0" y="1567.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="64.0 234.0">time, label, actions</text>
+<rect x="256.0" y="1482.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="266.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="289.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="312.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="335.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="358.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="381.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<rect x="404.0" y="1502.0" width="20.0" height="20.0" rx="3" fill="#e5e7eb"/>
+<text x="266.0" y="1552.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="264.0 434.0">A control</text>
+<text x="266.0" y="1567.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="264.0 434.0">7 days, 4 levels</text>
+<rect x="456.0" y="1482.0" width="180.0" height="90.0" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<rect x="466.0" y="1490.0" width="160.0" height="8.0" rx="2" fill="#e5e7eb"/>
+<rect x="466.0" y="1502.0" width="104.0" height="32.0" rx="2" fill="#c7d2fe"/>
+<rect x="574.0" y="1502.0" width="52.0" height="32.0" rx="2" fill="#e5e7eb"/>
+<text x="466.0" y="1552.0" font-size="13" fill="#111827" font-weight="700" text-anchor="start" data-box="464.0 634.0">A screen</text>
+<text x="466.0" y="1567.0" font-size="11.5" fill="#4b5563" font-weight="400" text-anchor="start" data-box="464.0 634.0">the player&#x27;s regions</text>
+<text x="672.0" y="1374.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="start" data-box="672.0 1844.0">Each one is marked in its CSS with its kind and reason (canccu-grid: fixed &lt;kind&gt; — &lt;why&gt;), so the guard lets it through and a reviewer sees why.</text>
+</svg>

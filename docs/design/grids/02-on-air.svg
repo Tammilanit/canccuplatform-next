@@ -1,0 +1,789 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1958 2002" width="1958" height="2002" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Grids that scale 02 · On air with 2 and 8 zones (1280 and 1920 px drawn at 50 %, phone at 55 %)</title>
+<defs><clipPath id="oac0"><rect x="0" y="0" width="1280" height="1082" rx="10"/></clipPath><clipPath id="oac1"><rect x="0" y="0" width="1920" height="1082" rx="10"/></clipPath><clipPath id="oac2"><rect x="0" y="0" width="1280" height="1602" rx="10"/></clipPath><clipPath id="oac3"><rect x="0" y="0" width="1920" height="1344" rx="10"/></clipPath><clipPath id="oac4"><rect x="0" y="0" width="390" height="2850" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1958" height="2002" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700">Grids that scale 02 · On air with 2 and 8 zones (1280 and 1920 px drawn at 50 %, phone at 55 %)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" data-box="32 1926">Amendment 3 on a board page: the crew band, one auto-fill grid of zones, the panel band. Demo names only.</text>
+<text x="32" y="138" font-size="17" fill="#111827" font-weight="700">2 zones · 1280 px: 3 columns of 304 px</text>
+<g transform="translate(32.0,150.0) scale(0.5)"><g clip-path="url(#oac0)">
+<rect x="0.0" y="0.0" width="1280.0" height="1082.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1280.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1280.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="371.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="391.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1234.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1260.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0.0" y="57.0" width="255.0" height="1025.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="1082.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="115.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="127.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="157.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="169.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="199.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="211.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24.0" y="254.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="12.0" y="272.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="272.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="283.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="295.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="325.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="337.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="380.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="409.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="421.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="451.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="463.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="493.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="505.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="535.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="547.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1240.0">Moments</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">What every zone shows now, what waits, and why. Live.</text>
+<line x1="296.0" y1="186.0" x2="351.6" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="300.0" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">On air</text>
+<text x="363.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="455.1" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="525.4" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="634.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<text x="709.7" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Cues</text>
+<line x1="296.0" y1="187.0" x2="1240.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="206.0" width="944.0" height="40.0" rx="8" fill="#173a2e" stroke="#2a7e64" stroke-width="1"/>
+<text x="312.0" y="231.0" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="312.0 1224.0">✓ Starting soon starts at 22:15, at T−15.</text>
+<rect x="296.0" y="262.0" width="944.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="310.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Crew actions</text>
+<rect x="456.0" y="284.0" width="128.0" height="40.0" rx="8" fill="#3ddcff"/>
+<text x="520.0" y="308.9" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="460.0 580.0">Announce…</text>
+<rect x="594.0" y="284.0" width="120.0" height="40.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="654.0" y="308.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="598.0 710.0">Spotlight…</text>
+<rect x="836.0" y="276.0" width="384.0" height="56.0" rx="8" fill="#2a1418" stroke="#b91c1c" stroke-width="1"/>
+<text x="850.0" y="299.0" font-size="14" fill="#fca5a5" font-weight="600" text-anchor="start">Emergency</text>
+<text x="850.0" y="318.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="850.0 1032.0">Every zone, full screen.</text>
+<rect x="1038.0" y="288.0" width="168.0" height="32.0" rx="8" fill="#b91c1c"/>
+<text x="1122.0" y="308.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1042.0 1202.0">Press and hold 2 s</text>
+<rect x="296.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Main hall</text>
+<text x="316.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">2 on air · 1 waiting</text>
+<rect x="316.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Pizza is here</text>
+<text x="316.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="316.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="364.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 409.8">Extend +5</text>
+<rect x="421.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="474.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="425.8 523.1">End in zone</text>
+<line x1="316.0" y1="556.0" x2="580.0" y2="556.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="568.0" width="42.9" height="22.0" rx="11" fill="#1e4158"/>
+<text x="337.4" y="583.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 356.9">Rail</text>
+<text x="316.0" y="612.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Demo Game Cup standings</text>
+<text x="316.0" y="632.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Tournament · until cleared</text>
+<line x1="316.0" y1="640.0" x2="580.0" y2="640.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="652.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="348.2" y="667.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="318.0 378.4">Queued</text>
+<text x="316.0" y="696.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Semis in 15 min</text>
+<text x="316.0" y="716.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Announcement · Sam · 9:40 left</text>
+<text x="316.0" y="738.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 580.0">Waits for a free region, up to 2 min.</text>
+<rect x="616.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Entrance</text>
+<text x="636.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air</text>
+<rect x="636.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="660.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 683.4">Hero</text>
+<text x="636.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Pizza is here</text>
+<text x="636.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="636.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="684.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="640.0 729.8">Extend +5</text>
+<rect x="741.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="794.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="745.8 843.1">End in zone</text>
+<rect x="296.0" y="780.0" width="464.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="814.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboards</text>
+<text x="316.0" y="842.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="316.0" y="862.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="316.0 740.0">Demo Game Cup, grand final · next round 22:15 (T−15)</text>
+<rect x="316.0" y="880.0" width="93.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="362.5" y="899.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 405.1">Stop loop</text>
+<rect x="417.1" y="880.0" width="122.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="478.1" y="899.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="421.1 535.2">Skip to finale</text>
+<line x1="316.0" y1="926.0" x2="740.0" y2="926.0" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="952.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start">Item</text>
+<rect x="316.0" y="964.0" width="326.0" height="36.0" rx="8" fill="#0f1222" stroke="#616788" stroke-width="1"/>
+<text x="328.0" y="987.0" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328.0 620.0">Grand final · 22:30</text>
+<text x="628.0" y="987.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">⌄</text>
+<rect x="654.0" y="964.0" width="86.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="697.0" y="986.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="658.0 736.0">Fire…</text>
+<text x="316.0" y="1020.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 740.0">Presets without an item ignore it.</text>
+<rect x="776.0" y="780.0" width="464.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="796.0" y="814.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Scenes</text>
+<text x="796.0" y="836.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="796.0 1220.0">Each zone&#x27;s scene now.</text>
+<text x="796.0" y="864.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Main hall</text>
+<text x="914.0" y="864.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">Peak · the crew, 21:02</text>
+<text x="796.0" y="888.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Entrance</text>
+<text x="914.0" y="888.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<rect x="796.0" y="918.0" width="90.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="841.0" y="938.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="800.0 882.0">End Peak</text>
+<rect x="894.0" y="918.0" width="90.6" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="939.3" y="938.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="898.0 980.6">Chill now</text>
+<text x="998.6" y="939.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="998.6 1220.0">All scenes</text>
+<circle cx="282.0" cy="278.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="283.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="282.0" cy="386.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="391.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="282.0" cy="796.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="801.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+</g></g>
+<text x="712.0" y="138" font-size="17" fill="#111827" font-weight="700">2 zones · 1920 px: 5 columns of 304 px</text>
+<g transform="translate(712.0,150.0) scale(0.5)"><g clip-path="url(#oac1)">
+<rect x="0.0" y="0.0" width="1920.0" height="1082.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1920.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1920.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="371.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="391.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1900.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0.0" y="57.0" width="255.0" height="1025.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="1082.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="115.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="127.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="157.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="169.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="199.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="211.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24.0" y="254.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="12.0" y="272.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="272.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="283.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="295.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="325.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="337.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="380.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="409.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="421.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="451.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="463.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="493.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="505.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="535.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="547.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1880.0">Moments</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1880.0">What every zone shows now, what waits, and why. Live.</text>
+<line x1="296.0" y1="186.0" x2="351.6" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="300.0" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">On air</text>
+<text x="363.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="455.1" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="525.4" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="634.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<text x="709.7" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Cues</text>
+<line x1="296.0" y1="187.0" x2="1880.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="206.0" width="1584.0" height="40.0" rx="8" fill="#173a2e" stroke="#2a7e64" stroke-width="1"/>
+<text x="312.0" y="231.0" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="312.0 1864.0">✓ Starting soon starts at 22:15, at T−15.</text>
+<rect x="296.0" y="262.0" width="1584.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="310.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Crew actions</text>
+<rect x="456.0" y="284.0" width="128.0" height="40.0" rx="8" fill="#3ddcff"/>
+<text x="520.0" y="308.9" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="460.0 580.0">Announce…</text>
+<rect x="594.0" y="284.0" width="120.0" height="40.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="654.0" y="308.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="598.0 710.0">Spotlight…</text>
+<rect x="1476.0" y="276.0" width="384.0" height="56.0" rx="8" fill="#2a1418" stroke="#b91c1c" stroke-width="1"/>
+<text x="1490.0" y="299.0" font-size="14" fill="#fca5a5" font-weight="600" text-anchor="start">Emergency</text>
+<text x="1490.0" y="318.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1490.0 1672.0">Every zone, full screen.</text>
+<rect x="1678.0" y="288.0" width="168.0" height="32.0" rx="8" fill="#b91c1c"/>
+<text x="1762.0" y="308.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1682.0 1842.0">Press and hold 2 s</text>
+<rect x="296.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Main hall</text>
+<text x="316.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">2 on air · 1 waiting</text>
+<rect x="316.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Pizza is here</text>
+<text x="316.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="316.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="364.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 409.8">Extend +5</text>
+<rect x="421.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="474.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="425.8 523.1">End in zone</text>
+<line x1="316.0" y1="556.0" x2="580.0" y2="556.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="568.0" width="42.9" height="22.0" rx="11" fill="#1e4158"/>
+<text x="337.4" y="583.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 356.9">Rail</text>
+<text x="316.0" y="612.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Demo Game Cup standings</text>
+<text x="316.0" y="632.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Tournament · until cleared</text>
+<line x1="316.0" y1="640.0" x2="580.0" y2="640.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="652.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="348.2" y="667.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="318.0 378.4">Queued</text>
+<text x="316.0" y="696.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Semis in 15 min</text>
+<text x="316.0" y="716.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Announcement · Sam · 9:40 left</text>
+<text x="316.0" y="738.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 580.0">Waits for a free region, up to 2 min.</text>
+<rect x="616.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Entrance</text>
+<text x="636.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air</text>
+<rect x="636.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="660.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 683.4">Hero</text>
+<text x="636.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Pizza is here</text>
+<text x="636.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="636.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="684.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="640.0 729.8">Extend +5</text>
+<rect x="741.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="794.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="745.8 843.1">End in zone</text>
+<rect x="296.0" y="780.0" width="768.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="814.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboards</text>
+<text x="316.0" y="842.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="316.0" y="862.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="316.0 1044.0">Demo Game Cup, grand final · next round 22:15 (T−15)</text>
+<rect x="316.0" y="880.0" width="93.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="362.5" y="899.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 405.1">Stop loop</text>
+<rect x="417.1" y="880.0" width="122.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="478.1" y="899.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="421.1 535.2">Skip to finale</text>
+<line x1="316.0" y1="926.0" x2="1044.0" y2="926.0" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="952.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start">Item</text>
+<rect x="316.0" y="964.0" width="630.0" height="36.0" rx="8" fill="#0f1222" stroke="#616788" stroke-width="1"/>
+<text x="328.0" y="987.0" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328.0 924.0">Grand final · 22:30</text>
+<text x="932.0" y="987.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">⌄</text>
+<rect x="958.0" y="964.0" width="86.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1001.0" y="986.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="962.0 1040.0">Fire…</text>
+<text x="316.0" y="1020.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 1044.0">Presets without an item ignore it.</text>
+<rect x="1080.0" y="780.0" width="768.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1100.0" y="814.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Scenes</text>
+<text x="1100.0" y="836.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1100.0 1828.0">Each zone&#x27;s scene now.</text>
+<text x="1100.0" y="864.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Main hall</text>
+<text x="1218.0" y="864.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">Peak · the crew, 21:02</text>
+<text x="1100.0" y="888.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Entrance</text>
+<text x="1218.0" y="888.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<rect x="1100.0" y="918.0" width="90.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1145.0" y="938.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1104.0 1186.0">End Peak</text>
+<rect x="1198.0" y="918.0" width="90.6" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="1243.3" y="938.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1202.0 1284.6">Chill now</text>
+<text x="1302.6" y="939.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="1302.6 1828.0">All scenes</text>
+<circle cx="282.0" cy="278.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="283.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="282.0" cy="386.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="391.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="282.0" cy="796.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="801.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+</g></g>
+<text x="32" y="749.0" font-size="17" fill="#111827" font-weight="700">8 zones · 1280 px: 3 columns of 304 px</text>
+<g transform="translate(32.0,761.0) scale(0.5)"><g clip-path="url(#oac2)">
+<rect x="0.0" y="0.0" width="1280.0" height="1602.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1280.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1280.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="371.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="391.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1234.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1260.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0.0" y="57.0" width="255.0" height="1545.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="1602.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="115.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="127.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="157.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="169.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="199.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="211.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24.0" y="254.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="12.0" y="272.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="272.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="283.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="295.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="325.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="337.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="380.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="409.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="421.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="451.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="463.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="493.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="505.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="535.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="547.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1240.0">Moments</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">What every zone shows now, what waits, and why. Live.</text>
+<line x1="296.0" y1="186.0" x2="351.6" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="300.0" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">On air</text>
+<text x="363.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="455.1" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="525.4" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="634.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<text x="709.7" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Cues</text>
+<line x1="296.0" y1="187.0" x2="1240.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="206.0" width="944.0" height="40.0" rx="8" fill="#173a2e" stroke="#2a7e64" stroke-width="1"/>
+<text x="312.0" y="231.0" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="312.0 1224.0">✓ Starting soon starts at 22:15, at T−15.</text>
+<rect x="296.0" y="262.0" width="944.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="310.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Crew actions</text>
+<rect x="456.0" y="284.0" width="128.0" height="40.0" rx="8" fill="#3ddcff"/>
+<text x="520.0" y="308.9" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="460.0 580.0">Announce…</text>
+<rect x="594.0" y="284.0" width="120.0" height="40.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="654.0" y="308.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="598.0 710.0">Spotlight…</text>
+<rect x="836.0" y="276.0" width="384.0" height="56.0" rx="8" fill="#2a1418" stroke="#b91c1c" stroke-width="1"/>
+<text x="850.0" y="299.0" font-size="14" fill="#fca5a5" font-weight="600" text-anchor="start">Emergency</text>
+<text x="850.0" y="318.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="850.0 1032.0">Every zone, full screen.</text>
+<rect x="1038.0" y="288.0" width="168.0" height="32.0" rx="8" fill="#b91c1c"/>
+<text x="1122.0" y="308.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1042.0 1202.0">Press and hold 2 s</text>
+<rect x="296.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Main hall</text>
+<text x="316.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">2 on air · 1 waiting</text>
+<rect x="316.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Pizza is here</text>
+<text x="316.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="316.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="364.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 409.8">Extend +5</text>
+<rect x="421.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="474.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="425.8 523.1">End in zone</text>
+<line x1="316.0" y1="556.0" x2="580.0" y2="556.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="568.0" width="42.9" height="22.0" rx="11" fill="#1e4158"/>
+<text x="337.4" y="583.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 356.9">Rail</text>
+<text x="316.0" y="612.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Demo Game Cup standings</text>
+<text x="316.0" y="632.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Tournament · until cleared</text>
+<line x1="316.0" y1="640.0" x2="580.0" y2="640.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="652.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="348.2" y="667.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="318.0 378.4">Queued</text>
+<text x="316.0" y="696.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Semis in 15 min</text>
+<text x="316.0" y="716.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Announcement · Sam · 9:40 left</text>
+<text x="316.0" y="738.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 580.0">Waits for a free region, up to 2 min.</text>
+<rect x="616.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Entrance</text>
+<text x="636.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air</text>
+<rect x="636.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="660.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 683.4">Hero</text>
+<text x="636.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Pizza is here</text>
+<text x="636.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="636.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="684.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="640.0 729.8">Extend +5</text>
+<rect x="741.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="794.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="745.8 843.1">End in zone</text>
+<rect x="936.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="956.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="956.0 1220.0">Café</text>
+<text x="956.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="956.0 1220.0">Nothing on air</text>
+<text x="956.0" y="454.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="956.0 1220.0">The playlist plays.</text>
+<rect x="296.0" y="772.0" width="304.0" height="242.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Stage</text>
+<text x="316.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">1 on air</text>
+<rect x="316.0" y="844.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="859.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="888.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Semis in 15 min</text>
+<text x="316.0" y="908.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Announcement · Sam · 9:40 left</text>
+<rect x="316.0" y="920.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="368.7" y="939.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="320.0 417.4">End in zone</text>
+<rect x="616.0" y="772.0" width="304.0" height="242.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Lobby</text>
+<text x="636.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air · 1 waiting</text>
+<rect x="636.0" y="844.0" width="61.2" height="22.0" rx="11" fill="#1e4158"/>
+<text x="666.6" y="859.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 695.2">Ticker</text>
+<text x="636.0" y="888.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Doors close at 02:00</text>
+<text x="636.0" y="908.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Ticker · Kim · until cleared</text>
+<line x1="636.0" y1="916.0" x2="900.0" y2="916.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="636.0" y="928.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="668.2" y="943.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="638.0 698.4">Queued</text>
+<text x="636.0" y="972.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Group photo</text>
+<text x="636.0" y="992.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Storyboard · next round 22:00</text>
+<rect x="936.0" y="772.0" width="304.0" height="242.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="956.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="956.0 1220.0">Workshop</text>
+<text x="956.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="956.0 1220.0">Nothing on air</text>
+<text x="956.0" y="856.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="956.0 1220.0">The playlist plays.</text>
+<rect x="296.0" y="1030.0" width="304.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="1064.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Lounge</text>
+<text x="316.0" y="1084.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">1 on air</text>
+<rect x="316.0" y="1102.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="1117.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="1146.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Starting soon</text>
+<text x="316.0" y="1166.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Storyboard · round 2 of 4</text>
+<rect x="616.0" y="1030.0" width="304.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="1064.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Back room</text>
+<text x="636.0" y="1084.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Nothing on air</text>
+<text x="636.0" y="1114.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="636.0 900.0">The playlist plays.</text>
+<rect x="296.0" y="1212.0" width="464.0" height="350.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="1246.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboards</text>
+<text x="316.0" y="1274.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="316.0" y="1294.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="316.0 740.0">Demo Game Cup, grand final · next round 22:15 (T−15)</text>
+<rect x="316.0" y="1312.0" width="93.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="362.5" y="1331.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 405.1">Stop loop</text>
+<rect x="417.1" y="1312.0" width="122.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="478.1" y="1331.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="421.1 535.2">Skip to finale</text>
+<line x1="316.0" y1="1358.0" x2="740.0" y2="1358.0" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="1384.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start">Item</text>
+<rect x="316.0" y="1396.0" width="326.0" height="36.0" rx="8" fill="#0f1222" stroke="#616788" stroke-width="1"/>
+<text x="328.0" y="1419.0" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328.0 620.0">Grand final · 22:30</text>
+<text x="628.0" y="1419.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">⌄</text>
+<rect x="654.0" y="1396.0" width="86.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="697.0" y="1418.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="658.0 736.0">Fire…</text>
+<text x="316.0" y="1452.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 740.0">Presets without an item ignore it.</text>
+<rect x="776.0" y="1212.0" width="464.0" height="350.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="796.0" y="1246.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Scenes</text>
+<text x="796.0" y="1268.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="796.0 1220.0">Each zone&#x27;s scene now.</text>
+<text x="796.0" y="1296.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Main hall</text>
+<text x="914.0" y="1296.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">Peak · the crew, 21:02</text>
+<text x="796.0" y="1320.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Entrance</text>
+<text x="914.0" y="1320.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<text x="796.0" y="1344.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Café</text>
+<text x="914.0" y="1344.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<text x="796.0" y="1368.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Stage</text>
+<text x="914.0" y="1368.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">Peak · the crew, 21:02</text>
+<text x="796.0" y="1392.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Lobby</text>
+<text x="914.0" y="1392.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<text x="796.0" y="1416.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Workshop</text>
+<text x="914.0" y="1416.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<text x="796.0" y="1440.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Lounge</text>
+<text x="914.0" y="1440.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<text x="796.0" y="1464.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="796.0 906.0">Back room</text>
+<text x="914.0" y="1464.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="914.0 1220.0">None · the day&#x27;s phase</text>
+<rect x="796.0" y="1494.0" width="90.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="841.0" y="1514.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="800.0 882.0">End Peak</text>
+<rect x="894.0" y="1494.0" width="90.6" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="939.3" y="1514.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="898.0 980.6">Chill now</text>
+<text x="998.6" y="1515.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="998.6 1220.0">All scenes</text>
+<circle cx="282.0" cy="278.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="283.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="282.0" cy="386.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="391.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="282.0" cy="1228.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="1233.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+</g></g>
+<text x="712.0" y="749.0" font-size="17" fill="#111827" font-weight="700">8 zones · 1920 px: 5 columns of 304 px</text>
+<g transform="translate(712.0,761.0) scale(0.5)"><g clip-path="url(#oac3)">
+<rect x="0.0" y="0.0" width="1920.0" height="1344.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1920.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1920.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="371.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="391.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1900.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0.0" y="57.0" width="255.0" height="1287.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="1344.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="115.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="127.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="157.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="169.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="199.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="211.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24.0" y="254.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="12.0" y="272.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="272.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="283.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="295.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="325.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="337.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="380.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="409.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="421.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="451.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="463.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="493.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="505.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="535.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="547.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1880.0">Moments</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1880.0">What every zone shows now, what waits, and why. Live.</text>
+<line x1="296.0" y1="186.0" x2="351.6" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="300.0" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">On air</text>
+<text x="363.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="455.1" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="525.4" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="634.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<text x="709.7" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Cues</text>
+<line x1="296.0" y1="187.0" x2="1880.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="206.0" width="1584.0" height="40.0" rx="8" fill="#173a2e" stroke="#2a7e64" stroke-width="1"/>
+<text x="312.0" y="231.0" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="312.0 1864.0">✓ Starting soon starts at 22:15, at T−15.</text>
+<rect x="296.0" y="262.0" width="1584.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="310.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Crew actions</text>
+<rect x="456.0" y="284.0" width="128.0" height="40.0" rx="8" fill="#3ddcff"/>
+<text x="520.0" y="308.9" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="460.0 580.0">Announce…</text>
+<rect x="594.0" y="284.0" width="120.0" height="40.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="654.0" y="308.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="598.0 710.0">Spotlight…</text>
+<rect x="1476.0" y="276.0" width="384.0" height="56.0" rx="8" fill="#2a1418" stroke="#b91c1c" stroke-width="1"/>
+<text x="1490.0" y="299.0" font-size="14" fill="#fca5a5" font-weight="600" text-anchor="start">Emergency</text>
+<text x="1490.0" y="318.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1490.0 1672.0">Every zone, full screen.</text>
+<rect x="1678.0" y="288.0" width="168.0" height="32.0" rx="8" fill="#b91c1c"/>
+<text x="1762.0" y="308.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1682.0 1842.0">Press and hold 2 s</text>
+<rect x="296.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Main hall</text>
+<text x="316.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">2 on air · 1 waiting</text>
+<rect x="316.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="340.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 363.4">Hero</text>
+<text x="316.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Pizza is here</text>
+<text x="316.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="316.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="364.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 409.8">Extend +5</text>
+<rect x="421.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="474.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="425.8 523.1">End in zone</text>
+<line x1="316.0" y1="556.0" x2="580.0" y2="556.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="568.0" width="42.9" height="22.0" rx="11" fill="#1e4158"/>
+<text x="337.4" y="583.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="318.0 356.9">Rail</text>
+<text x="316.0" y="612.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Demo Game Cup standings</text>
+<text x="316.0" y="632.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Tournament · until cleared</text>
+<line x1="316.0" y1="640.0" x2="580.0" y2="640.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="316.0" y="652.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="348.2" y="667.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="318.0 378.4">Queued</text>
+<text x="316.0" y="696.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Semis in 15 min</text>
+<text x="316.0" y="716.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Announcement · Sam · 9:40 left</text>
+<text x="316.0" y="738.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 580.0">Waits for a free region, up to 2 min.</text>
+<rect x="616.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Entrance</text>
+<text x="636.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air</text>
+<rect x="636.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="660.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 683.4">Hero</text>
+<text x="636.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Pizza is here</text>
+<text x="636.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="636.0" y="518.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="684.9" y="537.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="640.0 729.8">Extend +5</text>
+<rect x="741.8" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="794.5" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="745.8 843.1">End in zone</text>
+<rect x="936.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="956.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="956.0 1220.0">Café</text>
+<text x="956.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="956.0 1220.0">Nothing on air</text>
+<text x="956.0" y="454.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="956.0 1220.0">The playlist plays.</text>
+<rect x="1256.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1276.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1276.0 1540.0">Stage</text>
+<text x="1276.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1276.0 1540.0">1 on air</text>
+<rect x="1276.0" y="442.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="1300.7" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1278.0 1323.4">Hero</text>
+<text x="1276.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1276.0 1540.0">Semis in 15 min</text>
+<text x="1276.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1276.0 1540.0">Announcement · Sam · 9:40 left</text>
+<rect x="1276.0" y="518.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="1328.7" y="537.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="1280.0 1377.4">End in zone</text>
+<rect x="1576.0" y="370.0" width="304.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1596.0" y="404.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1596.0 1860.0">Lobby</text>
+<text x="1596.0" y="424.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1596.0 1860.0">1 on air · 1 waiting</text>
+<rect x="1596.0" y="442.0" width="61.2" height="22.0" rx="11" fill="#1e4158"/>
+<text x="1626.6" y="457.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1598.0 1655.2">Ticker</text>
+<text x="1596.0" y="486.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1596.0 1860.0">Doors close at 02:00</text>
+<text x="1596.0" y="506.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1596.0 1860.0">Ticker · Kim · until cleared</text>
+<line x1="1596.0" y1="514.0" x2="1860.0" y2="514.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="1596.0" y="526.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="1628.2" y="541.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="1598.0 1658.4">Queued</text>
+<text x="1596.0" y="570.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1596.0 1860.0">Group photo</text>
+<text x="1596.0" y="590.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1596.0 1860.0">Storyboard · next round 22:00</text>
+<rect x="296.0" y="772.0" width="304.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="316.0 580.0">Workshop</text>
+<text x="316.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 580.0">Nothing on air</text>
+<text x="316.0" y="856.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 580.0">The playlist plays.</text>
+<rect x="616.0" y="772.0" width="304.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="636.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Lounge</text>
+<text x="636.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">1 on air</text>
+<rect x="636.0" y="844.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="660.7" y="859.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="638.0 683.4">Hero</text>
+<text x="636.0" y="888.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="636.0 900.0">Starting soon</text>
+<text x="636.0" y="908.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636.0 900.0">Storyboard · round 2 of 4</text>
+<rect x="936.0" y="772.0" width="304.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="956.0" y="806.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="956.0 1220.0">Back room</text>
+<text x="956.0" y="826.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="956.0 1220.0">Nothing on air</text>
+<text x="956.0" y="856.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="956.0 1220.0">The playlist plays.</text>
+<rect x="296.0" y="954.0" width="768.0" height="350.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="988.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboards</text>
+<text x="316.0" y="1016.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="316.0" y="1036.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="316.0 1044.0">Demo Game Cup, grand final · next round 22:15 (T−15)</text>
+<rect x="316.0" y="1054.0" width="93.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="362.5" y="1073.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="320.0 405.1">Stop loop</text>
+<rect x="417.1" y="1054.0" width="122.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="478.1" y="1073.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="421.1 535.2">Skip to finale</text>
+<line x1="316.0" y1="1100.0" x2="1044.0" y2="1100.0" stroke="#3c446c" stroke-width="1"/>
+<text x="316.0" y="1126.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start">Item</text>
+<rect x="316.0" y="1138.0" width="630.0" height="36.0" rx="8" fill="#0f1222" stroke="#616788" stroke-width="1"/>
+<text x="328.0" y="1161.0" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328.0 924.0">Grand final · 22:30</text>
+<text x="932.0" y="1161.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">⌄</text>
+<rect x="958.0" y="1138.0" width="86.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1001.0" y="1160.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="962.0 1040.0">Fire…</text>
+<text x="316.0" y="1194.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 1044.0">Presets without an item ignore it.</text>
+<rect x="1080.0" y="954.0" width="768.0" height="350.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1100.0" y="988.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Scenes</text>
+<text x="1100.0" y="1010.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1100.0 1828.0">Each zone&#x27;s scene now.</text>
+<text x="1100.0" y="1038.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Main hall</text>
+<text x="1218.0" y="1038.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">Peak · the crew, 21:02</text>
+<text x="1100.0" y="1062.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Entrance</text>
+<text x="1218.0" y="1062.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<text x="1100.0" y="1086.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Café</text>
+<text x="1218.0" y="1086.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<text x="1100.0" y="1110.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Stage</text>
+<text x="1218.0" y="1110.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">Peak · the crew, 21:02</text>
+<text x="1100.0" y="1134.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Lobby</text>
+<text x="1218.0" y="1134.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<text x="1100.0" y="1158.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Workshop</text>
+<text x="1218.0" y="1158.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<text x="1100.0" y="1182.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Lounge</text>
+<text x="1218.0" y="1182.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<text x="1100.0" y="1206.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1100.0 1210.0">Back room</text>
+<text x="1218.0" y="1206.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1218.0 1828.0">None · the day&#x27;s phase</text>
+<rect x="1100.0" y="1236.0" width="90.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1145.0" y="1256.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1104.0 1186.0">End Peak</text>
+<rect x="1198.0" y="1236.0" width="90.6" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="1243.3" y="1256.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1202.0 1284.6">Chill now</text>
+<text x="1302.6" y="1257.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="1302.6 1828.0">All scenes</text>
+<circle cx="282.0" cy="278.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="283.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="282.0" cy="386.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="391.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="282.0" cy="970.0" r="13" fill="#f59e0b"/>
+<text x="282.0" y="975.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+</g></g>
+<text x="1712.0" y="138" font-size="17" fill="#111827" font-weight="700">8 zones · phone 390 px</text>
+<g transform="translate(1712.0,150.0) scale(0.55)"><g clip-path="url(#oac4)">
+<rect x="0.0" y="0.0" width="390.0" height="2850.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="390.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="390.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="16.0" y="14.0" width="70.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="51.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<circle cx="98.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="106.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="344.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="370.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<text x="16.0" y="98.0" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="16.0 374.0">Moments</text>
+<text x="16.0" y="120.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="16.0 374.0">What every zone shows now, what waits, and why.</text>
+<text x="16.0" y="138.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="16.0 374.0">Live.</text>
+<line x1="16.0" y1="188.0" x2="71.6" y2="188.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="20.0" y="180.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">On air</text>
+<text x="83.6" y="180.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="175.1" y="180.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="245.4" y="180.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<line x1="16.0" y1="189.0" x2="374.0" y2="189.0" stroke="#343c66" stroke-width="1"/>
+<rect x="16.0" y="208.0" width="358.0" height="286.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="32.0" y="240.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Crew actions</text>
+<rect x="32.0" y="256.0" width="326.0" height="40.0" rx="8" fill="#3ddcff"/>
+<text x="195.0" y="280.9" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="36.0 354.0">Announce…</text>
+<rect x="32.0" y="304.0" width="326.0" height="40.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="195.0" y="328.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="36.0 354.0">Spotlight…</text>
+<rect x="32.0" y="356.0" width="326.0" height="120.0" rx="8" fill="#2a1418" stroke="#b91c1c" stroke-width="1"/>
+<text x="46.0" y="380.0" font-size="14" fill="#fca5a5" font-weight="600" text-anchor="start">Emergency</text>
+<text x="46.0" y="400.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="46.0 344.0">Every zone, full screen. Nothing outranks it.</text>
+<rect x="46.0" y="416.0" width="298.0" height="40.0" rx="8" fill="#b91c1c"/>
+<text x="195.0" y="440.9" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="50.0 340.0">Press and hold 2 s</text>
+<rect x="16.0" y="518.0" width="358.0" height="386.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="552.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Main hall</text>
+<text x="36.0" y="572.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">2 on air · 1 waiting</text>
+<rect x="36.0" y="590.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="60.7" y="605.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 83.4">Hero</text>
+<text x="36.0" y="634.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Pizza is here</text>
+<text x="36.0" y="654.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="36.0" y="666.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="84.9" y="685.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="40.0 129.8">Extend +5</text>
+<rect x="141.8" y="666.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="194.5" y="685.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="145.8 243.2">End in zone</text>
+<line x1="36.0" y1="704.0" x2="354.0" y2="704.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="36.0" y="716.0" width="42.9" height="22.0" rx="11" fill="#1e4158"/>
+<text x="57.4" y="731.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 76.9">Rail</text>
+<text x="36.0" y="760.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Demo Game Cup standings</text>
+<text x="36.0" y="780.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Tournament · until cleared</text>
+<line x1="36.0" y1="788.0" x2="354.0" y2="788.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="36.0" y="800.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="68.2" y="815.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="38.0 98.4">Queued</text>
+<text x="36.0" y="844.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Semis in 15 min</text>
+<text x="36.0" y="864.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Announcement · Sam · 9:40 left</text>
+<text x="36.0" y="886.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="36.0 354.0">Waits for a free region, up to 2 min.</text>
+<rect x="16.0" y="920.0" width="358.0" height="200.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="954.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Entrance</text>
+<text x="36.0" y="974.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">1 on air</text>
+<rect x="36.0" y="992.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="60.7" y="1007.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 83.4">Hero</text>
+<text x="36.0" y="1036.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Pizza is here</text>
+<text x="36.0" y="1056.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Crew spotlight · Alex · 4:12 left</text>
+<rect x="36.0" y="1068.0" width="97.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="84.9" y="1087.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="40.0 129.8">Extend +5</text>
+<rect x="141.8" y="1068.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="194.5" y="1087.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="145.8 243.2">End in zone</text>
+<rect x="16.0" y="1136.0" width="358.0" height="108.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="1170.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Café</text>
+<text x="36.0" y="1190.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Nothing on air</text>
+<text x="36.0" y="1220.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="36.0 354.0">The playlist plays.</text>
+<rect x="16.0" y="1260.0" width="358.0" height="200.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="1294.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Stage</text>
+<text x="36.0" y="1314.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">1 on air</text>
+<rect x="36.0" y="1332.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="60.7" y="1347.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 83.4">Hero</text>
+<text x="36.0" y="1376.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Semis in 15 min</text>
+<text x="36.0" y="1396.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Announcement · Sam · 9:40 left</text>
+<rect x="36.0" y="1408.0" width="105.4" height="30.0" rx="8" fill="none" stroke="#f87171" stroke-width="1"/>
+<text x="88.7" y="1427.5" font-size="12.5" fill="#fca5a5" font-weight="600" text-anchor="middle" data-box="40.0 137.4">End in zone</text>
+<rect x="16.0" y="1476.0" width="358.0" height="242.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="1510.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Lobby</text>
+<text x="36.0" y="1530.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">1 on air · 1 waiting</text>
+<rect x="36.0" y="1548.0" width="61.2" height="22.0" rx="11" fill="#1e4158"/>
+<text x="66.6" y="1563.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 95.2">Ticker</text>
+<text x="36.0" y="1592.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Doors close at 02:00</text>
+<text x="36.0" y="1612.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Ticker · Kim · until cleared</text>
+<line x1="36.0" y1="1620.0" x2="354.0" y2="1620.0" stroke="#3c446c" stroke-width="1"/>
+<rect x="36.0" y="1632.0" width="64.4" height="22.0" rx="11" fill="#3a2e17"/>
+<text x="68.2" y="1647.0" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="38.0 98.4">Queued</text>
+<text x="36.0" y="1676.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Group photo</text>
+<text x="36.0" y="1696.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Storyboard · next round 22:00</text>
+<rect x="16.0" y="1734.0" width="358.0" height="108.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="1768.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Workshop</text>
+<text x="36.0" y="1788.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Nothing on air</text>
+<text x="36.0" y="1818.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="36.0 354.0">The playlist plays.</text>
+<rect x="16.0" y="1858.0" width="358.0" height="158.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="1892.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Lounge</text>
+<text x="36.0" y="1912.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">1 on air</text>
+<rect x="36.0" y="1930.0" width="49.4" height="22.0" rx="11" fill="#1e4158"/>
+<text x="60.7" y="1945.0" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="38.0 83.4">Hero</text>
+<text x="36.0" y="1974.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Starting soon</text>
+<text x="36.0" y="1994.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Storyboard · round 2 of 4</text>
+<rect x="16.0" y="2032.0" width="358.0" height="108.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="2066.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 354.0">Back room</text>
+<text x="36.0" y="2086.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Nothing on air</text>
+<text x="36.0" y="2116.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="36.0 354.0">The playlist plays.</text>
+<rect x="16.0" y="2164.0" width="358.0" height="280.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="2198.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboards</text>
+<text x="36.0" y="2226.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="36.0" y="2246.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="36.0 354.0">Demo Game Cup, grand final · next round 22:15</text>
+<text x="36.0" y="2264.0" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="36.0 354.0">(T−15)</text>
+<rect x="36.0" y="2282.0" width="93.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="82.5" y="2301.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="40.0 125.1">Stop loop</text>
+<rect x="137.1" y="2282.0" width="122.1" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="198.1" y="2301.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="141.1 255.2">Skip to finale</text>
+<line x1="36.0" y1="2328.0" x2="354.0" y2="2328.0" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="2354.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start">Item</text>
+<rect x="36.0" y="2366.0" width="220.0" height="36.0" rx="8" fill="#0f1222" stroke="#616788" stroke-width="1"/>
+<text x="48.0" y="2389.0" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="48.0 234.0">Grand final · 22:30</text>
+<text x="242.0" y="2389.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">⌄</text>
+<rect x="268.0" y="2366.0" width="86.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="311.0" y="2388.7" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="272.0 350.0">Fire…</text>
+<text x="36.0" y="2422.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Presets without an item ignore it.</text>
+<rect x="16.0" y="2460.0" width="358.0" height="350.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="36.0" y="2494.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Scenes</text>
+<text x="36.0" y="2516.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 354.0">Each zone&#x27;s scene now.</text>
+<text x="36.0" y="2544.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Main hall</text>
+<text x="154.0" y="2544.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">Peak · the crew, 21:02</text>
+<text x="36.0" y="2568.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Entrance</text>
+<text x="154.0" y="2568.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<text x="36.0" y="2592.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Café</text>
+<text x="154.0" y="2592.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<text x="36.0" y="2616.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Stage</text>
+<text x="154.0" y="2616.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">Peak · the crew, 21:02</text>
+<text x="36.0" y="2640.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Lobby</text>
+<text x="154.0" y="2640.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<text x="36.0" y="2664.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Workshop</text>
+<text x="154.0" y="2664.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<text x="36.0" y="2688.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Lounge</text>
+<text x="154.0" y="2688.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<text x="36.0" y="2712.0" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="36.0 146.0">Back room</text>
+<text x="154.0" y="2712.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="154.0 354.0">None · the day&#x27;s phase</text>
+<rect x="36.0" y="2742.0" width="90.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="81.0" y="2762.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="40.0 122.0">End Peak</text>
+<rect x="134.0" y="2742.0" width="90.6" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="179.3" y="2762.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="138.0 220.6">Chill now</text>
+<text x="238.6" y="2763.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="238.6 354.0">All scenes</text>
+</g></g>
+<text x="32" y="1758" font-size="16" fill="#111827" data-box="32 1926">1 · The page uses the wide width (up to 120 rem of content). At 1280 px the content is 944 px: three zone columns of 304 px. At 1920 px it is 1,584 px: five columns of 304 px. A zone card is never narrower than 18 rem (288</text>
+<text x="32" y="1781" font-size="16" fill="#111827" data-box="32 1926">px).</text>
+<text x="32" y="1810" font-size="16" fill="#111827" data-box="32 1926">2 · Crew actions are one band above the zones, never a column beside them: one row on a desk (Announce…, Spotlight… and the emergency&#x27;s hold), first on a phone.</text>
+<text x="32" y="1839" font-size="16" fill="#111827" data-box="32 1926">3 · The zones are one auto-fill grid. Two zones keep their card width and leave the rest of the row empty; they are never stretched across the page. Eight zones wrap into rows that end level: every card in a row is as tall as</text>
+<text x="32" y="1862" font-size="16" fill="#111827" data-box="32 1926">the row&#x27;s tallest.</text>
+<text x="32" y="1891" font-size="16" fill="#111827" data-box="32 1926">4 · Storyboards and Scenes are a band of panels under the zones: side by side from 2 × 22 rem, each at most 48 rem wide, one under the other on a phone. Their row ends level too.</text>
+<text x="32" y="1920" font-size="16" fill="#111827" data-box="32 1926">5 · Zones keep Screen&#x27;s order (the order the Screen studio lists them); a zone that starts showing something does not move. Its state is on the card, never in its place.</text>
+<text x="32" y="1949" font-size="16" fill="#111827" data-box="32 1926">6 · On a phone: one column, in the page&#x27;s order: crew actions, the zones, Storyboards, Scenes. Nothing is wider than 358 px.</text>
+</svg>
