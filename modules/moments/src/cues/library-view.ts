@@ -75,7 +75,11 @@ export function libraryView(o: { library: LibraryView[]; canWrite: boolean }): H
         >
       </form>`
     : "";
+  const n = o.library.length;
   return html`${upload}
+    <p class="canccu-small canccu-muted moments-sounds__count">
+      ${String(n)} sound${n === 1 ? "" : "s"} · A to Z
+    </p>
     <ul class="canccu-grid moments-sounds">
       ${[...o.library]
         .sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }))

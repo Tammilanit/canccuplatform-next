@@ -123,6 +123,11 @@ run("the sound desk", () => {
     expect(words).toContain("Upload a sound");
     expect(words).toContain("Or drop MP3 or OGG files here.");
     expect(words).toContain("Gong 5.6 s");
+    // The sounds A to Z by title, whatever their source, under one count (sheet 03).
+    expect(words).toContain("12 sounds · A to Z");
+    expect(page.body.match(/<li class="moments-sound">/g)).toHaveLength(12);
+    expect(words.indexOf("Airplane chime")).toBeLessThan(words.indexOf("Alarm"));
+    expect(words.indexOf("Alarm")).toBeLessThan(words.indexOf("Gong"));
     expect(words).toContain("Default pack · CC0 · 3 cues");
     expect(words).toContain("Tournament starts, Finals start +1");
     expect(flat(page.body)).toContain('data-player data-sound="/api/moments/sounds/pack/gong.ogg"');

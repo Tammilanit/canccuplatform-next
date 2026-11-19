@@ -50,6 +50,8 @@ const tab = (name) => async (page) => {
 export const STORY_PAGES = [
   ["stories-list", "/moments/storyboards", DESK],
   ["stories-list-phone", "/moments/storyboards", PHONE, { touch: true }],
+  // The catalogue's card grid at 1920 px: 5 columns (amendment 3, sheet 05).
+  ["stories-list-1920", "/moments/storyboards", { width: 1920, height: 1080 }],
   [
     "stories-builder",
     "/moments/storyboards?edit=starting_soon",
