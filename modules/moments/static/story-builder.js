@@ -273,7 +273,11 @@
     }
   });
   // The zone chosen under the preview is the one it draws and the one Test-fire uses.
-  for (const radio of root.querySelectorAll('[name="zone"], [name="preview_zone"]'))
+  // Scoped to the preview: the "Only if" zone boxes in the form share the name "zone".
+  const previewBox = ".moments-builder__preview";
+  for (const radio of root.querySelectorAll(
+    `${previewBox} [name="zone"], ${previewBox} [name="preview_zone"]`,
+  ))
     radio.addEventListener("change", () => {
       if (!radio.checked) return;
       frame.dataset.zone = radio.value;
@@ -281,6 +285,14 @@
       for (const n of document.querySelectorAll("[data-zone-name]")) n.textContent = radio.value;
       frame.src = `/screen/zones/${encodeURIComponent(radio.value)}`;
     });
+  // The marks move: turning one on for a step turns it off on the others.
+  for (const name of ["dot", "message"])
+    for (const box of root.querySelectorAll(`input[type="checkbox"][name="${name}"]`))
+      box.addEventListener("change", () => {
+        if (!box.checked) return;
+        for (const o of root.querySelectorAll(`input[name="${name}"]`))
+          if (o !== box) o.checked = false;
+      });
   frame.addEventListener("load", () => void draw(Number(scrub?.value ?? 0)));
   void draw(0);
 })();

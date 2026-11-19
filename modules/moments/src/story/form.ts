@@ -162,7 +162,21 @@ function contentOf(
   }
 }
 
-function stepOf(f: Raw, i: number, before: StoryStep | undefined): StoryStep {
+/**
+ * The step a mark checkbox group names. Without script every ticked box is posted, so when
+ * the mark moved, two values arrive: the one that is not the step holding the mark now is new.
+ */
+function markOf(v: string | string[] | undefined, held: (i: number) => boolean): string {
+  const xs = all(v);
+  return xs.find((x) => !held(Number(x))) ?? xs[0] ?? "";
+}
+
+function stepOf(
+  f: Raw,
+  i: number,
+  before: StoryStep | undefined,
+  mark: { dot: string; message: string },
+): StoryStep {
   const p = (k: string) => one(f[`s${String(i)}_${k}`]);
   const template = or(p("template"), STEP_TEMPLATES, "title_card");
   const kept = before?.template === template ? before.content : {};
@@ -172,8 +186,8 @@ function stepOf(f: Raw, i: number, before: StoryStep | undefined): StoryStep {
     duration_seconds: num(f[`s${String(i)}_seconds`]) ?? 20,
     transition: or(p("transition"), ["cut", "fade", "rise", "slide", "flash"] as const, "fade"),
     cue: p("cue") || null,
-    on_the_dot: one(f.dot) === String(i),
-    message: one(f.message) === String(i),
+    on_the_dot: mark.dot === String(i),
+    message: mark.message === String(i),
   };
 }
 
@@ -221,8 +235,13 @@ export function storyFromForm(f: Raw, before: Story): Story {
     .filter((x) => !x.drop)
     .map((x) => x.t);
   if (one(f.add_trigger) !== "") triggers.push(newTrigger(one(f.add_trigger)));
-  const read = before.round.steps.map((s, i) => ({
-    s: stepOf(f, i, s),
+  const steps0 = before.round.steps;
+  const mark = {
+    dot: markOf(f.dot, (i) => steps0[i]?.on_the_dot === true),
+    message: markOf(f.message, (i) => steps0[i]?.message === true),
+  };
+  const read = steps0.map((s, i) => ({
+    s: stepOf(f, i, s, mark),
     drop: one(f[`s${String(i)}_remove`]) === "yes",
   }));
   const steps = arranged(read, f)

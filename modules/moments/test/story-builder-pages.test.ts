@@ -131,8 +131,24 @@ describe.skipIf(!DATABASE_URL)("the storyboard builder's page", () => {
       "countdown",
       "title_card",
     ]);
+    // Without script both boxes arrive: the mark moves to the step that did not hold it.
+    const now = story()?.round.steps.findIndex((s) => s.on_the_dot) ?? -1;
+    const other = now === 0 ? 1 : 0;
+    await save(
+      [
+        ["order", "0,1,2"],
+        ["dot", String(now)],
+        ["dot", String(other)],
+      ],
+      "k-dot",
+      "2",
+    );
+    doc = await w.tx("demo", (c) => ensureStories(c));
+    expect(story()?.round.steps.map((s) => s.on_the_dot)).toEqual(
+      [0, 1, 2].map((i) => i === other),
+    );
     // A step added through its button opens at once.
-    const added = await save([["add_step", "yes"]], "k-add", "2");
+    const added = await save([["add_step", "yes"]], "k-add", "3");
     expect(added.headers.location).toContain("step=3");
   });
 });

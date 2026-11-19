@@ -106,6 +106,41 @@ describe.skipIf(browser === undefined)(
       expect(await page.getAttribute('.moments-step[data-step="1"]', "aria-current")).toBe("step");
     });
 
+    it('keeps the preview\'s zone when an "Only if" zone box is ticked', async () => {
+      const page = await open(1280);
+      const before = await page.getAttribute("[data-story-preview]", "data-zone");
+      await page.evaluate(() => {
+        const box = [
+          ...document.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="zone"]'),
+        ].find(
+          (x) =>
+            x.value !== document.querySelector("[data-story-preview]")?.getAttribute("data-zone"),
+        );
+        if (box === null) throw new Error("no condition zone box");
+        box.checked = true;
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(await page.getAttribute("[data-story-preview]", "data-zone")).toBe(before);
+    });
+
+    it("turns a mark off on the other steps when it is ticked on one", async () => {
+      const page = await open(1280);
+      await page.evaluate(() => {
+        const boxes = [...document.querySelectorAll<HTMLInputElement>('input[name="dot"]')];
+        for (const b of boxes) b.checked = false;
+        for (const b of boxes.slice(0, 2)) {
+          b.checked = true;
+          b.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+      expect(
+        await page.$$eval(
+          'input[name="dot"]',
+          (xs) => xs.filter((x) => (x as HTMLInputElement).checked).length,
+        ),
+      ).toBe(1);
+    });
+
     it("moves a step with the arrow keys, renumbers the strip and keeps the order for Save", async () => {
       const page = await open(1280);
       await page.locator('.moments-step[data-step="1"]').focus();
