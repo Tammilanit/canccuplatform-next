@@ -57,6 +57,13 @@ export const UPDATED_PAGES = [
 export const URGENT_PAGES = [
   screen("announce-screen-urgent", "main", "Semis in 15 min"),
   screen("announce-screen-urgent-4k", "main", "Semis in 15 min", SCREEN_4K),
+  // In portrait with its ticker line (#638, V5): the frame and the ticker's label in the warning colour.
+  [
+    "announce-screen-urgent-portrait",
+    "/screen/zones/main?orientation=portrait",
+    { width: 1080, height: 1920 },
+    { fullPage: false, ready: shows("Semis in 15 min") },
+  ],
 ];
 export const FULL_PAGES = [
   screen("announce-screen-full", "main", "Doors close at 23:00"),

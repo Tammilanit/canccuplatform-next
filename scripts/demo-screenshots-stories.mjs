@@ -140,6 +140,22 @@ export const PREMIERE_PAGES = [
   screen("premiere_video", drawn(".canccu-widget--video video", 45_000)),
   screen("premiere_after", shows("Thanks for watching", 40_000)),
 ];
+/**
+ * On air before and after Fire (#638; docs/design/moments-on-air.svg): the Fire… chooser open on
+ * the desktop, the phone with crew actions first, then Starting soon fired from the page on its
+ * picker's item (the next coming one), with the notice that says when it plays. The phone's
+ * "after" opens the page Fire answered with, so it shows the same notice.
+ */
+const chooserOpen = async (page) => {
+  await page.locator(".moments-fire__chooser > summary").click();
+  await page.waitForTimeout(300);
+};
+export const FIRE_PAGES = [
+  ["stories-on-air", "/moments/on-air", DESK, { ready: chooserOpen }],
+  ["stories-on-air-before-phone", "/moments/on-air", PHONE, { touch: true }],
+  ["stories-on-air-fired", "/moments/on-air", DESK],
+  ["stories-on-air-fired-phone", "/moments/on-air", PHONE, { touch: true }],
+];
 export const LIVE_PAGES = [
   ["stories-on-air-phone", "/moments/on-air", PHONE, { touch: true }],
 ];
@@ -249,6 +265,7 @@ export function storiesListed(at) {
     [STORY_PAGES, "the preset picker and the builder"],
     [PRESET_PAGES, "a preset's message step, test-fired on the main hall"],
     [PREMIERE_PAGES, "Premiere on the demo event, its builder and its steps"],
+    [FIRE_PAGES, "On air before and after Starting soon fired from the page"],
     [LIVE_PAGES, "a live loop with Stop loop"],
     [PHOTO_PAGES, "a crew photo spotlight"],
   ]
@@ -288,6 +305,28 @@ async function testFire(key, item = null, zone = "main") {
       );
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
+}
+
+/** Starting soon fired from On air's chooser; the page Fire answered with, and its notice. */
+async function fireFromPage(page) {
+  await chooserOpen(page);
+  await Promise.all([
+    page.waitForURL(/[?&](done|error)=/),
+    page.getByRole("button", { name: /Fire Starting soon/ }).click(),
+  ]);
+  const url = new URL(page.url());
+  const error = url.searchParams.get("error");
+  if (error !== null) throw new Error(`Fire: ${error}`);
+  await page.waitForTimeout(500);
+  return `${url.pathname}${url.search}`;
+}
+
+/** The live runs fired by hand, not by a test, so the shots' cleanup stops them. */
+async function liveRuns() {
+  const r = await moments("GET", "/api/moments/storyboards");
+  return (r.body?.runs ?? [])
+    .filter((x) => x.status === "live" && !x.test)
+    .map((x) => x.id);
 }
 
 async function stop(run) {
@@ -577,6 +616,24 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
     );
     await sequenceShots(sequence, itemOf, add, runs);
     await photoShots(demo, shot);
+    const [before, beforePhone, fired, firedPhone] = FIRE_PAGES;
+    for (const [name, path, viewport, o] of [before, beforePhone])
+      await shot(name, path, viewport, SESSION, o);
+    let answered = null;
+    await shot(fired[0], fired[1], fired[2], SESSION, {
+      ready: async (page) => {
+        answered = await fireFromPage(page);
+      },
+    });
+    if (answered !== null)
+      await shot(
+        firedPhone[0],
+        answered,
+        firedPhone[2],
+        SESSION,
+        firedPhone[3],
+      );
+    runs.push(...(await liveRuns()));
     // A live loop for On air: Doors open fired by hand would need its item; a test round shows the same card.
     runs.push(await testFire("doors_open"));
     for (const [name, path, viewport, o] of LIVE_PAGES)
