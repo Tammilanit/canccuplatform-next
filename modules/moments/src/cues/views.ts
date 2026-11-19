@@ -61,7 +61,11 @@ export function deskPage(o: {
   const time = (d: Date | string) =>
     new Date(d).toLocaleTimeString("en-GB", { timeZone: o.timeZone });
   const pill = (sub: Sub, label: string, count?: number) =>
-    html`<a class="moments-pill" data-sub="${sub}" ${sub === o.sub ? html`aria-current="page"` : ""} href="${subPath(sub)}"
+    html`<a
+      class="moments-pill"
+      data-sub="${sub}"
+      ${sub === o.sub ? html`aria-current="page"` : ""}
+      href="${subPath(sub)}"
       >${label}${count === undefined ? "" : html` <span class="moments-pill__count">${count}</span>`}</a
     >`;
   const subnav = html`<nav class="moments-subnav" aria-label="Sound desk">

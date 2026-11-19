@@ -47,7 +47,11 @@ function soundScreen(z: DeskZone): Html {
 
 /** A fixed rule as a two-way switch that shows which way it is. */
 const fixed = (label: string, [a, b]: [string, string], first: boolean): Html =>
-  html`<span class="moments-segments moments-segments--fixed" role="group" aria-label="${label}, fixed">
+  html`<span
+    class="moments-segments moments-segments--fixed"
+    role="group"
+    aria-label="${label}, fixed"
+  >
     <span class="moments-segment" aria-current="${first ? "true" : "false"}">${a}</span
     ><span class="moments-segment" aria-current="${first ? "false" : "true"}">${b}</span>
   </span>`;
@@ -55,7 +59,9 @@ const fixed = (label: string, [a, b]: [string, string], first: boolean): Html =>
 function categoryRow(c: Category, s: SoundSettings, canWrite: boolean): Html {
   const name = categoryName(c);
   return html`<li class="moments-category">
-    <span class="moments-category__name"><span class="moments-tag moments-tag--${c}">${name}</span></span>
+    <span class="moments-category__name"
+      ><span class="moments-tag moments-tag--${c}">${name}</span></span
+    >
     <span class="moments-category__level"
       >${slider({ id: `level-${c}`, name: `${c}.level`, label: `${name} level`, min: 0, max: 100, step: 5, value: s.categories[c].level, format: "pct", enabled: canWrite, hideLabel: true })}</span
     >
@@ -83,28 +89,31 @@ export function limitsView(o: {
       ${slider({ id: "hourly-budget", name: "hourly_budget", label: "Sounds an hour", min: 0, max: Math.max(60, s.hourly_budget), value: s.hourly_budget, format: "count", enabled: w })}
       ${slider({ id: "per-minute", name: "per_minute", label: "Sounds a minute", min: 1, max: Math.max(10, s.per_minute), value: s.per_minute, format: "count", enabled: w })}
       <div class="moments-slider">
-        <label class="moments-slider__label" for="per-source">Seconds between sounds of one source</label>
+        <label class="moments-slider__label" for="per-source"
+          >Seconds between sounds of one source</label
+        >
         ${stepper({ id: "per-source", name: "per_source_seconds", label: "Seconds between sounds of one source", value: s.per_source_seconds, min: 0, max: 3600, by: 5, unit: "s", less: "Five seconds less", more: "Five seconds more", enabled: w })}
       </div>
     </div>
     <div class="moments-zonehead" aria-hidden="true">
-      <span>Zone</span><span>This hour</span><span>This minute</span><span>Lets through now</span><span>Sound screen</span>
+      <span>Zone</span><span>This hour</span><span>This minute</span><span>Lets through now</span
+      ><span>Sound screen</span>
     </div>
-    <ul class="moments-zones">
+    <ul class="moments-zonelist">
       ${o.zones.map(
         (z) =>
-          html`<li class="moments-zone">
-            <b class="moments-zone__name">${z.zone_key}</b>
-            <span class="moments-zone__hour"
+          html`<li class="moments-zonerow">
+            <b class="moments-zonerow__name">${z.zone_key}</b>
+            <span class="moments-zonerow__hour"
               >${meter(z.hour, s.hourly_budget, `${z.zone_key} this hour`)}
               <span class="canccu-small">${z.hour} of ${s.hourly_budget} this hour</span></span
             >
-            <span class="moments-zone__minute"
+            <span class="moments-zonerow__minute"
               >${meter(z.minute, s.per_minute, `${z.zone_key} this minute`)}
               <span class="canccu-small">${z.minute} of ${s.per_minute} this minute</span></span
             >
-            <span class="moments-zone__lets canccu-small">${letsThrough(z)}</span>
-            <span class="moments-zone__screen canccu-small">${soundScreen(z)}</span>
+            <span class="moments-zonerow__lets canccu-small">${letsThrough(z)}</span>
+            <span class="moments-zonerow__screen canccu-small">${soundScreen(z)}</span>
           </li>`,
       )}
     </ul>
@@ -116,7 +125,8 @@ export function limitsView(o: {
       categories. Only urgent interrupts, and only urgent, result and attention play at calm.
     </p>
     <div class="moments-categoryhead" aria-hidden="true">
-      <span>Category</span><span>Level</span><span>When another plays</span><span>At calm</span><span>On</span>
+      <span>Category</span><span>Level</span><span>When another plays</span><span>At calm</span
+      ><span>On</span>
     </div>
     <ul class="moments-categories">
       ${CATEGORIES.map((c) => categoryRow(c, s, w))}

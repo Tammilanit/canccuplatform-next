@@ -59,11 +59,15 @@ export const categoryName = (c: Category): string => {
 
 /** "result and attention": a list in words. */
 export const listed = (items: string[]): string =>
-  items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
+  items.length < 2
+    ? (items[0] ?? "")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
 
 /** The category's level and rules in a sentence, as the editor states it under its chips. */
 export function categoryMeaning(c: Category, s: SoundSettings): string {
-  const above = CATEGORIES.slice(0, CATEGORIES.indexOf(c)).map((x) => categoryName(x).toLowerCase());
+  const above = CATEGORIES.slice(0, CATEGORIES.indexOf(c)).map((x) =>
+    categoryName(x).toLowerCase(),
+  );
   const waits = c === "urgent" ? "interrupts whatever plays" : `waits behind ${listed(above)}`;
   const calm =
     c === "urgent"

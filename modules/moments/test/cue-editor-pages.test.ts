@@ -70,14 +70,18 @@ run("the cue editor", () => {
     expect(words).toContain("Tournament starts");
     expect(words).toContain("tournament.start");
     for (const card of ["Sound", "Picture", "Try it", "From the default pack"])
-      expect(flat(page.body)).toMatch(new RegExp(`<h2 class="canccu-card__title"> ?${card} ?</h2>`));
+      expect(flat(page.body)).toMatch(
+        new RegExp(`<h2 class="canccu-card__title"> ?${card} ?</h2>`),
+      );
     // The category as six chips, the chosen one checked, and what it means in words.
     expect(flat(page.body)).toMatch(/type="radio" name="category" value="something_new" checked/);
     expect(words).toContain(
       "Something new plays at 80 %, waits behind urgent, result and attention, and is silent at calm.",
     );
     // The chosen sounds are players; the rest of the library are add-chips.
-    expect(flat(page.body)).toMatch(/data-chosen[\s\S]*data-sound="\/api\/moments\/sounds\/pack\/gong.ogg"/);
+    expect(flat(page.body)).toMatch(
+      /data-chosen[\s\S]*data-sound="\/api\/moments\/sounds\/pack\/gong.ogg"/,
+    );
     expect(flat(page.body)).toMatch(/name="sounds" value="pack.gong" checked/);
     expect(flat(page.body)).toMatch(/name="sounds" value="pack.chime-soft"(?! checked)/);
     expect(words).toContain("Add from the library");
@@ -85,13 +89,17 @@ run("the cue editor", () => {
     // Level, not again for and holds for are sliders; catch-up a stepper; once per source a switch.
     expect(flat(page.body)).toMatch(/type="range"[^>]*name="level"[^>]*value="100"/);
     expect(words).toContain("Heard at 64 %: master 80 % × Something new 80 % × this cue 100 %.");
-    expect(flat(page.body)).toMatch(/type="range"[^>]*name="cooldown_step"[^>]*max="5"[^>]*value="0"/);
+    expect(flat(page.body)).toMatch(
+      /type="range"[^>]*name="cooldown_step"[^>]*max="5"[^>]*value="0"/,
+    );
     expect(flat(page.body)).toContain(`name="cooldown_stops" value="${STOPS}"`);
     for (const stop of ["Off", "30 s", "1 min", "2 min", "5 min", "10 min"])
       expect(words).toContain(stop);
     expect(flat(page.body)).toMatch(/name="catch_up_minutes"[^>]*value="2"/);
     expect(flat(page.body)).toMatch(/role="switch"[^>]*name="once_per_source"[^>]*checked/);
-    expect(flat(page.body)).toMatch(/type="range"[^>]*name="hold_seconds"[^>]*min="60"[^>]*max="120"/);
+    expect(flat(page.body)).toMatch(
+      /type="range"[^>]*name="hold_seconds"[^>]*min="60"[^>]*max="120"/,
+    );
     expect(flat(page.body)).toMatch(/type="checkbox" name="effects" value="ripple" checked/);
     // Try it here or on a zone; the pending row; the seed as it is.
     expect(flat(page.body)).toMatch(/name="try_zone" value="here" checked/);
@@ -135,12 +143,18 @@ run("the cue editor", () => {
   });
 
   it("keeps a not-again-for the stops do not name as a stop of its own", async () => {
-    await w.call("admin", "POST", "/cues/edit/chrome.hot", {
-      ...seedForm({ category: "ambient", sounds: "pack.nudge", effects: "glow" }),
-      cooldown_stops: "0,900",
-      cooldown_step: "1",
-      hold_seconds: "90",
-    }, form);
+    await w.call(
+      "admin",
+      "POST",
+      "/cues/edit/chrome.hot",
+      {
+        ...seedForm({ category: "ambient", sounds: "pack.nudge", effects: "glow" }),
+        cooldown_stops: "0,900",
+        cooldown_step: "1",
+        hold_seconds: "90",
+      },
+      form,
+    );
     expect(await cue("chrome.hot")).toMatchObject({ cooldown_seconds: 900 });
     const page = await w.call("admin", "GET", "/cues/edit/chrome.hot");
     expect(flat(page.body)).toContain('name="cooldown_stops" value="0,30,60,120,300,600,900"');
@@ -165,9 +179,9 @@ run("the cue editor", () => {
     expect(await cue("poll.open")).toMatchObject({ enabled: true, sounds: ["pack.happy-beep"] });
     await w.call("admin", "POST", "/cues/edit/poll.open/toggle", {}, form);
     expect(await cue("poll.open")).toMatchObject({ enabled: false });
-    expect((await w.call("reader", "POST", "/cues/edit/poll.open/toggle", {}, form)).statusCode).toBe(
-      403,
-    );
+    expect(
+      (await w.call("reader", "POST", "/cues/edit/poll.open/toggle", {}, form)).statusCode,
+    ).toBe(403);
   });
 
   it("tries the form's first sound on a zone, and says Here needs the script", async () => {
@@ -196,7 +210,9 @@ run("the cue editor", () => {
     );
     expect(decodeURIComponent(here.headers.location as string)).toContain("the page's script");
     // Trying sends nothing that saves the cue.
-    expect(await cue("tournament.start")).toMatchObject({ sounds: ["pack.gong", "pack.drum-roll"] });
+    expect(await cue("tournament.start")).toMatchObject({
+      sounds: ["pack.gong", "pack.drum-roll"],
+    });
   });
 
   it("adds a cue of the event's own, named by a story, and says why a bad one is refused", async () => {

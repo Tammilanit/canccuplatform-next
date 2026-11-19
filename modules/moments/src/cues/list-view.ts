@@ -57,7 +57,8 @@ function row(c: CueView, o: { library: LibraryView[]; canWrite: boolean }): Html
   const sub = [c.name, c.sounds.map((id) => sound(id)?.title ?? id).join(", ")]
     .filter((x) => x !== "")
     .join(" · ");
-  const name = html`<b class="moments-cue__title">${cueTitle(c.name)}</b>${c.builtin ? "" : html` <span class="canccu-badge canccu-badge--plain">event's own</span>`}`;
+  const name = html`<b class="moments-cue__title">${cueTitle(c.name)}</b
+    >${c.builtin ? "" : html` <span class="canccu-badge canccu-badge--plain">event's own</span>`}`;
   return html`<li class="moments-cue${c.enabled ? "" : " moments-cue--off"}">
     <span class="moments-cue__play"
       >${first === undefined ? "" : player({ id: first.id, title: cueTitle(c.name), url: first.url, length_ms: first.length_ms, compact: true })}</span
@@ -95,7 +96,12 @@ export function cueList(o: {
     return `${PREFIX}cues${s === "" ? "" : `?${s}`}`;
   };
   const chip = (label: string, category: string) =>
-    html`<a class="canccu-chip" href="${href(category)}" aria-current="${(q.category ?? "") === category ? "true" : "false"}">${label}</a>`;
+    html`<a
+      class="canccu-chip"
+      href="${href(category)}"
+      aria-current="${(q.category ?? "") === category ? "true" : "false"}"
+      >${label}</a
+    >`;
   const shown = filterCues(o.cues, q);
   const groups = CATEGORIES.map((c) => [c, shown.filter((x) => x.category === c)] as const).filter(
     ([, list]) => list.length > 0,
@@ -104,7 +110,14 @@ export function cueList(o: {
     <div class="moments-cuebar">
       <form class="moments-search" method="get" action="${PREFIX}cues" role="search">
         ${q.category ? html`<input type="hidden" name="category" value="${q.category}" />` : ""}
-        <input class="canccu-input" type="search" name="q" value="${q.q ?? ""}" placeholder="Search cues" aria-label="Search cues" />
+        <input
+          class="canccu-input"
+          type="search"
+          name="q"
+          value="${q.q ?? ""}"
+          placeholder="Search cues"
+          aria-label="Search cues"
+        />
       </form>
       <nav class="canccu-chips canccu-chips--scroll" aria-label="Category">
         ${chip("All", "")}${CATEGORIES.map((c) => chip(categoryName(c), c))}
@@ -113,9 +126,14 @@ export function cueList(o: {
     </div>
     ${
       groups.length === 0
-        ? emptyState({ icon: "sliders", title: "No cue matches", text: "Try another category or word." })
+        ? emptyState({
+            icon: "sliders",
+            title: "No cue matches",
+            text: "Try another category or word.",
+          })
         : html`<div class="moments-cuehead" aria-hidden="true">
-              <span></span><span>Cue</span><span>Picture</span><span>Level</span><span>Not again for</span><span>On</span>
+              <span></span><span>Cue</span><span>Picture</span><span>Level</span
+              ><span>Not again for</span><span>On</span>
             </div>
             ${groups.map(
               ([c, list]) =>

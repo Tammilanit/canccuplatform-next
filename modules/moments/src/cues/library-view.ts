@@ -69,7 +69,11 @@ export function libraryView(o: { library: LibraryView[]; canWrite: boolean }): H
             credits file.</span
           >
         </p>
-        <noscript><span class="canccu-small canccu-muted">Uploading needs the page's script.</span></noscript>
+        <noscript
+          ><span class="canccu-small canccu-muted"
+            >Uploading needs the page's script.</span
+          ></noscript
+        >
       </form>`
     : "";
   return html`${upload}

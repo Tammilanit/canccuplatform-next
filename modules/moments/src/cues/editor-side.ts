@@ -57,11 +57,18 @@ export function pictureCard(o: { cue: Cue | null; name: string }): Html {
         ${EFFECTS.map(
           (e) =>
             html`<label class="canccu-chip"
-              ><input type="checkbox" name="effects" value="${e}" ${chosen.includes(e) ? "checked" : ""} data-label="effects" />${effectName(e)}</label
+              ><input
+                type="checkbox"
+                name="effects"
+                value="${e}"
+                ${chosen.includes(e) ? "checked" : ""}
+              />${effectName(e)}</label
             >`,
         )}
       </div>
-      <p class="canccu-small canccu-muted">Picked at random, never twice running. None: the cue only sounds.</p>
+      <p class="canccu-small canccu-muted">
+        Picked at random, never twice running. None: the cue only sounds.
+      </p>
     </fieldset>
     ${slider({ id: "hold_seconds", name: "hold_seconds", label: "Holds for", min: HOLD_MIN, max: HOLD_MAX, step: 1, value: c?.hold_seconds ?? 60, format: "secs", enabled: true })}
     <div class="moments-mini" aria-hidden="true">
@@ -69,8 +76,8 @@ export function pictureCard(o: { cue: Cue | null; name: string }): Html {
       <span></span><span></span><span></span>
     </div>
     <p class="canccu-small canccu-muted">
-      The chosen effects play here when you try the cue: the move once, then the frame and glow
-      hold and fade.
+      The chosen effects play here when you try the cue: the move once, then the frame and glow hold
+      and fade.
     </p>
   </section>`;
 }
@@ -87,7 +94,12 @@ export function tryCard(o: { name: string; zones: string[]; canTake: boolean }):
         ${where.map(
           ([v, label], i) =>
             html`<label class="moments-segment"
-              ><input type="radio" name="try_zone" value="${v ?? ""}" ${i === 0 ? "checked" : ""} />${label}</label
+              ><input
+                type="radio"
+                name="try_zone"
+                value="${v ?? ""}"
+                ${i === 0 ? "checked" : ""}
+              />${label}</label
             >`,
         )}
       </div>
@@ -101,6 +113,7 @@ export function tryCard(o: { name: string; zones: string[]; canTake: boolean }):
         ▶ Play sound and picture
       </button>
     </p>
+    <p class="canccu-small" data-try-note role="status" hidden></p>
     <p class="canccu-small canccu-muted">
       "Here" plays in this browser; a zone plays the first sound as a sound check, silently unless
       its sound is on. Trying saves nothing.
@@ -115,7 +128,13 @@ export function packCard(o: { cue: Cue | null; title: (id: string) => string }):
     return html`<section class="canccu-card">
       <h2 class="canccu-card__title">The event's own</h2>
       <p class="canccu-small canccu-muted">This cue is not in the default pack.</p>
-      <button class="canccu-button canccu-button--ghost canccu-danger-link" type="submit" form="${RESET_FORM}">Remove this cue</button>
+      <button
+        class="canccu-button canccu-button--ghost canccu-danger-link"
+        type="submit"
+        form="${RESET_FORM}"
+      >
+        Remove this cue
+      </button>
     </section>`;
   const seed = BUILTIN_CUES.find((b) => b.name === c.name);
   const changes = seed === undefined ? [] : changesFromSeed(c, seed, o.title);
@@ -125,7 +144,13 @@ export function packCard(o: { cue: Cue | null; title: (id: string) => string }):
       changes.length === 0
         ? html`<p class="canccu-small canccu-muted">Same as the default pack.</p>`
         : html`<p class="canccu-small">Changed here: ${changes.join(", ")}.</p>
-            <button class="canccu-button canccu-button--ghost canccu-danger-link" type="submit" form="${RESET_FORM}">Reset to default</button>`
+            <button
+              class="canccu-button canccu-button--ghost canccu-danger-link"
+              type="submit"
+              form="${RESET_FORM}"
+            >
+              Reset to default
+            </button>`
     }
   </section>`;
 }

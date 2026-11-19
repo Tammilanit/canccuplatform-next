@@ -22,6 +22,8 @@ const css = [
   file(new URL("../static/moments.css", import.meta.url)),
   file(new URL("../static/organiser.css", import.meta.url)),
   file(new URL("../static/sound-desk.css", import.meta.url)),
+  file(new URL("../static/sound-desk-lists.css", import.meta.url)),
+  file(new URL("../static/sound-desk-pages.css", import.meta.url)),
 ].join("\n");
 const script = file(new URL("../static/sound-desk.js", import.meta.url));
 const ORIGIN = "http://moments.test";
@@ -45,7 +47,14 @@ const ZONES: DeskZone[] = [
     lets_through: ["urgent", "result", "attention", "something_new", "ended", "ambient"],
     sound_screen: { name: "Main hall screen 1", online: true, audio_unlocked: true },
   },
-  { zone_key: "entrance", minute: 0, hour: 0, energy: "lively", lets_through: null, sound_screen: null },
+  {
+    zone_key: "entrance",
+    minute: 0,
+    hour: 0,
+    energy: "lively",
+    lets_through: null,
+    sound_screen: null,
+  },
 ];
 const CUES = BUILTIN_CUES.map((c) => ({ ...c, revision: 0 }));
 const START = { ...(CUES.find((c) => c.name === "tournament.start") as (typeof CUES)[number]) };
@@ -66,7 +75,7 @@ async function open(body: string, width: number): Promise<Page> {
   await page.addInitScript(FAKE_AUDIO);
   await page.route(`${ORIGIN}/**`, (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       body: `<!doctype html><html><head><meta name="viewport" content="width=device-width"><style>${css}</style></head><body class="canccu-page"><main class="canccu-main" style="padding:1rem">${body}</main><script>${script}</script></body></html>`,
     }),
   );
@@ -127,14 +136,18 @@ const fits = (page: Page) =>
     await expect(chosen.locator("[data-player]").count()).resolves.toBe(1);
     await page.locator("[data-add] label", { hasText: "Drum roll" }).click();
     await expect(chosen.locator("[data-player]").count()).resolves.toBe(2);
-    await expect(page.locator('input[name=sounds][value="pack.drum-roll"]').isChecked()).resolves.toBe(true);
+    await expect(
+      page.locator('input[name=sounds][value="pack.drum-roll"]').isChecked(),
+    ).resolves.toBe(true);
     await expect(page.locator(".canccu-savebar__text").textContent()).resolves.toBe(
       "Unsaved changes: sounds",
     );
     await chosen.getByRole("checkbox", { name: "Remove Gong" }).click();
     await expect(chosen.locator("[data-player]").count()).resolves.toBe(1);
     await expect(page.locator("[data-add] label", { hasText: "Gong" }).count()).resolves.toBe(1);
-    await expect(page.locator('input[name=sounds][value="pack.gong"]').isChecked()).resolves.toBe(false);
+    await expect(page.locator('input[name=sounds][value="pack.gong"]').isChecked()).resolves.toBe(
+      false,
+    );
   });
 
   it("says each slider's value, what the level is heard at, and the category's meaning", async () => {
@@ -153,7 +166,7 @@ const fits = (page: Page) =>
     await slide("hold_seconds", "90");
     await expect(page.locator("output[for=hold_seconds]").textContent()).resolves.toBe("90 s");
     await page.getByRole("radio", { name: "Urgent", exact: true }).check();
-    await expect(page.locator("[data-meaning]").textContent()).resolves.toContain(
+    await expect(page.locator("[data-meaning-line]").textContent()).resolves.toContain(
       "Urgent plays at 100 %, interrupts whatever plays",
     );
     await expect(page.locator("[data-heard]").textContent()).resolves.toBe(

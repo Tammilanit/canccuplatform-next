@@ -1,0 +1,362 @@
+/* The sound desk's other pages (#626, the step 4 polish sheets 02–04): Limits and categories,
+   the log, the cue editor with its live preview, the menus, and below 40rem each list as a column
+   of cards (sheet 04). The controls are sound-desk.css; the strip and the lists sound-desk-lists.css. */
+
+/* Limits and categories (sheet 03). */
+.moments-limitsform {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+.moments-limits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  align-items: end;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.moments-zonehead,
+.moments-zonerow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) repeat(2, minmax(0, 1.2fr)) repeat(2, minmax(0, 1.3fr));
+  align-items: center;
+  gap: 0.75rem;
+}
+.moments-zonerow,
+.moments-category {
+  padding: 0.625rem 0;
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.moments-zonerow__hour,
+.moments-zonerow__minute {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.moments-categoryhead,
+.moments-category {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1.6fr) auto auto 3rem;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+.moments-category .moments-slider {
+  grid-template-columns: minmax(0, 1fr) 3.5rem;
+  margin: 0;
+}
+.moments-category .moments-slider .moments-range {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* The log (sheet 03): what happened first, the code second. */
+.moments-loghead,
+.moments-logrow {
+  display: grid;
+  grid-template-columns: 5.5rem 6.5rem minmax(0, 1.1fr) minmax(0, 2fr);
+  gap: 0.75rem;
+}
+.moments-logrow {
+  align-items: start;
+  padding: 0.625rem 0;
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.moments-logrow__what {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 0.5rem;
+  align-items: start;
+}
+.moments-logrow__what > .moments-sub {
+  grid-column: 2;
+}
+.moments-outcome--played {
+  --canccu-b: var(--canccu-color-status-ok);
+  --canccu-k: var(--canccu-ink-ok);
+}
+.moments-outcome--queued {
+  --canccu-b: var(--canccu-color-primary);
+  --canccu-k: var(--canccu-ink-primary);
+}
+.moments-outcome--suppressed {
+  --canccu-b: var(--canccu-color-status-degraded);
+  --canccu-k: var(--canccu-ink-degraded);
+}
+.moments-outcome--missed,
+.moments-outcome--dropped {
+  --canccu-b: var(--canccu-color-status-down);
+  --canccu-k: var(--canccu-ink-down);
+}
+.moments-outcome::before {
+  display: none;
+}
+
+/* The cue editor (sheet 02): Sound beside Picture, Try it and the pack. */
+.moments-editor {
+  margin: 0;
+}
+.moments-editor__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.moments-editor__head .moments-sub {
+  margin: 0;
+  font-size: var(--canccu-text-sm);
+}
+.moments-editor__name .canccu-input {
+  width: min(100%, 22rem);
+}
+.moments-editor__on {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+.moments-editor__grid,
+.moments-editor__side {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+@media (min-width: 64rem) {
+  .moments-editor__grid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  }
+}
+.moments-chosen {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.moments-picker {
+  display: contents;
+}
+.moments-picker > summary {
+  list-style: none;
+}
+.moments-picker > summary::-webkit-details-marker {
+  display: none;
+}
+.moments-picker[open] > .canccu-chips {
+  flex-basis: 100%;
+}
+.moments-editor .canccu-savebar {
+  margin-top: 1rem;
+}
+
+/* The small live preview: six screens, the cue's box in the middle plays the chosen effect. */
+.moments-mini {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.375rem;
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-background);
+}
+.moments-mini > span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) - 2px);
+  background: var(--canccu-color-surface);
+  font-size: var(--canccu-text-xs);
+  font-weight: 700;
+}
+.moments-mini__box {
+  border-color: var(--canccu-color-primary);
+}
+.moments-fx--pop {
+  animation: moments-pop 0.4s ease-out;
+}
+.moments-fx--tilt {
+  animation: moments-tilt 0.5s ease-in-out;
+}
+.moments-fx--flip {
+  animation: moments-flip 0.6s ease-in-out;
+}
+.moments-fx--slide {
+  animation: moments-slide 0.4s ease-out;
+}
+.moments-fx--ripple,
+.moments-fx--ring_burst {
+  animation: moments-ring 0.7s ease-out;
+}
+.moments-fx--glow,
+.moments-fx--pop,
+.moments-fx--tilt,
+.moments-fx--flip,
+.moments-fx--slide,
+.moments-fx--ripple,
+.moments-fx--ring_burst {
+  box-shadow: 0 0 0.75rem color-mix(in srgb, var(--canccu-color-primary) 60%, transparent);
+}
+@keyframes moments-pop {
+  50% {
+    transform: scale(1.15);
+  }
+}
+@keyframes moments-tilt {
+  30% {
+    transform: rotate(-6deg);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes moments-flip {
+  50% {
+    transform: rotateY(90deg);
+  }
+}
+@keyframes moments-slide {
+  from {
+    transform: translateX(-40%);
+    opacity: 0;
+  }
+}
+@keyframes moments-ring {
+  from {
+    box-shadow: 0 0 0 0 var(--canccu-color-primary);
+  }
+  to {
+    box-shadow: 0 0 0 0.75rem transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .moments-mini__box {
+    animation: none;
+  }
+}
+
+/* Menus: a details list that opens below its button. */
+.moments-menu {
+  position: relative;
+}
+.moments-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.moments-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.moments-menu__list {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  min-width: 10rem;
+  padding: 0.25rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+  box-shadow: var(--canccu-shadow);
+}
+.moments-menu__list form {
+  margin: 0;
+}
+.moments-menu__item {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: calc(var(--canccu-radius) - 2px);
+  background: transparent;
+  color: var(--canccu-color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.moments-menu__item:hover,
+.moments-menu__item:focus-visible {
+  background: var(--canccu-tint);
+}
+.moments-menu__more {
+  padding: 0 0.5rem;
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-lg);
+}
+
+/* A phone (sheet 04): lists become cards; only what a finger needs stays on the row. */
+@media (max-width: 40rem) {
+  .moments-cuehead,
+  .moments-loghead,
+  .moments-zonehead,
+  .moments-categoryhead {
+    display: none;
+  }
+  .moments-search {
+    flex-basis: 100%;
+  }
+  .moments-cuebar__new,
+  .moments-logbar__zones {
+    margin-left: 0;
+  }
+  .moments-cue {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    margin-bottom: 0.5rem;
+    padding: 0.625rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+  }
+  .moments-cue__picture,
+  .moments-cue__level,
+  .moments-cue__again {
+    display: none;
+  }
+  .moments-zonerow {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .moments-zonerow__name,
+  .moments-zonerow__lets,
+  .moments-zonerow__screen {
+    grid-column: 1 / -1;
+  }
+  .moments-category {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+  .moments-category__level {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .moments-category__on {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .moments-logrow {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.25rem 0.75rem;
+  }
+  .moments-logrow__cue,
+  .moments-logrow__what {
+    grid-column: 1 / -1;
+  }
+  .moments-logrow__time,
+  .moments-logrow__zone {
+    grid-row: 3;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-xs);
+  }
+  .moments-player {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+  .moments-player .moments-wave {
+    display: none;
+  }
+  .moments-sound .moments-player .moments-wave,
+  .moments-chosen .moments-wave {
+    display: flex;
+  }
+  .moments-sound .moments-player,
+  .moments-chosen .moments-player {
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  }
+}

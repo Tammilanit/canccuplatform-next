@@ -63,7 +63,7 @@ run("the sound desk", () => {
       const words = text(page.body);
       for (const pill of ["Cues 33", "Library 12", "Limits and categories", "Log"])
         expect(words).toContain(pill);
-      expect(flat(page.body)).toContain('class="moments-strip');
+      expect(flat(page.body)).toContain('class="moments-master');
       expect(words).toContain("Mute all 15 min");
       expect(words).toContain("Sound check");
     }
@@ -72,7 +72,9 @@ run("the sound desk", () => {
   it("draws the master as a switch and a slider, and each zone's hour in a line", async () => {
     await spotlight();
     const page = await w.call("admin", "GET", "/cues");
-    expect(flat(page.body)).toMatch(/role="switch"[^>]*name="enabled"|name="enabled"[^>]*role="switch"/);
+    expect(flat(page.body)).toMatch(
+      /role="switch"[^>]*name="enabled"|name="enabled"[^>]*role="switch"/,
+    );
     expect(flat(page.body)).toMatch(/type="range"[^>]*name="volume"[^>]*value="80"/);
     expect(flat(page.body)).not.toContain('type="number"');
     const words = text(page.body);
@@ -197,7 +199,7 @@ run("the sound desk", () => {
     const desk = json(await w.call("reader", "GET", "/api/moments/sound"));
     expect((desk.settings as Record<string, unknown>).muted_until).not.toBeNull();
     const page = await w.call("crew", "GET", "/cues/log");
-    expect(flat(page.body)).toContain("moments-strip--muted");
+    expect(flat(page.body)).toContain("moments-master--muted");
     expect(text(page.body)).toContain("(15:00 left)");
     expect(flat(page.body)).toMatch(/data-until="[^"]+"/);
     expect(text(page.body)).toContain("Unmute now");
@@ -229,7 +231,9 @@ run("the sound desk", () => {
       .slice(before)
       .filter((e) => e.type === "moments.sound.played");
     expect(sent.map((e) => e.data.zone_key)).toContain("main");
-    const words = text((await w.call("crew", "GET", (r.headers.location as string).replace(/^\/moments/, ""))).body);
+    const words = text(
+      (await w.call("crew", "GET", (r.headers.location as string).replace(/^\/moments/, ""))).body,
+    );
     expect(words).toContain("Sound check sent to every zone at");
     expect(words).toContain("main played it");
     expect(words).toContain("cafe has no sound screen, so nothing was heard there");

@@ -63,7 +63,9 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     path: string,
   ) => {
     const a = await run;
-    return a.status >= 400 ? back(reply, path, "error", refusal(a)) : back(reply, "cues", "done", done);
+    return a.status >= 400
+      ? back(reply, path, "error", refusal(a))
+      : back(reply, "cues", "done", done);
   };
   const editor = async (
     request: Parameters<typeof viaApi>[1],
@@ -121,7 +123,13 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     const name = request.params.name;
     return answer(
       reply,
-      viaApi(pages, request, "PUT", `/api/moments/cues/${encodeURIComponent(name)}`, cueBody(request.body)),
+      viaApi(
+        pages,
+        request,
+        "PUT",
+        `/api/moments/cues/${encodeURIComponent(name)}`,
+        cueBody(request.body),
+      ),
       `${editorTitle(name)} saved.`,
       `cues/edit/${encodeURIComponent(name)}`,
     );
@@ -159,7 +167,13 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
   pages.post<Q>("/cues/edit/:name/delete", write, (request, reply) =>
     answer(
       reply,
-      viaApi(pages, request, "DELETE", `/api/moments/cues/${encodeURIComponent(request.params.name)}`, {}),
+      viaApi(
+        pages,
+        request,
+        "DELETE",
+        `/api/moments/cues/${encodeURIComponent(request.params.name)}`,
+        {},
+      ),
       `${editorTitle(request.params.name)}: done.`,
       "cues",
     ),

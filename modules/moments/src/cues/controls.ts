@@ -97,7 +97,14 @@ export function stepper(o: {
   enabled: boolean;
 }): Html {
   return html`<span class="moments-stepper" data-stepper data-by="${String(o.by)}">
-    <button class="moments-stepper__button" type="button" aria-label="${o.less}" hidden${dis(o.enabled)}>−</button>
+    <button
+      class="moments-stepper__button"
+      type="button"
+      aria-label="${o.less}"
+      hidden${dis(o.enabled)}
+    >
+      −
+    </button>
     <input
       class="moments-stepper__input"
       type="number"
@@ -111,13 +118,26 @@ export function stepper(o: {
       aria-label="${o.label}"
       ${dis(o.enabled)}
     /><span class="moments-stepper__unit">${o.unit}</span>
-    <button class="moments-stepper__button" type="button" aria-label="${o.more}" hidden${dis(o.enabled)}>+</button>
+    <button
+      class="moments-stepper__button"
+      type="button"
+      aria-label="${o.more}"
+      hidden${dis(o.enabled)}
+    >
+      +
+    </button>
   </span>`;
 }
 
 /** A bar for a level or a count, with its words beside it. */
 export const meter = (value: number, max: number, label: string): Html =>
-  html`<meter class="moments-meter" min="0" max="${String(Math.max(max, 1))}" value="${String(Math.min(value, Math.max(max, 1)))}" aria-label="${label}"></meter>`;
+  html`<meter
+    class="moments-meter"
+    min="0"
+    max="${String(Math.max(max, 1))}"
+    value="${String(Math.min(value, Math.max(max, 1)))}"
+    aria-label="${label}"
+  ></meter>`;
 
 /**
  * A waveform's look for a sound: no file is read for it, so its bars come from the sound's id,
@@ -145,7 +165,11 @@ export function player(o: {
 }): Html {
   const label = `Play ${o.title}`;
   if (o.compact === true)
-    return html`<span class="moments-player moments-player--compact" data-player data-sound="${o.url}">
+    return html`<span
+      class="moments-player moments-player--compact"
+      data-player
+      data-sound="${o.url}"
+    >
       <button class="moments-player__play" type="button" aria-label="${label}"></button>
     </span>`;
   return html`<div

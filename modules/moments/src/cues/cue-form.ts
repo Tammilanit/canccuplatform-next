@@ -55,11 +55,19 @@ export function cueEditor(o: {
       c === null
         ? html`<label class="moments-editor__name"
             ><span class="moments-label">Name</span>
-            <input class="canccu-input" name="name" required pattern="[a-z][a-z0-9_]*(\\.[a-z0-9_]+){0,2}" placeholder="raffle.draw" value="${o.name ?? ""}" data-label="name"
+            <input
+              class="canccu-input"
+              name="name"
+              required
+              pattern="[a-z][a-z0-9_]*(\\.[a-z0-9_]+){0,2}"
+              placeholder="raffle.draw"
+              value="${o.name ?? ""}"
           /></label>`
         : html`<p class="moments-sub">${c.name}</p>`
     }
-    <label class="moments-editor__on">On ${toggle({ name: "enabled", on: c?.enabled ?? true, label: "On", enabled: true })}</label>
+    <label class="moments-editor__on"
+      >On ${toggle({ name: "enabled", on: c?.enabled ?? true, label: "On", enabled: true })}</label
+    >
   </div>`;
   const categories = html`<fieldset class="moments-fieldset">
     <legend class="moments-label">Category</legend>
@@ -67,27 +75,44 @@ export function cueEditor(o: {
       ${CATEGORIES.map(
         (k) =>
           html`<label class="canccu-chip"
-            ><input type="radio" name="category" value="${k}" ${k === category ? "checked" : ""} data-label="category" data-name="${categoryName(k)}" data-level="${String(s.categories[k].level)}" data-meaning="${categoryMeaning(k, s)}" />${categoryName(k)}</label
+            ><input
+              type="radio"
+              name="category"
+              value="${k}"
+              ${k === category ? "checked" : ""}
+              data-name="${categoryName(k)}"
+              data-level="${String(s.categories[k].level)}"
+              data-meaning="${categoryMeaning(k, s)}"
+            />${categoryName(k)}</label
           >`,
       )}
     </div>
-    <p class="canccu-small canccu-muted" data-meaning>${categoryMeaning(category, s)}</p>
+    <p class="canccu-small canccu-muted" data-meaning-line>${categoryMeaning(category, s)}</p>
   </fieldset>`;
   const sounds = html`<fieldset class="moments-fieldset">
     <legend class="moments-label moments-label--split">
-      <span>Sounds</span><span class="canccu-small canccu-muted">One is picked at random, never the same twice running</span>
+      <span>Sounds</span
+      ><span class="canccu-small canccu-muted"
+        >One is picked at random, never the same twice running</span
+      >
     </legend>
     <ul class="moments-chosen" data-chosen>
       ${players.map(
         (l) =>
-          html`<li>
+          html`<li data-title="${l.title}" data-url="${l.url}" data-length="${String(l.length_ms)}">
             ${player({
               id: l.id,
               title: l.title,
               url: l.url,
               length_ms: l.length_ms,
               extra: html`<label class="moments-remove"
-                ><input type="checkbox" name="sounds" value="${l.id}" checked aria-label="Remove ${l.title}" data-label="sounds" /><span aria-hidden="true">×</span></label
+                ><input
+                  type="checkbox"
+                  name="sounds"
+                  value="${l.id}"
+                  checked
+                  aria-label="Remove ${l.title}"
+                /><span aria-hidden="true">×</span></label
               >`,
             })}
           </li>`,
@@ -99,8 +124,12 @@ export function cueEditor(o: {
         .filter((l) => !chosen.includes(l.id))
         .map(
           (l) =>
-            html`<label class="canccu-chip" data-title="${l.title}" data-url="${l.url}" data-length="${String(l.length_ms)}"
-              ><input type="checkbox" name="sounds" value="${l.id}" data-label="sounds" />+ ${l.title}</label
+            html`<label
+              class="canccu-chip"
+              data-title="${l.title}"
+              data-url="${l.url}"
+              data-length="${String(l.length_ms)}"
+              ><input type="checkbox" name="sounds" value="${l.id}" />+ ${l.title}</label
             >`,
         )}
     </div>
@@ -108,7 +137,12 @@ export function cueEditor(o: {
   const voice = c?.voice_line ?? null;
   const voiceChip = (id: string, label: string) =>
     html`<label class="canccu-chip"
-      ><input type="radio" name="voice_line" value="${id}" ${(voice ?? "") === id ? "checked" : ""} data-label="voice line" />${label}</label
+      ><input
+        type="radio"
+        name="voice_line"
+        value="${id}"
+        ${(voice ?? "") === id ? "checked" : ""}
+      />${label}</label
     >`;
   const voiceLine = html`<fieldset class="moments-fieldset">
     <legend class="moments-label">Voice line</legend>
@@ -123,21 +157,24 @@ export function cueEditor(o: {
     </div>
     <p class="canccu-small canccu-muted">Plays right after the sound; counts once in the budget.</p>
   </fieldset>`;
-  const timing = html`
-    ${slider({ id: "level", name: "level", label: "Level", min: 0, max: 100, value: level, format: "pct", enabled: true })}
-    <p class="canccu-small canccu-muted" data-heard data-master="${String(s.volume)}">${heard(s, { category, level })}</p>
+  const timing = html` ${slider({ id: "level", name: "level", label: "Level", min: 0, max: 100, value: level, format: "pct", enabled: true })}
+    <p class="canccu-small canccu-muted" data-heard data-master="${String(s.volume)}">
+      ${heard(s, { category, level })}
+    </p>
     <input type="hidden" name="cooldown_stops" value="${stops.join(",")}" />
     ${slider({ id: "cooldown_step", name: "cooldown_step", label: "Not again for", min: 0, max: stops.length - 1, value: stops.indexOf(c?.cooldown_seconds ?? 0), format: "stops", stops, enabled: true })}
     <ol class="moments-ticks" aria-hidden="true">
       ${stops.map((t) => html`<li>${t === 0 ? "Off" : t < 60 ? `${String(t)} s` : `${String(t / 60)} min`}</li>`)}
     </ol>
-    <div class="moments-row">
+    <div class="moments-fieldrow">
       <label class="moments-label" for="catch_up_minutes">Catch-up</label>
       ${stepper({ id: "catch_up_minutes", name: "catch_up_minutes", label: "Catch-up in minutes", value: (c?.catch_up_seconds ?? 120) / 60, min: 0, max: 60, by: 1, unit: "min", less: "One minute less", more: "One minute more", enabled: true })}
-      <p class="canccu-small canccu-muted">If a moment is missed (a screen was off), it may still sound this long after.</p>
+      <p class="canccu-small canccu-muted">
+        If a moment is missed (a screen was off), it may still sound this long after.
+      </p>
     </div>
     ${c?.catch_up_before_start == null ? "" : html`<input type="hidden" name="catch_up_before_start" value="${c.catch_up_before_start.join(",")}" />`}
-    <div class="moments-row">
+    <div class="moments-fieldrow">
       <label class="moments-label" for="once_per_source">Once per source</label>
       ${toggle({ id: "once_per_source", name: "once_per_source", on: c?.once_per_source ?? false, label: "Once per source", enabled: true })}
       <p class="canccu-small canccu-muted">Each source sounds it once, within 7 days.</p>
@@ -153,8 +190,7 @@ export function cueEditor(o: {
         </section>
         <div class="moments-editor__side">
           ${pictureCard({ cue: c, name: name === "" ? (o.name ?? "") : name })}
-          ${tryCard({ name, zones: o.zones, canTake: o.canTake })}
-          ${packCard({ cue: c, title })}
+          ${tryCard({ name, zones: o.zones, canTake: o.canTake })} ${packCard({ cue: c, title })}
         </div>
       </div>
       <div class="canccu-savebar">
@@ -167,4 +203,5 @@ export function cueEditor(o: {
 }
 
 /** The editor's page title: the cue's plain name. */
-export const editorTitle = (name: string | null): string => (name === null ? "New cue" : cueTitle(name));
+export const editorTitle = (name: string | null): string =>
+  name === null ? "New cue" : cueTitle(name);

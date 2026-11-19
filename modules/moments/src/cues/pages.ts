@@ -20,7 +20,6 @@ import type { LogRow } from "./store.js";
 import { SUBS, deskPage, subPath } from "./views.js";
 import type { DeskZone, LibraryView, Sub } from "./views.js";
 
-
 /** The sub-page a form came from, so its answer lands there; anything else is Cues. */
 const backOf = (f: Form): Sub => SUBS.find((s) => s === one(f.back)) ?? "cues";
 
@@ -194,4 +193,3 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
 
   editorPages(pages, deps);
 }
-
