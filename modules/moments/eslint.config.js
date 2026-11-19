@@ -15,6 +15,9 @@ const BROWSER = Object.fromEntries(
     "URL",
     "history",
     "AbortController",
+    "Audio",
+    "Event",
+    "URLSearchParams",
   ].map((name) => [name, "readonly"]),
 );
 
