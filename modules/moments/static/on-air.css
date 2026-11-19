@@ -11,35 +11,14 @@
   min-width: 0;
 }
 @media (min-width: 64rem) {
+  /* One auto-fill grid: the zone cards and the three compact cards are siblings, so any count of
+     zones fills it and the page stays balanced. The zones' wrapper drops out of the layout. */
   .moments-board {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      "zones zones crew"
-      "stories stories scenes";
-  }
-  /* A reader has no crew actions: the zones take the whole first row. */
-  .moments-board:not(:has(> .moments-onair__crew)) {
-    grid-template-areas:
-      "zones zones zones"
-      "stories stories scenes";
-  }
-  .moments-onair__crew {
-    grid-area: crew;
-  }
-  .moments-onair__stories {
-    grid-area: stories;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    align-items: start;
   }
   .moments-onair__zones {
-    grid-area: zones;
-    align-items: stretch;
-  }
-  .moments-onair__scenes {
-    grid-area: scenes;
-  }
-  .moments-onair__crew > .canccu-card,
-  .moments-onair__stories > .canccu-card,
-  .moments-onair__scenes > .canccu-card {
-    height: 100%;
+    display: contents;
   }
 }
 

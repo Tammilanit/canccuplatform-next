@@ -3,6 +3,7 @@
  * Skip to finale, and the pages' notice; the builder is builder.ts. Server-drawn with
  * `packages/ui` classes.
  */
+import { randomBytes } from "node:crypto";
 import type { Html } from "@canccu/ui";
 import { html, notice } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
@@ -117,7 +118,7 @@ export function crewStories(o: {
           method="post"
           action="${PREFIX}storyboards/${takes[0]?.key ?? ""}/fire"
         >
-          ${formKey()}<input type="hidden" name="back" value="${o.back}" />
+          <input type="hidden" name="back" value="${o.back}" />
           ${needsItem ? html`<label class="canccu-field__label" for="fire-item">Item</label>` : ""}
           <div class="moments-fire__row">
             ${
@@ -140,6 +141,8 @@ export function crewStories(o: {
                       class="moments-fire__story"
                       type="submit"
                       formaction="${PREFIX}storyboards/${s.key}/fire"
+                      name="idempotency_key"
+                      value="${randomBytes(12).toString("base64url")}"
                     >
                       <b>Fire ${s.name}</b
                       ><span class="canccu-small canccu-muted">${takesText(s)}</span>
