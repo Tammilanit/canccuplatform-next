@@ -20,6 +20,8 @@ import { masterStrip } from "./strip.js";
 
 export interface DeskZone {
   zone_key: string;
+  /** As people know it ("Main hall"), from Screen (#638); the key while Screen does not name it. */
+  name: string;
   minute: number;
   hour: number;
   energy: string | null;
@@ -87,7 +89,7 @@ export function deskPage(o: {
           ? limitsView({ settings: o.settings, zones: o.zones, canWrite: o.canWrite })
           : logView({
               rows: o.log,
-              zones: o.zones.map((z) => z.zone_key),
+              zones: o.zones,
               query: o.query,
               time,
               title,

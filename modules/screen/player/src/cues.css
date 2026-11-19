@@ -12,7 +12,8 @@
       var(--canccu-cue-delay, 0s) both;
   }
 
-  /* The frame and glow: on from the start, fading after the hold. */
+  /* The frame and glow: on from the start, fading after the hold. In `--canccu-cue-ink`, which an
+     urgent card sets to the warning colour (hero.css), else the primary. */
   .canccu-cue::after {
     content: "";
     position: absolute;
@@ -21,9 +22,9 @@
     pointer-events: none;
     border-radius: inherit;
     box-shadow:
-      inset 0 0 0 calc(0.4 * var(--canccu-u)) var(--canccu-color-primary),
+      inset 0 0 0 calc(0.4 * var(--canccu-u)) var(--canccu-cue-ink, var(--canccu-color-primary)),
       0 0 calc(3 * var(--canccu-u) * var(--canccu-fx-intensity, 1))
-        color-mix(in srgb, var(--canccu-color-primary) 55%, transparent);
+        color-mix(in srgb, var(--canccu-cue-ink, var(--canccu-color-primary)) 55%, transparent);
     animation: canccu-cue-fade var(--canccu-cue-fade, 10s) linear
       calc(var(--canccu-cue-delay, 0s) + var(--canccu-cue-hold, 60s)) forwards;
   }
@@ -37,7 +38,7 @@
     z-index: 2;
     pointer-events: none;
     border-radius: inherit;
-    border: calc(0.4 * var(--canccu-u)) solid var(--canccu-color-primary);
+    border: calc(0.4 * var(--canccu-u)) solid var(--canccu-cue-ink, var(--canccu-color-primary));
     opacity: 0;
     animation: canccu-cue-ring calc(1200ms * var(--canccu-fx-speed, 1)) ease-out
       var(--canccu-cue-delay, 0s) 1;

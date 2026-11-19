@@ -7,7 +7,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { READ, SETTINGS, TAKE, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
-import { page, pageNeeds, refusal, viaApi } from "../page-kit.js";
+import { page, pageNeeds, refusal, viaApi, zoneNames } from "../page-kit.js";
 import { CATEGORIES } from "./catalog.js";
 import { editorPages } from "./editor-pages.js";
 import { int, on, one } from "./form-fields.js";
@@ -68,6 +68,7 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
       check: q.checked === "1" ? lastCheck(await readLog(c, { limit: 50 })) : null,
     }));
     const library = await viaApi(pages, request, "GET", "/api/moments/sounds", {});
+    const zoneName = await zoneNames(deps, request);
     return page(request, reply, deps, {
       title: "Cues",
       tab: "cues",
@@ -75,7 +76,10 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
       body: deskPage({
         sub,
         settings: data.desk.settings as Parameters<typeof deskPage>[0]["settings"],
-        zones: data.desk.zones as DeskZone[],
+        zones: (data.desk.zones as Omit<DeskZone, "name">[]).map((z) => ({
+          ...z,
+          name: zoneName(z.zone_key),
+        })),
         cues: data.cues,
         library: library.body.sounds as LibraryView[],
         log: data.log,

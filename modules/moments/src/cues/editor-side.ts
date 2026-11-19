@@ -83,9 +83,13 @@ export function pictureCard(o: { cue: Cue | null; name: string }): Html {
 }
 
 /** A new cue is tried here only: a zone's try goes through the saved cue's path. */
-export function tryCard(o: { name: string; zones: string[]; canTake: boolean }): Html {
+export function tryCard(o: {
+  name: string;
+  zones: { key: string; name: string }[];
+  canTake: boolean;
+}): Html {
   const zones = o.canTake && o.name !== "" ? o.zones : [];
-  const where = [["here", "Here"], ...zones.map((z) => [z, z])];
+  const where = [["here", "Here"], ...zones.map((z) => [z.key, z.name])];
   return html`<section class="canccu-card">
     <h2 class="canccu-card__title">Try it</h2>
     <fieldset class="moments-fieldset">

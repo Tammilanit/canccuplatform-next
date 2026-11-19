@@ -6,7 +6,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { SETTINGS, TAKE } from "../http.js";
 import type { AppDeps } from "../http.js";
-import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
+import { PREFIX, page, pageNeeds, refusal, viaApi, zoneNames } from "../page-kit.js";
 import { cueEditor, editorTitle } from "./cue-form.js";
 import type { Form, Q } from "./form-fields.js";
 import { int, many, on, one } from "./form-fields.js";
@@ -74,10 +74,11 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     o: { name?: string; error?: string },
   ) => {
     const sounds = await viaApi(pages, request, "GET", "/api/moments/sounds", {});
+    const zoneName = await zoneNames(deps, request);
     const { settings, zones } = await deps.db.tenant(async (c) => ({
       settings: await loadSettings(c),
       zones: (await c.query(`SELECT zone_key FROM moments_zones ORDER BY zone_key`, [])).rows.map(
-        (r) => r.zone_key as string,
+        (r) => ({ key: r.zone_key as string, name: zoneName(r.zone_key as string) }),
       ),
     }));
     return page(request, reply, deps, {
@@ -171,7 +172,7 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     });
     return a.status >= 400
       ? back(reply, path, "error", refusal(a))
-      : back(reply, path, "done", `Sent to ${zone}.`);
+      : back(reply, path, "done", `Sent to ${(await zoneNames(deps, request))(zone)}.`);
   });
 
   pages.post<Q>("/cues/edit/:name/delete", write, (request, reply) =>

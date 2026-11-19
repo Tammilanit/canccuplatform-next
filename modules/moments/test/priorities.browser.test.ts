@@ -47,6 +47,7 @@ async function open(width: number): Promise<Page> {
     order: DEFAULT_ORDER,
     draft: false,
     zones: ["main"],
+    zoneName: (z) => z,
     own: [],
     revision: 0,
     preview: null,

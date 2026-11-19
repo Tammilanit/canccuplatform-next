@@ -10,6 +10,7 @@ import type { Described } from "./describe.js";
 import { RUN_SOUNDS } from "./round.js";
 import type { StorySettings } from "./store.js";
 import { clock, minutes, segmented, toggle } from "./builder-fields.js";
+import type { ZoneName } from "../page-kit.js";
 
 const pc = (n: number): string =>
   `${String(Math.round(Math.max(0, Math.min(1, n)) * 10_000) / 100)}%`;
@@ -49,7 +50,7 @@ function preview(o: Side): Html {
   const form = o.canTake ? "story-test" : undefined;
   return html`<section class="canccu-card moments-builder__preview" data-tab="preview" id="preview">
     <div class="moments-builder__cardhead">
-      <h2 class="canccu-card__title">Preview · <span data-zone-name>${zone}</span></h2>
+      <h2 class="canccu-card__title">Preview · <span data-zone-name>${o.zoneName(zone)}</span></h2>
       <span class="canccu-small canccu-muted"
         >${first === undefined ? "one round" : `round 1 at ${minutes(first)}`}</span
       >
@@ -89,7 +90,7 @@ function preview(o: Side): Html {
         o.zones.length > 1
           ? segmented(
               zoneName,
-              o.zones.map((z) => [z, z] as const),
+              o.zones.map((z) => [z, o.zoneName(z)] as const),
               zone,
               { label: "Zone", ...(form === undefined ? {} : { form }) },
             )
@@ -165,7 +166,7 @@ function checks(o: Side): Html {
             cap,
           )
     }
-    ${o.airtime.map((a) => html`<p class="canccu-small canccu-muted">All stories on ${a.zone}: ${String(Math.round(a.share * 100))} % of the last 10 min</p>`)}
+    ${o.airtime.map((a) => html`<p class="canccu-small canccu-muted">All stories on ${o.zoneName(a.zone)}: ${String(Math.round(a.share * 100))} % of the last 10 min</p>`)}
     ${meter(
       "Sounds per run, per zone",
       d.sounds_per_run / RUN_SOUNDS,
@@ -190,6 +191,7 @@ function checks(o: Side): Html {
 export interface Side {
   d: Described;
   zones: string[];
+  zoneName: ZoneName;
   settings: StorySettings;
   airtime: { zone: string; share: number }[];
   canTake: boolean;

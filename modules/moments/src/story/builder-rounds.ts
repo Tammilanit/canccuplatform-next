@@ -22,6 +22,8 @@ import {
   textInput,
   toggle,
 } from "./builder-fields.js";
+import { eventWords } from "./words.js";
+import { cueTitle } from "../cues/names.js";
 
 const pc = (n: number): string => `${String(Math.round(n * 100) / 100)}%`;
 
@@ -119,7 +121,7 @@ const UNTIL: readonly (readonly [string, string])[] = [
   ["item_starts", "the item starts"],
   ["item_ends", "the item ends"],
   ["next_item_starts", "the next item starts"],
-  ...Object.keys(DOMAIN_TYPES).map((x) => [`domain:${x}`, x] as const),
+  ...Object.keys(DOMAIN_TYPES).map((x) => [`domain:${x}`, eventWords(x)] as const),
 ];
 
 function untilOf(st: Story): string {
@@ -201,7 +203,7 @@ function finaleChip(st: Story, cues: string[]): Html {
     html`<div class="moments-grid">
       ${field("finale_title", "Finale title (empty: none)", textInput("finale_title", "finale_title", f0 === undefined ? "" : str(f0.content.title), { mono: true }))}
       ${field("finale_seconds", "Seconds (at least 8)", textInput("finale_seconds", "finale_seconds", f0?.duration_seconds, { number: true }))}
-      ${field("finale_cue", "Cue", select("finale_cue", "finale_cue", [["", "None"], ...cues.map((c) => [c, c] as const)], f0?.cue))}
+      ${field("finale_cue", "Cue", select("finale_cue", "finale_cue", [["", "None"], ...cues.map((c) => [c, cueTitle(c)] as const)], f0?.cue))}
     </div>`,
     { add: f0 === undefined },
   );

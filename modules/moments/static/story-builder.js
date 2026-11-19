@@ -282,7 +282,9 @@
       if (!radio.checked) return;
       frame.dataset.zone = radio.value;
       base = null;
-      for (const n of document.querySelectorAll("[data-zone-name]")) n.textContent = radio.value;
+      // The zone's name as its option shows it ("Main hall"), not its key (#638).
+      const name = radio.closest("label")?.textContent?.trim() || radio.value;
+      for (const n of document.querySelectorAll("[data-zone-name]")) n.textContent = name;
       frame.src = `/screen/zones/${encodeURIComponent(radio.value)}`;
     });
   // The marks move: turning one on for a step turns it off on the others.

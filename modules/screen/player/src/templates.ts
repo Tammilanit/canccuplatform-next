@@ -275,7 +275,8 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
   ticker: [
     el("p", "label", [
       sec("updated", t("Updated")),
-      not("updated", sec("urgent", t("Urgent")), not("urgent", t("Info"))),
+      // The span lets the look colour an urgent label (claims.css), as a template cannot test a value.
+      not("updated", sec("urgent", el("span", "urgent", [t("Urgent")])), not("urgent", t("Info"))),
     ]),
     el("p", "line", [f("text")]),
   ],

@@ -45,6 +45,7 @@ const LIBRARY: LibraryView[] = PACK.map((p) => ({
 const ZONES: DeskZone[] = [
   {
     zone_key: "main",
+    name: "Main hall",
     minute: 0,
     hour: 2,
     energy: "lively",
@@ -53,6 +54,7 @@ const ZONES: DeskZone[] = [
   },
   {
     zone_key: "entrance",
+    name: "Entrance",
     minute: 0,
     hour: 0,
     energy: "lively",
@@ -93,7 +95,10 @@ const editor = () =>
       cue: START,
       library: LIBRARY,
       settings: DEFAULT_SOUND_SETTINGS,
-      zones: ["main", "entrance"],
+      zones: [
+        { key: "main", name: "Main hall" },
+        { key: "entrance", name: "Entrance" },
+      ],
       canTake: true,
     }),
   );

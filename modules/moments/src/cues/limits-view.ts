@@ -103,13 +103,13 @@ export function limitsView(o: {
       ${o.zones.map(
         (z) =>
           html`<li class="moments-zonerow">
-            <b class="moments-zonerow__name">${z.zone_key}</b>
+            <b class="moments-zonerow__name">${z.name}</b>
             <span class="moments-zonerow__hour"
-              >${meter(z.hour, s.hourly_budget, `${z.zone_key} this hour`)}
+              >${meter(z.hour, s.hourly_budget, `${z.name} this hour`)}
               <span class="canccu-small">${z.hour} of ${s.hourly_budget} this hour</span></span
             >
             <span class="moments-zonerow__minute"
-              >${meter(z.minute, s.per_minute, `${z.zone_key} this minute`)}
+              >${meter(z.minute, s.per_minute, `${z.name} this minute`)}
               <span class="canccu-small">${z.minute} of ${s.per_minute} this minute</span></span
             >
             <span class="moments-zonerow__lets canccu-small">${letsThrough(z)}</span>

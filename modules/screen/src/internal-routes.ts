@@ -1,7 +1,8 @@
 /**
  * What Moments asks Screen (contracts/screen.md, For Moments): a zone's energy and its sound
  * screen for the sound gates (D16, E12, E13), an asset its library links (D23), and the event's
- * images with their files for the crew spotlight's photo picker (#624). Module calls
+ * images with their files for the crew spotlight's photo picker (#624), and the zones' names its
+ * pages show instead of keys (#638). Module calls
  * by the service name, so they name the event in `tenant_id` and need the kit's service identity
  * (app.ts installs it for `/internal/screen/`); no Caddy route reaches them.
  */
@@ -80,6 +81,15 @@ export function internalRoutes(
       );
     },
   );
+
+  // Moments' pages say "Main hall", not `main` (#638); a zone never seeded is simply not listed.
+  app.get<Query>("/internal/screen/zones", async (request) => {
+    const ctx = await event(request.query.tenant_id);
+    const { rows } = await withTenant(ctx.tenant_id, () =>
+      deps.db.tenant((c) => c.query(`SELECT key, name FROM screen_zones ORDER BY key`, [])),
+    );
+    return { zones: rows.map((r) => ({ key: r.key as string, name: r.name as string })) };
+  });
 
   // The picker shows at most this many, newest first: a crew phone scrolls a short grid.
   app.get<Query>("/internal/screen/images", async (request) => {

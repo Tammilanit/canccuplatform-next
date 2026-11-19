@@ -129,7 +129,10 @@ describe("hero.css, the hero rule", () => {
       ruleOf(".canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent)"),
     ).toContain("--canccu-cue-ink: var(--canccu-color-status-degraded);");
     const cues = read("cues.css").replace(/\/\*[\s\S]*?\*\//g, "");
-    expect(cues).not.toContain("var(--canccu-color-primary)");
+    // The primary only as the ink's fallback, never on its own.
+    expect(cues.replaceAll("var(--canccu-cue-ink, var(--canccu-color-primary))", "")).not.toContain(
+      "--canccu-color-primary",
+    );
     expect(cues.match(/var\(--canccu-cue-ink, var\(--canccu-color-primary\)\)/g)?.length).toBe(3);
   });
 

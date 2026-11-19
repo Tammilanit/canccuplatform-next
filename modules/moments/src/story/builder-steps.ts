@@ -24,6 +24,7 @@ import {
   textInput,
   toggle,
 } from "./builder-fields.js";
+import { cueTitle } from "../cues/names.js";
 
 export const TEMPLATE_NAMES: Record<string, string> = {
   title_card: "Title",
@@ -274,7 +275,12 @@ function stepForm(s: StoryStep, i: number, o: Builder): Html {
       ${field(
         p("cue"),
         "Cue at its start",
-        select(p("cue"), p("cue"), [["", "None"], ...o.cues.map((x) => [x, x] as const)], s.cue),
+        select(
+          p("cue"),
+          p("cue"),
+          [["", "None"], ...o.cues.map((x) => [x, cueTitle(x)] as const)],
+          s.cue,
+        ),
         {
           name: "cue",
           hint: html`<a href="${PREFIX}cues/new?name=${encodeURIComponent(newCue)}"

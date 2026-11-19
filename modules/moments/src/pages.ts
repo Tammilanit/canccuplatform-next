@@ -14,7 +14,17 @@ import { loadCrew, loadScenes, sceneZones } from "./scene-store.js";
 import { crewButtons, onAirScenes } from "./scene-views.js";
 import type { ZoneSceneView } from "./scene-views.js";
 import type { AppDeps } from "./http.js";
-import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
+import {
+  PREFIX,
+  page,
+  pageErrors,
+  pageNeeds,
+  refusal,
+  staticRoutes,
+  viaApi,
+  zoneNames,
+} from "./page-kit.js";
+import type { ZoneName } from "./page-kit.js";
 import { loadRules } from "./rules.js";
 import { loadCues } from "./cues/store.js";
 import { knownZones, loadOrders, runningMoments, splitZones, titleOf } from "./store.js";
@@ -78,7 +88,11 @@ async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: str
 }
 
 /** On air's scene card: each zone's scene, and the crew buttons for those who may press them. */
-async function sceneCard(deps: AppDeps, request: FastifyRequest): Promise<Html> {
+async function sceneCard(
+  deps: AppDeps,
+  request: FastifyRequest,
+  zoneName: ZoneName,
+): Promise<Html> {
   const ctx = tenantOf(request);
   const now = deps.now();
   const s = await deps.db.tenant(async (c) => ({
@@ -88,7 +102,7 @@ async function sceneCard(deps: AppDeps, request: FastifyRequest): Promise<Html> 
   }));
   const crew = s.crew !== null && s.crew.until > now ? s.crew : null;
   const canTake = request.session?.rights.has(SCENES_TAKE) === true && ctx.status !== "archived";
-  return html`${onAirScenes(s.zones, s.scenes, ctx.time_zone)}
+  return html`${onAirScenes(s.zones, s.scenes, ctx.time_zone, zoneName)}
     ${canTake ? crewButtons(s.scenes, crew === null ? null : { ...crew, until: crew.until.toISOString() }, "on-air") : ""}
     <a class="canccu-small" href="${PREFIX}scenes">All scenes</a>`;
 }
@@ -119,18 +133,20 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
 
     pages.get<Q>("/on-air", read, async (request, reply) => {
       const state = await onAir(deps);
+      const zoneName = await zoneNames(deps, request);
       return page(request, reply, deps, {
         title: "Moments",
         tab: "on-air",
         description: "What every zone shows now, what waits, and why. Live.",
         body: onAirView({
           ...state,
+          zoneName,
           now: deps.now(),
           canTake: has(request, TAKE),
           canAnnounce: has(request, ANNOUNCE),
           canEmergency: has(request, EMERGENCY),
           archived: tenantOf(request).status === "archived",
-          scenes: await sceneCard(deps, request),
+          scenes: await sceneCard(deps, request, zoneName),
           stories: await storyCard(deps, request),
           done: request.query.done,
           error: request.query.error,
@@ -212,7 +228,11 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       });
       return page(request, reply, deps, {
         title: "Crew spotlight",
-        body: spotlightView({ ...data, error: request.query.error }),
+        body: spotlightView({
+          ...data,
+          zoneName: await zoneNames(deps, request),
+          error: request.query.error,
+        }),
         description: "In the hero of the zones you pick, for as long as you choose.",
       });
     });
@@ -298,6 +318,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           order,
           draft,
           zones: state.zones,
+          zoneName: await zoneNames(deps, request),
           own: Object.keys(state.orders.zones),
           revision: state.orders.revision,
           preview: zone === undefined ? null : { zone, ranks, auto: request.query.preview === "1" },
@@ -374,6 +395,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         body: historyView({
           rows: out.rows.slice(0, PAGE),
           zones: out.zones,
+          zoneName: await zoneNames(deps, request),
           filter,
           timeZone: tenantOf(request).time_zone,
           more,

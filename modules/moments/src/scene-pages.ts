@@ -5,7 +5,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { READ, SCENES_TAKE, SETTINGS, tenantOf } from "./http.js";
 import type { AppDeps } from "./http.js";
-import { PREFIX, page, pageNeeds, refusal, viaApi } from "./page-kit.js";
+import { PREFIX, page, pageNeeds, refusal, viaApi, zoneNames } from "./page-kit.js";
 import { bandsOf } from "./scene-eval.js";
 import { agendaItems, loadCrew, loadScenes, sceneZones } from "./scene-store.js";
 import { PRESETS } from "./scenes.js";
@@ -168,6 +168,7 @@ export function scenePages(pages: FastifyInstance, deps: AppDeps): void {
           canWrite: writable,
           canTake: has(request, SCENES_TAKE) && ctx.status !== "archived",
           timeZone: ctx.time_zone,
+          zoneName: await zoneNames(deps, request),
           done: q.done,
           error: q.error,
         }),

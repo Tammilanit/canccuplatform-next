@@ -9,6 +9,7 @@ import { PROVISIONAL, isVideo } from "./model.js";
 import { FOLLOWS, RULE_OF_PRESET, presetOf } from "./presets.js";
 import { localParts } from "./schedule.js";
 import type { EventFacts } from "./store.js";
+import { capital, eventWords } from "./words.js";
 
 export interface PickerItem {
   id: string;
@@ -90,7 +91,7 @@ const dayTime = (ms: number, timeZone: string): string =>
   `${new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone }).format(new Date(ms))} ${localParts(ms, timeZone).hhmm}`;
 
 function itemStatus(t: Extract<Trigger, { kind: "item" }>, ctx: PickerCtx): string {
-  if (t.item_id === null && t.kinds.length === 0) return "pick an item";
+  if (t.item_id === null && t.kinds.length === 0) return "Pick an item";
   const next = ctx.items
     .filter(
       (i) =>
@@ -102,42 +103,41 @@ function itemStatus(t: Extract<Trigger, { kind: "item" }>, ctx: PickerCtx): stri
     .filter((x) => !Number.isNaN(x.at) && x.at >= ctx.now)
     .sort((a, b) => a.at - b.at)[0];
   return next === undefined
-    ? "idle: no matching item in the run of show"
-    : `next: ${dayTime(next.at, ctx.event.time_zone)} ${next.i.title}`;
+    ? "Waits for a matching item in the run of show"
+    : `Next: ${dayTime(next.at, ctx.event.time_zone)}, ${next.i.title}`;
 }
 
 function clockStatus(t: Extract<Trigger, { kind: "clock" }>, ctx: PickerCtx): string | null {
   const at = (iso: string | null) => (iso === null ? NaN : Date.parse(iso));
   if (t.mode === "once") {
-    if (t.at === null) return "clock once: set its time";
+    if (t.at === null) return "Set its time";
     const ms = at(t.at);
-    return ms >= ctx.now
-      ? `next: ${dayTime(ms, ctx.event.time_zone)}`
-      : "idle: its time has passed";
+    return ms >= ctx.now ? `Next: ${dayTime(ms, ctx.event.time_zone)}` : "Its time has passed";
   }
   if (t.mode === "event_start" || t.mode === "event_end") {
     const ms = at(t.mode === "event_end" ? ctx.event.ends_at : ctx.event.starts_at);
-    return Number.isNaN(ms) ? null : `next: ${dayTime(ms, ctx.event.time_zone)}`;
+    return Number.isNaN(ms) ? null : `Next: ${dayTime(ms, ctx.event.time_zone)}`;
   }
-  return t.mode === "daily" ? `daily at ${t.at ?? ""}` : null;
+  return t.mode === "daily" ? `Every day at ${t.at ?? ""}` : null;
 }
 
 function triggerStatus(t: Trigger, ctx: PickerCtx): string | null {
   if (t.kind === "item") return itemStatus(t, ctx);
   if (t.kind === "clock") return clockStatus(t, ctx);
   if (t.kind === "domain" && PROVISIONAL[t.type] !== undefined)
-    return `idle: ${t.type}: provisional, not sent yet (${PROVISIONAL[t.type] ?? ""})`;
+    return `Waits for “${capital(eventWords(t.type))}”, which ${PROVISIONAL[t.type]?.replace(/, step (\d+)$/, " sends from step $1") ?? "a later module sends"}`;
   return null;
 }
 
 /** What the picker says of a story now: its triggers' next time or why it idles, and its rule. */
 export function statusOf(s: Story, ctx: PickerCtx): string[] {
   const out = s.triggers.map((t) => triggerStatus(t, ctx)).filter((x) => x !== null);
-  if (s.conditions.quiet === "skip") out.push("not in quiet");
+  if (s.conditions.quiet === "skip") out.push("Not in a quiet scene");
   const o = s.preset === null ? undefined : RULE_OF_PRESET[s.preset];
   if (o !== undefined) {
-    if (o.on !== undefined) out.push(`takes the arrived order from rule ${o.rule}`);
-    else out.push(`${s.enabled ? "replaces" : "would replace"} rule ${o.rule}`);
+    const rule = `the built-in rule ${o.rule.replaceAll("_", " ")}`;
+    if (o.on !== undefined) out.push(`Takes the arrived order from ${rule}`);
+    else out.push(`${s.enabled ? "Replaces" : "Would replace"} ${rule}`);
   }
   return [...new Set(out)];
 }

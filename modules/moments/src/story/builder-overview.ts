@@ -20,6 +20,8 @@ import {
   textInput,
   toggle,
 } from "./builder-fields.js";
+import type { ZoneName } from "../page-kit.js";
+import { capital, eventWords } from "./words.js";
 
 const TRIGGER_NAMES: Record<(typeof ADD_TRIGGERS)[number], string> = {
   item: "A run-of-show item",
@@ -39,7 +41,7 @@ export function triggerChip(t: Trigger): string {
       return t.kinds.length === 0 ? `Any item ${when}` : `A ${t.kinds.join(" or ")} item ${when}`;
     }
     case "domain":
-      return `${t.type}${t.final_only ? " · a final" : ""}`;
+      return `${capital(eventWords(t.type))}${t.final_only ? " · a final" : ""}`;
     case "clock":
       if (t.mode === "every")
         return `Every ${String(t.every_minutes)} min, ${t.from ?? ""}–${t.until ?? ""}`;
@@ -82,7 +84,7 @@ function triggerFields(t: Trigger, i: number): Html {
           select(
             p("type"),
             p("type"),
-            Object.keys(DOMAIN_TYPES).map((x) => [x, x] as const),
+            Object.keys(DOMAIN_TYPES).map((x) => [x, capital(eventWords(x))] as const),
             t.type,
           ),
         )}
@@ -170,14 +172,14 @@ function triggers(st: Story): Html[] {
   return chips;
 }
 
-function zonesLabel(st: Story): string {
+function zonesLabel(st: Story, zoneName: ZoneName): string {
   const k = st.conditions;
   if (k.item_zone) return "Item's zone, else all";
-  return k.zones.length === 0 ? "Every zone" : `Zones: ${k.zones.join(", ")}`;
+  return k.zones.length === 0 ? "Every zone" : `Zones: ${k.zones.map(zoneName).join(", ")}`;
 }
 
 /** The conditions: zones and the quiet rule always; the others as chips once set. */
-function conditions(st: Story, zones: string[]): Html[] {
+function conditions(st: Story, zones: string[], zoneName: ZoneName): Html[] {
   const k = st.conditions;
   const text = (name: string, label: string, v: string | number | null | undefined, ph = "") =>
     field(name, label, textInput(name, name, v, { placeholder: ph }));
@@ -245,14 +247,14 @@ function conditions(st: Story, zones: string[]): Html[] {
               name="zone"
               value="${z}"
               ${k.zones.includes(z) ? "checked" : ""}
-            />${z}</label
+            />${zoneName(z)}</label
           >`,
       )}
     </div>
     <p class="canccu-small canccu-muted">None ticked: every zone.</p>
     ${toggle("item_zone", "yes", k.item_zone, "The item's zone, else all")}`;
   return [
-    chip(zonesLabel(st), zoneBody),
+    chip(zonesLabel(st, zoneName), zoneBody),
     chip(
       `Quiet scene: ${k.quiet === "calm" ? "calm and silent" : "skip"}`,
       segmented(
@@ -276,7 +278,7 @@ function conditions(st: Story, zones: string[]): Html[] {
   ];
 }
 
-export function overviewCard(st: Story, zones: string[]): Html {
+export function overviewCard(st: Story, zones: string[], zoneName: ZoneName): Html {
   return html`<section class="canccu-card moments-builder__overview" data-tab="overview">
     <div class="moments-chiprow">
       <label class="moments-chiprow__label" for="name"><strong>Name</strong></label>
@@ -285,6 +287,6 @@ export function overviewCard(st: Story, zones: string[]): Html {
     <hr class="moments-rule-line" />
     ${chipRow("Plays when", "any one", triggers(st))}
     <hr class="moments-rule-line" />
-    ${chipRow("Only if", "all", conditions(st, zones))}
+    ${chipRow("Only if", "all", conditions(st, zones, zoneName))}
   </section>`;
 }

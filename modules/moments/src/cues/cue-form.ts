@@ -32,7 +32,8 @@ export function cueEditor(o: {
   cue: (Cue & { revision: number }) | null;
   library: LibraryView[];
   settings: SoundSettings;
-  zones: string[];
+  /** The zones a try may go to, with their names (#638). */
+  zones: { key: string; name: string }[];
   canTake: boolean;
   error?: string;
   /** A new cue's name filled in: a story's "+ New cue" names it `story.<story>.<step>` (#114). */
