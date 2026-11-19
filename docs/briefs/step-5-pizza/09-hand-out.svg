@@ -1,14 +1,187 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1060" width="1920" height="1060" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Mockup 09: arrival and hand-out</title>
-  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
-<rect x="0" y="0" width="1920" height="1060" rx="0" fill="#f3f4f6"/>
-<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">09 · It&#x27;s here: hand-out and who paid the holder (holder)</text>
-<g transform="translate(30,70) scale(0.78)"><rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/><rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/><text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">18:42</text><text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text><text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Order 3</text><text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Hand out</text><rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/><text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text><text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text><text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text><text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text><text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text><rect x="26" y="100" width="338" height="70" rx="16" fill="#2a1f45" stroke="#b98cff" stroke-width="1.5"/><text x="44" y="130" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Arrived 19:28 · Entrance table</text><text x="44" y="152" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Everyone in the order was told</text><text x="26" y="206" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">4 of 6 collected · 3 paid you</text><rect x="26" y="218" width="338" height="8" rx="4" fill="#161a2e"/><rect x="26" y="218" width="225" height="8" rx="4" fill="#3ee39a"/><text x="250" y="252" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="middle">Got it</text><text x="326" y="252" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="middle">Paid</text><rect x="26" y="266" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="291" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Player</text><text x="44" y="311" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">#12 Kebab ×2</text><rect x="239" y="284" width="22" height="22" rx="6" fill="#3ee39a"/><text x="250" y="301" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="315" y="284" width="22" height="22" rx="6" fill="#b98cff"/><text x="326" y="301" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="26" y="332" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="357" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Two</text><text x="44" y="377" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">#12 Kebab · split</text><rect x="239" y="350" width="22" height="22" rx="6" fill="#3ee39a"/><text x="250" y="367" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="315" y="350" width="22" height="22" rx="6" fill="#b98cff"/><text x="326" y="367" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="26" y="398" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="423" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Three (you)</text><text x="44" y="443" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">#1 Margherita</text><rect x="239" y="416" width="22" height="22" rx="6" fill="#3ee39a"/><text x="250" y="433" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="315" y="416" width="22" height="22" rx="6" fill="#b98cff"/><text x="326" y="433" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="26" y="464" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="489" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Four</text><text x="44" y="509" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">Own pizza</text><rect x="239" y="482" width="22" height="22" rx="6" fill="#3ee39a"/><text x="250" y="499" font-size="15" fill="#0b0d1a" font-weight="800" text-anchor="middle">✓</text><rect x="315" y="482" width="22" height="22" rx="6" fill="#0b0d1a" stroke="#343c66" stroke-width="1.5"/><rect x="26" y="530" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="555" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Five</text><text x="44" y="575" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">#4 Quattro formaggi</text><rect x="239" y="548" width="22" height="22" rx="6" fill="#0b0d1a" stroke="#343c66" stroke-width="1.5"/><rect x="315" y="548" width="22" height="22" rx="6" fill="#0b0d1a" stroke="#343c66" stroke-width="1.5"/><rect x="26" y="596" width="338" height="58" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="621" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Six</text><text x="44" y="641" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">Other: gluten-free</text><rect x="239" y="614" width="22" height="22" rx="6" fill="#0b0d1a" stroke="#343c66" stroke-width="1.5"/><rect x="315" y="614" width="22" height="22" rx="6" fill="#0b0d1a" stroke="#343c66" stroke-width="1.5"/><rect x="26" y="670" width="338" height="50" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="195.0" y="701.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="middle">Nudge the 2 who haven&#x27;t collected</text></g>
-<g transform="translate(370,70) scale(0.78)"><rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/><rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/><text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">18:42</text><text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text><text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Food</text><text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Order 3</text><rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/><text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text><text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text><text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text><text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text><text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text><rect x="26" y="112" width="338" height="120" rx="16" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/><text x="44" y="146" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Order 3 is done</text><text x="44" y="174" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">Everyone collected. Paid status stays</text><text x="44" y="193" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">with the holder and the crew; nobody</text><text x="44" y="212" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">else sees it.</text><text x="26" y="270" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start">THE DAY&#x27;S RECORD KEEPS</text><text x="44" y="304" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">• the pizzeria, the times, the payer</text><text x="44" y="334" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">• who had what (for the bill split)</text><text x="44" y="364" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">• flags: released, corrected, cancelled</text></g>
-<text x="720" y="110" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Arrival is a moment for everyone</text><text x="720" y="136" font-size="15" fill="#374151" font-weight="400" text-anchor="start">&#x27;It&#x27;s here&#x27; (pizza.order.arrived) pushes to each person in</text><text x="720" y="157" font-size="15" fill="#374151" font-weight="400" text-anchor="start">the order (Notify&#x27;s food topic, personal part, already</text><text x="720" y="178" font-size="15" fill="#374151" font-weight="400" text-anchor="start">built) and starts Moments&#x27; &#x27;Pizza orders ready&#x27; story on the</text><text x="720" y="199" font-size="15" fill="#374151" font-weight="400" text-anchor="start">screens (preset 21, already built).</text>
-<text x="720" y="290" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Hand-out, the step the legacy never had</text><text x="720" y="316" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The roadmap&#x27;s goal says &#x27;the crew hands it out&#x27;; the legacy</text><text x="720" y="337" font-size="15" fill="#374151" font-weight="400" text-anchor="start">stopped at &#x27;placed&#x27;. Here the holder (or a crew member, U4)</text><text x="720" y="358" font-size="15" fill="#374151" font-weight="400" text-anchor="start">ticks each person off. &#x27;I&#x27;ve got mine&#x27; on the attendee&#x27;s</text><text x="720" y="379" font-size="15" fill="#374151" font-weight="400" text-anchor="start">page ticks the same box (U9).</text>
-<text x="720" y="470" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Paid the holder: a checkbox, no money</text><text x="720" y="496" font-size="15" fill="#374151" font-weight="400" text-anchor="start">#118&#x27;s criterion. It is the holder&#x27;s private memo: no</text><text x="720" y="517" font-size="15" fill="#374151" font-weight="400" text-anchor="start">amounts, no reminders to pay, no screen. It replaces chasing</text><text x="720" y="538" font-size="15" fill="#374151" font-weight="400" text-anchor="start">by memory, and it never makes the platform handle money</text><text x="720" y="559" font-size="15" fill="#374151" font-weight="400" text-anchor="start">(0022).</text>
-<text x="720" y="650" font-size="17" fill="#111827" font-weight="700" text-anchor="start">When is an order done?</text><text x="720" y="676" font-size="15" fill="#374151" font-weight="400" text-anchor="start">When everyone is ticked, or the holder taps Done, or after a</text><text x="720" y="697" font-size="15" fill="#374151" font-weight="400" text-anchor="start">set time (O7: 2 h after arrival). pizza.order.done is a new</text><text x="720" y="718" font-size="15" fill="#374151" font-weight="400" text-anchor="start">additive event (D3); Moments&#x27; preset 21 may end on it.</text>
-<text x="1380" y="110" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Nudge</text><text x="1380" y="136" font-size="15" fill="#374151" font-weight="400" text-anchor="start">One push to the people not yet ticked: &#x27;Your</text><text x="1380" y="157" font-size="15" fill="#374151" font-weight="400" text-anchor="start">pizza is waiting at the entrance table&#x27;. Once</text><text x="1380" y="178" font-size="15" fill="#374151" font-weight="400" text-anchor="start">per order, rate-limited (D12).</text>
-<text x="1380" y="270" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Leftovers</text><text x="1380" y="296" font-size="15" fill="#374151" font-weight="400" text-anchor="start">An unclaimed pizza after done stays a line in</text><text x="1380" y="317" font-size="15" fill="#374151" font-weight="400" text-anchor="start">the record; what happens to the pizza is the</text><text x="1380" y="338" font-size="15" fill="#374151" font-weight="400" text-anchor="start">venue&#x27;s house rule, not the app&#x27;s.</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1880 1100" width="1880" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 09 (plan): arrival and hand-out</title>
+<defs><clipPath id="ph42_150"><rect x="42" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph482_150"><rect x="482" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph922_150"><rect x="922" y="150" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1880" height="1100" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">09 · It&#x27;s here: hand-out, &quot;Everyone got theirs&quot;, who paid the holder (holder)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Redrawn for the plan: one press ticks everyone (U4 note); the Paid column only when the order settles to the holder (M1, U12 note).</text>
+<rect x="32" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="237" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">A · Hand out, paid to the holder</text>
+<g clip-path="url(#ph42_150)">
+<rect x="42" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="76" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:42</text>
+<rect x="368" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="370" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="62" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Order 3</text>
+<text x="237" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Hand out</text>
+<rect x="42" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="81" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="159" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="237" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="315" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="393" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="170" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="58" y="250" width="358" height="70" rx="14" fill="#161a2e" stroke="#b98cff" stroke-width="1.5"/>
+<text x="74" y="280" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Here 19:28 · Entrance table</text>
+<text x="74" y="302" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Everyone in the order was told</text>
+<rect x="58" y="334" width="358" height="52" rx="10" fill="#3ee39a"/>
+<text x="237" y="365.76" font-size="16" fill="#0b0d1a" font-weight="700" text-anchor="middle">✓  Everyone got theirs</text>
+<text x="237" y="410" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">Ticks every pizza at once · undo for 10 s</text>
+<text x="58" y="444" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">4 of 6 collected · 2 paid you</text>
+<rect x="58" y="454" width="358" height="8" rx="4" fill="#161a2e"/>
+<rect x="58" y="454" width="239" height="8" rx="4" fill="#3ee39a"/>
+<text x="304" y="486" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="middle">GOT IT</text>
+<text x="380" y="486" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="middle">PAID YOU</text>
+<rect x="58" y="496" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="74" y="521" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Player</text>
+<text x="74" y="541" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#12 Kebab ×2 · €20.00</text>
+<rect x="292" y="514" width="24" height="24" rx="6" fill="#3ee39a"/>
+<path transform="translate(42,150)" d="M256,376.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="368" y="514" width="24" height="24" rx="6" fill="#b98cff"/>
+<path transform="translate(42,150)" d="M332,376.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="58" y="564" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="74" y="589" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Two</text>
+<text x="74" y="609" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#4 Margherita · €8.50</text>
+<rect x="292" y="582" width="24" height="24" rx="6" fill="#3ee39a"/>
+<path transform="translate(42,150)" d="M256,444.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="368" y="582" width="24" height="24" rx="6" fill="#b98cff"/>
+<path transform="translate(42,150)" d="M332,444.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="58" y="632" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="74" y="657" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Three (you)</text>
+<text x="74" y="677" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#7 Funghi · you paid</text>
+<rect x="292" y="650" width="24" height="24" rx="6" fill="#3ee39a"/>
+<path transform="translate(42,150)" d="M256,512.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="380" y="668" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="middle">—</text>
+<rect x="58" y="700" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="74" y="725" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Four</text>
+<text x="74" y="745" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#4 Margherita ×2 · €17.00</text>
+<rect x="292" y="718" width="24" height="24" rx="6" fill="none" stroke="#616788" stroke-width="1.5"/>
+<rect x="368" y="718" width="24" height="24" rx="6" fill="none" stroke="#616788" stroke-width="1.5"/>
+<rect x="58" y="776" width="200" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="158" y="804.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Nudge Player Four</text>
+<rect x="268" y="776" width="148" height="46" rx="10" fill="#3ddcff"/>
+<text x="342" y="804.4" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle">Done</text>
+</g>
+<rect x="472" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="677" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">B · Hand out, settled through the organiser</text>
+<g clip-path="url(#ph482_150)">
+<rect x="482" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="516" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">18:09</text>
+<rect x="808" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="810" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="502" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Order 1</text>
+<text x="677" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Hand out</text>
+<rect x="482" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="521" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="599" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="677" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="755" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="833" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="610" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="498" y="250" width="358" height="70" rx="14" fill="#161a2e" stroke="#b98cff" stroke-width="1.5"/>
+<text x="514" y="280" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">Here 18:05 · Entrance table</text>
+<text x="514" y="302" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Everyone in the order was told</text>
+<rect x="498" y="332" width="358" height="64" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="358" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Settled through the organiser</text>
+<text x="514" y="378" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">People pay after the event. Nothing to collect.</text>
+<rect x="498" y="410" width="358" height="52" rx="10" fill="#3ee39a"/>
+<text x="677" y="441.76" font-size="16" fill="#0b0d1a" font-weight="700" text-anchor="middle">✓  Everyone got theirs</text>
+<text x="498" y="500" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">1 of 6 collected</text>
+<rect x="498" y="510" width="358" height="8" rx="4" fill="#161a2e"/>
+<rect x="498" y="510" width="60" height="8" rx="4" fill="#3ee39a"/>
+<text x="820" y="542" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="middle">GOT IT</text>
+<rect x="498" y="552" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="577" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Two (you)</text>
+<text x="514" y="597" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#3 Pepperoni</text>
+<rect x="808" y="570" width="24" height="24" rx="6" fill="#3ee39a"/>
+<path transform="translate(482,150)" d="M332,432.0 l4.8,4.8 l8.0,-8.0" fill="none" stroke="#0b0d1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="498" y="620" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="645" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Five</text>
+<text x="514" y="665" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#9 Veggie ×2</text>
+<rect x="808" y="638" width="24" height="24" rx="6" fill="none" stroke="#616788" stroke-width="1.5"/>
+<rect x="498" y="688" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="713" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Player</text>
+<text x="514" y="733" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">#3 Pepperoni ×2</text>
+<rect x="808" y="706" width="24" height="24" rx="6" fill="none" stroke="#616788" stroke-width="1.5"/>
+<rect x="498" y="756" width="358" height="60" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="781" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Six</text>
+<text x="514" y="801" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Other: garlic bread</text>
+<rect x="808" y="774" width="24" height="24" rx="6" fill="none" stroke="#616788" stroke-width="1.5"/>
+<rect x="498" y="840" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="677" y="868.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Nudge the 3 not collected</text>
+</g>
+<rect x="912" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1117" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">C · After &quot;Everyone got theirs&quot;: done</text>
+<g clip-path="url(#ph922_150)">
+<rect x="922" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="956" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:44</text>
+<rect x="1248" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1250" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="942" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Food</text>
+<text x="1117" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Order 3</text>
+<rect x="922" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="961" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="1039" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="1117" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="1195" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="1273" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1050" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="938" y="250" width="358" height="48" rx="12" fill="#1c2138" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="280" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">Everyone ticked · order 3 is done</text>
+<text x="1280" y="280" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="end">Undo</text>
+<rect x="938" y="314" width="358" height="112" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="348" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Order 3 is done</text>
+<text x="954" y="374" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">6 of 6 collected at 19:44</text>
+<text x="954" y="396" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">The screens&#x27; &quot;orders ready&quot; story ends</text>
+<text x="938" y="458" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">MONEY</text>
+<rect x="938" y="470" width="358" height="150" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="500" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">You paid Demo Trattoria €54.50</text>
+<text x="954" y="524" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Paid you: Demo Player, Player Two</text>
+<text x="954" y="560" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Still owes you</text>
+<text x="954" y="586" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Four</text>
+<text x="1280" y="586" font-size="15" fill="#ffb454" font-weight="700" text-anchor="end">€17.00</text>
+<rect x="938" y="636" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1117" y="664.4" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="middle">The order&#x27;s money</text>
+<text x="938" y="722" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Each person sees only their own mark:</text>
+<text x="938" y="744" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">&quot;Player Three has your payment marked&quot;.</text>
+</g>
+<circle cx="1375" cy="155" r="13" fill="#f59e0b"/>
+<text x="1375" y="160" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="1396" y="160" font-size="16" fill="#111827" font-weight="700" text-anchor="start">One press for everyone (U4 note)</text>
+<text x="1396" y="184" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">&quot;Everyone got theirs&quot; ticks every pizza at once, so</text>
+<text x="1396" y="205" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the holder does not tap a list at the door. Undo for</text>
+<text x="1396" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">10 s; single ticks still work, and &quot;I&#x27;ve got mine&quot; on</text>
+<text x="1396" y="247" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the attendee&#x27;s page ticks the same box (U9).</text>
+<circle cx="1375" cy="281" r="13" fill="#f59e0b"/>
+<text x="1375" y="286" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1396" y="286" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The order is done</text>
+<text x="1396" y="310" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">When every pizza is ticked, the order is done:</text>
+<text x="1396" y="331" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">pizza.order.done (D3), and the screens&#x27; &quot;Pizza orders</text>
+<text x="1396" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">ready&quot; story may end on it. Without ticks, the timer</text>
+<text x="1396" y="373" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">does it 2 h after arrival (O7).</text>
+<circle cx="1375" cy="407" r="13" fill="#f59e0b"/>
+<text x="1375" y="412" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="1396" y="412" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Paid you: only when it settles to the holder</text>
+<text x="1396" y="436" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The event setting &quot;Let holders take payment directly&quot;</text>
+<text x="1396" y="457" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(mockup 17) allows it; the holder then chooses per</text>
+<text x="1396" y="478" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">order (U12 note, M1). Settled through the organiser</text>
+<text x="1396" y="499" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(B), there is no Paid column: people pay after the</text>
+<text x="1396" y="520" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">event through the payment system.</text>
+<circle cx="1375" cy="554" r="13" fill="#f59e0b"/>
+<text x="1375" y="559" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="1396" y="559" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Amounts come from the order&#x27;s money</text>
+<text x="1396" y="583" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Each row shows what the person owes, as mockup 19</text>
+<text x="1396" y="604" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">works it out: exact from prices, or an even share per</text>
+<text x="1396" y="625" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">pizza. Who sees a tick: the holder and the crew; each</text>
+<text x="1396" y="646" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">person their own (U12 A).</text>
+<circle cx="1375" cy="680" r="13" fill="#f59e0b"/>
+<text x="1375" y="685" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="1396" y="685" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Nudge</text>
+<text x="1396" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">One push to the people not yet ticked, once per order</text>
+<text x="1396" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(D12).</text>
+<circle cx="1375" cy="764" r="13" fill="#f59e0b"/>
+<text x="1375" y="769" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1396" y="769" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Nobody at the door</text>
+<text x="1396" y="793" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">U5 B: venue staff get no door helper; the delivery</text>
+<text x="1396" y="814" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">asks for the holder, and the crew can still mark it</text>
+<text x="1396" y="835" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">arrived from the crew&#x27;s Food page.</text>
 </svg>

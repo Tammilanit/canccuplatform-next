@@ -1,0 +1,96 @@
+# Step 5 decisions (product owner, 2026-11-19)
+
+Every question in `docs/briefs/step-5-pizza/questions.md`, plus M1–M4, answered by the product owner. "rec" means the recommendation was taken as written.
+
+- **M1** A (rec)
+- **M2** A (rec)
+- **M3** A (rec). Answered in chat. Also: if a very cheap vision API allows it, the platform offers an optional AI reading service for receipts and menus (see D10), always confirmed by a person.
+- **M4** A (rec)
+- **U1** A (rec)
+- **U2** A (rec)
+- **U3** A (rec). PO note: It worked previously quite well when the caller made all the Status changes via the "old pizza app". There was also an auto -close for orders where the caller forgot to go through the whole chain.
+- **U4** A (rec). PO note: It should be possible for the caller to just check all with one press of a button.
+- **U5** B, not the recommended A: "Nothing: the delivery asks for the holder." PO note: In current venue the caller handles it directly. In some other venues it might be different, but then again a bigger event might not use this type of order system and billing.
+- **U6** A (rec)
+- **U7** A (rec)
+- **U8** A (rec)
+- **U9** A (rec)
+- **U10** A (rec)
+- **U11** A (rec)
+- **U12** A (rec). PO note: The option to pay directly the caller should be an event setting, not a per order setting. If enabled, then it can be chosen per order.
+- **U13** A (rec)
+- **U14** A (rec)
+- **U15** A (rec)
+- **U16** A (rec)
+- **U17** A (rec)
+- **U18** A (rec)
+- **L1** A (rec)
+- **L2** A (rec)
+- **L3** A (rec)
+- **L4** A (rec)
+- **L5** A (rec)
+- **L6** A (rec)
+- **L7** A (rec)
+- **L8** A (rec)
+- **L9** A (rec)
+- **D1** A (rec)
+- **D2** A (rec)
+- **D3** A (rec)
+- **D4** A (rec)
+- **D5** A (rec)
+- **D6** A (rec)
+- **D7** B, not the recommended A (in chat, after the page): the menu CSV carries an optional price per pizza. With prices, each person has an exact amount as soon as they order; the receipt confirms or corrects it; delivery fees and discounts are split evenly. PO note on the page: "Just wondering if we wanted to have the option to pay the exact prices instead of evened-out shares..."
+- **D8** A (rec)
+- **D9** A (rec)
+- **D10** A (rec). PO note: the menu import is a CSV with a spec we publish; anyone may generate that CSV with AI themselves. If a very cheap API allows it, the platform also offers an optional AI reading service for both menus (photo -> the menu CSV) and receipts (M3), always confirmed by a person before it counts. The CSV replaces the paste-a-text import.
+- **D11** A (rec). PO note: Needs also the www page of the pizzeria
+- **D12** A (rec)
+- **D13** A (rec)
+- **D14** A (rec)
+- **D15** A (rec)
+- **D16** A (rec)
+- **D17** A (rec)
+- **D18** A (rec)
+- **E1** A (rec)
+- **E2** A (rec)
+- **E3** A (rec)
+- **E4** A (rec). PO note: Need to send notifications to caller and crew that the order is not closed after a time.
+- **E5** A (rec)
+- **E6** A (rec)
+- **E7** A (rec)
+- **E8** A (rec)
+- **E9** A (rec)
+- **E10** A (rec)
+- **E11** A (rec)
+- **E12** A (rec)
+- **E13** A (rec)
+- **E14** A (rec)
+- **E15** A (rec)
+- **E16** A (rec)
+- **O1** A, amended (in chat): plan for parties of up to about 60–70 people, not 2,000; large events have their own food booths. Keep the conditional updates and idempotency (E1, E2, E12); drop the planning for a dinner spike of hundreds. PO note on the page: "Sure, but the fact is that if there is an event of 2000 people it will have it's internal food booths etc. I would imagine this kind of system is only used at parties up to 60-70 persons."
+- **O2** A (rec)
+- **O3** A (rec)
+- **O4** A (rec)
+- **O5** A (rec)
+- **O6** A (rec)
+- **O7** A (rec)
+- **O8** A (rec)
+- **O9** A (rec)
+- **O10** A (rec)
+- **P1** C (rec)
+- **P2** A (rec)
+- **P3** A (rec)
+- **P4** A (rec)
+- **P5** A (rec)
+- **P6** A (rec)
+- **P7** A (rec)
+- **P8** A (rec)
+
+## The M questions
+
+The four money questions came from the product owner's notes in the brief ([The product owner's notes (2026-11-19)](../step-5-pizza.md#the-product-owners-notes-2026-11-19)) and are not in `questions.md`. Each title and its chosen option, as the product owner saw them:
+
+- **M1. How is food settled?** Chosen: **A.** Through the organiser by default: after the event each person owes the organiser their share. An event setting lets attendees pay the holder directly instead.
+- **M2. An even share or exact prices?** Chosen: **A.** By pizza count by default: the platform exports the total and each person's pizzas. The holder or the crew can enter a person's exact amount from the receipt, and it is exported instead.
+- **M3. Scanning receipts.** Chosen: **A.** The holder or the crew can scan an order's receipts in the pizza app (optional). A machine read suggests the total and each pizza's price, matched to the order's pizzas. The holder confirms or corrects them before they count. The confirmed total becomes the order's total, and the prices become exact amounts in the export (M2). Without a scan, the holder types the total.
+- **M4. The CSV export for the payment system (contract).** Chosen: **A.** The pizza admin exports one CSV in the format the payment system reads, written as a contract in this repo and agreed with the dev host. Per order: the cost and who paid the pizzeria. Per person: their amount (even share or exact) and the order. The daily record shows the same numbers.

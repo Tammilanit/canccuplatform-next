@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2640 1180" width="2640" height="1180" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 18 (plan): scanning a receipt</title>
+<defs><clipPath id="ph42_150"><rect x="42" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph482_150"><rect x="482" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph922_150"><rect x="922" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph1362_150"><rect x="1362" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph1802_150"><rect x="1802" y="150" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2640" height="1180" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">18 · Scanning a receipt: the photo, the machine read, the holder confirms (holder, phone)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">New for the plan (M3): optional; the read only suggests, and nothing counts until the holder confirms the total and each pizza&#x27;s price.</text>
+<rect x="32" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="237" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">A · The money step after arrival</text>
+<g clip-path="url(#ph42_150)">
+<rect x="42" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="76" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:50</text>
+<rect x="368" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="370" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="62" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Order 3</text>
+<text x="237" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Money</text>
+<rect x="42" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="81" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="159" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="237" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="315" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="393" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="170" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<text x="58" y="266" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Add the receipt</text>
+<text x="58" y="292" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">It sets the order&#x27;s total and, when read,</text>
+<text x="58" y="311" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">each pizza&#x27;s price. Optional.</text>
+<rect x="58" y="330" width="358" height="84" rx="14" fill="#3a2e1a" stroke="#ffb454" stroke-width="1.5"/>
+<text x="74" y="356" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start">Read by an outside service</text>
+<text x="74" y="378" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">The photo goes to Anthropic to be read.</text>
+<text x="74" y="397" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">You check the result before it counts.</text>
+<rect x="58" y="432" width="358" height="52" rx="10" fill="#3ddcff"/>
+<text x="237" y="463.76" font-size="16" fill="#0b0d1a" font-weight="700" text-anchor="middle">Scan the receipt</text>
+<rect x="58" y="494" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="237" y="522.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">Type the total instead</text>
+<text x="58" y="580" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">THIS ORDER</text>
+<rect x="58" y="592" width="358" height="70" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="74" y="620" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Trattoria · 6 pizzas</text>
+<text x="74" y="642" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Menu prices add up to €51.50</text>
+<text x="58" y="696" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Without the reader the photo is kept</text>
+<text x="58" y="714" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">and you type the total (D).</text>
+</g>
+<rect x="472" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="677" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">B · The photo</text>
+<g clip-path="url(#ph482_150)">
+<rect x="482" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="516" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:51</text>
+<rect x="808" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="810" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="502" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Money</text>
+<text x="677" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Scan</text>
+<rect x="482" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="521" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="599" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="677" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="755" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="833" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="610" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="482" y="250" width="390" height="620" rx="0" fill="#05060c"/>
+<rect x="552" y="280" width="250" height="300" rx="6" fill="#f4f1ea"/>
+<text x="566" y="310" font-size="11" fill="#2f2a25" font-weight="700" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">DEMO TRATTORIA</text>
+<text x="566" y="330" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Order for delivery</text>
+<text x="566" y="350" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"></text>
+<text x="566" y="370" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">2 x 12 Kebab     19.00</text>
+<text x="566" y="390" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">3 x 4 Margherita  24.00</text>
+<text x="566" y="410" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">1 x 7 Funghi       8.50</text>
+<text x="566" y="430" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Delivery          4.00</text>
+<text x="566" y="450" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Discount         -1.00</text>
+<text x="566" y="470" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"></text>
+<text x="566" y="490" font-size="11" fill="#2f2a25" font-weight="700" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">TOTAL            54.50</text>
+<text x="566" y="510" font-size="11" fill="#2f2a25" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">CARD              ****</text>
+<path transform="translate(482,150)" d="M60,144 v-24 h24" fill="none" stroke="#3ddcff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path transform="translate(482,150)" d="M330,144 v-24 h-24" fill="none" stroke="#3ddcff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path transform="translate(482,150)" d="M60,416 v24 h24" fill="none" stroke="#3ddcff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path transform="translate(482,150)" d="M330,416 v24 h-24" fill="none" stroke="#3ddcff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="498" y="630" width="358" height="92" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="514" y="660" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">Reading the receipt…</text>
+<rect x="514" y="676" width="326" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="514" y="676" width="190" height="6" rx="3" fill="#3ddcff"/>
+<text x="514" y="706" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Usually a few seconds</text>
+<rect x="498" y="750" width="170" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="583" y="778.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">Retake</text>
+<rect x="686" y="750" width="170" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="771" y="778.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">Cancel</text>
+</g>
+<rect x="912" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1117" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">C · The machine read, to check</text>
+<g clip-path="url(#ph922_150)">
+<rect x="922" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="956" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:51</text>
+<rect x="1248" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1250" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="942" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Scan</text>
+<text x="1117" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Check the read</text>
+<rect x="922" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="961" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="1039" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="1117" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="1195" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="1273" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1050" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="938" y="250" width="358" height="96" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="276" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Total on the receipt</text>
+<rect x="954" y="292" width="200" height="38" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="992" y1="298" x2="992" y2="324" stroke="#3c446c"/>
+<line x1="1116" y1="298" x2="1116" y2="324" stroke="#3c446c"/>
+<path transform="translate(922,150)" d="M45,161.0 h12" fill="none" stroke="#f3f5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path transform="translate(922,150)" d="M207,161.0 h12 M213,155.0 v12" fill="none" stroke="#f3f5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1054" y="316" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">€54.50</text>
+<text x="1280" y="317" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="end">Type ›</text>
+<text x="938" y="378" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">EACH PIZZA</text>
+<rect x="938" y="388" width="358" height="56" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="413" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">12 Kebab ×2</text>
+<text x="954" y="433" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">€9.50 each · as the menu</text>
+<text x="1280" y="413" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€19.00</text>
+<rect x="938" y="450" width="358" height="56" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="475" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">4 Margherita ×3</text>
+<text x="954" y="495" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">€8.00 each · as the menu</text>
+<text x="1280" y="475" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€24.00</text>
+<rect x="938" y="512" width="358" height="56" rx="14" fill="#161a2e" stroke="#ffb454" stroke-width="1.5"/>
+<text x="954" y="537" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">7 Funghi</text>
+<text x="954" y="557" font-size="12.5" fill="#ffb454" font-weight="400" text-anchor="start">Menu said €8.00</text>
+<text x="1280" y="537" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€8.50</text>
+<text x="938" y="588" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">EXTRAS · SPLIT PER PIZZA</text>
+<rect x="938" y="598" width="358" height="44" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="623" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Delivery</text>
+<text x="1280" y="623" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€4.00</text>
+<rect x="938" y="648" width="358" height="44" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="954" y="673" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Discount</text>
+<text x="1280" y="673" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">−€1.00</text>
+<text x="938" y="722" font-size="14" fill="#3ee39a" font-weight="700" text-anchor="start">Adds up to €54.50 ✓</text>
+<rect x="938" y="740" width="170" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1023" y="768.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">Retake</text>
+<rect x="1126" y="740" width="170" height="46" rx="10" fill="#3ddcff"/>
+<text x="1211" y="768.4" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle">Confirm</text>
+</g>
+<rect x="1352" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1557" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">D · No reader: type the total</text>
+<g clip-path="url(#ph1362_150)">
+<rect x="1362" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1396" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:51</text>
+<rect x="1688" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1690" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="1382" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Money</text>
+<text x="1557" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Type the total</text>
+<rect x="1362" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="1401" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="1479" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="1557" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="1635" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="1713" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1490" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<text x="1557" y="330" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="middle">€54.50</text>
+<text x="1557" y="360" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">paid to Demo Trattoria</text>
+<rect x="1378" y="400" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1435" y="435" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">1</text>
+<rect x="1500" y="400" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1557" y="435" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">2</text>
+<rect x="1622" y="400" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1679" y="435" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">3</text>
+<rect x="1378" y="464" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1435" y="499" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">4</text>
+<rect x="1500" y="464" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1557" y="499" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">5</text>
+<rect x="1622" y="464" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1679" y="499" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">6</text>
+<rect x="1378" y="528" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1435" y="563" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">7</text>
+<rect x="1500" y="528" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1557" y="563" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">8</text>
+<rect x="1622" y="528" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1679" y="563" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">9</text>
+<rect x="1378" y="592" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1435" y="627" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">.</text>
+<rect x="1500" y="592" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1557" y="627" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">0</text>
+<rect x="1622" y="592" width="114" height="54" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1679" y="627" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="middle">⌫</text>
+<rect x="1378" y="670" width="358" height="50" rx="10" fill="#3ddcff"/>
+<text x="1557" y="700.58" font-size="15.5" fill="#0b0d1a" font-weight="700" text-anchor="middle">Save the total</text>
+<rect x="1378" y="732" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1557" y="760.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Add a photo (kept, not read)</text>
+<text x="1557" y="814" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">Even shares unless every pizza has a price</text>
+</g>
+<rect x="1792" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1997" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">E · Confirmed</text>
+<g clip-path="url(#ph1802_150)">
+<rect x="1802" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1836" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:52</text>
+<rect x="2128" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2130" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<text x="1822" y="232" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Order 3</text>
+<text x="1997" y="232" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Money</text>
+<rect x="1802" y="920" width="390" height="74" rx="0" fill="#161a2e"/>
+<text x="1841" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="1919" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="1997" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="2075" y="956" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="2153" y="956" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1930" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="1818" y="250" width="358" height="64" rx="14" fill="#16362b" stroke="#3ee39a" stroke-width="1.5"/>
+<text x="1834" y="277" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">Total €54.50 confirmed</text>
+<text x="1834" y="298" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">by Player Three at 19:52</text>
+<rect x="1818" y="328" width="358" height="92" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1834" y="340" width="50" height="68" rx="4" fill="#f4f1ea"/>
+<rect x="1842" y="352" width="34" height="3" rx="1" fill="#8a8378"/>
+<rect x="1842" y="362" width="24" height="3" rx="1" fill="#8a8378"/>
+<rect x="1842" y="372" width="34" height="3" rx="1" fill="#8a8378"/>
+<rect x="1842" y="382" width="24" height="3" rx="1" fill="#8a8378"/>
+<rect x="1842" y="392" width="34" height="3" rx="1" fill="#8a8378"/>
+<text x="1900" y="362" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Receipt 1 · 19:51</text>
+<text x="1900" y="384" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Seen by you, the crew and</text>
+<text x="1900" y="402" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">the organiser only</text>
+<text x="1818" y="446" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">EACH PERSON · EXACT AMOUNTS</text>
+<rect x="1818" y="456" width="358" height="52" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1834" y="481" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Player</text>
+<text x="1834" y="501" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">2 pizzas</text>
+<text x="2160" y="481" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€20.00</text>
+<rect x="1818" y="514" width="358" height="52" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1834" y="539" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Two</text>
+<text x="1834" y="559" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">1 pizza</text>
+<text x="2160" y="539" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€8.50</text>
+<rect x="1818" y="572" width="358" height="52" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1834" y="597" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Three (you)</text>
+<text x="1834" y="617" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">1 pizza</text>
+<text x="2160" y="597" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€9.00</text>
+<rect x="1818" y="630" width="358" height="52" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1834" y="655" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Player Four</text>
+<text x="1834" y="675" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">2 pizzas</text>
+<text x="2160" y="655" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="end">€17.00</text>
+<rect x="1818" y="702" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1997" y="730.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">The order&#x27;s money</text>
+<rect x="1818" y="758" width="358" height="46" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1997" y="786.22" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">Add another receipt</text>
+</g>
+<circle cx="2255" cy="155" r="13" fill="#f59e0b"/>
+<text x="2255" y="160" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="2276" y="160" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Optional</text>
+<text x="2276" y="184" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The money step appears after arrival and</text>
+<text x="2276" y="205" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">stays open until the order is done; the</text>
+<text x="2276" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">crew can add it later too. Skipping it</text>
+<text x="2276" y="247" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">leaves the order with no total, and the</text>
+<text x="2276" y="268" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">record says so.</text>
+<circle cx="2255" cy="302" r="13" fill="#f59e0b"/>
+<text x="2255" y="307" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="2276" y="307" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The read only suggests (M3 A)</text>
+<text x="2276" y="331" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">It fills the total and matches each</text>
+<text x="2276" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">receipt line to the order&#x27;s pizzas by</text>
+<text x="2276" y="373" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">menu number and name. The holder</text>
+<text x="2276" y="394" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">confirms or corrects; nothing counts</text>
+<text x="2276" y="415" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">before that.</text>
+<circle cx="2255" cy="449" r="13" fill="#f59e0b"/>
+<text x="2255" y="454" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="2276" y="454" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Differences are shown, never hidden</text>
+<text x="2276" y="478" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">A price unlike the menu&#x27;s is marked. A</text>
+<text x="2276" y="499" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">line that matches no pizza, or a pizza</text>
+<text x="2276" y="520" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">with no line, is asked about.</text>
+<circle cx="2255" cy="554" r="13" fill="#f59e0b"/>
+<text x="2255" y="559" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="2276" y="559" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Extras</text>
+<text x="2276" y="583" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Delivery fees and discounts are split</text>
+<text x="2276" y="604" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">per pizza (D7 note): €3.00 over 6 pizzas</text>
+<text x="2276" y="625" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">is €0.50 a pizza.</text>
+<circle cx="2255" cy="659" r="13" fill="#f59e0b"/>
+<text x="2255" y="664" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="2276" y="664" font-size="16" fill="#111827" font-weight="700" text-anchor="start">No reader, or reader off</text>
+<text x="2276" y="688" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The holder types the total on the amount</text>
+<text x="2276" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">pad and may still add the photo; it is</text>
+<text x="2276" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">kept, not read.</text>
+<circle cx="2255" cy="764" r="13" fill="#f59e0b"/>
+<text x="2255" y="769" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="2276" y="769" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Who sees a receipt, how long</text>
+<text x="2276" y="793" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The holder, the crew and the organiser,</text>
+<text x="2276" y="814" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">since a receipt can show card digits.</text>
+<text x="2276" y="835" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Deleted at the 12-month anonymisation</text>
+<text x="2276" y="856" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(0027).</text>
+</svg>
