@@ -119,6 +119,9 @@ export function crewStories(o: {
           action="${PREFIX}storyboards/${takes[0]?.key ?? ""}/fire"
         >
           <input type="hidden" name="back" value="${o.back}" />
+          <!-- Enter in a variable field submits the form's first submit button. A disabled one
+               first means Enter fires nothing, never the first preset by accident. -->
+          <button type="submit" disabled hidden tabindex="-1" aria-hidden="true"></button>
           ${needsItem ? html`<label class="canccu-field__label" for="fire-item">Item</label>` : ""}
           <div class="moments-fire__row">
             ${

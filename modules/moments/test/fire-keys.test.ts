@@ -28,4 +28,28 @@ describe("the Fire chooser's idempotency keys", () => {
     expect(keys).toHaveLength(buttons.length);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  // Enter in a variable field submits the form's first submit button: it must be a disabled one,
+  // never the first preset's.
+  it("puts a disabled submit button before every preset, so Enter fires nothing", () => {
+    const stories = ["champion", "starting_soon"].map((k) => ({
+      ...(presetOf(k) as Story),
+      enabled: true,
+    }));
+    const out = String(
+      crewStories({
+        stories,
+        runs: [],
+        items: [],
+        now: Date.parse("2026-03-14T17:00:00Z"),
+        canTake: true,
+        back: "on-air",
+        timeZone: "UTC",
+        settings: {} as never,
+      }),
+    );
+    const first = /<button[^>]*type="submit"[^>]*>/.exec(out)?.[0] ?? "";
+    expect(first).toContain("disabled");
+    expect(first).not.toContain("formaction");
+  });
 });

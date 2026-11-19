@@ -125,9 +125,16 @@ describe("hero.css, the hero rule", () => {
 
   // #638 (V5): the cue's frame and glow kept the primary colour over an urgent card.
   it("gives an urgent card's cue frame and glow the warning colour too", () => {
+    // On the region, which carries `.canccu-cue` (applyCue(drawn.el)); a child's property never
+    // reaches the region's ::after.
+    expect(
+      ruleOf(
+        ".canccu-region:has(> .canccu-widget.canccu-is-claim .canccu-widget__level--urgent)",
+      ),
+    ).toContain("--canccu-cue-ink: var(--canccu-color-status-degraded);");
     expect(
       ruleOf(".canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent)"),
-    ).toContain("--canccu-cue-ink: var(--canccu-color-status-degraded);");
+    ).not.toContain("--canccu-cue-ink");
     const cues = read("cues.css").replace(/\/\*[\s\S]*?\*\//g, "");
     // The primary only as the ink's fallback, never on its own.
     expect(cues.replaceAll("var(--canccu-cue-ink, var(--canccu-color-primary))", "")).not.toContain(
