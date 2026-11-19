@@ -2,7 +2,7 @@
 
 **This is the accepted design guideline (PO, 2026-11-12) for every later step that touches anything users see.** Issues name the sheet of `mockups.html` they follow; PRs carry screenshots of the built page next to that sheet.
 
-**What is in the repo and what is not.** This folder holds `mockups.html`, `stage.html`, this README, `widgets.md`, `experience-map.md` and `strips/*.png`. The per-sheet renders (`png/`, 64 files, about 84 MB) and the clips (`video/`, about 29 MB) are too large for the repo: they stay in the handover folder on the maintainer host, `/home/debian/handover/design-final/png/` and `/home/debian/handover/design-final/video/`. Wherever this README says `png/` or `video/`, it means those folders. The generator `build/` it names is in neither the repo nor the handover folder.
+**What is in the repo and what is not.** This folder holds `mockups.html`, `stage.html`, this README, `widgets.md`, `experience-map.md`, `strips/*.png` and `moments-on-air.svg` (On air rebalanced at 1280 px and 390 px, #638, in the dark shell of the step 4 polish sheets). The per-sheet renders (`png/`, 64 files, about 84 MB) and the clips (`video/`, about 29 MB) are too large for the repo: they stay in the handover folder on the maintainer host, `/home/debian/handover/design-final/png/` and `/home/debian/handover/design-final/video/`. Wherever this README says `png/` or `video/`, it means those folders. The generator `build/` it names is in neither the repo nor the handover folder.
 
 The one design language, organiser shell and screens (issue #382). The base is PR #387's `mockups.html`, with the hybrid from the design review, the fixes from four judging rounds, round 5's layouts and motion, and round 6's scenes, Director, cues, backgrounds and widgets.
 
