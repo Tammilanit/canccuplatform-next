@@ -9,13 +9,13 @@ It has three parts: [the organiser and crew pages](#the-organiser-and-crew), [th
 - **Two sources, both main `9f02c35`:**
   - **CI:** the artifact `demo-screenshots` of the Demo stack run on the push of `9f02c35` ([44514926330](https://github.com/Tammilanit/canccuplatform-next/actions/runs/44514926330), green). `scripts/demo-screenshots` took these in Chromium, with the demo event, its fixture and the CI session stub ([docs/ci.md](../ci.md#demo-stack)). Since #625 the storyboard screen shots pass the screens' readability check too. The book marks them *CI*.
   - **Local:** what CI does not shoot comes from the same commit, built locally with the same CI overlay (`deploy/compose.yml` + `deploy/compose.ci.yml`), the same fixture (`seedScreens`) and the same Playwright image. A one-off script built on the CI scripts' helpers took them (it is not committed). That covers: the gate's sequences in real time, the first fire on a fresh stack, the portrait screens, the mute and the sound check, Test-fire, a drag on Priorities and Fire by hand. The screens are real paired players on `/screen/`, each with its device cookie, so they draw what Screen places, as an installed screen would. The book marks them *local*.
-- **The event's time zone, local shots only:** Midnight fires at the event's own 00:00. To shoot it on the dot without waiting for UTC midnight, the local stack's demo event was set to the time zone `Australia/Eucla` (UTC+8:45) at 14:58 UTC. That made midnight fall at 15:15:00 UTC the same day. Before that, from 14:54 to 14:58 UTC, it was `Asia/Shanghai` (UTC+8), and the first fire (V6) was shot then. So the local shots show event time: the clock reads 22:57 to 00:45. The organiser header reads "Thu 19 – Sat 21 Nov", because the demo event's dates are UTC days shown in that zone. Nothing else changed: the fixture's run of show keeps its UTC times, so the semis start at 16:00 UTC (00:45 event time), the item Starting soon fired on in S1.
-- **Data:** the demo profile and the screens' fixture: a run of show around the time of the run (Dinner on now, the semis delayed 15 minutes), a ticker line, and two zones, Main hall (landscape) and Entrance (portrait, with the check-in QR in its hero). On top of that, per shot: crew spotlights, an urgent announcement, test-fires, Premiere set up on an added item with the demo film, and Starting soon on the fixture's semis. Every moment was ended or withdrawn afterwards, and every added item and file was removed.
+- **The event's time zone, local shots only:** Midnight fires at the event's own 00:00. To shoot it on the dot without waiting for UTC midnight, the local stack's demo event was set to the time zone `Australia/Eucla` (UTC+8:45) at 14:58 UTC. That made midnight fall at 15:15:00 UTC the same day. Before that, from about 14:55 to 14:58 UTC, it was `Asia/Shanghai` (UTC+8), and the first fire (V6) was shot then. So the local shots show event time: the clock reads 22:57 to 00:47. The organiser header reads "Thu 19 – Sat 21 Nov" there, where CI's reads "Thu 19 – Fri 20 Nov": the same dates seen from that zone. Nothing else changed: the fixture's run of show keeps its UTC times, so the semis start at 16:00 UTC (00:45 event time), the item Starting soon fired on in S1.
+- **Data:** the demo profile and the screens' fixture: a run of show around the time of the run (Dinner on now, the semis delayed 15 minutes), a ticker line, and two zones, Main hall (landscape) and Entrance (portrait, with the check-in QR in its hero). On top of that, per shot: crew spotlights, an urgent announcement, test-fires, Premiere set up on an added item with the demo film, and Starting soon on the fixture's semis. Every moment and run was ended, stopped or withdrawn afterwards, and every added item and file was removed (the agenda kind Premiere stays on the throwaway stack).
 - **Sizes:**
   - Pages are shown 1:1 as PNG: desktop 1280 px wide and phone 390 px wide, as tall as the page. A few local ones show only the window (1280×800), the top of the page, where the change is.
   - Screens were shot at 1920×1080, 3840×2160 and 1080×1920. Here they are JPEG, 720 px on the short side, with one 1:1 crop of a 4K screen. Sequences are numbered strips.
   - Each sequence frame's label is the instant the shot was asked for, in event time. A capture takes 1.1 to 1.8 s, and when two screens are shot at once in one browser, their captures can be up to about a second apart.
-- **Time:** CI took its shots 11:30–11:37 UTC. The local shots were taken 14:57–16:05 UTC: Midnight at 15:14:45–15:15:21, and Starting soon's rounds at 15:45, 15:55 and 15:59 UTC, with its finale at 16:00.
+- **Time:** CI took its shots 11:30–11:37 UTC. The local shots were taken 14:57–16:03 UTC: Midnight at 15:14:45–15:15:21, and Starting soon's rounds at 15:45, 15:55 and 15:59 UTC, with its finale at 16:00.
 - **Mockups:** "polish NN" is sheet NN of [docs/briefs/step-4-polish/](../briefs/step-4-polish/README.md) (#623). "Mockup NN" is the step 4 brief's mockup in [docs/briefs/step-4-moments/](../briefs/step-4-moments/). "Before" is the old book's shot (O, C, A, R, S numbers).
 
 ## Contents
@@ -28,7 +28,7 @@ It has three parts: [the organiser and crew pages](#the-organiser-and-crew), [th
 
 ## The organiser and crew
 
-Every page is in the organiser shell, under Studio → Moments (sheet 2 of [the design guideline](../design/mockups.html)). Each one is shown at 1280 px and on a 390 px phone.
+Every page is in the organiser shell, under Studio → Moments (sheet 2 of [the design guideline](../design/mockups.html)). Most are shown at 1280 px and on a 390 px phone; CI shoots the builder's loop, Premiere and Test-fire at 1280 px only.
 
 ### P1 · Priorities: drag and drop, no rank numbers
 
@@ -36,7 +36,7 @@ Every page is in the organiser shell, under Studio → Moments (sheet 2 of [the 
 |---|---|---|---|---|
 | ![Priorities](step4-polish-book/p01-priorities.png) | ![Priorities while a row is dragged](step4-polish-book/p01-priorities-dragging.png) | ![Priorities, phone](step4-polish-book/p01-priorities-phone.png) | ![Mockup 08](../briefs/step-4-moments/08-priorities.svg) | ![O5](step4-screenshot-book/o05-priorities-and-rules.png) |
 
-The order is a list of classes with a drag handle each. The rank numbers and arrows are gone, as the PO asked ("drag and drop, not arrows; the rank numbers mean nothing"). The line above says "Drag a class by its handle, or focus it and use the arrow keys", and Emergency stays locked at the top. In the local shot, Crew spotlight is held mid-drag and has already moved above Announcement. Rows reorder live under the pointer, and Save order keeps the new order. The preview of what main would show sits beside the list (here it plays the test round of P14). On a phone the list, the preview and the rules stack in one column. This matches mockup 08's drag and drop, without its numbers.
+The order is a list of classes with a drag handle each. The rank numbers and arrows are gone, as the PO asked ("drag and drop, not arrows; the rank numbers mean nothing"). The line above says "Drag a class by its handle, or focus it and use the arrow keys", and Emergency stays locked at the top. In the local shot, Crew spotlight is held mid-drag and has already moved above Announcement. Rows reorder live under the pointer; Save order then keeps the order (the shot does not save). The preview of what main would show sits beside the list (here it plays the test round of P14). On a phone the list, the preview and the rules stack in one column. This matches mockup 08's drag and drop, without its numbers.
 
 ### P2 · The built-in rules: chips and sliders
 
@@ -76,7 +76,7 @@ Upload a sound is one button with a drop area and its rules in words. The 12 sou
 |---|---|---|---|
 | ![Limits and categories](step4-polish-book/p06-limits.png) | ![Limits and categories, phone](step4-polish-book/p06-limits-phone.png) | ![Polish 03](../briefs/step-4-polish/03-sound-desk-library-limits-log.svg) | ![O9](step4-screenshot-book/o09-cues.png) |
 
-Budget per zone has Sounds an hour and Sounds a minute as sliders and the per-source gap as a stepper. The zone table says what passes now and that no zone has a sound screen ("None · Set one in Devices"). Categories are rows of a level slider and two switches (Interrupts or Waits, Plays or Silent at calm). Every number of O9's boxes is now a slider or a stepper, as polish 03 draws it. The pending row sits halfway down here too, an artefact of the capture.
+Budget per zone has Sounds an hour and Sounds a minute as sliders and the per-source gap as a stepper. The zone table says what passes now and that no zone has a sound screen ("None · Set one in Devices"). Categories are rows of a level slider and two switches (Interrupts or Waits, Plays or Silent at calm). Every number box of O9 is now a slider or a stepper, as polish 03 draws it. The pending row sits halfway down here too, an artefact of the capture.
 
 ### P7 · Log
 
@@ -140,7 +140,7 @@ Premiere, set up for the demo film. It plays when a premiere item starts, by han
 |---|---|---|
 | ![Match called after Test-fire](step4-polish-book/p14-builder-test-fired.png) | ![Polish 05](../briefs/step-4-polish/05-builder.svg) | ![O23](step4-screenshot-book/o23-builder-test-fired.png) |
 
-Match called after Test-fire on main: a green notice says "One test round on main." under the header, which keeps Test-fire on main and Save. Polish 05 puts that line in the header itself ("One test round on Main hall · marked as a test in History"). Here it is a notice, and it does not mention History. Close to the sheet, not the same.
+Match called after Test-fire on main: a green notice says "One test round on main." under the header, which keeps Test-fire on main and Save. Polish 05 puts that line in the header itself ("One test round on Main hall · marked as a test in History"). Here it is a notice, it names the zone by its key ("main") rather than its name (Main hall), and it does not mention History. Close to the sheet, not the same.
 
 ### P15 · History
 
@@ -156,7 +156,7 @@ On a phone each row is now a card (Time, Zone, Moment and its outcome, Region, W
 |---|---|---|---|---|
 | ![On air](step4-polish-book/p16-on-air.png) | ![On air, phone](step4-polish-book/p16-on-air-phone.png) | ![On air after Fire Starting soon](step4-polish-book/p16-fired.png) | ![Mockup 03](../briefs/step-4-moments/03-on-air.svg) ![Mockup 04](../briefs/step-4-moments/04-crew-remote.svg) | ![O2](step4-screenshot-book/o02-on-air-fired.png) |
 
-PENDING-P16
+The Storyboards card's item list now starts at the next item a story can take, not at the first item of the day. In CI at 11:30 UTC it picks "Demo Game Cup, semis", the next tournament item. Locally, with the semis started, it picks "Demo Game Cup, grand final" (17:45 UTC). In O2 the list started at Doors open, already past. Fire Starting soon on it (local): the page says "Fired." and the card reads "Starting soon · between rounds", with Stop loop and Skip to finale. The rounds count from the item's time, so nothing plays until the grand final's T−15 (V7). This answers #624's "Fire defaults to the next fitting item" (mockups 03 and 04 draw an item picker but no default). Two things fall short: the list writes the time in UTC ("17:45") where the event's clock reads 02:30, and on a phone the list touches the first Fire button (see [Seen while shooting](#seen-while-shooting)).
 
 ### P17 · The spotlight remote's photo picker
 
@@ -224,11 +224,15 @@ Each of the 23 presets, test-fired as one round on the main hall and shot at its
 |---|---|---|---|
 | ![Doors open's first fire on main](step4-polish-book/v06-first-fire.jpg) | ![The same fire on the entrance](step4-polish-book/v06-first-fire-portrait.jpg) | ![Polish 10](../briefs/step-4-polish/10-hero-4k-portrait.svg) | ![R20](step4-screenshot-book/r20-qr-step-blank.jpg) ![A5](step4-screenshot-book/a05-storyboard-card-portrait.jpg) |
 
-The first storyboard fired on a freshly started stack (Moments restarted just before), Doors open, test-fired on main and on the entrance at 14:57:08 UTC (22:57 event time, then UTC+8). The message reads "Welcome to Demo Event" on both screens at once, and the QR step draws its code at once. The first test-fire of the old book read "Welcome to" (A5, R19) and drew a white square (R20). This matches polish 10 (portrait: "the first fire never reads 'Welcome to' on its own"), apart from the kicker.
+The first storyboard fired on a freshly started stack (Moments restarted just before), Doors open, test-fired on main and on the entrance at 14:57:08 UTC (22:57 event time, then UTC+8). The message reads "Welcome to Demo Event" on both screens, and the QR step shows its code (each frame shot about 1 s after the step was drawn). The first test-fire of the old book read "Welcome to" (A5, R19) and drew a white square (R20). This matches polish 10 (portrait: "the first fire never reads 'Welcome to' on its own"), apart from the kicker.
 
 ### V7 · Fired by hand (R22)
 
-PENDING-V7
+| Main hall after Fire (*local*) | Before (R22) |
+|---|---|
+| ![The main hall after Fire Starting soon](step4-polish-book/v07-after-fire.jpg) | ![R22](step4-screenshot-book/r22-fired-by-hand.jpg) |
+
+The main hall 80 s after P16's Fire: the Pulse, with the grand final in the hero ("Starts in 01:42:24"). Nothing jumps to a finale. In R22 Fire defaulted to an item already past, and "It's on!" went up when nothing was starting. Now the run waits for its rounds at the item's T−15, T−5 and T−1, as S1 shows. The crew sees "between rounds" on On air but nothing on screen (see [Seen while shooting](#seen-while-shooting)). The run was stopped afterwards.
 
 ## The gate's sequences
 
@@ -236,7 +240,21 @@ Each sequence is a strip of numbered frames, labelled with the instant each was 
 
 ### S1 · Starting soon: T−15, T−5, T−1 and its finale
 
-PENDING-S1
+| Main hall, 1080p (*local*, real time) |
+|---|
+| ![Starting soon at T−15, T−5, T−1 and T](step4-polish-book/s01-starting-soon.jpg) |
+
+| Mockup: polish 08 (7–9) and mockup 19 | Before (S1) |
+|---|---|
+| ![Polish 08](../briefs/step-4-polish/08-hero-templates-1080p.svg) ![Mockup 19](../briefs/step-4-moments/19-storyboard-loop-timeline.svg) | ![S1](step4-screenshot-book/s01-starting-soon.jpg) |
+
+Nothing fired by hand and no item added. Starting soon fired by itself on the fixture's own tournament item, "Demo Game Cup, semis", which starts at 00:45:00 event time (16:00 UTC, 15 minutes late). The run started at T−15 exactly (15:45:00.98 UTC by its record).
+- **T−15:** the Pulse 15 minutes before (1), then the round's countdown "Demo Game Cup, semis · Starts in · 14:27 · Stage · in 15 minutes", large and centred in the hero (2). The watcher missed the round's opening sting: a bug in the one-off script, not the screen.
+- **T−5:** the sting "Starting soon", bright on the accent gradient and filling the hero (3); the countdown "04:56" (4); the sting again, since the round repeats steps 1–2 twice (5). Then the Pulse comes back between rounds (6).
+- **T−1:** sting (7), then the countdown "00:22" (8). The round is over 13 s before T, and the Pulse counts the last seconds ("Starts in 00:00:13", 9).
+- **T:** at 00:45:01 the finale "It's on! · Demo Game Cup, semis · Stage" fills the hero on the accent gradient (10). Nine seconds later the Pulse is back with the next tournament item (11).
+
+Each round plays on time and counts to the item, not to its own offset. The screen's clock in the top right reads the same minute as each label. This answers the lead's two notes on S1: the sting is now the loudest thing on the screen, not dim and small, and the finale is no longer "the quietest moment". It matches polish 08 (7–9) in scale and colour, without the sheet's "STARTING SOON" kicker over the countdown.
 
 ### S2 · Midnight at 00:00:00 on every zone
 
@@ -248,7 +266,7 @@ PENDING-S1
 |---|---|---|
 | ![Midnight at the entrance](step4-polish-book/s02-midnight-entrance.jpg) | ![Polish 09](../briefs/step-4-polish/09-hero-midnight.svg) | ![S2](step4-screenshot-book/s02-midnight.jpg) ![S2 at the entrance](step4-screenshot-book/s02-midnight-p00000-portrait.jpg) |
 
-Nothing fired by hand. Two paired players, the main hall at 1080p and the entrance in portrait, were each shot at the same instants, from 15 s before the event's midnight to 13 s after. At 23:59:45 and 23:59:50 both show the Pulse (1–2). By 23:59:55 both show the full-screen countdown "Midnight · Starts in · 00:05" with 330 px figures, and at 23:59:59.4 "00:01" (3–4). At 00:00:00.8 both show the sting "Midnight!" full screen on the theme's gradient (5). At 00:00:08 and 00:00:13 both show the card "Night 1 at Demo Event · Keep it going" (7–8); it is night 1 because the event began on Thursday in this time zone. At 00:00:03.9 the main hall was still on the sting while the entrance was in the 0.6 s gap before the card (6). The two captures run one after the other in one browser, so this may be the capture's own spread, not the zones'. Sting and card never overlap. So the entrance is now on the dot with the main hall, where in S2 it showed only its background at 00:00:00. This matches polish 09's timing and its no-overlap rule. The build leaves out the sheet's kicker lines ("MIDNIGHT IN", "Night 2 … starts at 00:00", "MIDNIGHT") and most of its confetti. During the countdown a purple glow runs round the edge of both screens (3–4), which polish 09 does not draw.
+Nothing fired by hand. Two paired players, the main hall at 1080p and the entrance in portrait, were each shot at the same instants, from 15 s before the event's midnight to 13 s after. At 23:59:45 and 23:59:50 both show the Pulse (1–2). By 23:59:55 both show the full-screen countdown "Midnight · Starts in · 00:05", and at 23:59:59.4 "00:01" (3–4). At 00:00:00.8 both show the sting "Midnight!" full screen on the theme's gradient (5). At 00:00:08 and 00:00:13 both show the card "Night 1 at Demo Event · Keep it going" (7–8). At 00:00:03.9 the main hall was still on the sting while the entrance was in the 0.6 s gap before the card (6). The two captures run one after the other in one browser, so this may be the capture's own spread, not the zones'. Sting and card never overlap. So the entrance is now on the dot with the main hall, where in S2 it showed only its background at 00:00:00. This matches polish 09's timing and its no-overlap rule. The build leaves out the sheet's kicker lines ("MIDNIGHT IN", "Night 2 … starts at 00:00", "MIDNIGHT") and most of its confetti. During the countdown a purple glow runs round the edge of both screens (3–4), which polish 09 does not draw.
 
 ### S3 · Premiere on two screens at once
 
@@ -256,7 +274,7 @@ Nothing fired by hand. Two paired players, the main hall at 1080p and the entran
 |---|---|---|
 | ![Premiere on two main-hall screens](step4-polish-book/s03-premiere.jpg) | ![Mockup 22](../briefs/step-4-moments/22-storyboard-premiere.svg) | ![S3](step4-screenshot-book/s03-premiere-two-screens.jpg) |
 
-Two players paired into the main hall, side by side, with Premiere test-fired on an added premiere item with the demo film. Each row is one moment on both screens. The countdown "Demo Event: the film · Starts in · 00:29 · Lights down, sound up" fills the hero (1–4). Its words now match the counter, where S3 said "Starts 02:00" over a 30 s count. The film then plays full bleed, edge to edge with no frame and no bars, at three moments (5–10). Last comes the after-card "Thanks for watching · Again at 21:00 on Stage", large and centred (11–12). The film's own position, read from both players at the same instant: 1.867 s and 1.818 s, 6.262 s and 6.212 s, 10.695 s and 10.645 s. The two screens stay 49–50 ms apart and do not drift, and the film's second counter shows the same second on both. This matches mockup 22 and the lead's two fixes for S3 (full bleed, matching countdown text).
+Two players paired into the main hall, side by side, with Premiere test-fired on an added premiere item with the demo film. Each row is one moment on both screens. The countdown "Demo Event: the film · Starts in · 00:29 · Lights down, sound up" fills the hero (1–4). Its words now match the counter, where S3 said "Starts 02:00" over a 30 s count. The film then plays full bleed, edge to edge with no frame and no bars, at three moments (5–10). Last comes the after-card "Thanks for watching · Again at 21:00 on Stage", large and centred (11–12). The film's own position, read from both players together: 1.867 s and 1.818 s, 6.262 s and 6.212 s, 10.695 s and 10.645 s. The two screens stay 49–50 ms apart and do not drift, and the film's second counter shows the same second on both. This matches mockup 22 and the lead's two fixes for S3 (full bleed, matching countdown text).
 
 ## Not in this book
 
@@ -273,13 +291,15 @@ Not fixed here (out of scope); for the lead to sort.
 - **A test-fired countdown counts from its round's offset.** Starting soon test-fired at 11:31 counts down "14:56", while the rail says the semis start in 58 minutes (V4, 2); the builder's preview shows "05:00" (P11). A test round seems to count its own −15 rather than the time to the item. The step thumbnails in the builder's strip read "05:00" whatever the step's length (P11, P13: a 30 s countdown).
 - **The urgent ticker label is purple.** The card's URGENT is amber (the warning colour), but the ticker's URGENT label sits on the purple secondary ground (V5, portrait). Mockup 06 uses the warning colour for both.
 - **A purple glow runs round the screen's edge** during Midnight's countdown, on both zones (S2, 3–4); polish 09 draws none.
+- **The rail lists the semis as "Delayed · 00:45" after they started** (S1 frames 10–11, V7, two minutes after T), not as Now. A step 3 Pulse matter, seen here.
 - **Match called with no data** still reads "Match called:" over an empty hero (V4, 3). It is on the old book's "later" list.
 
 **Pages**
 - **On air still shows rank numbers** ("rank 70") on every moment (P16), after the PO dropped them on Priorities as meaningless.
-- **On air's item list** is clipped at 1280 px ("Demo Game Cup, semis · 12:3", P16), and on a phone it touches the first Fire button with no gap.
-- **The spotlight form shows every field at once:** Message, More, Bracket of and Photo, whatever What it shows says (P17). Mockup 04 shows only the fields of the chosen kind.
-- **CI's full-page shots draw the pending row in the middle** of the cue editor and of Limits and categories (P4, P6), over the Voice line heading. The row sticks to the window's foot, and a full-page capture leaves it where the window ended. The phone shots handle this already (`tall`); the desktop ones of these two pages do not.
+- **On air's item list writes item times in UTC:** "Demo Game Cup, grand final · 17:45" while the event's clock reads 00:46 and the screens put the item at 02:30 (P16, local, with the event in UTC+8:45; CI runs in UTC, so it does not show there). The list is also clipped at 1280 px ("Demo Game Cup, semis · 12:3"), and on a phone it touches the first Fire button with no gap.
+- **Fire by hand on a later item shows nothing for now.** Fired on the grand final, 1 h 44 min away, Starting soon waits for its T−15 round; On air says "between rounds" and the screens stay on the Pulse (P16, V7). That is the rule (a take with an item counts from the item's time), but a crew member who pressed Fire sees nothing happen. Skip to finale is the only way to put something up now.
+- **The spotlight form shows every field at once:** Message, More, Bracket of and Photo, whatever What it shows says (P17). Mockup 04 shows only the fields of the chosen kind. At 1280 px every field spans the whole 944 px column, the one long edit box the PO disliked in the builder.
+- **CI's full-page shots draw the pending row in the middle** of the cue editor and of Limits and categories (P4, P6), over the Voice line heading. The row sticks to the window's foot, and a full-page capture leaves it where the window ended. The phone shots grow the window to the page's height first, so their row sits at the foot; the desktop ones do not.
 - **After Test-fire the builder says "One test round on main."** as a notice under the header. Polish 05 puts it in the header and adds "marked as a test in History" (P14).
 
 ## Lead's evaluation
