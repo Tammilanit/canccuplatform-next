@@ -1,6 +1,7 @@
 /*
- * On air (docs/design/grids/02-on-air.svg, amendment 3): the crew actions as one band, the zones in
- * .canccu-grid, then Storyboards and Scenes in .canccu-band. The page's order is the phone's.
+ * On air (docs/design/grids/02-on-air.svg, amendment 3): the crew band, the zones in .canccu-grid
+ * by key with "+n more" after 4, then Storyboards and Scenes in a .canccu-band under them. The
+ * page's order is the phone's.
  */
 .moments-onair {
   display: grid;

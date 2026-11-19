@@ -4,7 +4,7 @@
  * zones and the storyboard cards fill the width in `.canccu-grid`, the crew band stays above and
  * the panel band below at every width, and a phone reads them in the page's order. The pages are
  * the server's own views at the content widths of a 320 and a 390 px phone and of 1100, 1280 and
- * 1920 px desks.
+ * 1920 px desks. On air's 10-second reload, from static/moments.js, waits while "+n more" is open.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -29,6 +29,7 @@ const css = [
     file(new URL(`../static/${n}.css`, import.meta.url)),
   ),
 ].join("\n");
+const script = file(new URL("../static/moments.js", import.meta.url));
 
 const NOW = new Date("2026-03-14T18:00:00Z");
 const ZONES = ["bar", "cafe", "entrance", "lobby", "lounge", "main", "stage", "workshop"];
@@ -69,10 +70,13 @@ const stories = (title?: string) =>
     ...(title === undefined ? {} : { title }),
   });
 
-function onAir(zones: number): Html {
+function onAir(zones: number, inMain = 0): Html {
   const keys = ZONES.slice(0, zones);
   return onAirView({
-    moments: keys.slice(0, 2).map((z, i) => moment(i, z)),
+    moments:
+      inMain > 0
+        ? Array.from({ length: inMain }, (_, i) => moment(i, "main"))
+        : keys.slice(0, 2).map((z, i) => moment(i, z)),
     zones: keys,
     zoneName: (z) => `${z.charAt(0).toUpperCase()}${z.slice(1)}`,
     now: NOW,
@@ -158,6 +162,30 @@ describe.skipIf(browser === undefined)(
       expect(emergency.top).toBeLessThan(title.bottom);
       expect(announce.top).toBeLessThan(title.bottom);
       expect(emergency.left).toBeGreaterThan(announce.left + announce.width);
+      await page.close();
+    });
+
+    it('waits to reload On air while "+n more" is open, and reloads once it is closed', async () => {
+      if (browser === undefined) throw new Error("the suite runs only with a browser");
+      const page = await browser.newPage();
+      await page.clock.install();
+      let loads = 0;
+      await page.route("http://moments.test/**", (route) => {
+        loads += 1;
+        return route.fulfill({
+          contentType: "text/html",
+          body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page">${String(onAir(6, 6))}<script>${script}</script></body></html>`,
+        });
+      });
+      await page.goto("http://moments.test/moments/on-air");
+      expect(loads).toBe(1);
+      await page.locator(".moments-more > summary").click();
+      expect(await page.locator(".moments-more").getAttribute("open")).toBe("");
+      await page.clock.runFor(35_000);
+      expect(loads).toBe(1);
+      await page.locator(".moments-more > summary").click();
+      await page.clock.runFor(10_000);
+      await expect.poll(() => loads).toBe(2);
       await page.close();
     });
 

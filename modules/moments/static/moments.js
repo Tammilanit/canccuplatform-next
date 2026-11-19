@@ -36,11 +36,14 @@
     }
   }
 
-  // On air is live: read again every 10 s, unless someone is in the middle of something.
+  // On air is live: read again every 10 s, unless someone is in the middle of something. An open
+  // details ("+n more", a menu) counts too: a reload would close it under the reader.
   if (document.querySelector(".moments-onair")) {
     setTimeout(function again() {
       const busy =
-        document.querySelector(".moments-hold--holding") || document.activeElement?.closest("form");
+        document.querySelector(".moments-hold--holding") ||
+        document.querySelector(".moments-onair details[open]") ||
+        document.activeElement?.closest("form");
       if (busy) setTimeout(again, 10000);
       else location.reload();
     }, 10000);
