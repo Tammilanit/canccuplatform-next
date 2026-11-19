@@ -550,7 +550,7 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
       60,
       "Stage",
     );
-    await sequenceShots(sequence, itemOf, started, runs);
+    await sequenceShots(sequence, itemOf, add, runs);
     await photoShots(demo, shot);
     // A live loop for On air: Doors open fired by hand would need its item; a test round shows the same card.
     runs.push(await testFire("doors_open"));
