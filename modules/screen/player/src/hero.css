@@ -81,7 +81,9 @@
   }
 
   /* A countdown step: its name over the counter at full hero size, its own line under it (S1). */
-  .canccu-widget.canccu-is-claim .canccu-widget__when:empty,
+  /* The Pulse's when-row (hero-rail.ts' start, place and delay) is the item's, not the step's: on a
+     step it is a lone clock time that pushes the block apart; the step's own line says where. */
+  .canccu-widget.canccu-is-claim.canccu-widget--countdown .canccu-widget__when,
   .canccu-widget.canccu-is-claim > .canccu-widget__band:not(.canccu-widget__band--theme) {
     display: none;
   }
@@ -221,6 +223,31 @@
   }
 
   /*
+   * Full screen (sheet 09; Midnight's countdown and card, Premiere's countdown): the whole frame,
+   * edge to edge with no card, on the theme's ground and its two glows. An emergency keeps its own
+   * red (claims.css); a sting and the film have their own below.
+   */
+  .canccu-region--_full
+    > .canccu-widget.canccu-is-claim:where(:not(:has(.canccu-widget__level--emergency))) {
+    inset: calc(-1 * var(--canccu-safe-inset));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background:
+      radial-gradient(
+        ellipse 55% 60% at 80% 12%,
+        color-mix(in srgb, var(--canccu-color-primary) 22%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 55% at 16% 88%,
+        color-mix(in srgb, var(--canccu-color-accent) 20%, transparent),
+        transparent 70%
+      ),
+      var(--canccu-color-background);
+  }
+
+  /*
    * Stings, and a step that enters with a flash (a finale's "It's on!", the builder's default
    * for a finale), are the loudest moments (R17, S1, R22): the box turns to the theme's gradient,
    * primary to accent, with the ink computed for the primary (design decision 1) and a light
@@ -337,6 +364,7 @@
   .canccu-region--_full > .canccu-widget--video,
   .canccu-region--_full > .canccu-widget--video.canccu-is-claim {
     inset: calc(-1 * var(--canccu-safe-inset));
+    background: #000;
     padding: 0;
     border: 0;
     border-radius: 0;
