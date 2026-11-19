@@ -125,6 +125,13 @@ export const MOMENTS_PAGES = [
     SCREEN_VIEW,
     { fullPage: false, ready: shows("From the crew") },
   ],
+  // The hero rule at 4K (#625; docs/briefs/step-4-polish, sheet 10).
+  [
+    "moments-screen-spotlight-4k",
+    "/screen/zones/main",
+    { width: 3840, height: 2160 },
+    { fullPage: false, ready: shows("From the crew") },
+  ],
 ];
 /** With the crew's "Peak now" pressed (mockup 14): On air's scene card and the main hall. */
 export const PEAK_PAGES = [
