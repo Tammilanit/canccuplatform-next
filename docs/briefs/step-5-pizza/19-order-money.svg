@@ -99,8 +99,13 @@
 <text x="561.7" y="727.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle">The organiser</text>
 <rect x="633.4" y="708" width="117.52" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
 <text x="692.16" y="727.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle">Me directly</text>
-<text x="498" y="768" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Each person owes you their amount;</text>
-<text x="498" y="788" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">mark them paid at hand-out.</text>
+<rect x="498" y="752" width="358" height="112" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1.5"/>
+<text x="514" y="777" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start">PAY ME WITH</text>
+<text x="840" y="777" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="end">Edit</text>
+<text x="514" y="803" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">MobilePay · 040 000 0000</text>
+<text x="514" y="828" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Bank · FI00 0000 0000 0000 00</text>
+<text x="514" y="852" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">Sent to the 3 people in this order, with their amount</text>
+<text x="498" y="888" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Mark them paid at hand-out.</text>
 </g>
 <rect x="912" y="140" width="410" height="864" rx="46" fill="#000000"/>
 <text x="1117" y="1040" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">C · Who owes you</text>
@@ -216,4 +221,12 @@
 <text x="1836" y="688" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The holder until 06:00 the next day, also after</text>
 <text x="1836" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">done; the crew (pizza.order.manage) at any time,</text>
 <text x="1836" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">audited, with the person told (U14).</text>
+<circle cx="1815" cy="769" r="13" fill="#f59e0b"/>
+<text x="1815" y="774" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1836" y="774" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Pay me with (PO note)</text>
+<text x="1836" y="798" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">When the order settles to the holder, the holder</text>
+<text x="1836" y="819" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">adds a MobilePay (soon Vipps) number, a bank</text>
+<text x="1836" y="840" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">account, or both, once; it is offered again next</text>
+<text x="1836" y="861" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">time. Each person in the order gets it in their app</text>
+<text x="1836" y="882" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">with their own amount. No money moves in the app.</text>
 </svg>
