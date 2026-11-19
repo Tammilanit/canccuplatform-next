@@ -29,10 +29,6 @@
     /* canccu-grid: fixed master-detail — shows the picked item beside its list: the library beside the playlist builder */
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 42%);
   }
-
-  .canccu-studio-content__main .canccu-studio-library {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .canccu-studio-asset[draggable="true"] {

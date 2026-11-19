@@ -165,6 +165,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return page(request, reply, c, {
           title: "",
           tab: "live",
+          wide: true,
           description: c.t("live.desc"),
           actions: liveActions(c),
           body: html`${liveView(c, zones, all)}${quickActions(c, runningNow(items, c.nowMs))}`,
@@ -186,6 +187,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return page(request, reply, c, {
           title: "",
           tab: "devices",
+          wide: true,
           description: c.t("devices.desc"),
           actions: devicesActions(c),
           body: devicesView(c, zones, all, states),
@@ -210,6 +212,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return page(request, reply, c, {
           title: "",
           tab: "zones",
+          wide: true,
           description: c.t("zones.desc"),
           body: html`${zonesView(c, zones, all)}${motionCard(c, motion)}`,
           own: "studio-motion",
@@ -234,6 +237,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return page(request, reply, c, {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
+          wide: true,
           body: zoneEditorView(c, zone, layouts, all, zones, layoutId),
           own: "studio-zone",
           module: true,
@@ -251,7 +255,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const event = await eventOf(request, deps);
         const query = request.query;
         const view = await schedulePage(deps, ctx.tenant_id, c, event, zones, all, query);
-        const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
+        const o = { title: "", tab: "schedule", wide: true, description: c.t("schedule.desc") };
         const own = { own: "studio-schedule", module: true, script: c.rights.has(WRITE) };
         return page(request, reply, c, { ...o, ...own, ...view });
       },
@@ -266,7 +270,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const data = await readContent({ ...deps, now }, ctx, c.rights, request.query);
         const lists = await readPlaylists(deps.db, c.nowMs, param(request.query, "playlist"));
         const body = contentPage(c, data, lists, await readZones(deps, ctx));
-        const o = { title: "", tab: "content", description: c.t("content.desc"), body };
+        const o = { title: "", tab: "content", wide: true, description: c.t("content.desc"), body };
         return page(request, reply, c, { ...o, own: "studio-content", module: true });
       },
     );

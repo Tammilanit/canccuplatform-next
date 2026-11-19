@@ -301,7 +301,9 @@ export function contentView(c: ViewContext, d: ContentData, playlist = ""): Html
   const searched = d.query.q !== "" || d.query.kind !== "";
   const library =
     d.assets.length > 0
-      ? html`<div class="canccu-studio-library">${d.assets.map((a) => assetCard(c, d, a))}</div>`
+      ? html`<div class="canccu-grid canccu-grid--small canccu-studio-library">
+          ${d.assets.map((a) => assetCard(c, d, a))}
+        </div>`
       : searched
         ? emptyState({ icon: "box", title: t("content.none_title"), text: t("content.none_text") })
         : emptyState({

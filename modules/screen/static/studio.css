@@ -16,13 +16,6 @@
   display: none;
 }
 
-/* Live: every zone at once (U7), one column on a phone. */
-.canccu-studio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
-}
-
 .canccu-studio-zone .canccu-card__title {
   margin: 0.75rem 0 0.25rem;
 }
@@ -102,35 +95,14 @@
   );
 }
 
-/* Devices (mockup 07): cards of the fleet, a Recent panel beside them from 1440 px (ui.css's
-   canccu-split__side shows only there, as Settings' last changes). */
+/* Devices (docs/design/grids/04-devices.svg): the summary line, the screens in .canccu-grid with
+   their actions at each card's foot, then Recent in the panel band. */
 .canccu-studio-summary {
-  margin: 0 0 1rem;
-}
-
-.canccu-studio-split {
-  display: grid;
-  gap: 1rem;
-  align-items: start;
-}
-
-@media (min-width: 1440px) {
-  .canccu-studio-split {
-    grid-template-columns: minmax(0, 1fr) 20rem;
-  }
-}
-
-.canccu-studio-devices {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 1rem;
-  align-items: start;
+  margin: 0;
 }
 
 .canccu-studio-device {
-  display: grid;
   gap: 0.75rem;
-  align-content: start;
 }
 
 .canccu-studio-device__status > * {
