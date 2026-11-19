@@ -10,9 +10,9 @@ The one design language, organiser shell and screens (issue #382). The base is P
 
 The sheets carry no version or review tags.
 
-## Amendments accepted by the PO (2026-11-12), binding for the build
+## Amendments accepted by the PO, binding for the build
 
-These two amendments came after the sheets were drawn. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
+These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
 
 ### 1 · Energy levels: clearly different look, same pace
 
@@ -34,6 +34,65 @@ A test or CI clip shows the three levels side by side.
 
 - Each box shows at most 3–4 rows, with larger type.
 - During a showcase the 2 × 2 hero takes four cells. The two remaining cells show at most two widgets; the others pause.
+
+### 3 · Grids scale with their content (2026-11-19)
+
+The PO at the step 4 gate: "Any page that has a grid should scale." A page of like items fills the width it has, from a 390 px phone to a 2560 px desk, and stays balanced with one item, two or forty. The sheets are in [`grids/`](grids/README.md) (01 the rule; 02–05 On air, the sound library, Devices and the storyboard catalogue, each with few and many items at 1280 px, 1920 px and 390 px); the audit of every grid today is [`grids/audit.md`](grids/audit.md). Numbers are at a 16 px rem.
+
+**Collections are one auto-fill grid, with the shared class.** `packages/ui/ui.css` gets `.canccu-grid`; no module writes its own collection columns:
+
+```css
+.canccu-grid {
+  --canccu-grid-min: 18rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--canccu-grid-min)), 1fr));
+  gap: var(--canccu-gap);
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.canccu-grid > * { min-width: 0; }
+.canccu-grid--small { --canccu-grid-min: 10rem; }
+.canccu-grid--tile { --canccu-grid-min: 7rem; gap: calc(var(--canccu-gap) / 2); }
+```
+
+`auto-fill`, never `auto-fit`: the empty tracks stay, so one or two items keep their width. `min(100%, …)` lets a card shrink inside a box narrower than its minimum instead of overflowing it. A card wider than its minimum grows only until one more column fits, so from two columns on a card is at most 1.5 × its minimum plus half a gap (card 440 px, small 248 px, tile 172 px). Three sizes are enough: a module never sets `--canccu-grid-min` itself.
+
+| Size | Min | Phone (358 px) | 1280 px (944 px) | 1920 px (1,584 px) | 2560 px and wider (1,920 px) | Kinds |
+|---|---|---|---|---|---|---|
+| Card | 18 rem, 288 px | 1 | 3 × 304 | 5 × 304 | 6 × 307 | Zones (On air, Live), devices, sounds, storyboards, pizza orders (step 5) |
+| Small | 10 rem, 160 px | 2 | 5 × 176 | 9 × 162 | 11 × 160 | Option checkboxes (a scene's zones), filters, colours and swatches, content library items |
+| Tile | 7 rem, 112 px | 3 | 7 × 128 | 13 × 114 | 16 × 112 | Thumbnails: the spotlight's photos, the layout gallery |
+
+Not every list is a grid. **Scenes** stay a ranked list in one column: the first scene whose conditions hold wins (Q18), so rank reads top to bottom. **Cues** and **people** stay tables: they are compared column by column (level, cooldown; role, last seen), and a table already uses the width; on a phone each row is a card, as today. **Playlists** are picked beside the content library, a master–detail page.
+
+**Spacing.** The gap between cards is `--canccu-gap` (1 rem), half that between tiles. The page keeps the shell's padding: 2.5 rem at the sides from 1100 px (beside the 16 rem menu), 1 rem below. Between a page's parts (bands, groups, the grid) the main column's 1.5 rem.
+
+**Wide screens: columns keep coming, up to 120 rem of content.** A collection page, a board or a master–detail editor is a `wide` page: its content is at most 120 rem (1,920 px). The shell's `width: "wide"` option exists today but draws nothing; it becomes `.canccu-main--wide { max-width: 120rem; }`, and pages that are neither keep the 64 rem default (forms 40 rem). At 1920 px the content is 1,584 px; at 2560 px and on an ultra-wide it stops at 1,920 px and keeps the one left edge, the rest empty. Why a limit: past about 1,900 px a row is wider than the eye takes in at once, a page on a 2560 px desk keeps the shape it has on the common 1920 px one, and the bands and headings above the grid stay in reach of the menu.
+
+**Unequal heights: rows align.** `align-items: stretch`: every card in a row is as tall as the row's tallest, and its last action row sits at its foot (a column flex card with `margin-block-start: auto` on the actions), so buttons line up. No masonry: it places a card under the shortest column, so a card that grows live (a zone gets one more waiting moment) sends the cards after it to other columns while the crew aims at them, and the reading order no longer runs left to right. A card's own list shows at most 4 rows, then "+n more", so no card is far taller than its row.
+
+**Side panels go in bands, never in a column beside a collection.** A column of panels beside a grid grows taller than the grid (the screenshot book's On air, P16: one 1,900 px column) or leaves it short.
+- Above the collection: the page's **crew actions** as one band (one row of buttons on a desk), then its **summary** (a count line, the sound desk's master strip, count tiles) and **filters** (one wrapping row of small fields).
+- Below it: **related panels** (Storyboards and Scenes on On air, Recent on Devices) in `.canccu-band`: a flex row that wraps, each panel at least 22 rem and at most 48 rem wide, a row of panels as tall as its tallest, so a lone panel never stretches across a 1920 px page.
+
+```css
+.canccu-band { display: flex; flex-wrap: wrap; gap: var(--canccu-gap); align-items: stretch; }
+.canccu-band > * { flex: 1 1 22rem; min-width: min(100%, 22rem); max-width: 48rem; }
+```
+
+Only a master–detail page keeps a column beside its list, because that column shows the item picked in it.
+
+**Few and none.** One or two items keep their card width at the one left edge; the rest of the row stays empty (sheet 01, 5). None: the shared empty state (`emptyState`: icon, title, one sentence, the page's main action) replaces the grid; a group of a page with several groups says so in one dashed line with what to do (sheet 05).
+
+**Order is stable.** Each kind has one order that a live change never alters: zones in Screen's order (by key, as the Studio lists them), devices by name, sounds A to Z, storyboards by catalogue number and then the event's own A to Z, pizza orders oldest first. A new item lands at its place in that order; a change of state (on air, offline, on or off) shows on the card and never moves it.
+
+**Phone.** Under about 37 rem of content a card grid is one column (small items keep two, tiles three). The page's order is the phone's order: crew actions first, then the summary and filters, the collection and the panel band, so a screen reader meets them in the same order and no `order` is needed.
+
+**Fixed columns stay where the layout means it:** a form's label and field (`.canccu-form__row`, the builder's two-column fields), a table and its rows, a master–detail editor (the builder, the zone editor, the schedule, the announcement composer and its preview), a row's own parts (a time and a label, a player's controls), a control with a fixed count (the 7 days, the 4 motion levels, the delay chips) and the screens' own layouts (the player's regions, the layout map). Each is marked in its CSS with its kind and reason; the guard below lets the marked ones through.
+
+**The guard.** A test in `packages/ui` (it runs on every pull request in `lint-types-test (ui)`, so no workflow change) reads every tracked CSS file under `modules/` and `packages/ui/`, and the `grid-template-columns` written from TypeScript and JavaScript, and fails on a column list that is neither `ui.css`'s own `.canccu-grid` nor marked. A justified exception carries the marker on its line or the line above: `/* canccu-grid: fixed <kind> — <reason> */`, the kind one of `form`, `table`, `row`, `master-detail`, `control`, `screen`, `shell`. The full rules and its self-test are in [`grids/README.md`](grids/README.md#the-guard).
 
 ## Changes since v7
 
