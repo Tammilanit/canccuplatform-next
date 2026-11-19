@@ -187,8 +187,10 @@ describe("Premiere (23)", () => {
       }
     const card = (facts: Facts) =>
       String(fillContent("countdown", p.round.steps[0]?.content ?? {}, ctx(facts)).description);
-    expect(card(byTrigger.item ?? {})).toContain("19:00");
-    expect(card({})).not.toContain("19:00");
+    // S3 (#625): the subtitle names no clock time of its own, which a take's 30 s counter would
+    // contradict ("Starts 02:00" over "00:00:30"); the counter is the time.
+    for (const facts of Object.values(byTrigger)) expect(card(facts)).not.toMatch(/\d:\d\d/);
+    expect(card(byTrigger.item ?? {})).toBe("Lights down, sound up");
   });
 
   it("an item trigger without an item or kind, and a clock once without a time, never fire", () => {

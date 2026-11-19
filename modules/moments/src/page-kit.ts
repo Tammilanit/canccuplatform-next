@@ -54,6 +54,9 @@ async function eventOf(request: FastifyRequest, deps: AppDeps): Promise<EventInf
 const STORY_CSS = html`${["story-controls", "story-round", "story-side", "story-builder"].map(
   (n) => html`<link rel="stylesheet" href="${PREFIX}static/${n}.css" />`,
 )}`;
+const SOUND_CSS = html`${["sound-desk", "sound-desk-lists", "sound-desk-pages"].map(
+  (n) => html`<link rel="stylesheet" href="${PREFIX}static/${n}.css" />`,
+)}`;
 
 export async function page(
   request: FastifyRequest,
@@ -83,7 +86,7 @@ export async function page(
     head: html`<link rel="stylesheet" href="${PREFIX}static/moments.css" /><link
         rel="stylesheet"
         href="${PREFIX}static/organiser.css"
-      />${o.tab === "storyboards" ? STORY_CSS : ""}`,
+      />${o.tab === "storyboards" ? STORY_CSS : o.tab === "cues" ? SOUND_CSS : ""}`,
     event: await eventOf(request, deps),
     session: request.session ?? undefined,
     // Studio → Moments is the Screen studio's Moments tab (mockups 03, 08, 09); the composer is
@@ -109,7 +112,8 @@ export async function page(
         }),
     body: html`${o.body}
       <script src="${PREFIX}static/moments.js" defer></script>
-      ${o.tab === "storyboards" ? html`<script src="${PREFIX}static/story-builder.js" defer></script>` : ""}`,
+      ${o.tab === "storyboards" ? html`<script src="${PREFIX}static/story-builder.js" defer></script>` : ""}
+      ${o.tab === "cues" ? html`<script src="${PREFIX}static/sound-desk.js" defer></script>` : ""}`,
   });
   return reply
     .type("text/html; charset=utf-8")
@@ -170,8 +174,12 @@ const TYPES: Record<string, string> = {
   "story-round.css": "text/css; charset=utf-8",
   "story-side.css": "text/css; charset=utf-8",
   "story-builder.css": "text/css; charset=utf-8",
+  "sound-desk.css": "text/css; charset=utf-8",
+  "sound-desk-lists.css": "text/css; charset=utf-8",
+  "sound-desk-pages.css": "text/css; charset=utf-8",
   "moments.js": "text/javascript; charset=utf-8",
   "story-builder.js": "text/javascript; charset=utf-8",
+  "sound-desk.js": "text/javascript; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();
 

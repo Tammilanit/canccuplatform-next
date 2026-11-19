@@ -235,13 +235,17 @@ export async function writeLog(c: SqlClient, r: LogRow): Promise<void> {
 
 export async function readLog(
   c: SqlClient,
-  f: { zone?: string; limit: number; before?: number },
+  f: { zone?: string; limit: number; before?: number; outcome?: string; search?: string },
 ): Promise<(LogRow & { seq: number })[]> {
+  // The sound desk's Log filters by outcome and finds a word in the cue or the reason code.
+  const search = f.search === undefined ? null : `%${f.search.replace(/[\\%_]/g, "\\$&")}%`;
   const { rows } = await c.query(
     `SELECT seq, at, zone_key, cue, sound, outcome, reason, detail, source FROM moments_sound_log
      WHERE ($1::text IS NULL OR zone_key = $1) AND ($2::bigint IS NULL OR seq < $2)
+       AND ($4::text IS NULL OR outcome = $4)
+       AND ($5::text IS NULL OR cue ILIKE $5 OR reason ILIKE $5)
      ORDER BY seq DESC LIMIT $3`,
-    [f.zone ?? null, f.before ?? null, f.limit],
+    [f.zone ?? null, f.before ?? null, f.limit, f.outcome ?? null, search],
   );
   return (rows as unknown as (LogRow & { seq: string })[]).map((r) => ({
     ...r,

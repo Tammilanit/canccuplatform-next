@@ -30,12 +30,14 @@ const previewed = async (page) => {
   await page.waitForTimeout(1500);
 };
 
-const screen = (name, zone, text) => [
+const screen = (name, zone, text, viewport = SCREEN_VIEW) => [
   name,
   `/screen/zones/${zone}`,
-  SCREEN_VIEW,
+  viewport,
   { fullPage: false, ready: shows(text) },
 ];
+/** The hero rule at 4K (#625; docs/briefs/step-4-polish, sheet 10): every size doubles. */
+const SCREEN_4K = { width: 3840, height: 2160 };
 
 export const ANNOUNCE_PAGES = [
   [
@@ -46,6 +48,7 @@ export const ANNOUNCE_PAGES = [
   ],
   ["announce-composer-phone", "/moments/announce", PHONE, { touch: true }],
   screen("announce-screen-info", "main", "Pizza is here"),
+  screen("announce-screen-info-4k", "main", "Pizza is here", SCREEN_4K),
   screen("announce-screen-both-lines", "entrance", "Pizza is here"),
 ];
 export const UPDATED_PAGES = [
@@ -53,6 +56,7 @@ export const UPDATED_PAGES = [
 ];
 export const URGENT_PAGES = [
   screen("announce-screen-urgent", "main", "Semis in 15 min"),
+  screen("announce-screen-urgent-4k", "main", "Semis in 15 min", SCREEN_4K),
 ];
 export const FULL_PAGES = [
   screen("announce-screen-full", "main", "Doors close at 23:00"),

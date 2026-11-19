@@ -20,8 +20,19 @@
   }
 
   .canccu-widget--agenda_now .canccu-widget__row {
-    grid-template-areas: "state state" "name name" "until until" "where delay";
+    grid-template-areas: "state delay" "name name" "until where";
+    grid-template-columns: auto 1fr;
     row-gap: calc(0.4 * var(--canccu-u));
+  }
+
+  /* The place beside the end, three lines a row as in the shorter rails (layouts.css): two rows
+     of four lines overran a rail beside a hero claim and cut the second row's place (#625). */
+  .canccu-widget--agenda_now .canccu-widget__row--now .canccu-widget__where {
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row--now .canccu-widget__where::before {
+    content: "· ";
   }
 
   .canccu-widget--agenda_now .canccu-widget__row + .canccu-widget__row {

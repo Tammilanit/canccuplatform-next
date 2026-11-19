@@ -66,6 +66,17 @@ const layoutKey = (l: Layout): string =>
 const rotationKey = (r: Region): string =>
   JSON.stringify([r.rotation, r.order, r.widgets.map((w) => w.dwell_seconds)]);
 
+/**
+ * A storyboard's step hands over to the next by leaving first, then the next fades in: crossfaded,
+ * two steps' text lay over each other ("Midnight!" through "Night 2 at …", S2, #625). A claim's
+ * step key is `claim:<id>:<n>` (claims.ts).
+ */
+const isStep = (key: string | undefined): boolean =>
+  key?.startsWith("claim:") === true && key.split(":").length === 3;
+const outFirst = (from: string | undefined, to: string | undefined): boolean =>
+  (isStep(from) && to?.startsWith("claim:") === true) ||
+  (isStep(to) && from?.startsWith("claim:") === true);
+
 export class Screen {
   root: HTMLElement = document.createElement("main");
   private layoutKey = "";
@@ -293,6 +304,7 @@ export class Screen {
             media.reducedMotion,
           ]);
     if (next?.key === drawn.shown?.key && json === drawn.json) return;
+    const prior = drawn.shown?.key;
     const sameThing = next !== null && next.key === drawn.shown?.key && drawn.slot !== null;
     drawn.shown = next;
     drawn.json = json;
@@ -308,10 +320,11 @@ export class Screen {
       }
       return;
     }
+    const before = drawn.slot === null ? undefined : prior;
     const incoming = next === null ? null : this.widgetOf(next, templates, media);
     incoming?.classList.add("canccu-is-active");
     drawn.slot = incoming;
-    this.enter(drawn, incoming, motion);
+    this.enter(drawn, incoming, motion, outFirst(before, next?.key));
   }
 
   /** A widget as drawn; one a claim brings is marked, so the look can frame it (mockup 04). */
@@ -335,7 +348,7 @@ export class Screen {
    * widget waits, unseen, for its images, then fades in over the outgoing one, which leaves once
    * the fade is done. Without motion they swap at once.
    */
-  private enter(drawn: Drawn, incoming: HTMLElement | null, motion: Motion): void {
+  private enter(drawn: Drawn, incoming: HTMLElement | null, motion: Motion, cut = false): void {
     const region = drawn.el;
     if (motion === "none" || incoming === null) {
       region.replaceChildren(...(incoming === null ? [] : [incoming]));
@@ -357,6 +370,10 @@ export class Screen {
       incoming.classList.remove("canccu-slot--in");
       for (const old of [...region.children]) {
         if (old === incoming || !(old instanceof HTMLElement) || old === drawn.marks) continue;
+        if (cut) {
+          old.remove();
+          continue;
+        }
         old.classList.remove("canccu-is-active");
         old.classList.add("canccu-slot--out");
         setTimeout(() => {

@@ -3,7 +3,7 @@
 // standings, then one with a message that takes the hero from it, so On air shows one placed and
 // one waiting with why; On air at both widths, the spotlight form with its photo picker (an image
 // uploaded for it) at both widths, Priorities with its preview drawn, History at both widths, the
-// sound desk with the spotlights' cues and one cue's form, Scenes with
+// sound desk's four sub-pages and one cue's form at both widths, Scenes with
 // its band chart and Peak's editor, and the main hall's live view with "From the crew" and its
 // cue's frame; then "Peak now" pressed, on On air and the main hall. Then an emergency:
 // On air and the main hall under it. Screen places a zone's claims, and reports where, only while
@@ -112,10 +112,28 @@ export const MOMENTS_PAGES = [
     PHONE,
     { touch: true },
   ],
-  // The sound desk (mockup 12) after the two spotlights' cues: the budget, the log, the library.
+  // The sound desk (#626, the step 4 polish sheets 01–04) after the two spotlights' cues: its four
+  // sub-pages and the cue editor, each at both widths.
   ["moments-cues", "/moments/cues", DESK],
   ["moments-cues-phone", "/moments/cues", PHONE, { touch: true }],
+  ["moments-cues-library", "/moments/cues/library", DESK],
+  [
+    "moments-cues-library-phone",
+    "/moments/cues/library",
+    PHONE,
+    { touch: true },
+  ],
+  ["moments-cues-limits", "/moments/cues/limits", DESK],
+  ["moments-cues-limits-phone", "/moments/cues/limits", PHONE, { touch: true }],
+  ["moments-cues-log", "/moments/cues/log", DESK],
+  ["moments-cues-log-phone", "/moments/cues/log", PHONE, { touch: true }],
   ["moments-cue-edit", "/moments/cues/edit/tournament.start", DESK],
+  [
+    "moments-cue-edit-phone",
+    "/moments/cues/edit/tournament.start",
+    PHONE,
+    { touch: true },
+  ],
   ["moments-scenes", "/moments/scenes", DESK],
   ["moments-scenes-phone", "/moments/scenes", PHONE, { touch: true }],
   ["moments-scenes-edit", "/moments/scenes?edit=peak", DESK],
@@ -123,6 +141,13 @@ export const MOMENTS_PAGES = [
     "moments-screen-spotlight",
     "/screen/zones/main",
     SCREEN_VIEW,
+    { fullPage: false, ready: shows("From the crew") },
+  ],
+  // The hero rule at 4K (#625; docs/briefs/step-4-polish, sheet 10).
+  [
+    "moments-screen-spotlight-4k",
+    "/screen/zones/main",
+    { width: 3840, height: 2160 },
     { fullPage: false, ready: shows("From the crew") },
   ],
 ];
@@ -178,7 +203,7 @@ export function momentsListed(at) {
 }
 
 /** An image for the spotlight's photo picker, uploaded as Studio uploads it. */
-async function image(demo) {
+export async function image(demo) {
   const boundary = "canccu-moments-shot";
   const body = Buffer.concat([
     Buffer.from(
@@ -194,7 +219,7 @@ async function image(demo) {
     throw new Error(
       `uploading an image: HTTP ${r.status} ${JSON.stringify(r.body)}`,
     );
-  return r.body.id;
+  return r.body;
 }
 
 export async function momentsShots({ demo, shot, fail }) {
@@ -227,7 +252,7 @@ export async function momentsShots({ demo, shot, fail }) {
     );
     await placed(ids[0], ["main"]);
     await placed(ids[1], ["main", "entrance"]);
-    images.push(await image(demo));
+    images.push((await image(demo)).id);
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }

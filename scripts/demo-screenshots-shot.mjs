@@ -2,6 +2,10 @@
 // they use. A page that does not answer its own status or whose API reads are refused fails, so a
 // screenshot of an error never passes for a real one.
 import { DEMO_HOST } from "../modules/screen/test/stack/client.mjs";
+import {
+  collectSamples,
+  judgePage,
+} from "../modules/screen/test/stack/readability.mjs";
 
 export const DESK = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
@@ -33,7 +37,14 @@ export function shooter({ browser, at, out, check, fail, ok }) {
     path,
     viewport,
     cookie,
-    { fullPage = true, ready, status = 200, tall = false, touch = false } = {},
+    {
+      fullPage = true,
+      ready,
+      readable = false,
+      status = 200,
+      tall = false,
+      touch = false,
+    } = {},
   ) {
     const url = at(path);
     // A touch screen has no hover, so a phone page's `(hover: none)` rules apply.
@@ -90,7 +101,58 @@ export function shooter({ browser, at, out, check, fail, ok }) {
           path: `${out}/${name}.png`,
           fullPage: fullPage && !tall,
         });
+      if (readable) await judged(page);
       ok(`${name}.png  ${url}`);
+    } catch (err) {
+      fail(`${name}: ${url}: ${firstLine(err)}`);
+    } finally {
+      await context.close();
+    }
+  };
+}
+
+/**
+ * A screen's text against the screens' readability rules (modules/screen/test/stack/readability.mjs:
+ * size, contrast, clipping), as the screens' own shots are judged; a storyboard's steps and stings
+ * too (#625), which drew small and dark on dark before the check saw them.
+ */
+async function judged(page) {
+  const problems = judgePage(await page.evaluate(collectSamples));
+  if (problems.length > 0)
+    throw new Error(
+      `${problems.length} readability problems: ${problems.slice(0, 4).join("; ")}`,
+    );
+}
+
+/**
+ * `sequence(name, path, viewport, cookie, start, frames)`: one page, kept open while a storyboard
+ * plays on it, `start(page)` once it has drawn, then each frame `[suffix, ready]` written to
+ * `out/<name>-<suffix>.png` once `ready(page)` answers, and judged for readability. A failure is
+ * handed to `fail`; the frames after it are not taken.
+ */
+export function sequencer({ browser, at, out, check, fail, ok }) {
+  return async function sequence(name, path, viewport, cookie, start, frames) {
+    const url = at(path);
+    const context = await browser.newContext({ viewport });
+    try {
+      await context.addCookies([cookieOn(cookie)]);
+      const page = await context.newPage();
+      const res = await page.goto(url);
+      if (res?.status() !== 200)
+        throw new Error(`answered HTTP ${res?.status()}, not 200`);
+      await page.locator(".canccu-layout").first().waitFor({ timeout: 30_000 });
+      await start(page);
+      for (const [suffix, ready] of frames) {
+        await ready(page);
+        if (!check)
+          await page.screenshot({ path: `${out}/${name}-${suffix}.png` });
+        try {
+          await judged(page);
+        } catch (err) {
+          throw new Error(`${suffix}: ${firstLine(err)}`);
+        }
+        ok(`${name}-${suffix}.png  ${url}`);
+      }
     } catch (err) {
       fail(`${name}: ${url}: ${firstLine(err)}`);
     } finally {

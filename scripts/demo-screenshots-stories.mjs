@@ -6,17 +6,19 @@
 // Premiere on the demo event (a "premiere" item, the demo film uploaded to Screen) with its
 // builder and its three steps on the main hall; and On air on a phone with Doors open's loop live
 // (Stop loop). Every run is stopped, and every item, file, screen and Premiere's settings made
-// here are undone afterwards.
+// here are undone afterwards. The hero rule (#625, docs/briefs/step-4-polish sheets 07–10): every
+// screen shot here is judged by the screens' readability check, and four rounds are shot step by
+// step on one open page (S1 Starting soon with its finale, S2 Midnight on the main hall and the
+// portrait entrance, R17 Doors open), at 1080p and 4K, with a crew photo spotlight.
 import { readFileSync } from "node:fs";
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
-import { moments, placed } from "./demo-screenshots-moments.mjs";
+import { image, moments, placed } from "./demo-screenshots-moments.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
-const FILM = new URL(
-  "../events/demo/media/demo-film.mp4",
-  import.meta.url,
-);
+const SCREEN_4K = { width: 3840, height: 2160 };
+const PORTRAIT = { width: 1080, height: 1920 };
+const FILM = new URL("../events/demo/media/demo-film.mp4", import.meta.url);
 
 const shows =
   (text, timeout = 30_000) =>
@@ -87,10 +89,16 @@ export const STORY_PAGES = [
  */
 const PRESET_SHOTS = [
   ["doors_open", shows("Welcome to"), "doors"],
-  ["starting_soon", drawn(".canccu-widget--countdown"), "tournament"],
+  // The step's countdown, not the Pulse's own (the book's R21 caught the sting).
+  [
+    "starting_soon",
+    drawn(".canccu-widget--countdown.canccu-is-claim"),
+    "tournament",
+  ],
   ["match_called", shows("Match called")],
   ["champion", shows("Our champion")],
-  ["midnight", shows("Night")],
+  // The card, not "Tonight on stage" on the Pulse (the book's R21).
+  ["midnight", drawn(".canccu-region--_full > .canccu-widget--title_card")],
   ["meal_served", shows("is served"), "meal"],
   ["quiet_hours_soon", shows("Quiet hours from"), "quiet"],
   ["good_morning", shows("Today at"), "quiet"],
@@ -114,7 +122,7 @@ const screen = (name, ready) => [
   `stories-screen-${name.replace(/_/g, "-")}`,
   "/screen/zones/main",
   SCREEN_VIEW,
-  { fullPage: false, ready },
+  { fullPage: false, ready, readable: true },
 ];
 export const PRESET_PAGES = PRESET_SHOTS.map(([key, ready]) =>
   screen(key, ready),
@@ -136,6 +144,105 @@ export const LIVE_PAGES = [
   ["stories-on-air-phone", "/moments/on-air", PHONE, { touch: true }],
 ];
 
+/** A frame: the selector it waits for, drawn and settled (the step's flash and fade, 600 ms). */
+const frame =
+  (selector, timeout = 30_000) =>
+  async (page) => {
+    await page.locator(selector).first().waitFor({ timeout });
+    await page.waitForTimeout(900);
+  };
+const CLAIM = ".canccu-is-claim";
+const FULL = ".canccu-region--_full >";
+
+/**
+ * The rounds shot step by step (#625): `[name, zone, viewport, story, item kind, frames]`. A
+ * test round plays no finale, so a frame named `finale` stops it and fires the story by hand on an
+ * item that has just started, which goes straight to the finale (R22). Each frame is judged for
+ * readability.
+ */
+export const SEQUENCES = [
+  ...[
+    ["1080p", SCREEN_VIEW],
+    ["4k", SCREEN_4K],
+  ].flatMap(([size, viewport]) => [
+    [
+      `stories-seq-starting-soon-${size}`,
+      "main",
+      viewport,
+      "starting_soon",
+      "tournament",
+      [
+        ["1-sting", frame(`.canccu-widget--sting${CLAIM}`)],
+        ["2-countdown", frame(`.canccu-widget--countdown${CLAIM}`)],
+        [
+          "3-finale",
+          frame(`.canccu-step--flash.canccu-widget--title_card${CLAIM}`),
+        ],
+      ],
+    ],
+    [
+      `stories-seq-doors-open-${size}`,
+      "main",
+      viewport,
+      "doors_open",
+      "doors",
+      [
+        ["1-sting", frame(`.canccu-widget--sting${CLAIM}`)],
+        // The event's name filled on the first fire (A5, R19).
+        ["2-welcome", frame(`${CLAIM} :text("Welcome to Demo Event")`)],
+        ["3-title", frame(`${CLAIM} :text("Wi-Fi and venue info")`, 40_000)],
+        // The code drawn, not a white square (R20).
+        [
+          "4-qr",
+          frame(
+            `.canccu-widget--qr${CLAIM} img[src^="data:image/svg"]`,
+            40_000,
+          ),
+        ],
+      ],
+    ],
+  ]),
+  [
+    "stories-seq-midnight-1080p",
+    "main",
+    SCREEN_VIEW,
+    "midnight",
+    undefined,
+    [
+      ["1-countdown", frame(`${FULL} .canccu-widget--countdown`)],
+      ["2-sting", frame(`${FULL} .canccu-widget--sting`)],
+      ["3-card", frame(`${FULL} .canccu-widget--title_card`)],
+    ],
+  ],
+  [
+    "stories-seq-midnight-portrait",
+    "entrance",
+    PORTRAIT,
+    "midnight",
+    undefined,
+    [
+      ["1-countdown", frame(`${FULL} .canccu-widget--countdown`)],
+      ["2-sting", frame(`${FULL} .canccu-widget--sting`)],
+      ["3-card", frame(`${FULL} .canccu-widget--title_card`)],
+    ],
+  ],
+];
+
+/** A crew photo spotlight on the main hall (R2; sheets 07 B, 08 1 and 10), at 1080p and 4K. */
+export const PHOTO_PAGES = [
+  ["1080p", SCREEN_VIEW],
+  ["4k", SCREEN_4K],
+].map(([size, viewport]) => [
+  `stories-screen-crew-photo-${size}`,
+  "/screen/zones/main",
+  viewport,
+  {
+    fullPage: false,
+    ready: frame(`.canccu-widget--photo${CLAIM} img`),
+    readable: true,
+  },
+]);
+
 /** The dry run's lines. */
 export function storiesListed(at) {
   return [
@@ -143,19 +250,29 @@ export function storiesListed(at) {
     [PRESET_PAGES, "a preset's message step, test-fired on the main hall"],
     [PREMIERE_PAGES, "Premiere on the demo event, its builder and its steps"],
     [LIVE_PAGES, "a live loop with Stop loop"],
-  ].flatMap(([pages, how]) =>
-    pages.map(
-      ([name, path, { width, height }]) =>
-        `  ${name}.png  ${at(path)}  (${width}×${height}, ${how})`,
-    ),
-  );
+    [PHOTO_PAGES, "a crew photo spotlight"],
+  ]
+    .flatMap(([pages, how]) =>
+      pages.map(
+        ([name, path, { width, height }]) =>
+          `  ${name}.png  ${at(path)}  (${width}×${height}, ${how})`,
+      ),
+    )
+    .concat(
+      SEQUENCES.flatMap(([name, zone, { width, height }, key, , frames]) =>
+        frames.map(
+          ([suffix]) =>
+            `  ${name}-${suffix}.png  ${at(`/screen/zones/${zone}`)}  (${width}×${height}, ${key} test-fired, step by step)`,
+        ),
+      ),
+    );
 }
 
 /** One round on the main hall, silent; Moments learns a new item from the agenda's event, so a
  * test-fire that names one is asked again for a few seconds until Moments knows it. */
-async function testFire(key, item = null) {
+async function testFire(key, item = null, zone = "main") {
   const body = {
-    test: { zone: "main", sound: false },
+    test: { zone, sound: false },
     ...(item ? { item_id: item.id } : {}),
   };
   for (let tries = 0; ; tries++) {
@@ -328,7 +445,91 @@ async function resetPremiere() {
   });
 }
 
-export async function storiesShots({ demo, shot, fail }) {
+/** A round test-fired on a page already drawing the zone, then shot step by step. */
+async function sequenceShots(sequence, itemOf, add, runs) {
+  for (const [name, zone, viewport, key, pick, frames] of SEQUENCES) {
+    let run = null;
+    const steps = frames.map(([suffix, ready]) => [
+      suffix,
+      suffix.endsWith("finale")
+        ? async (page) => {
+            await stop(run);
+            // Made only now: its own start may fire the story too, which shows the same finale.
+            const started = await add.item(
+              "Demo Cup, final",
+              "tournament",
+              -1,
+              60,
+              "Stage",
+            );
+            const fired = await fireByHand(key, started);
+            if (fired !== null) runs.push(fired);
+            await ready(page);
+            if (fired !== null) await stop(fired);
+          }
+        : ready,
+    ]);
+    await sequence(
+      name,
+      `/screen/zones/${zone}${viewport.height > viewport.width ? "?orientation=portrait" : ""}`,
+      viewport,
+      SESSION,
+      async () => {
+        run = await testFire(key, itemOf(pick), zone);
+        runs.push(run);
+      },
+      steps,
+    );
+    if (run !== null) await stop(run);
+  }
+}
+
+/**
+ * The story fired by hand on `item`, asked again until Moments knows the new item; null when the
+ * item's own start fired it first (the run that owns it shows the same finale).
+ */
+async function fireByHand(key, item) {
+  for (let tries = 0; ; tries++) {
+    const r = await moments("POST", `/api/moments/storyboards/${key}/take`, {
+      item_id: item.id,
+    });
+    if (r.status === 201) return r.body.id;
+    if (r.status === 409) return null;
+    if (tries >= 20 || r.status !== 400)
+      throw new Error(
+        `firing ${key}: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+      );
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+}
+
+/** The crew photo spotlight: an image uploaded, shown on the main hall, then ended. */
+async function photoShots(demo, shot) {
+  const photo = await image(demo);
+  let id = null;
+  try {
+    const r = await moments("POST", "/api/moments/spotlight", {
+      show: "photo",
+      photo_url: photo.url,
+      caption: "Pizza is here",
+      zones: ["main"],
+    });
+    if (r.status !== 201 && r.status !== 200)
+      throw new Error(
+        `the photo spotlight: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+      );
+    id = r.body.id;
+    await placed(id, ["main"]);
+    for (const [name, path, viewport, o] of PHOTO_PAGES)
+      await shot(name, path, viewport, SESSION, o);
+  } finally {
+    if (id !== null)
+      await moments("POST", `/api/moments/moments/${id}/end`, {});
+    await demo.call("DELETE", `/api/screen/assets/${photo.id}`);
+  }
+}
+
+export async function storiesShots({ demo, shot, sequence, fail }) {
   const runs = [];
   const add = made(demo);
   let screenOn = null;
@@ -366,6 +567,16 @@ export async function storiesShots({ demo, shot, fail }) {
     for (const [name, path, viewport, o] of steps)
       await shot(name, path, viewport, SESSION, o);
     await stop(film);
+    // Started a minute ago: Starting soon fired by hand on it plays its finale at once.
+    const started = await add.item(
+      "Demo Cup, final",
+      "tournament",
+      -1,
+      60,
+      "Stage",
+    );
+    await sequenceShots(sequence, itemOf, add, runs);
+    await photoShots(demo, shot);
     // A live loop for On air: Doors open fired by hand would need its item; a test round shows the same card.
     runs.push(await testFire("doors_open"));
     for (const [name, path, viewport, o] of LIVE_PAGES)
