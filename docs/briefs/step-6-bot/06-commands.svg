@@ -88,7 +88,7 @@
 <rect x="310" y="525" width="40" height="22" rx="11" fill="#3ddcff"/>
 <circle cx="339" cy="536" r="8" fill="#0b0d1a"/>
 <text x="386" y="542" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Ticker</text>
-<text x="556" y="542" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/ticker set · stop · status · window add · list · remove</text>
+<text x="556" y="542" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/ticker set · stop · status · schedule add · list · remove</text>
 <text x="1096" y="542" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Ticker right</text>
 <rect x="296" y="570" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
 <rect x="310" y="585" width="40" height="22" rx="11" fill="#3ddcff"/>
@@ -173,7 +173,7 @@
 <text x="1412" y="633" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Ticker</text>
 <rect x="1702" y="618" width="40" height="22" rx="11" fill="#3ddcff"/>
 <circle cx="1731" cy="629" r="8" fill="#0b0d1a"/>
-<text x="1412" y="658" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker set · stop · status · window…</text>
+<text x="1412" y="658" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker set · stop · status · schedu…</text>
 <rect x="1398" y="686" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="1412" y="713" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Photo wall</text>
 <rect x="1702" y="698" width="40" height="22" rx="11" fill="#3ddcff"/>
