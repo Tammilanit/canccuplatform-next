@@ -88,6 +88,9 @@ cp "$MEDIA/clip-h264-aac.mp4" "$MEDIA/sound.ogg" "$work/$MEDIA/" || exit 2
 # Premiere on the demo event plays the demo film (demo-screenshots-stories.mjs).
 mkdir -p "$work/events/demo/media" \
   && cp events/demo/media/demo-film.mp4 "$work/events/demo/media/" || exit 2
+# The sound library shots upload some of the default pack's sounds (demo-screenshots-grids.mjs).
+mkdir -p "$work/modules/moments/static/sounds" \
+  && cp modules/moments/static/sounds/*.ogg "$work/modules/moments/static/sounds/" || exit 2
 user="$(id -u):$(id -g)"
 # On the default network: Caddy's namespace may not reach the registry.
 if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
