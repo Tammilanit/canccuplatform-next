@@ -22,7 +22,7 @@ import { ensureStories } from "./store.js";
 import { duplicated, toggled } from "./picker.js";
 import type { PickerItem } from "./picker.js";
 import { pickerView } from "./picker-view.js";
-import { builderView } from "./builder.js";
+import { builderHead, builderView } from "./builder.js";
 import { crewStories, fireChoices } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
@@ -141,9 +141,18 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
       eventEndsAt: doc.event.ends_at,
       hostname: doc.event.hostname,
     };
+    const head = builderHead({
+      story,
+      zones,
+      canWrite: has(request, SETTINGS),
+      canTake: has(request, TAKE),
+    });
     return page(request, reply, deps, {
-      title: `Storyboard: ${story.name}`,
+      title: story.name,
       tab: "storyboards",
+      crumb: { href: `${PREFIX}storyboards`, label: "Storyboards" },
+      description: head.description,
+      actions: head.actions,
       body: builderView({
         story,
         d: describeStory(story, doc.settings, (c) => videoMs({ content: c })),

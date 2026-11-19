@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import type { Page } from "playwright-core";
 import { afterAll, describe, expect, it } from "vitest";
-import { builderView } from "../src/story/builder.js";
+import { builderHead, builderView } from "../src/story/builder.js";
 import { describeStory } from "../src/story/describe.js";
 import { PRESETS } from "../src/story/presets.js";
 import { DEFAULT_SETTINGS } from "../src/story/store.js";
@@ -22,7 +22,9 @@ const css = [
   file(createRequire(import.meta.url).resolve("@canccu/ui/ui.css")),
   file(new URL("../static/moments.css", import.meta.url)),
   file(new URL("../static/organiser.css", import.meta.url)),
-  file(new URL("../static/story-builder.css", import.meta.url)),
+  ...["story-controls", "story-round", "story-side", "story-builder"].map((n) =>
+    file(new URL(`../static/${n}.css`, import.meta.url)),
+  ),
 ].join("\n");
 const script = file(new URL("../static/story-builder.js", import.meta.url));
 const ORIGIN = "http://moments.test";
@@ -33,6 +35,7 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
   if (story === undefined) throw new Error(`no preset ${key}`);
   const context = await browser.newContext({ viewport: { width, height: 900 }, hasTouch: true });
   const page = await context.newPage();
+  const head = builderHead({ story, zones: ["main", "entrance"], canWrite: true, canTake: true });
   const body = builderView({
     story,
     d: describeStory(story, DEFAULT_SETTINGS, () => 0),
@@ -51,7 +54,7 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
     route.request().url().includes("/moments/storyboards")
       ? route.fulfill({
           contentType: "text/html; charset=utf-8",
-          body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page"><main class="canccu-main">${String(body)}</main><script>${script}</script></body></html>`,
+          body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page"><main class="canccu-main"><div class="canccu-pagehead"><p>${String(head.description)}</p>${String(head.actions)}</div>${String(body)}</main><script>${script}</script></body></html>`,
         })
       : route.fulfill({ status: 404, body: "" }),
   );
@@ -111,6 +114,7 @@ describe.skipIf(browser === undefined)(
       const labels = await page.$$eval(".moments-step__name", (xs) => xs.map((x) => x.textContent));
       expect(labels).toEqual(["1 · Countdown", "2 · Sting"]);
       expect(await page.isVisible("[data-builder-unsaved]")).toBe(true);
+      expect(await page.textContent("[data-builder-state]")).toBe("1 change");
       expect(
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.step),
       ).toBe("1");

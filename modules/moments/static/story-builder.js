@@ -33,7 +33,7 @@
   // Changes not saved yet, counted by field, in the pending row and beside Save.
   const changed = new Set();
   const state = root.querySelector("[data-builder-state]");
-  const unsaved = root.querySelector("[data-builder-unsaved]");
+  const unsaved = document.querySelector("[data-builder-unsaved]");
   const note = (name) => {
     changed.add(name);
     if (state) state.textContent = changed.size === 1 ? "1 change" : `${changed.size} changes`;

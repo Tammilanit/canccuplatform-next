@@ -7,6 +7,7 @@
  */
 import type { Html } from "@canccu/ui";
 import { html } from "@canccu/ui";
+import { roundsText } from "./describe.js";
 import type { Described } from "./describe.js";
 import { DOMAIN_TYPES, lastRoundKnown } from "./model.js";
 import type { Story } from "./model.js";
@@ -50,8 +51,8 @@ function timeline(st: Story, d: Described): Html {
     { length: 13 },
     (_, i) =>
       html`<line
-        x1="${pc(3 + i * 7.5)}"
-        x2="${pc(3 + i * 7.5)}"
+        x1="${pc(3 + (i * (x(hi) - 3)) / 12)}"
+        x2="${pc(3 + (i * (x(hi) - 3)) / 12)}"
         y1="${i % 4 === 0 ? "46" : "48"}"
         y2="${i % 4 === 0 ? "56" : "54"}"
         class="moments-timeline__tick"
@@ -92,15 +93,24 @@ function timeline(st: Story, d: Described): Html {
             class="moments-timeline__finale-label"
             >Finale</text
           >`;
+  // Beside the last round's label, T would touch it on a phone; the finale marks T there.
+  const near = at.length > 0 && x(0) - x(Math.max(...at)) < 8;
+  const t = html`<text
+    x="${pc(x(0))}"
+    y="72"
+    text-anchor="middle"
+    class="moments-timeline__label moments-timeline__label--t${near ? " moments-timeline__label--near" : ""}"
+    >T</text
+  >`;
   return html`<svg
     class="moments-timeline"
     width="100%"
     height="80"
     role="img"
-    aria-label="The rounds on a time axis: ${at.map(minutes).join(", ")}${st.finale === null ? "" : ", then the finale"}"
+    aria-label="The rounds: ${roundsText(st)}"
   >
     <line x1="3%" x2="${pc(x(hi))}" y1="51" y2="51" class="moments-timeline__axis"></line>
-    ${ticks}${between}${rounds}${finale}
+    ${ticks}${between}${rounds}${finale}${at.includes(0) ? "" : t}
   </svg>`;
 }
 
@@ -164,7 +174,7 @@ function roundChips(st: Story): Html {
 function endsChip(st: Story): Html {
   const e = st.end;
   const face = [
-    e.rounds === null ? null : `${String(e.rounds)} rounds`,
+    e.rounds === null ? null : `${String(e.rounds)} round${e.rounds === 1 ? "" : "s"}`,
     e.for_minutes === null ? null : `for ${String(e.for_minutes)} min`,
     e.until_clock === null ? null : `until ${e.until_clock}`,
     e.crew ? "the crew may stop it" : null,

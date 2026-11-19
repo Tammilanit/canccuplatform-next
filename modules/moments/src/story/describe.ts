@@ -40,24 +40,6 @@ export function triggerText(t: Trigger): string {
   }
 }
 
-export function conditionsText(st: Story): string[] {
-  const k = st.conditions;
-  const out = [
-    `Zones: ${k.item_zone ? "the item's zone, else all" : k.zones.length === 0 ? "every zone" : k.zones.join(", ")}`,
-    `In a quiet scene: ${k.quiet === "calm" ? "play calm and silent" : "skip"}`,
-  ];
-  if (k.scenes.length > 0) out.push(`Only in ${k.scenes.join(" or ")}`);
-  if (k.not_scenes.length > 0) out.push(`Not in ${k.not_scenes.join(" or ")}`);
-  if (k.energy_min !== null) out.push(`Energy at least ${k.energy_min}`);
-  if (k.energy_max !== null) out.push(`Energy at most ${k.energy_max}`);
-  if (k.window !== null) out.push(`Between ${k.window.from} and ${k.window.until}`);
-  if (k.days.length > 0) out.push(`On ${k.days.join(", ")}`);
-  if (k.once !== null) out.push(`Once per ${k.once}`);
-  out.push(`Cooldown: ${k.cooldown_minutes === 0 ? "none" : `${String(k.cooldown_minutes)} min`}`);
-  out.push(`Run mode: ${st.run_mode.replace("_", " ")}`);
-  return out;
-}
-
 export function roundsText(st: Story): string {
   const r = st.rounds;
   const at =

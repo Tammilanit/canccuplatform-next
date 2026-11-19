@@ -179,8 +179,8 @@ function stepForm(s: StoryStep, i: number, o: Builder): Html {
   const input = (k: string, v: string | number | null | undefined, mono = false) =>
     textInput(p(k), p(k), v, { mono });
   const floor =
-    card.floor_seconds > 0 || card.under_floor
-      ? `At least ${String(Math.max(card.floor_seconds, Math.round(card.played_ms / 1000)))} s for ${String(card.words)} words${card.under_floor ? `: it plays ${secs(card.played_ms)}` : ""}`
+    card.floor_seconds > 0
+      ? `At least ${String(card.floor_seconds)} s for ${String(card.words)} words${card.under_floor ? `; it plays ${secs(card.played_ms)}` : ""}`
       : `Plays ${secs(card.played_ms)}`;
   return html`<fieldset
     class="moments-stepform"
@@ -193,8 +193,24 @@ function stepForm(s: StoryStep, i: number, o: Builder): Html {
         Step ${String(i + 1)} · ${nameOf(s.template)}
       </h2>
       <span class="moments-stepform__moves">
-        ${change("move", `${String(i)}:-1`, "Move earlier", "canccu-button canccu-button--ghost canccu-button--sm")}
-        ${change("move", `${String(i)}:1`, "Move later", "canccu-button canccu-button--ghost canccu-button--sm")}
+        <button
+          class="moments-quiet"
+          type="submit"
+          name="move"
+          value="${String(i)}:-1"
+          aria-label="Move step ${String(i + 1)} earlier"
+        >
+          Earlier
+        </button>
+        <button
+          class="moments-quiet"
+          type="submit"
+          name="move"
+          value="${String(i)}:1"
+          aria-label="Move step ${String(i + 1)} later"
+        >
+          Later
+        </button>
       </span>
       ${change(p("remove"), "yes", "Remove step")}
     </div>

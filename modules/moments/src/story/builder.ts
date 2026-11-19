@@ -1,6 +1,6 @@
 /**
  * Studio → Moments → Storyboards, the builder (SU5; mockup 18 redrawn as step 4 polish sheets 05
- * and 06, #627): the header with Test-fire and Save, what plays it, the rounds on a timeline, the
+ * and 06, #627): the page head with Test-fire and Save, what plays it, the rounds on a timeline, the
  * round as a strip of steps with the chosen step's form beside it, and the preview with the checks
  * before saving. On a phone the same parts are three tabs, Overview, Round and Preview, with
  * Test-fire and Save in the pending row. One form holds every field form.ts reads; the
@@ -30,8 +30,15 @@ function sampled(v: unknown, sample: (t: string) => string): unknown {
   return v;
 }
 
-function header(o: BuilderView, zone: string | undefined): Html {
+/** The page head's line under the title and its actions (sheet 05, 1): Preset, on or off, then
+ * Test-fire and Save, which stay in reach while the page scrolls; on a phone the pending row has
+ * them. The test-fire is a form of its own; Save and the switch name the builder's form. */
+export function builderHead(o: Pick<BuilderView, "story" | "zones" | "canWrite" | "canTake">): {
+  description: Html;
+  actions: Html;
+} {
   const st = o.story;
+  const zone = o.zones[0];
   const test =
     o.canTake && zone !== undefined
       ? html`<form id="story-test" method="post" action="${PREFIX}storyboards/${st.key}/test">
@@ -41,43 +48,32 @@ function header(o: BuilderView, zone: string | undefined): Html {
           </button>
         </form>`
       : "";
-  return html`<header class="moments-builder__head">
-    <a class="canccu-small" href="${PREFIX}storyboards">‹ Storyboards</a>
-    <div class="moments-builder__titlebar">
-      <label class="moments-visually-hidden" for="name">Name</label>
-      <input
-        class="moments-builder__name"
-        id="name"
-        name="name"
-        value="${st.name}"
-        form="story-save"
-        ${o.canWrite ? "" : "disabled"}
-      />
-      <span class="canccu-badge canccu-badge--plain"
+  return {
+    description: html`<span class="moments-builder__status"
+      ><span class="canccu-badge canccu-badge--plain"
         >${st.preset === null ? "The event's own" : "Preset"}</span
-      >
-      ${
+      >${
         o.canWrite
           ? toggle("enabled", "yes", st.enabled, "On for this event", { form: "story-save" })
-          : html`<span class="canccu-small">${st.enabled ? "On for this event" : "Off"}</span>`
+          : html`<span>${st.enabled ? "On for this event" : "Off"}</span>`
+      }</span
+    >`,
+    actions: html`<span class="moments-builder__actions">
+      ${test}
+      <span class="canccu-small canccu-muted" data-builder-unsaved hidden>Not saved yet</span>
+      ${
+        o.canWrite
+          ? html`<button
+              class="canccu-button canccu-button--primary"
+              type="submit"
+              form="story-save"
+            >
+              Save
+            </button>`
+          : ""
       }
-      <span class="moments-builder__actions">
-        ${test}
-        <span class="canccu-small canccu-muted" data-builder-unsaved hidden>Not saved yet</span>
-        ${
-          o.canWrite
-            ? html`<button
-                class="canccu-button canccu-button--primary"
-                type="submit"
-                form="story-save"
-              >
-                Save
-              </button>`
-            : ""
-        }
-      </span>
-    </div>
-  </header>`;
+    </span>`,
+  };
 }
 
 export interface BuilderView {
@@ -123,7 +119,6 @@ export function builderView(o: BuilderView): Html {
     </button>`;
   return html`${flash(o.done, o.error)}
     <div class="moments-builder" data-builder>
-      ${header(o, zone)}
       <div class="moments-builder__tabs" role="tablist" aria-label="Parts of the builder" hidden>
         ${tab("overview", "Overview", true)}${tab("round", "Round", false)}${tab("preview", "Preview", false)}
       </div>
@@ -139,7 +134,8 @@ export function builderView(o: BuilderView): Html {
           href="#checks"
           data-tab="overview"
           data-tab-to="preview"
-          ><span class="moments-checks__mark" aria-hidden="true">${n.look > 0 ? "!" : "✓"}</span
+          ><span class="moments-storychecks__mark" aria-hidden="true"
+            >${n.look > 0 ? "!" : "✓"}</span
           ><span
             >${String(n.ok)} checks
             pass${n.look > 0 ? ` · ${String(n.look)} to look at` : " · none to look at"}</span

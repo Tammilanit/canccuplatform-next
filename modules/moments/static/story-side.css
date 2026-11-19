@@ -1,0 +1,135 @@
+/* The storyboard builder's preview and checks (step 4 polish sheet 05, 7 and 8; sheet 06, 6). */
+
+/* The preview with its scrub bar, coloured by step (sheet 05, 7). */
+.moments-builder__preview .moments-preview__frame {
+  margin: 0.75rem 0 0.5rem;
+  overflow: hidden;
+  border-radius: var(--canccu-radius);
+}
+.moments-scrub {
+  position: relative;
+  height: 1.5rem;
+}
+.moments-scrub__bar {
+  position: absolute;
+  inset: 0.4375rem 0 auto;
+  display: block;
+}
+.moments-scrub__part {
+  fill: var(--canccu-color-primary);
+}
+.moments-scrub__part--sting {
+  fill: var(--canccu-color-accent);
+}
+.moments-scrub__part--countdown {
+  fill: var(--canccu-color-status-degraded);
+}
+.moments-scrub__part--qr {
+  fill: var(--canccu-color-status-ok);
+}
+.moments-scrub__range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+.moments-scrub__range::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+.moments-scrub__range::-webkit-slider-thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.1875rem;
+  border: 3px solid var(--canccu-color-primary);
+  border-radius: 50%;
+  background: var(--canccu-color-text);
+  appearance: none;
+}
+.moments-scrub__range::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 3px solid var(--canccu-color-primary);
+  border-radius: 50%;
+  background: var(--canccu-color-text);
+}
+.moments-scrub__range:focus-visible {
+  outline: 2px solid var(--canccu-ink-primary);
+}
+.moments-scrub__meta {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0 0;
+}
+.moments-preview__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0;
+}
+.moments-builder__preview [data-preview-note] {
+  margin: 0.75rem 0 0;
+}
+
+/* The checks before saving (sheet 05, 8). */
+.moments-meter {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.75rem 0;
+}
+.moments-meter__bar {
+  display: block;
+}
+.moments-meter__track {
+  fill: color-mix(in srgb, var(--canccu-color-text) 14%, transparent);
+}
+.moments-meter__fill {
+  fill: var(--canccu-color-primary);
+}
+.moments-meter__fill--over {
+  fill: var(--canccu-color-status-degraded);
+}
+.moments-meter__cap {
+  stroke: var(--canccu-color-text);
+  stroke-width: 2;
+}
+.moments-builder__checks > p {
+  margin: 0.25rem 0;
+}
+.moments-storychecks {
+  display: grid;
+  gap: 0.625rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.moments-storychecks__item {
+  display: grid;
+  grid-template-columns: 1.125rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  font-size: var(--canccu-text-sm);
+}
+.moments-storychecks__mark {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--canccu-color-status-ok);
+  color: var(--canccu-color-background);
+  font-size: 0.6875rem;
+  font-weight: 800;
+}
+.moments-storychecks__item--look {
+  color: var(--canccu-ink-degraded);
+}
+.moments-storychecks__item--look .moments-storychecks__mark,
+.moments-builder__checkline--look .moments-storychecks__mark {
+  background: var(--canccu-color-status-degraded);
+}

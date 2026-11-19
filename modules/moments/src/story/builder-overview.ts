@@ -278,6 +278,11 @@ function conditions(st: Story, zones: string[]): Html[] {
 
 export function overviewCard(st: Story, zones: string[]): Html {
   return html`<section class="canccu-card moments-builder__overview" data-tab="overview">
+    <div class="moments-chiprow">
+      <label class="moments-chiprow__label" for="name"><strong>Name</strong></label>
+      <div class="moments-chiprow__chips">${textInput("name", "name", st.name)}</div>
+    </div>
+    <hr class="moments-rule-line" />
     ${chipRow("Plays when", "any one", triggers(st))}
     <hr class="moments-rule-line" />
     ${chipRow("Only if", "all", conditions(st, zones))}

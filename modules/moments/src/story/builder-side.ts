@@ -172,11 +172,13 @@ function checks(o: Side): Html {
       `${String(d.sounds_per_run)} of ${String(RUN_SOUNDS)} · at most 2 a round`,
     )}
     <p class="canccu-small canccu-muted">Patience a round: ${String(d.patience_s)} s, then skip.</p>
-    <ul class="moments-checks">
+    <ul class="moments-storychecks">
       ${d.checks.map(
         (c) =>
-          html`<li class="moments-checks__item${c.ok ? "" : " moments-checks__item--look"}">
-            <span class="moments-checks__mark" aria-label="${c.ok ? "Passes" : "To look at"}"
+          html`<li
+            class="moments-storychecks__item${c.ok ? "" : " moments-storychecks__item--look"}"
+          >
+            <span class="moments-storychecks__mark" aria-label="${c.ok ? "Passes" : "To look at"}"
               >${c.ok ? "✓" : "!"}</span
             ><span>${c.text}</span>
           </li>`,
