@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2104 1164" width="2104" height="1164" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 4 polish 09: Midnight on the dot</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="glowp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ddcff" stop-opacity="0.35"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></radialGradient><radialGradient id="glowa" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.32"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a" stop-opacity="0"/><stop offset="0.3" stop-color="#0b0d1a" stop-opacity="0.1"/><stop offset="0.58" stop-color="#0b0d1a" stop-opacity="0.72"/><stop offset="1" stop-color="#0b0d1a" stop-opacity="0.94"/></linearGradient><linearGradient id="heroin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#141831"/></linearGradient><linearGradient id="photo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a4b2a"/><stop offset="0.5" stop-color="#c8763a"/><stop offset="1" stop-color="#3a1f2c"/></linearGradient><radialGradient id="bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a8" stop-opacity="0.85"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient><clipPath id="clm1"><rect x="0" y="0" width="1920" height="1080" rx="0"/></clipPath><clipPath id="clm2"><rect x="0" y="0" width="1920" height="1080" rx="0"/></clipPath><clipPath id="clm3"><rect x="0" y="0" width="1920" height="1080" rx="0"/></clipPath><clipPath id="pcmp"><rect x="0" y="0" width="1080" height="1920" rx="0"/></clipPath></defs>
+<rect x="0" y="0" width="2104" height="1164" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">09 · Midnight: a full-size countdown, a sting in the theme’s look, no overlap</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">The Midnight preset full screen at 1080p (drawn at 40 %) and on the portrait entrance. Book shots S2, R21.</text>
+<text x="32" y="116" font-size="18" fill="#111827" font-weight="700" text-anchor="start">1 · 23:59:52 · the countdown</text>
+<text x="32" y="138" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start">S2 frames 2–5: was “Midnight 00:00” small at the top of an empty screen</text>
+<g transform="translate(32,150) scale(0.4)">
+<g clip-path="url(#clm1)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<ellipse cx="1497.6000000000001" cy="172.8" rx="768.0" ry="540.0" fill="url(#glowp)"/>
+<ellipse cx="288.0" cy="918.0" rx="672.0" ry="486.0" fill="url(#glowa)"/>
+<text x="960" y="300" font-size="64" fill="#3ddcff" font-weight="600" text-anchor="middle" letter-spacing="10">MIDNIGHT IN</text>
+<text x="960" y="700" font-size="420" fill="#f3f5ff" font-weight="700" text-anchor="middle" letter-spacing="-6">00:08</text>
+<text x="960" y="850" font-size="60" fill="#c5cae3" font-weight="400" text-anchor="middle">Night 2 at Demo Event starts at 00:00</text>
+</g>
+</g>
+<text x="832" y="116" font-size="18" fill="#111827" font-weight="700" text-anchor="start">2 · 00:00:00 · the sting</text>
+<text x="832" y="138" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start">S2 frames 6–7: was a flat cyan block; now the theme’s gradient, a ring burst, confetti</text>
+<g transform="translate(832.0,150) scale(0.4)">
+<g clip-path="url(#clm2)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<ellipse cx="1497.6000000000001" cy="172.8" rx="768.0" ry="540.0" fill="url(#glowp)"/>
+<ellipse cx="288.0" cy="918.0" rx="672.0" ry="486.0" fill="url(#glowa)"/>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="url(#g)"/>
+<path d="M345.59999999999997,0 l307.2,0 l-576.0,1080 l-307.2,0 z" fill="#ffffff" opacity="0.16"/>
+<path d="M806.4,0 l96.0,0 l-576.0,1080 l-96.0,0 z" fill="#ffffff" opacity="0.12"/>
+<circle cx="960" cy="540" r="330" fill="none" stroke="#ffffff" stroke-width="10" opacity="0.35"/>
+<circle cx="960" cy="540" r="445.5" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.23"/>
+<circle cx="960" cy="540" r="577.5" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.11"/>
+<rect x="1007.83" y="879.947" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="427.684" y="584.444" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="59.4041" y="940.479" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="1108.05" y="1059.05" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1153.61" y="-100.396" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1206.66" y="1217.57" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1149.41" y="178.928" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="696.167" y="1188.44" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1722.04" y="828.641" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="363.181" y="526.075" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="749.54" y="1229.79" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1634.9" y="559.125" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1436.09" y="119.546" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="362.812" y="733.978" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="1322.05" y="903.165" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="1652.12" y="781.624" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="46.4638" y="472.034" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1534.44" y="1003.2" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="435.643" y="740.03" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="841.669" y="983.528" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="553.856" y="254.205" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1376.78" y="731.71" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="809.752" y="1078.64" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="1763.68" y="1024.57" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="472.061" y="620.336" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="1857.21" y="110.099" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1629.17" y="588.002" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="1079.43" y="72.852" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="796.626" y="905.108" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="791.331" y="930.284" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="724.53" y="802.605" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="263.245" y="667.193" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1827.31" y="530.312" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="1721.15" y="485.118" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="1351.45" y="751.937" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="18.0333" y="137.097" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="121.494" y="383.4" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1519.07" y="534.746" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1072.51" y="72.6619" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="325.043" y="595.849" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="335.241" y="559.83" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="969.695" y="1218.48" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="463.095" y="542.8" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="942.247" y="1062.4" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="391.972" y="743.616" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="2014.99" y="760.083" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<text x="960" y="611.5" font-size="300" fill="#0b0d1a" font-weight="800" text-anchor="middle" letter-spacing="-2">Midnight!</text>
+<text x="960" y="722.5" font-size="64" fill="#0b0d1a" font-weight="600" text-anchor="middle">Night 2 at Demo Event</text>
+</g>
+</g>
+<text x="32" y="618" font-size="18" fill="#111827" font-weight="700" text-anchor="start">3 · 00:00:03.6 · the card</text>
+<text x="32" y="640" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start">S2 frame 8: the sting has left before the card comes, so the two never overlap</text>
+<g transform="translate(32,652.0) scale(0.4)">
+<g clip-path="url(#clm3)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<ellipse cx="1497.6000000000001" cy="172.8" rx="768.0" ry="540.0" fill="url(#glowp)"/>
+<ellipse cx="288.0" cy="918.0" rx="672.0" ry="486.0" fill="url(#glowa)"/>
+<text x="960" y="330" font-size="64" fill="#cdacff" font-weight="600" text-anchor="middle" letter-spacing="10">MIDNIGHT</text>
+<text x="960" y="560" font-size="170" fill="#f3f5ff" font-weight="600" text-anchor="middle">Night 2 at</text>
+<text x="960" y="740" font-size="170" fill="#f3f5ff" font-weight="600" text-anchor="middle">Demo Event</text>
+<text x="960" y="880" font-size="64" fill="#3ddcff" font-weight="500" text-anchor="middle">Keep it going</text>
+</g>
+</g>
+<text x="1632" y="116" font-size="18" fill="#111827" font-weight="700" text-anchor="start">4 · The entrance at 00:00:00</text>
+<text x="1632" y="138" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start">S2 portrait: was its background only</text>
+<g transform="translate(1632.0,150) scale(0.4)">
+<g clip-path="url(#pcmp)">
+<rect x="0" y="0" width="1080" height="1920" rx="0" fill="#0b0d1a"/>
+<ellipse cx="864.0" cy="230.39999999999998" rx="648.0" ry="576.0" fill="url(#glowp)"/>
+<ellipse cx="108.0" cy="1728.0" rx="540.0" ry="576.0" fill="url(#glowa)"/>
+<rect x="0" y="0" width="1080" height="1920" rx="0" fill="url(#g)"/>
+<path d="M194.4,0 l172.8,0 l-324.0,1920 l-172.8,0 z" fill="#ffffff" opacity="0.16"/>
+<path d="M453.59999999999997,0 l54.0,0 l-324.0,1920 l-54.0,0 z" fill="#ffffff" opacity="0.12"/>
+<circle cx="540" cy="960" r="260" fill="none" stroke="#ffffff" stroke-width="10" opacity="0.35"/>
+<circle cx="540" cy="960" r="351" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.23"/>
+<circle cx="540" cy="960" r="455" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.11"/>
+<rect x="577.682" y="1227.84" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="120.599" y="995.016" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="-169.56" y="1275.53" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="656.649" y="1368.95" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="692.54" y="455.446" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="734.342" y="1493.84" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="689.236" y="675.519" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="332.132" y="1470.89" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1140.39" y="1187.41" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="69.7786" y="949.028" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="374.183" y="1503.47" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1071.74" y="975.068" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="915.098" y="628.733" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="69.488" y="1112.83" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="825.252" y="1246.13" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="1085.31" y="1150.37" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="-179.756" y="906.451" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="992.589" y="1324.95" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="126.87" y="1117.6" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="446.769" y="1309.45" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="220.008" y="734.829" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="868.375" y="1111.04" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="421.623" y="1384.38" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="1173.2" y="1341.78" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="155.563" y="1023.3" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="1246.89" y="621.291" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1067.23" y="997.819" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="634.093" y="591.944" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="411.281" y="1247.66" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="407.11" y="1267.5" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="354.479" y="1166.9" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="-8.95813" y="1060.21" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1223.33" y="952.367" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="1139.7" y="916.76" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="848.414" y="1126.98" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="-202.156" y="642.561" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<rect x="-120.641" y="836.618" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="980.476" y="955.861" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="628.645" y="591.794" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="39.7307" y="1004" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="47.7659" y="975.624" width="14" height="26" rx="3" fill="#3ee39a" opacity="0.8"/>
+<rect x="547.639" y="1494.56" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="148.499" y="962.206" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="526.013" y="1371.59" width="14" height="26" rx="3" fill="#ffc94d" opacity="0.8"/>
+<rect x="92.4629" y="1120.42" width="14" height="26" rx="3" fill="#0b0d1a" opacity="0.8"/>
+<rect x="1371.2" y="1133.4" width="14" height="26" rx="3" fill="#ffffff" opacity="0.8"/>
+<text x="540" y="987.48" font-size="176" fill="#0b0d1a" font-weight="800" text-anchor="middle" letter-spacing="-2">Midnight!</text>
+<text x="540" y="1077.4" font-size="64" fill="#0b0d1a" font-weight="600" text-anchor="middle">Night 2 at Demo Event</text>
+</g>
+</g>
+<text x="832" y="672" font-size="18" fill="#111827" font-weight="700" text-anchor="start">The timing, on every zone</text>
+<rect x="832" y="696" width="298" height="44" rx="6" fill="#161a2e"/>
+<text x="842" y="724" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">Countdown · 10 s</text>
+<rect x="1132" y="696" width="88" height="44" rx="6" fill="url(#gh)"/>
+<text x="1142" y="724" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="start">Sting · 3 s</text>
+<rect x="1222" y="696" width="16" height="44" rx="6" fill="#f3f4f6"/>
+<rect x="1240" y="696" width="358" height="44" rx="6" fill="#2f2a52"/>
+<text x="1250" y="724" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">Card · 12 s</text>
+<text x="1132" y="764" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">00:00:00</text>
+<line x1="1132" y1="690" x2="1132" y2="748" stroke="#111827" stroke-width="2"/>
+<text x="1231" y="782" font-size="13" fill="#374151" font-weight="400" text-anchor="middle">0.6 s: out, then in</text>
+<text x="832" y="822" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The sting starts on the dot: each player counts to the step against the server’s clock,</text>
+<text x="832" y="843" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">so the entrance and the main hall show it in the same second.</text>
+<text x="832" y="864" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">A player that joins late starts at the point the round has reached, not from its first step.</text>
+<text x="832" y="885" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Full screen hides the screen’s own clock; the countdown is the clock.</text>
+</svg>
