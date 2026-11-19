@@ -257,6 +257,22 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     );
   });
 
+  // A5, R19, R20 (#625): the first fire, before any page read the event, read "Welcome to" with
+  // no name and drew the QR step's code as a white square (no hostname, no code).
+  it("fills the event's name and draws the QR step's code on the very first fire", async () => {
+    const r = await w.call("crew", "POST", "/api/moments/storyboards/doors_open/take", {
+      test: { zone: "main", sound: false },
+    });
+    expect(r.statusCode).toBe(201);
+    const { rows } = await pool.query(`SELECT steps FROM moments WHERE steps IS NOT NULL`);
+    const steps = (rows[0] as { steps: { template: string; content: Record<string, unknown> }[] })
+      .steps;
+    expect(steps[1]?.content.title).toBe("Welcome to Demo Event");
+    const qr = steps.find((s) => s.template === "qr")?.content;
+    expect(qr?.image_url).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(qr?.url).toBe("https://demo.test/notify/");
+  });
+
   it("test-fires a round now with an item whose time has passed: it plays, not skipped", async () => {
     const doors = {
       ...ITEM,
