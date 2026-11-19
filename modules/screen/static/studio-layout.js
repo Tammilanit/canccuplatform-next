@@ -14,6 +14,7 @@ const place = (a) => `${a.row} / ${a.column} / span ${a.rows} / span ${a.columns
 export function boxEditor(form, { say, counted, tell, changed }) {
   for (const g of document.querySelectorAll("[data-grid]")) {
     const [columns, rows] = g.dataset.grid.split(" ").map(Number);
+    // canccu-grid: fixed screen — the player's or a layout's own grid: the layout map and gallery boxes
     g.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
     // On a phone a row keeps a tappable height (studio-layout.css), else the grid is to scale.
     g.style.gridTemplateRows = `repeat(${rows}, minmax(var(--canccu-studio-row, 0px), 1fr))`;

@@ -127,6 +127,7 @@ fieldset.canccu-card {
 /* Desktop: the strip, the step's form and the preview's column side by side (sheet 05). */
 @media (min-width: 1100px) {
   .moments-builder__grid {
+    /* canccu-grid: fixed master-detail — shows the picked item beside its list: rounds, steps and the preview column */
     grid-template-columns: 11rem minmax(0, 1fr) minmax(17rem, 20rem);
     align-items: start;
   }

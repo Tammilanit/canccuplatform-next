@@ -26,6 +26,7 @@
 
 @container canccu-content (min-width: 52rem) {
   .canccu-studio-content__grid {
+    /* canccu-grid: fixed master-detail — shows the picked item beside its list: the library beside the playlist builder */
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 42%);
   }
 
@@ -131,6 +132,7 @@
 
 .canccu-studio-item {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: an item and its tools */
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.25rem 0.5rem;
   align-items: center;
@@ -142,6 +144,7 @@
 
 /* An editor's row: the handle, the title, its length and tools; its fields and any refusal below. */
 .canccu-studio-item--edit {
+  /* canccu-grid: fixed row — lays out one item's own parts: handle, title, length, tools */
   grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
 
@@ -226,6 +229,7 @@
 
 .canccu-studio-run li {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: a run's time, title and length */
   grid-template-columns: 3.5rem minmax(0, 1fr) auto;
   gap: 0.5rem;
   font-variant-numeric: tabular-nums;

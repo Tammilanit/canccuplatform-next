@@ -188,6 +188,7 @@
 
   .canccu-widget__row {
     display: grid;
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a row's label and value */
     grid-template-columns: 1fr auto;
     align-items: baseline;
     column-gap: calc(1.6 * var(--canccu-u));

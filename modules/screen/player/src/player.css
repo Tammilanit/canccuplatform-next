@@ -313,6 +313,7 @@ body:has(.canccu-frame--check) {
   padding: 0;
   list-style: none;
   display: grid;
+  /* canccu-grid: fixed screen — the player's or a layout's own grid: a check's mark, name and result */
   grid-template-columns: auto auto 1fr;
   gap: 1.6vmin 2.4vmin;
   font-size: 4vmin;

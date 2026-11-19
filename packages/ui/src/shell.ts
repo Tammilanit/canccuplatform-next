@@ -201,7 +201,8 @@ export interface ShellOptions extends DocumentOptions {
   actions?: Slot;
   /** The page's own sub-pages. */
   tabs?: readonly Tab[];
-  /** `narrow` (40rem) for forms; workspaces keep the 64rem default. */
+  /** `narrow` (40rem) for forms; `wide` (120rem) for a collection, a board or a master–detail
+   * editor (amendment 3); other workspaces keep the 64rem default. */
   width?: "narrow" | "wide";
   /** An error page has no title row of its own: its view is the title. */
   plain?: boolean;
@@ -227,7 +228,7 @@ export function shellPage(o: ShellOptions): Html {
     ? ""
     : html`<div class="canccu-pagehead"><div>${crumb}<h1 class="canccu-pagehead__title">${o.title}</h1>${desc}</div>${o.actions ? html`<div class="canccu-cluster">${o.actions}</div>` : ""}</div>`;
   const tabs = o.tabs?.length ? tabsNav(o.title, o.tabs) : "";
-  const main = html`<div class="canccu-content"><main class="canccu-main${o.width === "narrow" ? " canccu-main--narrow" : ""}">${head}${tabs}${o.body}</main></div>`;
+  const main = html`<div class="canccu-content"><main class="canccu-main${o.width === undefined ? "" : ` canccu-main--${o.width}`}">${head}${tabs}${o.body}</main></div>`;
   // An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
   const here = o.plain ? undefined : o.current;
   const shell = o.session

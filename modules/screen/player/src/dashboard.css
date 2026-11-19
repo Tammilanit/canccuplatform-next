@@ -76,6 +76,7 @@
       .canccu-region:not([data-role="header"], [data-role="ticker"])
       .canccu-widget__row--delayed {
       grid-template-areas: "state until delay" "name name name";
+      /* canccu-grid: fixed screen — the player's or a layout's own grid: a box's widget rows */
       grid-template-columns: auto auto 1fr;
     }
 
@@ -121,6 +122,7 @@
       > .canccu-widget--countdown {
       display: grid;
       grid-template-areas: "headline headline" "when count";
+      /* canccu-grid: fixed screen — the player's or a layout's own grid: a countdown and its label */
       grid-template-columns: minmax(0, 1fr) auto;
       align-content: center;
       align-items: baseline;

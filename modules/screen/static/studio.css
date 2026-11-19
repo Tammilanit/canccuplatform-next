@@ -262,6 +262,7 @@
 
 .canccu-studio-columns {
   display: grid;
+  /* canccu-grid: fixed form — lays out fields: the start and end fields */
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   gap: 0.5rem 0.75rem;
 }

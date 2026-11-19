@@ -29,6 +29,7 @@
 }
 .moments-master .moments-slider {
   flex: 1 1 14rem;
+  /* canccu-grid: fixed row — lays out one item's own parts: the master slider's label, track and value */
   grid-template-columns: auto minmax(6rem, 14rem) auto;
   max-width: 24rem;
   margin: 0;
@@ -159,6 +160,7 @@
 .moments-cuehead,
 .moments-cue {
   display: grid;
+  /* canccu-grid: fixed table — keeps its columns in line across rows: the cue list's head and rows */
   grid-template-columns: 2.5rem minmax(0, 2.4fr) minmax(0, 1.3fr) minmax(0, 1.1fr) 5.5rem 3.5rem;
   align-items: center;
   gap: 0.75rem;

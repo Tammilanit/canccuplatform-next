@@ -35,12 +35,14 @@
 }
 .canccu-studio-kit {
   display: grid;
+  /* canccu-grid: fixed master-detail — the form and what it draws */
   grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr);
   gap: var(--canccu-gap);
   align-items: start;
 }
 @media (max-width: 60rem) {
   .canccu-studio-kit {
+    /* canccu-grid: fixed master-detail — shows the picked item beside its list: one column */
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -130,6 +132,7 @@
 /* A colour: its swatch (the picker) and its hex. */
 .canccu-studio-pair {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: a colour's swatch and hex */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 0.75rem;
 }

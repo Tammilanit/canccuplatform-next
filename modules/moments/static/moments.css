@@ -139,6 +139,7 @@
 .moments-bands__row,
 .moments-bands__axis {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: the band chart's label and its day */
   grid-template-columns: 6.5rem 1fr;
   align-items: center;
   gap: 0.5rem;
@@ -210,6 +211,7 @@
 .moments-pair {
   display: grid;
   gap: 0 1rem;
+  /* canccu-grid: fixed form — lays out fields: two fields side by side */
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 .moments-checks {
@@ -225,6 +227,7 @@
 }
 @media (min-width: 64rem) {
   .moments-announce {
+    /* canccu-grid: fixed master-detail — the form and what it shows */
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

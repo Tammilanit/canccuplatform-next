@@ -11,6 +11,7 @@
   .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--now,
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--now {
     grid-template-areas: "state delay" "name name" "until where";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a now row */
     grid-template-columns: auto 1fr;
   }
 
@@ -52,12 +53,14 @@
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--next,
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--cancelled {
     grid-template-areas: "state until where" "name name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a next row */
     grid-template-columns: auto auto 1fr;
   }
 
   .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
     grid-template-areas: "state delay until where" "name name name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a delayed row */
     grid-template-columns: auto auto auto 1fr;
   }
 
@@ -69,6 +72,7 @@
    */
   .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
     grid-template-areas: "state delay until" "name name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a delayed row */
     grid-template-columns: auto auto 1fr;
   }
 
@@ -243,6 +247,7 @@
   .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
   .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--cancelled {
     grid-template-areas: "state until delay ." "name name name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a row */
     grid-template-columns: auto auto auto 1fr;
     justify-content: start;
     justify-items: start;

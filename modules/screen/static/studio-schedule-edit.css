@@ -83,6 +83,7 @@
 /* The week's days as the shell's segmented chips, seven in one row (v8 sheet 5). */
 .canccu-studio-days {
   display: grid;
+  /* canccu-grid: fixed control — a fixed count of choices: the seven days */
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2px;
   padding: 3px;

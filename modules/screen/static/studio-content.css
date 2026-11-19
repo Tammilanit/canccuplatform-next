@@ -139,6 +139,7 @@
 
 .canccu-studio-uploads > li {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: an upload's name and progress */
   grid-template-columns: minmax(0, 1fr) 8rem;
   gap: 0.25rem 0.75rem;
   align-items: center;
@@ -270,6 +271,7 @@
 /* At most three slides, then the "+N" tile: four equal cells that always fit the card. */
 .canccu-studio-slides {
   display: grid;
+  /* canccu-grid: fixed control — a fixed summary of four cells */
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.25rem;
   width: 100%;

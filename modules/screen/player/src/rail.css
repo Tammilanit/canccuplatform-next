@@ -21,6 +21,7 @@
 
   .canccu-widget--agenda_now .canccu-widget__row {
     grid-template-areas: "state delay" "name name" "until where";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a row */
     grid-template-columns: auto 1fr;
     row-gap: calc(0.4 * var(--canccu-u));
   }
@@ -79,12 +80,14 @@
   .canccu-widget--agenda_now .canccu-widget__row--next,
   .canccu-widget--agenda_now .canccu-widget__row--cancelled {
     grid-template-areas: "state state" "until where" "name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a next row */
     grid-template-columns: auto 1fr;
   }
 
   /* A delayed row reads as a next one, its badge beside the label, so two rows fit the rail. */
   .canccu-widget--agenda_now .canccu-widget__row--delayed {
     grid-template-areas: "state delay" "until where" "name name";
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: a delayed row */
     grid-template-columns: auto 1fr;
   }
 
@@ -129,6 +132,7 @@
    * would read as a line's end and guests would type it wrong): an ellipsis ends one too long.
    */
   .canccu-widget--venue_info .canccu-widget__row {
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: the Wi-Fi and the hub QR */
     grid-template-columns: minmax(0, 1fr);
   }
 

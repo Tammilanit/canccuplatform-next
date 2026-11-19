@@ -68,6 +68,7 @@
    */
   .canccu-widget__gridline {
     display: grid;
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: the axis gutter and the bars */
     grid-template-columns: var(--canccu-graph-gutter) 1fr;
     column-gap: var(--canccu-u);
     align-items: center;
@@ -177,6 +178,7 @@
   /* "Today in numbers": three figures side by side, the graph of the day under them. */
   .canccu-widget__figures {
     display: grid;
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: three figures */
     grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: calc(2.4 * var(--canccu-u));
     margin: calc(2 * var(--canccu-u)) 0 0;

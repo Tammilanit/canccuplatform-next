@@ -101,6 +101,7 @@ export class Screen {
       this.root = document.createElement("main");
       this.root.className = `canccu-layout canccu-layout--${layout.id}`;
       this.root.style.setProperty("--canccu-layout-ratio", String(ratioOf(layout.aspect)));
+      // canccu-grid: fixed screen — from the theme's layout (contracts/theme.schema.json)
       this.root.style.setProperty("grid-template-columns", grid(layout.grid.columns));
       this.root.style.setProperty("grid-template-rows", grid(layout.grid.rows));
     }

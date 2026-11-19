@@ -12,6 +12,7 @@
 
 .canccu-studio-motion-levels {
   display: inline-grid;
+  /* canccu-grid: fixed control — a fixed count of choices: the four motion levels */
   grid-template-columns: repeat(4, minmax(0, auto));
   justify-self: start;
   gap: 2px;

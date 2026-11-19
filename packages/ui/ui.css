@@ -200,6 +200,7 @@
   .canccu-shell {
     min-height: 100vh;
     display: grid;
+    /* canccu-grid: fixed shell — the organiser shell: menu and content */
     grid-template: "head head" auto "banner banner" auto "menu main" 1fr / 16rem minmax(0, 1fr);
   }
   .canccu-shell > .canccu-header {
@@ -332,6 +333,11 @@
   .canccu-main--narrow {
     max-width: 40rem;
   }
+  /* A collection, a board or a master–detail editor (amendment 3): columns keep coming up to
+     120rem of content, then the page stops at the one left edge. */
+  .canccu-main--wide {
+    max-width: 120rem;
+  }
   .canccu-pagehead {
     display: flex;
     align-items: flex-end;
@@ -447,6 +453,7 @@
       overflow: auto;
     }
     .canccu-shell--bare {
+      /* canccu-grid: fixed shell — the bare shell at 1100 px and wider: one column, no menu */
       grid-template: "head" auto "banner" auto "main" 1fr / minmax(0, 1fr);
     }
     /* The menu column runs the page's full height; the menu itself stays in view over it. */
@@ -463,6 +470,7 @@
   }
   @media (max-width: 1099.98px) {
     .canccu-shell {
+      /* canccu-grid: fixed shell — the shell under 1100 px: one column and the bottom bar */
       grid-template: "head" auto "banner" auto "main" 1fr "bar" auto / minmax(0, 1fr);
     }
     .canccu-header {
@@ -506,6 +514,7 @@
     }
     .canccu-menu__sheet {
       display: grid;
+      /* canccu-grid: fixed shell — the organiser shell: the menu and its close */
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 0.25rem 0.75rem;
@@ -642,6 +651,7 @@
   }
   .canccu-form__row {
     display: grid;
+    /* canccu-grid: fixed form — lays out fields: label and field pairs */
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
   }
@@ -698,6 +708,7 @@
   }
   @media (max-width: 40rem) {
     .canccu-form__row {
+      /* canccu-grid: fixed form — lays out fields: one column */
       grid-template-columns: minmax(0, 1fr);
       gap: 1.25rem;
     }
@@ -711,6 +722,7 @@
   /* A form page with a side column (Settings' last changes): the side only where it fits. */
   .canccu-split {
     display: grid;
+    /* canccu-grid: fixed form — Settings' last changes beside the form */
     grid-template-columns: minmax(0, 40rem);
     gap: 1.5rem;
     align-items: start;
@@ -720,6 +732,7 @@
   }
   @media (min-width: 1440px) {
     .canccu-split {
+      /* canccu-grid: fixed form — lays out fields: the form beside its history */
       grid-template-columns: 40rem minmax(0, 1fr);
     }
     .canccu-split__side {
@@ -736,6 +749,7 @@
   }
   .canccu-history li {
     display: grid;
+    /* canccu-grid: fixed row — lays out one item's own parts: a history line's time and text */
     grid-template-columns: 5.5rem minmax(0, 1fr);
     gap: 0.5rem;
   }
@@ -828,6 +842,7 @@
   @media (max-width: 40rem) {
     .canccu-list__row:has(> .canccu-list__end > .canccu-list__glance) {
       display: grid;
+      /* canccu-grid: fixed row — lays out one item's own parts: a list row's parts */
       grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 0.125rem 0.875rem;
     }
@@ -1054,6 +1069,7 @@
   }
   .canccu-dl {
     display: grid;
+    /* canccu-grid: fixed row — lays out one item's own parts: label and value */
     grid-template-columns: 7.5rem 1fr;
     gap: 0.625rem 1rem;
     margin: 0;
@@ -1075,11 +1091,55 @@
     color: var(--canccu-ink-muted);
     font-size: var(--canccu-text-sm);
   }
-  /* Count tiles over a list (Health, sheet 4): four across, two by two on a phone. */
+  /* Collections (amendment 3, docs/design/README.md): one auto-fill grid, three sizes. auto-fill,
+     never auto-fit, so one or two items keep their width; min(100%, …) lets an item shrink in a
+     box narrower than its minimum. A module never sets --canccu-grid-min (the guard,
+     test/grid-rule.ts). The count tiles over a list (Health) are small items. */
+  .canccu-grid,
   .canccu-stats {
+    --canccu-grid-min: 18rem;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--canccu-grid-min)), 1fr));
     gap: var(--canccu-gap);
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .canccu-grid > *,
+  .canccu-stats > * {
+    min-width: 0;
+  }
+  .canccu-grid--small,
+  .canccu-stats {
+    --canccu-grid-min: 10rem;
+  }
+  .canccu-grid--tile {
+    --canccu-grid-min: 7rem;
+    gap: calc(var(--canccu-gap) / 2);
+  }
+  /* Rows align, no masonry: a card is as tall as its row, and its last action row sits at its
+     foot, so a row's buttons line up. */
+  .canccu-grid > .canccu-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .canccu-grid > .canccu-card > .canccu-card__foot {
+    margin-block-start: auto;
+    padding-block-start: 0.75rem;
+  }
+  /* Related panels under a collection (amendment 3): a wrapping row, each panel 22–48rem, so a
+     lone panel never stretches across a wide page. Never a column beside the collection. */
+  .canccu-band {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--canccu-gap);
+    align-items: stretch;
+  }
+  .canccu-band > * {
+    flex: 1 1 22rem;
+    min-width: min(100%, 22rem);
+    max-width: 48rem;
   }
   .canccu-stat {
     padding: 1rem 1.25rem;
@@ -1583,6 +1643,7 @@
   .canccu-front {
     min-height: 100vh;
     display: grid;
+    /* canccu-grid: fixed shell — the organiser shell: the poster beside the form */
     grid-template-columns: minmax(0, 1fr) 27rem;
     gap: 4rem;
     align-items: center;
@@ -1661,6 +1722,7 @@
   }
   @media (max-width: 1099.98px) {
     .canccu-front {
+      /* canccu-grid: fixed shell — the front door under 1100 px: one column */
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr) auto;
       gap: 2rem;
