@@ -202,7 +202,7 @@
 <text x="1836" y="433" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Who is paid (M1, U12 note)</text>
 <text x="1836" y="457" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">&quot;Me directly&quot; appears only when the event allows</text>
 <text x="1836" y="478" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">holders to take payment (mockup 17). The holder</text>
-<text x="1836" y="499" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">picks per order, until it is done; the crew can</text>
+<text x="1836" y="499" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">picks per order, until 06:00 the next day; the crew can</text>
 <text x="1836" y="520" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">change it later, audited.</text>
 <circle cx="1815" cy="554" r="13" fill="#f59e0b"/>
 <text x="1815" y="559" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
@@ -213,7 +213,7 @@
 <circle cx="1815" cy="659" r="13" fill="#f59e0b"/>
 <text x="1815" y="664" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
 <text x="1836" y="664" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Who may edit</text>
-<text x="1836" y="688" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The holder until the order is done; the crew</text>
-<text x="1836" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(pizza.order.manage) at any time, audited, with</text>
-<text x="1836" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the person told (U14).</text>
+<text x="1836" y="688" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The holder until 06:00 the next day, also after</text>
+<text x="1836" y="709" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">done; the crew (pizza.order.manage) at any time,</text>
+<text x="1836" y="730" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">audited, with the person told (U14).</text>
 </svg>

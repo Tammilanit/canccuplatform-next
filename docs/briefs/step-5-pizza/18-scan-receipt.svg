@@ -235,8 +235,8 @@
 <text x="2255" y="160" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
 <text x="2276" y="160" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Optional</text>
 <text x="2276" y="184" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The money step appears after arrival and</text>
-<text x="2276" y="205" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">stays open until the order is done; the</text>
-<text x="2276" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">crew can add it later too. Skipping it</text>
+<text x="2276" y="205" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">stays open for the holder until 06:00 the</text>
+<text x="2276" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">next day, also after done; the crew can add it. Skipping it</text>
 <text x="2276" y="247" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">leaves the order with no total, and the</text>
 <text x="2276" y="268" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">record says so.</text>
 <circle cx="2255" cy="302" r="13" fill="#f59e0b"/>
