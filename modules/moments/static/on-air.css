@@ -111,3 +111,12 @@
     width: 100%;
   }
 }
+
+/* A live loop: its name and round, with Stop loop and Skip to finale at the row's end. */
+.moments-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
