@@ -9,12 +9,12 @@ import { DESK, firstLine } from "./demo-screenshots-shot.mjs";
 const WIDE = { width: 1920, height: 1080 };
 export const COUNTS = [1, 2, 4, 8];
 
-/** Waits until the page draws exactly `n` zone cards: Moments learns a zone from Screen's events. */
+/** Waits until the page draws exactly `n` zone cards: Moments learns a zone from Screen's events, which lag up to a minute on a loaded CI stack (30 s timed out in CI). */
 const drawn = (n) => async (page) => {
   await page.waitForFunction(
     (want) => document.querySelectorAll(".moments-zone").length === want,
     n,
-    { timeout: 30_000 },
+    { timeout: 150_000 },
   );
   await page.waitForTimeout(500);
 };
