@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1030" width="1900" height="1030" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>07 · Attendees in Discord: few commands, each a door to the page</title>
+<defs><clipPath id="c1"><rect x="32" y="110" width="1240" height="820" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1030" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">07 · Attendees in Discord: few commands, each a door to the page</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: an attendee asks the bot what is on, where the food is and how to open the hub; the answers are private and one tap from the page that does it (#123).</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="110" width="1240" height="820" rx="0" fill="#313338"/>
+<rect x="32" y="110" width="72" height="820" rx="0" fill="#1e1f22"/>
+<circle cx="68" cy="146" r="22" fill="#5865f2"/>
+<circle cx="68" cy="204" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="262" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="320" r="22" fill="#3a3c43"/>
+<text x="68" y="151" font-size="12" fill="#fff" font-weight="700" text-anchor="middle" data-box="46 90">DC</text>
+<rect x="104" y="110" width="220" height="820" rx="0" fill="#2b2d31"/>
+<text x="120" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="116 318">Demo Community</text>
+<line x1="104" y1="158" x2="324" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="124" y="186" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># announcements</text>
+<text x="124" y="218" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># now-and-next</text>
+<rect x="112" y="230" width="204" height="30" rx="4" fill="#404249"/>
+<text x="124" y="250" font-size="14.5" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="120 316"># food</text>
+<text x="124" y="282" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># photos</text>
+<text x="124" y="314" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># tournaments</text>
+<text x="124" y="346" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># crew</text>
+<text x="120" y="388" font-size="11.5" fill="#949ba4" font-weight="700" text-anchor="start" data-box="116 316">VOICE</text>
+<text x="124" y="418" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby</text>
+<text x="124" y="448" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby 2</text>
+<line x1="324" y1="158" x2="1272" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="342" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="332 1252"># food</text>
+<text x="396" y="180" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">↱ Demo Player used /food</text>
+<circle cx="362" cy="208" r="18" fill="#5865f2"/>
+<text x="362" y="213" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="204" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 1256">Demo Bot</text>
+<rect x="472.8" y="192" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="204" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="204" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">20:14</text>
+<rect x="396" y="214" width="560" height="134" rx="4" fill="#2b2d31"/>
+<rect x="396" y="214" width="4" height="134" rx="2" fill="#3ee39a"/>
+<text x="412" y="240" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="410 944">Food at Demo Event</text>
+<text x="412" y="264" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="410 944">Order 3 · Demo Pizzeria · open until 20:45</text>
+<text x="412" y="286" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="410 944">2 pizzas so far · held by Player Five</text>
+<text x="412" y="308" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="410 944">Order 2 · Demo Trattoria · called in, about 20:50</text>
+<text x="412" y="330" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="410 944">You have 1 pizza in it</text>
+<rect x="396" y="358" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="471" y="379" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="400 542">Add a pizza ↗</text>
+<rect x="554" y="358" width="120" height="32" rx="4" fill="#4e5058"/>
+<text x="614" y="379" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="558 670">My order ↗</text>
+<text x="396" y="412" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 956">◉ Only you can see this · Dismiss message</text>
+<text x="396" y="448" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">↱ Demo Player used /now</text>
+<circle cx="362" cy="476" r="18" fill="#5865f2"/>
+<text x="362" y="481" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="472" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 1256">Demo Bot</text>
+<rect x="472.8" y="460" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="472" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="472" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">20:15</text>
+<rect x="396" y="482" width="560" height="112" rx="4" fill="#2b2d31"/>
+<rect x="396" y="482" width="4" height="112" rx="2" fill="#3ddcff"/>
+<text x="412" y="508" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="410 944">Now at Demo Event</text>
+<text x="412" y="532" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="410 944">Now · Match 3 · Demo Arena · on the stage</text>
+<text x="412" y="554" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="410 944">Next · 21:00 · Pizza last call</text>
+<text x="412" y="576" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="410 944">Then · 22:00 · Quiet hours in the hall</text>
+<rect x="396" y="604" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="471" y="625" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="400 542">Run of show ↗</text>
+<text x="396" y="658" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 956">◉ Only you can see this · Dismiss message</text>
+<text x="396" y="694" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">↱ Demo Player used /hub</text>
+<circle cx="362" cy="722" r="18" fill="#5865f2"/>
+<text x="362" y="727" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="718" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 1256">Demo Bot</text>
+<rect x="472.8" y="706" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="718" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="718" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 1256">20:16</text>
+<text x="396" y="742" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 1256">The hub has your orders, your matches and the notifications you chose.</text>
+<rect x="396" y="766" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="471" y="787" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="400 542">Open the hub ↗</text>
+<text x="396" y="820" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 956">◉ Only you can see this · Dismiss message</text>
+</g>
+<text x="652" y="966" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1272">A · Desktop: /food, /now and /hub; every answer is private and links to the page</text>
+<text x="1300" y="130" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1300 1870">B · Replies that say no, kindly</text>
+<text x="1300" y="166" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1300 1870">Server not connected</text>
+<rect x="1300" y="176" width="570" height="96" rx="8" fill="#313338"/>
+<circle cx="1328" cy="204" r="14" fill="#5865f2"/>
+<text x="1328" y="209" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1314 1342">DB</text>
+<text x="1352" y="204" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1350 1860">Demo Bot</text>
+<text x="1352" y="226" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1350 1860">This server is not connected to an event.</text>
+<text x="1352" y="248" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">An event admin connects it from the event&#x27;s Discord page.</text>
+<text x="1352" y="265" font-size="11" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">◉ Only you can see this</text>
+<text x="1300" y="306" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1300 1870">Feature off</text>
+<rect x="1300" y="316" width="570" height="96" rx="8" fill="#313338"/>
+<circle cx="1328" cy="344" r="14" fill="#5865f2"/>
+<text x="1328" y="349" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1314 1342">DB</text>
+<text x="1352" y="344" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1350 1860">Demo Bot</text>
+<text x="1352" y="366" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1350 1860">Food is not on at Demo Event.</text>
+<text x="1352" y="388" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">Ask the crew; the command goes away within a minute.</text>
+<text x="1352" y="405" font-size="11" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">◉ Only you can see this</text>
+<text x="1300" y="446" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1300 1870">Crew command, no account</text>
+<rect x="1300" y="456" width="570" height="96" rx="8" fill="#313338"/>
+<circle cx="1328" cy="484" r="14" fill="#5865f2"/>
+<text x="1328" y="489" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1314 1342">DB</text>
+<text x="1352" y="484" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1350 1860">Demo Bot</text>
+<text x="1352" y="506" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1350 1860">Sign in to Demo Event once to use /announce.</text>
+<text x="1352" y="528" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">Then your @Crew role brings the rights.</text>
+<text x="1352" y="545" font-size="11" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">◉ Only you can see this</text>
+<text x="1300" y="586" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1300 1870">Crew command, no right</text>
+<rect x="1300" y="596" width="570" height="96" rx="8" fill="#313338"/>
+<circle cx="1328" cy="624" r="14" fill="#5865f2"/>
+<text x="1328" y="629" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1314 1342">DB</text>
+<text x="1352" y="624" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1350 1860">Demo Bot</text>
+<text x="1352" y="646" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1350 1860">You need the Announce right for /announce.</text>
+<text x="1352" y="668" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">Your roles: @Attendee. Ask an event admin.</text>
+<text x="1352" y="685" font-size="11" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">◉ Only you can see this</text>
+<text x="1300" y="726" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1300 1870">The platform is busy</text>
+<rect x="1300" y="736" width="570" height="96" rx="8" fill="#313338"/>
+<circle cx="1328" cy="764" r="14" fill="#5865f2"/>
+<text x="1328" y="769" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1314 1342">DB</text>
+<text x="1352" y="764" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1350 1860">Demo Bot</text>
+<text x="1352" y="786" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1350 1860">Demo Event did not answer in time.</text>
+<text x="1352" y="808" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">Nothing was sent. Try again in a moment.</text>
+<text x="1352" y="825" font-size="11" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1350 1860">◉ Only you can see this</text>
+</svg>

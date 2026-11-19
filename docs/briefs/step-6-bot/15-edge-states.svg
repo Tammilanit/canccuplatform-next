@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1010" width="1900" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>15 · Edge states: what the organiser and the attendee see when something is off</title>
+<rect x="0" y="0" width="1900" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">15 · Edge states: what the organiser and the attendee see when something is off</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: each state names what happened and the one thing to do, never an error code (bot.md, one event&#x27;s trouble stays its own).</text>
+<text x="32" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 622">Not connected</text>
+<rect x="32" y="144" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="56" y="190" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="56 598">Discord</text>
+<rect x="56" y="216" width="542" height="170" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="1.5"/>
+<circle cx="84" cy="246" r="10" fill="#ffb454"/>
+<text x="84" y="252" font-size="16" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="72 96">!</text>
+<text x="104" y="252" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="102 592">Connect Demo Event&#x27;s Discord server</text>
+<text x="74" y="286" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="74 584">The bot posts, counts and answers commands only</text>
+<text x="74" y="309" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="74 584">in a server an event admin connected.</text>
+<rect x="74" y="334" width="161.92" height="36" rx="8" fill="#3ddcff"/>
+<text x="154.96" y="356.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="78 231.92">Connect a server</text>
+<text x="56" y="420" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 598">Attendees in Discord: “This server is not connected to an event.”</text>
+<text x="652" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="652 1242">Own bot: token refused</text>
+<rect x="652" y="144" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="676" y="190" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="676 1218">Discord</text>
+<rect x="676" y="216" width="542" height="170" rx="12" fill="#161a2e" stroke="#ff7b7b" stroke-width="1.5"/>
+<circle cx="704" cy="246" r="10" fill="#ff7b7b"/>
+<text x="704" y="251.6" font-size="18" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="692 716">×</text>
+<text x="724" y="252" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="722 1212">The bot stopped: Discord refused its token</text>
+<text x="694" y="286" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="694 1204">It was reset in the Developer Portal. Paste the</text>
+<text x="694" y="309" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="694 1204">new token; nothing is retried until then.</text>
+<rect x="694" y="334" width="170.04" height="36" rx="8" fill="#3ddcff"/>
+<text x="779.02" y="356.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="698 860.04">Paste a new token</text>
+<text x="676" y="420" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="676 1218">Attendees: commands answer “Demo Event did not answer in time.”</text>
+<text x="1272" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1272 1862">Removed from the server</text>
+<rect x="1272" y="144" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="1296" y="190" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1296 1838">Discord</text>
+<rect x="1296" y="216" width="542" height="170" rx="12" fill="#161a2e" stroke="#ffb454" stroke-width="1.5"/>
+<circle cx="1324" cy="246" r="10" fill="#ffb454"/>
+<text x="1324" y="252" font-size="16" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="1312 1336">!</text>
+<text x="1344" y="252" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1342 1832">Demo Community removed the bot at 19:40</text>
+<text x="1314" y="286" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1314 1824">Someone with Manage Server removed it, which</text>
+<text x="1314" y="309" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1314 1824">unbinds the server. Add it again to reconnect.</text>
+<rect x="1314" y="334" width="129.44" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1378.72" y="356.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1318 1439.44">Add it again</text>
+<text x="1296" y="420" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1296 1838">Only this event is touched; other events go on.</text>
+<text x="1296" y="444" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1296 1838">Audited as a system action.</text>
+<text x="32" y="550" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 622">Archived event</text>
+<rect x="32" y="564" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="56" y="610" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="56 598">Discord</text>
+<rect x="56" y="636" width="542" height="170" rx="12" fill="#161a2e" stroke="#616788" stroke-width="1.5"/>
+<circle cx="84" cy="666" r="10" fill="#ffb454"/>
+<text x="84" y="672" font-size="16" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="72 96">!</text>
+<text x="104" y="672" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="102 592">Demo Event is archived</text>
+<text x="74" y="706" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="74 584">The bot reads nothing more; its commands are</text>
+<text x="74" y="729" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="74 584">gone. The server stays for the next event (clone).</text>
+<rect x="74" y="754" width="235" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="191.5" y="776.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="78 305">Clone into the next event</text>
+<text x="56" y="840" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 598">Unbinding and clearing the bot still work.</text>
+<text x="652" y="550" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="652 1242">Discord is down</text>
+<rect x="652" y="564" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="676" y="610" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="676 1218">Discord</text>
+<rect x="676" y="636" width="542" height="170" rx="12" fill="#161a2e" stroke="#ffb454" stroke-width="1.5"/>
+<circle cx="704" cy="666" r="10" fill="#ffb454"/>
+<text x="704" y="672" font-size="16" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="692 716">!</text>
+<text x="724" y="672" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="722 1212">Discord has not answered since 20:40</text>
+<text x="694" y="706" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="694 1204">Posts are not kept for later; the screens and the</text>
+<text x="694" y="729" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="694 1204">hub work as usual. The bot reconnects by itself.</text>
+<text x="676" y="840" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="676 1218">Every event on the shared bot is touched; own bots are not.</text>
+<text x="1272" y="550" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1272 1862">Presence intent missing</text>
+<rect x="1272" y="564" width="590" height="360" rx="10" fill="#0b0d1a"/>
+<text x="1296" y="610" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1296 1838">Discord</text>
+<rect x="1296" y="636" width="542" height="170" rx="12" fill="#161a2e" stroke="#ffb454" stroke-width="1.5"/>
+<circle cx="1324" cy="666" r="10" fill="#ffb454"/>
+<text x="1324" y="672" font-size="16" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="1312 1336">!</text>
+<text x="1344" y="672" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1342 1832">Who plays what is off</text>
+<text x="1314" y="706" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1314 1824">Your own application lacks the Presence intent.</text>
+<text x="1314" y="729" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1314 1824">Turn it on in the Developer Portal, then reconnect.</text>
+<rect x="1314" y="754" width="105.08" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1366.54" y="776.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1318 1415.08">Reconnect</text>
+<text x="1296" y="840" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1296 1838">Only this event is touched; other events go on.</text>
+</svg>

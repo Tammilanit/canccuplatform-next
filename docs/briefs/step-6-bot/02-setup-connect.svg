@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1010" width="1900" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>02 · Guided setup: choose the bot, add it to your server</title>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="800" rx="10"/></clipPath><clipPath id="c2"><rect x="1382" y="110" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">02 · Guided setup: choose the bot, add it to your server</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: an event admin connects the event&#x27;s Discord server for the first time, from the Discord page, in a few minutes (#124, bot.md Binding a guild).</text>
+<g transform="translate(32,110) scale(1)">
+<g clip-path="url(#c1)">
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
+<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
+<rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">RUN THE EVENT</text>
+<rect x="26" y="112" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="124" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Run of show</text>
+<rect x="26" y="154" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="166" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Notifications</text>
+<rect x="26" y="196" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="208" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Announcements</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">SCREENS AND LOOK</text>
+<rect x="26" y="279" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="291" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Screen studio</text>
+<rect x="26" y="321" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="333" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Theme studio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">ADMIN</text>
+<rect x="26" y="404" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Settings</text>
+<rect x="26" y="446" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="458" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Health</text>
+<rect x="26" y="488" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="500" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Event profile</text>
+<rect x="26" y="530" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="542" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">People</text>
+<rect x="12" y="561" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="561" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="572" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="584" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="50 250">Discord</text>
+<text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Discord</text>
+<text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Connect your event&#x27;s Discord server. About five minutes.</text>
+<rect x="296" y="160" width="161.6" height="34" rx="17" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="376.8" y="182" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="300 453.6">1 Choose the bot</text>
+<rect x="469.6" y="160" width="214.8" height="34" rx="17" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="577" y="182" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="473.6 680.4">2 Add it to your server</text>
+<rect x="696.4" y="160" width="192" height="34" rx="17" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="792.4" y="182" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="700.4 884.4">3 Channels and roles</text>
+<rect x="900.4" y="160" width="93.2" height="34" rx="17" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="947" y="182" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="904.4 989.6">4 Check</text>
+<text x="296" y="236" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Which bot speaks for Demo Event?</text>
+<rect x="296" y="256" width="464" height="170" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
+<circle cx="326" cy="286" r="9" fill="none" stroke="#3ddcff" stroke-width="2"/>
+<circle cx="326" cy="286" r="4.5" fill="#3ddcff"/>
+<text x="346" y="291" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312 744">The platform&#x27;s bot (recommended)</text>
+<text x="346" y="322" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Ready now: nothing to create.</text>
+<text x="346" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Named Canccu Platform in your server.</text>
+<text x="346" y="370" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Shares Discord&#x27;s limits with other events.</text>
+<rect x="776" y="256" width="464" height="170" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="806" cy="286" r="9" fill="none" stroke="#616788" stroke-width="2"/>
+<text x="826" y="291" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="792 1224">Your own Discord application</text>
+<text x="826" y="322" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1220">Your own name and picture.</text>
+<text x="826" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1220">Paste its bot token and client secret.</text>
+<text x="826" y="370" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1220">Its own limits; an outage stays yours.</text>
+<text x="296" y="466" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Step 2 · Add it to your server</text>
+<text x="296" y="494" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="296 1240">Discord opens and asks which server. You need Manage Server there; the bot gets only the permissions</text>
+<text x="296" y="516" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="296 1240">your features need (step 4 lists them). You come back here when it is done.</text>
+<rect x="296" y="546" width="170" height="36" rx="8" fill="#3ddcff"/>
+<text x="381" y="568.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300 462">Add to Discord</text>
+<rect x="478" y="546" width="190" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="573" y="568.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="482 664">I have no server yet</text>
+<rect x="296" y="610" width="944" height="120" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="312" y="640" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312 1224">What the bot will do in your server</text>
+<text x="312" y="666" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">Post announcements, the run of show and food updates in the channels you pick · edit its own posts</text>
+<text x="312" y="690" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">Send DMs people chose · create match voice channels (tournament, later) · count who is online (no names stored)</text>
+</g>
+</g>
+<text x="672" y="946" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Desktop 1280 px: step 1 and step 2 on one page</text>
+<rect x="1372" y="100" width="410" height="864" rx="46" fill="#000"/>
+<g clip-path="url(#c2)">
+<rect x="1382" y="110" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1416" y="140" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">20:14</text>
+<rect x="1708" y="129" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1710" y="131" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1382" y="160" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1398" y="173" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1434" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Demo Event</text>
+<rect x="1542" y="176" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1565" y="190" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1544 1586">Live</text>
+<rect x="1732" y="178" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="185" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="192" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1398" y="240" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1382 1772">‹ More</text>
+<text x="1398" y="270" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Discord</text>
+<rect x="1382" y="870" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1413" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1421" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1382 1460">Run of show</text>
+<rect x="1491" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1499" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1460 1538">Notifications</text>
+<circle cx="1577" cy="894" r="15" fill="#3ddcff"/>
+<text x="1577" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1538 1616">Add</text>
+<rect x="1647" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1655" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1616 1694">Screens</text>
+<rect x="1725" y="884" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1733" y="924" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1694 1772">More</text>
+<rect x="1510" y="942" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<text x="1398" y="310" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1398 1756">Step 2 of 4</text>
+<text x="1398" y="336" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1398 1756">Add it to your server</text>
+<text x="1398" y="366" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1398 1756">Discord opens and asks which server.</text>
+<text x="1398" y="388" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1398 1756">You need Manage Server there.</text>
+<rect x="1398" y="420" width="358" height="36" rx="8" fill="#3ddcff"/>
+<text x="1577" y="442.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1402 1752">Add to Discord</text>
+<rect x="1398" y="486" width="358" height="150" rx="12" fill="#161a2e" stroke="#2a7e64" stroke-width="1.5"/>
+<circle cx="1422" cy="512" r="8" fill="#3ee39a"/>
+<path d="M1418.32,512.32 l2.72,2.72 l4.8,-5.76" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1440" y="517" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1438 1744">Added to Demo Community</text>
+<text x="1414" y="546" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1414 1740">Bound by Demo Admin, 20:02.</text>
+<text x="1414" y="568" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1414 1740">The commands are registered.</text>
+<text x="1414" y="590" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1414 1740">Next: channels and roles.</text>
+<rect x="1398" y="656" width="358" height="36" rx="8" fill="#3ddcff"/>
+<text x="1577" y="678.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1402 1752">Continue</text>
+<rect x="1398" y="722" width="358" height="120" rx="12" fill="#161a2e" stroke="#ff7b7b" stroke-width="1.5"/>
+<circle cx="1422" cy="748" r="8" fill="#ff7b7b"/>
+<text x="1422" y="752.48" font-size="14.4" fill="#0b0d1a" font-weight="800" text-anchor="middle" data-box="1412 1432">×</text>
+<text x="1440" y="753" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1398 1756">Not bound</text>
+<text x="1414" y="782" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1414 1740">You need Manage Server on that</text>
+<text x="1414" y="804" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1414 1740">server. Ask its owner, then try again.</text>
+</g>
+<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: step 2, bound, and a refused bind</text>
+</svg>

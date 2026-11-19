@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1010" width="1900" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>06 · Commands follow the event&#x27;s features</title>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="800" rx="10"/></clipPath><clipPath id="c2"><rect x="1382" y="110" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">06 · Commands follow the event&#x27;s features</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: the event admin sees which commands Demo Community has, per feature flag; turning a feature off removes its commands from the server (#121, bot.md Slash commands per guild).</text>
+<g transform="translate(32,110) scale(1)">
+<g clip-path="url(#c1)">
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
+<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
+<rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">RUN THE EVENT</text>
+<rect x="26" y="112" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="124" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Run of show</text>
+<rect x="26" y="154" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="166" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Notifications</text>
+<rect x="26" y="196" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="208" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Announcements</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">SCREENS AND LOOK</text>
+<rect x="26" y="279" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="291" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Screen studio</text>
+<rect x="26" y="321" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="333" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Theme studio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">ADMIN</text>
+<rect x="26" y="404" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Settings</text>
+<rect x="26" y="446" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="458" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Health</text>
+<rect x="26" y="488" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="500" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Event profile</text>
+<rect x="26" y="530" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="542" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">People</text>
+<rect x="12" y="561" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="561" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="572" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="584" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="50 250">Discord</text>
+<text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Discord</text>
+<text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Demo Community · bound</text>
+<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 378.48">Overview</text>
+<text x="384.48" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="382.48 462.96">Channels</text>
+<text x="468.96" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="466.96 607.92">Roles and rights</text>
+<text x="613.92" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="611.92 692.4">Commands</text>
+<line x1="609.92" y1="186" x2="680.4" y2="186" stroke="#3ddcff" stroke-width="2"/>
+<text x="698.4" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="696.4 754.2">Check</text>
+<line x1="296" y1="187" x2="1240" y2="187" stroke="#343c66" stroke-width="1"/>
+<circle cx="304" cy="214" r="8" fill="#3ee39a"/>
+<path d="M300.32,214.32 l2.72,2.72 l4.8,-5.76" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="322" y="220" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Registered in Demo Community at 20:02 · 9 commands, 2 menus</text>
+<rect x="1120" y="200" width="120" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1180" y="222.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1124 1236">Sync now</text>
+<text x="296" y="244" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Names and help in English and Finnish, from the event&#x27;s languages. Crew commands show to everyone; the rights are checked when used.</text>
+<rect x="296" y="270" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="285" width="63.76" height="22" rx="11" fill="#1b1f36" stroke="#616788" stroke-width="1"/>
+<text x="341.88" y="300.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="313 370.76">Always</text>
+<text x="386" y="302" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Always on</text>
+<text x="556" y="302" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/hub · /privacy</text>
+<text x="1096" y="302" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
+<rect x="296" y="330" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="345" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="356" r="8" fill="#0b0d1a"/>
+<text x="386" y="362" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Food</text>
+<text x="556" y="362" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/food</text>
+<text x="1096" y="362" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
+<rect x="296" y="390" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="405" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="416" r="8" fill="#0b0d1a"/>
+<text x="386" y="422" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Run of show</text>
+<text x="556" y="422" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/now</text>
+<text x="1096" y="422" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
+<rect x="296" y="450" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="465" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="476" r="8" fill="#0b0d1a"/>
+<text x="386" y="482" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Announcements</text>
+<text x="556" y="482" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/announce</text>
+<text x="1096" y="482" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Announce right</text>
+<rect x="296" y="510" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="525" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="536" r="8" fill="#0b0d1a"/>
+<text x="386" y="542" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Ticker</text>
+<text x="556" y="542" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/ticker set · stop · status · window add · list · remove</text>
+<text x="1096" y="542" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Ticker right</text>
+<rect x="296" y="570" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="585" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="596" r="8" fill="#0b0d1a"/>
+<text x="386" y="602" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Photo wall</text>
+<text x="556" y="602" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076">Menus: Send to the screen · Remove from the screen</text>
+<text x="1096" y="602" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Photos right</text>
+<rect x="296" y="630" width="944" height="52" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="645" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="339" cy="656" r="8" fill="#0b0d1a"/>
+<text x="386" y="662" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="384 546">Who plays what</text>
+<text x="556" y="662" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="552 1076">No command: counts for the screens, live names for the hub</text>
+<text x="1096" y="662" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">—</text>
+<rect x="296" y="690" width="944" height="52" rx="8" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="705" width="40" height="22" rx="11" fill="#2a2f4d"/>
+<circle cx="321" cy="716" r="8" fill="#a9b1d6"/>
+<text x="386" y="722" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="384 546">Tournament</text>
+<text x="556" y="722" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/tournament … (step 7)</text>
+<text x="1096" y="722" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Crew parts by right</text>
+<rect x="296" y="750" width="944" height="52" rx="8" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
+<rect x="310" y="765" width="40" height="22" rx="11" fill="#2a2f4d"/>
+<circle cx="321" cy="776" r="8" fill="#a9b1d6"/>
+<text x="386" y="782" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="384 546">Finals</text>
+<text x="556" y="782" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/finals … (Finals track)</text>
+<text x="1096" y="782" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
+</g>
+</g>
+<text x="672" y="946" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Desktop 1280 px: one row per feature; the switch is the event&#x27;s feature flag</text>
+<rect x="1372" y="100" width="410" height="864" rx="46" fill="#000"/>
+<g clip-path="url(#c2)">
+<rect x="1382" y="110" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1416" y="140" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">20:14</text>
+<rect x="1708" y="129" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1710" y="131" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1382" y="160" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1398" y="173" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1434" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Demo Event</text>
+<rect x="1542" y="176" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1565" y="190" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1544 1586">Live</text>
+<rect x="1732" y="178" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="185" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="192" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1398" y="240" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1382 1772">‹ More</text>
+<text x="1398" y="270" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Discord</text>
+<rect x="1398" y="286" width="86.24" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1441.12" y="306" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1402 1480.24">Overview</text>
+<rect x="1492.24" y="286" width="86.24" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1535.36" y="306" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1496.24 1574.48">Commands</text>
+<rect x="1586.48" y="286" width="64.4" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1618.68" y="306" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1590.48 1646.88">Check</text>
+<rect x="1382" y="870" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1413" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1421" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1382 1460">Run of show</text>
+<rect x="1491" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1499" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1460 1538">Notifications</text>
+<circle cx="1577" cy="894" r="15" fill="#3ddcff"/>
+<text x="1577" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1538 1616">Add</text>
+<rect x="1647" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1655" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1616 1694">Screens</text>
+<rect x="1725" y="884" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1733" y="924" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1694 1772">More</text>
+<rect x="1510" y="942" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<circle cx="1406" cy="342" r="8" fill="#3ee39a"/>
+<path d="M1402.32,342.32 l2.72,2.72 l4.8,-5.76" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1422" y="347" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1398 1756">9 commands, 2 menus · 20:02</text>
+<rect x="1398" y="366" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="393" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Food</text>
+<rect x="1702" y="378" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="389" r="8" fill="#0b0d1a"/>
+<text x="1412" y="418" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/food</text>
+<rect x="1398" y="446" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="473" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Run of show</text>
+<rect x="1702" y="458" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="469" r="8" fill="#0b0d1a"/>
+<text x="1412" y="498" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/now</text>
+<rect x="1398" y="526" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="553" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Announcements</text>
+<rect x="1702" y="538" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="549" r="8" fill="#0b0d1a"/>
+<text x="1412" y="578" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/announce</text>
+<rect x="1398" y="606" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="633" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Ticker</text>
+<rect x="1702" y="618" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="629" r="8" fill="#0b0d1a"/>
+<text x="1412" y="658" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker set · stop · status · window…</text>
+<rect x="1398" y="686" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="713" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Photo wall</text>
+<rect x="1702" y="698" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="709" r="8" fill="#0b0d1a"/>
+<text x="1412" y="738" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">Menus: Send to the screen · Remove f…</text>
+<rect x="1398" y="766" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="793" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Who plays what</text>
+<rect x="1702" y="778" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="789" r="8" fill="#0b0d1a"/>
+<text x="1412" y="818" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">No command: counts for the screens, …</text>
+</g>
+<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: the same switches</text>
+</svg>

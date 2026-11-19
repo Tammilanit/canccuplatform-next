@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1030" width="1900" height="1030" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>08 · /announce: the one announce action, from Discord</title>
+<defs><clipPath id="c1"><rect x="32" y="110" width="900" height="820" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1030" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">08 · /announce: the one announce action, from Discord</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: a crew member with the Announce right sends an announcement from Discord; it reaches the screens, the ticker, the channel and push at once (step 4 composer, #123).</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="110" width="900" height="820" rx="0" fill="#313338"/>
+<rect x="32" y="110" width="72" height="820" rx="0" fill="#1e1f22"/>
+<circle cx="68" cy="146" r="22" fill="#5865f2"/>
+<circle cx="68" cy="204" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="262" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="320" r="22" fill="#3a3c43"/>
+<text x="68" y="151" font-size="12" fill="#fff" font-weight="700" text-anchor="middle" data-box="46 90">DC</text>
+<rect x="104" y="110" width="220" height="820" rx="0" fill="#2b2d31"/>
+<text x="120" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="116 318">Demo Community</text>
+<line x1="104" y1="158" x2="324" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="124" y="186" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># announcements</text>
+<text x="124" y="218" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># now-and-next</text>
+<text x="124" y="250" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># food</text>
+<text x="124" y="282" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># photos</text>
+<text x="124" y="314" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># tournaments</text>
+<rect x="112" y="326" width="204" height="30" rx="4" fill="#404249"/>
+<text x="124" y="346" font-size="14.5" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="120 316"># crew</text>
+<text x="120" y="388" font-size="11.5" fill="#949ba4" font-weight="700" text-anchor="start" data-box="116 316">VOICE</text>
+<text x="124" y="418" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby</text>
+<text x="124" y="448" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby 2</text>
+<line x1="324" y1="158" x2="932" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="342" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="332 912"># crew</text>
+<text x="396" y="180" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">↱ Crew One used /announce</text>
+<rect x="374" y="200" width="520" height="400" rx="8" fill="#313338" stroke="#1e1f22" stroke-width="2"/>
+<text x="394" y="236" font-size="19" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="394 874">Announce to Demo Event</text>
+<text x="394" y="276" font-size="12" fill="#949ba4" font-weight="700" text-anchor="start" data-box="394 874">TITLE</text>
+<rect x="394" y="286" width="480" height="40" rx="4" fill="#1e1f22"/>
+<text x="406" y="312" font-size="15" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="394 874">Match 3 starts at 20:30</text>
+<text x="394" y="352" font-size="12" fill="#949ba4" font-weight="700" text-anchor="start" data-box="394 874">TEXT</text>
+<rect x="394" y="362" width="480" height="80" rx="4" fill="#1e1f22"/>
+<text x="406" y="388" font-size="15" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="394 874">Teams to the stage, please. Voice</text>
+<text x="406" y="410" font-size="15" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="394 874">channels open at 20:25.</text>
+<text x="394" y="468" font-size="12" fill="#949ba4" font-weight="700" text-anchor="start" data-box="394 874">TEMPLATE (OPTIONAL)</text>
+<rect x="394" y="478" width="480" height="40" rx="4" fill="#1e1f22"/>
+<text x="406" y="504" font-size="15" fill="#949ba4" font-weight="400" text-anchor="start" data-box="394 874">Starting soon  ▾</text>
+<rect x="674" y="544" width="90" height="32" rx="4" fill="#4e5058"/>
+<text x="719" y="565" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="678 760">Cancel</text>
+<rect x="772" y="544" width="100" height="32" rx="4" fill="#5865f2"/>
+<text x="822" y="565" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="776 868">Next</text>
+<circle cx="362" cy="648" r="18" fill="#5865f2"/>
+<text x="362" y="653" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="644" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 916">Demo Bot</text>
+<rect x="472.8" y="632" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="644" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="644" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">20:14</text>
+<text x="396" y="668" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 916">Ready to send. This is what goes out:</text>
+<rect x="396" y="686" width="500" height="114" rx="4" fill="#2b2d31"/>
+<rect x="396" y="686" width="4" height="114" rx="2" fill="#3ddcff"/>
+<text x="412" y="712" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="410 884">Match 3 starts at 20:30</text>
+<text x="412" y="736" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="410 884">Teams to the stage, please.</text>
+<text x="412" y="758" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="410 884">Voice channels open at 20:25.</text>
+<text x="412" y="782" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="410 884">Screens: all zones, info · Ticker · # announcements · Push</text>
+<rect x="396" y="808" width="240" height="32" rx="4" fill="#1e1f22" stroke="#4e5058" stroke-width="1"/>
+<text x="406" y="829" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="400 632">Level: Info  ▾</text>
+<rect x="644" y="808" width="250" height="32" rx="4" fill="#1e1f22" stroke="#4e5058" stroke-width="1"/>
+<text x="654" y="829" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="648 890">Where: 4 of 4  ▾</text>
+<rect x="396" y="850" width="110" height="32" rx="4" fill="#248046"/>
+<text x="451" y="871" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="400 502">Send now</text>
+<rect x="514" y="850" width="70" height="32" rx="4" fill="#4e5058"/>
+<text x="549" y="871" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="518 580">Back</text>
+<rect x="592" y="850" width="190" height="32" rx="4" fill="#4e5058"/>
+<text x="687" y="871" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="596 778">Open the composer ↗</text>
+<text x="396" y="902" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 896">◉ Only you can see this · Dismiss message</text>
+</g>
+<text x="482" y="966" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 932">A · The crew channel: the form, then the preview with level and where</text>
+<text x="960" y="130" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="960 1870">B · The post in # announcements, as it lives</text>
+<text x="960" y="166" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="960 1870">20:14 · sent</text>
+<rect x="960" y="176" width="900" height="170" rx="8" fill="#313338"/>
+<circle cx="994" cy="210" r="18" fill="#5865f2"/>
+<text x="994" y="215" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="976 1012">DB</text>
+<text x="1028" y="206" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="970 1850">Demo Bot</text>
+<rect x="1104.8" y="194" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="1121.8" y="206" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="1104.8 1138.8">APP</text>
+<text x="1146.8" y="206" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="970 1850">20:14</text>
+<rect x="1028" y="216" width="600" height="114" rx="4" fill="#2b2d31"/>
+<rect x="1028" y="216" width="4" height="114" rx="2" fill="#3ddcff"/>
+<text x="1044" y="242" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1042 1616">Match 3 starts at 20:30</text>
+<text x="1044" y="266" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="1042 1616">Teams to the stage, please.</text>
+<text x="1044" y="288" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="1042 1616">Voice channels open at 20:25.</text>
+<text x="1044" y="312" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1042 1616">From the crew · on the screens until 20:19</text>
+<text x="960" y="376" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="960 1870">20:16 · edited in the composer</text>
+<rect x="960" y="386" width="900" height="170" rx="8" fill="#313338"/>
+<circle cx="994" cy="420" r="18" fill="#5865f2"/>
+<text x="994" y="425" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="976 1012">DB</text>
+<text x="1028" y="416" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="970 1850">Demo Bot</text>
+<rect x="1104.8" y="404" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="1121.8" y="416" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="1104.8 1138.8">APP</text>
+<text x="1146.8" y="416" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="970 1850">20:16</text>
+<rect x="1028" y="426" width="600" height="114" rx="4" fill="#2b2d31"/>
+<rect x="1028" y="426" width="4" height="114" rx="2" fill="#3ddcff"/>
+<text x="1044" y="452" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1042 1616">Match 3 starts at 20:40</text>
+<text x="1044" y="476" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="1042 1616">Teams to the stage, please.</text>
+<text x="1044" y="498" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="1042 1616">Voice channels open at 20:35.</text>
+<text x="1044" y="522" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1042 1616">Updated 20:16 · from the crew</text>
+<text x="960" y="586" font-size="14" fill="#6b7280" font-weight="600" text-anchor="start" data-box="960 1870">20:18 · withdrawn</text>
+<rect x="960" y="596" width="900" height="170" rx="8" fill="#313338"/>
+<circle cx="994" cy="630" r="18" fill="#5865f2"/>
+<text x="994" y="635" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="976 1012">DB</text>
+<text x="1028" y="626" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="970 1850">Demo Bot</text>
+<rect x="1104.8" y="614" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="1121.8" y="626" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="1104.8 1138.8">APP</text>
+<text x="1146.8" y="626" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="970 1850">20:18</text>
+<rect x="1028" y="636" width="600" height="92" rx="4" fill="#2b2d31"/>
+<rect x="1028" y="636" width="4" height="92" rx="2" fill="#80848e"/>
+<text x="1044" y="662" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1042 1616">Withdrawn: Match 3 starts at 20:40</text>
+<text x="1044" y="686" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="1042 1616">This announcement was withdrawn at 20:18.</text>
+<text x="1044" y="710" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1042 1616">From the crew</text>
+<text x="960" y="800" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">One message per announcement, edited when the composer edits it and marked when it is withdrawn</text>
+<text x="960" y="821.025" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">(moments.announcement.* events, D12). Urgent ones mention the role the event chose (Q L3).</text>
+</svg>
