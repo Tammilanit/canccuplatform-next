@@ -1,0 +1,301 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2660 1460" width="2660" height="1460" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 05: alert settings for the event</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="1230" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1832" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2660" height="1460" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2628">05 · Alert settings: where the event&#x27;s alerts go and what they are about (organiser)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2628">A tab of Health, saved like every settings form (the save bar). The channel comes from the bot&#x27;s binding; the webhook is a write-only secret like step 5&#x27;s AI key.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2628">Use case: before the event, an organiser picks the alert channel and role, sets the fallback webhook and tunes which problems alert, and how soon</text>
+<text x="672" y="1414" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Alert settings at 1280 px (a form page: 40 rem)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1230" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 136">Demo</text>
+<text x="148" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Demo Event</text>
+<line x1="263.385" y1="168" x2="263.385" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="276.385" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="32 1312">Fri 20 – Sun 22 Nov</text>
+<rect x="422.879" y="167" width="62.9448" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="434.879" cy="178" r="3.5" fill="#a9b1d6"/>
+<text x="443.879" y="182.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="422.879 485.824">Draft</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">18:05</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="1173" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1380" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Announcements</text>
+<rect x="58" y="387" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="398" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<text x="56" y="452" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">ADMIN</text>
+<rect x="44" y="596" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="596" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Settings</text>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="735" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="746" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Venue info</text>
+<rect x="58" y="777" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="788" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+</g>
+<text x="328" y="249" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 968">Health</text>
+<rect x="328" y="273" width="56.5207" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="356.26" y="292.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="328 384.521">Now</text>
+<rect x="392.521" y="273" width="74.9453" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="429.993" y="292.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="392.521 467.466">History</text>
+<rect x="475.466" y="273" width="124.919" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="537.926" y="292.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="475.466 600.385">Alert settings</text>
+<text x="328" y="339" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 968">Where alerts go</text>
+<text x="328" y="361" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Down alerts mention the role; everything else only posts.</text>
+<text x="328" y="406" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Discord channel</text>
+<rect x="548" y="383" width="420" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="560" y="405.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="548 968">#crew-alerts</text>
+<text x="548" y="439" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">From the bot&#x27;s binding · Change in Discord ›</text>
+<text x="328" y="486" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Mention on Down</text>
+<rect x="548" y="463" width="420" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="560" y="485.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="548 968">@Crew on duty</text>
+<text x="548" y="519" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">A role the crew already manages (U3)</text>
+<text x="328" y="566" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Fallback webhook</text>
+<rect x="548" y="543" width="420" height="112" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="564" y="557" width="52.7864" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="576" cy="568" r="3.5" fill="#3ee39a"/>
+<text x="585" y="572.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="564 616.786">Set</text>
+<text x="626.786" y="573" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="564 952">ends in …k9Qe</text>
+<text x="564" y="601" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="564 952">Set by Player Three, 12 Nov · last used today 16:03</text>
+<rect x="564" y="613" width="74.5072" height="30" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="601.254" y="632.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="564 638.507">Test it</text>
+<rect x="646.507" y="613" width="85.9316" height="30" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="689.473" y="632.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="646.507 732.439">Replace</text>
+<rect x="740.439" y="613" width="81.6944" height="30" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="781.286" y="632.68" font-size="13" fill="#ffb4bd" font-weight="600" text-anchor="middle" data-box="740.439 822.133">Revoke</text>
+<text x="548" y="675" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Only when the bot is down or is the subject.</text>
+<circle cx="310" cy="563" r="13" fill="#f59e0b"/>
+<text x="310" y="568" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">1</text>
+<line x1="328" y1="713" x2="968" y2="713" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="749" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 968">What alerts</text>
+<text x="328" y="771" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Each problem, when it alerts, and the fix tried first. Off still shows on Health.</text>
+<rect x="328" y="796" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="357" cy="807" r="8" fill="#0b0d1a"/>
+<text x="382" y="812" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">A screen is dark</text>
+<text x="758" y="812" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 968">after</text>
+<rect x="768" y="789" width="150" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="804" y1="795" x2="804" y2="817" stroke="#3c446c" stroke-width="1"/>
+<line x1="882" y1="795" x2="882" y2="817" stroke="#3c446c" stroke-width="1"/>
+<text x="786" y="811" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">–</text>
+<text x="900" y="811" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">+</text>
+<text x="843" y="811" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">2 min</text>
+<rect x="328" y="850" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="357" cy="861" r="8" fill="#0b0d1a"/>
+<text x="382" y="866" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">A screen is stuck</text>
+<text x="382" y="885" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Reload it first</text>
+<text x="758" y="866" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 968">after</text>
+<rect x="768" y="843" width="150" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="804" y1="849" x2="804" y2="871" stroke="#3c446c" stroke-width="1"/>
+<line x1="882" y1="849" x2="882" y2="871" stroke="#3c446c" stroke-width="1"/>
+<text x="786" y="865" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">–</text>
+<text x="900" y="865" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">+</text>
+<text x="843" y="865" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">1 min</text>
+<rect x="328" y="904" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="357" cy="915" r="8" fill="#0b0d1a"/>
+<text x="382" y="920" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">The bot is offline</text>
+<text x="758" y="920" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 968">after</text>
+<rect x="768" y="897" width="150" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="804" y1="903" x2="804" y2="925" stroke="#3c446c" stroke-width="1"/>
+<line x1="882" y1="903" x2="882" y2="925" stroke="#3c446c" stroke-width="1"/>
+<text x="786" y="919" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">–</text>
+<text x="900" y="919" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">+</text>
+<text x="843" y="919" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">1 min</text>
+<rect x="328" y="958" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="357" cy="969" r="8" fill="#0b0d1a"/>
+<text x="382" y="974" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Storage nearly full</text>
+<text x="382" y="993" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">No reminders</text>
+<text x="758" y="974" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 968">at</text>
+<rect x="768" y="951" width="150" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="804" y1="957" x2="804" y2="979" stroke="#3c446c" stroke-width="1"/>
+<line x1="882" y1="957" x2="882" y2="979" stroke="#3c446c" stroke-width="1"/>
+<text x="786" y="973" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">–</text>
+<text x="900" y="973" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">+</text>
+<text x="843" y="973" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">90 %</text>
+<rect x="328" y="1012" width="40" height="22" rx="11" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<circle cx="339" cy="1023" r="8" fill="#a9b1d6"/>
+<text x="382" y="1028" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Screens refused by the venue check</text>
+<text x="382" y="1047" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Off by default (E16)</text>
+<text x="758" y="1028" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 968">after</text>
+<rect x="768" y="1005" width="150" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="804" y1="1011" x2="804" y2="1033" stroke="#3c446c" stroke-width="1"/>
+<line x1="882" y1="1011" x2="882" y2="1033" stroke="#3c446c" stroke-width="1"/>
+<text x="786" y="1027" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">–</text>
+<text x="900" y="1027" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 968">+</text>
+<text x="843" y="1027" font-size="13.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="328 968">2 min</text>
+<circle cx="310" cy="809" r="13" fill="#f59e0b"/>
+<text x="310" y="814" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">2</text>
+<text x="328" y="1065" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">The platform&#x27;s parts alert the superadmins, not you; you see one word for them.</text>
+<line x1="328" y1="1089" x2="968" y2="1089" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="1125" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 968">Reminders</text>
+<text x="328" y="1168" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Remind every</text>
+<rect x="548" y="1145" width="160" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="560" y="1167.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="548 708">30 min</text>
+<text x="728" y="1168" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">until acked or back</text>
+<rect x="328" y="1201" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="357" cy="1212" r="8" fill="#0b0d1a"/>
+<text x="382" y="1217" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 968">Quiet during the run of show&#x27;s quiet hours</text>
+<text x="382" y="1237" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 968">Screens may be dark at night (E9).</text>
+<circle cx="310" cy="1211" r="13" fill="#f59e0b"/>
+<text x="310" y="1216" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">3</text>
+<rect x="288" y="1316" width="1024" height="64" rx="0" fill="#1c2138"/>
+<line x1="288" y1="1316" x2="1312" y2="1316" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="1354" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">1 change not saved</text>
+<rect x="1082" y="1329" width="80" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1122" y="1352.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1082 1162">Undo</text>
+<rect x="1172" y="1329" width="100" height="36" rx="10" fill="#3ddcff"/>
+<text x="1222" y="1352.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1172 1272">Save</text>
+<text x="1567" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1762">B · The same on a phone</text>
+<rect x="1362" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">18:06</text>
+<rect x="1698" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1700" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1372" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1388" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1424" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Demo Event</text>
+<rect x="1538.65" y="225" width="61.5721" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="1550.65" cy="236" r="3.5" fill="#a9b1d6"/>
+<text x="1559.65" y="240.5" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1538.65 1600.22">Draft</text>
+<rect x="1722" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1388" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Health</text>
+<rect x="1388" y="320" width="56.5207" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1416.26" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1388 1444.52">Now</text>
+<rect x="1450.52" y="320" width="74.9453" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1487.99" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1450.52 1525.47">History</text>
+<rect x="1531.47" y="320" width="70.1833" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="1566.56" y="339.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1531.47 1601.65">Alerts</text>
+<text x="1388" y="378" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">Where alerts go</text>
+<text x="1388" y="404" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1388 1746">Discord channel</text>
+<rect x="1388" y="414" width="358" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1400" y="436.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">#crew-alerts</text>
+<text x="1388" y="476" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1388 1746">Mention on Down</text>
+<rect x="1388" y="486" width="358" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1400" y="508.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">@Crew on duty</text>
+<text x="1388" y="548" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1388 1746">Fallback webhook</text>
+<rect x="1388" y="560" width="52.7864" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1400" cy="571" r="3.5" fill="#3ee39a"/>
+<text x="1409" y="575.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1388 1440.79">Set</text>
+<text x="1448.79" y="576" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">…k9Qe · last used 16:03</text>
+<text x="1388" y="626" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">What alerts</text>
+<rect x="1388" y="650" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1417" cy="661" r="8" fill="#0b0d1a"/>
+<text x="1440" y="666" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">A screen is dark</text>
+<text x="1746" y="666" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="1388 1746">2 min ›</text>
+<rect x="1388" y="696" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1417" cy="707" r="8" fill="#0b0d1a"/>
+<text x="1440" y="712" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">A screen is stuck</text>
+<text x="1746" y="712" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="1388 1746">1 min ›</text>
+<rect x="1388" y="742" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1417" cy="753" r="8" fill="#0b0d1a"/>
+<text x="1440" y="758" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">The bot is offline</text>
+<text x="1746" y="758" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="1388 1746">1 min ›</text>
+<rect x="1388" y="788" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1417" cy="799" r="8" fill="#0b0d1a"/>
+<text x="1440" y="804" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Storage nearly full</text>
+<text x="1746" y="804" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="1388 1746">90 % ›</text>
+<rect x="1372" y="856" width="390" height="64" rx="0" fill="#1c2138"/>
+<text x="1388" y="894" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1388 1746">1 change not saved</text>
+<rect x="1646" y="869" width="100" height="36" rx="10" fill="#3ddcff"/>
+<text x="1696" y="892.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1646 1746">Save</text>
+<rect x="1372" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1403" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1411" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1372 1450">Health</text>
+<rect x="1481" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1489" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1450 1528">Studio</text>
+<circle cx="1567" cy="944" r="15" fill="#3ddcff"/>
+<text x="1567" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1528 1606">Add</text>
+<rect x="1637" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1645" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1606 1684">Screens</text>
+<rect x="1715" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1723" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1684 1762">More</text>
+<rect x="1500" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2027" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1832 2222">C · Replacing the webhook, tested</text>
+<rect x="1822" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c3)">
+<rect x="1832" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1866" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">18:07</text>
+<rect x="2158" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2160" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1832" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1848" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1884" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Demo Event</text>
+<rect x="1998.65" y="225" width="61.5721" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="2010.65" cy="236" r="3.5" fill="#a9b1d6"/>
+<text x="2019.65" y="240.5" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1998.65 2060.22">Draft</text>
+<rect x="2182" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1848" y="290" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1832 2222">‹ Alert settings</text>
+<text x="1848" y="320" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Fallback webhook</text>
+<text x="1848" y="368" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">Paste the webhook URL Discord gives for the alert</text>
+<text x="1848" y="388" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">channel. It is stored encrypted and never shown</text>
+<text x="1848" y="408" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">again.</text>
+<text x="1848" y="446" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1848 2206">Webhook URL</text>
+<rect x="1848" y="456" width="358" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1860" y="478.86" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1848 2206">https://discord.com/api/webhooks/…</text>
+<rect x="1848" y="512" width="358" height="36" rx="10" fill="#3ddcff"/>
+<text x="2027" y="535.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1848 2206">Save and test</text>
+<rect x="1848" y="568" width="358" height="92" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1864" y="596" font-size="14" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1864 2190">Saved. A test reached the channel.</text>
+<text x="1864" y="620" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1864 2190">Replace swaps it at once; the old one</text>
+<text x="1864" y="640" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1864 2190">stops being used. Audited, never the URL.</text>
+<rect x="1848" y="680" width="358" height="92" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="1864" y="708" font-size="14" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1864 2190">Discord refused it (404).</text>
+<text x="1864" y="732" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1864 2190">The old webhook stays in use. Check the URL</text>
+<text x="1864" y="752" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1864 2190">or make a new one in the channel&#x27;s settings.</text>
+<text x="1848" y="808" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1848 2206">Right: admin.alerts.write (U1)</text>
+<rect x="1832" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1863" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1871" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1832 1910">Health</text>
+<rect x="1941" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1949" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1910 1988">Studio</text>
+<circle cx="2027" cy="944" r="15" fill="#3ddcff"/>
+<text x="2027" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1988 2066">Add</text>
+<rect x="2097" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2105" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2066 2144">Screens</text>
+<rect x="2175" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2183" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2144 2222">More</text>
+<rect x="1960" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2262" y="180" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="2262 2632">Notes</text>
+<circle cx="2275" cy="205" r="13" fill="#f59e0b"/>
+<text x="2275" y="210" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">1</text>
+<text x="2298" y="210" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">The fallback webhook is a secret:</text>
+<text x="2298" y="231" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">write-only, encrypted at rest, its last four</text>
+<text x="2298" y="252" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">characters shown, set, replaced and</text>
+<text x="2298" y="273" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">revoked with an audit entry, as step 5&#x27;s AI</text>
+<text x="2298" y="294" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">key (D6). Test it posts one line to the</text>
+<text x="2298" y="315" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">channel.</text>
+<circle cx="2275" cy="345" r="13" fill="#f59e0b"/>
+<text x="2275" y="350" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">2</text>
+<text x="2298" y="350" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Each event alert kind with its switch and</text>
+<text x="2298" y="371" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">delay (D1, D2, O7). A kind that is off still</text>
+<text x="2298" y="392" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">shows on Health; only Discord stays quiet.</text>
+<text x="2298" y="413" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Defaults are the values drawn.</text>
+<circle cx="2275" cy="443" r="13" fill="#f59e0b"/>
+<text x="2275" y="448" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">3</text>
+<text x="2298" y="448" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Quiet hours come from the run of show, so</text>
+<text x="2298" y="469" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">a screen switched off for the night does</text>
+<text x="2298" y="490" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">not page anyone (E9).</text>
+</svg>
