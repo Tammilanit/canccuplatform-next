@@ -56,6 +56,13 @@ export const STORY_PAGES = [
     DESK,
     { ready: previewed },
   ],
+  // Its triggers and Until in words, "A match is called" (#638, P14).
+  [
+    "stories-builder-match-called",
+    "/moments/storyboards?edit=match_called",
+    DESK,
+    { ready: previewed },
+  ],
   [
     "stories-builder-phone",
     "/moments/storyboards?edit=starting_soon",
