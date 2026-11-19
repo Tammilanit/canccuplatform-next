@@ -243,55 +243,6 @@
   }
 }
 
-/* Menus: a details list that opens below its button. */
-.moments-menu {
-  position: relative;
-}
-.moments-menu > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.moments-menu > summary::-webkit-details-marker {
-  display: none;
-}
-.moments-menu__list {
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  right: 0;
-  z-index: 5;
-  display: grid;
-  min-width: 10rem;
-  padding: 0.25rem;
-  border: var(--canccu-border-width) solid var(--canccu-color-border);
-  border-radius: var(--canccu-radius);
-  background: var(--canccu-color-surface);
-  box-shadow: var(--canccu-shadow);
-}
-.moments-menu__list form {
-  margin: 0;
-}
-.moments-menu__item {
-  width: 100%;
-  min-height: 2.5rem;
-  padding: 0 0.75rem;
-  border: 0;
-  border-radius: calc(var(--canccu-radius) - 2px);
-  background: transparent;
-  color: var(--canccu-color-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.moments-menu__item:hover,
-.moments-menu__item:focus-visible {
-  background: var(--canccu-tint);
-}
-.moments-menu__more {
-  padding: 0 0.5rem;
-  color: var(--canccu-ink-muted);
-  font-size: var(--canccu-text-lg);
-}
-
 /* A phone (sheet 04): lists become cards; only what a finger needs stays on the row. */
 @media (max-width: 40rem) {
   .moments-cuehead,

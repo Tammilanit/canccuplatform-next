@@ -49,7 +49,9 @@ export async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zon
           })),
       }))
       .sort((a, b) => b.rank - a.rank);
-    return { moments, zones: await knownZones(c) };
+    // Screen's order, by key as the Studio lists them (amendment 3): a zone never moves on the page.
+    const zones = (await knownZones(c)).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    return { moments, zones };
   });
 }
 

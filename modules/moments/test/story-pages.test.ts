@@ -289,11 +289,17 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect(select).toMatch(/value="it_final"\s*selected/);
   });
 
-  it("keeps the catalogue and its Fire panel in one grid that fits a phone", async () => {
-    const page = (await w.call("crew", "GET", "/storyboards")).body;
-    expect(page).toContain('class="moments-stories"');
-    expect(page).toContain('class="moments-stories__side"');
-    expect(page).toContain('class="moments-presets"');
+  it("puts the Fire band above the catalogue, then a card grid per group (sheet 05)", async () => {
+    const page = (await w.call("admin", "GET", "/storyboards")).body;
+    const at = (s: string) => page.indexOf(s);
+    expect(at("Fire a storyboard")).toBeGreaterThan(-1);
+    expect(at("Fire a storyboard")).toBeLessThan(at("Your storyboards"));
+    expect(at("Your storyboards")).toBeLessThan(at("Every event"));
+    expect(at("Every event")).toBeLessThan(at("Some venues"));
+    // A new event has none of its own: one dashed line with what to do, no empty grid.
+    expect(page).toContain("No storyboards of your own yet. Duplicate a built-in, or start with");
+    expect(page.match(/class="canccu-grid moments-presets"/g)).toHaveLength(2);
+    expect(page).toMatch(/<summary class="moments-menu__more" aria-label="More for Doors open">/);
     expect(page).not.toContain("<table");
   });
 

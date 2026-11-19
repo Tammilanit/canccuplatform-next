@@ -1,7 +1,8 @@
 /**
  * The sound desk's Library (#626, the step 4 polish sheets 03 and 04; D23): one upload button with
- * a drop area and the rules in words, then each sound as a card with its themed player, licence
- * and the cues that use it by name. The page's script uploads the file to Screen, then links it.
+ * a drop area and the rules in words, then the sounds A to Z by title in the shared card grid
+ * (docs/design/grids/03-sound-library.svg), each with its themed player, licence and the cues
+ * that use it by name. The page's script uploads the file to Screen, then links it.
  */
 import type { Html } from "@canccu/ui";
 import { html } from "@canccu/ui";
@@ -75,7 +76,9 @@ export function libraryView(o: { library: LibraryView[]; canWrite: boolean }): H
       </form>`
     : "";
   return html`${upload}
-    <ul class="moments-sounds">
-      ${o.library.map((l) => soundCard(l, o.canWrite))}
+    <ul class="canccu-grid moments-sounds">
+      ${[...o.library]
+        .sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }))
+        .map((l) => soundCard(l, o.canWrite))}
     </ul>`;
 }
