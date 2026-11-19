@@ -783,7 +783,7 @@
 <text x="32" y="1810" font-size="16" fill="#111827" data-box="32 1926">2 · Crew actions are one band above the zones, never a column beside them: one row on a desk (Announce…, Spotlight… and the emergency&#x27;s hold), first on a phone.</text>
 <text x="32" y="1839" font-size="16" fill="#111827" data-box="32 1926">3 · The zones are one auto-fill grid. Two zones keep their card width and leave the rest of the row empty; they are never stretched across the page. Eight zones wrap into rows that end level: every card in a row is as tall as</text>
 <text x="32" y="1862" font-size="16" fill="#111827" data-box="32 1926">the row&#x27;s tallest.</text>
-<text x="32" y="1891" font-size="16" fill="#111827" data-box="32 1926">4 · Storyboards and Scenes are a band of panels under the zones: side by side from 2 × 22 rem, each at most 48 rem wide, one under the other on a phone. Their row ends level too.</text>
+<text x="32" y="1891" font-size="16" fill="#111827" data-box="32 1926">4 · Storyboards and Scenes are a band of panels under the zones: side by side from 45 rem (2 × 22 rem and the gap), each at most 48 rem wide, one under the other on a phone. Their row ends level too.</text>
 <text x="32" y="1920" font-size="16" fill="#111827" data-box="32 1926">5 · Zones keep Screen&#x27;s order (the order the Screen studio lists them); a zone that starts showing something does not move. Its state is on the card, never in its place.</text>
 <text x="32" y="1949" font-size="16" fill="#111827" data-box="32 1926">6 · On a phone: one column, in the page&#x27;s order: crew actions, the zones, Storyboards, Scenes. Nothing is wider than 358 px.</text>
 </svg>

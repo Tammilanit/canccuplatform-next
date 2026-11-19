@@ -32,7 +32,7 @@ The pages
 
 Tests and screenshots
 - [ ] A Moments browser test (as `test/priorities.browser.test.ts`, with `@canccu/ui/ui.css`) renders On air with 1, 2 and 8 zones at content widths of 358, 944 and 1,584 px: the zones take 1, 3 and 5 columns; one zone is at most 440 px wide; the crew actions are above the zones and Storyboards and Scenes below them at every width; on the phone width the order is crew actions, zones, Storyboards, Scenes.
-- [ ] The same test shape for the storyboard catalogue (5 columns at 1,584 px, the Fire band above) and, in `packages/ui`, for `.canccu-band` (a lone panel is at most 48 rem wide; two panels share a row from 2 × 22 rem).
+- [ ] The same test shape for the storyboard catalogue (5 columns at 1,584 px, the Fire band above) and, in `packages/ui`, for `.canccu-band` (a lone panel is at most 48 rem wide; two panels share a row from 45 rem: 2 × 22 rem and the 1 rem gap).
 - [ ] Screenshots next to sheets 02–05: On air with 1, 2 and 8 zones at 1280 px and 8 at 1920 px and on a phone (the shots #639 added stay and are redrawn); the sound library with 3 and 20 sounds at 1280 and 1920 px and on a phone; Devices with 2 and 12 screens at 1280 and 1920 px, none, and on a phone; the storyboard catalogue at 1280 and 1920 px and on a phone. The scripts make the zones, sounds and screens they need and remove them afterwards.
 
 ## Room to design
