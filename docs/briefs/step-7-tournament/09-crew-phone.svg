@@ -228,10 +228,10 @@
 </g>
 <circle cx="45.0" cy="785.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The crew phone is the desk at 390 px: what&#x27;s next first, then what needs the crew (U13).</text>
+<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The crew phone is the desk at 390 px: what&#x27;s next first, then what needs the crew (U14).</text>
 <circle cx="985.0" cy="785.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Calling a match sets where and an optional lobby id, and emits tournament.match.called (D1).</text>
+<text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Calling a match sets where and an optional lobby id, and emits tournament.match.called (U13).</text>
 <circle cx="45.0" cy="819.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
 <text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The stage QR is Notify&#x27;s rotating code with purpose tournament:&lt;session&gt; (built, #35) (D6).</text>

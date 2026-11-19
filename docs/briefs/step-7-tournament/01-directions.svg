@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1130" width="1920" height="1130" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <title>Step 7 mockup 01: Three directions, one moment: Saturday 19:30, the Demo Arena semi-finals</title>
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
-<rect x="0.0" y="0.0" width="1920.0" height="1130.0" rx="0" fill="#f3f4f6"/>
+<rect x="0.0" y="0.0" width="1920.0" height="1000.0" rx="0" fill="#f3f4f6"/>
 <text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">01 · Three directions, one moment: Saturday 19:30, the Demo Arena semi-finals</text>
 <text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the session compares how each direction feels for a player, the crew and the hall</text>
-<rect x="32.0" y="110.0" width="600.0" height="990.0" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+<rect x="32.0" y="110.0" width="600.0" height="860.0" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
 <text x="56.0" y="150.0" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="56.0 542.0">A · The LAN cup, ported</text>
 <rect x="550.0" y="130.0" width="60.0" height="28.0" rx="14" fill="#eef2ff"/>
 <text x="580.0" y="150.0" font-size="14" fill="#2563eb" font-weight="700" text-anchor="middle" data-box="552.0 608.0">S–M</text>
@@ -42,7 +42,7 @@
 <text x="56.0" y="880.0" font-size="14" fill="#2563eb" font-weight="700" text-anchor="start">Trade-off</text>
 <text x="56.0" y="906.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="56.0 608.0">Cheap, proven, but quiet: nobody is called to a</text>
 <text x="56.0" y="932.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="56.0 608.0">match, the screen has no story until scores exist.</text>
-<rect x="660.0" y="110.0" width="600.0" height="990.0" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+<rect x="660.0" y="110.0" width="600.0" height="860.0" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
 <text x="684.0" y="150.0" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="684.0 1170.0">B · Brackets everywhere</text>
 <rect x="1178.0" y="130.0" width="60.0" height="28.0" rx="14" fill="#eef2ff"/>
 <text x="1208.0" y="150.0" font-size="14" fill="#2563eb" font-weight="700" text-anchor="middle" data-box="1180.0 1236.0">L–XL</text>
@@ -70,7 +70,7 @@
 <rect x="1058.0" y="379.0" width="150.0" height="54.0" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="1068.0" y="401.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1066.0 1198.0">Team ?</text>
 <text x="1068.0" y="423.0" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1066.0 1198.0">Team ?</text>
-<text x="708.0" y="558.0" font-size="14" fill="#ffc94d" font-weight="600" text-anchor="start" data-box="708.0 1212.0">+ lower bracket · 3 disputes waiting</text>
+<text x="708.0" y="568.0" font-size="14" fill="#ffc94d" font-weight="600" text-anchor="start" data-box="708.0 1212.0">+ lower bracket · 3 disputes waiting</text>
 <text x="684.0" y="610.0" font-size="15.5" fill="#1f2937" font-weight="400" text-anchor="start" data-box="684.0 1236.0">Every session a bracket: groups, single or double</text>
 <text x="684.0" y="638.0" font-size="15.5" fill="#1f2937" font-weight="400" text-anchor="start" data-box="684.0 1236.0">elimination, best-of-n, seeded from a rating.</text>
 <text x="684.0" y="666.0" font-size="15.5" fill="#1f2937" font-weight="400" text-anchor="start" data-box="684.0 1236.0">Teams report their own scores and confirm each</text>
@@ -83,7 +83,7 @@
 <text x="684.0" y="880.0" font-size="14" fill="#2563eb" font-weight="700" text-anchor="start">Trade-off</text>
 <text x="684.0" y="906.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="684.0 1236.0">Exciting for one serious game, wrong for a</text>
 <text x="684.0" y="932.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="684.0 1236.0">party game; most cost goes to rules few use.</text>
-<rect x="1288.0" y="110.0" width="600.0" height="990.0" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+<rect x="1288.0" y="110.0" width="600.0" height="860.0" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
 <text x="1312.0" y="150.0" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1798.0">C · The cup, live (recommended)</text>
 <rect x="1806.0" y="130.0" width="60.0" height="28.0" rx="14" fill="#eef2ff"/>
 <text x="1836.0" y="150.0" font-size="14" fill="#2563eb" font-weight="700" text-anchor="middle" data-box="1808.0 1864.0">M</text>

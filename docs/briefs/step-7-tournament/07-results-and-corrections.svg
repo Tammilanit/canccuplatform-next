@@ -19,7 +19,7 @@
 <circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
 <text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
 <text x="1234.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">20:14</text>
-<text x="1260.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">EET</text>
+<text x="1260.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
 <rect x="0.0" y="57.0" width="255.0" height="903.0" rx="0" fill="#0e1122"/>
 <line x1="255.0" y1="57.0" x2="255.0" y2="960.0" stroke="#343c66" stroke-width="1"/>
 <text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
@@ -127,7 +127,7 @@
 <circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
 <text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
 <text x="1174.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:02</text>
-<text x="1200.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">EET</text>
+<text x="1200.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
 <rect x="0.0" y="57.0" width="255.0" height="903.0" rx="0" fill="#0e1122"/>
 <line x1="255.0" y1="57.0" x2="255.0" y2="960.0" stroke="#343c66" stroke-width="1"/>
 <text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>

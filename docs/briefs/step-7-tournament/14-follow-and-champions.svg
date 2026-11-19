@@ -171,13 +171,13 @@
 <text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">The live session is the bracket widget&#x27;s data on a phone; it updates by push (D10).</text>
 <circle cx="45.0" cy="819.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
-<text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A champions page per event: the final&#x27;s top three with photos, then each session&#x27;s winner (U10).</text>
+<text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A champions page per event: the final&#x27;s top three with photos, then each session&#x27;s winner (U16).</text>
 <circle cx="985.0" cy="819.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
 <text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">The rules page is written by the organiser; the points come from the settings, never typed twice.</text>
 <circle cx="45.0" cy="853.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
-<text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">After the event: the player&#x27;s own summary; results seed the next event in the same series (D7).</text>
+<text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">After the event: the player&#x27;s own summary; results seed the next event in the same series (D13).</text>
 <circle cx="985.0" cy="853.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
 <text x="1006.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Retention: results anonymised after 12 months, counts and totals stay (tenants contract).</text>
