@@ -7,7 +7,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Html } from "@canccu/ui";
 import { READ, SETTINGS, TAKE, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
-import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
+import { PREFIX, page, pageNeeds, refusal, viaApi, zoneNames } from "../page-kit.js";
 import { knownZones } from "../store.js";
 import { loadCues } from "../cues/store.js";
 import { canSee, runOfShow } from "../announce/store.js";
@@ -18,12 +18,14 @@ import { one, stepAfter, storyFromForm } from "./form.js";
 import type { Story } from "./model.js";
 import { EMPTY_CONDITIONS } from "./model.js";
 import { videoMs } from "./runner.js";
-import { ensureStories } from "./store.js";
+import { DEFAULT_SETTINGS, ensureStories } from "./store.js";
+import type { StorySettings } from "./store.js";
 import { duplicated, toggled } from "./picker.js";
 import type { PickerItem } from "./picker.js";
 import { pickerView } from "./picker-view.js";
 import { builderHead, builderView } from "./builder.js";
-import { crewStories, fireChoices } from "./views.js";
+import { fireResult } from "./fire-words.js";
+import { crewStories, fireChoices, takesWords } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
 type Raw = Record<string, string | string[] | undefined>;
@@ -42,6 +44,8 @@ async function state(deps: AppDeps, request: FastifyRequest) {
   return {
     stories: (a.body.stories ?? []) as Story[],
     revision: Number(a.body.revision ?? 0),
+    settings: (a.body.settings ?? DEFAULT_SETTINGS) as StorySettings,
+    timeZone: tenantOf(request).time_zone,
     runs: (a.body.runs ?? []) as RunView[],
     items: items.map((i): ItemChoice => ({
       id: i.id,
@@ -141,9 +145,11 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
       eventEndsAt: doc.event.ends_at,
       hostname: doc.event.hostname,
     };
+    const zoneName = await zoneNames(deps, request);
     const head = builderHead({
       story,
       zones,
+      zoneName,
       canWrite: has(request, SETTINGS),
       canTake: has(request, TAKE),
     });
@@ -158,6 +164,7 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         d: describeStory(story, doc.settings, (c) => videoMs({ content: c })),
         settings: doc.settings,
         zones,
+        zoneName,
         cues,
         revision: s.revision,
         canWrite: has(request, SETTINGS),
@@ -278,12 +285,31 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     take,
     async (request, reply) => {
       const f = raw(request);
+      const to = one(f.back) === "storyboards" ? "storyboards" : "on-air";
       const variables = Object.fromEntries(
         Object.entries(f)
           .filter(([k]) => k.startsWith("var_"))
           .map(([k, v]) => [k.slice(4), one(v)]),
       );
-      const item = one(f.item_id);
+      const s = await state(deps, request);
+      const story = s.stories.find((x) => x.key === request.params.key);
+      // One picker serves every story on On air (#638): a story fired on no item ignores it, and
+      // one that takes only some kinds says which, rather than run on an item it does not take.
+      const onItem = story?.triggers.some((t) => t.kind === "item") === true;
+      const item = onItem ? one(f.item_id) : "";
+      if (
+        story !== undefined &&
+        item !== "" &&
+        !fireChoices(story, s.items, s.now).some((i) => i.id === item)
+      ) {
+        const title = s.items.find((i) => i.id === item)?.title ?? "this item";
+        return back(
+          reply,
+          to,
+          "error",
+          `${story.name} does not take ${title}: pick ${takesWords(story)}.`,
+        );
+      }
       const a = await viaApi(
         pages,
         request,
@@ -291,7 +317,16 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         `/api/moments/storyboards/${request.params.key}/take`,
         { variables, ...(item === "" ? {} : { item_id: item }) },
       );
-      return after(reply, one(f.back) === "storyboards" ? "storyboards" : "on-air", a, "Fired.");
+      if (a.status >= 400 || story === undefined) return after(reply, to, a, "Fired.");
+      const done = fireResult({
+        story,
+        t: Date.parse(String(a.body.t)),
+        anchored: item !== "",
+        settings: s.settings,
+        now: s.now,
+        timeZone: s.timeZone,
+      });
+      return back(reply, to, "done", done);
     },
   );
 
@@ -311,7 +346,7 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         reply,
         `storyboards?edit=${request.params.key}`,
         a,
-        `One test round on ${one(f.zone)}.`,
+        `One test round on ${(await zoneNames(deps, request))(one(f.zone))}.`,
       );
     },
   );

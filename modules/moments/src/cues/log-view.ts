@@ -67,7 +67,7 @@ function sentence(r: LogRow, title: (id: string) => string): string {
 
 export function logView(o: {
   rows: LogRow[];
-  zones: string[];
+  zones: { zone_key: string; name: string }[];
   query: LogQuery;
   time: (d: Date) => string;
   title: (id: string) => string;
@@ -103,14 +103,16 @@ export function logView(o: {
     </nav>
     <nav class="canccu-chips canccu-chips--scroll moments-logbar__zones" aria-label="Zone">
       ${chip("Every zone", { zone: "" }, !q.zone)}
-      ${o.zones.map((z) => chip(z, { zone: z }, q.zone === z))}
+      ${o.zones.map((z) => chip(z.name, { zone: z.zone_key }, q.zone === z.zone_key))}
     </nav>
   </div>`;
   const rows = o.rows.map(
     (r) =>
       html`<li class="moments-logrow">
         <span class="moments-logrow__time canccu-num">${o.time(r.at)}</span>
-        <span class="moments-logrow__zone">${r.zone_key}</span>
+        <span class="moments-logrow__zone"
+          >${o.zones.find((z) => z.zone_key === r.zone_key)?.name ?? r.zone_key}</span
+        >
         <span class="moments-logrow__cue"
           ><b>${cueTitle(r.cue)}</b> <span class="moments-sub">${r.cue}</span></span
         >

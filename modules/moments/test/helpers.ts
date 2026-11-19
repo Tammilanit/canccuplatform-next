@@ -85,6 +85,8 @@ export interface World {
   assets: Map<string, Awaited<ReturnType<ScreenClient["asset"]>>>;
   /** The event's images the fake Screen holds, newest first, with their bytes. */
   images: { id: string; title: string; url: string; type: string; body: Buffer }[];
+  /** The zones' names the fake Screen gives, by key; a zone not set has none. */
+  zoneNames: Map<string, string>;
 }
 
 /** Valkey's counters in memory; their keys name their minute or hour, so none needs expiring. */
@@ -117,7 +119,9 @@ export function world(pool: pg.Pool): World {
   };
   const assets: World["assets"] = new Map();
   const images: World["images"] = [];
+  const zoneNames: World["zoneNames"] = new Map();
   const screen: ScreenClient = {
+    zones: () => Promise.resolve([...zoneNames].map(([key, name]) => ({ key, name }))),
     zoneSound: (_tenant, zone) =>
       Promise.resolve(zoneStatus.get(zone) ?? { energy: "lively", device: soundScreen }),
     asset: (_tenant, id) => Promise.resolve(assets.get(id) ?? null),
@@ -156,6 +160,7 @@ export function world(pool: pg.Pool): World {
     soundScreen,
     assets,
     images,
+    zoneNames,
     screen,
     now: T0,
     at: (s) => new Date(T0.getTime() + s * 1000),

@@ -11,6 +11,7 @@ import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from
 import { KitError, MissingRight, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import type { EventInfo, Html, Slot } from "@canccu/ui";
 import { errorTitle, errorView, html, shellPage } from "@canccu/ui";
+import { tenantOf } from "./http.js";
 import type { AppDeps } from "./http.js";
 
 export const SIGN_IN = "/admin/sign-in";
@@ -86,6 +87,9 @@ export async function page(
     head: html`<link rel="stylesheet" href="${PREFIX}static/moments.css" /><link
         rel="stylesheet"
         href="${PREFIX}static/organiser.css"
+      /><link
+        rel="stylesheet"
+        href="${PREFIX}static/on-air.css"
       />${o.tab === "storyboards" ? STORY_CSS : o.tab === "cues" ? SOUND_CSS : ""}`,
     event: await eventOf(request, deps),
     session: request.session ?? undefined,
@@ -170,6 +174,7 @@ const TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "moments.css": "text/css; charset=utf-8",
   "organiser.css": "text/css; charset=utf-8",
+  "on-air.css": "text/css; charset=utf-8",
   "story-controls.css": "text/css; charset=utf-8",
   "story-round.css": "text/css; charset=utf-8",
   "story-side.css": "text/css; charset=utf-8",
@@ -242,6 +247,16 @@ export async function viaApi(
 }
 
 /** The API's refusal in a sentence for the page's notice. */
+/** A zone as people know it ("Main hall"), or its key while Screen does not name it (#638). */
+export type ZoneName = (key: string) => string;
+
+export async function zoneNames(deps: AppDeps, request: FastifyRequest): Promise<ZoneName> {
+  const names = new Map(
+    (await deps.screen.zones(tenantOf(request).tenant_id)).map((z) => [z.key, z.name]),
+  );
+  return (key) => names.get(key) ?? key;
+}
+
 export const refusal = (a: ApiAnswer): string =>
   ((a.body.error as { message?: string } | undefined)?.message ?? "That did not work.").replace(
     /`/g,

@@ -1,0 +1,101 @@
+/*
+ * On air (docs/design/moments-on-air.svg, #638): on a phone one column in the page's order, crew
+ * actions first; from 64rem one grid whose two rows end level, the zones on two thirds of the
+ * width and Crew actions, Storyboards and Scenes as compact cards around them.
+ */
+.moments-board {
+  display: grid;
+  gap: 1rem;
+}
+.moments-board > * {
+  min-width: 0;
+}
+@media (min-width: 64rem) {
+  /* One auto-fill grid: the zone cards and the three compact cards are siblings, so any count of
+     zones fills it and the page stays balanced. The zones' wrapper drops out of the layout. */
+  .moments-board {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    align-items: start;
+  }
+  .moments-onair__zones {
+    display: contents;
+  }
+}
+
+/* Fire (#638): one item picker and one "Fire…" that opens the chooser below it. */
+.moments-fire {
+  display: grid;
+  gap: 0.5rem;
+  margin-block-start: 0.75rem;
+}
+.moments-fire__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.moments-fire__item {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.moments-fire__chooser {
+  position: relative;
+  flex: 0 0 auto;
+}
+.moments-fire__chooser > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.moments-fire__chooser > summary::-webkit-details-marker {
+  display: none;
+}
+.moments-fire__list {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  width: min(20rem, 85vw);
+  padding: 0.25rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+  box-shadow: var(--canccu-shadow);
+}
+.moments-fire__story {
+  display: grid;
+  gap: 0.125rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: calc(var(--canccu-radius) - 2px);
+  background: transparent;
+  color: var(--canccu-color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.moments-fire__story:hover,
+.moments-fire__story:focus-visible {
+  background: var(--canccu-tint);
+}
+/* On a phone "Fire…" takes the row under the picker, and the chooser opens under it. */
+@media (max-width: 40rem) {
+  .moments-fire__chooser,
+  .moments-fire__chooser > summary {
+    width: 100%;
+  }
+  .moments-fire__list {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* A live loop: its name and round, with Stop loop and Skip to finale at the row's end. */
+.moments-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}

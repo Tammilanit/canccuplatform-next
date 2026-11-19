@@ -408,7 +408,8 @@
   }
 
   /*
-   * Urgent (R6, A3; mockup 06 b): "Urgent" in the warning colour, on the kicker and the frame.
+   * Urgent (R6, A3; mockup 06 b): "Urgent" in the warning colour, on the kicker and the frame,
+   * and the cue's frame and glow over it (cues.css) too (V5, #638).
    */
   .canccu-widget__level--urgent .canccu-widget__urgent {
     color: var(--canccu-color-status-degraded);
@@ -417,5 +418,11 @@
   .canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent) {
     border-color: var(--canccu-color-status-degraded);
     box-shadow: inset 0 0 0 calc(0.5 * var(--canccu-u)) var(--canccu-color-status-degraded);
+  }
+
+  /* The cue is drawn on the region (screen.ts applyCue), and a custom property does not inherit
+     upward, so the ink is set on the region, not on the widget. */
+  .canccu-region:has(> .canccu-widget.canccu-is-claim .canccu-widget__level--urgent) {
+    --canccu-cue-ink: var(--canccu-color-status-degraded);
   }
 }

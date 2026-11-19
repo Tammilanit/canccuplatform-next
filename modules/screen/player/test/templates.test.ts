@@ -70,6 +70,21 @@ describe("the player's default templates", () => {
     expect(t({ urgent: true, updated: true, source: "moments" })).toBe("Updated");
   });
 
+  // #638 (V5): the look gives an urgent line's label the warning colour, as the card's.
+  it("marks an urgent ticker line's label for the look", () => {
+    const label = (view: Record<string, unknown>) =>
+      draw(DEFAULT_TEMPLATES.ticker ?? [], { text: "Semis in 15 min", ...view }).querySelector(
+        ".canccu-widget__label",
+      );
+    expect(label({ urgent: true })?.querySelector(".canccu-widget__urgent")?.textContent).toBe(
+      "Urgent",
+    );
+    expect(label({})?.querySelector(".canccu-widget__urgent")).toBeNull();
+    expect(
+      label({ urgent: true, updated: true })?.querySelector(".canccu-widget__urgent"),
+    ).toBeNull();
+  });
+
   it("draws the Wi-Fi name and its password each as a part the look keeps on one line (#546)", () => {
     const view = { wifi: { ssid: "demo-guest", password: "lan-party-2026", note: null } };
     const box = draw(DEFAULT_TEMPLATES.venue_info ?? [], view);

@@ -37,14 +37,15 @@ function checkReport(rows: LogRow[], zones: DeskZone[], time: (d: Date) => strin
   if (first === undefined) return html``;
   const screenless = (zone: string) =>
     zones.find((z) => z.zone_key === zone)?.sound_screen === null;
+  const name = (zone: string) => zones.find((z) => z.zone_key === zone)?.name ?? zone;
   const said = rows.map((r) =>
     r.outcome === "played" && !screenless(r.zone_key)
-      ? `${r.zone_key} played it`
-      : `${r.zone_key} ${r.reason === "no_sound_screen" || screenless(r.zone_key) ? "has no sound screen" : `did not: ${REASONS[r.reason] ?? r.reason}`}, so nothing was heard there`,
+      ? `${name(r.zone_key)} played it`
+      : `${name(r.zone_key)} ${r.reason === "no_sound_screen" || screenless(r.zone_key) ? "has no sound screen" : `did not: ${REASONS[r.reason] ?? r.reason}`}, so nothing was heard there`,
   );
   return html`<p class="moments-master__report" role="status">
     <b
-      >Sound check sent to ${rows.length > 1 ? "every zone" : rows[0]?.zone_key} at
+      >Sound check sent to ${rows.length > 1 ? "every zone" : name(first.zone_key)} at
       ${time(first.at)}</b
     >
     · ${said.join(" · ")}
@@ -110,7 +111,7 @@ export function masterStrip(o: {
             <button class="moments-menu__item" type="submit" name="zone_key" value="">
               Every zone
             </button>
-            ${o.zones.map((z) => html`<button class="moments-menu__item" type="submit" name="zone_key" value="${z.zone_key}">${z.zone_key}</button>`)}
+            ${o.zones.map((z) => html`<button class="moments-menu__item" type="submit" name="zone_key" value="${z.zone_key}">${z.name}</button>`)}
           </div>
         </details>
       </form>`
@@ -119,7 +120,7 @@ export function masterStrip(o: {
     ${o.zones.map(
       (z) =>
         html`<li>
-          <b>${z.zone_key}</b> ${meter(z.hour, s.hourly_budget, `${z.zone_key} this hour`)}
+          <b>${z.name}</b> ${meter(z.hour, s.hourly_budget, `${z.name} this hour`)}
           <span class="canccu-small">${z.hour} of ${s.hourly_budget} this hour</span>
           ${screenFlag(z)}
         </li>`,

@@ -35,11 +35,19 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
   if (story === undefined) throw new Error(`no preset ${key}`);
   const context = await browser.newContext({ viewport: { width, height: 900 }, hasTouch: true });
   const page = await context.newPage();
-  const head = builderHead({ story, zones: ["main", "entrance"], canWrite: true, canTake: true });
+  const zoneName = (z: string) => z;
+  const head = builderHead({
+    story,
+    zones: ["main", "entrance"],
+    zoneName,
+    canWrite: true,
+    canTake: true,
+  });
   const body = builderView({
     story,
     d: describeStory(story, DEFAULT_SETTINGS, () => 0),
     settings: DEFAULT_SETTINGS,
+    zoneName,
     zones: ["main", "entrance"],
     cues: ["tournament.pre", "tournament.start"],
     revision: 0,

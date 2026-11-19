@@ -1,7 +1,7 @@
 /**
  * What Moments asks Screen (contracts/screen.md, For Moments): a zone's energy and its sound
- * screen, an `audio` asset the library links, and the event's images for the crew spotlight's
- * photo picker. Through Screen's internal paths with the
+ * screen, an `audio` asset the library links, the event's images for the crew spotlight's
+ * photo picker, and the zones' names the pages show (#638). Through Screen's internal paths with the
  * kit's service identity; Moments never reads Screen's data.
  */
 import type { ServiceIdentity } from "@canccu/kit";
@@ -36,6 +36,8 @@ export interface ScreenClient {
   asset(tenant: string, assetId: string): Promise<AudioAsset | null>;
   /** The event's images, newest first; none when Screen does not answer. */
   images(tenant: string): Promise<ScreenImage[]>;
+  /** The event's zones with their names; none when Screen does not answer. */
+  zones(tenant: string): Promise<{ key: string; name: string }[]>;
   /** An image's bytes for its thumbnail; null when the event has no such image. */
   image(tenant: string, assetId: string): Promise<{ type: string; body: Buffer } | null>;
 }
@@ -84,6 +86,16 @@ export function screenClient(
           images?: ScreenImage[];
         } | null;
         return v?.images ?? [];
+      } catch {
+        return [];
+      }
+    },
+    async zones(tenant) {
+      try {
+        const v = (await get("/internal/screen/zones", tenant)) as {
+          zones?: { key: string; name: string }[];
+        } | null;
+        return v?.zones ?? [];
       } catch {
         return [];
       }

@@ -1,6 +1,6 @@
 /**
  * The preset picker, pure (mockup 21; #602): what triggers each preset in a few words, its rounds
- * and sound, its status ("next: …", "idle: no matching item in the run of show", "pick an item",
+ * and sound, its status ("next: …", "Waits for a matching item in the run of show", "pick an item",
  * the rule it replaces), turning one on or off (a preset not yet copied is copied; Champion
  * replay follows Champion) and duplicate to edit.
  */
@@ -16,6 +16,7 @@ import {
   triggerShort,
 } from "../src/story/picker.js";
 import { roundsText, triggerText } from "../src/story/describe.js";
+import { triggerChip } from "../src/story/builder-overview.js";
 import { PRESETS, presetOf } from "../src/story/presets.js";
 
 const preset = (key: string): Story => JSON.parse(JSON.stringify(presetOf(key))) as Story;
@@ -68,39 +69,57 @@ describe("the picker's words", () => {
     // The builder's sentences for a clock with no time yet and one round at T.
     expect(preset("premiere").triggers.map(triggerText).at(-1)).toBe("Once, at a time not set yet");
     expect(roundsText(preset("premiere"))).toMatch(/^At T · 1 rounds/);
+    // #638 (P14): events in words, as an item trigger reads (P11).
+    expect(preset("match_called").triggers.map(triggerText)[0]).toBe("When a match is called");
+    expect(preset("match_called").triggers.map(triggerChip)[0]).toBe("A match is called");
+    expect(roundsText(preset("match_called"))).toContain("until a match starts");
+    expect(roundsText(preset("match_called"))).not.toMatch(/tournament\./);
   });
 });
 
 describe("a preset's status", () => {
   it("names the next matching item, or says it is idle", () => {
-    expect(statusOf(preset("meal_served"), at([DINNER]))).toContain("next: Sat 19:00 Dinner");
+    expect(statusOf(preset("meal_served"), at([DINNER]))).toContain("Next: Sat 19:00, Dinner");
     expect(statusOf(preset("meal_served"), at())).toContain(
-      "idle: no matching item in the run of show",
+      "Waits for a matching item in the run of show",
     );
     const cancelled = { ...DINNER, status: "cancelled" };
     expect(statusOf(preset("meal_served"), at([cancelled]))).toContain(
-      "idle: no matching item in the run of show",
+      "Waits for a matching item in the run of show",
     );
-    expect(statusOf(preset("closing_time"), at())).toContain("next: Sun 18:00");
+    expect(statusOf(preset("closing_time"), at())).toContain("Next: Sun 18:00");
   });
 
   it("asks for an item or a time a preset needs, and says when it waits for an event not sent yet", () => {
-    expect(statusOf(preset("prize_draw"), at([DINNER]))).toContain("pick an item");
-    expect(statusOf(preset("premiere"), at())).toContain("clock once: set its time");
-    expect(statusOf(preset("pizza_last_call"), at()).join(" ")).toMatch(
-      /pizza\.order\.closing: provisional, not sent yet/,
+    expect(statusOf(preset("prize_draw"), at([DINNER]))).toContain("Pick an item");
+    expect(statusOf(preset("premiere"), at())).toContain("Set its time");
+    expect(statusOf(preset("pizza_last_call"), at())).toContain(
+      "Waits for “A pizza order is about to close”, which the pizza module sends from step 5",
     );
-    expect(statusOf(preset("midnight"), at())).toContain("not in quiet");
+    expect(statusOf(preset("midnight"), at())).toContain("Not in a quiet scene");
   });
 
   it("names the rule a preset replaces, or would replace when on", () => {
-    expect(statusOf(preset("match_called"), at())).toContain("replaces rule match_called");
-    expect(statusOf(preset("hot_game"), at())).toContain("would replace rule hot_game");
+    expect(statusOf(preset("match_called"), at())).toContain(
+      "Replaces the built-in rule match called",
+    );
+    expect(statusOf(preset("hot_game"), at())).toContain(
+      "Would replace the built-in rule hot game",
+    );
     expect(statusOf(preset("pizza_arrived"), at())).toContain(
-      "takes the arrived order from rule pizza",
+      "Takes the arrived order from the built-in rule pizza",
     );
     const copy = { ...preset("hot_game"), key: "hot_game_copy", preset: null };
     expect(statusOf(copy, at()).join(" ")).not.toMatch(/rule/);
+  });
+
+  // #638 (P10): the notes read as words, never an event type or a status code.
+  it("writes no event type and no code in any preset's notes", () => {
+    for (const p of PRESETS)
+      for (const note of statusOf(p, at([DINNER]))) {
+        expect(note, p.key).not.toMatch(/[a-z]+\.[a-z_]+\.[a-z_]+/);
+        expect(note, p.key).not.toMatch(/^(idle|next):/);
+      }
   });
 });
 

@@ -74,6 +74,15 @@
     color: var(--canccu-color-background);
   }
 
+  /* An urgent line's label wears the warning colour, as its card does (mockup 06; V5, #638). */
+  .canccu-widget--ticker .canccu-widget__label:has(.canccu-widget__urgent),
+  .canccu-region[data-role="ticker"]
+    > .canccu-widget--ticker.canccu-is-claim
+    .canccu-widget__label:has(.canccu-widget__urgent) {
+    background: var(--canccu-color-status-degraded);
+    color: var(--canccu-color-background);
+  }
+
   /* A takeover hides every region but itself and the overlay; the overlay is a lower-third band. */
   .canccu-layout[data-takeover]
     > .canccu-region:not(.canccu-region--_full, .canccu-region--_overlay) {

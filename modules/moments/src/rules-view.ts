@@ -7,7 +7,9 @@
 import type { Html } from "@canccu/ui";
 import { html } from "@canccu/ui";
 import { CLASSES } from "./arbiter.js";
+import { cueTitle } from "./cues/names.js";
 import { PREFIX } from "./page-kit.js";
+import type { ZoneName } from "./page-kit.js";
 import type { RuleView } from "./rules.js";
 import { CLASS_NAMES } from "./views.js";
 
@@ -58,7 +60,9 @@ function chips(
   >`;
 }
 
-function ruleRow(r: RuleView, o: { zones: string[]; cues: string[]; canWrite: boolean }): Html {
+type RulesOptions = { zones: string[]; zoneName: ZoneName; cues: string[]; canWrite: boolean };
+
+function ruleRow(r: RuleView, o: RulesOptions): Html {
   const dis = o.canWrite ? "" : " disabled";
   const id = r.rule_id;
   const classes = CLASSES.filter((c) => c !== "emergency").map(
@@ -66,7 +70,10 @@ function ruleRow(r: RuleView, o: { zones: string[]; cues: string[]; canWrite: bo
       html`<option value="${c}" ${c === r.class ? " selected" : ""}>${CLASS_NAMES[c]}</option>`,
   );
   // A zone the rule names that no screen reported yet stays ticked, so a save keeps it.
-  const zones = [...new Set([...o.zones, ...r.zones])].map((z): [string, string] => [z, z]);
+  const zones = [...new Set([...o.zones, ...r.zones])].map((z): [string, string] => [
+    z,
+    o.zoneName(z),
+  ]);
   const cues = [...new Set([...o.cues, ...(r.cue === null ? [] : [r.cue])])];
   const max = Math.max(SECONDS.max, Math.ceil(r.ttl_seconds / SECONDS.step) * SECONDS.step);
   return html`<form class="moments-rule" method="post" action="${PREFIX}rules/${id}">
@@ -116,7 +123,7 @@ function ruleRow(r: RuleView, o: { zones: string[]; cues: string[]; canWrite: bo
       >Cue
       <select class="canccu-input" name="cue" ${dis}>
         <option value="">No cue</option>
-        ${cues.map((c) => html`<option value="${c}" ${c === r.cue ? " selected" : ""}>${c}</option>`)}
+        ${cues.map((c) => html`<option value="${c}" ${c === r.cue ? " selected" : ""}>${cueTitle(c)}</option>`)}
       </select></label
     >
     <fieldset class="moments-fieldset moments-rule__regions">
@@ -133,10 +140,7 @@ function ruleRow(r: RuleView, o: { zones: string[]; cues: string[]; canWrite: bo
   </form>`;
 }
 
-export function rulesView(
-  rules: RuleView[],
-  o: { zones: string[]; cues: string[]; canWrite: boolean },
-): Html {
+export function rulesView(rules: RuleView[], o: RulesOptions): Html {
   return html`<section class="canccu-card moments-rules">
     <h2 class="canccu-card__title">Built-in rules</h2>
     <p class="canccu-small canccu-muted">

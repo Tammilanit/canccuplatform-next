@@ -5,6 +5,7 @@
  * before saving. Pure.
  */
 import { checkStory } from "./check.js";
+import { eventWords } from "./words.js";
 import { fillsOf, isSting, isVideo, lastRoundKnown, roundCount } from "./model.js";
 import type { Story, Trigger } from "./model.js";
 import { RUN_SOUNDS, ROUND_SOUNDS } from "./round.js";
@@ -23,7 +24,7 @@ export function triggerText(t: Trigger): string {
     case "item":
       return `${t.item_id !== null ? `The item ${t.item_id}` : `A run-of-show item of kind ${t.kinds.join(" or ")}`} · its ${t.anchor} · follows delays`;
     case "domain":
-      return `When ${t.type} arrives${t.final_only ? " for a final" : ""}`;
+      return `When ${eventWords(t.type)}${t.final_only ? " in a final" : ""}`;
     case "clock":
       if (t.mode === "every")
         return `Every ${String(t.every_minutes)} min from ${t.from ?? ""} to ${t.until ?? ""}, each a run of its own`;
@@ -55,7 +56,7 @@ export function roundsText(st: Story): string {
     e.until_clock === null ? null : `until ${e.until_clock}`,
     e.until_event === null
       ? null
-      : `until ${e.until_event.kind === "domain" ? e.until_event.type : e.until_event.kind.replace(/_/g, " ")}`,
+      : `until ${e.until_event.kind === "domain" ? eventWords(e.until_event.type) : e.until_event.kind.replace(/_/g, " ")}`,
     e.crew ? "or the crew's Stop loop" : null,
   ].filter((x) => x !== null);
   const finale =

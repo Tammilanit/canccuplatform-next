@@ -5,6 +5,7 @@ import { emptyState, html, notice } from "@canccu/ui";
 import type { Class } from "./arbiter.js";
 import type { HistoryFilter, HistoryRow } from "./history.js";
 import { PREFIX } from "./page-kit.js";
+import type { ZoneName } from "./page-kit.js";
 import type { RuleView } from "./rules.js";
 import { rulesView } from "./rules-view.js";
 import { CLASS_NAMES } from "./views.js";
@@ -14,6 +15,7 @@ export function prioritiesView(o: {
   order: readonly Class[];
   draft: boolean;
   zones: string[];
+  zoneName: ZoneName;
   own: string[];
   revision: number;
   /** `auto`: the script draws it at once (a moved order's Preview reloads with the draft). */
@@ -75,7 +77,10 @@ export function prioritiesView(o: {
   });
   const scopes = [
     ["", "Event order"],
-    ...o.zones.map((z) => [z, o.own.includes(z) ? `${z} · own order` : `${z} · event order`]),
+    ...o.zones.map((z) => [
+      z,
+      `${o.zoneName(z)} · ${o.own.includes(z) ? "own order" : "event order"}`,
+    ]),
   ];
   const save = o.canWrite
     ? html`<form method="post" action="${PREFIX}priorities" class="canccu-cluster">
@@ -101,14 +106,14 @@ export function prioritiesView(o: {
     o.preview === null
       ? ""
       : html`<section class="canccu-card moments-preview">
-          <h2 class="canccu-card__title">Preview: what ${o.preview.zone} would show</h2>
+          <h2 class="canccu-card__title">Preview: what ${o.zoneName(o.preview.zone)} would show</h2>
           <p class="canccu-small canccu-muted">
             With what is live now, ranked by the order on this page.
           </p>
           <div class="moments-preview__frame">
             <iframe
               src="/screen/zones/${encodeURIComponent(o.preview.zone)}"
-              title="Preview of ${o.preview.zone}"
+              title="Preview of ${o.zoneName(o.preview.zone)}"
               data-preview
               data-zone="${o.preview.zone}"
               data-ranks="${JSON.stringify(o.preview.ranks)}"
@@ -136,7 +141,12 @@ export function prioritiesView(o: {
       </section>
       ${preview}
     </div>
-    ${rulesView(o.rules, { zones: o.zones, cues: o.cues, canWrite: o.canWrite })}`;
+    ${rulesView(o.rules, {
+      zones: o.zones,
+      zoneName: o.zoneName,
+      cues: o.cues,
+      canWrite: o.canWrite,
+    })}`;
 }
 
 const ORIGINS = ["rule", "crew", "emergency", "module"];
@@ -146,6 +156,7 @@ const REGIONS = ["full", "hero", "rail", "venue_rail", "ticker", "overlay"];
 export function historyView(o: {
   rows: HistoryRow[];
   zones: string[];
+  zoneName: ZoneName;
   filter: HistoryFilter;
   timeZone: string;
   more: number | null;
@@ -153,12 +164,17 @@ export function historyView(o: {
   const query = new URLSearchParams(
     Object.entries(o.filter).filter(([, v]) => v !== undefined) as [string, string][],
   ).toString();
-  const select = (name: keyof HistoryFilter, label: string, values: string[]) =>
+  const select = (
+    name: keyof HistoryFilter,
+    label: string,
+    values: string[],
+    words: (v: string) => string = (v) => v,
+  ) =>
     html`<div class="canccu-field">
       <label class="canccu-field__label" for="f-${name}">${label}</label
       ><select class="canccu-input" id="f-${name}" name="${name}">
         <option value="">All</option>
-        ${values.map((v) => html`<option value="${v}" ${o.filter[name] === v ? " selected" : ""}>${v}</option>`)}
+        ${values.map((v) => html`<option value="${v}" ${o.filter[name] === v ? " selected" : ""}>${words(v)}</option>`)}
       </select>
     </div>`;
   const time = (iso: string) =>
@@ -193,7 +209,9 @@ export function historyView(o: {
                 (r) =>
                   html`<tr>
                     <td class="canccu-num" data-label="Time">${time(r.at)}</td>
-                    <td data-label="Zone">${r.zone_key ?? "all"}</td>
+                    <td data-label="Zone">
+                      ${r.zone_key === null ? "all" : o.zoneName(r.zone_key)}
+                    </td>
                     <td data-label="Moment">
                       <b>${r.title}</b><br /><span class="canccu-small canccu-muted"
                         >${r.action}</span
@@ -209,7 +227,7 @@ export function historyView(o: {
           </table>
         </div>`;
   return html`<form class="moments-filters" method="get" action="${PREFIX}history">
-      ${select("zone", "Zone", o.zones)}${select("region", "Region", REGIONS)}${select("origin", "Source", ORIGINS)}${select("action", "Outcome", ACTIONS)}
+      ${select("zone", "Zone", o.zones, o.zoneName)}${select("region", "Region", REGIONS)}${select("origin", "Source", ORIGINS)}${select("action", "Outcome", ACTIONS)}
       <div class="canccu-cluster">
         <button class="canccu-button canccu-button--secondary" type="submit">Filter</button
         ><a

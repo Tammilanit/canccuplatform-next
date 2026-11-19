@@ -106,12 +106,12 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       "Champion replay",
       "item meal · start",
       "every 5 min · 3 rounds · until it ends",
-      "idle: no matching item in the run of show",
-      "next: Thu 19:00 Demo Game Cup final",
-      "replaces rule match_called",
-      "would replace rule hot_game",
-      "takes the arrived order from rule pizza",
-      "pick an item",
+      "Waits for a matching item in the run of show",
+      "Next: Thu 19:00, Demo Game Cup final",
+      "Replaces the built-in rule match called",
+      "Would replace the built-in rule hot game",
+      "Takes the arrived order from the built-in rule pizza",
+      "Pick an item",
       "Reset all to default",
       "Duplicate",
       "New storyboard",
@@ -280,7 +280,7 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       storeAgenda(c, { agenda_version: 2, items: [past, doors, awards, ITEM] }),
     );
     const page = (await w.call("crew", "GET", "/on-air")).body;
-    const fire = page.slice(page.indexOf('action="/moments/storyboards/starting_soon/fire"'));
+    const fire = page.slice(page.indexOf('name="item_id"'));
     const select = fire.slice(0, fire.indexOf("</select>"));
     expect(select).not.toContain("Opening match");
     expect(select).not.toContain("Doors open");
@@ -299,7 +299,7 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
 
   it("fires from On air with its item, then stops the loop and skips another to its finale", async () => {
     const onAir = await w.call("crew", "GET", "/on-air");
-    expect(onAir.body).toContain("Fire Starting soon");
+    expect(onAir.body).toContain('formaction="/moments/storyboards/starting_soon/fire"');
     expect(onAir.body).toContain("Demo Game Cup final · 19:00");
     const fired = await w.call(
       "crew",
@@ -308,7 +308,9 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       { idempotency_key: "k-fire-1", item_id: "it_final", back: "on-air" },
       form,
     );
-    expect(fired.headers.location).toContain("done=Fired");
+    expect(decodeURIComponent(String(fired.headers.location))).toContain(
+      "done=Starting soon starts at 18:45, at T−15.",
+    );
     const live = await w.call("crew", "GET", "/on-air");
     const id = /storyboards\/runs\/([^/]+)\/stop/.exec(live.body)?.[1] ?? "";
     expect(live.body).toContain("Skip to finale");
@@ -321,6 +323,18 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     );
     expect(stop.headers.location).toContain("done=Loop%20stopped");
     expect((await w.call("crew", "GET", "/on-air")).body).toContain("No loop is running.");
+  });
+
+  // #638 (P14): the builder's triggers, Until and cue pickers in words, not ids.
+  it("words the builder's triggers, Until and cues, not their ids", async () => {
+    const b = (await w.call("admin", "GET", "/storyboards?edit=match_called")).body;
+    expect(b).toContain("A match is called");
+    expect(b).toMatch(
+      /<option value="domain:tournament\.match\.started"\s*selected>a match starts<\/option>/,
+    );
+    expect(b).not.toMatch(/>\s*tournament\.match\.(called|started)\s*</);
+    expect(b).toContain(">Urgent announcement</option>");
+    expect(b).not.toMatch(/>announce\.urgent<\/option>/);
   });
 
   it("opens the sound desk's new cue with the story's cue name filled in", async () => {

@@ -14,6 +14,7 @@ import { roundsShort, soundShort, statusOf, triggerShort } from "./picker.js";
 import type { PickerCtx } from "./picker.js";
 import { PRESETS, PRESET_INFO } from "./presets.js";
 import type { PresetGroup } from "./presets.js";
+import type { Timing } from "./timing.js";
 import { crewStories, flash } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
@@ -86,6 +87,7 @@ export function pickerView(o: {
   items: ItemChoice[];
   now: number;
   ctx: PickerCtx;
+  settings: Timing;
   canWrite: boolean;
   canTake: boolean;
   revision: number;
@@ -127,7 +129,7 @@ export function pickerView(o: {
         ${own.length === 0 ? "" : section("Your storyboards", "The event's own stories and copies.", own)}
       </div>
       <div class="moments-stories__side">
-        ${crewStories({ stories: o.stories, runs: o.runs, items: o.items, now: o.now, canTake: o.canTake, back: "storyboards" })}
+        ${crewStories({ stories: o.stories, runs: o.runs, items: o.items, now: o.now, canTake: o.canTake, back: "storyboards", timeZone: o.ctx.event.time_zone, settings: o.settings })}
       </div>
     </div>`;
 }

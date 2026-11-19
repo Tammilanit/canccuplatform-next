@@ -5,6 +5,7 @@
 import type { Html } from "@canccu/ui";
 import { html, notice } from "@canccu/ui";
 import { PREFIX, formKey } from "./page-kit.js";
+import type { ZoneName } from "./page-kit.js";
 import { conditionText } from "./scene-eval.js";
 import type { DayBands } from "./scene-eval.js";
 import { HERO_FEATURES, MOODS, MOTIONS, PRESETS, crewMinutes } from "./scenes.js";
@@ -82,6 +83,7 @@ export function onAirScenes(
   zones: readonly ZoneSceneView[],
   scenes: readonly Scene[],
   timeZone: string,
+  zoneName: ZoneName,
 ): Html {
   if (zones.length === 0) return html``;
   const name = (key: string | null) =>
@@ -90,7 +92,7 @@ export function onAirScenes(
     ${zones.map(
       (z) =>
         html`<li>
-          <span class="canccu-badge canccu-badge--plain">${z.zone_key}</span>
+          <span class="canccu-badge canccu-badge--plain">${zoneName(z.zone_key)}</span>
           <strong>Scene: ${name(z.scene_key)}</strong>
           <span class="canccu-small canccu-muted"
             >since ${clock(z.since, timeZone)} · ${z.why}</span
@@ -348,6 +350,7 @@ export function scenesPageView(o: {
   canWrite: boolean;
   canTake: boolean;
   timeZone: string;
+  zoneName: ZoneName;
   done?: string | undefined;
   error?: string | undefined;
 }): Html {
@@ -358,7 +361,7 @@ export function scenesPageView(o: {
       : "";
   const side = html`<section class="canccu-card moments-crew">
     <h2 class="canccu-card__title">Right now</h2>
-    ${onAirScenes(o.now, o.scenes, o.timeZone)}
+    ${onAirScenes(o.now, o.scenes, o.timeZone, o.zoneName)}
     ${o.canTake ? crewButtons(o.scenes, o.crew, "scenes") : ""}
     ${
       o.canWrite
@@ -372,7 +375,7 @@ export function scenesPageView(o: {
     }
   </section>`;
   const zonePicker = html`<nav class="moments-scopes" aria-label="Zone of the chart">
-    ${o.zones.map((z) => html`<a class="canccu-badge${z === o.chartZone ? " canccu-badge--primary" : " canccu-badge--plain"}" href="${PREFIX}scenes?zone=${encodeURIComponent(z)}">${z}</a>`)}
+    ${o.zones.map((z) => html`<a class="canccu-badge${z === o.chartZone ? " canccu-badge--primary" : " canccu-badge--plain"}" href="${PREFIX}scenes?zone=${encodeURIComponent(z)}">${o.zoneName(z)}</a>`)}
   </nav>`;
   return html`${flash}
     <div class="moments-onair">

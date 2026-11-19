@@ -4,6 +4,7 @@ import { html, notice } from "@canccu/ui";
 import type { Class } from "./arbiter.js";
 import type { ScreenImage } from "./cues/screen.js";
 import { PREFIX, formKey } from "./page-kit.js";
+import type { ZoneName } from "./page-kit.js";
 
 export const CLASS_NAMES: Record<Class, string> = {
   emergency: "Emergency",
@@ -26,6 +27,7 @@ export interface Placement {
 export interface MomentView {
   id: string;
   class: Class;
+  /** Orders the list only: the crew never sees it (the PO: rank numbers mean nothing; #638). */
   rank: number;
   template: string;
   title: string;
@@ -81,7 +83,6 @@ function momentRow(m: MomentView, zone: string, now: Date, canAct: boolean): Htm
             >`
           : ""
       }
-      <span class="canccu-small canccu-muted">rank ${m.rank}</span>
       ${STATES[state] === undefined ? "" : html`<span class="canccu-badge canccu-badge--late">${STATES[state]}</span>`}
     </div>
     <p class="moments-item__title">${m.title}</p>
@@ -108,9 +109,15 @@ function actionForm(action: "end" | "extend", id: string, zone: string, label: s
   </form>`;
 }
 
+/**
+ * On air (docs/design/moments-on-air.svg, #638): one grid whose two rows end level, the zones on
+ * two thirds of the width and Crew actions, Storyboards and Scenes as compact cards. The areas
+ * come in the phone's order (crew actions first), and the desktop grid places them.
+ */
 export function onAirView(o: {
   moments: MomentView[];
   zones: string[];
+  zoneName: ZoneName;
   now: Date;
   canTake: boolean;
   canAnnounce: boolean;
@@ -134,8 +141,21 @@ export function onAirView(o: {
     const here = o.moments.filter(
       (m) => (m.zones.length === 0 || m.zones.includes(zone)) && !m.left.includes(zone),
     );
+    const placed = here.filter((m) =>
+      m.placements.some((p) => p.zone_key === zone && p.state === "placed"),
+    );
+    const summary =
+      here.length === 0
+        ? ""
+        : [
+            placed.length === 0 ? null : `${String(placed.length)} on air`,
+            here.length === placed.length ? null : `${String(here.length - placed.length)} waiting`,
+          ]
+            .filter((x) => x !== null)
+            .join(" · ");
     return html`<section class="canccu-card moments-zone">
-      <h2 class="canccu-card__title">${zone === "—" ? "No zones yet" : zone}</h2>
+      <h2 class="canccu-card__title">${zone === "—" ? "No zones yet" : o.zoneName(zone)}</h2>
+      ${summary === "" ? "" : html`<p class="canccu-small canccu-muted">${summary}</p>`}
       ${
         here.length === 0
           ? html`<p class="canccu-muted canccu-small">
@@ -150,20 +170,23 @@ export function onAirView(o: {
   const crew =
     o.archived || !(o.canTake || o.canAnnounce || o.canEmergency)
       ? ""
-      : html`<section class="canccu-card moments-crew">
-          <h2 class="canccu-card__title">Crew actions</h2>
-          <div class="moments-crew__buttons">
-            ${o.canAnnounce ? html`<a class="canccu-button canccu-button--primary canccu-button--block" href="${PREFIX}announce">Announce…</a>` : ""}
-            ${o.canTake ? html`<a class="canccu-button canccu-button--secondary canccu-button--block" href="${PREFIX}spotlight">Spotlight…</a>` : ""}
-          </div>
-          ${o.canEmergency ? emergencyBox(emergency) : ""}
-        </section>`;
+      : html`<div class="moments-onair__crew">
+          <section class="canccu-card moments-crew">
+            <h2 class="canccu-card__title">Crew actions</h2>
+            <div class="moments-crew__buttons">
+              ${o.canAnnounce ? html`<a class="canccu-button canccu-button--primary canccu-button--block" href="${PREFIX}announce">Announce…</a>` : ""}
+              ${o.canTake ? html`<a class="canccu-button canccu-button--secondary canccu-button--block" href="${PREFIX}spotlight">Spotlight…</a>` : ""}
+            </div>
+            ${o.canEmergency ? emergencyBox(emergency) : ""}
+          </section>
+        </div>`;
   return html`${flash}
-    <div class="moments-onair">
-      <div class="moments-zones">${columns}</div>
-      <div class="moments-side">
-        ${crew} ${o.stories ?? ""}
-        <section class="canccu-card moments-crew">
+    <div class="moments-board">
+      ${crew}
+      ${o.stories === undefined ? "" : html`<div class="moments-onair__stories">${o.stories}</div>`}
+      <div class="moments-onair__zones moments-zones">${columns}</div>
+      <div class="moments-onair__scenes">
+        <section class="canccu-card">
           <h2 class="canccu-card__title">Scenes</h2>
           ${o.scenes}
         </section>
@@ -240,6 +263,7 @@ export function confirmEmergency(key: string): Html {
 
 export function spotlightView(o: {
   zones: string[];
+  zoneName: ZoneName;
   sessions: { id: string; name: string }[];
   /** The event's images (Screen's), picked by thumbnail (mockup 04). */
   images: ScreenImage[];
@@ -249,7 +273,7 @@ export function spotlightView(o: {
     >${o.zones.map(
       (z) =>
         html`<label class="canccu-chip"
-          ><input type="checkbox" name="zone" value="${z}" />${z}</label
+          ><input type="checkbox" name="zone" value="${z}" />${o.zoneName(z)}</label
         >`,
     )}</span
   >`;

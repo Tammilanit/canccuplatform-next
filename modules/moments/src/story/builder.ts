@@ -20,6 +20,7 @@ import { roundsCard } from "./builder-rounds.js";
 import { checkCount, sideColumn } from "./builder-side.js";
 import { roundColumns } from "./builder-steps.js";
 import { flash } from "./views.js";
+import type { ZoneName } from "../page-kit.js";
 
 /** A step's view-model with its texts filled by the sample; a countdown's target stays as set. */
 function sampled(v: unknown, sample: (t: string) => string): unknown {
@@ -33,7 +34,9 @@ function sampled(v: unknown, sample: (t: string) => string): unknown {
 /** The page head's line under the title and its actions (sheet 05, 1): Preset, on or off, then
  * Test-fire and Save, which stay in reach while the page scrolls; on a phone the pending row has
  * them. The test-fire is a form of its own; Save and the switch name the builder's form. */
-export function builderHead(o: Pick<BuilderView, "story" | "zones" | "canWrite" | "canTake">): {
+export function builderHead(
+  o: Pick<BuilderView, "story" | "zones" | "zoneName" | "canWrite" | "canTake">,
+): {
   description: Html;
   actions: Html;
 } {
@@ -44,7 +47,7 @@ export function builderHead(o: Pick<BuilderView, "story" | "zones" | "canWrite" 
       ? html`<form id="story-test" method="post" action="${PREFIX}storyboards/${st.key}/test">
           ${formKey()}
           <button class="canccu-button canccu-button--secondary" type="submit">
-            ▶ Test-fire on <span data-zone-name>${zone}</span>
+            ▶ Test-fire on <span data-zone-name>${o.zoneName(zone)}</span>
           </button>
         </form>`
       : "";
@@ -81,6 +84,7 @@ export interface BuilderView {
   d: Described;
   settings: StorySettings;
   zones: string[];
+  zoneName: ZoneName;
   cues: string[];
   revision: number;
   canWrite: boolean;
@@ -143,10 +147,10 @@ export function builderView(o: BuilderView): Html {
         >
         <fieldset class="moments-builder__part" ${o.canWrite ? "" : "disabled"}>
           <legend class="moments-visually-hidden">What plays it and when</legend>
-          ${overviewCard(st, o.zones)} ${roundsCard(st, d, o.cues)}
+          ${overviewCard(st, o.zones, o.zoneName)} ${roundsCard(st, d, o.cues)}
         </fieldset>
         ${roundColumns({ story: st, d, cues: o.cues, step, canWrite: o.canWrite, placeholders: sharedPlaceholders(st), sample: o.sample })}
-        ${sideColumn({ d, zones: o.zones, settings: o.settings, airtime: o.airtime, canTake: o.canTake, fullScreen: st.full_screen, steps })}
+        ${sideColumn({ d, zones: o.zones, zoneName: o.zoneName, settings: o.settings, airtime: o.airtime, canTake: o.canTake, fullScreen: st.full_screen, steps })}
       </form>
       ${
         o.canWrite || o.canTake
