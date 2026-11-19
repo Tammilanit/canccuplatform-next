@@ -173,15 +173,43 @@ run("the cue editor", () => {
     expect(r.headers.location).toMatch(/^\/moments\/cues\/edit\/tournament.start\?error=/);
   });
 
-  it("turns a cue on and off from its row", async () => {
-    const r = await w.call("admin", "POST", "/cues/edit/poll.open/toggle", {}, form);
+  it("turns a cue on and off from its row, as the row asked", async () => {
+    const turn = async (enabled: boolean) => {
+      const c = (await cue("poll.open")) as { revision: number };
+      return w.call(
+        "admin",
+        "POST",
+        "/cues/edit/poll.open/toggle",
+        enabled
+          ? { enabled: "on", revision: String(c.revision) }
+          : { revision: String(c.revision) },
+        form,
+      );
+    };
+    const r = await turn(true);
     expect(r.headers.location).toMatch(/^\/moments\/cues\?done=/);
     expect(await cue("poll.open")).toMatchObject({ enabled: true, sounds: ["pack.happy-beep"] });
-    await w.call("admin", "POST", "/cues/edit/poll.open/toggle", {}, form);
+    await turn(false);
     expect(await cue("poll.open")).toMatchObject({ enabled: false });
     expect(
       (await w.call("reader", "POST", "/cues/edit/poll.open/toggle", {}, form)).statusCode,
     ).toBe(403);
+  });
+
+  it("refuses a row toggle from a stale page instead of flipping the cue back", async () => {
+    const c = (await cue("poll.open")) as { revision: number; enabled: boolean };
+    const post = (revision: number) =>
+      w.call(
+        "admin",
+        "POST",
+        "/cues/edit/poll.open/toggle",
+        { enabled: "on", revision: String(revision) },
+        form,
+      );
+    expect((await post(c.revision)).headers.location).toMatch(/done=/);
+    const again = await post(c.revision);
+    expect(again.headers.location).toMatch(/error=/);
+    expect(await cue("poll.open")).toMatchObject({ enabled: true });
   });
 
   it("tries the form's first sound on a zone, and says Here needs the script", async () => {

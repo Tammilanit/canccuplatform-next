@@ -35,10 +35,10 @@ function cueBody(f: Form): Record<string, unknown> {
   };
 }
 
-/** The cue as the API takes it back: everything it read, the switch turned. */
-const turned = (c: CueView): Record<string, unknown> => ({
+/** The cue as the API takes it back: everything it read, with the state and revision the page posted. */
+const turned = (c: CueView, enabled: boolean, revision: number): Record<string, unknown> => ({
   category: c.category,
-  enabled: !c.enabled,
+  enabled,
   level: c.level,
   cooldown_seconds: c.cooldown_seconds,
   catch_up_seconds: c.catch_up_seconds,
@@ -48,7 +48,7 @@ const turned = (c: CueView): Record<string, unknown> => ({
   voice_line: c.voice_line,
   effects: c.effects,
   hold_seconds: c.hold_seconds,
-  revision: c.revision,
+  revision,
 });
 
 export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
@@ -139,10 +139,20 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     const name = request.params.name;
     const cue = await deps.db.tenant((c) => loadCue(c, name));
     if (cue === null) return back(reply, "cues", "error", "No such cue.");
+    const turn = one(request.body.turn);
+    const want = turn === "" ? on(request.body.enabled) : turn === "on";
     return answer(
       reply,
-      viaApi(pages, request, "PUT", `/api/moments/cues/${encodeURIComponent(name)}`, turned(cue)),
-      `${editorTitle(name)} is ${cue.enabled ? "off" : "on"}.`,
+      viaApi(
+        pages,
+        request,
+        "PUT",
+        `/api/moments/cues/${encodeURIComponent(name)}`,
+        // The state the person asked for and the revision their page showed, so a stale row or a
+        // repeated submit is a version_conflict, not a flip the other way. "turn" is the no-script button.
+        turned(cue, want, int(request.body.revision)),
+      ),
+      `${editorTitle(name)} is ${want ? "on" : "off"}.`,
       "cues",
     );
   });

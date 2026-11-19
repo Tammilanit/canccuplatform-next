@@ -74,8 +74,9 @@ function row(c: CueView, o: { library: LibraryView[]; canWrite: boolean }): Html
     >
     <span class="moments-cue__again canccu-small">${seconds(c.cooldown_seconds, "none")}</span>
     <form class="moments-cue__on" method="post" action="${PREFIX}cues/edit/${c.name}/toggle">
+      <input type="hidden" name="revision" value="${String(c.revision)}" />
       ${toggle({ name: "enabled", on: c.enabled, label: `${cueTitle(c.name)} on`, enabled: o.canWrite, auto: true })}
-      ${o.canWrite ? html`<noscript><button class="canccu-button canccu-button--ghost canccu-button--sm" type="submit">${c.enabled ? "Turn off" : "Turn on"}</button></noscript>` : ""}
+      ${o.canWrite ? html`<noscript><button class="canccu-button canccu-button--ghost canccu-button--sm" type="submit" name="turn" value="${c.enabled ? "off" : "on"}">${c.enabled ? "Turn off" : "Turn on"}</button></noscript>` : ""}
     </form>
   </li>`;
 }

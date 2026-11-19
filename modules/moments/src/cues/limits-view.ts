@@ -63,7 +63,7 @@ function categoryRow(c: Category, s: SoundSettings, canWrite: boolean): Html {
       ><span class="moments-tag moments-tag--${c}">${name}</span></span
     >
     <span class="moments-category__level"
-      >${slider({ id: `level-${c}`, name: `${c}.level`, label: `${name} level`, min: 0, max: 100, step: 5, value: s.categories[c].level, format: "pct", enabled: canWrite, hideLabel: true })}</span
+      >${slider({ id: `level-${c}`, name: `${c}.level`, label: `${name} level`, min: 0, max: 100, value: s.categories[c].level, format: "pct", enabled: canWrite, hideLabel: true })}</span
     >
     ${fixed(`${name} when another plays`, ["Interrupts", "Waits"], c === "urgent")}
     ${fixed(`${name} at calm`, ["Plays", "Silent"], CALM.has(c))}

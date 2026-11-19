@@ -263,6 +263,34 @@ run("the sound desk", () => {
     expect(stale.headers.location).toMatch(/error=/);
   });
 
+  it("draws a level or volume nobody rounded to 5 as it is stored", async () => {
+    const saved = await w.call(
+      "admin",
+      "POST",
+      "/cues/settings",
+      {
+        enabled: "on",
+        volume: "72",
+        hourly_budget: "15",
+        per_minute: "3",
+        per_source_seconds: "10",
+        revision: "0",
+        "urgent.enabled": "on",
+        "urgent.level": "100",
+        "ambient.enabled": "on",
+        "ambient.level": "33",
+      },
+      form,
+    );
+    expect(saved.headers.location).toMatch(/done=/);
+    const limits = flat((await w.call("admin", "GET", "/cues/limits")).body);
+    expect(limits).toMatch(/type="range"[^>]*name="ambient.level"[^>]*value="33"/);
+    expect(limits).not.toMatch(/name="ambient.level"[^>]*step="5"/);
+    const strip = flat((await w.call("admin", "GET", "/cues")).body);
+    expect(strip).toMatch(/type="range"[^>]*name="volume"[^>]*value="72"/);
+    expect(strip).not.toMatch(/name="volume"[^>]*step="5"/);
+  });
+
   it("saves the limits and the categories", async () => {
     const r = await w.call(
       "admin",

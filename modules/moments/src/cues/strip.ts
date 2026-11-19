@@ -75,7 +75,7 @@ export function masterStrip(o: {
       >Sound
       ${toggle({ name: "enabled", on: s.enabled, label: "Sound on", enabled: o.canWrite, auto: true })}</label
     >
-    ${slider({ id: "master-volume", name: "volume", label: "Master", min: 0, max: 100, step: 5, value: s.volume, format: "pct", enabled: o.canWrite })}
+    ${slider({ id: "master-volume", name: "volume", label: "Master", min: 0, max: 100, value: s.volume, format: "pct", enabled: o.canWrite })}
     ${o.canWrite ? html`<noscript><button class="canccu-button canccu-button--secondary canccu-button--sm" type="submit">Set</button></noscript>` : ""}
   </form>`;
   const mute = muted
