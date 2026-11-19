@@ -41,6 +41,12 @@ const previewed = async (page) => {
   await page.waitForTimeout(1500);
 };
 
+/** The builder on a phone at one of its tabs (step 4 polish sheet 06). */
+const tab = (name) => async (page) => {
+  await page.getByRole("tab", { name }).click();
+  await page.waitForTimeout(800);
+};
+
 export const STORY_PAGES = [
   ["stories-list", "/moments/storyboards", DESK],
   ["stories-list-phone", "/moments/storyboards", PHONE, { touch: true }],
@@ -55,6 +61,25 @@ export const STORY_PAGES = [
     "/moments/storyboards?edit=starting_soon",
     PHONE,
     { touch: true },
+  ],
+  [
+    "stories-builder-phone-round",
+    "/moments/storyboards?edit=starting_soon&step=1",
+    PHONE,
+    { touch: true, ready: tab("Round") },
+  ],
+  [
+    "stories-builder-phone-preview",
+    "/moments/storyboards?edit=starting_soon",
+    PHONE,
+    { touch: true, ready: tab("Preview") },
+  ],
+  // A loop: Doors open plays its round every 10 minutes (sheet 05, 3).
+  [
+    "stories-builder-loop",
+    "/moments/storyboards?edit=doors_open&step=1",
+    DESK,
+    { ready: previewed },
   ],
 ];
 

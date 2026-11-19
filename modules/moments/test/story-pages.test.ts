@@ -46,19 +46,51 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     const b = await w.call("admin", "GET", "/storyboards?edit=starting_soon");
     expect(b.statusCode).toBe(200);
     for (const text of [
-      "A run-of-show item of kind tournament or ceremony · its start · follows delays",
-      "Taken by hand",
-      "repeat ×2",
-      "floor 8 s",
-      "♪ tournament.pre",
-      "At −15, −5, −1 min of T · until item starts",
-      "finale It&#39;s on!",
-      "Sounds per run, per zone",
-      "Test-fire one round on",
-      "data-story-scrub",
+      // The header: Test-fire and Save stay in reach (sheet 05, 1).
+      "Test-fire on",
+      'form="story-save"',
+      // Triggers and conditions as chip rows, labels in one column (2).
+      "Plays when",
+      "A tournament or ceremony item starts",
+      "By hand, from On air",
+      "Add a trigger",
+      "Only if",
+      "Every zone",
+      "Quiet scene: calm and silent",
+      "Add a condition",
+      // The rounds on a timeline, one switch for set times or a loop (3).
+      "At set times",
+      "Every few minutes",
+      "−15 min",
+      "−1 min",
+      "Add a round",
+      "the item starts",
+      "the first and last round",
+      "Finale: It&#39;s on! · 8 s",
+      "moments-timeline",
+      // The round as a strip of steps, the repeat a bracket (4), the step's form beside it (5).
+      " · 4 steps",
+      "×2",
+      "1 · Sting",
+      "2 · Countdown",
+      "Step 1 · Sting",
+      "Remove step",
+      // Fields on a grid: seconds a slider, placeholders as chips, what they fill with (6).
+      'type="range"',
+      "{item.title}",
+      "Fills with: Demo Game Cup final",
       "+ New cue (story.starting_soon.1)",
       "/moments/cues/new?name=story.starting_soon.1",
-      "the first and last round",
+      // The live preview with scrub (7) and the checks before saving (8).
+      "data-story-scrub",
+      "Play round",
+      "Whole loop",
+      "Before you save",
+      "Airtime on the hero",
+      "Sounds per run, per zone",
+      // On a phone: three parts and the checks in one line (sheet 06).
+      "Overview",
+      "to look at",
     ])
       expect(b.body, text).toContain(text);
   });

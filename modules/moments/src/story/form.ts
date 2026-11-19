@@ -1,7 +1,9 @@
 /**
- * The builder's form as a story (mockup 18): plain fields per trigger and per step, so an
- * organiser edits a story without code; the API checks the result. Fields the form does not show
- * (a widget's other view-model fields) are kept from the story as it was.
+ * The builder's form as a story (mockup 18, step 4 polish sheet 05): plain fields per trigger and
+ * per step, so an organiser edits a story without code; the API checks the result. Fields the form
+ * does not show (a widget's other view-model fields) are kept from the story as it was. A step's
+ * fields keep the index it was drawn with; `order` (the strip as dragged) and `move` (a step's
+ * Move button) only reorder them.
  */
 import { DOMAIN_TYPES, EMPTY_CONDITIONS } from "./model.js";
 import type { Conditions, Story, StoryStep, Trigger, UntilEvent } from "./model.js";
@@ -12,9 +14,10 @@ export const one = (v: string | string[] | undefined): string =>
   (Array.isArray(v) ? (v[0] ?? "") : (v ?? "")).trim();
 const all = (v: string | string[] | undefined): string[] =>
   (Array.isArray(v) ? v : v === undefined ? [] : [v]).map((x) => x.trim()).filter(Boolean);
+/** Every value of a field, each split at commas: a list field, or one chip's field per entry. */
 const csv = (v: string | string[] | undefined): string[] =>
-  one(v)
-    .split(",")
+  all(v)
+    .flatMap((x) => x.split(","))
     .map((x) => x.trim())
     .filter(Boolean);
 const num = (v: string | string[] | undefined): number | null => {
@@ -159,7 +162,21 @@ function contentOf(
   }
 }
 
-function stepOf(f: Raw, i: number, before: StoryStep | undefined): StoryStep {
+/**
+ * The step a mark checkbox group names. Without script every ticked box is posted, so when
+ * the mark moved, two values arrive: the one that is not the step holding the mark now is new.
+ */
+function markOf(v: string | string[] | undefined, held: (i: number) => boolean): string {
+  const xs = all(v);
+  return xs.find((x) => !held(Number(x))) ?? xs[0] ?? "";
+}
+
+function stepOf(
+  f: Raw,
+  i: number,
+  before: StoryStep | undefined,
+  mark: { dot: string; message: string },
+): StoryStep {
   const p = (k: string) => one(f[`s${String(i)}_${k}`]);
   const template = or(p("template"), STEP_TEMPLATES, "title_card");
   const kept = before?.template === template ? before.content : {};
@@ -169,9 +186,40 @@ function stepOf(f: Raw, i: number, before: StoryStep | undefined): StoryStep {
     duration_seconds: num(f[`s${String(i)}_seconds`]) ?? 20,
     transition: or(p("transition"), ["cut", "fade", "rise", "slide", "flash"] as const, "fade"),
     cue: p("cue") || null,
-    on_the_dot: one(f.dot) === String(i),
-    message: one(f.message) === String(i),
+    on_the_dot: mark.dot === String(i),
+    message: mark.message === String(i),
   };
+}
+
+/** The indices `order` lists, when it lists each step once; else the steps as they were. */
+function orderOf(v: string, n: number): number[] {
+  const xs = v === "" ? [] : v.split(",").map(Number);
+  const whole = xs.length === n && [...xs].sort((a, b) => a - b).every((x, i) => x === i);
+  return whole ? xs : Array.from({ length: n }, (_, i) => i);
+}
+
+/** `move` is `<position>:<by>`, a position in the order after `order`; by is −1 or 1. */
+function moveOf(v: string): { at: number; by: number } | null {
+  const m = /^(\d+):(-?1)$/.exec(v);
+  return m === null ? null : { at: Number(m[1]), by: Number(m[2]) };
+}
+
+function arranged<T>(xs: T[], f: Raw): T[] {
+  const out = orderOf(one(f.order), xs.length).map((i) => xs[i] as T);
+  const m = moveOf(one(f.move));
+  const to = m === null ? -1 : m.at + m.by;
+  if (m !== null && m.at < out.length && to >= 0 && to < out.length)
+    [out[m.at], out[to]] = [out[to] as T, out[m.at] as T];
+  return out;
+}
+
+/** The step the builder opens after a save: an added one, a moved one, or the one it had open. */
+export function stepAfter(f: Raw, saved: Story): number {
+  const last = Math.max(0, saved.round.steps.length - 1);
+  if (one(f.add_step) === "yes") return last;
+  const m = moveOf(one(f.move));
+  const at = m === null ? Number(one(f.step)) : m.at + m.by;
+  return Number.isInteger(at) ? Math.max(0, Math.min(at, last)) : 0;
 }
 
 function untilOf(v: string): UntilEvent | null {
@@ -187,8 +235,16 @@ export function storyFromForm(f: Raw, before: Story): Story {
     .filter((x) => !x.drop)
     .map((x) => x.t);
   if (one(f.add_trigger) !== "") triggers.push(newTrigger(one(f.add_trigger)));
-  const steps = before.round.steps
-    .map((s, i) => ({ s: stepOf(f, i, s), drop: one(f[`s${String(i)}_remove`]) === "yes" }))
+  const steps0 = before.round.steps;
+  const mark = {
+    dot: markOf(f.dot, (i) => steps0[i]?.on_the_dot === true),
+    message: markOf(f.message, (i) => steps0[i]?.message === true),
+  };
+  const read = steps0.map((s, i) => ({
+    s: stepOf(f, i, s, mark),
+    drop: one(f[`s${String(i)}_remove`]) === "yes",
+  }));
+  const steps = arranged(read, f)
     .filter((x) => !x.drop)
     .map((x) => x.s);
   if (one(f.add_step) === "yes")

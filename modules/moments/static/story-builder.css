@@ -1,0 +1,177 @@
+/* The storyboard builder (step 4 polish sheets 05 and 06, #627). Colours and type are the theme's
+   tokens. From 1100 px (the shell's desktop width) the strip, the chosen step's form and the
+   preview's column sit side by side; under it the parts stack, and with the script they are three
+   tabs, Overview, Round and Preview, with Test-fire and Save in the pending row. */
+
+.moments-builder {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.moments-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.moments-mono {
+  font-family: var(--canccu-font-mono);
+  font-size: 0.875em;
+}
+.moments-warn {
+  color: var(--canccu-ink-degraded);
+}
+
+/* The page head's line: Preset and on or off; its actions: Test-fire and Save (sheet 05, 1). */
+.moments-builder__status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  color: var(--canccu-color-text);
+}
+.moments-builder__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.moments-builder__actions form {
+  margin: 0;
+}
+.moments-builder__overview .canccu-input[name="name"] {
+  max-width: 24rem;
+}
+.moments-builder button.moments-quiet {
+  padding: 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--canccu-color-text-muted);
+  font: inherit;
+  font-size: var(--canccu-text-sm);
+  cursor: pointer;
+}
+.moments-builder button.moments-quiet:hover {
+  color: var(--canccu-color-text);
+  text-decoration: underline;
+}
+
+/* The parts. Fieldsets lose their browser frame; a card keeps the kit's. */
+.moments-builder__grid {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.moments-builder__part {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+fieldset.canccu-card {
+  margin: 0;
+}
+.moments-builder__side {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+}
+.moments-builder__cardhead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+.moments-builder .canccu-card__title {
+  margin: 0;
+}
+.moments-builder button.canccu-danger-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* The phone's checks in one line (sheet 06, 1). */
+.moments-builder__checkline {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border: var(--canccu-border-width) solid
+    color-mix(in srgb, var(--canccu-color-status-ok) 50%, transparent);
+  border-radius: calc(var(--canccu-radius) + 2px);
+  background: color-mix(in srgb, var(--canccu-color-status-ok) 12%, transparent);
+  color: var(--canccu-ink-ok);
+  font-size: var(--canccu-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+.moments-builder__checkline--look {
+  border-color: color-mix(in srgb, var(--canccu-color-status-degraded) 50%, transparent);
+  background: color-mix(in srgb, var(--canccu-color-status-degraded) 12%, transparent);
+  color: var(--canccu-ink-degraded);
+}
+.moments-builder__checkline > :last-child {
+  margin-inline-start: auto;
+  font-size: 1.25rem;
+}
+
+/* Desktop: the strip, the step's form and the preview's column side by side (sheet 05). */
+@media (min-width: 1100px) {
+  .moments-builder__grid {
+    grid-template-columns: 11rem minmax(0, 1fr) minmax(17rem, 20rem);
+    align-items: start;
+  }
+  .moments-builder__part,
+  .moments-builder__grid > .canccu-notice {
+    grid-column: 1 / -1;
+  }
+  .moments-builder__tabs,
+  .moments-builder__checkline,
+  .moments-builder__pending {
+    display: none;
+  }
+  .moments-builder__strip {
+    padding-inline: 0.5rem;
+  }
+}
+
+/* Phone and tablet: the parts stack; with the script, one tab at a time (sheet 06). */
+@media (max-width: 1099.98px) {
+  .moments-builder__actions {
+    display: none;
+  }
+  .moments-builder__tabs:not([hidden]) {
+    display: flex;
+    gap: 1.5rem;
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .moments-builder__tab {
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--canccu-color-text-muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  .moments-builder__tab[aria-selected="true"] {
+    border-bottom-color: var(--canccu-color-primary);
+    color: var(--canccu-color-text);
+    font-weight: 600;
+  }
+  .moments-builder[data-show="overview"] [data-tab]:not([data-tab="overview"]),
+  .moments-builder[data-show="round"] [data-tab]:not([data-tab="round"]),
+  .moments-builder[data-show="preview"] [data-tab]:not([data-tab="preview"]) {
+    display: none;
+  }
+}
