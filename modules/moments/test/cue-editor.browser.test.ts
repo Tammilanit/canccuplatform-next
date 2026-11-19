@@ -25,7 +25,11 @@ const css = [
   file(new URL("../static/sound-desk-lists.css", import.meta.url)),
   file(new URL("../static/sound-desk-pages.css", import.meta.url)),
 ].join("\n");
-const script = file(new URL("../static/sound-desk.js", import.meta.url));
+// Both scripts, as the desk's pages load them: each must leave the other's parts alone.
+const script = [
+  file(new URL("../static/moments.js", import.meta.url)),
+  file(new URL("../static/sound-desk.js", import.meta.url)),
+].join("\n");
 const ORIGIN = "http://moments.test";
 const NOW = new Date("2026-11-17T21:32:00Z");
 
@@ -222,6 +226,25 @@ const fits = (page: Page) =>
     await page.waitForFunction(() =>
       /\(1:2\d left\)/.test(document.querySelector("[data-until]")?.textContent ?? ""),
     );
+  });
+
+  it("uploads a chosen file to Screen once, then links it", async () => {
+    const page = await open(desk("library"), 1280);
+    let uploads = 0;
+    await page.route(`${ORIGIN}/api/screen/assets`, (route) => {
+      uploads += 1;
+      return route.fulfill({ status: 201, contentType: "application/json", body: '{"id":"as_1"}' });
+    });
+    const linked = page.waitForRequest(
+      (r) => r.method() === "POST" && r.url().endsWith("/moments/cues/library"),
+    );
+    await page.locator("input[type=file]").setInputFiles({
+      name: "bell.ogg",
+      mimeType: "audio/ogg",
+      buffer: Buffer.from("OggS"),
+    });
+    expect((await linked).postData()).toContain("asset_id=as_1");
+    expect(uploads).toBe(1);
   });
 
   for (const width of [1280, 390])

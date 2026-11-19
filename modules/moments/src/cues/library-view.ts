@@ -52,7 +52,6 @@ export function libraryView(o: { library: LibraryView[]; canWrite: boolean }): H
         method="post"
         action="${PREFIX}cues/library"
         data-upload-sound
-        data-drop
       >
         <input type="hidden" name="asset_id" value="" />
         <label class="canccu-button canccu-button--secondary moments-drop__button"
@@ -61,7 +60,6 @@ export function libraryView(o: { library: LibraryView[]; canWrite: boolean }): H
             type="file"
             name="file"
             accept="audio/mpeg,audio/ogg,.mp3,.ogg"
-            data-upload-file
         /></label>
         <p class="canccu-small">
           Or drop MP3 or OGG files here.<br /><span class="canccu-muted"
