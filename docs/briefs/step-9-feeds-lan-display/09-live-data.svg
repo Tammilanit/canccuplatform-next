@@ -1,0 +1,242 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1210" width="1920" height="1210" font-family="system-ui, -apple-system, &#x27;Segoe UI&#x27;, Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 9 mockup 09: Screen studio, Live data</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="c1"><rect x="32" y="130" width="1280" height="1050" rx="10"/></clipPath><clipPath id="c2"><rect x="1420" y="150" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1920" height="1210" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">09 · Screen studio → Live data: what each feed does, and why a box shows nothing</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">New in step 9 (U5). Feed cards in the shared card grid (amendment 3: 3 × 304 px at 1280); related panels in a band below; on a phone, one column in the same order.</text>
+<text x="32" y="108" font-size="18" fill="#374151" font-weight="600" text-anchor="start">Use case: the organiser or crew checks the feeds before doors and when a box looks empty.</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="130" width="1280" height="1050" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="130" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="186" x2="1312" y2="186" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="144" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="163" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="148" y="164" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="244" y1="148" x2="244" y2="168" stroke="#343c66" stroke-width="1"/>
+<text x="257" y="163" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Sat 21 – Sun 22 Nov</text>
+<rect x="407" y="147" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="419" cy="158" r="3.5" fill="#3ee39a"/>
+<text x="427" y="162.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1266" y="165" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">19:52</text>
+<rect x="32" y="187" width="255" height="993" rx="0" fill="#0e1122"/>
+<line x1="287" y1="187" x2="287" y2="1180" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="216" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="251" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="262" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="58" y="293" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="304" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="58" y="335" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="346" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<rect x="58" y="377" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="388" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Food</text>
+<text x="56" y="432" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="44" y="454" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="454" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="467" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="478" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="58" y="509" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="520" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="56" y="564" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="58" y="599" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="610" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="58" y="641" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="652" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="58" y="683" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="694" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="58" y="725" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="736" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="328" y="226" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Screen studio</text>
+<text x="328" y="264" font-size="28" fill="#f3f5ff" font-weight="500" text-anchor="start">Live data</text>
+<rect x="1147.77" y="238" width="124.232" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1209.88" y="261.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Open Health</text>
+<rect x="903.73" y="238" width="232.038" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1019.75" y="261.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Preview with sample data</text>
+<rect x="328" y="302" width="944" height="52" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="344" y="316" width="69.2094" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="356" cy="328" r="3.5" fill="#3ee39a"/>
+<text x="365" y="332.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">6 live</text>
+<rect x="423.209" y="316" width="190.129" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="435.209" cy="328" r="3.5" fill="#ffc94d"/>
+<text x="444.209" y="332.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">2 waiting or collecting</text>
+<rect x="623.338" y="316" width="106.129" height="24" rx="12" fill="#22263d" stroke="#4a5075" stroke-width="1"/>
+<circle cx="635.338" cy="328" r="3.5" fill="#a9b1d6"/>
+<text x="644.338" y="332.5" font-size="12.5" fill="#c5cae3" font-weight="600" text-anchor="start">1 not used</text>
+<text x="1256" y="334" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end">Last event 2 s ago · pushed to 4 screens</text>
+<rect x="328" y="378" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="344" y="394" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="356" cy="406" r="3.5" fill="#3ee39a"/>
+<text x="365" y="410.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="344" y="444" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Presence counts</text>
+<text x="344" y="470" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">231 online · 64 in voice</text>
+<text x="344" y="491" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Last count 19:52:10, every 60 s</text>
+<text x="344" y="512" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">9 boxes on 3 zones</text>
+<text x="616" y="408" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Bot settings ›</text>
+<rect x="648" y="378" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="664" y="394" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="676" cy="406" r="3.5" fill="#3ee39a"/>
+<text x="685" y="410.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="664" y="444" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Who plays what</text>
+<text x="664" y="470" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">58 playing 9 games</text>
+<text x="664" y="491" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Names on 0 of 3 zones</text>
+<text x="664" y="512" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">6 boxes on 2 zones</text>
+<text x="936" y="408" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Zone settings ›</text>
+<rect x="968" y="378" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="984" y="394" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="996" cy="406" r="3.5" fill="#3ee39a"/>
+<text x="1005" y="410.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="984" y="444" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Voice rooms</text>
+<text x="984" y="470" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">14 public rooms, 4 busy</text>
+<text x="984" y="491" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Read every 30 s</text>
+<text x="984" y="512" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">3 boxes on 2 zones</text>
+<rect x="328" y="562" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="344" y="578" width="101.55" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="356" cy="590" r="3.5" fill="#ffc94d"/>
+<text x="365" y="594.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">Collecting</text>
+<text x="344" y="628" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">History</text>
+<text x="344" y="654" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">2 h 10 of the first 3 h</text>
+<text x="344" y="675" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Graphs and top games say</text>
+<text x="344" y="696" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">&quot;Collecting…&quot; until then</text>
+<rect x="648" y="562" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="664" y="578" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="676" cy="590" r="3.5" fill="#3ee39a"/>
+<text x="685" y="594.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="664" y="628" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Tournament</text>
+<text x="664" y="654" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Demo Cup: heat 2 of 4</text>
+<text x="664" y="675" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Last event 19:45:02</text>
+<text x="664" y="696" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">4 boxes on 2 zones</text>
+<text x="936" y="592" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Tournament ›</text>
+<rect x="968" y="562" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="984" y="578" width="83.9487" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="996" cy="590" r="3.5" fill="#ffc94d"/>
+<text x="1005" y="594.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">Waiting</text>
+<text x="984" y="628" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Games and surges</text>
+<text x="984" y="654" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">The games module is off</text>
+<text x="984" y="675" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Hot game and covers wait</text>
+<text x="984" y="696" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">2 boxes show nothing</text>
+<text x="1256" y="592" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Event profile ›</text>
+<rect x="328" y="746" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="344" y="762" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="356" cy="774" r="3.5" fill="#3ee39a"/>
+<text x="365" y="778.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="344" y="812" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Food</text>
+<text x="344" y="838" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">2 orders open or on the way</text>
+<text x="344" y="859" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Last event 19:40:31</text>
+<text x="344" y="880" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">2 boxes on 2 zones</text>
+<text x="616" y="776" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Food ›</text>
+<rect x="648" y="746" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="664" y="762" width="94.1088" height="24" rx="12" fill="#22263d" stroke="#4a5075" stroke-width="1"/>
+<circle cx="676" cy="774" r="3.5" fill="#a9b1d6"/>
+<text x="685" y="778.5" font-size="12.5" fill="#c5cae3" font-weight="600" text-anchor="start">Not used</text>
+<text x="664" y="812" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Finals</text>
+<text x="664" y="838" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Not part of this event</text>
+<text x="664" y="859" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Its boxes are skipped</text>
+<rect x="968" y="746" width="304" height="168" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="984" y="762" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="996" cy="774" r="3.5" fill="#3ee39a"/>
+<text x="1005" y="778.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="984" y="812" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Run of show, check-in</text>
+<text x="984" y="838" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Agenda version 41</text>
+<text x="984" y="859" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Check-in code rotating</text>
+<text x="984" y="880" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">7 boxes on 3 zones</text>
+<rect x="328" y="938" width="464" height="230" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="344" y="970" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Boxes showing nothing</text>
+<text x="344" y="1008" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="start">Café · Hot game</text>
+<text x="344" y="1028" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Waiting for the games module</text>
+<text x="344" y="1058" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="start">Main hall · Top games</text>
+<text x="344" y="1078" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Collecting: 50 min to go</text>
+<text x="344" y="1108" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="start">Stage · Voice rooms</text>
+<text x="344" y="1128" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">No public room is busy</text>
+<rect x="808" y="938" width="464" height="230" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="824" y="970" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Recent</text>
+<text x="824" y="1008" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:52</text>
+<text x="876" y="1008" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Presence count: 231 online</text>
+<text x="824" y="1048" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:45</text>
+<text x="876" y="1048" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Heat 2 called (Demo Cup)</text>
+<text x="824" y="1088" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:31</text>
+<text x="876" y="1088" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Demo Racer: HOT, 18 playing</text>
+<text x="824" y="1128" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">18:02</text>
+<text x="876" y="1128" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Bot back after 40 s; counts trusted again</text>
+</g>
+<rect x="32" y="130" width="1280" height="1050" rx="10" fill="none" stroke="#0f172a" stroke-width="2"/>
+<text x="32" y="1205" font-size="16" fill="#374151" font-weight="600" text-anchor="start"></text>
+<rect x="1410" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="1420" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1454" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">19:52</text>
+<rect x="1420" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1436" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1472" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1580" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1603" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="1770" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1770" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1770" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1436" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Screen studio</text>
+<text x="1436" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Live data</text>
+<rect x="1436" y="338" width="358" height="40" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1446" y="346" width="69.2094" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1458" cy="358" r="3.5" fill="#3ee39a"/>
+<text x="1467" y="362.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">6 live</text>
+<rect x="1523.21" y="346" width="96.9708" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="1535.21" cy="358" r="3.5" fill="#ffc94d"/>
+<text x="1544.21" y="362.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">2 waiting</text>
+<rect x="1628.18" y="346" width="106.129" height="24" rx="12" fill="#22263d" stroke="#4a5075" stroke-width="1"/>
+<circle cx="1640.18" cy="358" r="3.5" fill="#a9b1d6"/>
+<text x="1649.18" y="362.5" font-size="12.5" fill="#c5cae3" font-weight="600" text-anchor="start">1 not used</text>
+<rect x="1436" y="392" width="358" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1452" y="408" width="83.9487" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="1464" cy="420" r="3.5" fill="#ffc94d"/>
+<text x="1473" y="424.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">Waiting</text>
+<text x="1452" y="458" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Games and surges</text>
+<text x="1452" y="484" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">The games module is off</text>
+<text x="1452" y="505" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Hot game and covers wait</text>
+<text x="1452" y="526" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">2 boxes show nothing</text>
+<text x="1778" y="422" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Event profile ›</text>
+<rect x="1436" y="554" width="358" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1452" y="570" width="101.55" height="24" rx="12" fill="#3a3424" stroke="#7a6a35" stroke-width="1"/>
+<circle cx="1464" cy="582" r="3.5" fill="#ffc94d"/>
+<text x="1473" y="586.5" font-size="12.5" fill="#ffd98a" font-weight="600" text-anchor="start">Collecting</text>
+<text x="1452" y="620" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">History</text>
+<text x="1452" y="646" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">2 h 10 of the first 3 h</text>
+<text x="1452" y="667" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Graphs and top games say</text>
+<text x="1452" y="688" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">&quot;Collecting…&quot; until then</text>
+<rect x="1436" y="716" width="358" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1452" y="732" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1464" cy="744" r="3.5" fill="#3ee39a"/>
+<text x="1473" y="748.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="1452" y="782" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Presence counts</text>
+<text x="1452" y="808" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">231 online · 64 in voice</text>
+<text x="1452" y="829" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Last count 19:52:10, every 60 s</text>
+<text x="1452" y="850" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">9 boxes on 3 zones</text>
+<text x="1778" y="746" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Bot settings ›</text>
+<rect x="1436" y="878" width="358" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1452" y="894" width="61.9113" height="24" rx="12" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1464" cy="906" r="3.5" fill="#3ee39a"/>
+<text x="1473" y="910.5" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start">Live</text>
+<text x="1452" y="944" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Who plays what</text>
+<text x="1452" y="970" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">58 playing 9 games</text>
+<text x="1452" y="991" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Names on 0 of 3 zones</text>
+<text x="1452" y="1012" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">6 boxes on 2 zones</text>
+<text x="1778" y="908" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="end">Zone settings ›</text>
+<rect x="1420" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1451" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1459" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1529" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1537" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1615" cy="934" r="15" fill="#3ddcff"/>
+<text x="1615" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1685" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1693" y="964" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">Screens</text>
+<rect x="1763" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1771" y="964" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">More</text>
+<rect x="1548" y="982" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<circle cx="1435" cy="1045" r="15" fill="#111827"/>
+<text x="1435" y="1051" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">1</text>
+<text x="1460" y="1050" font-size="15" fill="#1f2937" font-weight="400" text-anchor="start">Problems first on a phone: waiting and collecting feeds</text>
+<text x="1460" y="1071" font-size="15" fill="#1f2937" font-weight="400" text-anchor="start">lead, in the page&#x27;s order otherwise.</text>
+<circle cx="1435" cy="1097" r="15" fill="#111827"/>
+<text x="1435" y="1103" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">2</text>
+<text x="1460" y="1102" font-size="15" fill="#1f2937" font-weight="400" text-anchor="start">Words, not codes: each card says what the screens do</text>
+<text x="1460" y="1123" font-size="15" fill="#1f2937" font-weight="400" text-anchor="start">about it, and links to where it is fixed.</text>
+</svg>
