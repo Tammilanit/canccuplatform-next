@@ -104,7 +104,7 @@ interface Fetched {
 interface FakeRoute {
   request: () => { url: () => string; headers: () => Record<string, string> };
   fetch: (options?: Fetched) => Promise<{ json: () => Promise<object> }>;
-  fetched?: Fetched;
+  fetched?: Fetched | undefined;
   fulfill: (o: { json: object }) => Promise<void>;
   abort: () => Promise<void>;
   aborted?: boolean;

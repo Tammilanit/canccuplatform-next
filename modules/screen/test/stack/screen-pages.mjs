@@ -57,7 +57,7 @@ export async function handStates(page, close, change) {
   unhanded.catch(() => undefined);
   await page.route("**/api/screen/device/state", async (route) => {
     try {
-      const answer = await route.fetch();
+      const answer = await route.fetch(await viaLoopback(page, route.request()));
       await route.fulfill({ response: answer, json: change(await answer.json()) });
     } catch (err) {
       if (!closing) broken(new Error(`the state handed to the page: ${err?.message ?? err}`));
@@ -71,4 +71,22 @@ export async function handStates(page, close, change) {
       return close();
     },
   };
+}
+
+/**
+ * `route.fetch` options for `request` of `page`: a `.localhost` name goes to the loopback, with the
+ * name in `Host` and the context's cookies for it; any other is fetched as asked (`undefined`).
+ * Chromium finds `.localhost` names on the loopback itself, but `route.fetch` runs in Node, which
+ * asks the resolver; on some runners that answered ENOTFOUND for every handed view (#655). The
+ * shots share Caddy's network namespace, so its loopback is where the page's name leads.
+ */
+async function viaLoopback(page, request) {
+  const url = new URL(request.url());
+  if (!url.hostname.endsWith(".localhost")) return undefined;
+  const headers = { ...request.headers(), host: url.host };
+  // Cookies follow the URL, which no longer names the event once it points at the loopback.
+  const cookies = await page.context().cookies(url.href);
+  if (cookies.length) headers.cookie = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+  url.hostname = "127.0.0.1";
+  return { url: url.href, headers };
 }
