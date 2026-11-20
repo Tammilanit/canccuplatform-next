@@ -25,6 +25,7 @@ import { handlePlatformEvent, handleTenantEvent } from "./consumer.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { dropOldKeys } from "./idempotency.js";
 import { everySessionIsMember, tenantsPeople } from "./people.js";
+import { Scheduler, TICK_MS } from "./scheduler.js";
 import { settingsReader } from "./settings.js";
 
 const PORT = 8080;
@@ -95,7 +96,7 @@ async function main(): Promise<void> {
   const db = poolDb(pool);
   const outbox = new Outbox(new Bus(store, config.module, log), db, { log });
   const now = () => new Date();
-  const deps = {
+  const base = {
     db,
     outbox,
     rights,
@@ -106,10 +107,19 @@ async function main(): Promise<void> {
     members: everySessionIsMember,
     people: tenantsPeople(tenantsUrl, service),
     settings: settingsReader(settings),
+  };
+  const scheduler = new Scheduler(base);
+  const deps = {
+    ...base,
     health: createHealth({
       module: config.module,
       version: config.version,
-      checks: { valkey: valkeyCheck(store), postgres: postgresCheck(() => pool.query("SELECT 1")) },
+      checks: {
+        valkey: valkeyCheck(store),
+        postgres: postgresCheck(() => pool.query("SELECT 1")),
+        // O8: a late scheduler degrades the module; it never takes it down.
+        scheduler: { run: scheduler.check(), essential: false },
+      },
     }),
   };
   listener.subscribe(["tenants", "admin"], async (event) => {
@@ -142,10 +152,15 @@ async function main(): Promise<void> {
       log.warn({ err }, "pizza upkeep failed");
     });
   }, UPKEEP_MS);
-  for (const t of [resend, hourly]) t.unref();
+  const tick = setInterval(() => {
+    scheduler.tick().catch((err: unknown) => {
+      log.warn({ err }, "the pizza scheduler failed");
+    });
+  }, TICK_MS);
+  for (const t of [resend, hourly, tick]) t.unref();
 
   const stop = async (): Promise<void> => {
-    for (const t of [resend, hourly]) clearInterval(t);
+    for (const t of [resend, hourly, tick]) clearInterval(t);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());

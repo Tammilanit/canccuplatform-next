@@ -17,6 +17,7 @@ import type { Step } from "./lifecycle.js";
 import { keyOf, once } from "./idempotency.js";
 import type { Answer } from "./idempotency.js";
 import type { Members, People } from "./people.js";
+import { MANAGE } from "./policy.js";
 import type { Caller } from "./policy.js";
 import type { PizzaSettings } from "./settings.js";
 import type { Actor } from "./store.js";
@@ -61,6 +62,7 @@ export async function whoIs(deps: AppDeps, request: FastifyRequest): Promise<Who
     if (!(err instanceof NotSignedIn)) throw err;
   }
   if (session === null) return { session, caller: null };
+  await noteCrew(deps, ctx.tenant_id, session);
   let restricted = false;
   try {
     checkAdminAccess(ctx, request.ip);
@@ -76,6 +78,36 @@ export async function whoIs(deps: AppDeps, request: FastifyRequest): Promise<Who
       restricted,
     },
   };
+}
+
+const CREW_SEEN_MS = 5 * 60_000;
+const crewSeen = new WeakMap<AppDeps, Map<string, { crew: boolean; until: number }>>();
+
+/**
+ * The scheduler's crew (pizza_crew): who showed `pizza.order.manage` here when last seen. No module
+ * answers who holds a right, so pizza notes it from the sessions it serves, at most every few
+ * minutes per person, and forgets someone whose session no longer has it.
+ */
+async function noteCrew(deps: AppDeps, tenant: string, session: Session): Promise<void> {
+  const crew = session.rights.has(MANAGE);
+  let seen = crewSeen.get(deps);
+  if (seen === undefined)
+    crewSeen.set(deps, (seen = new Map<string, { crew: boolean; until: number }>()));
+  const key = `${tenant} ${session.userId}`;
+  const hit = seen.get(key);
+  const now = deps.now();
+  if (hit !== undefined && hit.crew === crew && hit.until > Date.now()) return;
+  await deps.db.tenant((c) =>
+    crew
+      ? c.query(
+          `INSERT INTO pizza_crew (user_id, seen_at) VALUES ($1, $2)
+           ON CONFLICT (tenant_id, user_id) DO UPDATE SET seen_at = EXCLUDED.seen_at`,
+          [session.userId, now],
+        )
+      : c.query(`DELETE FROM pizza_crew WHERE user_id = $1`, [session.userId]),
+  );
+  if (seen.size > 5000) seen.clear();
+  seen.set(key, { crew, until: Date.now() + CREW_SEEN_MS });
 }
 
 /** A guest's read, or a non-member's, follows the event's info-page mode (U15). */

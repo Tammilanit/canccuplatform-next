@@ -25,7 +25,7 @@ afterAll(async () => {
 beforeEach(async () => {
   if (!DATABASE_URL) return;
   await pool.query(
-    "TRUNCATE pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
+    "TRUNCATE pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
   );
   w = await world(pool);
 });

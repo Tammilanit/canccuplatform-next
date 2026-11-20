@@ -240,6 +240,43 @@ export async function handOutAll(s: Step, orderId: string): Promise<Moved> {
   return (await doneIfAllHandedOut(s, orderId)) ?? (await done(s, orderId, "handed_out"));
 }
 
+/**
+ * The nudge (D12): once per order, while it is here, one `pizza.reminder.triggered` to each person
+ * with a pizza not ticked yet. The order's state does not change, so no order event.
+ */
+export async function nudge(s: Step, orderId: string): Promise<OrderRow> {
+  const { rows } = await s.c.query(
+    `UPDATE pizza_orders SET nudged_at = $2 WHERE id = $1 AND state = 'arrived' AND nudged_at IS NULL
+     RETURNING ${ORDER_COLUMNS}`,
+    [orderId, s.now],
+  );
+  const o = rows[0] as OrderRow | undefined;
+  if (o === undefined) {
+    const now = await getOrder(s.c, orderId);
+    if (now === null) throw new KitError("No such order.", { status: 404, code: "not_found" });
+    if (now.state !== "arrived") throw cannot("hand_out", now);
+    throw new Conflict("nudged", "The people still to collect were nudged already.");
+  }
+  const waiting = new Set(
+    (await itemsOf(s.c, [orderId]))
+      .filter(
+        (i) => i.handed_out_at === null && i.user_id !== null && !i.user_id.startsWith("anon_"),
+      )
+      .map((i) => i.user_id as string),
+  );
+  await logStep(s.c, orderId, s.now, s.actor, "nudged", { people: waiting.size });
+  for (const user_id of [...waiting].sort())
+    await emitOrder(s.c, s.e, "pizza.reminder.triggered", o, {
+      kind: "not_collected",
+      minutes: Math.round(
+        (s.now.getTime() - (o.arrived_at?.getTime() ?? s.now.getTime())) / 60_000,
+      ),
+      user_id,
+      role: "member",
+    });
+  return o;
+}
+
 async function doneIfAllHandedOut(s: Step, orderId: string): Promise<Moved | null> {
   const items = await itemsOf(s.c, [orderId]);
   if (items.length === 0 || items.some((i) => i.handed_out_at === null)) return null;

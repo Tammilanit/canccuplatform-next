@@ -27,6 +27,8 @@ import { MANAGE, MENU_WRITE, OPEN, RECORD_READ } from "../src/policy.js";
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 const TABLES = [
+  "pizza_due",
+  "pizza_crew",
   "pizza_pizzerias",
   "pizza_menu_entries",
   "pizza_orders",

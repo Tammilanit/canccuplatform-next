@@ -116,6 +116,7 @@ export function orderView(
       website: ctx.pizzeria?.website ?? null,
     },
     claimed_at: iso(o.claimed_at),
+    nudged_at: iso(o.nudged_at),
     items: items.map((i) => itemView(i, caller, true)),
     payer: o.payer_user_id === null ? null : { user_id: o.payer_user_id, name: o.payer_name },
     total_cents: o.total_cents,

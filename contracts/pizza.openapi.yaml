@@ -52,6 +52,8 @@ paths:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1arrive"
   /api/pizza/orders/{order_id}/hand-out:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1hand-out"
+  /api/pizza/orders/{order_id}/nudge:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1nudge"
   /api/pizza/orders/{order_id}/done:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1done"
   /api/pizza/orders/{order_id}/undo:
@@ -233,7 +235,7 @@ components:
         An order as the caller may see it (contracts/pizza.md, Who sees what). Every caller gets the base
         fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents` and
         `lines`; the holder and the crew `items` instead of `lines`, the pizzeria's `phone` and `website`,
-        `claimed_at`, `payer`, `total_cents`, `split` and `settle_to`.
+        `claimed_at`, `nudged_at`, `payer`, `total_cents`, `split` and `settle_to`.
       required: [id, seq, day, state, pizzeria, closes_at, target_at, pizza_count, people_count, revision, stale]
       properties:
         id:
@@ -327,6 +329,8 @@ components:
           items:
             $ref: "#/components/schemas/Item"
         claimed_at:
+          $ref: "#/components/schemas/NullableTime"
+        nudged_at:
           $ref: "#/components/schemas/NullableTime"
         payer:
           oneOf:

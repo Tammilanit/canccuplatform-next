@@ -10,6 +10,7 @@ import {
   editItem,
   handOut,
   handOutAll,
+  nudge,
   removeItem,
 } from "./items.js";
 import { authorize } from "./policy.js";
@@ -143,6 +144,22 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
       );
       const m = await handOutAll(w.step(c), order.id);
       return ok(await present(c, w.caller, w.ctx, w.now, m.row));
+    }),
+  );
+
+  app.post<{ Params: Params }>("/api/pizza/orders/:id/nudge", (request, reply) =>
+    write(deps, request, reply, async (c, w) => {
+      const { order } = await orderFor(
+        c,
+        request.params.id,
+        "order.nudge",
+        w.caller,
+        w.ctx,
+        w.now,
+        true,
+      );
+      const after = await nudge(w.step(c), order.id);
+      return ok(await present(c, w.caller, w.ctx, w.now, after));
     }),
   );
 }
