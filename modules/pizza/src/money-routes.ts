@@ -129,8 +129,7 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         // Confirming a read names its receipt; a total typed in names none (mockups 18 E, 19).
         let receipt: string | null = null;
         if (b.receipt_id !== undefined && b.receipt_id !== null) {
-          const r =
-            typeof b.receipt_id === "string" ? await getReceipt(c, b.receipt_id) : null;
+          const r = typeof b.receipt_id === "string" ? await getReceipt(c, b.receipt_id) : null;
           if (r === null || r.order_id !== order.id)
             bad("receipt_id", "must be a receipt of this order");
           receipt = b.receipt_id as string;

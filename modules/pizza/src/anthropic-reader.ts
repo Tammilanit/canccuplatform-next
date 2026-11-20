@@ -72,28 +72,31 @@ List every item that has a menu number: the number as printed, the name, the ing
 Set unsure to true when the photo does not make the number, the name or the price clear.
 Use only what the photo shows.`;
 
-const cut = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const cut = (v: unknown, max: number): string =>
+  typeof v === "string" ? v.trim().slice(0, max) : "";
 const cents = (v: unknown, min: number, max: number): number | null =>
   typeof v === "number" && Number.isInteger(v) && v >= min && v <= max ? v : null;
 
 function receiptOf(raw: unknown): ReceiptReading {
   const r = (raw ?? {}) as { total_cents?: unknown; lines?: unknown };
-  const lines: ReceiptLine[] = (Array.isArray(r.lines) ? r.lines : []).slice(0, 100).flatMap((l) => {
-    const x = (l ?? {}) as Record<string, unknown>;
-    const amount = cents(x.amount_cents, -500_000, 500_000);
-    if (amount === null) return [];
-    const number = cut(x.number, 8);
-    return [
-      {
-        text: cut(x.text, 120),
-        number: number === "" ? null : number,
-        name: cut(x.name, 80),
-        quantity: cents(x.quantity, 1, 99) ?? 1,
-        amount_cents: amount,
-        kind: x.kind === "extra" ? ("extra" as const) : ("item" as const),
-      },
-    ];
-  });
+  const lines: ReceiptLine[] = (Array.isArray(r.lines) ? r.lines : [])
+    .slice(0, 100)
+    .flatMap((l) => {
+      const x = (l ?? {}) as Record<string, unknown>;
+      const amount = cents(x.amount_cents, -500_000, 500_000);
+      if (amount === null) return [];
+      const number = cut(x.number, 8);
+      return [
+        {
+          text: cut(x.text, 120),
+          number: number === "" ? null : number,
+          name: cut(x.name, 80),
+          quantity: cents(x.quantity, 1, 99) ?? 1,
+          amount_cents: amount,
+          kind: x.kind === "extra" ? ("extra" as const) : ("item" as const),
+        },
+      ];
+    });
   return { total_cents: cents(r.total_cents, 0, 500_000), lines };
 }
 
@@ -125,7 +128,12 @@ export function anthropicReader(apiKey: string, o: { fetch?: typeof fetch } = {}
     maxRetries: 0,
     ...(o.fetch === undefined ? {} : { fetch: o.fetch }),
   });
-  const ask = async (image: Buffer, type: string, text: string, schema: object): Promise<unknown> => {
+  const ask = async (
+    image: Buffer,
+    type: string,
+    text: string,
+    schema: object,
+  ): Promise<unknown> => {
     let res: Anthropic.Message;
     try {
       res = await client.messages.create({
@@ -153,7 +161,10 @@ export function anthropicReader(apiKey: string, o: { fetch?: typeof fetch } = {}
         ],
       });
     } catch (err) {
-      if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError)
+      if (
+        err instanceof Anthropic.AuthenticationError ||
+        err instanceof Anthropic.PermissionDeniedError
+      )
         throw new ReaderKeyRejected();
       throw new ReaderFailed();
     }

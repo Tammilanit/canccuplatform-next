@@ -56,7 +56,9 @@ export function matchReceipt(reading: ReceiptReading, items: MatchItem[], at: Da
     reading.lines.findIndex((l, i) => open(i) && test(l));
   const pizzas = items.map((item): MatchedPizza => {
     let line =
-      item.number === null ? -1 : find((l) => l.number !== null && fold(l.number) === fold(item.number ?? ""));
+      item.number === null
+        ? -1
+        : find((l) => l.number !== null && fold(l.number) === fold(item.number ?? ""));
     if (line < 0) line = find((l) => fold(l.name) === nameOf(item.label));
     const hit = line < 0 ? undefined : reading.lines[line];
     if (hit !== undefined) used[line] = (used[line] ?? 0) + 1;
@@ -77,9 +79,9 @@ export function matchReceipt(reading: ReceiptReading, items: MatchItem[], at: Da
     .filter((l) => l.kind === "extra")
     .reduce((s, l) => s + l.amount_cents, 0);
   const priced = pizzas.map((p) => p.suggested_cents ?? p.price_cents);
-  const sum = priced.every((p) => p !== null)
-    ? (priced as number[]).reduce((s, p) => s + p, 0) + extras
-    : null;
+  const sum = priced.includes(null)
+    ? null
+    : priced.reduce((s: number, p) => s + (p ?? 0), 0) + extras;
   return {
     read_at: at.toISOString(),
     total_cents: reading.total_cents,

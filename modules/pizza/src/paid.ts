@@ -98,7 +98,10 @@ export function paidRoutes(app: FastifyInstance, deps: AppDeps): void {
               `INSERT INTO pizza_paid (order_id, user_id, at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
               [order.id, user, w.now],
             )
-          : c.query(`DELETE FROM pizza_paid WHERE order_id = $1 AND user_id = $2`, [order.id, user]));
+          : c.query(`DELETE FROM pizza_paid WHERE order_id = $1 AND user_id = $2`, [
+              order.id,
+              user,
+            ]));
         return ok(await moneyView(c, order));
       }),
   );

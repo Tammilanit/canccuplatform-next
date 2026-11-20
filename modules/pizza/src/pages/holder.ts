@@ -42,7 +42,9 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
     // The money step stays open after done (mockup 18): the holder's until the day turns.
     const money =
       mine(o, c) && ["placed", "arrived", "done"].includes(o.state)
-        ? html`<a class="canccu-button canccu-button--secondary pizza-wide" href="/pizza/hold/${o.id}/money"
+        ? html`<a
+            class="canccu-button canccu-button--secondary pizza-wide"
+            href="/pizza/hold/${o.id}/money"
             >${c.t("hand.order_money")}</a
           >`
         : "";

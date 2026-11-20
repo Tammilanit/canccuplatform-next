@@ -47,16 +47,48 @@ beforeEach(async () => {
         menu_item_id: await itemId(w, pz, number),
       }),
     ).id as string;
-  items = { anni: await add("anni", "1"), anni2: await add("anni", "1"), mikko: await add("mikko", "12") };
+  items = {
+    anni: await add("anni", "1"),
+    anni2: await add("anni", "1"),
+    mikko: await add("mikko", "12"),
+  };
   await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
   // Two Margheritas at 8.50 (the menu says 8.00), a Kebab at 9.50, delivery, and a line for no pizza.
   w.reader.receipt = {
     total_cents: 3200,
     lines: [
-      { text: "2 x 1 Margherita 17.00", number: "1", name: "Margherita", quantity: 2, amount_cents: 1700, kind: "item" },
-      { text: "1 x 12 Kebab 9.50", number: "12", name: "Kebab", quantity: 1, amount_cents: 950, kind: "item" },
-      { text: "Garlic bread 2.50", number: null, name: "Garlic bread", quantity: 1, amount_cents: 250, kind: "item" },
-      { text: "Delivery 3.00", number: null, name: "Delivery", quantity: 1, amount_cents: 300, kind: "extra" },
+      {
+        text: "2 x 1 Margherita 17.00",
+        number: "1",
+        name: "Margherita",
+        quantity: 2,
+        amount_cents: 1700,
+        kind: "item",
+      },
+      {
+        text: "1 x 12 Kebab 9.50",
+        number: "12",
+        name: "Kebab",
+        quantity: 1,
+        amount_cents: 950,
+        kind: "item",
+      },
+      {
+        text: "Garlic bread 2.50",
+        number: null,
+        name: "Garlic bread",
+        quantity: 1,
+        amount_cents: 250,
+        kind: "item",
+      },
+      {
+        text: "Delivery 3.00",
+        number: null,
+        name: "Delivery",
+        quantity: 1,
+        amount_cents: 300,
+        kind: "extra",
+      },
     ],
   };
 });
@@ -144,9 +176,27 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
       unmatched_lines: [2],
     });
     expect(r.pizzas).toEqual([
-      expect.objectContaining({ item_id: items.anni, price_cents: 800, suggested_cents: 850, differs: true, line: 0 }),
-      expect.objectContaining({ item_id: items.anni2, price_cents: 800, suggested_cents: 850, differs: true, line: 0 }),
-      expect.objectContaining({ item_id: items.mikko, price_cents: 950, suggested_cents: 950, differs: false, line: 1 }),
+      expect.objectContaining({
+        item_id: items.anni,
+        price_cents: 800,
+        suggested_cents: 850,
+        differs: true,
+        line: 0,
+      }),
+      expect.objectContaining({
+        item_id: items.anni2,
+        price_cents: 800,
+        suggested_cents: 850,
+        differs: true,
+        line: 0,
+      }),
+      expect.objectContaining({
+        item_id: items.mikko,
+        price_cents: 950,
+        suggested_cents: 950,
+        differs: false,
+        line: 1,
+      }),
     ]);
     expect(withoutReads(json(await money()))).toEqual(before);
     expect(w.reader.sent[0]).toMatchObject({ kind: "receipt", key: KEY });
@@ -154,8 +204,13 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
 
   it("names a pizza that has no line on the receipt", async () => {
     await setKey();
-    w.reader.receipt = { total_cents: 1800, lines: [w.reader.receipt.lines[0]!, w.reader.receipt.lines[3]!] };
-    const r = json(await read(await addReceipt())).read as { pizzas: { item_id: string; line: number | null }[] };
+    w.reader.receipt = {
+      total_cents: 1800,
+      lines: w.reader.receipt.lines.filter((_l, i) => i === 0 || i === 3),
+    };
+    const r = json(await read(await addReceipt())).read as {
+      pizzas: { item_id: string; line: number | null }[];
+    };
     expect(r.pizzas.find((p) => p.item_id === items.mikko)).toMatchObject({ line: null });
   });
 
@@ -256,7 +311,9 @@ describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
       contentType: "text/csv",
     });
     expect(preview.statusCode).toBe(200);
-    expect(json(preview)).toMatchObject({ pizzerias: [expect.objectContaining({ status: "matched" })] });
+    expect(json(preview)).toMatchObject({
+      pizzerias: [expect.objectContaining({ status: "matched" })],
+    });
     const { rows } = await pool.query("SELECT count(*)::int AS n FROM pizza_receipts");
     expect(rows[0]).toEqual({ n: 0 });
   });

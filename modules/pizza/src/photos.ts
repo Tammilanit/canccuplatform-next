@@ -60,7 +60,10 @@ export function photoBodies(app: FastifyInstance): void {
 }
 
 /** The request's photo and its type, or 400 when there is none. */
-export function photoOf(body: unknown, contentType: string | undefined): { photo: Buffer; type: string } {
+export function photoOf(
+  body: unknown,
+  contentType: string | undefined,
+): { photo: Buffer; type: string } {
   const type = (contentType ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
   if (!Buffer.isBuffer(body) || PHOTO_TYPES[type] === undefined) {
     throw new KitError("Send the photo as the body: JPEG, PNG or WebP.", {

@@ -16,7 +16,9 @@ import { base, flash } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 
 const plain = (cents: number | null) =>
-  cents === null ? "" : `${Math.floor(cents / 100)}.${String(Math.abs(cents) % 100).padStart(2, "0")}`;
+  cents === null
+    ? ""
+    : `${Math.floor(cents / 100)}.${String(Math.abs(cents) % 100).padStart(2, "0")}`;
 
 /** An amount field the pad fills; the phone's decimal keyboard without a script. */
 function amountField(name: string, value: number | null, label: string, big = false): Html {
@@ -42,25 +44,31 @@ export function padView(
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"];
   return html`${flash(s.error)}
     <form method="post" action="${base(o)}/money/total" class="pizza-form pizza-pad" data-pad>
-      ${formKey()}
-      ${amountField("total", s.total, c.t("pad.title"), true)}
+      ${formKey()} ${amountField("total", s.total, c.t("pad.title"), true)}
       <p class="pizza-muted pizza-centered">${c.t("pad.paid_to", { pizzeria: o.pizzeria.name })}</p>
       <div class="pizza-pad__keys" hidden>
         ${keys.map(
-          (k) => html`<button
-            type="button"
-            class="pizza-pad__key"
-            data-pad-key="${k}"
-            ${k === "back" ? html`aria-label="${c.t("pad.delete")}"` : ""}
-          >
-            ${k === "back" ? "⌫" : k}
-          </button>`,
+          (k) =>
+            html`<button
+              type="button"
+              class="pizza-pad__key"
+              data-pad-key="${k}"
+              ${k === "back" ? html`aria-label="${c.t("pad.delete")}"` : ""}
+            >
+              ${k === "back" ? "⌫" : k}
+            </button>`,
         )}
       </div>
-      <button class="canccu-button canccu-button--primary pizza-wide" type="submit">${c.t("pad.save")}</button>
-      ${s.reader
-        ? ""
-        : html`<a class="pizza-center" href="${base(o)}/money/scan">${c.t("money.photo_only")}</a>`}
+      <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
+        ${c.t("pad.save")}
+      </button>
+      ${
+        s.reader
+          ? ""
+          : html`<a class="pizza-center" href="${base(o)}/money/scan"
+              >${c.t("money.photo_only")}</a
+            >`
+      }
       <p class="pizza-muted pizza-centered">${c.t("pad.even_note")}</p>
     </form>`;
 }
@@ -111,53 +119,69 @@ export function checkView(c: PageCtx, o: OrderView, receiptId: string, r: Receip
     <section class="pizza-card">
       <label class="canccu-field"
         ><span class="pizza-section">${c.t("check.total")}</span>
-        <span class="pizza-card__title">${r.total_cents === null ? "—" : euro(c, r.total_cents)}</span>
+        <span class="pizza-card__title"
+          >${r.total_cents === null ? "—" : euro(c, r.total_cents)}</span
+        >
         ${amountField("total", r.total_cents, c.t("check.total"))}</label
       >
     </section>
     <p class="pizza-section">${c.t("check.each")}</p>
     <ul class="pizza-people">
       ${r.pizzas.map(
-        (p) => html`<li class="pizza-person${p.differs || p.line === null ? " pizza-person--warn" : ""}">
-          <span class="pizza-person__text"
-            ><span class="pizza-person__name">${p.label}</span
-            ><span class="pizza-person__what">${why(p)}</span></span
-          >
-          ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
-        </li>`,
+        (p) =>
+          html`<li class="pizza-person${p.differs || p.line === null ? " pizza-person--warn" : ""}">
+            <span class="pizza-person__text"
+              ><span class="pizza-person__name">${p.label}</span
+              ><span class="pizza-person__what">${why(p)}</span></span
+            >
+            ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
+          </li>`,
       )}
     </ul>
-    ${extras.length === 0
-      ? ""
-      : html`<p class="pizza-section">${c.t("check.extras")}</p>
-          <ul class="pizza-people">
-            ${extras.map(
-              (l) => html`<li class="pizza-person">
-                <span class="pizza-person__text"><span class="pizza-person__name">${l.name}</span></span
-                ><span class="pizza-amount canccu-num">${euro(c, l.amount_cents)}</span>
-              </li>`,
+    ${
+      extras.length === 0
+        ? ""
+        : html`<p class="pizza-section">${c.t("check.extras")}</p>
+            <ul class="pizza-people">
+              ${extras.map(
+                (l) =>
+                  html`<li class="pizza-person">
+                    <span class="pizza-person__text"
+                      ><span class="pizza-person__name">${l.name}</span></span
+                    ><span class="pizza-amount canccu-num">${euro(c, l.amount_cents)}</span>
+                  </li>`,
+              )}
+            </ul>`
+    }
+    ${
+      r.unmatched_lines.length === 0
+        ? ""
+        : html`<ul class="pizza-people">
+            ${r.unmatched_lines.map(
+              (i) =>
+                html`<li class="pizza-person pizza-person--warn">
+                  <span class="pizza-person__text"
+                    ><span class="pizza-person__name">${r.lines[i]?.text ?? ""}</span
+                    ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
+                  >
+                </li>`,
             )}
-          </ul>`}
-    ${r.unmatched_lines.length === 0
-      ? ""
-      : html`<ul class="pizza-people">
-          ${r.unmatched_lines.map(
-            (i) => html`<li class="pizza-person pizza-person--warn">
-              <span class="pizza-person__text"
-                ><span class="pizza-person__name">${r.lines[i]?.text ?? ""}</span
-                ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
-              >
-            </li>`,
-          )}
-        </ul>`}
+          </ul>`
+    }
     <p class="pizza-centered ${r.adds_up ? "pizza-ok" : "pizza-warn"}">
-      ${r.adds_up
-        ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
-        : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })}
+      ${
+        r.adds_up
+          ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
+          : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })
+      }
     </p>
     <div class="pizza-row">
-      <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan">${c.t("check.retake")}</a>
-      <button class="canccu-button canccu-button--primary" type="submit">${c.t("check.confirm")}</button>
+      <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan"
+        >${c.t("check.retake")}</a
+      >
+      <button class="canccu-button canccu-button--primary" type="submit">
+        ${c.t("check.confirm")}
+      </button>
     </div>
   </form>`;
 }

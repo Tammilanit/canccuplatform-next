@@ -68,7 +68,12 @@ export interface OrderView {
   my_amount_estimated?: boolean;
   settle_to?: "organiser" | "payer";
   my_paid?: boolean | null;
-  pay_to?: { user_id: string; name: string | null; mobilepay: string | null; iban: string | null } | null;
+  pay_to?: {
+    user_id: string;
+    name: string | null;
+    mobilepay: string | null;
+    iban: string | null;
+  } | null;
 }
 
 export const base = (o: OrderView) => `${PREFIX}hold/${o.id}`;

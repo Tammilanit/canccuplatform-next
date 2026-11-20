@@ -49,14 +49,18 @@ function header(c: PageCtx, o: OrderView, m: MoneyView, me: string): Html {
   if (m.total_cents === null)
     return html`<section class="pizza-card">
       <p class="pizza-card__title">${c.t("money.no_total")}</p>
-      <p class="pizza-card__meta">${c.t("money.order_line", { pizzeria: o.pizzeria.name, n: o.pizza_count })}</p>
+      <p class="pizza-card__meta">
+        ${c.t("money.order_line", { pizzeria: o.pizzeria.name, n: o.pizza_count })}
+      </p>
     </section>`;
   const amount = euro(c, m.total_cents);
   return html`<section class="pizza-card">
     <p class="pizza-card__title">
-      ${m.payer?.user_id === me
-        ? c.t("money.paid_by_you", { amount })
-        : c.t("money.paid_by", { amount, name: m.payer?.name ?? "—" })}
+      ${
+        m.payer?.user_id === me
+          ? c.t("money.paid_by_you", { amount })
+          : c.t("money.paid_by", { amount, name: m.payer?.name ?? "—" })
+      }
     </p>
     <p class="pizza-card__meta">
       ${c.t(m.total_receipt_id === null ? "money.typed" : "money.from_receipt", { pizzeria: o.pizzeria.name })}
@@ -74,17 +78,27 @@ function addReceipt(c: PageCtx, o: OrderView, m: MoneyView, reader: boolean): Ht
     </section>
     ${reader ? outsideNotice(c, c.t("money.outside_text", { provider: PROVIDER.name })) : ""}
     <div class="pizza-stack">
-      ${reader
-        ? html`<a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/money/scan"
-              >${c.t("money.scan")}</a
-            ><a class="canccu-button canccu-button--secondary pizza-wide" href="${base(o)}/money/total"
-              >${c.t("money.type_instead")}</a
-            >`
-        : html`<a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/money/total"
-              >${c.t("pad.title")}</a
-            ><a class="canccu-button canccu-button--secondary pizza-wide" href="${base(o)}/money/scan"
-              >${c.t("money.photo_only")}</a
-            >`}
+      ${
+        reader
+          ? html`<a
+                class="canccu-button canccu-button--primary pizza-wide"
+                href="${base(o)}/money/scan"
+                >${c.t("money.scan")}</a
+              ><a
+                class="canccu-button canccu-button--secondary pizza-wide"
+                href="${base(o)}/money/total"
+                >${c.t("money.type_instead")}</a
+              >`
+          : html`<a
+                class="canccu-button canccu-button--primary pizza-wide"
+                href="${base(o)}/money/total"
+                >${c.t("pad.title")}</a
+              ><a
+                class="canccu-button canccu-button--secondary pizza-wide"
+                href="${base(o)}/money/scan"
+                >${c.t("money.photo_only")}</a
+              >`
+      }
     </div>
     <section class="pizza-card">
       <p class="pizza-section">${c.t("money.this_order")}</p>
@@ -96,26 +110,35 @@ function addReceipt(c: PageCtx, o: OrderView, m: MoneyView, reader: boolean): Ht
 /** Mockup 18 E: the total is in; its receipts, seen by the holder, the crew and the organiser. */
 function confirmed(c: PageCtx, o: OrderView, m: MoneyView): Html {
   return html`<section class="pizza-card pizza-card--here">
-    <p class="pizza-card__title">${c.t("money.confirmed", { amount: euro(c, m.total_cents ?? 0) })}</p>
-    ${m.total_set_by === null
-      ? ""
-      : html`<p class="pizza-card__meta">
-          ${c.t("money.confirmed_by", { name: m.total_set_by.name, time: time(c, m.total_set_at) })}
-        </p>`}
-    ${m.receipts.length === 0
-      ? ""
-      : html`<ul class="pizza-receipts">
-            ${m.receipts.map(
-              (r, i) =>
-                html`<li class="pizza-receipt">
-                  <a href="${photoUrl(r.id)}"
-                    ><img src="${photoUrl(r.id)}" alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}" loading="lazy"
-                  /></a>
-                  <span>${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}</span>
-                </li>`,
-            )}
-          </ul>
-          <p class="pizza-muted">${c.t("money.receipt_who")}</p>`}
+    <p class="pizza-card__title">
+      ${c.t("money.confirmed", { amount: euro(c, m.total_cents ?? 0) })}
+    </p>
+    ${
+      m.total_set_by === null
+        ? ""
+        : html`<p class="pizza-card__meta">
+            ${c.t("money.confirmed_by", { name: m.total_set_by.name, time: time(c, m.total_set_at) })}
+          </p>`
+    }
+    ${
+      m.receipts.length === 0
+        ? ""
+        : html`<ul class="pizza-receipts">
+              ${m.receipts.map(
+                (r, i) =>
+                  html`<li class="pizza-receipt">
+                    <a href="${photoUrl(r.id)}"
+                      ><img
+                        src="${photoUrl(r.id)}"
+                        alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"
+                        loading="lazy"
+                    /></a>
+                    <span>${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}</span>
+                  </li>`,
+              )}
+            </ul>
+            <p class="pizza-muted">${c.t("money.receipt_who")}</p>`
+    }
     <div class="pizza-card__links">
       <a href="${base(o)}/money/scan">${c.t("money.another")}</a>
       <a href="${base(o)}/money/total">${c.t("money.change_total")}</a>
@@ -134,22 +157,39 @@ function unpriced(c: PageCtx, o: OrderView, m: MoneyView): Slot {
     </p>
     <p class="pizza-muted">${c.t("money.unpriced_hint")}</p>
     ${missing.map(
-      (p) => html`<form method="post" action="${base(o)}/money/price" class="pizza-price">
-        ${formKey()}<input type="hidden" name="item_id" value="${p.item_id}" />
-        <label class="canccu-field"
-          ><span class="canccu-field__label">${p.label} (${names.get(p.user_id) ?? "—"})</span
-          ><input class="canccu-input pizza-amount-input" name="price" inputmode="decimal" autocomplete="off" required placeholder="0.00"
-        /></label>
-        <button class="canccu-button canccu-button--secondary" type="submit">${c.t("money.save_price")}</button>
-      </form>`,
+      (p) =>
+        html`<form method="post" action="${base(o)}/money/price" class="pizza-price">
+          ${formKey()}<input type="hidden" name="item_id" value="${p.item_id}" />
+          <label class="canccu-field"
+            ><span class="canccu-field__label">${p.label} (${names.get(p.user_id) ?? "—"})</span
+            ><input
+              class="canccu-input pizza-amount-input"
+              name="price"
+              inputmode="decimal"
+              autocomplete="off"
+              required
+              placeholder="0.00"
+          /></label>
+          <button class="canccu-button canccu-button--secondary" type="submit">
+            ${c.t("money.save_price")}
+          </button>
+        </form>`,
     )}
     ${m.total_cents === null ? "" : html`<p class="pizza-muted">${c.t("money.unpriced_even", { line: splitLine(c, { ...m, split_effective: "even" }) })}</p>`}
   </section>`;
 }
 
-function choice(name: string, value: string, label: string, checked: boolean, disabled = false): Html {
+function choice(
+  name: string,
+  value: string,
+  label: string,
+  checked: boolean,
+  disabled = false,
+): Html {
   return html`<label class="pizza-choice"
-    ><input${attrs({ type: "radio", name, value, checked, disabled })} /><span>${label}</span></label
+    ><input${attrs({ type: "radio", name, value, checked, disabled })} /><span
+      >${label}</span
+    ></label
   >`;
 }
 
@@ -165,7 +205,9 @@ function split(c: PageCtx, o: OrderView, m: MoneyView): Slot {
       </div>
     </fieldset>
     <p class="pizza-muted">${splitLine(c, m)}</p>
-    <button class="canccu-button canccu-button--secondary" type="submit">${c.t("money.save")}</button>
+    <button class="canccu-button canccu-button--secondary" type="submit">
+      ${c.t("money.save")}
+    </button>
   </form>`;
 }
 
@@ -177,12 +219,15 @@ function people(c: PageCtx, m: MoneyView, me: string): Html {
     </p>
     <ul class="pizza-people">
       ${m.people.map(
-        (p) => html`<li class="pizza-person">
-          <span class="pizza-person__text"
-            ><span class="pizza-person__name">${who(p)}</span
-            ><span class="pizza-person__what">${pizzasOf(c, p.units)}</span></span
-          ><span class="pizza-amount canccu-num">${p.amount_cents === null ? "—" : euro(c, p.amount_cents)}</span>
-        </li>`,
+        (p) =>
+          html`<li class="pizza-person">
+            <span class="pizza-person__text"
+              ><span class="pizza-person__name">${who(p)}</span
+              ><span class="pizza-person__what">${pizzasOf(c, p.units)}</span></span
+            ><span class="pizza-amount canccu-num"
+              >${p.amount_cents === null ? "—" : euro(c, p.amount_cents)}</span
+            >
+          </li>`,
       )}
     </ul>`;
 }
@@ -200,7 +245,9 @@ function whoIsPaid(c: PageCtx, o: OrderView, m: MoneyView, directly: boolean): S
       </div>
     </fieldset>
     <p class="pizza-muted">${c.t(payer ? "money.directly_text" : "money.organiser_text")}</p>
-    <button class="canccu-button canccu-button--secondary" type="submit">${c.t("money.save")}</button>
+    <button class="canccu-button canccu-button--secondary" type="submit">
+      ${c.t("money.save")}
+    </button>
   </form>`;
 }
 
@@ -221,13 +268,25 @@ function payWith(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
             ${formKey()}
             <label class="canccu-field"
               ><span class="canccu-field__label">${c.t("money.mobilepay_label")}</span
-              ><input class="canccu-input" name="mobilepay" inputmode="tel" autocomplete="tel" value="${p.mobilepay ?? ""}"
+              ><input
+                class="canccu-input"
+                name="mobilepay"
+                inputmode="tel"
+                autocomplete="tel"
+                value="${p.mobilepay ?? ""}"
             /></label>
             <label class="canccu-field"
               ><span class="canccu-field__label">${c.t("money.iban_label")}</span
-              ><input class="canccu-input" name="iban" autocomplete="off" spellcheck="false" value="${p.iban ?? ""}"
+              ><input
+                class="canccu-input"
+                name="iban"
+                autocomplete="off"
+                spellcheck="false"
+                value="${p.iban ?? ""}"
             /></label>
-            <button class="canccu-button canccu-button--primary" type="submit">${c.t("money.save_details")}</button>
+            <button class="canccu-button canccu-button--primary" type="submit">
+              ${c.t("money.save_details")}
+            </button>
           </form>
         </details>`;
   return html`<section class="pizza-card">
@@ -238,7 +297,12 @@ function payWith(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
 }
 
 /** A person's Paid tick: the holder's memo (U12 A). `back` is the page to return to. */
-export function paidTick(c: PageCtx, o: OrderView, p: MoneyPerson, back: "money" | "hand-out"): Html {
+export function paidTick(
+  c: PageCtx,
+  o: OrderView,
+  p: MoneyPerson,
+  back: "money" | "hand-out",
+): Html {
   return html`<form method="post" action="${base(o)}/paid" class="pizza-inline">
     ${formKey()}<input type="hidden" name="user_id" value="${p.user_id ?? ""}" /><input
       type="hidden"
@@ -269,12 +333,15 @@ function owes(c: PageCtx, o: OrderView, m: MoneyView): Slot {
     <p class="pizza-cols"><span>${c.t("money.paid")}</span></p>
     <ul class="pizza-people">
       ${owing.map(
-        (p) => html`<li class="pizza-person">
-          <span class="pizza-person__text"
-            ><span class="pizza-person__name">${p.name ?? "—"}</span
-            ><span class="pizza-person__what">${c.t("money.owes_you", { amount: euro(c, p.amount_cents ?? 0) })}</span></span
-          >${paidTick(c, o, p, "money")}
-        </li>`,
+        (p) =>
+          html`<li class="pizza-person">
+            <span class="pizza-person__text"
+              ><span class="pizza-person__name">${p.name ?? "—"}</span
+              ><span class="pizza-person__what"
+                >${c.t("money.owes_you", { amount: euro(c, p.amount_cents ?? 0) })}</span
+              ></span
+            >${paidTick(c, o, p, "money")}
+          </li>`,
       )}
     </ul>
     <p class="pizza-muted">${c.t("money.memo")}</p>
@@ -283,7 +350,8 @@ function owes(c: PageCtx, o: OrderView, m: MoneyView): Slot {
 
 export function moneyPageView(c: PageCtx, o: OrderView, m: MoneyView, s: MoneyPageOpts): Html {
   return html`${flash(s.error)} ${header(c, o, m, s.me)}
-  ${m.total_cents === null ? addReceipt(c, o, m, s.reader) : confirmed(c, o, m)} ${unpriced(c, o, m)}
-  ${split(c, o, m)} ${m.total_effective_cents === null ? "" : people(c, m, s.me)}
-  ${whoIsPaid(c, o, m, s.directly)} ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`;
+  ${m.total_cents === null ? addReceipt(c, o, m, s.reader) : confirmed(c, o, m)}
+  ${unpriced(c, o, m)} ${split(c, o, m)}
+  ${m.total_effective_cents === null ? "" : people(c, m, s.me)} ${whoIsPaid(c, o, m, s.directly)}
+  ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`;
 }

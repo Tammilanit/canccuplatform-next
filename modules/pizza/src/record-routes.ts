@@ -95,7 +95,9 @@ export function recordRoutes(app: FastifyInstance, deps: AppDeps): void {
                  OR (l.kind = 'money_changed' AND l.detail->>'crew' = 'true'))
           GROUP BY l.order_id`,
       );
-      const paid = await count(`SELECT order_id, count(*)::int AS n FROM pizza_paid GROUP BY order_id`);
+      const paid = await count(
+        `SELECT order_id, count(*)::int AS n FROM pizza_paid GROUP BY order_id`,
+      );
       const receipts = await count(
         `SELECT order_id, count(*)::int AS n FROM pizza_receipts GROUP BY order_id`,
       );

@@ -65,12 +65,15 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (receipt === null) throw notFound("receipt");
       const order = (await getOrder(c, receipt.order_id)) as OrderRow;
       authorize("receipt.add", caller, facts(ctx, now, order));
-      if (order.state === "cancelled" || !CALLED_IN.includes(order.state)) throw cannot("total", order);
+      if (order.state === "cancelled" || !CALLED_IN.includes(order.state))
+        throw cannot("total", order);
       const reader: Reader = await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, now);
       return { receipt, reader, items: await itemsOf(c, [order.id]) };
     });
     const photo = await readFile(receiptPath(deps.filesRoot, receipt.file));
-    const reading = await counted(deps, request, "receipt", () => reader.receipt(photo, receipt.type));
+    const reading = await counted(deps, request, "receipt", () =>
+      reader.receipt(photo, receipt.type),
+    );
     const read = matchReceipt(reading, items, now);
     const { rows } = await deps.db.tenant((c) =>
       c.query(`UPDATE pizza_receipts SET read = $2 WHERE id = $1 RETURNING *`, [
@@ -90,7 +93,10 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
     const { pizzeria, reader } = await deps.db.tenant(async (c) => {
       const pizzeria = await getPizzeria(c, id);
       if (pizzeria === null) throw notFound("pizzeria");
-      return { pizzeria, reader: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now()) };
+      return {
+        pizzeria,
+        reader: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now()),
+      };
     });
     const clean = await cleanPhoto(photo, type);
     const rows = await counted(deps, request, "menu", () => reader.menu(clean, type));

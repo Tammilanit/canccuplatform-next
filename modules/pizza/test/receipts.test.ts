@@ -9,7 +9,6 @@ import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { withTenant } from "@canccu/kit";
-import type { Event } from "@canccu/kit";
 import { handleTenantEvent } from "../src/consumer.js";
 import {
   DATABASE_URL,
@@ -107,18 +106,20 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
   it("is seen by the holder, the crew and the organiser only (a receipt can show card digits)", async () => {
     await place();
     const r = json(await upload("pena", await png(), "image/png"));
-    const photo = (who: string) => w.call(who, "GET", `/api/pizza/receipts/${r.id as string}/photo`);
+    const photo = (who: string) =>
+      w.call(who, "GET", `/api/pizza/receipts/${r.id as string}/photo`);
     for (const who of ["pena", "crew", "treasurer"]) {
       const res = await photo(who);
       expect(res.statusCode, who).toBe(200);
       expect(res.headers["content-type"]).toBe("image/png");
       expect(res.headers["cache-control"]).toContain("no-store");
     }
-    for (const who of ["anni", "mikko"]) expect(errorOf(await photo(who)).code, who).toBe("not_holder");
+    for (const who of ["anni", "mikko"])
+      expect(errorOf(await photo(who)).code, who).toBe("not_holder");
     expect((await photo("outsider")).statusCode).toBe(403);
-    expect((await w.call(null, "GET", `/api/pizza/receipts/${r.id as string}/photo`)).statusCode).toBe(
-      401,
-    );
+    expect(
+      (await w.call(null, "GET", `/api/pizza/receipts/${r.id as string}/photo`)).statusCode,
+    ).toBe(401);
     expect(errorOf(await w.call("anni", "GET", `/api/pizza/orders/${id}/receipts`)).code).toBe(
       "not_holder",
     );
@@ -127,9 +128,15 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
   it("is never another event's: the id does not reach across", async () => {
     await place();
     const r = json(await upload("pena", await png(), "image/png"));
-    const res = await w.call("crew", "GET", `/api/pizza/receipts/${r.id as string}/photo`, undefined, {
-      host: "two.test",
-    });
+    const res = await w.call(
+      "crew",
+      "GET",
+      `/api/pizza/receipts/${r.id as string}/photo`,
+      undefined,
+      {
+        host: "two.test",
+      },
+    );
     expect(res.statusCode).toBe(404);
   });
 
@@ -155,7 +162,7 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
         source: "tenants",
         tenant: "demo",
         data: { data_class: "personal" },
-      } as Event),
+      }),
     );
     expect(existsSync(file)).toBe(false);
     const list = json(await w.call("crew", "GET", `/api/pizza/orders/${id}/receipts`));

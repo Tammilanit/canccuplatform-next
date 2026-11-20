@@ -27,7 +27,10 @@ export async function photosOf(request: FastifyRequest): Promise<Photo[]> {
     if (part.type === "file") {
       const bytes = await part.toBuffer();
       if (part.file.truncated)
-        throw new KitError("A photo may be at most 10 MB.", { status: 413, code: "file_too_large" });
+        throw new KitError("A photo may be at most 10 MB.", {
+          status: 413,
+          code: "file_too_large",
+        });
       if (bytes.length > 0) photos.push({ bytes, type: part.mimetype });
     } else if (typeof part.value === "string") fields[part.fieldname] = part.value;
   }

@@ -201,7 +201,9 @@ describe.skipIf(!DATABASE_URL)("races", () => {
 
   it("never leaves a pizza from another pizzeria's menu when the pizzeria changes during an add (E6)", async () => {
     for (let round = 0; round < 8; round++) {
-      await pool.query("TRUNCATE pizza_receipts, pizza_paid, pizza_due, pizza_items, pizza_order_log, pizza_orders");
+      await pool.query(
+        "TRUNCATE pizza_receipts, pizza_paid, pizza_due, pizza_items, pizza_order_log, pizza_orders",
+      );
       const id = json(await open(w, "pena", pz)).id as string;
       await Promise.all([
         w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: grill }),

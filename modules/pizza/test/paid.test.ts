@@ -59,7 +59,9 @@ const tick = (who: string, user: string, paid = true) =>
 const money = (who = "pena") => w.call(who, "GET", `/api/pizza/orders/${id}/money`);
 const view = (who: string | null) => w.call(who, "GET", `/api/pizza/orders/${id}`);
 const paidOf = (m: Record<string, unknown>) =>
-  Object.fromEntries((m.people as { name: string; paid: boolean | null }[]).map((p) => [p.name, p.paid]));
+  Object.fromEntries(
+    (m.people as { name: string; paid: boolean | null }[]).map((p) => [p.name, p.paid]),
+  );
 
 describe.skipIf(!DATABASE_URL)("Paid ticks", () => {
   it("are only for an order that settles to its payer", async () => {

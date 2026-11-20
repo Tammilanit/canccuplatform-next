@@ -7,9 +7,11 @@ export const MONEY_EN = {
   "money.title": "Money",
   "money.back": "Order {seq}",
   "money.add_receipt": "Add the receipt",
-  "money.add_receipt_hint": "It sets the order's total and, when read, each pizza's price. Optional.",
+  "money.add_receipt_hint":
+    "It sets the order's total and, when read, each pizza's price. Optional.",
   "money.outside": "Read by an outside service",
-  "money.outside_text": "The photo goes to {provider} to be read. You check the result before it counts.",
+  "money.outside_text":
+    "The photo goes to {provider} to be read. You check the result before it counts.",
   "money.scan": "Scan the receipt",
   "money.type_instead": "Type the total instead",
   "money.photo_only": "Add a photo (kept, not read)",
@@ -46,7 +48,8 @@ export const MONEY_EN = {
   "money.who_paid": "Who is paid",
   "money.organiser": "The organiser",
   "money.directly": "Me directly",
-  "money.organiser_text": "People pay the organiser after the event. Nothing to collect at the door.",
+  "money.organiser_text":
+    "People pay the organiser after the event. Nothing to collect at the door.",
   "money.directly_text": "People pay you. Mark them paid at hand-out.",
   "money.pay_with": "Pay me with",
   "money.pay_with_hint": "Sent to the {n} people in this order, with their amount.",
@@ -61,7 +64,8 @@ export const MONEY_EN = {
   "money.owe_line": "{n} people owe you {amount} · {k} marked paid",
   "money.paid": "Paid",
   "money.owes_you": "owes you {amount}",
-  "money.memo": "A tick is your memo: no money moves through the app. Each person sees only their own mark.",
+  "money.memo":
+    "A tick is your memo: no money moves through the app. Each person sees only their own mark.",
   "money.mark": "Mark {name} paid",
   "money.save": "Save",
   "pad.title": "Type the total",
@@ -131,7 +135,8 @@ export const MONEY_EN = {
   "export.which": "Which orders",
   "export.count": "{orders} orders · {rows} rows",
   "export.left_out": "Order {seq} is left out",
-  "export.left_out_text": "It has no total yet. Add it and export again: the same orders are replaced.",
+  "export.left_out_text":
+    "It has no total yet. Add it and export again: the same orders are replaced.",
   "export.preview": "Preview",
   "export.col_order": "Order",
   "export.col_nick": "Nick",
@@ -145,7 +150,8 @@ export const MONEY_EN = {
   "settings.organiser": "People pay the organiser",
   "settings.organiser_hint": "After the event, in the payment system",
   "settings.settle_to_payer": "Let holders take payment",
-  "settings.settle_to_payer_hint": "The holder then picks per order: via the organiser, or paid to them",
+  "settings.settle_to_payer_hint":
+    "The holder then picks per order: via the organiser, or paid to them",
   "settings.reader": "AI reader",
   "settings.ai_reader": "Read receipts and menus",
   "settings.ai_reader_hint": "From photos; a person confirms",
@@ -159,7 +165,7 @@ export const MONEY_EN = {
   "integrations.reader_text":
     "Reads receipts and menus from photos for the Food pages; a person confirms every read.",
   "integrations.not_set": "No key is set: the AI reader is not shown anywhere.",
-  "integrations.key_ending": "Key ending {last4}",
+  "integrations.key_ending": "Key ending {last_four}",
   "integrations.set_by": "Set by {name} on {date}",
   "integrations.last_used": "Last used {date}",
   "integrations.never_used": "Not used yet",
@@ -168,12 +174,14 @@ export const MONEY_EN = {
   "integrations.key": "API key",
   "integrations.set": "Set the key",
   "integrations.replace": "Replace the key",
-  "integrations.kept": "The key is kept encrypted and never shown again. Every change is in the audit log.",
+  "integrations.kept":
+    "The key is kept encrypted and never shown again. Every change is in the audit log.",
   "integrations.revoke": "Revoke the key",
   "integrations.revoke_text": "Reads stop at once, and the reader disappears from every page.",
   "integrations.off": "The event's own switch is in Food settings.",
   "read.title": "Read a photo",
-  "read.outside_text": "The photo goes to {provider} to be read. Nothing else is sent; the photo is not kept.",
+  "read.outside_text":
+    "The photo goes to {provider} to be read. Nothing else is sent; the photo is not kept.",
   "read.photos": "Photos of the menu, one page each",
   "read.go": "Read the photos",
   "read.result": "Read {n} items · check them first",

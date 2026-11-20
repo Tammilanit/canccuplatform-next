@@ -46,7 +46,8 @@ export function receiptView(r: ReceiptRow) {
     type: r.type,
     bytes: r.bytes,
     added_at: r.added_at.toISOString(),
-    added_by: r.added_by_user_id === null ? null : { user_id: r.added_by_user_id, name: r.added_by_name },
+    added_by:
+      r.added_by_user_id === null ? null : { user_id: r.added_by_user_id, name: r.added_by_name },
     read: r.read,
   };
 }
@@ -112,7 +113,13 @@ export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
         [id, order.id, file, type, clean.length, w.now, w.session.userId, w.session.userName],
       );
-      await logStep(c, order.id, w.now, { user_id: w.session.userId, name: w.session.userName }, "receipt_added");
+      await logStep(
+        c,
+        order.id,
+        w.now,
+        { user_id: w.session.userId, name: w.session.userName },
+        "receipt_added",
+      );
       return ok(receiptView(rows[0] as unknown as ReceiptRow), 201);
     }),
   );
@@ -121,7 +128,14 @@ export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
     const ctx = tenantOf(request);
     const { caller } = await whoIs(deps, request);
     return deps.db.tenant(async (c) => {
-      const { order } = await orderFor(c, request.params.id, "receipt.read", caller, ctx, deps.now());
+      const { order } = await orderFor(
+        c,
+        request.params.id,
+        "receipt.read",
+        caller,
+        ctx,
+        deps.now(),
+      );
       return { receipts: (await receiptsOf(c, order.id)).map(receiptView) };
     });
   });
@@ -148,10 +162,13 @@ async function onVolume(fn: () => Promise<void>): Promise<void> {
   } catch (err) {
     const code = (err as { code?: unknown }).code;
     if (code === "EACCES" || code === "EPERM" || code === "EROFS" || code === "ENOSPC") {
-      throw new KitError("The files volume cannot be written, so receipts are off. Tell an operator.", {
-        status: 503,
-        code: "files_unavailable",
-      });
+      throw new KitError(
+        "The files volume cannot be written, so receipts are off. Tell an operator.",
+        {
+          status: 503,
+          code: "files_unavailable",
+        },
+      );
     }
     throw err;
   }

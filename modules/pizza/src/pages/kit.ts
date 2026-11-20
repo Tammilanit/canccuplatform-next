@@ -14,7 +14,7 @@ import { attrs, errorTitle, errorView, html, shellPage } from "@canccu/ui";
 import type { EventInfo, Html, Slot, Tab } from "@canccu/ui";
 import { tenantOf, whoIs } from "../http.js";
 import type { AppDeps } from "../http.js";
-import { MANAGE, MENU_WRITE } from "../policy.js";
+import { MANAGE, MENU_WRITE, RECORD_READ } from "../policy.js";
 import { translator } from "./messages.js";
 import type { Translate } from "./messages.js";
 
@@ -131,11 +131,14 @@ export function hubPage(
 }
 
 /** The Food section's tabs, those the caller may open. */
-export function foodTabs(c: PageCtx, current: "orders" | "pizzerias" | "settings"): Tab[] {
+export type FoodTab = "orders" | "pizzerias" | "record" | "settings";
+
+export function foodTabs(c: PageCtx, current: FoodTab): Tab[] {
   const r = c.session.rights;
   const all: [string, string, string, boolean][] = [
     ["orders", `${PREFIX}crew`, c.t("tab.orders"), r.has(MANAGE)],
     ["pizzerias", `${PREFIX}crew/pizzerias`, c.t("tab.pizzerias"), r.has(MENU_WRITE)],
+    ["record", `${PREFIX}crew/record`, c.t("tab.record"), r.has(RECORD_READ)],
     ["settings", `${PREFIX}crew/settings`, c.t("tab.settings"), r.has(SETTINGS_WRITE)],
   ];
   return all
@@ -151,7 +154,9 @@ export async function organiserPage(
   c: PageCtx,
   o: {
     title: string;
-    tab?: "orders" | "pizzerias" | "settings";
+    tab?: FoodTab;
+    /** The organiser menu's item this page is (Food unless said). */
+    current?: string;
     body: Slot;
     crumb?: { href: string; label: string };
     actions?: Slot;
@@ -172,7 +177,7 @@ export async function organiserPage(
       /><link rel="stylesheet" href="${PREFIX}static/money.css" />`,
     event: await eventOf(request, deps),
     session: { userName: c.session.userName, rights: c.session.rights },
-    current: "food",
+    current: o.current ?? "food",
     ...(o.crumb === undefined ? {} : { crumb: o.crumb }),
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.wide === true ? { width: "wide" as const } : {}),

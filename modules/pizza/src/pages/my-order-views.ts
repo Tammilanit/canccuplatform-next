@@ -170,7 +170,12 @@ function nobodyCard(c: FoodCtx, o: OrderView): Html {
 const copyable = (c: FoodCtx, label: string, value: string) =>
   html`<p class="pizza-copyable">
     <span>${label}</span
-    ><button type="button" class="canccu-button canccu-button--secondary canccu-button--sm" data-copy="${value}" hidden>
+    ><button
+      type="button"
+      class="canccu-button canccu-button--secondary canccu-button--sm"
+      data-copy="${value}"
+      hidden
+    >
       ${c.t("mine.copy")}
     </button>
   </p>`;
@@ -194,13 +199,19 @@ function myMoney(c: FoodCtx, o: OrderView): Slot {
         ? o.settle_to === "payer"
           ? ""
           : html`<p>${c.t("mine.pay_organiser")}</p>`
-        : html`<p class="pizza-card__title">${c.t("mine.pay_to", { name: p.name ?? "—", amount: sum })}</p>
+        : html`<p class="pizza-card__title">
+              ${c.t("mine.pay_to", { name: p.name ?? "—", amount: sum })}
+            </p>
             ${p.mobilepay === null ? "" : copyable(c, c.t("money.mobilepay", { number: p.mobilepay }), p.mobilepay)}
             ${p.iban === null ? "" : copyable(c, c.t("money.bank", { iban: p.iban }), p.iban)}
             <p class="pizza-muted">${c.t("mine.no_app_money", { name: p.name ?? "—" })}</p>
-            ${o.my_paid === true
-              ? html`<p class="pizza-badge pizza-badge--ok">${c.t("mine.marked", { name: p.name ?? "—" })}</p>`
-              : ""}`
+            ${
+              o.my_paid === true
+                ? html`<p class="pizza-badge pizza-badge--ok">
+                    ${c.t("mine.marked", { name: p.name ?? "—" })}
+                  </p>`
+                : ""
+            }`
     }
   </section>`;
 }

@@ -42,12 +42,21 @@ async function keyRow(c: SqlClient): Promise<KeyRow | null> {
   return (rows[0] as KeyRow | undefined) ?? null;
 }
 
-async function readsSince(c: SqlClient, column: "day" | "at", since: string | Date): Promise<number> {
+async function readsSince(
+  c: SqlClient,
+  column: "day" | "at",
+  since: string | Date,
+): Promise<number> {
   const { rows } = await c.query(
     `SELECT count(*)::int AS n FROM pizza_reads WHERE ${column} >= $1`,
     [since],
   );
   return (rows[0] as { n: number }).n;
+}
+
+/** Whether an admin has set a provider key: without one the reader's setting is not shown. */
+export async function readerKeySet(deps: AppDeps): Promise<boolean> {
+  return (await deps.db.tenant(keyRow)) !== null;
 }
 
 /** Whether pages offer the reader at all: on, with a key the provider has not refused. */
@@ -107,7 +116,8 @@ async function status(c: SqlClient, zone: string, now: Date) {
     model: PROVIDER.model,
     set: key !== null,
     last4: key?.last4 ?? null,
-    set_by: key?.set_by_user_id == null ? null : { user_id: key.set_by_user_id, name: key.set_by_name },
+    set_by:
+      key?.set_by_user_id == null ? null : { user_id: key.set_by_user_id, name: key.set_by_name },
     set_at: key?.set_at.toISOString() ?? null,
     last_used_at: key?.last_used_at?.toISOString() ?? null,
     rejected: key?.rejected_at != null,

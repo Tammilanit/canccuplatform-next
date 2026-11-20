@@ -5,9 +5,11 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.title": "Rahat",
   "money.back": "Tilaus {seq}",
   "money.add_receipt": "Lisää kuitti",
-  "money.add_receipt_hint": "Se asettaa tilauksen summan ja luettuna jokaisen pizzan hinnan. Vapaaehtoinen.",
+  "money.add_receipt_hint":
+    "Se asettaa tilauksen summan ja luettuna jokaisen pizzan hinnan. Vapaaehtoinen.",
   "money.outside": "Ulkopuolinen palvelu lukee",
-  "money.outside_text": "Kuva lähetetään luettavaksi palveluun {provider}. Tarkistat tuloksen ennen kuin se lasketaan.",
+  "money.outside_text":
+    "Kuva lähetetään luettavaksi palveluun {provider}. Tarkistat tuloksen ennen kuin se lasketaan.",
   "money.scan": "Skannaa kuitti",
   "money.type_instead": "Kirjoita summa itse",
   "money.photo_only": "Lisää kuva (säilytetään, ei lueta)",
@@ -44,7 +46,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.who_paid": "Kenelle maksetaan",
   "money.organiser": "Järjestäjälle",
   "money.directly": "Suoraan minulle",
-  "money.organiser_text": "Kaikki maksavat järjestäjälle tapahtuman jälkeen. Ovella ei kerätä mitään.",
+  "money.organiser_text":
+    "Kaikki maksavat järjestäjälle tapahtuman jälkeen. Ovella ei kerätä mitään.",
   "money.directly_text": "Kaikki maksavat sinulle. Merkitse maksaneet jaossa.",
   "money.pay_with": "Maksa minulle",
   "money.pay_with_hint": "Lähetetään tilauksen {n} henkilölle heidän summansa kanssa.",
@@ -59,7 +62,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.owe_line": "{n} henkilöä on velkaa {amount} · {k} merkitty maksaneeksi",
   "money.paid": "Maksanut",
   "money.owes_you": "velkaa {amount}",
-  "money.memo": "Merkintä on sinun muistiinpanosi: sovellus ei siirrä rahaa. Kukin näkee vain oman merkintänsä.",
+  "money.memo":
+    "Merkintä on sinun muistiinpanosi: sovellus ei siirrä rahaa. Kukin näkee vain oman merkintänsä.",
   "money.mark": "Merkitse {name} maksaneeksi",
   "money.save": "Tallenna",
   "pad.title": "Kirjoita summa",
@@ -129,7 +133,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "export.which": "Mitkä tilaukset",
   "export.count": "{orders} tilausta · {rows} riviä",
   "export.left_out": "Tilaus {seq} jätetään pois",
-  "export.left_out_text": "Siltä puuttuu summa. Lisää se ja vie uudelleen: samat tilaukset korvataan.",
+  "export.left_out_text":
+    "Siltä puuttuu summa. Lisää se ja vie uudelleen: samat tilaukset korvataan.",
   "export.preview": "Esikatselu",
   "export.col_order": "Tilaus",
   "export.col_nick": "Nimi",
@@ -143,7 +148,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "settings.organiser": "Kaikki maksavat järjestäjälle",
   "settings.organiser_hint": "Tapahtuman jälkeen, maksujärjestelmässä",
   "settings.settle_to_payer": "Tilaaja voi ottaa maksut",
-  "settings.settle_to_payer_hint": "Tilaaja valitsee tilauskohtaisesti: järjestäjän kautta tai itselleen",
+  "settings.settle_to_payer_hint":
+    "Tilaaja valitsee tilauskohtaisesti: järjestäjän kautta tai itselleen",
   "settings.reader": "Tekoälylukija",
   "settings.ai_reader": "Lue kuitit ja menut",
   "settings.ai_reader_hint": "Kuvista; ihminen vahvistaa",
@@ -157,7 +163,7 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "integrations.reader_text":
     "Lukee kuitit ja menut kuvista Ruoka-sivuille; ihminen vahvistaa jokaisen luennan.",
   "integrations.not_set": "Avainta ei ole: tekoälylukijaa ei näytetä missään.",
-  "integrations.key_ending": "Avain, loppuu {last4}",
+  "integrations.key_ending": "Avain, loppuu {last_four}",
   "integrations.set_by": "Asetti {name} {date}",
   "integrations.last_used": "Viimeksi käytetty {date}",
   "integrations.never_used": "Ei vielä käytetty",
@@ -166,17 +172,20 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "integrations.key": "API-avain",
   "integrations.set": "Aseta avain",
   "integrations.replace": "Vaihda avain",
-  "integrations.kept": "Avain tallennetaan salattuna eikä sitä näytetä enää. Jokainen muutos kirjataan.",
+  "integrations.kept":
+    "Avain tallennetaan salattuna eikä sitä näytetä enää. Jokainen muutos kirjataan.",
   "integrations.revoke": "Poista avain",
   "integrations.revoke_text": "Luku loppuu heti, ja lukija katoaa kaikilta sivuilta.",
   "integrations.off": "Tapahtuman oma kytkin on Ruoka-asetuksissa.",
   "read.title": "Lue kuva",
-  "read.outside_text": "Kuva lähetetään luettavaksi palveluun {provider}. Muuta ei lähetetä; kuvaa ei säilytetä.",
+  "read.outside_text":
+    "Kuva lähetetään luettavaksi palveluun {provider}. Muuta ei lähetetä; kuvaa ei säilytetä.",
   "read.photos": "Kuvat menusta, sivu kerrallaan",
   "read.go": "Lue kuvat",
   "read.result": "Luettiin {n} tuotetta · tarkista ne ensin",
   "read.unsure": "epävarma: tarkista",
-  "read.fix": "Korjaa rivi alla olevaan CSV:hen. Mitään ei tallenneta ennen kuin tuonnin esikatselu hyväksytään.",
+  "read.fix":
+    "Korjaa rivi alla olevaan CSV:hen. Mitään ei tallenneta ennen kuin tuonnin esikatselu hyväksytään.",
   "read.use": "Käytä tuontiin",
   "read.download": "Lataa CSV",
   "read.button": "Lue kuva",

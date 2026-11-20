@@ -51,11 +51,7 @@ export interface RecordDay {
 }
 
 export type FlagKind =
-  | "no_total"
-  | "edited_after_placed"
-  | "released"
-  | "cancelled_after_placed"
-  | "closed_by_timer";
+  "no_total" | "edited_after_placed" | "released" | "cancelled_after_placed" | "closed_by_timer";
 
 export interface DailyRecord {
   days: RecordDay[];

@@ -51,7 +51,10 @@ beforeEach(async () => {
     });
   }
   await w.call("pena", "POST", `/api/pizza/orders/${one}/place`, {});
-  await w.call("pena", "PATCH", `/api/pizza/orders/${one}/money`, { total_cents: 2000, settle_to: "payer" });
+  await w.call("pena", "PATCH", `/api/pizza/orders/${one}/money`, {
+    total_cents: 2000,
+    settle_to: "payer",
+  });
   await w.call("pena", "PUT", `/api/pizza/orders/${one}/paid/u_anni`, { paid: true });
   two = json(await open(w, "tero", grill)).id as string;
   await w.call("tero", "POST", `/api/pizza/orders/${two}/items`, { kind: "text", text: "Burger" });
@@ -67,7 +70,7 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
     expect(r.body).toContain("Order 1 · Demo Pizzeria");
     expect(r.body).toContain("€20.00 · exact amounts");
     expect(r.body).toContain("Paid by Pena · paid to them");
-    expect(r.body).toContain("Order 1 · Demo Grill");
+    expect(r.body).toContain("Order 2 · Demo Grill");
     expect(r.body).toContain("No total yet");
     expect(r.body).toContain("total missing");
     expect(r.body).toContain("Export for the payment system");
@@ -89,7 +92,7 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
     const r = await view(w, "treasurer", "/crew/export?day=2026-10-29");
     expect(r.statusCode).toBe(200);
     expect(r.body).toContain("1 orders · 2 rows");
-    expect(r.body).toContain("Order 1 is left out");
+    expect(r.body).toContain("Order 2 is left out");
     expect(r.body).toContain("It has no total yet.");
     expect(r.body).toContain("Anni");
     expect(r.body).toContain("10.75");
@@ -102,28 +105,31 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
   });
 });
 
-describe.skipIf(!DATABASE_URL)("settling up and the AI reader in Food settings (mockup 17 C)", () => {
-  it("lets holders take payment, and hides the reader without a key", async () => {
-    let page = (await view(w, "organiser", "/crew/settings")).body;
-    expect(page).toContain("Let holders take payment");
-    expect(page).not.toContain("Read receipts and menus");
-    await w.call("organiser", "PUT", "/api/pizza/reader/key", { api_key: KEY });
-    page = (await view(w, "organiser", "/crew/settings")).body;
-    expect(page).toContain("Read receipts and menus");
-    expect(page).toContain("Anthropic, Claude Haiku 5.5");
-    await form(w, "organiser", "/crew/settings", {
-      settings_version: "1",
-      settle_to_payer: "on",
-      ai_reader: "on",
-      ai_reader_daily_reads: "40",
+describe.skipIf(!DATABASE_URL)(
+  "settling up and the AI reader in Food settings (mockup 17 C)",
+  () => {
+    it("lets holders take payment, and hides the reader without a key", async () => {
+      let page = (await view(w, "organiser", "/crew/settings")).body;
+      expect(page).toContain("Let holders take payment");
+      expect(page).not.toContain("Read receipts and menus");
+      await w.call("organiser", "PUT", "/api/pizza/reader/key", { api_key: KEY });
+      page = (await view(w, "organiser", "/crew/settings")).body;
+      expect(page).toContain("Read receipts and menus");
+      expect(page).toContain("Anthropic, Claude Haiku 5.5");
+      await form(w, "organiser", "/crew/settings", {
+        settings_version: "1",
+        settle_to_payer: "on",
+        ai_reader: "on",
+        ai_reader_daily_reads: "40",
+      });
+      expect(w.adminSettings.writes.at(-1)?.values).toMatchObject({
+        settle_to_payer: true,
+        ai_reader: true,
+        ai_reader_daily_reads: 40,
+      });
     });
-    expect(w.adminSettings.writes.at(-1)?.values).toMatchObject({
-      settle_to_payer: true,
-      ai_reader: true,
-      ai_reader_daily_reads: 40,
-    });
-  });
-});
+  },
+);
 
 describe.skipIf(!DATABASE_URL)("Admin → Integrations", () => {
   it("sets, shows by its last four, and revokes the reader's key; never shows it", async () => {
@@ -147,7 +153,9 @@ describe.skipIf(!DATABASE_URL)("Admin → Integrations", () => {
 
 describe.skipIf(!DATABASE_URL)("reading a menu photo (mockup 11 D)", () => {
   it("is offered only with the reader on, says where the photo goes, and gives the import a CSV", async () => {
-    expect((await view(w, "organiser", `/crew/pizzerias/${pz}`)).body).not.toContain("Read a photo");
+    expect((await view(w, "organiser", `/crew/pizzerias/${pz}`)).body).not.toContain(
+      "Read a photo",
+    );
     w.settings.set("demo", { ...DEFAULT_SETTINGS, ai_reader: true });
     await w.call("organiser", "PUT", "/api/pizza/reader/key", { api_key: KEY });
     expect((await view(w, "organiser", `/crew/pizzerias/${pz}`)).body).toContain("Read a photo");

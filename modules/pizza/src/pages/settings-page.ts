@@ -1,15 +1,17 @@
 /**
- * Food settings (`/pizza/crew/settings`, mockup 17 A and B): ordering, and the scheduler's times
- * and forgotten orders. Read and saved through admin's settings API as the person, with
- * `admin.settings.write` and the version they read, so admin checks, audits and announces the
- * change; the keys this page does not show (settling up, the money issue's) are sent back as read.
+ * Food settings (`/pizza/crew/settings`, mockup 17): ordering, the scheduler's times and forgotten
+ * orders, settling up and the AI reader. Read and saved through admin's settings API as the person,
+ * with `admin.settings.write` and the version they read, so admin checks, audits and announces the
+ * change; keys the page does not show (the reader's, without a provider key) are sent back as read.
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
 import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
-import { DEFAULT_SETTINGS, NOTE_MAX, TIME_BOUNDS } from "../settings.js";
+import { PROVIDER } from "../reader.js";
+import { readerKeySet } from "../reader-key.js";
+import { DEFAULT_SETTINGS, NOTE_MAX, READS_BOUNDS, TIME_BOUNDS } from "../settings.js";
 import type { TimeKey } from "../settings.js";
 import { flash } from "./order-view.js";
 import { PREFIX, SETTINGS_WRITE, formKey, organiserPage, pageCtx } from "./kit.js";
@@ -19,7 +21,11 @@ import type { MessageKey } from "./messages.js";
 type Values = Record<string, unknown>;
 const PATH = "/api/admin/settings/pizza";
 const TIMES = Object.keys(TIME_BOUNDS) as TimeKey[];
-const COUNTS = { max_open_orders: [1, 20], max_items_per_person: [1, 20] } as const;
+const COUNTS = {
+  max_open_orders: [1, 20],
+  max_items_per_person: [1, 20],
+  ai_reader_daily_reads: READS_BOUNDS,
+} as const;
 
 /** The minutes as people read them: "10 min", "2 h", "1 h 30 min". */
 export function duration(c: PageCtx, minutes: number): string {
@@ -29,7 +35,41 @@ export function duration(c: PageCtx, minutes: number): string {
   return m === 0 ? c.t("time.h", { n: h }) : c.t("time.h_min", { h, m });
 }
 
-function form(c: PageCtx, values: Values, version: number, error?: string): Html {
+/** Mockup 17 C: settling up, and the AI reader once an admin has set its provider key. */
+function settling(
+  c: PageCtx,
+  sw: (k: string, l: MessageKey, h: MessageKey) => Html,
+  count: (k: keyof typeof COUNTS, l: MessageKey, h: MessageKey) => Html,
+  reader: boolean,
+): Html {
+  return html`<section class="canccu-card pizza-form">
+      <h2 class="canccu-card__title">${c.t("settings.settling")}</h2>
+      <p class="pizza-switch">
+        <span class="pizza-switch__text"
+          ><span class="pizza-switch__label">${c.t("settings.organiser")}</span
+          ><span class="canccu-muted canccu-small">${c.t("settings.organiser_hint")}</span></span
+        >
+      </p>
+      ${sw("settle_to_payer", "settings.settle_to_payer", "settings.settle_to_payer_hint")}
+    </section>
+    ${
+      reader
+        ? html`<section class="canccu-card pizza-form">
+            <h2 class="canccu-card__title">${c.t("settings.reader")}</h2>
+            ${sw("ai_reader", "settings.ai_reader", "settings.ai_reader_hint")}
+            <div class="canccu-notice canccu-notice--info">
+              <p class="canccu-notice__title">${c.t("settings.reader_outside")}</p>
+              <p>
+                ${c.t("settings.reader_cost", { provider: PROVIDER.name, model: PROVIDER.model })}
+              </p>
+            </div>
+            ${count("ai_reader_daily_reads", "settings.ai_reader_daily_reads", "settings.ai_reader_daily_reads_hint")}
+          </section>`
+        : ""
+    }`;
+}
+
+function form(c: PageCtx, values: Values, version: number, reader: boolean, error?: string): Html {
   const v = { ...DEFAULT_SETTINGS, ...values } as Values;
   const sw = (key: string, label: MessageKey, hint: MessageKey) =>
     html`<label class="pizza-switch"
@@ -39,7 +79,7 @@ function form(c: PageCtx, values: Values, version: number, error?: string): Html
       ><input
         type="hidden"
         name="${key}"
-        value="off" /><input${attrs({ class: "pizza-switch__box", type: "checkbox", name: key, value: "on", checked: v[key] !== false })}
+        value="off" /><input${attrs({ class: "pizza-switch__box", type: "checkbox", name: key, value: "on", checked: v[key] === true })}
     /></label>`;
   const count = (key: keyof typeof COUNTS, label: MessageKey, hint: MessageKey) =>
     html`<label class="pizza-setting"
@@ -98,6 +138,7 @@ function form(c: PageCtx, values: Values, version: number, error?: string): Html
         ${TIMES.map(slider)} ${sw("auto_close", "settings.auto_close", "settings.auto_close_hint")}
         ${sw("close_forgotten", "settings.close_forgotten", "settings.close_forgotten_hint")}
       </section>
+      ${settling(c, sw, count, reader)}
       <div class="canccu-savebar">
         <span class="canccu-savebar__text">${c.t("settings.saved_where")}</span>
         <a class="canccu-button canccu-button--secondary" href="${PREFIX}crew/settings"
@@ -118,7 +159,14 @@ export function valuesOf(form: Record<string, unknown>, read: Values): Values {
     const last: unknown = Array.isArray(raw) ? (raw as unknown[]).at(-1) : raw;
     if (last === "on" || last === "off") out[k] = last === "on";
   };
-  for (const k of ["ordering_open", "auto_close", "close_forgotten"]) flag(k);
+  for (const k of [
+    "ordering_open",
+    "auto_close",
+    "close_forgotten",
+    "settle_to_payer",
+    "ai_reader",
+  ])
+    flag(k);
   if (form.open_by === "anyone" || form.open_by === "crew") out.open_by = form.open_by;
   if (typeof form.ordering_note === "string")
     out.ordering_note = form.ordering_note.trim().slice(0, NOTE_MAX);
@@ -175,7 +223,7 @@ export function settingsPage(app: FastifyInstance, deps: AppDeps): void {
       title: c.t("crew.title"),
       tab: "settings",
       narrow: true,
-      body: form(c, s.values, s.version, request.query.error),
+      body: form(c, s.values, s.version, await readerKeySet(deps), request.query.error),
     });
   });
 

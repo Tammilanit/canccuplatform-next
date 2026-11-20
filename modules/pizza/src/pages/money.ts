@@ -48,7 +48,10 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
   ) =>
     hubPage(request, reply, c, {
       title,
-      back: { href: to, label: to.endsWith("/money") ? c.t("money.title") : c.t("money.back", { seq: o.seq }) },
+      back: {
+        href: to,
+        label: to.endsWith("/money") ? c.t("money.title") : c.t("money.back", { seq: o.seq }),
+      },
       body,
     });
 
@@ -56,31 +59,54 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     const l = await load(request, reply);
     if (l === null) return reply;
     const s = await deps.settings(l.c.tenant);
-    return page(request, reply, l.c, l.o, l.c.t("money.title"), moneyPageView(l.c, l.o, l.m, {
-      reader: l.reader,
-      directly: s.settle_to_payer,
-      me: l.c.session.userId,
-      ...(request.query.error === undefined ? {} : { error: request.query.error }),
-    }));
+    return page(
+      request,
+      reply,
+      l.c,
+      l.o,
+      l.c.t("money.title"),
+      moneyPageView(l.c, l.o, l.m, {
+        reader: l.reader,
+        directly: s.settle_to_payer,
+        me: l.c.session.userId,
+        ...(request.query.error === undefined ? {} : { error: request.query.error }),
+      }),
+    );
   });
 
   app.get<{ Params: Params; Querystring: Q }>("/hold/:id/money/total", async (request, reply) => {
     const l = await load(request, reply);
     if (l === null) return reply;
-    return page(request, reply, l.c, l.o, l.c.t("pad.title"), padView(l.c, l.o, {
-      total: l.m.total_cents,
-      reader: l.reader,
-      ...(request.query.error === undefined ? {} : { error: request.query.error }),
-    }), `/pizza/hold/${l.o.id}/money`);
+    return page(
+      request,
+      reply,
+      l.c,
+      l.o,
+      l.c.t("pad.title"),
+      padView(l.c, l.o, {
+        total: l.m.total_cents,
+        reader: l.reader,
+        ...(request.query.error === undefined ? {} : { error: request.query.error }),
+      }),
+      `/pizza/hold/${l.o.id}/money`,
+    );
   });
 
   app.get<{ Params: Params; Querystring: Q }>("/hold/:id/money/scan", async (request, reply) => {
     const l = await load(request, reply);
     if (l === null) return reply;
-    return page(request, reply, l.c, l.o, l.c.t("scan.title"), scanView(l.c, l.o, {
-      reader: l.reader,
-      ...(request.query.error === undefined ? {} : { error: request.query.error }),
-    }), `/pizza/hold/${l.o.id}/money`);
+    return page(
+      request,
+      reply,
+      l.c,
+      l.o,
+      l.c.t("scan.title"),
+      scanView(l.c, l.o, {
+        reader: l.reader,
+        ...(request.query.error === undefined ? {} : { error: request.query.error }),
+      }),
+      `/pizza/hold/${l.o.id}/money`,
+    );
   });
 
   app.get<{ Params: Params; Querystring: Q }>("/hold/:id/money/check", async (request, reply) => {
@@ -88,12 +114,25 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     if (l === null) return reply;
     const r = l.m.receipts.find((x: ReceiptView) => x.id === request.query.receipt);
     if (r?.read == null) return reply.redirect(`/pizza/hold/${l.o.id}/money`, 303);
-    return page(request, reply, l.c, l.o, l.c.t("check.title"), checkView(l.c, l.o, r.id, r.read),
-      `/pizza/hold/${l.o.id}/money/scan`);
+    return page(
+      request,
+      reply,
+      l.c,
+      l.o,
+      l.c.t("check.title"),
+      checkView(l.c, l.o, r.id, r.read),
+      `/pizza/hold/${l.o.id}/money/scan`,
+    );
   });
 
   const moneyWrite = (request: FastifyRequest<{ Params: Params }>, body: Record<string, unknown>) =>
-    viaApi(app, request, "PATCH", `/api/pizza/orders/${encodeURIComponent(request.params.id)}/money`, body);
+    viaApi(
+      app,
+      request,
+      "PATCH",
+      `/api/pizza/orders/${encodeURIComponent(request.params.id)}/money`,
+      body,
+    );
   const done = (reply: FastifyReply, id: string, a: ApiAnswer, failed = `hold/${id}/money`) =>
     back(reply, a.status >= 400 ? failed : `hold/${id}/money`, a);
 
@@ -102,9 +141,17 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     const total = parseEuro(formText(request, "total"));
     if (total === null) {
       const c = await pageCtx(deps, request);
-      return reply.redirect(`/pizza/hold/${id}/money/total?error=${encodeURIComponent(c.t("pad.invalid"))}`, 303);
+      return reply.redirect(
+        `/pizza/hold/${id}/money/total?error=${encodeURIComponent(c.t("pad.invalid"))}`,
+        303,
+      );
     }
-    return done(reply, id, await moneyWrite(request, { total_cents: total }), `hold/${id}/money/total`);
+    return done(
+      reply,
+      id,
+      await moneyWrite(request, { total_cents: total }),
+      `hold/${id}/money/total`,
+    );
   });
 
   app.post<{ Params: Params }>("/hold/:id/money/split", async (request, reply) => {
@@ -123,11 +170,20 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     const price = parseEuro(formText(request, "price"));
     if (price === null) {
       const c = await pageCtx(deps, request);
-      return reply.redirect(`/pizza/hold/${id}/money?error=${encodeURIComponent(c.t("pad.invalid"))}`, 303);
+      return reply.redirect(
+        `/pizza/hold/${id}/money?error=${encodeURIComponent(c.t("pad.invalid"))}`,
+        303,
+      );
     }
-    const a = await viaApi(app, request, "PUT", `/api/pizza/items/${encodeURIComponent(item)}/price`, {
-      price_cents: price,
-    });
+    const a = await viaApi(
+      app,
+      request,
+      "PUT",
+      `/api/pizza/items/${encodeURIComponent(item)}/price`,
+      {
+        price_cents: price,
+      },
+    );
     return done(reply, id, a);
   });
 
@@ -142,10 +198,20 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: Params }>("/hold/:id/paid", async (request, reply) => {
     const { id } = request.params;
     const user = encodeURIComponent(formText(request, "user_id") ?? "");
-    const a = await viaApi(app, request, "PUT", `/api/pizza/orders/${encodeURIComponent(id)}/paid/${user}`, {
-      paid: formText(request, "paid") !== "no",
-    });
-    return back(reply, formText(request, "back") === "money" ? `hold/${id}/money` : `hold/${id}/hand-out`, a);
+    const a = await viaApi(
+      app,
+      request,
+      "PUT",
+      `/api/pizza/orders/${encodeURIComponent(id)}/paid/${user}`,
+      {
+        paid: formText(request, "paid") !== "no",
+      },
+    );
+    return back(
+      reply,
+      formText(request, "back") === "money" ? `hold/${id}/money` : `hold/${id}/hand-out`,
+      a,
+    );
   });
 
   /** The photo: kept with the order, then read when the reader is on (after its notice). */
@@ -153,15 +219,35 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     const { id } = request.params;
     const [photo] = await photosOf(request);
     if (photo === undefined) return back(reply, `hold/${id}/money/scan`);
-    const added = await viaApi(app, request, "POST", `/api/pizza/orders/${encodeURIComponent(id)}/receipts`, photo, 0);
+    const added = await viaApi(
+      app,
+      request,
+      "POST",
+      `/api/pizza/orders/${encodeURIComponent(id)}/receipts`,
+      photo,
+      0,
+    );
     if (added.status >= 400) return back(reply, `hold/${id}/money/scan`, added);
     const c = await pageCtx(deps, request);
     if (!(await readerAvailable(deps, c.tenant))) return back(reply, `hold/${id}/money/total`);
     const receipt = String(added.body.id);
-    const read = await viaApi(app, request, "POST", `/api/pizza/receipts/${encodeURIComponent(receipt)}/read`, {}, 1);
+    const read = await viaApi(
+      app,
+      request,
+      "POST",
+      `/api/pizza/receipts/${encodeURIComponent(receipt)}/read`,
+      {},
+      1,
+    );
     if (read.status >= 400)
-      return reply.redirect(`/pizza/hold/${id}/money/total?error=${encodeURIComponent(refusal(read))}`, 303);
-    return reply.redirect(`/pizza/hold/${id}/money/check?receipt=${encodeURIComponent(receipt)}`, 303);
+      return reply.redirect(
+        `/pizza/hold/${id}/money/total?error=${encodeURIComponent(refusal(read))}`,
+        303,
+      );
+    return reply.redirect(
+      `/pizza/hold/${id}/money/check?receipt=${encodeURIComponent(receipt)}`,
+      303,
+    );
   });
 
   /** Confirm: the total, every price and the receipt they came from, in one write. */
@@ -172,7 +258,8 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     const prices: { item_id: string; price_cents: number }[] = [];
     for (const [k, v] of Object.entries(form)) {
       const cents = typeof v === "string" ? parseEuro(v) : null;
-      if (k.startsWith("price_") && cents !== null) prices.push({ item_id: k.slice(6), price_cents: cents });
+      if (k.startsWith("price_") && cents !== null)
+        prices.push({ item_id: k.slice(6), price_cents: cents });
     }
     const receipt = formText(request, "receipt_id");
     if (total === null) {

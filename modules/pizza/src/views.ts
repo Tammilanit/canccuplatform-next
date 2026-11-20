@@ -117,11 +117,14 @@ export function orderView(
   // Each person in the order: whom they pay and their own mark, never anyone else's (U12 A).
   if (mine.length > 0 || seen === "manager") {
     const owes =
-      o.settle_to === "payer" && caller !== null && mine.length > 0 && caller.user_id !== o.payer_user_id;
+      o.settle_to === "payer" &&
+      caller !== null &&
+      mine.length > 0 &&
+      caller.user_id !== o.payer_user_id;
     Object.assign(member, {
       settle_to: o.settle_to,
       pay_to: ctx.settling?.payTo ?? null,
-      my_paid: owes && caller !== null ? (ctx.settling?.paid.has(caller.user_id) ?? false) : null,
+      my_paid: owes ? (ctx.settling?.paid.has(caller.user_id) ?? false) : null,
     });
   }
   if (seen === "member") return { ...member, lines: linesOf(items) };
