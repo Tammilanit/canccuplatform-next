@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 900" width="1900" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 03: The event timeline</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="900" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">03 · The event timeline: what runs when, from T−14 days to the day after (organiser, superadmin, the platform)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: Demo Event, doors Sat 21 Nov 12:00. O5, U5, D12, U10, D1. The Readiness page and its digests follow this line.</text>
+<line x1="260" y1="200" x2="1640" y2="200" stroke="#111827" stroke-width="3"/>
+<line x1="260" y1="190" x2="260" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="260" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">T−14 d</text>
+<line x1="563.6" y1="190" x2="563.6" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="563.6" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">T−7 d</text>
+<line x1="881" y1="190" x2="881" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="881" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">T−1 d</text>
+<line x1="1088" y1="190" x2="1088" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="1088" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Doors</text>
+<line x1="1391.6" y1="190" x2="1391.6" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="1391.6" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">End</text>
+<line x1="1640" y1="190" x2="1640" y2="210" stroke="#111827" stroke-width="3"/>
+<text x="1640" y="178" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">T+1 d</text>
+<rect x="881" y="218" width="719" height="14" rx="7" fill="#fde68a"/>
+<text x="891" y="230" font-size="11.5" fill="#92400e" font-weight="700" text-anchor="start">Deploy hold (D12)</text>
+<rect x="1088" y="236" width="303.6" height="14" rx="7" fill="#bbf7d0"/>
+<text x="1098" y="248" font-size="11.5" fill="#166534" font-weight="700" text-anchor="start">Live</text>
+<rect x="32" y="290" width="1836" height="170" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52" y="324" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Organiser</text>
+<line x1="260" y1="290" x2="260" y2="312" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="260" cy="318" r="6" fill="#0e7490"/>
+<text x="272" y="323" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Picks the release to test</text>
+<text x="272" y="345" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">on stable, in the profile</text>
+<line x1="563.6" y1="290" x2="563.6" y2="382" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="563.6" cy="388" r="6" fill="#0e7490"/>
+<text x="575.6" y="393" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Digest 1: what is not ready</text>
+<text x="575.6" y="415" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Readiness, with fixes</text>
+<line x1="881" y1="290" x2="881" y2="312" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="881" cy="318" r="6" fill="#0e7490"/>
+<text x="893" y="323" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Digest 2</text>
+<text x="893" y="345" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">fix or override blockers</text>
+<line x1="1056.95" y1="290" x2="1056.95" y2="382" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="1056.95" cy="388" r="6" fill="#0e7490"/>
+<text x="1068.95" y="393" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Digest 3, doors − 2 h</text>
+<text x="1068.95" y="415" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Go live</text>
+<rect x="32" y="480" width="1836" height="170" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52" y="514" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Superadmin</text>
+<line x1="563.6" y1="480" x2="563.6" y2="502" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="563.6" cy="508" r="6" fill="#0e7490"/>
+<text x="575.6" y="513" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Laptop check</text>
+<text x="575.6" y="535" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">setup/fallback check (U10)</text>
+<line x1="881" y1="480" x2="881" y2="572" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="881" cy="578" r="6" fill="#0e7490"/>
+<text x="893" y="583" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Hold starts 18:00</text>
+<text x="893" y="605" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">a fresh backup verified</text>
+<line x1="1209.44" y1="480" x2="1209.44" y2="502" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="1209.44" cy="508" r="6" fill="#0e7490"/>
+<text x="1221.44" y="513" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">On call</text>
+<text x="1221.44" y="535" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">laptop at the venue</text>
+<line x1="1640" y1="480" x2="1640" y2="572" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="1640" cy="578" r="6" fill="#0e7490"/>
+<text x="1652" y="583" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Hold ends</text>
+<text x="1652" y="605" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">queued deploys may run</text>
+<rect x="32" y="670" width="1836" height="170" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52" y="704" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Platform, by itself</text>
+<line x1="346.743" y1="670" x2="346.743" y2="692" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="346.743" cy="698" r="6" fill="#0e7490"/>
+<text x="358.743" y="703" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Weekly CI drill</text>
+<text x="358.743" y="725" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Sunday, every week (O4)</text>
+<line x1="669.4" y1="670" x2="669.4" y2="762" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="669.4" cy="768" r="6" fill="#0e7490"/>
+<text x="681.4" y="773" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Weekly CI drill</text>
+<line x1="1108.24" y1="670" x2="1108.24" y2="692" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="1108.24" cy="698" r="6" fill="#0e7490"/>
+<text x="1120.24" y="703" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Laptop warm copy</text>
+<text x="1120.24" y="725" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">WAL every 5 min while live (D1)</text>
+<line x1="1391.6" y1="670" x2="1391.6" y2="762" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="1391.6" cy="768" r="6" fill="#0e7490"/>
+<text x="1403.6" y="773" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Archive</text>
+<text x="1403.6" y="795" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">retention dates set</text>
+<text x="52" y="870" font-size="14" fill="#374151" font-weight="400" text-anchor="start">A live event holds deploys for the whole stack; the hold starts at T−1 18:00 and ends 6 hours after the event ends, so a late fix lands only when no event is live. A hotfix a maintainer marks is the exception (E11).</text>
+</svg>

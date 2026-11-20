@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 920" width="1900" height="920" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 01: Three directions</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="920" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">01 · Three directions, on the same evening (the session)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Saturday 21:12, Demo Event: the hosted VM stops answering; the hall's screens show their last state; the fallback laptop is in a bag by the stage.</text>
+<rect x="32" y="120" width="592" height="770" rx="16" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="56" y="160" font-size="24" fill="#111827" font-weight="700" text-anchor="start">A · The runbook</text>
+<text x="56" y="190" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">Scripts and written runbooks</text>
+<text x="56" y="236" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE EVENING</text>
+<line x1="72" y1="256" x2="72" y2="412" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="72" cy="256" r="7" fill="#9ca3af"/>
+<text x="92" y="261" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:12</text>
+<text x="152" y="261" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">screens freeze on their last state</text>
+<circle cx="72" cy="308" r="7" fill="#9ca3af"/>
+<text x="92" y="313" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:30</text>
+<text x="152" y="313" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">someone notices; finds the runbook</text>
+<circle cx="72" cy="360" r="7" fill="#9ca3af"/>
+<text x="92" y="365" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:55</text>
+<text x="152" y="365" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">restore done on the laptop, by hand</text>
+<circle cx="72" cy="412" r="7" fill="#9ca3af"/>
+<text x="92" y="417" font-size="15" fill="#111827" font-weight="700" text-anchor="start">22:20</text>
+<text x="152" y="417" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">a person walks to 4 screen PCs</text>
+<text x="56" y="484" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ATTENDEES</text>
+<text x="56" y="508" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Frozen screens for about an hour.</text>
+<text x="56" y="548" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ORGANISERS</text>
+<text x="56" y="572" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Nothing new to see; ask the superadmin if they are ready.</text>
+<text x="56" y="612" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">VENUE STAFF</text>
+<text x="56" y="636" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A phone number on a sheet; then move each screen by hand.</text>
+<text x="56" y="676" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">SUPERADMIN</text>
+<text x="56" y="700" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Strong terminal tools, much to remember; the laptop is tested only when it</text>
+<text x="56" y="722" font-size="15" fill="#374151" font-weight="400" text-anchor="start">is needed.</text>
+<text x="56" y="762" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">TRADE-OFFS</text>
+<text x="56" y="786" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Cheapest, robust when down; readiness is invisible and drills rely on</text>
+<text x="56" y="808" font-size="15" fill="#374151" font-weight="400" text-anchor="start">discipline (the legacy's failure).</text>
+<text x="56" y="852" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start">Cost</text>
+<text x="102" y="852" font-size="20" fill="#111827" font-weight="700" text-anchor="start">S–M</text>
+<rect x="646" y="120" width="592" height="770" rx="16" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="670" y="160" font-size="24" fill="#111827" font-weight="700" text-anchor="start">B · The control room</text>
+<text x="670" y="190" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">A superadmin web console for everything</text>
+<text x="670" y="236" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE EVENING</text>
+<line x1="686" y1="256" x2="686" y2="412" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="686" cy="256" r="7" fill="#9ca3af"/>
+<text x="706" y="261" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:12</text>
+<text x="766" y="261" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the console goes down with the VM</text>
+<circle cx="686" cy="308" r="7" fill="#9ca3af"/>
+<text x="706" y="313" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:25</text>
+<text x="766" y="313" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the hoster is called</text>
+<circle cx="686" cy="360" r="7" fill="#9ca3af"/>
+<text x="706" y="365" font-size="15" fill="#111827" font-weight="700" text-anchor="start">22:10</text>
+<text x="766" y="365" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the VM is back; restore by button</text>
+<circle cx="686" cy="412" r="7" fill="#9ca3af"/>
+<text x="706" y="417" font-size="15" fill="#111827" font-weight="700" text-anchor="start">22:15</text>
+<text x="766" y="417" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">screens reconnect</text>
+<text x="670" y="484" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ATTENDEES</text>
+<text x="670" y="508" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Frozen screens until the VM is back.</text>
+<text x="670" y="548" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ORGANISERS</text>
+<text x="670" y="572" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A polished readiness wizard and a release picker.</text>
+<text x="670" y="612" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">VENUE STAFF</text>
+<text x="670" y="636" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A switch page, on the VM that is down.</text>
+<text x="670" y="676" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">SUPERADMIN</text>
+<text x="670" y="700" font-size="15" fill="#374151" font-weight="400" text-anchor="start">One place for all of it, while the VM is up.</text>
+<text x="670" y="740" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">TRADE-OFFS</text>
+<text x="670" y="764" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The rescue path lives on what fails; a large high-risk surface; per-event</text>
+<text x="670" y="786" font-size="15" fill="#374151" font-weight="400" text-anchor="start">releases break the shared stack.</text>
+<text x="670" y="830" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start">Cost</text>
+<text x="716" y="830" font-size="20" fill="#111827" font-weight="700" text-anchor="start">L–XL</text>
+<rect x="1260" y="120" width="592" height="770" rx="16" fill="#ffffff" stroke="#0e7490" stroke-width="3"/>
+<rect x="1702" y="136" width="130" height="28" rx="14" fill="#0e7490"/>
+<text x="1767" y="155" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Recommended</text>
+<text x="1284" y="160" font-size="24" fill="#111827" font-weight="700" text-anchor="start">C · Ready by design</text>
+<text x="1284" y="190" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">Rescue in a terminal and a kit; readiness on three thin views</text>
+<text x="1284" y="236" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE EVENING</text>
+<line x1="1300" y1="256" x2="1300" y2="412" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="1300" cy="256" r="7" fill="#0e7490"/>
+<text x="1320" y="261" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:15</text>
+<text x="1380" y="261" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the watchdog alerts the on-call person</text>
+<circle cx="1300" cy="308" r="7" fill="#0e7490"/>
+<text x="1320" y="313" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:18</text>
+<text x="1380" y="313" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">setup/fallback promote on the laptop</text>
+<circle cx="1300" cy="360" r="7" fill="#0e7490"/>
+<text x="1320" y="365" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:27</text>
+<text x="1380" y="365" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">restored and verified</text>
+<circle cx="1300" cy="412" r="7" fill="#0e7490"/>
+<text x="1320" y="417" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:29</text>
+<text x="1380" y="417" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the screens follow the laptop by themselves</text>
+<text x="1284" y="484" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ATTENDEES</text>
+<text x="1284" y="508" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A few quiet minutes of the last state; most never notice.</text>
+<text x="1284" y="548" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ORGANISERS</text>
+<text x="1284" y="572" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Readiness with fixes before the event; one plain line during it.</text>
+<text x="1284" y="612" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">VENUE STAFF</text>
+<text x="1284" y="636" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Nothing to do; a printed card says whom to call.</text>
+<text x="1284" y="676" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">SUPERADMIN</text>
+<text x="1284" y="700" font-size="15" fill="#374151" font-weight="400" text-anchor="start">One command, an emergency kit, drills in Health, an outside watchdog.</text>
+<text x="1284" y="740" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">TRADE-OFFS</text>
+<text x="1284" y="764" font-size="15" fill="#374151" font-weight="400" text-anchor="start">More parts (readiness per module, the player's fallback, a fence); a warm</text>
+<text x="1284" y="786" font-size="15" fill="#374151" font-weight="400" text-anchor="start">WAL copy on the laptop sits near the non-goal line (D1).</text>
+<text x="1284" y="830" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start">Cost</text>
+<text x="1330" y="830" font-size="20" fill="#111827" font-weight="700" text-anchor="start">M–L</text>
+</svg>

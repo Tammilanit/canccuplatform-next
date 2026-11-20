@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 990" width="1900" height="990" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 08: The watchdog</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="990" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">08 · The watchdog: outside the VM, two signals, alerts once and on recovery (superadmin, organisers of a live event)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the VM stops answering at 21:12. D7, D8, D9, U9, L5, E9, E10, E12. The bot is not in this path: it runs on the VM (P6).</text>
+<rect x="60" y="170" width="360" height="150" rx="10" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.4"/>
+<text x="240" y="244" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Hosted VM</text>
+<text x="240" y="263" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="middle">the stack · heartbeat sender</text>
+<text x="80" y="350" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">every 60 s: health summary, last backup,</text>
+<text x="80" y="370" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">last WAL push, disk use (D8)</text>
+<rect x="760" y="170" width="380" height="150" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/>
+<text x="950" y="244" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Watchdog</text>
+<text x="950" y="263" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="middle">on the backup target host (D7)</text>
+<path d="M420,225 L760,225" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="590" y="214" font-size="13.5" fill="#374151" font-weight="600" text-anchor="middle">heartbeat (push)</text>
+<path d="M760,280 L420,280" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="590" y="302" font-size="13" fill="#374151" font-weight="600" text-anchor="middle">polls https://platform.example/api/hello/health</text>
+<rect x="1440" y="120" width="380" height="90" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.4"/>
+<text x="1630" y="164" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Platform channel</text>
+<text x="1630" y="183" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="middle">Discord webhook + e-mail (U9)</text>
+<rect x="1440" y="240" width="380" height="90" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.4"/>
+<text x="1630" y="284" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Live event's channel</text>
+<text x="1630" y="303" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="middle">one plain line, only while live</text>
+<rect x="1440" y="360" width="380" height="90" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.4"/>
+<text x="1630" y="404" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">Status page</text>
+<text x="1630" y="423" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="middle">static, on the watchdog host (L5)</text>
+<path d="M1140,245 L1440,165" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1140,245 L1440,285" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1140,245 L1440,405" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="60" y="470" width="600" height="250" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="78" y="500" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Alert rules (D9, E10)</text>
+<text x="78" y="526" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Bad for 3 min → one alert; one on recovery; a reminder every 30 min while bad.</text>
+<text x="78" y="549.575" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Silence or a failed poll alerts; a reported 'degraded' alone does not.</text>
+<text x="78" y="573.15" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Counted from the first heartbeat, never from start-up; a slow poll never delays the</text>
+<text x="78" y="592.725" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">heartbeat.</text>
+<text x="78" y="616.3" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Also: backup older than 26 h, WAL older than 15 min, disk over 85 %, certificate under</text>
+<text x="78" y="635.875" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">14 days.</text>
+<rect x="60" y="750" width="600" height="150" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="78" y="780" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Who watches the watchdog (E9)</text>
+<text x="78" y="806" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The heartbeat sender expects an answer. After 10 minutes without one, Health and</text>
+<text x="78" y="825.575" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Readiness say “the watchdog is not answering”.</text>
+<rect x="700" y="470" width="680" height="430" rx="12" fill="#313338"/>
+<text x="720" y="502" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start"># platform-alerts</text>
+<line x1="700" y1="518" x2="1380" y2="518" stroke="#3f4147" stroke-width="1"/>
+<circle cx="738" cy="556" r="18" fill="#ef4444"/>
+<text x="768" y="552" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start">Platform watchdog</text>
+<text x="923.359" y="552" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start">Today at 21:15</text>
+<text x="768" y="578" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">DOWN · no heartbeat for 3 min and the health poll fails (connect timeout). Live</text>
+<text x="768" y="599" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">now: Demo Event.</text>
+<text x="768" y="623" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">Last good backup 03:00; last WAL 21:10. Runbook: setup/README.md, Fallback.</text>
+<circle cx="738" cy="679" r="18" fill="#f59e0b"/>
+<text x="768" y="675" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start">Platform watchdog</text>
+<text x="923.359" y="675" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start">Today at 21:45</text>
+<text x="768" y="701" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">Still down after 33 min. The fence is set: the event runs on the fallback laptop</text>
+<text x="768" y="722" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">since 21:27.</text>
+<circle cx="738" cy="778" r="18" fill="#22c55e"/>
+<text x="768" y="774" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start">Platform watchdog</text>
+<text x="923.359" y="774" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start">Today at 22:02</text>
+<text x="768" y="800" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">RECOVERED · the VM answers again after 50 min. It serves read-only (fenced)</text>
+<text x="768" y="821" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">until moved back.</text>
+<rect x="1440" y="470" width="420" height="170" rx="12" fill="#313338"/>
+<text x="1460" y="502" font-size="14" fill="#f2f3f5" font-weight="700" text-anchor="start"># demo-crew (the event's channel)</text>
+<circle cx="1478" cy="542" r="18" fill="#6366f1"/>
+<text x="1508" y="538" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start">Platform</text>
+<text x="1582.22" y="538" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start">21:16</text>
+<text x="1508" y="564" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">The platform has trouble since 21:12. We are</text>
+<text x="1508" y="585" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start">on it; the screens keep running.</text>
+<rect x="1440" y="690" width="420" height="270" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="1440" y="690" width="420" height="40" rx="12" fill="#f3f4f6"/>
+<text x="1460" y="716" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">status.platform.example</text>
+<text x="1460" y="772" font-size="22" fill="#111827" font-weight="700" text-anchor="start">Platform status</text>
+<rect x="1460" y="792" width="380" height="70" rx="10" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+<text x="1478" y="822" font-size="17" fill="#991b1b" font-weight="700" text-anchor="start">Down since 21:12</text>
+<text x="1478" y="846" font-size="13" fill="#991b1b" font-weight="400" text-anchor="start">We are on it. Screens at venues keep running.</text>
+<text x="1460" y="886" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start">Updated 21:40 · checked every minute</text>
+<text x="1460" y="912" font-size="13" fill="#374151" font-weight="400" text-anchor="start">No event names, no details: anyone can read it. The hub's</text>
+<text x="1460" y="930.85" font-size="13" fill="#374151" font-weight="400" text-anchor="start">offline state links here.</text>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 980" width="1900" height="980" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 06: Restore from cold on the fallback laptop</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="980" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">06 · Restore from cold: one command on the fallback laptop, against the 30-minute target (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: Saturday 21:12 the VM is lost; the on-call person decides at 21:17 to move Demo Event to the laptop. U1, U6, D1, D2, D3, D5, E1, E8.</text>
+<rect x="32" y="120" width="1060" height="600" rx="10" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+<rect x="32" y="120" width="1060" height="30" rx="10" fill="#161b22"/>
+<rect x="32" y="140" width="1060" height="10" rx="0" fill="#161b22"/>
+<circle cx="50" cy="135" r="5.5" fill="#ff5f56"/>
+<circle cx="68" cy="135" r="5.5" fill="#ffbd2e"/>
+<circle cx="86" cy="135" r="5.5" fill="#27c93f"/>
+<text x="562" y="140" font-size="12.5" fill="#8b949e" font-weight="400" text-anchor="middle">fallback laptop · on-call</text>
+<text x="50" y="176" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">$ sudo setup/fallback promote</text>
+<text x="50" y="200" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Emergency kit: canccu-emergency-kit.age</text>
+<text x="50" y="224" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Passphrase: ••••••••••••</text>
+<text x="50" y="248" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  key version 3 opens the test value</text>
+<text x="50" y="272" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Newest copy on this laptop: base Fri 03:00 + WAL to 21:10</text>
+<text x="50" y="296" font-size="15" fill="#d29922" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">!   data age: 2 min (the VM stopped answering at 21:12)</text>
+<text x="50" y="320" font-size="15" fill="#d29922" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">!   fence written at the backup target: if the VM returns,</text>
+<text x="50" y="344" font-size="15" fill="#d29922" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">    it serves read-only and says the event runs here</text>
+<text x="50" y="368" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Restoring the database: base 486 MB, WAL 1.2 GB   6 min</text>
+<text x="50" y="392" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Restoring files: 212 MB from the warm copy        2 min</text>
+<text x="50" y="416" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  migrations at v0.10.4, the release this laptop runs</text>
+<text x="50" y="440" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  14 of 14 modules healthy</text>
+<text x="50" y="464" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  demo: 3 zones, 4 screens, 182 members, as the manifest</text>
+<text x="50" y="488" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  a screen of demo renders</text>
+<text x="50" y="512" font-size="15" fill="#79c0ff" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">&gt; This laptop is the primary for Demo Event since 21:27.</text>
+<text x="50" y="536" font-size="15" fill="#79c0ff" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">&gt; Screens follow within 2 minutes (fallback address set).</text>
+<text x="50" y="560" font-size="15" fill="#79c0ff" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">&gt; Crew code for Studio on the LAN: 4F7-K2Q, valid 12 h.</text>
+<text x="50" y="584" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Move back after the event: setup/fallback demote</text>
+<rect x="32" y="750" width="1060" height="170" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="50" y="780" font-size="16" fill="#111827" font-weight="700" text-anchor="start">What the restore checks before it says done (D5)</text>
+<text x="50" y="806" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The key opens a sealed test value (else it names each secret it cannot open, E5) · migrations match the release (E6) · every module's health is ok · counts</text>
+<text x="50" y="825.575" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">per event match the backup's manifest · one screen of each live event renders.</text>
+<text x="50" y="849.15" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">It refuses a dump newer than the laptop's release and says how to sync the images (setup/fallback sync).</text>
+<text x="1180" y="136" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE TIME LINE (D2)</text>
+<line x1="1240" y1="150" x2="1240" y2="930" stroke="#9ca3af" stroke-width="3"/>
+<circle cx="1240" cy="150" r="8" fill="#0e7490"/>
+<text x="1180" y="155" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:12</text>
+<text x="1264" y="155" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The VM stops answering</text>
+<circle cx="1240" cy="216.857" r="8" fill="#0e7490"/>
+<text x="1180" y="221.857" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:15</text>
+<text x="1264" y="221.857" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The watchdog alerts (D9)</text>
+<circle cx="1240" cy="261.429" r="8" fill="#0e7490"/>
+<text x="1180" y="266.429" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:17</text>
+<text x="1264" y="266.429" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A person decides: promote</text>
+<circle cx="1240" cy="283.714" r="8" fill="#0e7490"/>
+<text x="1180" y="288.714" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:18</text>
+<text x="1264" y="288.714" font-size="15" fill="#374151" font-weight="400" text-anchor="start">promote starts; fence written (E1)</text>
+<circle cx="1240" cy="462" r="8" fill="#0e7490"/>
+<text x="1180" y="467" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:26</text>
+<text x="1264" y="467" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Database and files restored</text>
+<circle cx="1240" cy="484.286" r="8" fill="#0e7490"/>
+<text x="1180" y="489.286" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:27</text>
+<text x="1264" y="489.286" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Verified (D5): primary</text>
+<circle cx="1240" cy="528.857" r="8" fill="#0e7490"/>
+<text x="1180" y="533.857" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:29</text>
+<text x="1264" y="533.857" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Screens follow by themselves (U6)</text>
+<circle cx="1240" cy="930" r="8" fill="#16a34a"/>
+<text x="1180" y="935" font-size="15" fill="#111827" font-weight="700" text-anchor="start">21:47</text>
+<text x="1264" y="935" font-size="15" fill="#374151" font-weight="600" text-anchor="start">Target: 30 min after the decision</text>
+<rect x="1264" y="558.857" width="560" height="190" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1284" y="592.857" font-size="14" fill="#374151" font-weight="400" text-anchor="start">Without the warm copy (D1 A) the restore pulls base and WAL over the</text>
+<text x="1284" y="613.857" font-size="14" fill="#374151" font-weight="400" text-anchor="start">venue uplink: about 15 minutes more, and impossible when the uplink is</text>
+<text x="1284" y="634.857" font-size="14" fill="#374151" font-weight="400" text-anchor="start">what failed.</text>
+<text x="1284" y="670.857" font-size="14" fill="#374151" font-weight="400" text-anchor="start">The weekly CI drill runs the same command on the demo stack and posts its</text>
+<text x="1284" y="691.857" font-size="14" fill="#374151" font-weight="400" text-anchor="start">time (O4).</text>
+</svg>

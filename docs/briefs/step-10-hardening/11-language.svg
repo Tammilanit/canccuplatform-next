@@ -1,0 +1,231 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1100" width="2000" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 11: Finnish, the first language pack</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="ph32_146"><rect x="42" y="156" width="390" height="844" rx="38"/></clipPath><clipPath id="dk1"><rect x="0" y="0" width="1280" height="640" rx="10"/></clipPath><clipPath id="scr11"><rect x="0" y="0" width="1920" height="1080" rx="16"/></clipPath></defs>
+<rect x="0" y="0" width="2000" height="1100" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">11 · Finnish: the event's language on the screens, each person's own on their pages (organiser, attendees in the hall)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: Demo Event speaks Finnish; a visiting crew member keeps English. D13, D14, D15, D16, E13, E14, L8.</text>
+<rect x="32" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="237" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">Two settings, two owners (D15)</text>
+<g clip-path="url(#ph32_146)">
+<rect x="42" y="156" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="76" y="186" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="368" y="175" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="370" y="177" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="42" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="58" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="94" y="238" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="202" y="222" width="52" height="20" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="228" y="236" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Draft</text>
+<rect x="392" y="224" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="231" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="238" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="58" y="286" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Settings</text>
+<text x="58" y="316" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Language</text>
+<text x="58" y="350" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Event language</text>
+<rect x="58" y="362" width="358" height="38" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="70" y="387" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Finnish</text>
+<path d="M392,377 l6,6 l6,-6" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="58" y="422" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Screens, public pages and the hub's default. Changing it</text>
+<text x="58" y="440.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">changes every screen at once.</text>
+<text x="58" y="480.125" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Your language</text>
+<rect x="58" y="492.125" width="358" height="38" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="70" y="517.125" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">English</text>
+<path d="M392,507.125 l6,6 l6,-6" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="58" y="552.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Only your own pages: organiser pages and the hub. It</text>
+<text x="58" y="570.25" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">follows you to every event.</text>
+<rect x="58" y="610.25" width="358" height="120" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="74" y="640.25" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Dates and numbers</text>
+<text x="74" y="668.25" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">la 21.11. klo 18.30 · 1 234,50</text>
+<text x="74" y="694.25" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">follow the event's language on screens</text>
+<rect x="42" y="916" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="73" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="81" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="151" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="159" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="237" cy="940" r="15" fill="#3ddcff"/>
+<text x="237" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="307" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="315" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="385" y="930" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="393" y="970" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="170" y="988" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="490" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Readiness in Finnish (an event admin who chose Finnish) · 1280 px at 62 %</text>
+<g transform="translate(490,146) scale(0.62)" clip-path="url(#dk1)">
+<rect x="0" y="0" width="1280" height="640" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">la 21. – su 22.11.</text>
+<rect x="371" y="17" width="56" height="22" rx="11" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="399" y="32.5" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="middle">Luonnos</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1260" y="35" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0" y="57" width="255" height="583" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="640" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">TAPAHTUMAN KULKU</text>
+<rect x="26" y="111" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="123" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Ohjelma</text>
+<rect x="26" y="153" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="165" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Ilmoitukset</text>
+<rect x="26" y="195" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="207" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Tiedotteet</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">NÄYTÖT JA ILME</text>
+<rect x="26" y="278" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="290" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Näyttöstudio</text>
+<rect x="26" y="320" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="332" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Teemastudio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">HALLINTA</text>
+<rect x="26" y="403" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="415" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Asetukset</text>
+<rect x="12" y="434" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="434" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="445" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="457" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Valmius</text>
+<rect x="26" y="487" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="499" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Tila</text>
+<rect x="26" y="529" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="541" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Tapahtumaprofiili</text>
+<rect x="26" y="571" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="583" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Ihmiset</text>
+<text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start">Valmius</text>
+<text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Mitä pitää olla kunnossa ennen ovien avautumista. Tarkistetaan 30 s välein.</text>
+<rect x="296" y="186" width="76.4265" height="22.5" rx="11.25" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="334.213" y="201" font-size="12.5" fill="#ff98a6" font-weight="600" text-anchor="middle">2 estettä</text>
+<rect x="396" y="186" width="95.5944" height="22.5" rx="11.25" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="443.797" y="201" font-size="12.5" fill="#ffd27a" font-weight="600" text-anchor="middle">2 varoitusta</text>
+<rect x="518" y="186" width="95.1975" height="22.5" rx="11.25" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="565.599" y="201" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="middle">9 kunnossa</text>
+<rect x="296" y="232" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="318" cy="258" r="6" fill="#3ee39a"/>
+<text x="334" y="263" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Joka alueella on näyttö</text>
+<text x="312" y="288" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">main 2, entrance 1, café 1. Kaikki neljä on</text>
+<text x="312" y="306.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">liitetty tähän tapahtumaan.</text>
+<rect x="616" y="232" width="304" height="136" rx="12" fill="#161a2e" stroke="#9a7426" stroke-width="1.5"/>
+<circle cx="638" cy="258" r="6" fill="#f0b23e"/>
+<text x="654" y="263" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Näytöt verkossa</text>
+<rect x="835.035" y="247" width="68.9645" height="21.5" rx="10.75" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="869.518" y="261" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Varoitus</text>
+<text x="632" y="288" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">café on ollut poissa verkosta klo 17.02</text>
+<text x="632" y="306.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">alkaen.</text>
+<text x="632" y="352" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Avaa laitteet ›</text>
+<rect x="936" y="232" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="958" cy="258" r="6" fill="#3ee39a"/>
+<text x="974" y="263" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Näyttöversio lukittu</text>
+<text x="952" y="288" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Näytöt ajavat versiota 1.10.2, jonka</text>
+<text x="952" y="306.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">tapahtuma testasi.</text>
+<rect x="296" y="384" width="304" height="136" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.5"/>
+<circle cx="318" cy="410" r="6" fill="#ff5d73"/>
+<text x="334" y="415" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Osoite vahvistettu</text>
+<rect x="536.583" y="399" width="47.417" height="21.5" rx="10.75" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="560.291" y="413" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Este</text>
+<text x="312" y="440" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">demo.platform.example ei ole vahvistettu,</text>
+<text x="312" y="458.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">joten kirjautuminen ei toimi.</text>
+<text x="312" y="504" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Vahvista osoite ›</text>
+<rect x="616" y="384" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="638" cy="410" r="6" fill="#3ee39a"/>
+<text x="654" y="415" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Kieli</text>
+<text x="632" y="440" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Suomi. Jokaisella sivulla ja näytön sanalla</text>
+<text x="632" y="458.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">on suomenkielinen teksti.</text>
+<rect x="936" y="384" width="304" height="136" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.5"/>
+<circle cx="958" cy="410" r="6" fill="#ff5d73"/>
+<text x="974" y="415" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Varakone</text>
+<rect x="1176.58" y="399" width="47.417" height="21.5" rx="10.75" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1200.29" y="413" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Este</text>
+<text x="952" y="440" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tarkistettu viimeksi ma 2.11. Tarkistus pitää</text>
+<text x="952" y="458.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">ajaa ennen ovia.</text>
+<text x="952" y="504" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Kysy pääkäyttäjältä ›</text>
+</g>
+<circle cx="661.52" cy="257.6" r="11" fill="#f59e0b"/>
+<text x="661.52" y="262.1" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="490" y="586.8" font-size="17" fill="#111827" font-weight="700" text-anchor="start">The main zone's screen in Finnish · 1920 × 1080 at 41 %</text>
+<g transform="translate(490,602.8) scale(0.4135)" clip-path="url(#scr11)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0f1430"/>
+<rect x="0" y="0" width="1920" height="110" rx="0" fill="#1d2550"/>
+<rect x="48" y="30" width="120" height="50" rx="10" fill="#3b82f6"/>
+<text x="196" y="72" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<text x="1872" y="72" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="end">la 18.30</text>
+<text x="64" y="220" font-size="34" fill="#7be7ff" font-weight="700" text-anchor="start" letter-spacing="4">NYT</text>
+<text x="64" y="320" font-size="76" fill="#f3f5ff" font-weight="700" text-anchor="start">Turnauksen välierät</text>
+<text x="64" y="390" font-size="40" fill="#c5cae3" font-weight="400" text-anchor="start">Päälava · päättyy klo 19.30</text>
+<text x="64" y="520" font-size="34" fill="#7be7ff" font-weight="700" text-anchor="start" letter-spacing="4">SEURAAVAKSI</text>
+<text x="64" y="600" font-size="54" fill="#f3f5ff" font-weight="600" text-anchor="start">Pizzatilaus sulkeutuu · 20 min</text>
+<rect x="1260" y="170" width="600" height="440" rx="20" fill="#2a2f6a"/>
+<text x="1300" y="250" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="start">Ilmoittautuminen</text>
+<text x="1300" y="310" font-size="36" fill="#c5cae3" font-weight="400" text-anchor="start">päättyy klo 20.00</text>
+<rect x="1300" y="360" width="520" height="84" rx="14" fill="#3a2f17" stroke="#f0b23e" stroke-width="4" stroke-dasharray="14 10"/>
+<text x="1320" y="416" font-size="40" fill="#ffd27a" font-weight="700" text-anchor="start">Turnausilmoittautumiset</text>
+<text x="1300" y="500" font-size="26" fill="#a9b1d6" font-weight="400" text-anchor="start">CI flags this box: the word is wider</text>
+<text x="1300" y="540" font-size="26" fill="#a9b1d6" font-weight="400" text-anchor="start">than its place (E14)</text>
+<rect x="0" y="960" width="1920" height="120" rx="0" fill="#161d44"/>
+<text x="64" y="1034" font-size="40" fill="#c5cae3" font-weight="400" text-anchor="start">Tervetuloa! Wi-Fi: Demo-LAN · Ruokatilaukset hubissa</text>
+</g>
+<circle cx="478" cy="622.8" r="11" fill="#f59e0b"/>
+<text x="478" y="627.3" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="1332" cy="162" r="12" fill="#f59e0b"/>
+<text x="1332" y="167" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="1354" y="168" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Everything the event shows, in Finnish (D14)</text>
+<text x="1354" y="192" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The organiser shell, every module's pages, every screen word and Moments' built-in stories;</text>
+<text x="1354" y="212" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">&lt;html lang&gt; follows the language. Each person may keep their own language for their pages.</text>
+<circle cx="1332" cy="252" r="12" fill="#f59e0b"/>
+<text x="1332" y="257" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1354" y="258" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Long words in fixed boxes (E14)</text>
+<text x="1354" y="282" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">CI shoots every screen in both languages; a check flags text wider than its box. Finnish runs</text>
+<text x="1354" y="302" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">about a third longer than English.</text>
+<circle cx="1332" cy="426" r="11" fill="#f59e0b"/>
+<text x="1332" y="430.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<rect x="1320" y="440" width="640" height="420" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1340" y="474" font-size="17" fill="#111827" font-weight="700" text-anchor="start">CI · i18n coverage (D13, D16)</text>
+<text x="1340" y="504" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">One catalog per module: i18n/en.json and i18n/fi.json, ICU plurals.</text>
+<text x="1340" y="542" font-size="11.5" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">MODULE</text>
+<text x="1540" y="542" font-size="11.5" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">KEYS</text>
+<text x="1640" y="542" font-size="11.5" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">EN</text>
+<text x="1720" y="542" font-size="11.5" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">FI</text>
+<text x="1800" y="542" font-size="11.5" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">MISSING</text>
+<text x="1340" y="574" font-size="14" fill="#111827" font-weight="600" text-anchor="start">packages/ui</text>
+<text x="1540" y="574" font-size="14" fill="#374151" font-weight="400" text-anchor="start">164</text>
+<text x="1640" y="574" font-size="14" fill="#374151" font-weight="400" text-anchor="start">164</text>
+<text x="1720" y="574" font-size="14" fill="#374151" font-weight="400" text-anchor="start">164</text>
+<text x="1800" y="574" font-size="14" fill="#374151" font-weight="400" text-anchor="start">0</text>
+<text x="1340" y="604" font-size="14" fill="#111827" font-weight="600" text-anchor="start">admin</text>
+<text x="1540" y="604" font-size="14" fill="#374151" font-weight="400" text-anchor="start">312</text>
+<text x="1640" y="604" font-size="14" fill="#374151" font-weight="400" text-anchor="start">312</text>
+<text x="1720" y="604" font-size="14" fill="#374151" font-weight="400" text-anchor="start">312</text>
+<text x="1800" y="604" font-size="14" fill="#374151" font-weight="400" text-anchor="start">0</text>
+<text x="1340" y="634" font-size="14" fill="#111827" font-weight="600" text-anchor="start">screen</text>
+<text x="1540" y="634" font-size="14" fill="#374151" font-weight="400" text-anchor="start">688</text>
+<text x="1640" y="634" font-size="14" fill="#374151" font-weight="400" text-anchor="start">688</text>
+<text x="1720" y="634" font-size="14" fill="#374151" font-weight="400" text-anchor="start">686</text>
+<text x="1800" y="634" font-size="14" fill="#b91c1c" font-weight="700" text-anchor="start">2</text>
+<text x="1340" y="664" font-size="14" fill="#111827" font-weight="600" text-anchor="start">moments</text>
+<text x="1540" y="664" font-size="14" fill="#374151" font-weight="400" text-anchor="start">540</text>
+<text x="1640" y="664" font-size="14" fill="#374151" font-weight="400" text-anchor="start">540</text>
+<text x="1720" y="664" font-size="14" fill="#374151" font-weight="400" text-anchor="start">540</text>
+<text x="1800" y="664" font-size="14" fill="#374151" font-weight="400" text-anchor="start">0</text>
+<text x="1340" y="694" font-size="14" fill="#111827" font-weight="600" text-anchor="start">agenda</text>
+<text x="1540" y="694" font-size="14" fill="#374151" font-weight="400" text-anchor="start">221</text>
+<text x="1640" y="694" font-size="14" fill="#374151" font-weight="400" text-anchor="start">221</text>
+<text x="1720" y="694" font-size="14" fill="#374151" font-weight="400" text-anchor="start">221</text>
+<text x="1800" y="694" font-size="14" fill="#374151" font-weight="400" text-anchor="start">0</text>
+<text x="1340" y="724" font-size="14" fill="#111827" font-weight="600" text-anchor="start">theming</text>
+<text x="1540" y="724" font-size="14" fill="#374151" font-weight="400" text-anchor="start">297</text>
+<text x="1640" y="724" font-size="14" fill="#374151" font-weight="400" text-anchor="start">297</text>
+<text x="1720" y="724" font-size="14" fill="#374151" font-weight="400" text-anchor="start">297</text>
+<text x="1800" y="724" font-size="14" fill="#374151" font-weight="400" text-anchor="start">0</text>
+<text x="1340" y="764" font-size="13" fill="#b91c1c" font-weight="400" text-anchor="start">screen: 2 keys added in this PR without Finnish (studio.devices.forget_title,</text>
+<text x="1340" y="782.85" font-size="13" fill="#b91c1c" font-weight="400" text-anchor="start">studio.devices.forget_body). The check fails the PR; at runtime a missing key falls back to</text>
+<text x="1340" y="801.7" font-size="13" fill="#b91c1c" font-weight="400" text-anchor="start">English and is logged once (E13).</text>
+<circle cx="1332" cy="902" r="12" fill="#f59e0b"/>
+<text x="1332" y="907" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1354" y="908" font-size="16" fill="#111827" font-weight="600" text-anchor="start">The glossary (L8)</text>
+<text x="1354" y="932" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">docs/i18n/glossary.md fixes the words once: zone = alue, screen = näyttö, run of show =</text>
+<text x="1354" y="952" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">ohjelma, moment = hetki; plain spoken Finnish, short verbs on buttons.</text>
+<circle cx="1332" cy="994" r="12" fill="#f59e0b"/>
+<text x="1332" y="999" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="1354" y="1000" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Who keeps it current (D16)</text>
+<text x="1354" y="1024" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Each PR that adds an English string adds its Finnish one; the product owner reads the first</text>
+<text x="1354" y="1044" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">full pack.</text>
+</svg>

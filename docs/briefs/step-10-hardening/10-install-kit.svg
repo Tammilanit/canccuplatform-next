@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 800" width="1900" height="800" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 10: The install kit</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="800" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">10 · The install kit: check the host, answer the wizard, then start fresh or restore (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: a fresh Debian VM, or the fallback laptop. U13, O6, O7, D3; builds on setup/install --boot (built).</text>
+<rect x="32" y="120" width="980" height="560" rx="10" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+<rect x="32" y="120" width="980" height="30" rx="10" fill="#161b22"/>
+<rect x="32" y="140" width="980" height="10" rx="0" fill="#161b22"/>
+<circle cx="50" cy="135" r="5.5" fill="#ff5f56"/>
+<circle cx="68" cy="135" r="5.5" fill="#ffbd2e"/>
+<circle cx="86" cy="135" r="5.5" fill="#27c93f"/>
+<text x="522" y="140" font-size="12.5" fill="#8b949e" font-weight="400" text-anchor="middle">fresh host</text>
+<text x="50" y="176" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">$ sudo setup/check-host</text>
+<text x="50" y="200" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  Debian 13, Docker 28.1, 8 GB RAM, 120 GB free</text>
+<text x="50" y="224" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  ports 80 and 443 free; time in sync</text>
+<text x="50" y="248" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  platform.example and *.platform.example point here</text>
+<text x="50" y="272" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  registry, backup target and watchdog reachable</text>
+<text x="50" y="296" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">$ sudo setup/install --wizard --boot</text>
+<text x="50" y="320" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Platform domain ............. platform.example</text>
+<text x="50" y="344" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Discord application id ...... 1234 (secret hidden)</text>
+<text x="50" y="368" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Backup target ............... backup@target.example</text>
+<text x="50" y="392" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Watchdog webhook ............ (hidden)</text>
+<text x="50" y="416" font-size="15" fill="#c9d1d9" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Channel ..................... stable</text>
+<text x="50" y="440" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">Writing deploy/.env (mode 600): new secrets key v1,</text>
+<text x="50" y="464" font-size="15" fill="#8b949e" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">service key, database passwords, VAPID key</text>
+<text x="50" y="488" font-size="15" fill="#d29922" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">!   Make the emergency kit now: setup/emergency-kit make</text>
+<text x="50" y="512" font-size="15" fill="#3fb950" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">ok  firewall, boot units, stack up; health ok</text>
+<text x="50" y="536" font-size="15" fill="#79c0ff" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">&gt; Open https://platform.example/admin/ to finish</text>
+<text x="50" y="560" font-size="15" fill="#79c0ff" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">&gt; Took 14 min (target 20, O7)</text>
+<rect x="1060" y="120" width="808" height="560" rx="12" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
+<rect x="1060" y="120" width="808" height="56" rx="12" fill="#121528"/>
+<rect x="1060" y="164" width="808" height="12" rx="0" fill="#121528"/>
+<text x="1084" y="156" font-size="15" fill="#c5cae3" font-weight="400" text-anchor="start">platform.example · first run</text>
+<text x="1100" y="240" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start">Set up this platform</text>
+<text x="1100" y="272" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">Signed in as the owner with the first-run code (#10).</text>
+<rect x="1100" y="306" width="728" height="150" rx="12" fill="#161a2e" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="1124" y="350" font-size="20" fill="#f3f5ff" font-weight="600" text-anchor="start">Start fresh</text>
+<text x="1124" y="386" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">Create the first event from the demo profile or from an event's profile zip. Readiness then shows</text>
+<text x="1124" y="407" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">what is left.</text>
+<rect x="1590.69" y="330" width="173.308" height="34" rx="8" fill="#3ddcff"/>
+<text x="1677.35" y="351.86" font-size="13.5" fill="#0b0d1a" font-weight="600" text-anchor="middle">Create the first event</text>
+<rect x="1100" y="476" width="728" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1124" y="520" font-size="20" fill="#f3f5ff" font-weight="600" text-anchor="start">Restore from a backup</text>
+<text x="1124" y="556" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">Bring back a platform from its off-VM backups. It runs in a terminal, because the platform may be</text>
+<text x="1124" y="577" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">down when you need it: setup/restore with the emergency kit.</text>
+<rect x="1626.2" y="500" width="137.8" height="34" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1695.1" y="521.86" font-size="13.5" fill="#fff" font-weight="600" text-anchor="middle">Show the steps</text>
+<text x="1100" y="650" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Afterwards: Health → Platform shows backups, the watchdog and the release (mockup 04).</text>
+<text x="32" y="730" font-size="15" fill="#374151" font-weight="400" text-anchor="start">The same kit installs the fallback laptop (setup/install --wizard --laptop): no public domain, the warm copy on, and setup/fallback check posting its result to the platform (U10). The wizard writes only deploy/.env; real values never enter the repo.</text>
+</svg>

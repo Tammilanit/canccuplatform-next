@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1080" width="2000" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 04: Health, the Platform tab (superadmin)</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="dk0"><rect x="0" y="0" width="1280" height="1050" rx="10"/></clipPath><clipPath id="ph1150_146"><rect x="1160" y="156" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2000" height="1080" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">04 · Health → Platform: the parts outside any one event (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the superadmin checks the platform before a weekend of events. L3, D2, D8, D10, U10; card grid as amendment 3, the Recent panel in the band below.</text>
+<text x="32" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start">1280 px at 85 %</text>
+<g transform="translate(32,146) scale(0.85)" clip-path="url(#dk0)">
+<rect x="0" y="0" width="1280" height="1050" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Sat 21 – Sun 22 Nov</text>
+<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1260" y="35" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0" y="57" width="255" height="993" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="1050" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26" y="111" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="123" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26" y="153" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="165" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26" y="195" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="207" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="26" y="278" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="290" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26" y="320" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="332" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26" y="403" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="415" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26" y="445" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="457" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Readiness</text>
+<rect x="12" y="476" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="476" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="487" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="499" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Health</text>
+<rect x="26" y="529" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="541" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26" y="571" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="583" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start">Health</text>
+<text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Every part of the platform and how it is doing. Checked every 10 s.</text>
+<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Modules</text>
+<text x="390.095" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Platform</text>
+<line x1="386.095" y1="186" x2="446.115" y2="186" stroke="#3ddcff" stroke-width="2"/>
+<line x1="296" y1="187" x2="1240" y2="187" stroke="#343c66" stroke-width="1"/>
+<rect x="296" y="216" width="79.2052" height="22.5" rx="11.25" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="335.603" y="231" font-size="12.5" fill="#ff98a6" font-weight="600" text-anchor="middle">1 blocker</text>
+<rect x="388" y="216" width="83.1324" height="22.5" rx="11.25" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="429.566" y="231" font-size="12.5" fill="#ffd27a" font-weight="600" text-anchor="middle">1 warning</text>
+<rect x="488" y="216" width="47.9013" height="22.5" rx="11.25" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="511.951" y="231" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="middle">6 ok</text>
+<text x="558" y="232" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Live now: Demo Event. Next: none in 14 days.</text>
+<rect x="296" y="262" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="318" cy="288" r="6" fill="#3ee39a"/>
+<text x="334" y="293" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Backups</text>
+<text x="312" y="318" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Base backup 03:00, files 03:20, WAL pushed</text>
+<text x="312" y="336.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">2 min ago. 7 daily and 4 weekly kept.</text>
+<text x="312" y="382" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Backups and drills ›</text>
+<rect x="616" y="262" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="638" cy="288" r="6" fill="#3ee39a"/>
+<text x="654" y="293" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Restore drills</text>
+<text x="632" y="318" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">CI: passed Sun 15 Nov in 11 min 40 s.</text>
+<text x="632" y="336.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Laptop: Mon 2 Nov, 31 min, over target.</text>
+<text x="632" y="382" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Backups and drills ›</text>
+<rect x="936" y="262" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="958" cy="288" r="6" fill="#3ee39a"/>
+<text x="974" y="293" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Watchdog</text>
+<text x="952" y="318" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Outside poll ok 12 s ago; heartbeat</text>
+<text x="952" y="336.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">answered. Status page: all good.</text>
+<rect x="296" y="414" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="318" cy="440" r="6" fill="#3ee39a"/>
+<text x="334" y="445" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Release</text>
+<text x="312" y="470" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">v0.10.4 on stable. Deploys held from Fri</text>
+<text x="312" y="488.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">18:00 while Demo Event is live.</text>
+<text x="312" y="534" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Releases ›</text>
+<rect x="616" y="414" width="304" height="136" rx="12" fill="#161a2e" stroke="#9a7426" stroke-width="1.5"/>
+<circle cx="638" cy="440" r="6" fill="#f0b23e"/>
+<text x="654" y="445" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Disk</text>
+<rect x="836.209" y="429" width="67.7907" height="21.5" rx="10.75" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="870.105" y="443" font-size="11.5" fill="#ffd27a" font-weight="600" text-anchor="middle">Warning</text>
+<text x="632" y="470" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">71 % used. The WAL archive holds 3.1 GB;</text>
+<text x="632" y="488.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">alert at 85 %.</text>
+<rect x="936" y="414" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="958" cy="440" r="6" fill="#3ee39a"/>
+<text x="974" y="445" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Certificates</text>
+<text x="952" y="470" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">*.platform.example renews in 54 days.</text>
+<rect x="296" y="566" width="304" height="136" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.5"/>
+<circle cx="318" cy="592" r="6" fill="#ff5d73"/>
+<text x="334" y="597" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Fallback laptop</text>
+<rect x="518.948" y="581" width="65.0516" height="21.5" rx="10.75" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="551.474" y="595" font-size="11.5" fill="#ff98a6" font-weight="600" text-anchor="middle">Blocker</text>
+<text x="312" y="622" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Last check Mon 2 Nov. Images of v0.10.4</text>
+<text x="312" y="640.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">are missing on it.</text>
+<text x="312" y="686" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">How to check it ›</text>
+<rect x="616" y="566" width="304" height="136" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="638" cy="592" r="6" fill="#3ee39a"/>
+<text x="654" y="597" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Emergency kit</text>
+<text x="632" y="622" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">2 copies; last opened on the laptop Mon 2</text>
+<text x="632" y="640.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Nov.</text>
+<rect x="296" y="724" width="560" height="236" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316" y="758" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Recent</text>
+<text x="316" y="790" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">03:20</text>
+<text x="416" y="790" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Files backup done · 212 MB</text>
+<text x="316" y="822" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">03:00</text>
+<text x="416" y="822" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Base backup done, checked · 486 MB</text>
+<text x="316" y="854" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Sun 03:43</text>
+<text x="416" y="854" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">CI restore drill passed · 11 min 40 s</text>
+<text x="316" y="886" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Sat 22:10</text>
+<text x="416" y="886" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Watchdog: heartbeat late 1 min, recovered</text>
+<text x="316" y="918" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Mon 2 Nov</text>
+<text x="416" y="918" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Laptop drill · 31 min, over target · data 6 min old</text>
+</g>
+<circle cx="269.6" cy="307.5" r="11" fill="#f59e0b"/>
+<text x="269.6" y="312" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="269.6" cy="367" r="11" fill="#f59e0b"/>
+<text x="269.6" y="371.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="1086" cy="628.8" r="11" fill="#f59e0b"/>
+<text x="1086" y="633.3" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<circle cx="269.6" cy="775" r="11" fill="#f59e0b"/>
+<text x="269.6" y="779.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<rect x="1150" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1355" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">Phone: blockers first, then warnings, then ok</text>
+<g clip-path="url(#ph1150_146)">
+<rect x="1160" y="156" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1194" y="186" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="1486" y="175" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1488" y="177" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1160" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1176" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1212" y="238" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1320" y="222" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1343" y="236" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="1510" y="224" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1510" y="231" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1510" y="238" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1176" y="286" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ More</text>
+<text x="1176" y="316" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Health</text>
+<text x="1265.5" y="366" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Modules</text>
+<rect x="1402.6" y="346" width="83.8017" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1444.5" y="366" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Platform</text>
+<rect x="1176" y="398" width="76.837" height="22" rx="11" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="1214.42" y="412.5" font-size="12" fill="#ff98a6" font-weight="600" text-anchor="middle">1 blocker</text>
+<rect x="1266" y="398" width="80.6071" height="22" rx="11" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="1306.3" y="412.5" font-size="12" fill="#ffd27a" font-weight="600" text-anchor="middle">1 warning</text>
+<rect x="1362" y="398" width="46.7853" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1385.39" y="412.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle">6 ok</text>
+<rect x="1176" y="438" width="358" height="124" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.5"/>
+<circle cx="1198" cy="464" r="6" fill="#ff5d73"/>
+<text x="1214" y="469" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Fallback laptop</text>
+<rect x="1452.95" y="453" width="65.0516" height="21.5" rx="10.75" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="1485.47" y="467" font-size="11.5" fill="#ff98a6" font-weight="600" text-anchor="middle">Blocker</text>
+<text x="1192" y="494" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Last check Mon 2 Nov. Images of v0.10.4 are missing</text>
+<text x="1192" y="512.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">on it.</text>
+<text x="1192" y="546" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">How to check it ›</text>
+<rect x="1176" y="574" width="358" height="124" rx="12" fill="#161a2e" stroke="#9a7426" stroke-width="1.5"/>
+<circle cx="1198" cy="600" r="6" fill="#f0b23e"/>
+<text x="1214" y="605" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Disk</text>
+<rect x="1450.21" y="589" width="67.7907" height="21.5" rx="10.75" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="1484.1" y="603" font-size="11.5" fill="#ffd27a" font-weight="600" text-anchor="middle">Warning</text>
+<text x="1192" y="630" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">71 % used. The WAL archive holds 3.1 GB; alert at 85</text>
+<text x="1192" y="648.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">%.</text>
+<rect x="1176" y="710" width="358" height="124" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1198" cy="736" r="6" fill="#3ee39a"/>
+<text x="1214" y="741" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Backups</text>
+<text x="1192" y="766" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Base backup 03:00, files 03:20, WAL pushed 2 min</text>
+<text x="1192" y="784.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">ago. 7 daily and 4 weekly kept.</text>
+<text x="1192" y="818" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Backups and drills ›</text>
+<rect x="1176" y="846" width="358" height="124" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1198" cy="872" r="6" fill="#3ee39a"/>
+<text x="1214" y="877" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Restore drills</text>
+<text x="1192" y="902" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">CI: passed Sun 15 Nov in 11 min 40 s. Laptop: Mon 2</text>
+<text x="1192" y="920.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Nov, 31 min, over target.</text>
+<text x="1192" y="954" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Backups and drills ›</text>
+<rect x="1160" y="916" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1191" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1199" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1269" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1277" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1355" cy="940" r="15" fill="#3ddcff"/>
+<text x="1355" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1425" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1433" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="1503" y="930" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1511" y="970" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1288" y="988" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<circle cx="1612" cy="162" r="12" fill="#f59e0b"/>
+<text x="1612" y="167" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="1634" y="168" font-size="16" fill="#111827" font-weight="600" text-anchor="start">A tab, not a console (L3)</text>
+<text x="1634" y="192" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The superadmin's session sees a Platform tab</text>
+<text x="1634" y="212" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">beside Modules; event admins see Modules only</text>
+<text x="1634" y="232" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">and the platform's one line on Readiness.</text>
+<circle cx="1612" cy="272" r="12" fill="#f59e0b"/>
+<text x="1612" y="277" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1634" y="278" font-size="16" fill="#111827" font-weight="600" text-anchor="start">What the watchdog also sees</text>
+<text x="1634" y="302" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Backups, WAL, disk and certificates come from the</text>
+<text x="1634" y="322" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">same heartbeat the watchdog gets (D8), so the</text>
+<text x="1634" y="342" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">page and the alerts agree.</text>
+<circle cx="1612" cy="382" r="12" fill="#f59e0b"/>
+<text x="1612" y="387" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="1634" y="388" font-size="16" fill="#111827" font-weight="600" text-anchor="start">The fallback laptop (U10)</text>
+<text x="1634" y="412" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Its last check, from setup/fallback check: images of</text>
+<text x="1634" y="432" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">the running release, a restore into a scratch</text>
+<text x="1634" y="452" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">database, the key opens a sealed value.</text>
+<circle cx="1612" cy="492" r="12" fill="#f59e0b"/>
+<text x="1612" y="497" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1634" y="498" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Recent</text>
+<text x="1634" y="522" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Backups, drills and watchdog events, newest first,</text>
+<text x="1634" y="542" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">in the panel band under the grid (amendment 3).</text>
+</svg>
