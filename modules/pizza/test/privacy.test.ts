@@ -105,6 +105,24 @@ describe.skipIf(!DATABASE_URL)("the privacy export and delete", () => {
     await w.call("anni", "DELETE", "/api/pizza/me");
     expect(json(await w.call("crew", "GET", `/api/pizza/orders/${second}`)).pizza_count).toBe(0);
   });
+  it("drops other people's stored answers that name the deleted person", async () => {
+    const stored = async () =>
+      (await pool.query(`SELECT body::text AS b FROM pizza_idempotency`)).rows.map(
+        (r: { b: string | null }) => r.b ?? "",
+      );
+    // The holder's call-in answered with every pizza and its person: Anni among them.
+    expect((await stored()).some((b) => /u_anni|Anni/.test(b))).toBe(true);
+    await w.call("anni", "DELETE", "/api/pizza/me");
+    expect((await stored()).filter((b) => /u_anni|Anni/.test(b))).toEqual([]);
+    expect((await stored()).some((b) => b.includes("u_mikko"))).toBe(true);
+  });
+  it("drops the stored answers that name a deleted user, in every event", async () => {
+    await handlePlatformEvent(w.deps, event("tenants.user.deleted", { user_id: "u_anni" }, null));
+    const { rows } = await pool.query(
+      `SELECT count(*)::int AS n FROM pizza_idempotency WHERE strpos(body::text, 'u_anni') > 0`,
+    );
+    expect((rows[0] as { n: number }).n).toBe(0);
+  });
   it("clears the holder and the payer of a holder who deletes", async () => {
     await w.call("pena", "DELETE", "/api/pizza/me");
     const after = await crewView();

@@ -102,8 +102,9 @@ describe("rules", () => {
     expect(e("Demo,1,A,,not a url,")).toMatchObject({ column: "website" });
     expect(e("Demo,1,A,,,boat")).toMatchObject({ column: "service" });
     const fine = parseMenuCsv(`${head}\nDemo,1,A,,http://x.example/menu,\n`);
+    // Left empty, the service is not given: a new pizzeria gets delivery, a stored one keeps its own.
     expect(fine.pizzerias[0]).toMatchObject({
-      service: "delivery",
+      service: null,
       website: "http://x.example/menu",
     });
   });

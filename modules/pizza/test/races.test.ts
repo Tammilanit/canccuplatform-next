@@ -40,6 +40,22 @@ beforeEach(async () => {
   margherita = await itemId(w, pz, "1");
 });
 
+/** Until another session waits on a row lock (bounded: a request that never blocks fails the test). */
+async function waitForLockWaiter(holder: pg.PoolClient): Promise<void> {
+  const pid = ((await holder.query("SELECT pg_backend_pid() AS pid")).rows[0] as { pid: number })
+    .pid;
+  for (let i = 0; i < 200; i++) {
+    const { rows } = await holder.query(
+      `SELECT count(*)::int AS n FROM pg_stat_activity
+        WHERE wait_event_type = 'Lock' AND datname = current_database() AND pid <> $1`,
+      [pid],
+    );
+    if ((rows[0] as { n: number }).n > 0) return;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  throw new Error("no request waited on the order's row");
+}
+
 const people = (n: number) => Array.from({ length: n }, (_, i) => `p${i}`);
 const statuses = (rs: { statusCode: number }[]) => rs.map((r) => r.statusCode).sort();
 
@@ -98,6 +114,32 @@ describe.skipIf(!DATABASE_URL)("races", () => {
     // Both may win in turn (a take-over takes a held order), but never lose an event.
     const ok = rs.filter((r) => r.statusCode === 200).length;
     expect(types(w.events()).filter((t) => t === "pizza.order.claimed")).toHaveLength(ok);
+  });
+
+  it("refuses the holder's release once the crew's take-over has committed", async () => {
+    const id = json(await open(w, "pena", pz)).id as string;
+    // The take-over commits while the release is under way: a transaction holds the order's row,
+    // the release starts, and the order passes to the crew before the row is let go.
+    const takeOver = await pool.connect();
+    try {
+      await takeOver.query("BEGIN");
+      await takeOver.query("SELECT 1 FROM pizza_orders WHERE id = $1 FOR UPDATE", [id]);
+      const releasing = w.call("pena", "POST", `/api/pizza/orders/${id}/release`, {});
+      await waitForLockWaiter(takeOver);
+      await takeOver.query(
+        `UPDATE pizza_orders SET holder_user_id = 'u_crew', holder_name = 'Crew', revision = revision + 1
+          WHERE id = $1`,
+        [id],
+      );
+      await takeOver.query("COMMIT");
+      const r = await releasing;
+      expect(r.statusCode).toBe(403);
+    } finally {
+      takeOver.release();
+    }
+    const d = json(await w.call("crew", "GET", `/api/pizza/orders/${id}`));
+    expect(d.holder).toMatchObject({ user_id: "u_crew" });
+    expect(types(w.events())).not.toContain("pizza.order.released");
   });
 
   it("opens one order per pizzeria when ten open at once", async () => {

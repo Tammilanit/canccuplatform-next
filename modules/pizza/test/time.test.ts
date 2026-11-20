@@ -14,6 +14,11 @@ describe("eventDay", () => {
     expect(eventDay(new Date("2026-10-24T03:30:00Z"), HKI)).toBe("2026-10-24"); // 06:30, +3
     expect(eventDay(new Date("2026-10-26T03:30:00Z"), HKI)).toBe("2026-10-25"); // 05:30, +2
   });
+  it("turns at 06:00 local on the March night the clocks go forward", () => {
+    expect(eventDay(new Date("2026-03-29T03:30:00Z"), HKI)).toBe("2026-03-29"); // 06:30, +3
+    expect(eventDay(new Date("2026-03-29T02:59:00Z"), HKI)).toBe("2026-03-28"); // 05:59, +3
+    expect(eventDay(new Date("2026-03-29T00:30:00Z"), HKI)).toBe("2026-03-28"); // 02:30, +2
+  });
   it("uses UTC as given", () => {
     expect(eventDay(new Date("2026-01-01T05:59:59Z"), "UTC")).toBe("2025-12-31");
   });

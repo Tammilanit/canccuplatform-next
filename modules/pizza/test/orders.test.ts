@@ -93,6 +93,11 @@ describe.skipIf(!DATABASE_URL)("opening", () => {
       errorOf(await post("pena", "orders", { pizzeria_id: pz, closes_at: "2026-10-29T15:00:00Z" })),
     ).toMatchObject({ field: "closes_at" });
   });
+  it("answers 400 to a close time without an offset, which no zone would read the same", async () => {
+    const r = await post("pena", "orders", { pizzeria_id: pz, closes_at: "2026-10-29T19:00:00" });
+    expect(r.statusCode).toBe(400);
+    expect(errorOf(r)).toMatchObject({ code: "invalid_request", field: "closes_at" });
+  });
   it("refuses a second open order at one pizzeria with 409 another_open and that order", async () => {
     const first = await opened("pena");
     const r = await open(w, "anni", pz);
