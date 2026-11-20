@@ -183,3 +183,57 @@ test("log text cannot mention people or close the code block", () => {
   assert.doesNotMatch(body, /@someone/);
   assert.equal(body.split("```").length, 3, "one code block, opened and closed");
 });
+
+test("the last green run is read from one page, not by walking every green run", () => {
+  const gh = repo();
+  const calls = [];
+  const spy = (args) => (calls.push(args), gh(args));
+  spy.writes = gh.writes;
+  run({ gh: spy, env });
+  const runs = calls.filter((c) => c.at(-1).includes("/workflows/demo-stack.yml/runs"));
+  assert.equal(runs.length, 1);
+  assert.ok(!runs[0].includes("--paginate"), "per_page=1 with --paginate pages through all of them");
+  assert.match(runs[0].at(-1), /per_page=1\b/);
+});
+
+test("commit subjects cannot mention people, in a new issue or a comment on the open one", () => {
+  const open = { number: 41, body: "<!-- canccu-regression: the push channel's latency -->" };
+  const gh = repo({ issues: [open] });
+  const compare = `repos/o/r/compare/${GREEN}...${SHA}`;
+  const answers = { [compare]: { commits: [{ sha: "b".repeat(40), commit: { message: "fix(ci): thanks @someone" } }] } };
+  const wrapped = (args) => (args.at(-1) === compare ? JSON.stringify(answers[compare]) : gh(args));
+  wrapped.writes = gh.writes;
+  run({ gh: wrapped, env });
+  const issue = arg(created(gh)[0], "--body");
+  const comment = arg(gh.writes.find((w) => w[0] === "issue" && w[1] === "comment"), "--body");
+  for (const body of [issue, comment]) {
+    assert.match(body, /bbbbbbb fix\(ci\): thanks @​someone/);
+    assert.doesNotMatch(body, /@someone/);
+  }
+});
+
+test("a compare call that fails (history rewritten, rate limit) still files the night's failures", () => {
+  const gh = repo();
+  const failing = (args) => {
+    if (args.at(-1).startsWith("repos/o/r/compare/")) throw new Error("gh: Not Found (HTTP 404)");
+    return gh(args);
+  };
+  failing.writes = gh.writes;
+  const got = run({ gh: failing, env });
+  assert.equal(got.length, 2);
+  const body = arg(created(gh)[0], "--body");
+  assert.match(body, /commits unknown/i);
+  assert.match(body, /aaaaaaa/, "names the green run it could not compare with");
+});
+
+test("IGNORE as the weekly report builds it, with empty entries and spaces, leaves out the knock-on parts", () => {
+  const gh = fakeGh({
+    "repos/o/r/actions/runs/77/jobs": { jobs: [job(1, "screens (base)"), job(2, "screen-diff"), job(3, "mutation-score")] },
+    "repos/o/r/actions/jobs/1/logs": log("FAIL settings: timeout"),
+    "repos/o/r/actions/jobs/3/logs": log("::error::no stryker report"),
+    "repos/o/r/actions/workflows/weekly.yml/runs": { workflow_runs: [] },
+    "repos/o/r/issues": [],
+  });
+  const got = run({ gh, env: { ...env, WORKFLOW: "weekly.yml", PER: "job", PREFIX: "weekly: ", IGNORE: ", screen-diff" } });
+  assert.deepEqual(got.map((r) => r.name), ["weekly: screens (base)", "weekly: mutation-score"]);
+});

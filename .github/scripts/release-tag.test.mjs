@@ -150,3 +150,45 @@ test("no open step milestone fails the tag instead of guessing one", () => {
   assert.throws(() => run({ gh, env }), /no open step milestone/);
   assert.deepEqual(gh.writes, []);
 });
+
+test("a red push whose issue was closed already files nothing more", () => {
+  const closed = { number: 9, state: "closed", body: `x\n<!-- canccu-release-red: ${SHA} -->` };
+  const gh = repo({ ci: "failure", issues: (q) => (q.get("state") === "open" ? [] : [closed]) });
+  assert.deepEqual(run({ gh, env }), { action: "red", filed: false, issue: 9 });
+  assert.deepEqual(gh.writes, []);
+});
+
+test("an annotated tag at the sha counts as its tag", () => {
+  const gh = repo({ tags: [["step-3", "c".repeat(40)]] });
+  const TAG_OBJECT = "e".repeat(40);
+  const annotated = (args) => {
+    const path = args.at(-1);
+    if (path === "repos/o/r/git/matching-refs/tags/") {
+      return [
+        { ref: "refs/tags/step-3", object: { sha: "c".repeat(40), type: "commit" } },
+        { ref: "refs/tags/v0.4.0", object: { sha: TAG_OBJECT, type: "tag" } },
+      ].map((r) => JSON.stringify(r)).join("\n");
+    }
+    if (path === `repos/o/r/git/tags/${TAG_OBJECT}`) return JSON.stringify({ object: { sha: SHA, type: "commit" } });
+    return gh(args);
+  };
+  annotated.writes = gh.writes;
+  assert.deepEqual(run({ gh: annotated, env }), { action: "skip", reason: "already tagged" });
+  assert.deepEqual(gh.writes, []);
+});
+
+test("a red push with a failing tag lookup still files its issue", () => {
+  const gh = repo({ demo: "failure", tags: [["step-3", "c".repeat(40)]] });
+  const TAG_OBJECT = "e".repeat(40);
+  const broken = (args) => {
+    const path = args.at(-1);
+    if (path === "repos/o/r/git/matching-refs/tags/") {
+      return [{ ref: "refs/tags/v0.4.0", object: { sha: TAG_OBJECT, type: "tag" } }]
+        .map((r) => JSON.stringify(r)).join("\n");
+    }
+    if (path.startsWith("repos/o/r/git/tags/")) throw new Error("404");
+    return gh(args);
+  };
+  broken.writes = gh.writes;
+  assert.deepEqual(run({ gh: broken, env }), { action: "red", filed: true });
+});

@@ -67,17 +67,24 @@ export function decodePng(buf) {
   return { width, height, data: rgba };
 }
 
+// Two screens of different sizes share their top-left overlap, compared pixel by pixel; what only
+// one of them has (a longer page, a wider layout) counts as changed, of the area both cover.
 function changedRatio(a, b) {
+  const [w, h] = [Math.min(a.width, b.width), Math.min(a.height, b.height)];
   let changed = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    for (let k = 0; k < 4; k++) {
-      if (Math.abs(a.data[i + k] - b.data[i + k]) > TOLERANCE) {
-        changed++;
-        break;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const [i, j] = [(y * a.width + x) * 4, (y * b.width + x) * 4];
+      for (let k = 0; k < 4; k++) {
+        if (Math.abs(a.data[i + k] - b.data[j + k]) > TOLERANCE) {
+          changed++;
+          break;
+        }
       }
     }
   }
-  return changed / (a.width * a.height);
+  const union = a.width * a.height + b.width * b.height - w * h;
+  return (changed + union - w * h) / union;
 }
 
 export function compare(oldDir, newDir, { threshold }) {
@@ -88,12 +95,10 @@ export function compare(oldDir, newDir, { threshold }) {
   for (const name of [...after].filter((n) => before.has(n)).sort()) {
     compared++;
     const [a, b] = [oldDir, newDir].map((dir) => decodePng(readFileSync(join(dir, name))));
-    if (a.width !== b.width || a.height !== b.height) {
-      changed.push({ name, ratio: 1, note: `${a.width}x${a.height} → ${b.width}x${b.height}` });
-      continue;
-    }
     const ratio = changedRatio(a, b);
-    if (ratio >= threshold) changed.push({ name, ratio });
+    if (ratio < threshold) continue;
+    const resized = a.width !== b.width || a.height !== b.height;
+    changed.push(resized ? { name, ratio, note: `${a.width}x${a.height} → ${b.width}x${b.height}` } : { name, ratio });
   }
   changed.sort((x, y) => y.ratio - x.ratio || x.name.localeCompare(y.name));
   return {

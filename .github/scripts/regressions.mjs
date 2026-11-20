@@ -9,7 +9,7 @@
 //             scripts/demo-stack-test and scripts/demo-screenshots) or job (each failed job)
 //   PREFIX    put before every name (`weekly: `)      IGNORE  job names never reported, comma-separated
 import { pathToFileURL } from "node:url";
-import { createIssue, ensureLabel, get, list, markerOf, openIssueWith, realGh } from "./gh.mjs";
+import { createIssue, ensureLabel, get, list, issueWith, markerOf, realGh } from "./gh.mjs";
 
 const LABEL = "regression";
 const FAILED = ["failure", "timed_out"];
@@ -53,21 +53,33 @@ export function failuresOf(jobs, logs, { perTest, prefix = "", ignore = [] }) {
   return [...byName.values()];
 }
 
-// Log text goes into an issue: it must not mention anyone or end the code block it sits in.
+// Text from a log or a commit goes into an issue: a bare `@` would mention someone.
+const unmention = (text) => text.replaceAll("@", "@​");
+
+// Log text must also not end the code block it sits in.
 const fenced = (text) => {
-  const safe = text.replaceAll("```", "'''").replaceAll("@", "@​");
+  const safe = unmention(text.replaceAll("```", "'''"));
   const cut = safe.length > MAX_OUTPUT ? `…\n${safe.slice(-MAX_OUTPUT)}` : safe;
   return ["```", cut, "```"].join("\n");
 };
 
+// One page holding one run: `list()` would page through every green run there is.
 function commitsSince({ gh, repo, workflow, event, sha }) {
-  const green = list(gh, `repos/${repo}/actions/workflows/${workflow}/runs?status=success&event=${event}&per_page=1`, "workflow_runs")[0];
+  const green = get(gh, `repos/${repo}/actions/workflows/${workflow}/runs?status=success&event=${event}&per_page=1`).workflow_runs[0];
   if (!green) return `no green run of ${workflow} yet.`;
   if (green.head_sha === sha) return "none: the last green run was on this commit.";
-  const { commits } = get(gh, `repos/${repo}/compare/${green.head_sha}...${sha}`);
+  const since = green.head_sha.slice(0, 7);
+  let commits;
+  try {
+    ({ commits } = get(gh, `repos/${repo}/compare/${green.head_sha}...${sha}`));
+  } catch (err) {
+    // A rewritten history (404) or the rate limit must not keep the night's failures unfiled.
+    console.error(`compare ${since}...${sha.slice(0, 7)} failed: ${err.message}`);
+    return `unknown: comparing with the last green run (${since}) failed.`;
+  }
   return [
-    `since the last green run (${green.head_sha.slice(0, 7)}):`,
-    ...commits.map((c) => `- ${c.sha.slice(0, 7)} ${c.commit.message.split("\n")[0]}`),
+    `since the last green run (${since}):`,
+    ...commits.map((c) => `- ${c.sha.slice(0, 7)} ${unmention(c.commit.message.split("\n")[0])}`),
   ].join("\n");
 }
 
@@ -90,7 +102,7 @@ export function run({ gh, env }) {
   ensureLabel(gh, repo, LABEL, "d93f0b", "A scheduled run found it failing; the lead triages it");
   return failures.map((f) => {
     const marker = markerOf(LABEL, f.name);
-    const open = openIssueWith(gh, repo, LABEL, marker);
+    const open = issueWith(gh, repo, LABEL, marker);
     if (open) {
       gh(["issue", "comment", String(open.number), "--repo", repo, "--body", `Still failing.\n\n${report(f)}`]);
       return { name: f.name, commented: open.number };

@@ -107,10 +107,29 @@ test("screens whose pixels changed past the threshold are listed, worst first; a
   assert.equal(got.compared, 5);
 });
 
-test("a screen whose size changed counts as changed all over", () => {
-  const [a, b] = dirs({ "a.png": png(10, 10, 3, gradient) }, { "a.png": png(10, 12, 3, gradient) });
+test("a screen whose size changed compares their overlap and counts the added area as changed", () => {
+  const [a, b] = dirs(
+    { "longer.png": png(10, 10, 3, gradient), "wider.png": png(10, 10, 3, gradient), "redone.png": png(10, 10, 3, gradient) },
+    {
+      "longer.png": png(10, 12, 3, gradient),
+      "wider.png": png(12, 10, 3, (x, y) => (y < 5 ? [0, 0, 0] : gradient(x, y))),
+      "redone.png": png(8, 12, 3, () => [255, 255, 255]),
+    },
+  );
   const got = compare(a, b, { threshold: 0.1 });
-  assert.deepEqual(got.changed, [{ name: "a.png", ratio: 1, note: "10x10 → 10x12" }]);
+  const by = Object.fromEntries(got.changed.map((c) => [c.name, c]));
+  // 20 new pixels of 120, the overlap the same.
+  assert.ok(Math.abs(by["longer.png"].ratio - 20 / 120) < 1e-9, `longer: ${by["longer.png"].ratio}`);
+  assert.equal(by["longer.png"].note, "10x10 → 10x12");
+  // The top half of the overlap changed (about 50 of 100) and 20 pixels were added, of 120.
+  assert.ok(Math.abs(by["wider.png"].ratio - 70 / 120) < 0.06, `wider: ${by["wider.png"].ratio}`);
+  // A narrower, taller screen: 20 pixels gone, 16 added, the 80 they share all changed.
+  assert.equal(by["redone.png"].ratio, 1);
+});
+
+test("a small size change with the same content stays under the threshold", () => {
+  const [a, b] = dirs({ "a.png": png(10, 100, 3, gradient) }, { "a.png": png(10, 104, 3, gradient) });
+  assert.deepEqual(compare(a, b, { threshold: 0.1 }).changed, []);
 });
 
 test("the list reads as a table with the base and the threshold", () => {

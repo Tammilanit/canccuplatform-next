@@ -6,7 +6,7 @@
 //        GH_TOKEN; GITHUB_OUTPUT, when set, gets `tag=<tag>` for the image build.
 import { appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { createIssue, ensureLabel, get, list, markerOf, openIssueWith, realGh } from "./gh.mjs";
+import { createIssue, ensureLabel, get, list, issueWith, markerOf, realGh } from "./gh.mjs";
 
 const WORKFLOWS = { ci: ".github/workflows/ci.yml", demo: ".github/workflows/demo-stack.yml" };
 const RED = ["failure", "timed_out", "startup_failure"];
@@ -82,14 +82,21 @@ export function run({ gh, env, dryRun = false }) {
   const runs = { ci: newest(WORKFLOWS.ci), demo: newest(WORKFLOWS.demo) };
   const refs = list(gh, `repos/${repo}/git/matching-refs/tags/`);
   const tags = refs.map((r) => r.ref.replace(/^refs\/tags\//, ""));
-  const tagsAtSha = refs.filter((r) => r.object.sha === sha).map((r) => r.ref.replace(/^refs\/tags\//, ""));
   const mainHead = get(gh, `repos/${repo}/commits/main`).sha;
-  const decision = decide({ sha, mainHead, runs, tagsAtSha });
+  let decision = decide({ sha, mainHead, runs, tagsAtSha: [] });
+  // Only the tag path looks at the tags' objects, so a failed lookup cannot stop a release-red issue.
+  if (decision.action === "tag") {
+    const tagsAtSha = refs
+      .filter((r) => /^refs\/tags\/v0\.\d+\.\d+$/.test(r.ref) && peel(gh, repo, r.object) === sha)
+      .map((r) => r.ref.replace(/^refs\/tags\//, ""));
+    decision = decide({ sha, mainHead, runs, tagsAtSha });
+  }
 
   if (decision.action === "red") {
     const marker = markerOf(LABEL, sha);
-    const open = openIssueWith(gh, repo, LABEL, marker);
-    if (open) return { action: "red", filed: false, issue: open.number };
+    // A closed one counts too: closing it says the red was handled, not that it should be filed again.
+    const known = issueWith(gh, repo, LABEL, marker, "all");
+    if (known) return { action: "red", filed: false, issue: known.number };
     if (dryRun) return { action: "red", filed: false, dryRun: true };
     const lastTag = tags.filter((t) => /^v0\.\d+\.\d+$/.test(t)).sort(byVersion).pop();
     ensureLabel(gh, repo, LABEL, "b60205", "Main's full pipeline failed; the issue is the release investigator");
@@ -105,6 +112,14 @@ export function run({ gh, env, dryRun = false }) {
   // A lightweight tag, made through the API: the tag job checks nothing out.
   gh(["api", "-X", "POST", `repos/${repo}/git/refs`, "-f", `ref=refs/tags/${tag}`, "-f", `sha=${sha}`]);
   return { action: "tag", tag };
+}
+
+// An annotated tag's ref points at a tag object, which points at the commit (or, rarely, at
+// another tag object).
+function peel(gh, repo, object) {
+  let { sha, type } = object;
+  while (type === "tag") ({ sha, type } = get(gh, `repos/${repo}/git/tags/${sha}`).object);
+  return sha;
 }
 
 const byVersion = (a, b) => {
