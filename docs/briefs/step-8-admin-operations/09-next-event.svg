@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2660 1180" width="2660" height="1180" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 09: the next event in a series (superadmin)</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="760" rx="10"/></clipPath><clipPath id="c2"><rect x="2052" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2660" height="1180" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2628">09 · The next event: a series, its events, and one form that makes the next one (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2628">The tenants contract&#x27;s series and clone: the superadmin creates the draft (it needs a hostname and a venue); its event admins then copy from the last event (mockup 10).</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2628">Use case: after an event, the superadmin opens the series and creates the next event with the last one&#x27;s dates shifted, its venue and its admins</text>
+<text x="672" y="944" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Series at 1280 px: master–detail, the series&#x27; events newest first</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="760" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="92" height="28" rx="6" fill="#b98cff"/>
+<text x="98" y="183" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="52 144">Platform</text>
+<text x="158" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Superadmin console</text>
+<rect x="332" y="167" width="111.84" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="342" y="182.5" font-size="12" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="332 443.84">Tailscale only</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">10:02</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="703" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="910" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PLATFORM</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Stack health</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Incidents</text>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Fixes</text>
+<text x="56" y="410" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENTS</text>
+<rect x="58" y="435" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="446" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Events</text>
+<rect x="44" y="464" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="464" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Series</text>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Venues</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PEOPLE</text>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Users</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Superadmins</text>
+<text x="56" y="716" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RECORD</text>
+<rect x="58" y="741" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="752" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Audit</text>
+</g>
+<text x="328" y="249" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Series</text>
+<rect x="1152" y="227" width="120" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1212" y="250.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1152 1272">New series</text>
+<rect x="328" y="279" width="260" height="220" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="336" y="291" width="244" height="60" rx="8" fill="#1c374d"/>
+<rect x="336" y="291" width="3" height="60" rx="1" fill="#3ddcff"/>
+<text x="352" y="317" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 588">Demo LAN</text>
+<text x="352" y="337" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 588">4 events · next: none yet</text>
+<text x="352" y="387" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 588">Demo Cup</text>
+<text x="352" y="407" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 588">2 events · live now</text>
+<text x="604" y="301" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="604 1272">Demo LAN</text>
+<text x="604" y="325" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="604 1272">At Demo Hall, about every 16 weeks · 4 events</text>
+<rect x="1062" y="289" width="210" height="36" rx="10" fill="#3ddcff"/>
+<text x="1167" y="312.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1062 1272">New event in this series</text>
+<circle cx="1062" cy="289" r="13" fill="#f59e0b"/>
+<text x="1062" y="294" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1049 1075">1</text>
+<rect x="604" y="359" width="668" height="300" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="622" y="387" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="604 1272">Event</text>
+<text x="854" y="387" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="604 1272">State</text>
+<text x="964" y="387" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="604 1272">Dates</text>
+<text x="1124" y="387" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="604 1272">Venue</text>
+<line x1="616" y1="399" x2="1260" y2="399" stroke="#343c66" stroke-width="1"/>
+<text x="622" y="425" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="622 846">Demo Event</text>
+<text x="622" y="445" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="622 846">cloned from the summer</text>
+<rect x="854" y="413" width="59.1671" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="866" cy="424" r="3.5" fill="#3ee39a"/>
+<text x="875" y="428.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="854 913.167">Live</text>
+<text x="964" y="429" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="604 1272">20–22 Nov</text>
+<text x="1124" y="429" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1124 1260">Demo Hall</text>
+<line x1="616" y1="461" x2="1260" y2="461" stroke="#343c66" stroke-width="1"/>
+<text x="622" y="487" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="622 846">Demo Event (summer)</text>
+<text x="622" y="507" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="622 846">cloned from the spring</text>
+<rect x="854" y="475" width="88.935" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="866" cy="486" r="3.5" fill="#a9b1d6"/>
+<text x="875" y="490.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="854 942.935">Archived</text>
+<text x="964" y="491" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="604 1272">31 Jul – 2 Aug</text>
+<text x="1124" y="491" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1124 1260">Demo Hall</text>
+<line x1="616" y1="523" x2="1260" y2="523" stroke="#343c66" stroke-width="1"/>
+<text x="622" y="549" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="622 846">Demo Event (spring)</text>
+<text x="622" y="569" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="622 846">cloned from the winter</text>
+<rect x="854" y="537" width="88.935" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="866" cy="548" r="3.5" fill="#a9b1d6"/>
+<text x="875" y="552.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="854 942.935">Archived</text>
+<text x="964" y="553" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="604 1272">10–12 Apr</text>
+<text x="1124" y="553" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1124 1260">Demo Hall</text>
+<line x1="616" y1="585" x2="1260" y2="585" stroke="#343c66" stroke-width="1"/>
+<text x="622" y="611" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="622 846">Demo Event (winter)</text>
+<text x="622" y="631" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="622 846">the first</text>
+<rect x="854" y="599" width="88.935" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="866" cy="610" r="3.5" fill="#a9b1d6"/>
+<text x="875" y="614.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="854 942.935">Archived</text>
+<text x="964" y="615" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="604 1272">16–18 Jan</text>
+<text x="1124" y="615" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1124 1260">Demo Annex</text>
+<text x="604" y="689" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="604 1272">Clone the last event: each event admin of both events copies on the new event&#x27;s</text>
+<text x="604" y="709" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="604 1272">hostname; the series keeps its Discord server, its own bot moves along (bot.md).</text>
+<text x="1672" y="1074" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1352 1992">B · New event in Demo LAN: filled from the last one</text>
+<rect x="1352" y="160" width="640" height="880" rx="14" fill="#1c2138" stroke="#343c66" stroke-width="1"/>
+<text x="1380" y="204" font-size="21" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1380 1964">New event in Demo LAN</text>
+<text x="1380" y="230" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1380 1964">Filled from Demo Event, the series&#x27; last. Created as a draft.</text>
+<text x="1380" y="283" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Name</text>
+<rect x="1532" y="260" width="432" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="282.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1964">Demo Event (spring)</text>
+<text x="1380" y="335" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Id</text>
+<rect x="1532" y="312" width="432" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="334.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1964">demo-2027-spring</text>
+<text x="1380" y="387" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Hostname</text>
+<rect x="1532" y="364" width="432" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="386.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1964">demo-2027-spring.example.org</text>
+<text x="1380" y="439" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Time zone</text>
+<rect x="1532" y="416" width="432" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="438.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1964">Europe/Helsinki</text>
+<text x="1380" y="491" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Venue</text>
+<rect x="1532" y="468" width="432" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="490.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1964">Demo Hall</text>
+<text x="1380" y="543" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Dates</text>
+<rect x="1532" y="520" width="206" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="542.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1738">Fri 12 Mar</text>
+<rect x="1758" y="520" width="206" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1770" y="542.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1758 1964">Sun 14 Mar</text>
+<text x="1532" y="576" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1380 1964">Offered: the same weekday, 16 weeks after the last (D17)</text>
+<text x="1380" y="623" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">First event admins</text>
+<rect x="1532" y="600" width="432" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<rect x="1544" y="609" width="16" height="16" rx="4" fill="#3ddcff"/>
+<path d="M1547,617 l4,4 l6,-8" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1572" y="622" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Player One · admin of Demo Event</text>
+<rect x="1532" y="640" width="432" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<rect x="1544" y="649" width="16" height="16" rx="4" fill="#3ddcff"/>
+<path d="M1547,657 l4,4 l6,-8" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1572" y="662" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Player Three · admin of Demo Event</text>
+<text x="1532" y="698" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1380 1964">Only admins of both events can copy from the last one.</text>
+<text x="1380" y="747" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Storage quota</text>
+<rect x="1532" y="724" width="200" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1544" y="746.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1532 1732">2 GiB</text>
+<rect x="1380" y="788" width="584" height="110" rx="10" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1396" y="816" font-size="14.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1380 1964">What happens next</text>
+<text x="1396" y="840" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">The draft is out of sight: guests see nothing, nobody joins.</text>
+<text x="1396" y="862" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">Its admins get the event&#x27;s link and a &quot;Start from the last</text>
+<text x="1396" y="882" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380 1964">event&quot; card on its Health page (C, and mockup 10).</text>
+<rect x="1380" y="976" width="120" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1440" y="999.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1380 1500">Cancel</text>
+<rect x="1784" y="976" width="180" height="36" rx="10" fill="#3ddcff"/>
+<text x="1874" y="999.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1784 1964">Create the draft</text>
+<circle cx="1348" cy="170" r="13" fill="#f59e0b"/>
+<text x="1348" y="175" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1335 1361">2</text>
+<text x="2247" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="2052 2442">C · The new draft, for its event admin</text>
+<rect x="2042" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="2052" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="2086" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2052 2442">10:20</text>
+<rect x="2378" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2380" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="2052" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="2068" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="2104" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2052 2442">Demo Event (spring)</text>
+<rect x="2288.93" y="225" width="61.5721" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="2300.93" cy="236" r="3.5" fill="#a9b1d6"/>
+<text x="2309.93" y="240.5" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="2288.93 2350.51">Draft</text>
+<rect x="2402" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2402" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2402" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="2068" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2052 2442">Health</text>
+<rect x="2068" y="332" width="358" height="196" rx="12" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="2086" y="364" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2084 2410">Start from the last event</text>
+<text x="2086" y="390" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2084 2410">Copy Demo Event&#x27;s run of show,</text>
+<text x="2086" y="410" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2084 2410">screens, theme, stories, food and</text>
+<text x="2086" y="430" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2084 2410">notifications, its dates shifted</text>
+<text x="2086" y="450" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2084 2410">by 16 weeks.</text>
+<rect x="2086" y="472" width="210" height="36" rx="10" fill="#3ddcff"/>
+<text x="2191" y="495.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="2086 2296">Choose what to copy</text>
+<text x="2068" y="572" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2068 2426">Draft · nothing is public</text>
+<line x1="2068" y1="588" x2="2426" y2="588" stroke="#343c66" stroke-width="1"/>
+<text x="2068" y="615" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2068 2426">Guests</text>
+<text x="2426" y="615" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="2068 2426">see nothing</text>
+<line x1="2068" y1="630" x2="2426" y2="630" stroke="#343c66" stroke-width="1"/>
+<text x="2068" y="657" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2068 2426">Joining</text>
+<text x="2426" y="657" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="2068 2426">closed until live</text>
+<line x1="2068" y1="672" x2="2426" y2="672" stroke="#343c66" stroke-width="1"/>
+<text x="2068" y="699" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2068 2426">Alerts</text>
+<text x="2426" y="699" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="2068 2426">none while draft (E10)</text>
+<line x1="2068" y1="714" x2="2426" y2="714" stroke="#343c66" stroke-width="1"/>
+<text x="2068" y="741" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2068 2426">Venue info</text>
+<text x="2426" y="741" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="end" data-box="2068 2426">copied from Demo Hall</text>
+<rect x="2052" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="2083" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="2091" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="2052 2130">Health</text>
+<rect x="2161" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2169" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2130 2208">Studio</text>
+<circle cx="2247" cy="944" r="15" fill="#3ddcff"/>
+<text x="2247" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2208 2286">Add</text>
+<rect x="2317" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2325" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2286 2364">Screens</text>
+<rect x="2395" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2403" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2364 2442">More</text>
+<rect x="2180" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<circle cx="2048" cy="300" r="13" fill="#f59e0b"/>
+<text x="2048" y="305" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2035 2061">3</text>
+<text x="32" y="1150" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="32 2628">1 · The series is the superadmin&#x27;s (U11): a hostname and a venue are theirs to give.   2 · Every field is filled from the last event; the dates keep the weekday (D17).   3 · The new event&#x27;s admins are led to the copy (U12–U14).</text>
+</svg>

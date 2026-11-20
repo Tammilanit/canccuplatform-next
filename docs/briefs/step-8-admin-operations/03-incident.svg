@@ -1,0 +1,349 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2700 1310" width="2700" height="1310" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 03: an incident, mute and history</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="900" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1832" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c4"><rect x="2292" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2700" height="1310" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2668">03 · An incident: its timeline, what to check, mute, and the day&#x27;s history (event crew)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2668">One page per incident: what happened when, who was told and who is on it, the fixes tried, and the next step in words.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2668">Use case: a crew member opens an alert from Discord or Health, acks it, mutes a screen that is being replaced, and looks back at the day</text>
+<text x="672" y="1084" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · The incident page at 1280 px, acked, the fix not possible while the screen is offline</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="900" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 136">Demo</text>
+<text x="148" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Demo Event</text>
+<line x1="263.385" y1="168" x2="263.385" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="276.385" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="32 1312">Fri 20 – Sun 22 Nov</text>
+<rect x="422.879" y="167" width="59.1671" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="434.879" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="443.879" y="182.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="422.879 482.046">Live</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">21:36</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="843" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1050" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Announcements</text>
+<rect x="58" y="387" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="398" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<text x="56" y="452" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">ADMIN</text>
+<rect x="44" y="596" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="596" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="145.27" y="608" width="74.6996" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="157.27" cy="619" r="3.5" fill="#f87171"/>
+<text x="166.27" y="623.5" font-size="11" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="145.27 219.969">1 down</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Settings</text>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="735" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="746" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Venue info</text>
+<rect x="58" y="777" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="788" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+</g>
+<text x="328" y="239" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">‹ Health</text>
+<text x="328" y="277" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Main hall screen 2 is dark</text>
+<rect x="328" y="293" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="340" cy="304" r="3.5" fill="#f87171"/>
+<text x="349" y="308.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="328 394.896">Down</text>
+<rect x="402.896" y="293" width="171.484" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="414.896" cy="304" r="3.5" fill="#3ee39a"/>
+<text x="423.896" y="308.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="402.896 574.38">Acked by Player Two</text>
+<text x="586.38" y="309" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">since 21:29 · 7 min · screen_dark</text>
+<rect x="328" y="335" width="66.9963" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="361.498" y="358.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="328 394.996">Mute</text>
+<rect x="402.996" y="335" width="87.0707" height="36" rx="10" fill="none" stroke="#3c446c" stroke-width="1"/>
+<text x="446.532" y="358.04" font-size="14" fill="#616788" font-weight="600" text-anchor="middle" data-box="402.996 490.067">Identify</text>
+<rect x="498.067" y="335" width="81.7756" height="36" rx="10" fill="none" stroke="#3c446c" stroke-width="1"/>
+<text x="538.955" y="358.04" font-size="14" fill="#616788" font-weight="600" text-anchor="middle" data-box="498.067 579.843">Reload</text>
+<rect x="587.843" y="335" width="132.468" height="36" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="654.076" y="358.04" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="587.843 720.31">Open devices</text>
+<text x="736.31" y="358" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Identify and Reload need the screen online</text>
+<circle cx="310" cy="353" r="13" fill="#f59e0b"/>
+<text x="310" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">1</text>
+<rect x="328" y="399" width="560" height="560" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="431" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">What happened</text>
+<circle cx="358" cy="460" r="6" fill="#a9b1d6"/>
+<line x1="358" y1="467" x2="358" y2="531" stroke="#3c446c" stroke-width="2"/>
+<text x="376" y="465" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:29:10</text>
+<text x="450" y="465" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">Screen 2 stopped checking in</text>
+<text x="450" y="485" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">Its last heartbeat; its zone Main hall played the run of show.</text>
+<circle cx="358" cy="534" r="6" fill="#f87171"/>
+<line x1="358" y1="541" x2="358" y2="605" stroke="#3c446c" stroke-width="2"/>
+<text x="376" y="539" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:31:10</text>
+<text x="450" y="539" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">Confirmed dark after 2 min</text>
+<text x="450" y="559" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">Incident opened. Screen 1 in the same zone still shows it.</text>
+<circle cx="358" cy="608" r="6" fill="#c5cae3"/>
+<line x1="358" y1="615" x2="358" y2="679" stroke="#3c446c" stroke-width="2"/>
+<text x="376" y="613" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:31:11</text>
+<text x="450" y="613" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">Told #crew-alerts, mentioning Crew on duty</text>
+<text x="450" y="633" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">One message; it changes in place as this does.</text>
+<circle cx="358" cy="682" r="6" fill="#a9b1d6"/>
+<line x1="358" y1="689" x2="358" y2="753" stroke="#3c446c" stroke-width="2"/>
+<text x="376" y="687" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:31:11</text>
+<text x="450" y="687" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">No automatic fix</text>
+<text x="450" y="707" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">A reload needs the screen online; nothing to try remotely.</text>
+<circle cx="358" cy="756" r="6" fill="#3ee39a"/>
+<line x1="358" y1="763" x2="358" y2="827" stroke="#3c446c" stroke-width="2"/>
+<text x="376" y="761" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:33:40</text>
+<text x="450" y="761" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">Acked by Player Two in Discord</text>
+<text x="450" y="781" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">Reminders stop. The message says who is on it.</text>
+<circle cx="358" cy="830" r="6" fill="#c5cae3"/>
+<text x="376" y="835" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">21:34:02</text>
+<text x="450" y="835" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 868">Note from Player Two</text>
+<text x="450" y="855" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 868">&quot;Going to the PC, power strip looks off.&quot;</text>
+<rect x="348" y="899" width="520" height="40" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="360" y="924" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 868">Add a note for the crew…</text>
+<circle cx="884" cy="409" r="13" fill="#f59e0b"/>
+<text x="884" y="414" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="871 897">2</text>
+<rect x="904" y="399" width="368" height="330" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="924" y="431" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="924 1252">What to check</text>
+<circle cx="934" cy="456" r="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="934" y="460" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="924 1252">1</text>
+<text x="954" y="461" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">Is the screen&#x27;s PC on, with the browser on</text>
+<text x="954" y="481" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">the screen page?</text>
+<circle cx="934" cy="510" r="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="934" y="514" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="924 1252">2</text>
+<text x="954" y="515" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">Is the network up at the screen? Screen 1</text>
+<text x="954" y="535" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">in the same hall is online, so the hall&#x27;s</text>
+<text x="954" y="555" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">network works.</text>
+<circle cx="934" cy="584" r="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="934" y="588" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="924 1252">3</text>
+<text x="954" y="589" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">Once the PC is back the screen comes</text>
+<text x="954" y="609" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">back by itself: its cookie keeps it paired.</text>
+<text x="954" y="629" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="954 1252">No new code.</text>
+<text x="924" y="705" font-size="13.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="924 1252">Open devices ›</text>
+<circle cx="1268" cy="409" r="13" fill="#f59e0b"/>
+<text x="1268" y="414" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1255 1281">3</text>
+<rect x="904" y="745" width="368" height="214" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="924" y="777" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="924 1252">What still works</text>
+<text x="924" y="805" font-size="14" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="924 1252">✓</text>
+<text x="946" y="805" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="924 1252">Main hall: screen 1 shows everything.</text>
+<text x="924" y="831" font-size="14" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="924 1252">✓</text>
+<text x="946" y="831" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="924 1252">Moments, food and the run of show go on.</text>
+<text x="924" y="857" font-size="14" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="924 1252">✓</text>
+<text x="946" y="857" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="924 1252">The screen&#x27;s sound plays from screen 1.</text>
+<text x="924" y="911" font-size="12" fill="#616788" font-weight="400" text-anchor="start" data-box="924 1252">Raw: device offline · last_seen 21:29:10</text>
+<text x="924" y="931" font-size="12" fill="#616788" font-weight="400" text-anchor="start" data-box="924 1252">heartbeat_seconds 15 · offline_after 45 s</text>
+<text x="1567" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1762">B · The incident on a phone</text>
+<rect x="1362" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">21:36</text>
+<rect x="1698" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1700" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1372" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1388" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1424" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Demo Event</text>
+<rect x="1538.65" y="225" width="57.9518" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1550.65" cy="236" r="3.5" fill="#3ee39a"/>
+<text x="1559.65" y="240.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1538.65 1596.6">Live</text>
+<rect x="1722" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1388" y="290" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1372 1762">‹ Health</text>
+<text x="1388" y="320" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Screen 2 is dark</text>
+<rect x="1388" y="354" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1400" cy="365" r="3.5" fill="#f87171"/>
+<text x="1409" y="369.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1388 1454.9">Down</text>
+<rect x="1462.9" y="354" width="171.484" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1474.9" cy="365" r="3.5" fill="#3ee39a"/>
+<text x="1483.9" y="369.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1462.9 1634.38">Acked by Player Two</text>
+<text x="1388" y="398" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">Main hall · since 21:29 · 7 min</text>
+<rect x="1388" y="416" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1420.8" y="437.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1388 1453.6">Mute</text>
+<rect x="1461.6" y="416" width="84.961" height="34" rx="10" fill="none" stroke="#3c446c" stroke-width="1"/>
+<text x="1504.08" y="437.86" font-size="13.5" fill="#616788" font-weight="600" text-anchor="middle" data-box="1461.6 1546.56">Identify</text>
+<rect x="1554.56" y="416" width="79.8551" height="34" rx="10" fill="none" stroke="#3c446c" stroke-width="1"/>
+<text x="1594.49" y="437.86" font-size="13.5" fill="#616788" font-weight="600" text-anchor="middle" data-box="1554.56 1634.42">Reload</text>
+<text x="1388" y="474" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">Identify and Reload need the screen online.</text>
+<text x="1388" y="512" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">What to check</text>
+<text x="1404" y="538" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">· Is the PC on, with the browser on the screen</text>
+<text x="1404" y="558" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">page?</text>
+<text x="1404" y="586" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">· Screen 1 in the same hall is online, so the</text>
+<text x="1404" y="606" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">network works.</text>
+<text x="1404" y="634" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">· Once the PC is back the screen returns by</text>
+<text x="1404" y="654" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1746">itself.</text>
+<text x="1388" y="702" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">What happened</text>
+<text x="1388" y="728" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">21:29</text>
+<text x="1440" y="728" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Stopped checking in</text>
+<text x="1388" y="758" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">21:31</text>
+<text x="1440" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Confirmed dark · told #crew-alerts</text>
+<text x="1388" y="788" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">21:33</text>
+<text x="1440" y="788" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Acked by Player Two</text>
+<text x="1388" y="818" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">21:34</text>
+<text x="1440" y="818" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Note: &quot;Going to the PC&quot;</text>
+<rect x="1372" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1403" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1411" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1372 1450">Health</text>
+<rect x="1481" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1489" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1450 1528">Studio</text>
+<circle cx="1567" cy="944" r="15" fill="#3ddcff"/>
+<text x="1567" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1528 1606">Add</text>
+<rect x="1637" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1645" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1606 1684">Screens</text>
+<rect x="1715" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1723" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1684 1762">More</text>
+<rect x="1500" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2027" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1832 2222">C · Mute: one subject, for a set time</text>
+<rect x="1822" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c3)">
+<rect x="1832" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1866" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">21:37</text>
+<rect x="2158" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2160" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1832" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1848" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1884" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Demo Event</text>
+<rect x="1998.65" y="225" width="57.9518" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="2010.65" cy="236" r="3.5" fill="#3ee39a"/>
+<text x="2019.65" y="240.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1998.65 2056.6">Live</text>
+<rect x="2182" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1848" y="290" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1832 2222">‹ Health</text>
+<text x="1848" y="320" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Screen 2 is dark</text>
+<rect x="1832" y="160" width="390" height="844" rx="0" fill="#000000" opacity="0.55"/>
+<rect x="1832" y="490" width="390" height="514" rx="20" fill="#1c2138" stroke="#343c66" stroke-width="1"/>
+<rect x="2007" y="500" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1848" y="536" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1848 2206">Mute Main hall screen 2</text>
+<text x="1848" y="560" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">No alerts, reminders or fixes for it until then.</text>
+<text x="1848" y="580" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">Health still shows it.</text>
+<rect x="1848" y="598" width="74.5436" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1885.27" y="617.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1848 1922.54">15 min</text>
+<rect x="1930.54" y="598" width="74.9266" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="1968.01" y="617.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1930.54 2005.47">1 hour</text>
+<rect x="2013.47" y="598" width="101.391" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2064.17" y="617.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2013.47 2114.86">Until 06:00</text>
+<rect x="1848" y="638" width="163.641" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1929.82" y="657.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1848 2011.64">Until the event ends</text>
+<text x="1848" y="704" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1848 2206">Note for the crew (optional)</text>
+<rect x="1848" y="716" width="358" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="1860" y="738.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1848 2206">PC is being swapped</text>
+<text x="1848" y="778" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1848 2206">Mutes until 22:37 · never for ever</text>
+<rect x="1848" y="798" width="171" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1933.5" y="821.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1848 2019">Cancel</text>
+<rect x="2035" y="798" width="171" height="36" rx="10" fill="#3ddcff"/>
+<text x="2120.5" y="821.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="2035 2206">Mute for 1 hour</text>
+<rect x="1832" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1863" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1871" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1832 1910">Health</text>
+<rect x="1941" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1949" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1910 1988">Studio</text>
+<circle cx="2027" cy="944" r="15" fill="#3ddcff"/>
+<text x="2027" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1988 2066">Add</text>
+<rect x="2097" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2105" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2066 2144">Screens</text>
+<rect x="2175" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2183" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2144 2222">More</text>
+<rect x="1960" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2487" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="2292 2682">D · History: the day&#x27;s incidents</text>
+<rect x="2282" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c4)">
+<rect x="2292" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="2326" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2292 2682">23:50</text>
+<rect x="2618" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2620" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="2292" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="2308" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="2344" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2292 2682">Demo Event</text>
+<rect x="2458.65" y="225" width="57.9518" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="2470.65" cy="236" r="3.5" fill="#3ee39a"/>
+<text x="2479.65" y="240.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="2458.65 2516.6">Live</text>
+<rect x="2642" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2642" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2642" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="2308" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2292 2682">Health</text>
+<rect x="2308" y="320" width="56.5207" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2336.26" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2308 2364.52">Now</text>
+<rect x="2370.52" y="320" width="78.701" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="2409.87" y="339.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="2370.52 2449.22">History</text>
+<rect x="2455.22" y="320" width="67.0586" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2488.75" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2455.22 2522.28">Alerts</text>
+<rect x="2308" y="366" width="71.8286" height="28" rx="14" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="2343.91" y="384.5" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="2308 2379.83">Today</text>
+<rect x="2385.83" y="366" width="80.0923" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2425.87" y="384.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2385.83 2465.92">Screens</text>
+<rect x="2471.92" y="366" width="49.939" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2496.89" y="384.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2471.92 2521.86">Bot</text>
+<rect x="2527.86" y="366" width="83.7745" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2569.75" y="384.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2527.86 2611.63">Platform</text>
+<text x="2308" y="422" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">6 incidents today · longest 14 min</text>
+<line x1="2308" y1="442" x2="2666" y2="442" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="468" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">21:29</text>
+<text x="2360" y="468" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">Main hall screen 2 dark</text>
+<text x="2360" y="489" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">12 min · acked by Player Two</text>
+<rect x="2608.36" y="455" width="57.6436" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="2618.36" y="470.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="2608.36 2666">Fixed</text>
+<line x1="2308" y1="506" x2="2666" y2="506" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="532" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">21:20</text>
+<text x="2360" y="532" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">The bot kept reconnecting</text>
+<text x="2360" y="553" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">14 min · acked by Player Two</text>
+<rect x="2608.36" y="519" width="57.6436" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="2618.36" y="534.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="2608.36 2666">Fixed</text>
+<line x1="2308" y1="570" x2="2666" y2="570" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="596" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">21:12</text>
+<text x="2360" y="596" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">Lobby screen stuck</text>
+<text x="2360" y="617" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">1 min · reloaded by itself</text>
+<rect x="2614.79" y="583" width="51.2095" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="2624.79" y="598.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="2614.79 2666">Auto</text>
+<line x1="2308" y1="634" x2="2666" y2="634" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="660" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">19:40</text>
+<text x="2360" y="660" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">Food reminders late</text>
+<text x="2360" y="681" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">2 min · caught up</text>
+<rect x="2614.79" y="647" width="51.2095" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="2624.79" y="662.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="2614.79 2666">Auto</text>
+<line x1="2308" y1="698" x2="2666" y2="698" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="724" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">16:05</text>
+<text x="2360" y="724" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">Discord bot offline</text>
+<text x="2360" y="745" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">40 s · reconnected</text>
+<rect x="2614.79" y="711" width="51.2095" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="2624.79" y="726.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="2614.79 2666">Auto</text>
+<line x1="2308" y1="762" x2="2666" y2="762" stroke="#343c66" stroke-width="1"/>
+<text x="2308" y="788" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">14:02</text>
+<text x="2360" y="788" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2360 2586">Platform slow</text>
+<text x="2360" y="809" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2360 2586">6 min · not yours to fix</text>
+<rect x="2588.17" y="775" width="77.827" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<text x="2598.17" y="790.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="2588.17 2666">Platform</text>
+<text x="2308" y="856" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">Kept for the event&#x27;s life; who acted shows as long</text>
+<text x="2308" y="874" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2308 2666">as the person exists (audit references).</text>
+<rect x="2292" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="2323" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="2331" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="2292 2370">Health</text>
+<rect x="2401" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2409" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2370 2448">Studio</text>
+<circle cx="2487" cy="944" r="15" fill="#3ddcff"/>
+<text x="2487" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2448 2526">Add</text>
+<rect x="2557" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2565" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2526 2604">Screens</text>
+<rect x="2635" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2643" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2604 2682">More</text>
+<rect x="2420" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="32" y="1130" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1292">Notes</text>
+<circle cx="45" cy="1155" r="13" fill="#f59e0b"/>
+<text x="45" y="1160" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 58">1</text>
+<text x="68" y="1160" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="68 1292">The page&#x27;s crew actions as one band above its parts (amendment 3). Actions that cannot work now say why instead of failing: Identify and Reload are typed</text>
+<text x="68" y="1181" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="68 1292">screen commands (built), delivered only to an online screen (D11).</text>
+<circle cx="45" cy="1211" r="13" fill="#f59e0b"/>
+<text x="45" y="1216" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 58">2</text>
+<text x="68" y="1216" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="68 1292">The timeline is the incident&#x27;s whole story, kept for the event&#x27;s life (D8). It writes &quot;no automatic fix&quot; and &quot;blocked&quot; as entries, never as fake state changes</text>
+<text x="68" y="1237" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="68 1292">(legacy P4, E8).</text>
+<circle cx="45" cy="1267" r="13" fill="#f59e0b"/>
+<text x="45" y="1272" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 58">3</text>
+<text x="68" y="1272" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="68 1292">Words per alert kind: what to check and what still works, filled with the facts (L2). The raw check is the grey last line, for whoever needs it.</text>
+</svg>

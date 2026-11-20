@@ -1,0 +1,253 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2700 1130" width="2700" height="1130" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 07: fixes, auto-fix rules, logs</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="900" rx="10"/></clipPath><clipPath id="c2"><rect x="2180" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2700" height="1130" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2668">07 · Fixes: typed actions, auto-fix rules that try first, the action log, and a part&#x27;s last lines (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2668">The executor is designed new: every action has a name, a right, a guard and an audit entry. No free-text command exists; the ops sidecar may only restart, inspect and read logs.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2668">Use case: the superadmin decides which fixes may run by themselves, checks what ran overnight, and reads a slow part&#x27;s redacted log lines</text>
+<text x="672" y="1084" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Fixes at 1280 px: the rules, then the log</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="900" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="92" height="28" rx="6" fill="#b98cff"/>
+<text x="98" y="183" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="52 144">Platform</text>
+<text x="158" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Superadmin console</text>
+<rect x="332" y="167" width="111.84" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="342" y="182.5" font-size="12" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="332 443.84">Tailscale only</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">09:15</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="843" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1050" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PLATFORM</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Stack health</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Incidents</text>
+<rect x="44" y="332" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="332" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Fixes</text>
+<text x="56" y="410" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENTS</text>
+<rect x="58" y="435" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="446" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Events</text>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Series</text>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Venues</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PEOPLE</text>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Users</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Superadmins</text>
+<text x="56" y="716" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RECORD</text>
+<rect x="58" y="741" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="752" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Audit</text>
+</g>
+<text x="328" y="249" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Fixes</text>
+<text x="328" y="279" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">What may run by itself, and everything that ran, by whom.</text>
+<text x="328" y="313" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Auto-fix rules</text>
+<rect x="328" y="329" width="944" height="96" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="346" y="347" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="375" cy="358" r="8" fill="#0b0d1a"/>
+<text x="402" y="363" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Reload a stuck screen</text>
+<text x="598.247" y="363" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">every event</text>
+<text x="1254" y="363" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 1272">On by default</text>
+<text x="402" y="387" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">When a screen is online but has not drawn its zone for 60 s, or repeats one error 3 times.</text>
+<text x="402" y="409" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Wait 5 min between tries · at most 3 in 30 min · then one &quot;gave up&quot; alert</text>
+<rect x="328" y="437" width="944" height="96" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="346" y="455" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="375" cy="466" r="8" fill="#0b0d1a"/>
+<text x="402" y="471" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Reconnect an event&#x27;s bot</text>
+<text x="627.347" y="471" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">every event</text>
+<text x="1254" y="471" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 1272">On by default</text>
+<text x="402" y="495" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">When its client is down for 1 min and Discord still accepts its token.</text>
+<text x="402" y="517" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Wait 2 min between tries · at most 3 in 30 min · never with a refused token</text>
+<rect x="328" y="545" width="944" height="96" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="346" y="563" width="40" height="22" rx="11" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<circle cx="357" cy="574" r="8" fill="#a9b1d6"/>
+<text x="402" y="579" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Restart a part that is down</text>
+<text x="638.043" y="579" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">per part</text>
+<text x="1254" y="579" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 1272">Off by default</text>
+<text x="402" y="603" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">When a part is down for 2 min while Postgres and Valkey are ok.</text>
+<text x="402" y="625" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Waits while any live event has a takeover, an emergency or a cast on air</text>
+<circle cx="310" cy="383" r="13" fill="#f59e0b"/>
+<text x="310" y="388" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">1</text>
+<text x="328" y="659" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Restart a part: turned on per part, from its card in Stack health. Never for a muted subject (E7).</text>
+<text x="328" y="693" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Log</text>
+<rect x="380" y="673" width="94.299" height="28" rx="14" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="427.15" y="691.5" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="380 474.299">Last 24 h</text>
+<rect x="480.299" y="673" width="94.2419" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="527.42" y="691.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="480.299 574.541">Automatic</text>
+<rect x="580.541" y="673" width="92.375" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="626.728" y="691.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="580.541 672.916">By people</text>
+<rect x="678.916" y="673" width="80.8776" height="28" rx="14" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="719.355" y="691.5" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="678.916 759.794">Gave up</text>
+<rect x="328" y="711" width="944" height="300" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="739" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">Time</text>
+<text x="418" y="739" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">Subject</text>
+<text x="628" y="739" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">Action</text>
+<text x="748" y="739" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">By</text>
+<text x="918" y="739" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">Result</text>
+<line x1="340" y1="751" x2="1260" y2="751" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="774" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">09:02</text>
+<text x="418" y="774" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">notify</text>
+<text x="628" y="774" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Restart</text>
+<text x="748" y="774" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">Player One</text>
+<rect x="918" y="758" width="111.441" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="930" cy="769" r="3.5" fill="#3ee39a"/>
+<text x="939" y="773.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="918 1029.44">Back in 14 s</text>
+<line x1="340" y1="787" x2="1260" y2="787" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="810" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">03:10</text>
+<text x="418" y="810" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">Demo Cup · bot</text>
+<text x="628" y="810" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Reconnect</text>
+<text x="748" y="810" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">automatic</text>
+<rect x="918" y="794" width="133.613" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="930" cy="805" r="3.5" fill="#f87171"/>
+<text x="939" y="809.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="918 1051.61">Gave up after 3</text>
+<line x1="340" y1="823" x2="1260" y2="823" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="846" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">02:50</text>
+<text x="418" y="846" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">Demo Cup · bot</text>
+<text x="628" y="846" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Reconnect</text>
+<text x="748" y="846" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">automatic</text>
+<rect x="918" y="830" width="126.405" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="930" cy="841" r="3.5" fill="#f59e0b"/>
+<text x="939" y="845.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="918 1044.41">Refused token</text>
+<line x1="340" y1="859" x2="1260" y2="859" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="882" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">21:12</text>
+<text x="418" y="882" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">Demo Event · Lobby screen</text>
+<text x="628" y="882" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Reload</text>
+<text x="748" y="882" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">automatic</text>
+<rect x="918" y="866" width="102.951" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="930" cy="877" r="3.5" fill="#3ee39a"/>
+<text x="939" y="881.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="918 1020.95">Back in 9 s</text>
+<line x1="340" y1="895" x2="1260" y2="895" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="918" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">20:40</text>
+<text x="418" y="918" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">screen rendering</text>
+<text x="628" y="918" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Restart</text>
+<text x="748" y="918" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">automatic</text>
+<rect x="918" y="902" width="165.757" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="930" cy="913" r="3.5" fill="#a9b1d6"/>
+<text x="939" y="917.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="918 1083.76">Waited: takeover on</text>
+<line x1="340" y1="931" x2="1260" y2="931" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="954" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">20:05</text>
+<text x="418" y="954" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">Demo Event · Main 1</text>
+<text x="628" y="954" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Identify</text>
+<text x="748" y="954" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">Player Two</text>
+<rect x="918" y="938" width="107.783" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="930" cy="949" r="3.5" fill="#3ee39a"/>
+<text x="939" y="953.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="918 1025.78">Shown 15 s</text>
+<line x1="340" y1="967" x2="1260" y2="967" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="990" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">18:31</text>
+<text x="418" y="990" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="418 618">Demo Event · Main 2</text>
+<text x="628" y="990" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Reload</text>
+<text x="748" y="990" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">Player Three</text>
+<rect x="918" y="974" width="102.951" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="930" cy="985" r="3.5" fill="#3ee39a"/>
+<text x="939" y="989.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="918 1020.95">Back in 7 s</text>
+<circle cx="310" cy="727" r="13" fill="#f59e0b"/>
+<text x="310" y="732" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">2</text>
+<text x="328" y="1035" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">The log is the audit log&#x27;s fix entries: kept as the audit is, actors as audit references (O4).</text>
+<text x="1732" y="754" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1352 2112">B · A part&#x27;s last lines, redacted (the sidecar&#x27;s logs verb)</text>
+<rect x="1352" y="160" width="760" height="560" rx="14" fill="#1c2138" stroke="#343c66" stroke-width="1"/>
+<text x="1376" y="200" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1376 2088">screen rendering · last 200 lines</text>
+<text x="1376" y="224" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1376 2088">Redacted by the kit&#x27;s patterns before they leave the sidecar (D13). Newest last.</text>
+<rect x="1376" y="242" width="712" height="400" rx="8" fill="#07080f" stroke="#343c66" stroke-width="1"/>
+<text x="1392" y="272" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:31:02</text>
+<text x="1472" y="272" font-size="12.5" fill="#c5cae3" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">info   render job 4182 queued deck=asset_77 slides=48</text>
+<text x="1392" y="312" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:31:40</text>
+<text x="1472" y="312" font-size="12.5" fill="#ffd36d" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">warn   libreoffice took 38.2 s for slide 12</text>
+<text x="1392" y="352" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:33:05</text>
+<text x="1472" y="352" font-size="12.5" fill="#ffd36d" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">warn   queue oldest=9m12s jobs=6</text>
+<text x="1392" y="392" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:34:11</text>
+<text x="1472" y="392" font-size="12.5" fill="#c5cae3" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">info   fetch tokens Authorization: Bearer [redacted]</text>
+<text x="1392" y="432" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:35:00</text>
+<text x="1472" y="432" font-size="12.5" fill="#ffb4bd" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">error  convert failed: font cache locked, retrying</text>
+<text x="1392" y="472" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:36:30</text>
+<text x="1472" y="472" font-size="12.5" fill="#ffd36d" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">warn   queue oldest=12m40s jobs=7</text>
+<text x="1392" y="512" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:37:02</text>
+<text x="1472" y="512" font-size="12.5" fill="#c5cae3" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">info   webhook=[redacted] not used by this part</text>
+<text x="1392" y="552" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:38:15</text>
+<text x="1472" y="552" font-size="12.5" fill="#ffd36d" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">warn   queue oldest=14m02s jobs=7</text>
+<text x="1392" y="592" font-size="12.5" fill="#a9b1d6" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">21:38:16</text>
+<text x="1472" y="592" font-size="12.5" fill="#c5cae3" font-family="ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace" data-box="1376 2088">info   tenant=demo render progress 31/48</text>
+<rect x="1376" y="660" width="85.787" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1418.89" y="681.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1376 1461.79">Refresh</text>
+<rect x="1469.79" y="660" width="66.1292" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1502.85" y="681.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1469.79 1535.92">Copy</text>
+<rect x="1543.92" y="660" width="101.615" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1594.72" y="681.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1543.92 1645.53">Download</text>
+<text x="2088" y="682" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1376 2088">Superadmin only in step 8 (D12)</text>
+<text x="2375" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="2180 2570">C · An auto-fix that gave up</text>
+<rect x="2170" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="2180" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="2214" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2180 2570">03:12</text>
+<rect x="2506" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2508" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="2180" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="2196" y="223" width="26" height="26" rx="6" fill="#b98cff"/>
+<text x="2232" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2180 2570">Platform</text>
+<rect x="2312" y="225" width="76.8759" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="2322" y="240.5" font-size="11.5" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="2312 2388.88">Tailscale</text>
+<rect x="2530" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2530" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2530" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="2196" y="290" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2180 2570">‹ Incidents</text>
+<text x="2196" y="320" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2180 2570">Bot offline</text>
+<rect x="2196" y="354" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="2208" cy="365" r="3.5" fill="#f87171"/>
+<text x="2217" y="369.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="2196 2262.9">Down</text>
+<rect x="2270.9" y="354" width="109.158" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="2282.9" cy="365" r="3.5" fill="#f59e0b"/>
+<text x="2291.9" y="369.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="2270.9 2380.05">Fix gave up</text>
+<text x="2196" y="398" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">Demo Cup · since 02:48 · 24 min</text>
+<text x="2196" y="428" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2196 2554">Three reconnects did not hold. Discord refuses</text>
+<text x="2196" y="449" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2196 2554">the bot&#x27;s token: someone must set a new one in</text>
+<text x="2196" y="470" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2196 2554">the event&#x27;s Discord settings.</text>
+<rect x="2196" y="501" width="55.4668" height="34" rx="10" fill="#3ddcff"/>
+<text x="2223.73" y="522.86" font-size="13.5" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="2196 2251.47">Ack</text>
+<rect x="2259.47" y="501" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2292.27" y="522.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2259.47 2325.07">Mute</text>
+<rect x="2333.07" y="501" width="114.35" height="34" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2390.25" y="522.86" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="2333.07 2447.42">Open event</text>
+<text x="2196" y="567" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2196 2554">What happened</text>
+<text x="2196" y="595" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">02:48</text>
+<text x="2248" y="595" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Bot client down</text>
+<text x="2196" y="625" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">02:49</text>
+<text x="2248" y="625" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Confirmed · told Demo Cup&#x27;s channel</text>
+<text x="2196" y="655" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">02:50</text>
+<text x="2248" y="655" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Reconnect: token refused</text>
+<text x="2196" y="685" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">03:00</text>
+<text x="2248" y="685" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Reconnect: token refused</text>
+<text x="2196" y="715" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">03:10</text>
+<text x="2248" y="715" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Reconnect: token refused</text>
+<text x="2196" y="745" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2196 2554">03:10</text>
+<text x="2248" y="745" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2196 2554">Gave up: no more tries until it recovers</text>
+<rect x="2180" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="2211" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2219" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2180 2258">Stack</text>
+<rect x="2289" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="2297" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="2258 2336">Incidents</text>
+<rect x="2367" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2375" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2336 2414">Events</text>
+<rect x="2445" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2453" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2414 2492">Venues</text>
+<rect x="2523" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2531" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2492 2570">More</text>
+<rect x="2308" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="1352" y="820" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1352 2112">Notes</text>
+<circle cx="1365" cy="845" r="13" fill="#f59e0b"/>
+<text x="1365" y="850" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1352 1378">1</text>
+<text x="1388" y="850" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">Three typed auto-fix rules for step 8, the legacy engine&#x27;s rules as their spec: a trigger, a</text>
+<text x="1388" y="871" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">wait, a cap per 30 min, one &quot;gave up&quot; alert, never while muted (D11, E7).</text>
+<circle cx="1365" cy="901" r="13" fill="#f59e0b"/>
+<text x="1365" y="906" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1352 1378">2</text>
+<text x="1388" y="906" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">Every fix, by a person or by a rule, is one row of the audit log with its result; &quot;waited&quot; and</text>
+<text x="1388" y="927" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">&quot;gave up&quot; are rows, not state changes (legacy P4).</text>
+<circle cx="1365" cy="957" r="13" fill="#f59e0b"/>
+<text x="1365" y="962" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1352 1378">3</text>
+<text x="1388" y="962" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">A refused token is never retried in a loop: Discord blocks an address that keeps failing</text>
+<text x="1388" y="983" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1388 2112">(bot.md), so the rule stops and asks a person.</text>
+</svg>

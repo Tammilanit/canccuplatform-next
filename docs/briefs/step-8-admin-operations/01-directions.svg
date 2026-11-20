@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1040" width="2560" height="1040" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 01: three directions</title>
+<defs></defs>
+<rect x="0" y="0" width="2560" height="1040" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2528">01 · Three directions for admin operations, side by side</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2528">The same moment in each: 21:31 on Saturday, a Main hall screen has gone dark and the platform&#x27;s render queue is slow.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2528">Use case: the product owner compares the three directions before the session picks one (P1)</text>
+<rect x="32" y="150" width="816" height="860" rx="16" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="60" y="196" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="60 820">A · The manager, ported</text>
+<text x="60" y="226" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start" data-box="60 820">Cost: S–M</text>
+<text x="60" y="260" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">canccumanager inside admin: Health gets ack, mute and history; alerts go to Discord through the</text>
+<text x="60" y="282" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">bot, with the webhook as fallback; one restart button; series and venues as plain forms; the</text>
+<text x="60" y="304" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">browser runs the clone.</text>
+<rect x="60" y="336" width="760" height="230" rx="10" fill="#0b0d1a"/>
+<text x="76" y="380" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="76 804">screen</text>
+<rect x="232" y="364" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="244" cy="375" r="3.5" fill="#f87171"/>
+<text x="253" y="379.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="232 298.896">Down</text>
+<text x="332" y="380" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 804">devices: Main 2 last_seen 21:29:10</text>
+<text x="76" y="430" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="76 804">screen-render</text>
+<rect x="232" y="414" width="62.1439" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="244" cy="425" r="3.5" fill="#f59e0b"/>
+<text x="253" y="429.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="232 294.144">Slow</text>
+<text x="332" y="430" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 804">render: queue 840 s</text>
+<text x="76" y="480" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="76 804">agenda</text>
+<rect x="232" y="464" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="244" cy="475" r="3.5" fill="#3ee39a"/>
+<text x="253" y="479.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="232 280.688">OK</text>
+<text x="332" y="480" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 804">postgres: ok</text>
+<text x="76" y="530" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="76 804">bot</text>
+<rect x="232" y="514" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="244" cy="525" r="3.5" fill="#3ee39a"/>
+<text x="253" y="529.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="232 280.688">OK</text>
+<text x="332" y="530" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 804">gateway: ok</text>
+<text x="60" y="596" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="60 820">Attendees</text>
+<text x="60" y="618" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">Nothing changes.</text>
+<text x="60" y="651" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="60 820">Organisers, crew</text>
+<text x="60" y="673" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">A post per change in Discord with Ack; Health lists every part with its raw check message; mute a</text>
+<text x="60" y="694" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">part.</text>
+<text x="60" y="727" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="60 820">Venue staff</text>
+<text x="60" y="749" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">Nothing; the venue profile is a superadmin form.</text>
+<text x="60" y="782" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="60 820">Superadmin</text>
+<text x="60" y="804" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="60 820">The same page as the crew; a restart button.</text>
+<line x1="60" y1="843" x2="820" y2="843" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="873" font-size="14.5" fill="#166534" font-weight="400" text-anchor="start" data-box="60 820">+ Cheapest; the legacy tests are the spec nearly line for line.</text>
+<text x="60" y="900" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="60 820">− Raw messages; every part shown to every event&#x27;s crew (TI1).</text>
+<text x="60" y="927" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="60 820">− A post per change is the noise the legacy already cut (3754623).</text>
+<text x="60" y="954" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="60 820">− A closed tab leaves half a clone.</text>
+<rect x="872" y="150" width="816" height="860" rx="16" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="900" y="196" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="900 1660">B · The control room</text>
+<text x="900" y="226" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start" data-box="900 1660">Cost: XL</text>
+<text x="900" y="260" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">An operations console: severities, on-call rotas and escalation chains, runbooks per alert, log</text>
+<text x="900" y="282" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">search and metrics graphs, maintenance windows, a public status page, scripted actions; series</text>
+<text x="900" y="304" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">with templates and a setup wizard.</text>
+<rect x="900" y="336" width="760" height="230" rx="10" fill="#0b0d1a"/>
+<rect x="916" y="356" width="230" height="120" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<polyline points="926,456 947,419 968,452 989,415 1010,448 1031,411 1052,444 1073,407 1094,440 1115,403 1136,436" fill="none" stroke="#3ddcff" stroke-width="2"/>
+<text x="928" y="376" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="916 1644">p95 latency</text>
+<rect x="1161" y="356" width="230" height="120" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<polyline points="1171,443 1192,406 1213,439 1234,402 1255,435 1276,398 1297,431 1318,394 1339,427 1360,390 1381,423" fill="none" stroke="#b98cff" stroke-width="2"/>
+<text x="1173" y="376" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="916 1644">queue depth</text>
+<rect x="1406" y="356" width="230" height="120" rx="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<polyline points="1416,430 1437,393 1458,426 1479,389 1500,422 1521,455 1542,418 1563,451 1584,414 1605,447 1626,410" fill="none" stroke="#f59e0b" stroke-width="2"/>
+<text x="1418" y="376" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="916 1644">errors / min</text>
+<text x="916" y="508" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 1644">On call now: Player Two → Player Three (15 min)</text>
+<text x="916" y="534" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 1644">Runbook RB-12: screen dark · 9 steps</text>
+<text x="900" y="596" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="900 1660">Attendees</text>
+<text x="900" y="618" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">A public status page.</text>
+<text x="900" y="651" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="900 1660">Organisers, crew</text>
+<text x="900" y="673" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">A powerful console, and a rota to keep up.</text>
+<text x="900" y="706" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="900 1660">Venue staff</text>
+<text x="900" y="728" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">A venue role with its own alerts.</text>
+<text x="900" y="761" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="900 1660">Superadmin</text>
+<text x="900" y="783" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="900 1660">Metrics, logs and runbooks.</text>
+<line x1="900" y1="822" x2="1660" y2="822" stroke="#e5e7eb" stroke-width="1"/>
+<text x="900" y="852" font-size="14.5" fill="#166534" font-weight="400" text-anchor="start" data-box="900 1660">+ Everything a large operation could want.</text>
+<text x="900" y="879" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="900 1660">− Rebuilds monitoring products for a volunteer crew on a weekend.</text>
+<text x="900" y="906" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="900 1660">− A metrics store and a log pipeline: new state, new containers.</text>
+<text x="900" y="933" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="900 1660">− Scripted actions bring the free-text command back (P13).</text>
+<rect x="1712" y="150" width="816" height="860" rx="16" fill="#ffffff" stroke="#3ddcff" stroke-width="3"/>
+<text x="1740" y="196" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="1740 2500">C · The calm crew desk</text>
+<rect x="2358" y="174" width="142" height="30" rx="15" fill="#0e7490"/>
+<text x="2429" y="194" font-size="14" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="2358 2500">Recommended</text>
+<text x="1740" y="226" font-size="15" fill="#6b7280" font-weight="600" text-anchor="start" data-box="1740 2500">Cost: M–L</text>
+<text x="1740" y="260" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">Problems in plain words with the next step; one voice per audience; fixes that try themselves</text>
+<text x="1740" y="282" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">first; the next event started from the last one in one guided flow.</text>
+<rect x="1740" y="314" width="760" height="230" rx="10" fill="#0b0d1a"/>
+<rect x="1756" y="332" width="340" height="196" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1756" y="342" width="3" height="176" rx="1.5" fill="#f87171"/>
+<rect x="1774" y="348" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1786" cy="359" r="3.5" fill="#f87171"/>
+<text x="1795" y="363.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1774 1840.9">Down</text>
+<text x="1774" y="398" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1772 2080">Main hall screen 2 is dark</text>
+<text x="1774" y="422" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1772 2080">Screen 1 still shows Main hall.</text>
+<text x="1774" y="446" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1772 2080">Told #crew-alerts · not acked</text>
+<rect x="1774" y="470" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="1801.22" y="490.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1774 1828.45">Ack</text>
+<rect x="1836.45" y="470" width="64.2108" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1868.55" y="490.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1836.45 1900.66">Mute</text>
+<text x="2116" y="364" font-size="14" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="1756 2484">Platform: slow</text>
+<text x="2116" y="388" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1756 2484">(the render queue is the</text>
+<text x="2116" y="408" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1756 2484">superadmin&#x27;s to fix)</text>
+<text x="1740" y="574" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1740 2500">Attendees</text>
+<text x="1740" y="596" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">Nothing to see: a feature shows its own state.</text>
+<text x="1740" y="629" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1740 2500">Organisers, crew</text>
+<text x="1740" y="651" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">&quot;Needs you&quot; cards on Health; one Discord post per incident, edited in place, acked from its button;</text>
+<text x="1740" y="672" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">mute for a set time; copy from the last event with progress and retry.</text>
+<text x="1740" y="705" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1740 2500">Venue staff</text>
+<text x="1740" y="727" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">The hall&#x27;s lasting facts in each event&#x27;s Venue info; crew presets for those who help.</text>
+<text x="1740" y="760" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1740 2500">Superadmin</text>
+<text x="1740" y="782" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">Stack health, platform alerts in a platform channel, a guarded restart and logs through a fenced</text>
+<text x="1740" y="803" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1740 2500">sidecar; series and venues.</text>
+<line x1="1740" y1="842" x2="2500" y2="842" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1740" y="872" font-size="14.5" fill="#166534" font-weight="400" text-anchor="start" data-box="1740 2500">+ Fixes the legacy&#x27;s edges, not its shape; small surfaces, big effect.</text>
+<text x="1740" y="899" font-size="14.5" fill="#166534" font-weight="400" text-anchor="start" data-box="1740 2500">+ One voice per audience: event crew never see other events.</text>
+<text x="1740" y="926" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="1740 2500">− Words per kind, grouping and message edits are design work.</text>
+<text x="1740" y="953" font-size="14.5" fill="#991b1b" font-weight="400" text-anchor="start" data-box="1740 2500">− One privileged sidecar to review (high risk, one accept).</text>
+</svg>

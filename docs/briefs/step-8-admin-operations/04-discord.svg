@@ -1,0 +1,211 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1300" width="2560" height="1300" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 04: alerts in Discord</title>
+<defs></defs>
+<rect x="0" y="0" width="2560" height="1300" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2528">04 · Alerts in Discord: one message per incident, edited in place; the fallback; /platform status</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2528">Drawn simply as a chat, not Discord&#x27;s own look. The bot posts as the event&#x27;s bot; the webhook is the fallback when the bot is down or is the subject.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2528">Use case: the crew in the event&#x27;s alert channel learns of a problem, acks it with a button, and sees it recover, without opening admin</text>
+<text x="332" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 632">A · One incident&#x27;s message, edited in place</text>
+<rect x="32" y="150" width="600" height="1000" rx="10" fill="#26282f"/>
+<rect x="32" y="150" width="600" height="48" rx="10" fill="#1f2128"/>
+<rect x="32" y="188" width="600" height="10" rx="0" fill="#1f2128"/>
+<text x="50" y="180" font-size="16" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="32 632"># crew-alerts</text>
+<text x="614" y="180" font-size="13" fill="#9a9ca5" font-weight="400" text-anchor="end" data-box="32 632">Demo Event</text>
+<text x="52" y="220" font-size="12" fill="#9a9ca5" font-weight="600" text-anchor="start" data-box="32 632">State: Down · @Crew on duty</text>
+<circle cx="68" cy="254" r="16" fill="#3b82f6"/>
+<text x="94" y="252" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="48 616">Demo Bot</text>
+<rect x="181.407" y="240" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="199.407" y="252" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="181.407 217.407">APP</text>
+<text x="225.407" y="252" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="48 616">Today at 21:31</text>
+<rect x="94" y="266" width="510" height="124" rx="6" fill="#2f3139"/>
+<rect x="94" y="266" width="4" height="124" rx="2" fill="#f87171"/>
+<text x="110" y="292" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="110 592">Main hall screen 2 is dark</text>
+<text x="110" y="316" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">No word from it for 2 min. Screen 1 still shows Main hall.</text>
+<text x="110" y="344" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">SINCE</text>
+<text x="110" y="362" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">21:29</text>
+<text x="175.593" y="344" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">ZONE</text>
+<text x="175.593" y="362" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Main hall</text>
+<text x="261.969" y="344" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">STATE</text>
+<text x="261.969" y="362" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Not acked</text>
+<rect x="94" y="400" width="126.181" height="32" rx="4" fill="#4b5ccf"/>
+<text x="157.091" y="421" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="94 220.181">Acknowledge</text>
+<rect x="228.181" y="400" width="92.2267" height="32" rx="4" fill="#3a3d47"/>
+<text x="274.294" y="421" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="228.181 320.408">Mute 1 h</text>
+<rect x="328.408" y="400" width="149.503" height="32" rx="4" fill="#3a3d47"/>
+<text x="403.159" y="421" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="328.408 477.911">Open in admin ↗</text>
+<text x="52" y="464" font-size="12" fill="#9a9ca5" font-weight="600" text-anchor="start" data-box="32 632">State: Acked</text>
+<circle cx="68" cy="498" r="16" fill="#3b82f6"/>
+<text x="94" y="496" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="48 616">Demo Bot</text>
+<rect x="181.407" y="484" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="199.407" y="496" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="181.407 217.407">APP</text>
+<text x="225.407" y="496" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="48 616">Today at 21:33 (edited)</text>
+<rect x="94" y="510" width="510" height="124" rx="6" fill="#2f3139"/>
+<rect x="94" y="510" width="4" height="124" rx="2" fill="#f59e0b"/>
+<text x="110" y="536" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="110 592">Main hall screen 2 is dark</text>
+<text x="110" y="560" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Player Two is on it: &quot;Going to the PC&quot;.</text>
+<text x="110" y="588" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">SINCE</text>
+<text x="110" y="606" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">21:29</text>
+<text x="175.593" y="588" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">ZONE</text>
+<text x="175.593" y="606" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Main hall</text>
+<text x="261.969" y="588" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">ACKED</text>
+<text x="261.969" y="606" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Player Two, 21:33</text>
+<rect x="94" y="644" width="92.2267" height="32" rx="4" fill="#3a3d47"/>
+<text x="140.113" y="665" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="94 186.227">Mute 1 h</text>
+<rect x="194.227" y="644" width="149.503" height="32" rx="4" fill="#3a3d47"/>
+<text x="268.978" y="665" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="194.227 343.73">Open in admin ↗</text>
+<text x="52" y="708" font-size="12" fill="#9a9ca5" font-weight="600" text-anchor="start" data-box="32 632">State: Recovered</text>
+<circle cx="68" cy="742" r="16" fill="#3b82f6"/>
+<text x="94" y="740" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="48 616">Demo Bot</text>
+<rect x="181.407" y="728" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="199.407" y="740" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="181.407 217.407">APP</text>
+<text x="225.407" y="740" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="48 616">Today at 21:41 (edited)</text>
+<rect x="94" y="754" width="510" height="124" rx="6" fill="#2f3139"/>
+<rect x="94" y="754" width="4" height="124" rx="2" fill="#3ee39a"/>
+<text x="110" y="780" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="110 592">Main hall screen 2 is back</text>
+<text x="110" y="804" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Back after 12 min. Nothing more to do.</text>
+<text x="110" y="832" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">WAS DOWN</text>
+<text x="110" y="850" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">21:29 – 21:41</text>
+<text x="228.364" y="832" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="110 592">ACKED</text>
+<text x="228.364" y="850" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="110 592">Player Two</text>
+<rect x="94" y="888" width="149.503" height="32" rx="4" fill="#3a3d47"/>
+<text x="168.752" y="909" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="94 243.503">Open in admin ↗</text>
+<text x="52" y="1130" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="32 632">The @mention is only on the first post, for Down alerts (U3).</text>
+<text x="964" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="664 1264">B · The channel later: a reminder replies to its incident</text>
+<rect x="664" y="150" width="600" height="1000" rx="10" fill="#26282f"/>
+<rect x="664" y="150" width="600" height="48" rx="10" fill="#1f2128"/>
+<rect x="664" y="188" width="600" height="10" rx="0" fill="#1f2128"/>
+<text x="682" y="180" font-size="16" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="664 1264"># crew-alerts</text>
+<text x="1246" y="180" font-size="13" fill="#9a9ca5" font-weight="400" text-anchor="end" data-box="664 1264">Demo Event</text>
+<circle cx="700" cy="234" r="16" fill="#3b82f6"/>
+<text x="726" y="232" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="680 1248">Demo Bot</text>
+<rect x="813.407" y="220" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="831.407" y="232" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="813.407 849.407">APP</text>
+<text x="857.407" y="232" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="680 1248">Today at 21:24</text>
+<rect x="726" y="246" width="510" height="124" rx="6" fill="#2f3139"/>
+<rect x="726" y="246" width="4" height="124" rx="2" fill="#f59e0b"/>
+<text x="742" y="272" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="742 1224">The bot keeps reconnecting</text>
+<text x="742" y="296" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="742 1224">4 reconnects in 10 min. Posts and commands are late, not lost.</text>
+<text x="742" y="324" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="742 1224">SINCE</text>
+<text x="742" y="342" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="742 1224">21:20</text>
+<text x="807.593" y="324" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="742 1224">STATE</text>
+<text x="807.593" y="342" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="742 1224">Slow, not acked</text>
+<rect x="726" y="380" width="126.181" height="32" rx="4" fill="#4b5ccf"/>
+<text x="789.091" y="401" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="726 852.181">Acknowledge</text>
+<rect x="860.181" y="380" width="92.2267" height="32" rx="4" fill="#3a3d47"/>
+<text x="906.294" y="401" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="860.181 952.408">Mute 1 h</text>
+<rect x="960.408" y="380" width="149.503" height="32" rx="4" fill="#3a3d47"/>
+<text x="1035.16" y="401" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="960.408 1109.91">Open in admin ↗</text>
+<line x1="710" y1="434" x2="710" y2="464" stroke="#3a3d47" stroke-width="2"/>
+<line x1="710" y1="464" x2="726" y2="464" stroke="#3a3d47" stroke-width="2"/>
+<text x="734" y="468" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="664 1264">replying to The bot keeps reconnecting</text>
+<circle cx="700" cy="498" r="16" fill="#3b82f6"/>
+<text x="726" y="496" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="680 1248">Demo Bot</text>
+<rect x="813.407" y="484" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="831.407" y="496" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="813.407 849.407">APP</text>
+<text x="857.407" y="496" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="680 1248">Today at 21:54</text>
+<rect x="726" y="510" width="510" height="80" rx="6" fill="#2f3139"/>
+<rect x="726" y="510" width="4" height="80" rx="2" fill="#f59e0b"/>
+<text x="742" y="536" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="742 1224">Reminder: still slow after 34 min</text>
+<text x="742" y="560" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="742 1224">Nobody has acked yet. 9 reconnects so far.</text>
+<circle cx="700" cy="634" r="16" fill="#6b7280"/>
+<text x="726" y="632" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="680 1248">Player Two</text>
+<text x="825.246" y="632" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="680 1248">Today at 21:56</text>
+<text x="726" y="660" font-size="14" fill="#e6e7ea" font-weight="400" text-anchor="start" data-box="664 1264">on it, the bot&#x27;s token was rotated by mistake</text>
+<circle cx="700" cy="704" r="16" fill="#3b82f6"/>
+<text x="726" y="702" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="680 1248">Demo Bot</text>
+<rect x="813.407" y="690" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="831.407" y="702" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="813.407 849.407">APP</text>
+<text x="857.407" y="702" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="680 1248">Today at 22:05</text>
+<rect x="726" y="716" width="510" height="80" rx="6" fill="#2f3139"/>
+<rect x="726" y="716" width="4" height="80" rx="2" fill="#3ee39a"/>
+<text x="742" y="742" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="742 1224">Recovered: the bot is steady again</text>
+<text x="742" y="766" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="742 1224">Back after 45 min. Acked by Player Two at 21:57.</text>
+<text x="684" y="1110" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="664 1264">One message per incident; reminders every 30 min as</text>
+<text x="684" y="1130" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="664 1264">replies until acked; the recovery is posted even when acked.</text>
+<text x="1596" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1296 1896">C · When the bot is the subject: the webhook; an unknown user</text>
+<rect x="1296" y="150" width="600" height="1000" rx="10" fill="#26282f"/>
+<rect x="1296" y="150" width="600" height="48" rx="10" fill="#1f2128"/>
+<rect x="1296" y="188" width="600" height="10" rx="0" fill="#1f2128"/>
+<text x="1314" y="180" font-size="16" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1296 1896"># crew-alerts</text>
+<text x="1878" y="180" font-size="13" fill="#9a9ca5" font-weight="400" text-anchor="end" data-box="1296 1896">Demo Event</text>
+<circle cx="1332" cy="234" r="16" fill="#6b7280"/>
+<text x="1358" y="232" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1296 1896">Demo Event alerts</text>
+<rect x="1516.01" y="220" width="66" height="16" rx="3" fill="#3a3d47"/>
+<text x="1549.01" y="232" font-size="9.5" fill="#e6e7ea" font-weight="700" text-anchor="middle" data-box="1516.01 1582.01">WEBHOOK</text>
+<text x="1590.01" y="232" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1296 1896">Today at 16:03</text>
+<rect x="1358" y="246" width="510" height="144" rx="6" fill="#2f3139"/>
+<rect x="1358" y="246" width="4" height="144" rx="2" fill="#f87171"/>
+<text x="1374" y="272" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="1374 1856">The event&#x27;s bot is offline</text>
+<text x="1374" y="296" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="1374 1856">Discord commands and posts are paused.</text>
+<text x="1374" y="316" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="1374 1856">Sent by the fallback, so no buttons can ack here.</text>
+<text x="1374" y="344" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="1374 1856">SINCE</text>
+<text x="1374" y="362" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="1374 1856">16:01</text>
+<text x="1439.59" y="344" font-size="11.5" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="1374 1856">STATE</text>
+<text x="1439.59" y="362" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="1374 1856">Not acked</text>
+<rect x="1358" y="400" width="138.165" height="32" rx="4" fill="#3a3d47"/>
+<text x="1427.08" y="421" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1358 1496.16">Ack in admin ↗</text>
+<text x="1316" y="470" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1296 1896">Webhooks take no button clicks: the link opens the incident.</text>
+<line x1="1312" y1="520" x2="1880" y2="520" stroke="#3a3d47" stroke-width="1"/>
+<circle cx="1332" cy="564" r="16" fill="#3b82f6"/>
+<text x="1358" y="562" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1312 1880">Demo Bot</text>
+<rect x="1445.41" y="550" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="1463.41" y="562" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1445.41 1481.41">APP</text>
+<text x="1489.41" y="562" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1312 1880">Today at 21:31</text>
+<rect x="1358" y="576" width="510" height="80" rx="6" fill="#2f3139"/>
+<rect x="1358" y="576" width="4" height="80" rx="2" fill="#f87171"/>
+<text x="1374" y="602" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="1374 1856">Main hall screen 2 is dark</text>
+<text x="1374" y="626" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="1374 1856">No word from it for 2 min.</text>
+<rect x="1358" y="666" width="126.181" height="32" rx="4" fill="#4b5ccf"/>
+<text x="1421.09" y="687" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1358 1484.18">Acknowledge</text>
+<rect x="1492.18" y="666" width="92.2267" height="32" rx="4" fill="#3a3d47"/>
+<text x="1538.29" y="687" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1492.18 1584.41">Mute 1 h</text>
+<rect x="1358" y="720" width="510" height="92" rx="6" fill="#2a2c3a" stroke="#3a3d47" stroke-width="1"/>
+<text x="1374" y="746" font-size="11.5" fill="#9a9ca5" font-weight="600" text-anchor="start" data-box="1358 1868">Only you can see this</text>
+<text x="1374" y="770" font-size="13.5" fill="#e6e7ea" font-weight="400" text-anchor="start" data-box="1358 1868">Sign in once at the event&#x27;s admin to act</text>
+<text x="1374" y="792" font-size="13.5" fill="#e6e7ea" font-weight="400" text-anchor="start" data-box="1358 1868">from Discord. Your Discord account is not a user yet.</text>
+<text x="2228" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1928 2528">D · /platform status: the event&#x27;s view and the stack&#x27;s</text>
+<rect x="1928" y="150" width="600" height="470" rx="10" fill="#26282f"/>
+<rect x="1928" y="150" width="600" height="48" rx="10" fill="#1f2128"/>
+<rect x="1928" y="188" width="600" height="10" rx="0" fill="#1f2128"/>
+<text x="1946" y="180" font-size="16" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1928 2528"># crew</text>
+<text x="2510" y="180" font-size="13" fill="#9a9ca5" font-weight="400" text-anchor="end" data-box="1928 2528">Demo Event</text>
+<text x="1948" y="224" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1928 2528">Player Two used /platform status</text>
+<circle cx="1964" cy="254" r="16" fill="#3b82f6"/>
+<text x="1990" y="252" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1944 2512">Demo Bot</text>
+<rect x="2077.41" y="240" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="2095.41" y="252" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="2077.41 2113.41">APP</text>
+<text x="2121.41" y="252" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1944 2512">Today at 21:35</text>
+<rect x="1990" y="266" width="510" height="160" rx="6" fill="#2f3139"/>
+<rect x="1990" y="266" width="4" height="160" rx="2" fill="#f87171"/>
+<text x="2006" y="292" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="2006 2488">Demo Event: 1 needs you</text>
+<text x="2006" y="316" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Down: Main hall screen 2 is dark (6 min, acked)</text>
+<text x="2006" y="336" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Screens: 4 of 5 online</text>
+<text x="2006" y="356" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Discord bot: connected</text>
+<text x="2006" y="376" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Food, notifications, storage: ok</text>
+<text x="2006" y="396" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Platform: ok</text>
+<rect x="1990" y="436" width="132.503" height="32" rx="4" fill="#3a3d47"/>
+<text x="2056.25" y="457" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1990 2122.5">Open Health ↗</text>
+<text x="1948" y="600" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1928 2528">Only the asker sees it; needs admin.health.read (U16).</text>
+<rect x="1928" y="650" width="600" height="500" rx="10" fill="#26282f"/>
+<rect x="1928" y="650" width="600" height="48" rx="10" fill="#1f2128"/>
+<rect x="1928" y="688" width="600" height="10" rx="0" fill="#1f2128"/>
+<text x="1946" y="680" font-size="16" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1928 2528"># platform-alerts</text>
+<text x="2510" y="680" font-size="13" fill="#9a9ca5" font-weight="400" text-anchor="end" data-box="1928 2528">Platform guild</text>
+<text x="1948" y="724" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1928 2528">A superadmin used /platform status</text>
+<circle cx="1964" cy="754" r="16" fill="#3b82f6"/>
+<text x="1990" y="752" font-size="14.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="1944 2512">Platform Bot</text>
+<rect x="2100.49" y="740" width="36" height="16" rx="3" fill="#4b5ccf"/>
+<text x="2118.49" y="752" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="2100.49 2136.49">APP</text>
+<text x="2144.49" y="752" font-size="12" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1944 2512">Today at 21:36</text>
+<rect x="1990" y="766" width="510" height="140" rx="6" fill="#2f3139"/>
+<rect x="1990" y="766" width="4" height="140" rx="2" fill="#3ee39a"/>
+<text x="2006" y="792" font-size="15" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="2006 2488">Stack: 14 parts ok</text>
+<text x="2006" y="816" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Live events: 2 · deploy hold on</text>
+<text x="2006" y="836" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Slowest answer: screen 41 ms</text>
+<text x="2006" y="856" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Open platform incidents: none</text>
+<text x="2006" y="876" font-size="13" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2006 2488">Version v0.8.0 on every part</text>
+<rect x="1990" y="916" width="176.159" height="32" rx="4" fill="#3a3d47"/>
+<text x="2078.08" y="937" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1990 2166.16">Open stack health ↗</text>
+<text x="1948" y="1130" font-size="12.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="1928 2528">Platform alerts live here, never in an event&#x27;s channel.</text>
+<text x="32" y="1240" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="32 2528">Words, never secrets or log lines, travel to Discord (D3). Message caps: at most 10 per audience per 10 min, then a digest (O3). Ack from a button maps the Discord user to a platform user with admin.alerts.ack (U4, D5).</text>
+</svg>

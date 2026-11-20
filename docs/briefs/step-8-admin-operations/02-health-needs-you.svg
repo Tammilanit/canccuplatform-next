@@ -1,0 +1,300 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1230" width="2240" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 02: Health, what needs you (event crew)</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="1000" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1230" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">02 · Health: what needs you, in plain words (event crew)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">The built Health page grows an incident band: each problem of this event as a card with what it means, who was told, and the next step.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: during the event, a crew member sees at a glance what is wrong in their event and acts on it (desk at 1280 px, phone at 390 px)</text>
+<text x="672" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Health at 1280 px: two problems need the crew, one is muted, three fixed themselves</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1000" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 136">Demo</text>
+<text x="148" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Demo Event</text>
+<line x1="263.385" y1="168" x2="263.385" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="276.385" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="32 1312">Fri 20 – Sun 22 Nov</text>
+<rect x="422.879" y="167" width="59.1671" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="434.879" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="443.879" y="182.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="422.879 482.046">Live</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">21:32</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="943" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1150" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Announcements</text>
+<rect x="58" y="387" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="398" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<text x="56" y="452" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">ADMIN</text>
+<rect x="44" y="596" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="596" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="145.27" y="608" width="74.6996" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="157.27" cy="619" r="3.5" fill="#f87171"/>
+<text x="166.27" y="623.5" font-size="11" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="145.27 219.969">1 down</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Settings</text>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="735" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="746" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Venue info</text>
+<rect x="58" y="777" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="788" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+</g>
+<text x="328" y="249" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Health</text>
+<text x="1144" y="243" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 1272">Last check 21:32:10</text>
+<text x="1144" y="261" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="328 1272">every 10 s</text>
+<rect x="1156" y="227" width="116" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1214" y="250.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1156 1272">Check now</text>
+<rect x="328" y="273" width="58.8024" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="357.401" y="292.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="328 386.802">Now</text>
+<rect x="394.802" y="273" width="74.9453" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="432.275" y="292.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="394.802 469.748">History</text>
+<rect x="477.748" y="273" width="117.74" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="536.618" y="292.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="477.748 595.487">Alert settings</text>
+<circle cx="310" cy="288" r="13" fill="#f59e0b"/>
+<text x="310" y="293" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">1</text>
+<rect x="328" y="325" width="224" height="72" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="363" font-size="26" fill="#f87171" font-weight="700" text-anchor="start" data-box="328 552">2</text>
+<text x="346" y="385" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 552">need you</text>
+<rect x="568" y="325" width="224" height="72" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="586" y="363" font-size="26" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="568 792">1</text>
+<text x="586" y="385" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="568 792">muted</text>
+<rect x="808" y="325" width="224" height="72" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="826" y="363" font-size="26" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="808 1032">3</text>
+<text x="826" y="385" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="808 1032">fixed by themselves today</text>
+<rect x="1048" y="325" width="224" height="72" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1066" y="363" font-size="26" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="1048 1272">ok</text>
+<text x="1066" y="385" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1048 1272">platform</text>
+<circle cx="310" cy="361" r="13" fill="#f59e0b"/>
+<text x="310" y="366" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">2</text>
+<text x="328" y="429" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Needs you</text>
+<text x="432" y="429" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">oldest first; a change of state never moves a card</text>
+<rect x="328" y="447" width="304" height="222" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="328" y="457" width="3" height="202" rx="1.5" fill="#f87171"/>
+<rect x="346" y="463" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="358" cy="474" r="3.5" fill="#f87171"/>
+<text x="367" y="478.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="346 412.896">Down</text>
+<text x="614" y="479" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="344 616">3 min</text>
+<text x="346" y="513" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="344 616">Main hall screen 2 is dark</text>
+<text x="346" y="539" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="344 616">No word from it for 3 min, since 21:29.</text>
+<text x="346" y="559" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="344 616">Screen 1 still shows the Main hall zone.</text>
+<text x="346" y="593" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="344 616">Told #crew-alerts at 21:31 · not acked</text>
+<rect x="346" y="615" width="55.4668" height="34" rx="10" fill="#3ddcff"/>
+<text x="373.733" y="636.86" font-size="13.5" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="346 401.467">Ack</text>
+<rect x="409.467" y="615" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="442.269" y="636.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="409.467 475.07">Mute</text>
+<rect x="483.07" y="615" width="66.805" height="34" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="516.473" y="636.86" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="483.07 549.875">Open</text>
+<rect x="648" y="447" width="304" height="222" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="648" y="457" width="3" height="202" rx="1.5" fill="#f59e0b"/>
+<rect x="666" y="463" width="62.1439" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="678" cy="474" r="3.5" fill="#f59e0b"/>
+<text x="687" y="478.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="666 728.144">Slow</text>
+<text x="934" y="479" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="664 936">12 min</text>
+<text x="666" y="513" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="664 936">The bot keeps reconnecting</text>
+<text x="666" y="539" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="664 936">4 reconnects in 10 min, since 21:20.</text>
+<text x="666" y="559" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="664 936">Posts and commands are late, not lost.</text>
+<text x="666" y="593" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="664 936">Acked by Player Two at 21:24</text>
+<rect x="666" y="615" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="698.802" y="636.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="666 731.604">Mute</text>
+<rect x="739.604" y="615" width="66.805" height="34" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="773.006" y="636.86" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="739.604 806.409">Open</text>
+<circle cx="632" cy="455" r="13" fill="#f59e0b"/>
+<text x="632" y="460" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="619 645">3</text>
+<circle cx="632" cy="631" r="13" fill="#f59e0b"/>
+<text x="632" y="636" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="619 645">4</text>
+<text x="328" y="697" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">This event&#x27;s parts</text>
+<rect x="328" y="713" width="944" height="254" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="741" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">Part</text>
+<text x="568" y="741" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">State</text>
+<text x="708" y="741" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272">What it says</text>
+<text x="1028" y="741" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="328 1272"></text>
+<line x1="340" y1="753" x2="1260" y2="753" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="776" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Screens</text>
+<rect x="568" y="760" width="72.6094" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="580" cy="771" r="3.5" fill="#f87171"/>
+<text x="589" y="775.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="568 640.609">1 dark</text>
+<text x="708" y="776" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">4 of 5 online · Main hall screen 2 dark</text>
+<text x="1252" y="776" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="end" data-box="328 1272">Open devices ›</text>
+<line x1="340" y1="788" x2="1260" y2="788" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="811" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Discord bot</text>
+<rect x="568" y="795" width="62.1439" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="580" cy="806" r="3.5" fill="#f59e0b"/>
+<text x="589" y="810.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="568 630.144">Slow</text>
+<text x="708" y="811" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">Connected; 4 reconnects in 10 min</text>
+<text x="1252" y="811" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="end" data-box="328 1272">Open bot ›</text>
+<line x1="340" y1="823" x2="1260" y2="823" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="846" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Food orders</text>
+<rect x="568" y="830" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="580" cy="841" r="3.5" fill="#3ee39a"/>
+<text x="589" y="845.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="568 616.688">OK</text>
+<text x="708" y="846" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">Reminders on time</text>
+<line x1="340" y1="858" x2="1260" y2="858" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="881" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Notifications</text>
+<rect x="568" y="865" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="580" cy="876" r="3.5" fill="#3ee39a"/>
+<text x="589" y="880.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="568 616.688">OK</text>
+<text x="708" y="881" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">Push delivered to 214 phones today</text>
+<line x1="340" y1="893" x2="1260" y2="893" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="916" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Storage</text>
+<rect x="568" y="900" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="580" cy="911" r="3.5" fill="#3ee39a"/>
+<text x="589" y="915.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="568 616.688">OK</text>
+<text x="708" y="916" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">1.2 of 2 GiB used</text>
+<line x1="340" y1="928" x2="1260" y2="928" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="951" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="328 1272">Platform</text>
+<rect x="568" y="935" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="580" cy="946" r="3.5" fill="#3ee39a"/>
+<text x="589" y="950.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="568 616.688">OK</text>
+<text x="708" y="951" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="708 1018">Every shared part answers</text>
+<circle cx="310" cy="943" r="13" fill="#f59e0b"/>
+<text x="310" y="948" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="297 323">5</text>
+<rect x="328" y="991" width="464" height="150" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="1021" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 792">Muted</text>
+<text x="346" y="1051" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 792">Lobby screen</text>
+<text x="458" y="1051" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 712">until 23:00 · Player Three · &quot;PC moved&quot;</text>
+<text x="774" y="1051" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="end" data-box="328 792">Unmute</text>
+<rect x="808" y="991" width="464" height="150" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="826" y="1021" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="808 1272">Fixed by themselves today</text>
+<text x="826" y="1051" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="808 1272">21:12</text>
+<text x="878" y="1051" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1258">Lobby screen was stuck 60 s; reloaded</text>
+<text x="826" y="1079" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="808 1272">19:40</text>
+<text x="878" y="1079" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1258">Food reminders late 2 min; caught up</text>
+<text x="826" y="1107" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="808 1272">16:05</text>
+<text x="878" y="1107" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1258">Discord bot reconnected after 40 s</text>
+<circle cx="800" cy="999" r="13" fill="#f59e0b"/>
+<text x="800" y="1004" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="787 813">6</text>
+<text x="1567" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1762">B · The same at 390 px</text>
+<rect x="1362" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">21:34</text>
+<rect x="1698" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1700" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1372" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1388" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1424" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Demo Event</text>
+<rect x="1538.65" y="225" width="57.9518" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1550.65" cy="236" r="3.5" fill="#3ee39a"/>
+<text x="1559.65" y="240.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1538.65 1596.6">Live</text>
+<rect x="1722" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1388" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Health</text>
+<rect x="1388" y="320" width="58.8024" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<text x="1417.4" y="339.68" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1388 1446.8">Now</text>
+<rect x="1452.8" y="320" width="74.9453" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1490.28" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1452.8 1527.75">History</text>
+<rect x="1533.75" y="320" width="67.0586" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1567.28" y="339.68" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1533.75 1600.81">Alerts</text>
+<text x="1388" y="378" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1388 1746">2 need you · 1 muted · platform ok</text>
+<rect x="1388" y="398" width="358" height="176" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="408" width="3" height="156" rx="1.5" fill="#f87171"/>
+<rect x="1406" y="414" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1418" cy="425" r="3.5" fill="#f87171"/>
+<text x="1427" y="429.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1406 1472.9">Down</text>
+<text x="1406" y="462" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Main hall screen 2 is dark</text>
+<text x="1406" y="486" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1730">No word from it for 3 min.</text>
+<text x="1406" y="510" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1404 1730">Told #crew-alerts · not acked</text>
+<rect x="1406" y="526" width="55.4668" height="34" rx="10" fill="#3ddcff"/>
+<text x="1433.73" y="547.86" font-size="13.5" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1406 1461.47">Ack</text>
+<rect x="1469.47" y="526" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1502.27" y="547.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1469.47 1535.07">Mute</text>
+<rect x="1543.07" y="526" width="66.805" height="34" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1576.47" y="547.86" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1543.07 1609.88">Open</text>
+<rect x="1388" y="590" width="358" height="176" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="600" width="3" height="156" rx="1.5" fill="#f59e0b"/>
+<rect x="1406" y="606" width="62.1439" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="1418" cy="617" r="3.5" fill="#f59e0b"/>
+<text x="1427" y="621.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="1406 1468.14">Slow</text>
+<text x="1406" y="654" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Discord bot keeps reconnecting</text>
+<text x="1406" y="678" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1730">4 reconnects in 10 min.</text>
+<text x="1406" y="702" font-size="12.5" fill="#7cecba" font-weight="400" text-anchor="start" data-box="1404 1730">Acked by Player Two</text>
+<rect x="1406" y="718" width="65.6036" height="34" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1438.8" y="739.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1406 1471.6">Mute</text>
+<rect x="1479.6" y="718" width="66.805" height="34" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1513.01" y="739.86" font-size="13.5" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1479.6 1546.41">Open</text>
+<text x="1388" y="790" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">This event&#x27;s parts</text>
+<line x1="1388" y1="804" x2="1746" y2="804" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="830" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Screens</text>
+<rect x="1673.39" y="813" width="72.6094" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1685.39" cy="824" r="3.5" fill="#f87171"/>
+<text x="1694.39" y="828.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1673.39 1746">1 dark</text>
+<line x1="1388" y1="844" x2="1746" y2="844" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="870" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Discord bot</text>
+<rect x="1683.86" y="853" width="62.1439" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="1695.86" cy="864" r="3.5" fill="#f59e0b"/>
+<text x="1704.86" y="868.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="1683.86 1746">Slow</text>
+<line x1="1388" y1="884" x2="1746" y2="884" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="910" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Food orders</text>
+<rect x="1697.31" y="893" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1709.31" cy="904" r="3.5" fill="#3ee39a"/>
+<text x="1718.31" y="908.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1697.31 1746">OK</text>
+<line x1="1388" y1="924" x2="1746" y2="924" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="950" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1746">Notifications</text>
+<rect x="1697.31" y="933" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1709.31" cy="944" r="3.5" fill="#3ee39a"/>
+<text x="1718.31" y="948.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1697.31 1746">OK</text>
+<rect x="1372" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1403" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1411" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1372 1450">Health</text>
+<rect x="1481" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1489" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1450 1528">Studio</text>
+<circle cx="1567" cy="944" r="15" fill="#3ddcff"/>
+<text x="1567" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1528 1606">Add</text>
+<rect x="1637" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1645" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1606 1684">Screens</text>
+<rect x="1715" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1723" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1684 1762">More</text>
+<rect x="1500" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="1812" y="180" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1812 2208">Notes</text>
+<circle cx="1825" cy="205" r="13" fill="#f59e0b"/>
+<text x="1825" y="210" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">1</text>
+<text x="1848" y="210" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Health keeps its place and name (the menu&#x27;s</text>
+<text x="1848" y="231" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">&quot;Health 1 down&quot; note is built, #478). It gains</text>
+<text x="1848" y="252" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">History and Alert settings beside Now</text>
+<text x="1848" y="273" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">(mockups 03 and 06).</text>
+<circle cx="1825" cy="303" r="13" fill="#f59e0b"/>
+<text x="1825" y="308" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">2</text>
+<text x="1848" y="308" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Count tiles say what matters: what needs</text>
+<text x="1848" y="329" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">you, what is muted, what fixed itself. The</text>
+<text x="1848" y="350" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">platform is one coarse word for event crew</text>
+<text x="1848" y="371" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">(TI1); the stack is the superadmin&#x27;s (mockup</text>
+<text x="1848" y="392" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">07).</text>
+<circle cx="1825" cy="422" r="13" fill="#f59e0b"/>
+<text x="1825" y="427" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">3</text>
+<text x="1848" y="427" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">An incident card: state, what it means in</text>
+<text x="1848" y="448" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">words, what still works, and who was told.</text>
+<text x="1848" y="469" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Cards follow amendment 3: an 18 rem card</text>
+<text x="1848" y="490" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">grid; two cards keep their width at the left</text>
+<text x="1848" y="511" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">edge.</text>
+<circle cx="1825" cy="541" r="13" fill="#f59e0b"/>
+<text x="1825" y="546" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">4</text>
+<text x="1848" y="546" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Ack stops the reminders and tells the others</text>
+<text x="1848" y="567" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">someone is on it; Mute silences one subject</text>
+<text x="1848" y="588" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">for a set time, never for ever (U5, U6).</text>
+<circle cx="1825" cy="618" r="13" fill="#f59e0b"/>
+<text x="1825" y="623" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">5</text>
+<text x="1848" y="623" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">The event&#x27;s own parts, as a table: compared</text>
+<text x="1848" y="644" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">by state and words. Each row links to the</text>
+<text x="1848" y="665" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">page that fixes it.</text>
+<circle cx="1825" cy="695" r="13" fill="#f59e0b"/>
+<text x="1825" y="700" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">6</text>
+<text x="1848" y="700" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Related panels sit in a band below the</text>
+<text x="1848" y="721" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">collection, never in a column beside it</text>
+<text x="1848" y="742" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">(amendment 3).</text>
+</svg>

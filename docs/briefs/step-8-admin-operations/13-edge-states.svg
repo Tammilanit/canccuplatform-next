@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 940" width="2560" height="940" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 13: edge states</title>
+<defs></defs>
+<rect x="0" y="0" width="2560" height="940" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2528">13 · Edge states: when the alert itself has trouble (event crew, superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2528">Each tile is one state as it shows on Health or Stack health, at card size. Nothing here is silent by accident: each says what happened and what to do.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2528">Use case: the reviewer and the builder see how undelivered, grouped, flapping, deploying, draft and self-failing cases read before they are built</text>
+<rect x="32" y="150" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="54" y="184" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="54 612">E2 · Not delivered</text>
+<text x="54" y="206" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="54 612">Health, event crew: the bot is down and no webhook is set</text>
+<rect x="54" y="230" width="558" height="230" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="54" y="240" width="3" height="210" rx="1.5" fill="#f87171"/>
+<rect x="72" y="246" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="84" cy="257" r="3.5" fill="#f87171"/>
+<text x="93" y="261.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="72 138.896">Down</text>
+<text x="72" y="296" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="70 596">The bot is offline</text>
+<text x="72" y="322" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">Discord commands and posts are paused.</text>
+<text x="72" y="342" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">No alert reached Discord: the bot is the</text>
+<text x="72" y="362" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">subject and no fallback webhook is set.</text>
+<text x="72" y="388" font-size="12.5" fill="#ffb4bd" font-weight="400" text-anchor="start" data-box="70 596">Not delivered · retrying every 5 min, the recovery too</text>
+<rect x="72" y="412" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="99.2248" y="432.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="72 126.45">Ack</text>
+<rect x="134.45" y="412" width="135.895" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="202.397" y="432.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="134.45 270.345">Set a webhook</text>
+<rect x="660" y="150" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="682" y="184" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="682 1240">E6 · One cause, many parts</text>
+<text x="682" y="206" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="682 1240">Stack health, superadmin; and what event crew see</text>
+<rect x="682" y="230" width="558" height="196" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="682" y="240" width="3" height="176" rx="1.5" fill="#f87171"/>
+<rect x="700" y="246" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="712" cy="257" r="3.5" fill="#f87171"/>
+<text x="721" y="261.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="700 766.896">Down</text>
+<text x="700" y="296" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="698 1224">Postgres is not answering</text>
+<text x="700" y="322" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="698 1224">9 parts depend on it and are down with it.</text>
+<text x="700" y="342" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="698 1224">One incident, one post: the cause first.</text>
+<text x="700" y="368" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="698 1224">Told #platform-alerts · 21:02</text>
+<rect x="700" y="392" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="727.225" y="412.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="700 754.45">Ack</text>
+<rect x="762.45" y="392" width="63.6902" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="794.295" y="412.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="762.45 826.14">Logs</text>
+<rect x="682" y="446" width="558" height="76" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="698" y="474" font-size="14" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="698 1224">Platform: down. The platform team is on it.</text>
+<text x="698" y="498" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="698 1224">Event crew&#x27;s Health: one line, no internals (U2).</text>
+<rect x="1288" y="150" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="1310" y="184" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1310 1868">E5 · Deploy grace</text>
+<text x="1310" y="206" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310 1868">Stack health, superadmin: a new version is starting</text>
+<rect x="1310" y="230" width="558" height="196" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1310" y="240" width="3" height="176" rx="1.5" fill="#3ddcff"/>
+<rect x="1328" y="246" width="90.3633" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<circle cx="1340" cy="257" r="3.5" fill="#3ddcff"/>
+<text x="1349" y="261.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1328 1418.36">Updating</text>
+<text x="1328" y="296" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1326 1852">screen is starting v0.8.1</text>
+<text x="1328" y="322" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1326 1852">Down for 40 s while it starts: expected.</text>
+<text x="1328" y="342" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1326 1852">Its incidents wait 3 min before alerting.</text>
+<text x="1328" y="368" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1326 1852">Was v0.8.0 · started 21:00:12</text>
+<text x="1310" y="446" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310 1868">Deploys only reach live events as hotfixes (0013</text>
+<text x="1310" y="466" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310 1868">item 22), so grace is short and automatic.</text>
+<rect x="1916" y="150" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="1938" y="184" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1938 2496">E4 · Keeps changing</text>
+<text x="1938" y="206" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1938 2496">Health, event crew: a loose cable</text>
+<rect x="1938" y="230" width="558" height="216" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1938" y="240" width="3" height="196" rx="1.5" fill="#f59e0b"/>
+<rect x="1956" y="246" width="137.017" height="22" rx="11" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<circle cx="1968" cy="257" r="3.5" fill="#f59e0b"/>
+<text x="1977" y="261.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="1956 2093.02">Keeps changing</text>
+<text x="1956" y="296" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1954 2480">Lobby screen goes on and off</text>
+<text x="1956" y="322" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1954 2480">5 changes in 10 min. One post says so;</text>
+<text x="1956" y="342" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1954 2480">nothing more until it holds for 5 min.</text>
+<text x="1956" y="368" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1954 2480">Told #crew-alerts once · 22:10</text>
+<rect x="1956" y="392" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="1983.22" y="412.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1956 2010.45">Ack</text>
+<rect x="2018.45" y="392" width="64.2108" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2050.55" y="412.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2018.45 2082.66">Mute</text>
+<rect x="2090.66" y="392" width="65.3677" height="32" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="2123.34" y="412.68" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="2090.66 2156.03">Open</text>
+<rect x="32" y="540" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="54" y="574" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="54 612">O8 · Several screens, one zone</text>
+<text x="54" y="596" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="54 612">Health, event crew: a power strip feeds three screens</text>
+<rect x="54" y="620" width="558" height="236" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="54" y="630" width="3" height="216" rx="1.5" fill="#f87171"/>
+<rect x="72" y="636" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="84" cy="647" r="3.5" fill="#f87171"/>
+<text x="93" y="651.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="72 138.896">Down</text>
+<text x="72" y="686" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="70 596">3 screens in Main hall are dark</text>
+<text x="72" y="712" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">Main hall screens 1, 2 and 3: no word</text>
+<text x="72" y="732" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">since 21:29. Main hall shows nowhere now.</text>
+<text x="72" y="752" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="70 596">One incident for the zone, not three.</text>
+<text x="72" y="778" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="70 596">Told #crew-alerts · @Crew on duty</text>
+<rect x="72" y="802" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="99.2248" y="822.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="72 126.45">Ack</text>
+<rect x="134.45" y="802" width="125.006" height="32" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="196.952" y="822.68" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="134.45 259.455">Open devices</text>
+<rect x="660" y="540" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="682" y="574" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="682 1240">E10 · A draft event</text>
+<text x="682" y="596" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="682 1240">Health of a draft: the state shows, nobody is paged</text>
+<rect x="682" y="620" width="558" height="76" rx="10" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<text x="698" y="650" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="698 1224">Draft: problems show here; nobody is alerted</text>
+<text x="698" y="674" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="698 1224">Alerts start when the event goes live (E10).</text>
+<line x1="682" y1="716" x2="1240" y2="716" stroke="#343c66" stroke-width="1"/>
+<text x="682" y="743" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="682 1240">Screens</text>
+<rect x="1155.6" y="726" width="84.3964" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="1167.6" cy="737" r="3.5" fill="#a9b1d6"/>
+<text x="1176.6" y="741.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1155.6 1240">2 offline</text>
+<line x1="682" y1="758" x2="1240" y2="758" stroke="#343c66" stroke-width="1"/>
+<text x="682" y="785" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="682 1240">Discord bot</text>
+<rect x="1140.96" y="768" width="99.04" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="1152.96" cy="779" r="3.5" fill="#a9b1d6"/>
+<text x="1161.96" y="783.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1140.96 1240">Not bound</text>
+<line x1="682" y1="800" x2="1240" y2="800" stroke="#343c66" stroke-width="1"/>
+<text x="682" y="827" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="682 1240">Storage</text>
+<rect x="1191.31" y="810" width="48.6883" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1203.31" cy="821" r="3.5" fill="#3ee39a"/>
+<text x="1212.31" y="825.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1191.31 1240">OK</text>
+<rect x="1288" y="540" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="1310" y="574" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1310 1868">E3 · Admin itself is down</text>
+<text x="1310" y="596" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310 1868">Any organiser page: the shell can&#x27;t reach Health</text>
+<rect x="1310" y="620" width="558" height="220" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1328" y="656" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1328 1850">Health can&#x27;t be reached</text>
+<text x="1328" y="682" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1328 1850">The menu&#x27;s note says &quot;Health: no answer&quot;.</text>
+<text x="1328" y="704" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1328 1850">Docker restarts admin; while it is down nothing</text>
+<text x="1328" y="726" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1328 1850">alerts. Step 10&#x27;s outside watchdog closes this gap.</text>
+<text x="1328" y="760" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1328 1850">No second watcher in step 8 (E3).</text>
+<rect x="1916" y="540" width="602" height="330" rx="14" fill="#0b0d1a"/>
+<text x="1938" y="574" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1938 2496">E14 · A mute ends, still dark</text>
+<text x="1938" y="596" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1938 2496">Discord and Health, event crew</text>
+<rect x="1938" y="620" width="558" height="216" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1938" y="630" width="3" height="196" rx="1.5" fill="#f87171"/>
+<rect x="1956" y="636" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1968" cy="647" r="3.5" fill="#f87171"/>
+<text x="1977" y="651.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1956 2022.9">Down</text>
+<text x="1956" y="686" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1954 2480">Lobby screen is still dark</text>
+<text x="1956" y="712" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1954 2480">The mute by Player Three ended at 23:00.</text>
+<text x="1956" y="732" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1954 2480">It has been dark since 21:50.</text>
+<text x="1956" y="758" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1954 2480">Reminder posted at once · not acked</text>
+<rect x="1956" y="782" width="54.4495" height="32" rx="10" fill="#3ddcff"/>
+<text x="1983.22" y="802.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1956 2010.45">Ack</text>
+<rect x="2018.45" y="782" width="108.91" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2072.9" y="802.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2018.45 2127.36">Mute again</text>
+</svg>
