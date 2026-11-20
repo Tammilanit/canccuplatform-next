@@ -154,7 +154,7 @@ function deviceActions(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): Sl
   ];
   const unassigned = current === "";
   const id = `canccu-studio-${d.id}`;
-  return html`<div class="canccu-studio-device__actions">${command("identify", t("device.identified"))}${command("reload", t("device.reloaded"))}<details class="canccu-studio-assign"><summary class="canccu-button canccu-button--${unassigned ? "primary" : "secondary"} canccu-button--sm">${t(unassigned ? "device.assign" : "device.edit")}</summary><form class="canccu-form"${attrs({ "data-device": d.id, "data-done": t("device.saved") })}><div class="canccu-field"><label class="canccu-field__label" for="${id}-name">${t("device.name")}</label><input${attrs({ class: "canccu-input", id: `${id}-name`, name: "name", value: d.name, required: true, maxlength: 80 })}></div><div class="canccu-field"><label class="canccu-field__label" for="${id}-shows">${t("device.shows")}</label><select class="canccu-input" id="${id}-shows" name="shows">${shows}</select></div><div class="canccu-cluster"><button class="canccu-button canccu-button--primary" type="submit">${t("device.save")}</button><button${attrs({ class: "canccu-button canccu-button--danger-ghost", type: "button", "data-call": "POST", "data-url": `${api}/revoke`, "data-confirm": t("device.revoke_confirm", { device: d.name }) })}>${t("device.revoke")}</button></div></form></details></div>`;
+  return html`<div class="canccu-card__foot canccu-studio-device__actions">${command("identify", t("device.identified"))}${command("reload", t("device.reloaded"))}<details class="canccu-studio-assign"><summary class="canccu-button canccu-button--${unassigned ? "primary" : "secondary"} canccu-button--sm">${t(unassigned ? "device.assign" : "device.edit")}</summary><form class="canccu-form"${attrs({ "data-device": d.id, "data-done": t("device.saved") })}><div class="canccu-field"><label class="canccu-field__label" for="${id}-name">${t("device.name")}</label><input${attrs({ class: "canccu-input", id: `${id}-name`, name: "name", value: d.name, required: true, maxlength: 80 })}></div><div class="canccu-field"><label class="canccu-field__label" for="${id}-shows">${t("device.shows")}</label><select class="canccu-input" id="${id}-shows" name="shows">${shows}</select></div><div class="canccu-cluster"><button class="canccu-button canccu-button--primary" type="submit">${t("device.save")}</button><button${attrs({ class: "canccu-button canccu-button--danger-ghost", type: "button", "data-call": "POST", "data-url": `${api}/revoke`, "data-confirm": t("device.revoke_confirm", { device: d.name }) })}>${t("device.revoke")}</button></div></form></details></div>`;
 }
 
 function pairDialog(c: ViewContext, zones: readonly ZoneSummary[]): Slot {
@@ -248,7 +248,7 @@ function recentPanel(c: ViewContext, devices: readonly SeenDevice[]): Html {
           ><span>${text}</span>
         </li>`,
     );
-  return html`<section class="canccu-card canccu-split__side" data-live="devices-recent">
+  return html`<section class="canccu-card" data-live="devices-recent">
     <h2 class="canccu-card__title">${t("devices.recent")}</h2>
     <p class="canccu-card__desc">${t("devices.recent_desc")}</p>
     ${
@@ -294,8 +294,10 @@ export function devicesView(
           title: t("devices.empty_title"),
           text: t("devices.empty_text"),
         })
-      : html`<div class="canccu-studio-devices">${cards}</div>`;
-  return html`${summary}
-    <div class="canccu-studio-split">${list}${recentPanel(c, devices)}</div>
+      : html`<div class="canccu-grid canccu-studio-devices">${cards}</div>`;
+  // Amendment 3 (docs/design/grids/04-devices.svg): the summary, the screens, then Recent in the
+  // panel band under them at every width, never a column beside them.
+  return html`${summary} ${list}
+    <div class="canccu-band">${recentPanel(c, devices)}</div>
     ${pairDialog(c, zones)}`;
 }

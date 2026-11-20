@@ -3,6 +3,7 @@
 @layer canccu-base {
   .canccu-layout--preview {
     display: grid;
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: the preview's hero and rail */
     grid-template-columns: 2fr 1fr;
     grid-template-rows: 1fr auto;
     gap: var(--canccu-gap);

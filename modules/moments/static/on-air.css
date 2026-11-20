@@ -1,25 +1,75 @@
 /*
- * On air (docs/design/moments-on-air.svg, #638): on a phone one column in the page's order, crew
- * actions first; from 64rem one grid whose two rows end level, the zones on two thirds of the
- * width and Crew actions, Storyboards and Scenes as compact cards around them.
+ * On air (docs/design/grids/02-on-air.svg, amendment 3): the crew band, the zones in .canccu-grid
+ * by key with "+n more" after 4, then Storyboards and Scenes in a .canccu-band under them. The
+ * page's order is the phone's.
  */
-.moments-board {
+.moments-onair {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
 }
-.moments-board > * {
-  min-width: 0;
+/* Crew actions: one row on a desk (from 1100 px), the emergency's hold at its right end. */
+.moments-onair__crew {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
 }
-@media (min-width: 64rem) {
-  /* One auto-fill grid: the zone cards and the three compact cards are siblings, so any count of
-     zones fills it and the page stays balanced. The zones' wrapper drops out of the layout. */
-  .moments-board {
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-    align-items: start;
+.moments-onair__crew > .canccu-card__title {
+  margin: 0;
+}
+.moments-onair__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.moments-onair__crew .moments-emergency {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  /* A basis, not its widest content, so it stays in the row and shrinks there (the hold goes
+     under its words at 1100 px); past 30rem the auto margin keeps it at the right end. */
+  flex: 1 1 15rem;
+  max-width: 30rem;
+  margin: 0 0 0 auto;
+}
+.moments-emergency__text {
+  flex: 1 1 10rem;
+}
+.moments-emergency__text p {
+  margin: 0;
+}
+.moments-onair__crew .moments-emergency .canccu-button--block {
+  width: auto;
+}
+/* A phone: the title, the buttons across, then the emergency under them. */
+@media (max-width: 40rem) {
+  .moments-onair__crew {
+    flex-direction: column;
+    align-items: stretch;
   }
-  .moments-onair__zones {
-    display: contents;
+  .moments-onair__buttons {
+    display: grid;
   }
+  .moments-onair__crew .moments-emergency {
+    flex: 0 0 auto;
+    max-width: none;
+    margin: 0;
+  }
+  .moments-onair__crew .moments-emergency .canccu-button--block {
+    width: 100%;
+  }
+}
+/* A zone's moments past the first four, opened on demand. */
+.moments-more {
+  margin-block-start: 0.75rem;
+}
+.moments-more > summary {
+  cursor: pointer;
+  color: var(--canccu-ink-muted);
+}
+.moments-more > .moments-list {
+  margin-block-start: 0.75rem;
 }
 
 /* Fire (#638): one item picker and one "Fire…" that opens the chooser below it. */

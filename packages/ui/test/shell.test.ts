@@ -81,6 +81,15 @@ describe("shellPage", () => {
     const front = s(frontPage({ title: "Check in", card: "", event: EVENT, surface: "hub" }));
     expect(front).toContain('<link rel="stylesheet" href="/theming/current/tokens.css">');
   });
+  it("draws the width: wide stops at 120rem (amendment 3), narrow at 40rem, the default at 64rem", () => {
+    const main = (width?: "narrow" | "wide") =>
+      /<main class="([^"]*)"/.exec(
+        s(shellPage({ title: "T", session: ORGANISER, body: "", ...(width ? { width } : {}) })),
+      )?.[1];
+    expect(main("wide")).toBe("canccu-main canccu-main--wide");
+    expect(main("narrow")).toBe("canccu-main canccu-main--narrow");
+    expect(main()).toBe("canccu-main");
+  });
   it("is phone-ready and escapes the event's name", () => {
     expect(doc).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
     expect(doc).toContain("Demo &lt;Event&gt;");

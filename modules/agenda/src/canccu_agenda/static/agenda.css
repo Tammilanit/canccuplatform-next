@@ -41,6 +41,7 @@
     font-variant-numeric: tabular-nums;
   }
   .canccu-agenda-hero__actions { display: grid; gap: 0.875rem; margin-top: 1rem; }
+  /* canccu-grid: fixed control — four fixed choices in one row */
   .canccu-agenda-delay { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
   .canccu-agenda-delay > span { grid-column: 1 / -1; font-size: var(--canccu-text-sm); }
   .canccu-agenda-delay .canccu-button { min-width: 0; padding: 0 0.25rem; font-variant-numeric: tabular-nums; }
@@ -109,6 +110,7 @@
   /* Phone first: time over Was, the item over where and kind (sheet 5, Day, phone). */
   .canccu-agenda-row {
     display: grid;
+    /* canccu-grid: fixed row — lays out one item's own parts: a row's time, item and marker */
     grid-template-columns: 3.5rem minmax(0, 1fr) 1.25rem;
     grid-template-rows: auto auto;
     grid-template-areas: "time what icon" "was what icon" ". meta icon";
@@ -182,7 +184,9 @@
   .canccu-agenda-side .canccu-dl { margin: 0; }
   .canccu-agenda-side .canccu-card__title { margin: 0.25rem 5.5rem 0.5rem 0; line-height: 1.3; }
   :where(.canccu-page) .canccu-agenda-side .canccu-card__title a { color: inherit; }
+  /* canccu-grid: fixed row — lays out one item's own parts: label and value */
   .canccu-agenda-side .canccu-dl { grid-template-columns: 5.5rem minmax(0, 1fr); }
+  /* canccu-grid: fixed control — two equal buttons */
   .canccu-agenda-side__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
   .canccu-agenda-side .canccu-agenda-changes {
     padding-top: 0.875rem;
@@ -233,6 +237,7 @@
     :where(.canccu-page) .canccu-agenda-days a { min-height: 2rem; }
     .canccu-agenda-head,
     .canccu-agenda-row {
+      /* canccu-grid: fixed table — keeps its columns in line across rows: the table's head and rows */
       grid-template-columns: 4rem 3rem minmax(0, 1fr) 7rem 6rem 1.25rem;
       grid-template-rows: none;
       grid-template-areas: none;
@@ -291,6 +296,7 @@
     }
   }
   @media (min-width: 1440px) {
+    /* canccu-grid: fixed master-detail — the item now beside what the screen shows */
     .canccu-agenda-hero:has(.canccu-agenda-hero__screen) { grid-template-columns: minmax(0, 1fr) 336px; }
     .canccu-agenda-hero__screen { display: block; }
     /* The picked row is marked where its item stands beside the list. */
@@ -298,6 +304,7 @@
       background: var(--canccu-raised);
       box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--canccu-color-text) 50%, transparent);
     }
+    /* canccu-grid: fixed master-detail — shows the picked item beside its list: the list beside the picked item */
     .canccu-agenda-day:has(.canccu-agenda-side) { grid-template-columns: minmax(0, 1fr) 23rem; }
     .canccu-agenda-side,
     .canccu-agenda-side.is-open {
@@ -347,6 +354,7 @@
   /* Quick add's own length field only for Other… (sheet 5). */
   .canccu-agenda-quick fieldset:has(input[name="length"][value="other"]:not(:checked)) input[name="minutes"] { display: none; }
   .canccu-agenda-form > .canccu-field { margin: 0; }
+  /* canccu-grid: fixed form — lays out fields: the day and the time fields */
   .canccu-agenda-when { display: grid; grid-template-columns: minmax(0, 1fr) 6.5rem; gap: 0.5rem; }
   /* The typed day only for "Other date…" (web.when_inputs), below the day and the time. */
   .canccu-agenda-when__other { grid-column: 1 / -1; }

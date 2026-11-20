@@ -29,6 +29,7 @@
 
 .canccu-sched__layout {
   display: grid;
+  /* canccu-grid: fixed master-detail — the side shows the picked window */
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
   gap: 1rem;
   align-items: start;
@@ -369,6 +370,7 @@
 
 @media (max-width: 60rem) {
   .canccu-sched__layout {
+    /* canccu-grid: fixed master-detail — shows the picked item beside its list: one column */
     grid-template-columns: minmax(0, 1fr);
   }
 }

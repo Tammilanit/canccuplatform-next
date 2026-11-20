@@ -123,6 +123,7 @@
 /* Sliders: the label and its value above the track. */
 .moments-slider {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: a slider's label and value */
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0 0.75rem;
@@ -186,6 +187,7 @@
 }
 .moments-fieldrow {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: a field and its unit */
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.25rem 1rem;
@@ -257,6 +259,7 @@
 /* The themed player: play and stop, the waveform and the length. */
 .moments-player {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: the themed player's controls */
   grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 0.75rem;

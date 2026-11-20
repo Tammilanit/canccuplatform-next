@@ -37,7 +37,7 @@ A test or CI clip shows the three levels side by side.
 
 ### 3 · Grids scale with their content (2026-11-19)
 
-The PO at the step 4 gate: "Any page that has a grid should scale." A page of like items fills the width it has, from a 390 px phone to a 2560 px desk, and stays balanced with one item, two or forty. The sheets are in [`grids/`](grids/README.md) (01 the rule; 02–05 On air, the sound library, Devices and the storyboard catalogue, each with few and many items at 1280 px, 1920 px and 390 px); the audit of every grid today is [`grids/audit.md`](grids/audit.md). Numbers are at a 16 px rem.
+The PO at the step 4 gate: "Any page that has a grid should scale." A page of like items fills the width it has, from a 390 px phone to a 2560 px desk, and stays balanced with one item, two or forty. The sheets are in [`grids/`](grids/README.md) (01 the rule; 02–05 On air, the sound library, Devices and the storyboard catalogue, each with few and many items at 1280 px and 1920 px; the phone frames show the many state only, and sheet 05 shows one state per width); the audit of every grid today is [`grids/audit.md`](grids/audit.md). Numbers are at a 16 px rem.
 
 **Collections are one auto-fill grid, with the shared class.** `packages/ui/ui.css` gets `.canccu-grid`; no module writes its own collection columns:
 
@@ -57,7 +57,9 @@ The PO at the step 4 gate: "Any page that has a grid should scale." A page of li
 .canccu-grid--tile { --canccu-grid-min: 7rem; gap: calc(var(--canccu-gap) / 2); }
 ```
 
-`auto-fill`, never `auto-fit`: the empty tracks stay, so one or two items keep their width. `min(100%, …)` lets a card shrink inside a box narrower than its minimum instead of overflowing it. A card wider than its minimum grows only until one more column fits, so from two columns on a card is at most 1.5 × its minimum plus half a gap (card 440 px, small 248 px, tile 172 px). Three sizes are enough: a module never sets `--canccu-grid-min` itself.
+The count tiles over a list (`.canccu-stats`, admin's Health) share the selectors of `.canccu-grid` and `.canccu-grid--small`, so they are small items with no column list of their own.
+
+`auto-fill`, never `auto-fit`: the empty tracks stay, so one or two items keep their width. `min(100%, …)` lets a card shrink inside a box narrower than its minimum instead of overflowing it. A card wider than its minimum grows only until one more column fits, so from two columns on a card is at most 1.5 × its minimum plus half a gap (card 440 px, small 248 px, tile 172 px). On a phone under 360 px (288 px of content at 320 px) small items fall to one column and tiles to two; the browser tests cover 320 px. Three sizes are enough: a module never sets `--canccu-grid-min` itself.
 
 | Size | Min | Phone (358 px) | 1280 px (944 px) | 1920 px (1,584 px) | 2560 px and wider (1,920 px) | Kinds |
 |---|---|---|---|---|---|---|
@@ -75,7 +77,7 @@ Not every list is a grid. **Scenes** stay a ranked list in one column: the first
 
 **Side panels go in bands, never in a column beside a collection.** A column of panels beside a grid grows taller than the grid (the screenshot book's On air, P16: one 1,900 px column) or leaves it short.
 - Above the collection: the page's **crew actions** as one band (one row of buttons on a desk), then its **summary** (a count line, the sound desk's master strip, count tiles) and **filters** (one wrapping row of small fields).
-- Below it: **related panels** (Storyboards and Scenes on On air, Recent on Devices) in `.canccu-band`: a flex row that wraps, each panel at least 22 rem and at most 48 rem wide, a row of panels as tall as its tallest, so a lone panel never stretches across a 1920 px page.
+- Below it: **related panels** (Storyboards and Scenes on On air, Recent on Devices) in `.canccu-band`: a flex row that wraps, each panel at least 22 rem and at most 48 rem wide (two panels share a row from 45 rem: 2 × 22 rem and the 1 rem gap), a row of panels as tall as its tallest, so a lone panel never stretches across a 1920 px page.
 
 ```css
 .canccu-band { display: flex; flex-wrap: wrap; gap: var(--canccu-gap); align-items: stretch; }

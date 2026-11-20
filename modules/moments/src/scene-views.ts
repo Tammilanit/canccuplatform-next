@@ -271,7 +271,7 @@ function editView(s: Scene, zones: readonly string[], revision: number): Html {
     ${field("name", "Name", text("name", s.name))}
     <fieldset class="moments-fieldset">
       <legend class="canccu-field__label">Zones (none ticked: every zone)</legend>
-      <div class="moments-checks">
+      <div class="canccu-grid canccu-grid--small moments-checks">
         ${zones.map((z) => check("zone", z, s.zones.includes(z), z))}
       </div>
     </fieldset>
@@ -320,7 +320,7 @@ function editView(s: Scene, zones: readonly string[], revision: number): Html {
       )}
       ${check("quiet", "yes", t.quiet, "Quiet mode: calm at most, urgent sounds only")}
       <p class="canccu-field__label">The hero skips</p>
-      <div class="moments-checks">
+      <div class="canccu-grid canccu-grid--small moments-checks">
         ${HERO_FEATURES.map((f) => check("hero_off", f, t.hero_off.includes(f), f.replace(/_/g, " ")))}
       </div>
     </fieldset>
@@ -359,7 +359,7 @@ export function scenesPageView(o: {
     : o.done
       ? notice({ kind: "ok", title: o.done })
       : "";
-  const side = html`<section class="canccu-card moments-crew">
+  const side = html`<section class="canccu-card">
     <h2 class="canccu-card__title">Right now</h2>
     ${onAirScenes(o.now, o.scenes, o.timeZone, o.zoneName)}
     ${o.canTake ? crewButtons(o.scenes, o.crew, "scenes") : ""}
@@ -377,13 +377,13 @@ export function scenesPageView(o: {
   const zonePicker = html`<nav class="moments-scopes" aria-label="Zone of the chart">
     ${o.zones.map((z) => html`<a class="canccu-badge${z === o.chartZone ? " canccu-badge--primary" : " canccu-badge--plain"}" href="${PREFIX}scenes?zone=${encodeURIComponent(z)}">${o.zoneName(z)}</a>`)}
   </nav>`;
+  // "Right now" is the page's crew actions: a band above the chart and the list (amendment 3),
+  // never a column beside them, and first on a phone too.
   return html`${flash}
-    <div class="moments-onair">
-      <div class="moments-scenes-page">
-        ${zonePicker} ${bandChart(o.days, o.scenes, o.chartZone)}
-        ${o.edit === null ? "" : editView(o.edit, o.zones, o.revision)}
-        ${listView(o.scenes, o.revision, o.canWrite)}
-      </div>
-      ${side}
+    <div class="canccu-band">${side}</div>
+    <div class="moments-scenes-page">
+      ${zonePicker} ${bandChart(o.days, o.scenes, o.chartZone)}
+      ${o.edit === null ? "" : editView(o.edit, o.zones, o.revision)}
+      ${listView(o.scenes, o.revision, o.canWrite)}
     </div>`;
 }

@@ -1,27 +1,5 @@
 /* The Moments pages (mockups 03, 04, 07, 12, 14, 18): only layout; every look comes from ui.css.
    Priorities, History, the catalogue and the photo picker are in organiser.css. */
-.moments-onair {
-  display: grid;
-  gap: 1rem;
-}
-.moments-zones {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  align-items: start;
-}
-/* The crew remote (mockup 04): on a phone the crew moments come first. */
-@media (max-width: 63.99rem) {
-  .moments-crew {
-    order: -1;
-  }
-}
-@media (min-width: 64rem) {
-  .moments-onair {
-    grid-template-columns: 1fr 18rem;
-    align-items: start;
-  }
-}
 .moments-list {
   list-style: none;
   margin: 0;
@@ -139,6 +117,7 @@
 .moments-bands__row,
 .moments-bands__axis {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: the band chart's label and its day */
   grid-template-columns: 6.5rem 1fr;
   align-items: center;
   gap: 0.5rem;
@@ -210,12 +189,12 @@
 .moments-pair {
   display: grid;
   gap: 0 1rem;
+  /* canccu-grid: fixed form — lays out fields: two fields side by side */
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
+/* A scene's zone and hero-feature checkboxes: small items of .canccu-grid, rows close together. */
 .moments-checks {
-  display: grid;
-  gap: 0 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  row-gap: 0;
 }
 /* The announcement composer (mockup 05): the form, then the preview and the list beside it. */
 .moments-announce {
@@ -225,6 +204,7 @@
 }
 @media (min-width: 64rem) {
   .moments-announce {
+    /* canccu-grid: fixed master-detail — the form and what it shows */
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

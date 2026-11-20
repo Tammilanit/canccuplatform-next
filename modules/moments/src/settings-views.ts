@@ -226,7 +226,11 @@ export function historyView(o: {
             </tbody>
           </table>
         </div>`;
-  return html`<form class="moments-filters" method="get" action="${PREFIX}history">
+  return html`<form
+      class="canccu-grid canccu-grid--small moments-filters"
+      method="get"
+      action="${PREFIX}history"
+    >
       ${select("zone", "Zone", o.zones, o.zoneName)}${select("region", "Region", REGIONS)}${select("origin", "Source", ORIGINS)}${select("action", "Outcome", ACTIONS)}
       <div class="canccu-cluster">
         <button class="canccu-button canccu-button--secondary" type="submit">Filter</button

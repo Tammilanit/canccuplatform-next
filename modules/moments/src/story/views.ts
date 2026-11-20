@@ -95,6 +95,8 @@ export function crewStories(o: {
   back: string;
   timeZone: string;
   settings: Timing;
+  /** The panel's title: the catalogue's band says "Fire a storyboard" (sheet 05). */
+  title?: string;
 }): Html {
   if (!o.canTake) return html``;
   const takes = o.stories.filter((s) => s.enabled && s.triggers.some((t) => t.kind === "take"));
@@ -193,8 +195,8 @@ export function crewStories(o: {
         </span>
       </li>`,
   );
-  return html`<section class="canccu-card moments-crew">
-    <h2 class="canccu-card__title">Storyboards</h2>
+  return html`<section class="canccu-card moments-firepanel">
+    <h2 class="canccu-card__title">${o.title ?? "Storyboards"}</h2>
     ${
       running.length === 0
         ? html`<p class="canccu-small canccu-muted">No loop is running.</p>`

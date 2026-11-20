@@ -37,13 +37,41 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     });
   });
 
-  it("puts crew actions first, then Storyboards, the zones and Scenes, in one grid", async () => {
+  it("puts the crew band first, then the zones' grid, then Storyboards and Scenes in a band (sheet 02)", async () => {
     const page = (await w.call("admin", "GET", "/on-air")).body;
-    const at = (cls: string) => page.indexOf(`moments-onair__${cls}`);
-    expect(at("crew")).toBeGreaterThan(-1);
-    expect(at("crew")).toBeLessThan(at("stories"));
-    expect(at("stories")).toBeLessThan(at("zones"));
-    expect(at("zones")).toBeLessThan(at("scenes"));
+    const at = (s: string) => page.indexOf(s);
+    expect(at("moments-onair__crew")).toBeGreaterThan(-1);
+    expect(at("moments-onair__crew")).toBeLessThan(at("canccu-grid moments-onair__zones"));
+    expect(at("canccu-grid moments-onair__zones")).toBeLessThan(
+      at("canccu-band moments-onair__panels"),
+    );
+    expect(at("canccu-band moments-onair__panels")).toBeLessThan(at("moments-firepanel"));
+    expect(at("moments-firepanel")).toBeLessThan(at("moments-onair__scenes"));
+  });
+
+  it("lists the zones in Screen's order, by key, and at most four moments a zone, then +n more", async () => {
+    w.zoneNames.set("bar", "Bar").set("stage", "Stage");
+    await w.tx("demo", async (c) => {
+      await addZone(c, "stage");
+      await addZone(c, "bar");
+    });
+    for (const n of [1, 2, 3, 4, 5, 6]) {
+      await w.call("crew", "POST", "/api/moments/spotlight", {
+        show: "message",
+        title: `Note ${String(n)}`,
+        zones: ["bar"],
+      });
+    }
+    const page = (await w.call("crew", "GET", "/on-air")).body;
+    const names = [
+      ...page.matchAll(/<li class="canccu-card moments-zone">\s*<h2[^>]*>([^<]*)</g),
+    ].map((m) => m[1]);
+    expect(names).toEqual(["Bar", "Entrance", "Main hall", "Stage"]);
+    const bar = page.slice(page.indexOf(">Bar</h2>"), page.indexOf(">Entrance</h2>"));
+    expect(bar.match(/class="moments-item /g)).toHaveLength(6);
+    const shown = bar.slice(0, bar.indexOf("moments-more"));
+    expect(shown.match(/class="moments-item /g)).toHaveLength(4);
+    expect(bar).toMatch(/<summary class="canccu-small">\+2 more<\/summary>/);
   });
 
   it("draws a zone by its name and a moment without its rank", async () => {

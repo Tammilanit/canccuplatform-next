@@ -4,6 +4,7 @@
 /* Chip rows: the label in one column, the chips wrapping beside it (sheet 05, 2; sheet 06, 2). */
 .moments-chiprow {
   display: grid;
+  /* canccu-grid: fixed form — lays out fields: a chip row's label and chips */
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 0.5rem 1rem;
   align-items: start;
@@ -90,6 +91,7 @@
 /* Fields on a grid: two even columns, the label above each (sheet 05, 6). */
 .moments-grid {
   display: grid;
+  /* canccu-grid: fixed form — lays out fields: the step form's two field columns */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.875rem 1rem;
   align-items: start;
@@ -218,6 +220,7 @@
 
 @media (max-width: 40rem) {
   .moments-chiprow {
+    /* canccu-grid: fixed form — lays out fields: a chip row */
     grid-template-columns: minmax(0, 1fr);
   }
   .moments-chiprow__label {
@@ -226,6 +229,7 @@
     align-items: baseline;
   }
   .moments-grid {
+    /* canccu-grid: fixed form — lays out fields: the step form */
     grid-template-columns: minmax(0, 1fr);
   }
   .moments-inline .canccu-input {

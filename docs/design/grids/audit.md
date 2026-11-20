@@ -123,15 +123,15 @@ Every `grid-template-columns` in the organiser and screen CSS on main at `9f02c3
 | 109 | `packages/ui/ui.css:739` | Admin → Settings; Devices' Recent | `.canccu-history li` | a history line's time and text | `5.5rem minmax(0, 1fr)` | Keep: row |
 | 110 | `packages/ui/ui.css:831` | Lists with a glance, phone | `.canccu-list__row:has(> .canccu-list__end > .canccu-list_…` (@media (max-width: 40rem)) | a list row's parts | `auto minmax(0, 1fr) auto` | Keep: row |
 | 111 | `packages/ui/ui.css:1057` | Every label and value list | `.canccu-dl` | label and value | `7.5rem 1fr` | Keep: row |
-| 112 | `packages/ui/ui.css:1081` | Admin → Health | `.canccu-stats` | the count tiles | `repeat(auto-fit, minmax(8rem, 1fr))` | Rule: small (auto-fit → auto-fill: four tiles keep their width; two by two on a phone) |
+| 112 | `packages/ui/ui.css:1081` | Admin → Health | `.canccu-stats` | the count tiles | `repeat(auto-fit, minmax(8rem, 1fr))` | Rule: small (auto-fit → auto-fill: four tiles keep their width; two by two on a phone, one column under 360 px; `.canccu-stats` shares `.canccu-grid--small`'s selectors) |
 | 113 | `packages/ui/ui.css:1586` | Front door: sign-in, check-in | `.canccu-front` | the poster beside the form | `minmax(0, 1fr) 27rem` | Keep: shell |
 | 114 | `packages/ui/ui.css:1664` | Front door under 1100 px | `.canccu-front` (@media (max-width: 1099.98px)) | one column | `minmax(0, 1fr)` | Keep: shell |
 | 115 | `screen/player/src/widgets.css:53` | Screen: a crew spotlight | `(grid-template)` | the photo beside the name and zone | `auto minmax(0, 1fr)` | Keep: screen |
 | 116 | `screen/player/src/screen.ts:104` | Screen: every layout | `(set from the layout)` | the layout's regions | `the theme layout's columns` | Keep: screen — from the theme's layout (contracts/theme.schema.json) |
 | 117 | `screen/studio-layout.js:17` | Screen studio → Zones and layouts | `(set from the layout)` | the layout map and gallery boxes | `repeat(columns, minmax(0, 1fr))` | Keep: screen |
 | 118 | `packages/ui/ui.css:203` | Shell | `(grid-template) .canccu-shell` | menu and content | `16rem minmax(0, 1fr)` | Keep: shell |
-| 119 | `packages/ui/ui.css:450` | Shell under 1100 px | `(grid-template) .canccu-shell` | one column | `minmax(0, 1fr)` | Keep: shell |
-| 120 | `packages/ui/ui.css:466` | Shell on a phone | `(grid-template) .canccu-shell` | one column and the bar | `minmax(0, 1fr)` | Keep: shell |
+| 119 | `packages/ui/ui.css:450` | Shell without a menu, at 1100 px and wider | `(grid-template) .canccu-shell--bare` | one column | `minmax(0, 1fr)` | Keep: shell |
+| 120 | `packages/ui/ui.css:466` | Shell under 1100 px | `(grid-template) .canccu-shell` | one column and the bar | `minmax(0, 1fr)` | Keep: shell |
 
 **Not grids.** Several pages lay collections out with flex or a list, not with grid columns, and are left as they are: the Scenes page's ranked list (`.moments-scenes`), the cue list's rows (row 27 is its table), admin's People table, the run of show's day list. Amendment 3 says why scenes, cues and people stay lists or tables.
 

@@ -119,6 +119,7 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
       return page(request, reply, deps, {
         title: "Storyboards",
         tab: "storyboards",
+        wide: true,
         description:
           "Sequences for the peaks, as data: triggers, rounds, a finale, a cue per step.",
         body: pickerView({
@@ -156,6 +157,7 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     return page(request, reply, deps, {
       title: story.name,
       tab: "storyboards",
+      wide: true,
       crumb: { href: `${PREFIX}storyboards`, label: "Storyboards" },
       description: head.description,
       actions: head.actions,

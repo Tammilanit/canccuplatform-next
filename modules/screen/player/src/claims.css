@@ -208,6 +208,7 @@
   /* The hot game (mockup 04 c): its cover at the left, the game and its numbers beside it. */
   .canccu-region > .canccu-widget--hot_game {
     display: grid;
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: its cover and text */
     grid-template-columns: auto 1fr;
     align-content: center;
     column-gap: calc(4 * var(--canccu-u));

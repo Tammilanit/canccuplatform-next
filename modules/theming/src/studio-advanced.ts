@@ -88,7 +88,7 @@ function tokensForm(draft: DraftRow): Html {
     html`<form class="canccu-studio-form" data-action="tokens">
       <fieldset class="canccu-studio-tokens">
         <legend>Colours</legend>
-        <div class="canccu-studio-colours">${colours}</div>
+        <div class="canccu-grid canccu-grid--small canccu-studio-colours">${colours}</div>
       </fieldset>
       ${fieldsets}
       <div class="canccu-field">

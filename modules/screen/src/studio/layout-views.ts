@@ -71,7 +71,7 @@ export function layoutGallery(
   return html`<section class="canccu-card">
     <h2 class="canccu-card__title">${t("layout.title")}</h2>
     <p class="canccu-card__desc">${t("layout.desc")}</p>
-    <div class="canccu-studio-laypick">
+    <div class="canccu-grid canccu-grid--tile canccu-studio-laypick">
       ${layouts.map(
         (l) =>
           html`<a

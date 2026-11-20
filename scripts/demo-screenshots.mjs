@@ -56,6 +56,11 @@ import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 import { momentsListed, momentsShots } from "./demo-screenshots-moments.mjs";
 import { announceListed, announceShots } from "./demo-screenshots-announce.mjs";
 import { storiesListed, storiesShots } from "./demo-screenshots-stories.mjs";
+import { gridsListed, gridsShots } from "./demo-screenshots-grids.mjs";
+import {
+  DEVICE_PAGES,
+  devicesShots,
+} from "../modules/screen/test/stack/devices-shots.mjs";
 import {
   AGENDA_DOWN,
   CHECK_IN,
@@ -126,7 +131,12 @@ if (opts["dry-run"]) {
     ...themingListed(at),
     ...agendaListed(at),
     ...(want("moments")
-      ? [...momentsListed(at), ...announceListed(at), ...storiesListed(at)]
+      ? [
+          ...momentsListed(at),
+          ...announceListed(at),
+          ...storiesListed(at),
+          ...gridsListed(at),
+        ]
       : []),
   ];
   for (const name of want("screens") ? planned(opts.check) : []) {
@@ -140,6 +150,7 @@ if (opts["dry-run"]) {
     [LAYOUT_PAGES, "the box editor, unsaved"],
     [EDITOR_PAGES, "the editors' refusals, focus and a missing layout"],
     [SCHEDULE_PAGES, "on windows made for it"],
+    [DEVICE_PAGES, "on screens paired for it"],
   ];
   for (const [list, how] of studioLists)
     for (const [name, path, { width, height }] of studio(list))
@@ -273,6 +284,7 @@ try {
     } catch (err) {
       fail(`studio: ${firstLine(err)}`);
     }
+    await devicesShots(run);
   }
   if (want("moments")) {
     // Studio → Moments, on the fixture's zones; it ends every moment it starts.
@@ -280,6 +292,7 @@ try {
     // Run the event → Announcements (#115), after them: it hides the entrance's rail a while.
     await announceShots(run);
     await storiesShots(run);
+    await gridsShots(run);
   }
 } finally {
   await browser.close();

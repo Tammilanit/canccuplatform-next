@@ -113,5 +113,5 @@ export function liveView(
   });
   return zones.length === 0
     ? emptyState({ icon: "monitor", title: t("live.empty_title"), text: t("live.empty_text") })
-    : html`<div class="canccu-studio-grid">${cards}</div>`;
+    : html`<div class="canccu-grid canccu-studio-grid">${cards}</div>`;
 }

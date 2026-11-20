@@ -110,6 +110,7 @@
 }
 .moments-storychecks__item {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: a check's icon and sentence */
   grid-template-columns: 1.125rem minmax(0, 1fr);
   gap: 0.5rem;
   align-items: start;

@@ -3,6 +3,7 @@
 @layer canccu-module {
   /* A confirm's facts: the shared card with label and value rows (sheet 5). */
   .canccu-agenda-preview .canccu-dl,
+  /* canccu-grid: fixed row — lays out one item's own parts: label and value */
   .canccu-agenda-variant .canccu-dl { grid-template-columns: 6.5rem minmax(0, 1fr); }
   .canccu-agenda-confirm { display: grid; gap: 1rem; }
   .canccu-agenda-confirm .canccu-card__title { margin: 0; }

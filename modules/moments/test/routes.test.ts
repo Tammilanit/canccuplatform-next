@@ -8,6 +8,7 @@ import type pg from "pg";
 import { ServiceIdentity } from "@canccu/kit";
 import { DEFAULT_ORDER } from "../src/arbiter.js";
 import { applyClaims } from "../src/placements.js";
+import { addZone } from "../src/store.js";
 import { DATABASE_URL, claims, freshDatabase } from "./helpers.js";
 import { SERVICE_KEY, SUPERADMIN_HOST, appWorld, errorOf, idOf, json } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -385,7 +386,11 @@ run("the moments API", () => {
       show: "message",
       title: "Placed",
     });
-    await w.tx("demo", (c) => applyClaims(c, claims("main", [[idOf(spot), "hero"]]), w.now));
+    // Screen saves a zone before it reports on it: a report alone adds no zone (#642).
+    await w.tx("demo", async (c) => {
+      await addZone(c, "main");
+      await applyClaims(c, claims("main", [[idOf(spot), "hero"]]), w.now);
+    });
     const list = json(await w.call("reader", "GET", "/api/moments/moments"));
     expect(list.zones).toEqual(["main"]);
     expect((list.moments as unknown[])[0]).toMatchObject({

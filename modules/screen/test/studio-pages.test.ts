@@ -319,6 +319,19 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(body).toContain('<script type="module" src="/admin/screen/static/studio-ends.js">');
   });
 
+  it("draws only the collection, board and editor pages wide (amendment 3); the rest keep 64rem", async () => {
+    const wide = async (path: string) => {
+      const res = await page(path, "admin");
+      expect(res.statusCode, path).toBe(200);
+      return res.body.includes("canccu-main--wide");
+    };
+    for (const tab of ["live", "devices", "zones", "zones/main", "schedule", "content"]) {
+      expect(await wide(`/admin/screen/${tab}`), tab).toBe(true);
+    }
+    for (const tab of ["ticker", "pins"])
+      expect(await wide(`/admin/screen/${tab}`), tab).toBe(false);
+  });
+
   it("stays in English when admin cannot say the event's language", async () => {
     h.adminSettings.alpha = { language: "fi" };
     const res = await page("/admin/screen/live", "admin");

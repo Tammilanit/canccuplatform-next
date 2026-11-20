@@ -10,6 +10,7 @@
 }
 .moments-limits {
   display: grid;
+  /* canccu-grid: fixed form — a few fields that share the row */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   align-items: end;
   gap: 1rem 1.5rem;
@@ -18,6 +19,7 @@
 .moments-zonehead,
 .moments-zonerow {
   display: grid;
+  /* canccu-grid: fixed table — keeps its columns in line across rows: the per-zone table */
   grid-template-columns: minmax(0, 0.8fr) repeat(2, minmax(0, 1.2fr)) repeat(2, minmax(0, 1.3fr));
   align-items: center;
   gap: 0.75rem;
@@ -37,11 +39,13 @@
 .moments-categoryhead,
 .moments-category {
   display: grid;
+  /* canccu-grid: fixed table — keeps its columns in line across rows: the categories table */
   grid-template-columns: 9rem minmax(0, 1.6fr) auto auto 3rem;
   align-items: center;
   gap: 0.75rem 1rem;
 }
 .moments-category .moments-slider {
+  /* canccu-grid: fixed row — lays out one item's own parts: a category's slider and value */
   grid-template-columns: minmax(0, 1fr) 3.5rem;
   margin: 0;
 }
@@ -54,6 +58,7 @@
 .moments-loghead,
 .moments-logrow {
   display: grid;
+  /* canccu-grid: fixed table — keeps its columns in line across rows: the log's head and rows */
   grid-template-columns: 5.5rem 6.5rem minmax(0, 1.1fr) minmax(0, 2fr);
   gap: 0.75rem;
 }
@@ -64,6 +69,7 @@
 }
 .moments-logrow__what {
   display: grid;
+  /* canccu-grid: fixed row — lays out one item's own parts: what happened and its code */
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0 0.5rem;
   align-items: start;
@@ -125,6 +131,7 @@
 }
 @media (min-width: 64rem) {
   .moments-editor__grid {
+    /* canccu-grid: fixed form — one editor in two halves */
     grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   }
 }
@@ -152,6 +159,7 @@
 /* The small live preview: six screens, the cue's box in the middle plays the chosen effect. */
 .moments-mini {
   display: grid;
+  /* canccu-grid: fixed screen — the dashboard's six boxes */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.375rem;
   margin: 0.75rem 0;
@@ -235,55 +243,6 @@
   }
 }
 
-/* Menus: a details list that opens below its button. */
-.moments-menu {
-  position: relative;
-}
-.moments-menu > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.moments-menu > summary::-webkit-details-marker {
-  display: none;
-}
-.moments-menu__list {
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  right: 0;
-  z-index: 5;
-  display: grid;
-  min-width: 10rem;
-  padding: 0.25rem;
-  border: var(--canccu-border-width) solid var(--canccu-color-border);
-  border-radius: var(--canccu-radius);
-  background: var(--canccu-color-surface);
-  box-shadow: var(--canccu-shadow);
-}
-.moments-menu__list form {
-  margin: 0;
-}
-.moments-menu__item {
-  width: 100%;
-  min-height: 2.5rem;
-  padding: 0 0.75rem;
-  border: 0;
-  border-radius: calc(var(--canccu-radius) - 2px);
-  background: transparent;
-  color: var(--canccu-color-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.moments-menu__item:hover,
-.moments-menu__item:focus-visible {
-  background: var(--canccu-tint);
-}
-.moments-menu__more {
-  padding: 0 0.5rem;
-  color: var(--canccu-ink-muted);
-  font-size: var(--canccu-text-lg);
-}
-
 /* A phone (sheet 04): lists become cards; only what a finger needs stays on the row. */
 @media (max-width: 40rem) {
   .moments-cuehead,
@@ -300,6 +259,7 @@
     margin-left: 0;
   }
   .moments-cue {
+    /* canccu-grid: fixed row — lays out one item's own parts: a cue row */
     grid-template-columns: 2.5rem minmax(0, 1fr) auto;
     margin-bottom: 0.5rem;
     padding: 0.625rem;
@@ -312,6 +272,7 @@
     display: none;
   }
   .moments-zonerow {
+    /* canccu-grid: fixed row — lays out one item's own parts: a zone row */
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .moments-zonerow__name,
@@ -320,6 +281,7 @@
     grid-column: 1 / -1;
   }
   .moments-category {
+    /* canccu-grid: fixed row — lays out one item's own parts: a category row */
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
   }
@@ -332,6 +294,7 @@
     grid-row: 1;
   }
   .moments-logrow {
+    /* canccu-grid: fixed row — lays out one item's own parts: a log row */
     grid-template-columns: auto minmax(0, 1fr);
     gap: 0.25rem 0.75rem;
   }
@@ -346,6 +309,7 @@
     font-size: var(--canccu-text-xs);
   }
   .moments-player {
+    /* canccu-grid: fixed row — lays out one item's own parts: the themed player */
     grid-template-columns: auto minmax(0, 1fr) auto auto;
   }
   .moments-player .moments-wave {
@@ -357,6 +321,7 @@
   }
   .moments-sound .moments-player,
   .moments-chosen .moments-player {
+    /* canccu-grid: fixed row — lays out one item's own parts: the player in a sound card */
     grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   }
 }

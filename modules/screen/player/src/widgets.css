@@ -50,6 +50,7 @@
   @container (aspect-ratio < 1) {
     .canccu-region[data-role="header"] > .canccu-widget--logo {
       display: grid;
+      /* canccu-grid: fixed screen — the player's or a layout's own grid: the photo beside the name and zone */
       grid-template: "image name" auto "image zone" auto / auto minmax(0, 1fr);
       align-content: center;
       row-gap: calc(0.6 * var(--canccu-u));

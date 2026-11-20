@@ -151,6 +151,9 @@ export interface PageOptions {
   script?: boolean;
   /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
   style?: string;
+  /** A collection, a board or a master–detail editor (amendment 3): up to 120rem of content;
+   * other pages keep the 64rem default. */
+  wide?: boolean;
 }
 
 export async function studioPage(
@@ -189,7 +192,7 @@ export async function studioPage(
     ...(o.description === undefined ? {} : { description: o.description }),
     ...(o.crumb === undefined ? {} : { crumb: o.crumb }),
     ...(o.actions === undefined ? {} : { actions: o.actions }),
-    width: "wide",
+    ...(o.wide === true ? { width: "wide" as const } : {}),
     ...(o.tab === undefined
       ? {}
       : {

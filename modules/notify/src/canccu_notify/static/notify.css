@@ -12,12 +12,14 @@
   }
   .canccu-notify-condition {
     display: grid;
+    /* canccu-grid: fixed form — lays out fields: a condition, phone */
     grid-template-columns: 1fr;
     gap: 0.25rem;
     padding: 0.5rem 0;
     border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
   }
   @media (min-width: 36rem) {
+    /* canccu-grid: fixed form — lays out fields: a condition's three fields */
     .canccu-notify-condition { grid-template-columns: 2fr 1.5fr 2fr; }
   }
   .canccu-notify-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -28,6 +30,7 @@
   .canccu-checkin__rows { display: grid; gap: 0.75rem; text-align: left; }
   .canccu-checkin__row {
     display: grid;
+    /* canccu-grid: fixed row — lays out one item's own parts: an arrival's icon and name */
     grid-template-columns: auto 1fr;
     gap: 0.75rem;
     align-items: start;

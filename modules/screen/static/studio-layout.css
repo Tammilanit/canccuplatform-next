@@ -29,13 +29,7 @@
   color: var(--canccu-on-primary);
 }
 
-.canccu-studio-laypick {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-  gap: 0.75rem;
-}
-
-/* Rows at the top: an item stretched by a taller neighbour (one with a note) would stretch its
+/* The layout gallery: thumbnails, the tile size of .canccu-grid (amendment 3). Rows at the top: an item stretched by a taller neighbour (one with a note) would stretch its
    thumbnail's row, and a 16:9 thumbnail grows as wide as it is then tall. */
 .canccu-studio-laypick__item {
   display: grid;

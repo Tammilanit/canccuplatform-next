@@ -307,7 +307,7 @@ export function coloursDetails(
           </ul>`
         : ""
     }
-    <ul class="canccu-studio-swatches">
+    <ul class="canccu-grid canccu-grid--small canccu-studio-swatches">
       ${swatches}
     </ul>
   </details>`;
