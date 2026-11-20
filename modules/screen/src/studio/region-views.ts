@@ -38,7 +38,7 @@ export const WIDGETS = [
   "today_numbers",
 ] as const;
 
-/** The seconds a widget shows: its own, else the region's, else the layout's default. */
+/** A widget's own seconds, or undefined: the caller falls back to the region's. */
 const ownDwell = (entry: Entry): number | undefined => {
   const seconds = (entry.props as Entry | undefined)?.dwell_seconds;
   return typeof seconds === "number" ? seconds : undefined;

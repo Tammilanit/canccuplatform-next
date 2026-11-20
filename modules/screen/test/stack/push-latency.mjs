@@ -2,6 +2,7 @@
 // screen into the demo event's `main` zone, opens its stream, then times 20 ticker changes from
 // the start of the PUT to the `ticker` message on the stream, and fails unless the p95 is under
 // one second. scripts/demo-stack-test runs it inside the screen container (client.mjs says why).
+import { cleanUp } from "./cleanup.mjs";
 import { DEMO_HOST, event, tickerIs } from "./client.mjs";
 import { percentile } from "./measure.mjs";
 
@@ -18,6 +19,7 @@ const demo = event(DEMO_HOST);
 const screen = await demo.pair("Push latency check", "main");
 const sse = demo.stream(screen.cookie);
 const times = [];
+let threw = false;
 try {
   await sse.opened;
   await sse.next((f) => f.event === "state");
@@ -42,10 +44,18 @@ try {
     times.push(performance.now() - started);
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
+} catch (err) {
+  threw = true;
+  throw err;
 } finally {
   sse.close();
-  await demo.call("DELETE", "/api/screen/ticker").catch(() => undefined);
-  await demo.revoke(screen.id);
+  await cleanUp(
+    [
+      () => demo.call("DELETE", "/api/screen/ticker").catch(() => undefined),
+      () => demo.revoke(screen.id),
+    ],
+    threw,
+  );
 }
 
 const p95 = percentile(times, 0.95);

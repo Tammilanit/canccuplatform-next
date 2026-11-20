@@ -16,6 +16,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { chromium } from "playwright-core";
+import { cleanUp } from "./cleanup.mjs";
 import { DEMO_HOST, SCREEN, event } from "./client.mjs";
 import { report, soakVerdict } from "./measure.mjs";
 import { retrying, stopReason } from "./retry.mjs";
@@ -138,8 +139,14 @@ try {
   stopped = err;
 } finally {
   await browser.close().catch(() => undefined);
-  await demo.call("DELETE", "/api/screen/ticker").catch(() => undefined);
-  await demo.revoke(device.id);
+  // A failed revoke must not replace the run's own error, which the verdict below reports.
+  await cleanUp(
+    [
+      () => demo.call("DELETE", "/api/screen/ticker").catch(() => undefined),
+      () => demo.revoke(device.id),
+    ],
+    stopped !== undefined,
+  );
 }
 
 const verdict = soakVerdict(samples, budget);

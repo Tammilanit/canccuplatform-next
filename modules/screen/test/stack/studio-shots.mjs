@@ -294,14 +294,17 @@ async function studioReady(page) {
   await page.waitForTimeout(1500);
 }
 
-/** A paired screen playing in its own browser context, at its own size. */
-async function play(browser, at, cookieOn, device, viewport) {
+/**
+ * A paired screen playing in its own browser context, at its own size. The context goes into
+ * `contexts` as soon as it exists, so the run's cleanup closes it also when a wait here fails.
+ */
+async function play(browser, contexts, at, cookieOn, device, viewport) {
   const context = await browser.newContext({ viewport });
+  contexts.push(context);
   await context.addCookies([cookieOn(device.cookie)]);
   const page = await context.newPage();
   await page.goto(at("/screen/"));
   await page.waitForSelector(".canccu-layout", { timeout: 30_000 });
-  return context;
 }
 
 /** Until each device's heartbeat has reported its viewport (contracts/screen.md, Device health). */
@@ -336,8 +339,8 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     // The hall screen plays the main zone's sound (contracts/screen.md, Zones); revoking it at the
     // end clears the zone's sound device again.
     await saveZone(demo, "main", { sound: { enabled: true, device_id: hall.id } });
-    contexts.push(await play(browser, at, cookieOn, hall, { width: 1920, height: 1080 }));
-    contexts.push(await play(browser, at, cookieOn, entrance, { width: 1080, height: 1920 }));
+    await play(browser, contexts, at, cookieOn, hall, { width: 1920, height: 1080 });
+    await play(browser, contexts, at, cookieOn, entrance, { width: 1080, height: 1920 });
     await reported(demo, [hall.id, entrance.id]);
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });

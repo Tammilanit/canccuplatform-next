@@ -21,6 +21,17 @@ export const PAGES_TO_CHECK = [
   ["screen-first-view", "/screen/", { width: 1920, height: 1080 }],
 ];
 
+/**
+ * Why a page's answer is not the page itself, or null when it is: an error page (401, 404, 502)
+ * or the sign-in page a rejected session is sent on to (which answers 200) would pass axe clean.
+ */
+export function reached(res) {
+  if (!res) return "answered nothing";
+  if (res.status() < 200 || res.status() >= 300) return `answered HTTP ${res.status()}`;
+  if (res.request().redirectedFrom()) return `was sent on to ${new URL(res.url()).pathname}`;
+  return null;
+}
+
 export const failing = (results) =>
   results.filter((r) => r.error || r.violations.some((v) => FAILS.includes(v.impact)));
 
@@ -62,7 +73,8 @@ async function main() {
     await context.addCookies([cookieOn(SESSION)]);
     const page = await context.newPage();
     try {
-      await page.goto(at(path), { waitUntil: "load", timeout: 30_000 });
+      const why = reached(await page.goto(at(path), { waitUntil: "load", timeout: 30_000 }));
+      if (why !== null) throw new Error(why);
       await page.waitForTimeout(500);
       await page.addScriptTag({ path: axe });
       const { violations } = await page.evaluate(

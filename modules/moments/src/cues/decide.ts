@@ -185,6 +185,9 @@ export function decide(i: DecideInput): Decision {
       `sounded ${ago(now - last)} ago (waits ${ago(cue.cooldown_seconds * 1000)})`,
     );
   }
+  // Still waiting, it starts soon: a second one would play right after it, inside the cooldown.
+  if (cue.cooldown_seconds > 0 && i.zone.queue.some((q) => q.play.cue === cue.name))
+    return no("cooldown", "one waits in the queue");
   if (i.emergency && !urgent) return no("emergency");
   const held = i.zone.playing !== null && now < i.zone.playing.until_ms ? i.zone.playing : null;
   if (held?.cue === VIDEO_CUE && !urgent) return no("video", "held while a video plays");

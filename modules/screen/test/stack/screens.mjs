@@ -248,7 +248,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
      * The surge's strip: the stage before the tint (the state as the server had it a moment
      * earlier), while it holds with the game's art, and after it ended on the screen's own clock.
      */
-    async function surgeStrip(page, theme, view, size, close) {
+    async function surgeStrip(page, theme, view, size, close, race) {
       await page.waitForSelector(".canccu-stage--art");
       await page.waitForTimeout(STAGE_FADE_MS + 200);
       await playing(nameOf(theme, `${view}-during`, size), page);
@@ -258,6 +258,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await page.waitForTimeout(STAGE_FADE_MS + 200);
       await playing(nameOf(theme, `${view}-after`, size), page);
       await close();
+      if (race.lost) return;
       // Before: the same stage at the same level, no box asking yet.
       await handed(theme, `${view}-before`, size, withStage("lively", false));
     }
@@ -277,11 +278,20 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       }
       await holdStream(page);
       const { unhanded, close: closeView } = await handStates(page, close, change);
-      await Promise.race([shown(theme, view, size, page, closeView), unhanded]);
+      // When `unhanded` wins, `shown` runs on: `race.lost` keeps it from opening another page
+      // after the run's cleanup closed every page (stage-surge's "-before").
+      const race = { lost: false };
+      await Promise.race([
+        shown(theme, view, size, page, closeView, race),
+        unhanded.catch((err) => {
+          race.lost = true;
+          throw err;
+        }),
+      ]);
     }
 
     /** The handed page drawing `view`, checked, and its shots. */
-    async function shown(theme, view, size, page, close) {
+    async function shown(theme, view, size, page, close, race) {
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
@@ -302,7 +312,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await tickerFitted(page, theme !== "level-up");
       } else if (view === "ambient-takeover") await emergencyIsRed(page, "_full");
       else if (view === "claim-hero-emergency") await emergencyIsRed(page, "hero");
-      else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
+      else if (view === "stage-surge")
+        return await surgeStrip(page, theme, view, size, close, race);
       else if (view.startsWith("director-") || view === "choreographer") {
         await settle(page);
         await directorStrip(page, view, (f) => shot(`${nameOf(theme, view, size)}-${f}`, page));

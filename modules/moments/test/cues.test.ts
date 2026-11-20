@@ -238,7 +238,9 @@ live("cues", () => {
     expect((await log()).at(-1)).toMatchObject({ cue: "pizza.placed", outcome: "queued" });
     await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(5)));
     expect((await log()).at(-1)).toMatchObject({ cue: "pizza.placed", reason: "stale" });
-    const { rows } = await pool.query(`SELECT 1 FROM moments_sound_sources`);
+    const { rows } = await pool.query(
+      `SELECT 1 FROM moments_sound_sources WHERE cue = 'pizza.placed'`,
+    );
     expect(rows).toEqual([]);
   });
 

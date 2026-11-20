@@ -45,7 +45,7 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
   const deliver = (e: Event, o: object = {}) =>
     w.tx(e.tenant ?? "demo", () => handleTenantEvent(deps(o), e));
   const rows = async (sql: string, tenant = "demo") =>
-    (await w.tx(tenant, (c) => c.query(sql, []))).rows as Record<string, unknown>[];
+    (await w.tx(tenant, (c) => c.query(sql, []))).rows;
   const crewMoment = (ttl = 600) =>
     w.tx("demo", (c) =>
       w.engine.request(
@@ -126,9 +126,7 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
     await deliver(
       event("screen.claims.changed", claims("main", [[`${r.moment.id}.main`, "hero"]])),
     );
-    expect(await rows(`SELECT zone_key FROM moments_claims_marks`)).toEqual([
-      { zone_key: "main" },
-    ]);
+    expect(await rows(`SELECT zone_key FROM moments_claims_marks`)).toEqual([{ zone_key: "main" }]);
     await deliver(event("screen.zone.removed", { zone_key: "main" }));
     expect(await rows(`SELECT zone_key FROM moments_claims_marks`)).toEqual([]);
   });
@@ -184,7 +182,7 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
           origin: "crew",
           why: "test",
           // Beside the run's own title card, which owns the happening too.
-          happening: run.facts["@happening"],
+          happening: run.facts["@happening"] ?? null,
           happening_run: run.id,
         },
         w.at(5),
@@ -230,21 +228,18 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
       );
     const rule = (o: object) =>
       w.tx("demo", (c) =>
-        c.query(
-          `INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('pizza', $1, 1)`,
-          [
-            {
-              enabled: true,
-              template: "pizza_placed",
-              class: "announcement",
-              regions: ["rail", "ticker"],
-              ttl_seconds: TTL,
-              zones: [],
-              cue: "pizza.placed",
-              ...o,
-            },
-          ],
-        ),
+        c.query(`INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('pizza', $1, 1)`, [
+          {
+            enabled: true,
+            template: "pizza_placed",
+            class: "announcement",
+            regions: ["rail", "ticker"],
+            ttl_seconds: TTL,
+            zones: [],
+            cue: "pizza.placed",
+            ...o,
+          },
+        ]),
       );
     const tick = (at: Date, engine: Engine = w.engine) =>
       w.tx("demo", (c) => tickTenant(c, engine, at));
@@ -286,9 +281,7 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
         ),
       );
       if (top.status === "refused") throw new Error("refused");
-      await w.tx("demo", (c) =>
-        applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)),
-      );
+      await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
       await keep(pizza());
       await rule({ ttl_seconds: 60 });
       await tick(w.at(1));

@@ -93,7 +93,13 @@ export async function retryRules(c: SqlClient, engine: Engine, now: Date): Promi
       regions: rule.regions,
       ttl_seconds: rule.ttl_seconds,
       zones: rule.zones,
+      cue: rule.cue,
     };
-    await settle(c, r, await engine.request(c, r, now), now, row.give_up_at);
+    // Its TTL after the rule's last ask, as the TTL is now (the stored one came from the old TTL).
+    const ttlMs = (ttl: number | null | undefined) => (ttl ?? DEFAULT_TTL_SECONDS) * 1000;
+    const giveUp = new Date(
+      row.give_up_at.getTime() - ttlMs(old.ttl_seconds) + ttlMs(rule.ttl_seconds),
+    );
+    await settle(c, r, await engine.request(c, r, now), now, giveUp);
   }
 }

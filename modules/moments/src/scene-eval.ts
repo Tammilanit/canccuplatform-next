@@ -122,12 +122,15 @@ function matchOf(s: Scene, f: SceneFacts, items: readonly AgendaItem[]): string 
 const appliesTo = (s: Scene, zone: string): boolean =>
   s.zones.length === 0 || s.zones.includes(zone);
 
+/** Why a zone shows the scene the crew pressed; stored, so the next pass knows it was a press. */
+export const CREW_WHY = "the crew pressed it";
+
 /** The scene of `zone` now, or null while none holds (Screen then follows the day's phase). */
 export function pickScene(
   list: readonly Scene[],
   f: SceneFacts,
   zone: string,
-  current: { key: string; since: number } | null,
+  current: { key: string; since: number; crew?: boolean } | null,
 ): Picked | null {
   const scenes = list.filter((s) => appliesTo(s, zone));
   const crew = f.crew;
@@ -137,7 +140,7 @@ export function pickScene(
     (crew.zones.length === 0 || crew.zones.includes(zone))
   ) {
     const pressed = scenes.find((s) => s.key === crew.scene && crewMinutes(s) !== null);
-    if (pressed !== undefined) return { scene: pressed, crew: true, why: "the crew pressed it" };
+    if (pressed !== undefined) return { scene: pressed, crew: true, why: CREW_WHY };
   }
   const items = zoneItems(f.items, zone);
   let first: Picked | null = null;
@@ -148,7 +151,8 @@ export function pickScene(
       break;
     }
   }
-  if (current !== null && current.key !== first?.scene.key) {
+  // A press holds until its time ends or it is pressed again (E7), never its hold time on top.
+  if (current !== null && current.crew !== true && current.key !== first?.scene.key) {
     const at = scenes.findIndex((s) => s.key === current.key);
     const held = scenes[at];
     const higher = first !== null && scenes.indexOf(first.scene) < at;

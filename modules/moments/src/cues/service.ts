@@ -8,10 +8,12 @@ import type { Outbox, SqlClient } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
 import { FADE_SECONDS } from "./catalog.js";
 import type { Effect } from "./catalog.js";
-import { LEAD_MS, VIDEO_CUE, decide, pickNotLast, pump } from "./decide.js";
+import { LEAD_MS, decide, pickNotLast, pump } from "./decide.js";
 import type { Done, Play } from "./decide.js";
 import { soundKeys } from "./counters.js";
 import type { Counters } from "./counters.js";
+import { moveVideo, planVideo, startVideo } from "./video.js";
+import type { VideoPlan } from "./video.js";
 import type { ScreenClient, ZoneSoundStatus } from "./screen.js";
 import {
   emergencyOn,
@@ -21,6 +23,7 @@ import {
   lockZone,
   oncePlayed,
   queuedZones,
+  forgetOnce,
   rememberOnce,
   saveZone,
   swapEffect,
@@ -134,10 +137,11 @@ export class Cues {
       }
       const emergency = await emergencyOn(c, zone);
       let state = await this.pumped(c, zone, at, settings, emergency, library);
-      const [minute, hour] = await this.deps.counters.get([
-        soundKeys.minute(zone, at),
-        soundKeys.hour(zone, at),
-      ]);
+      // While Valkey does not answer, the flood and budget gates count nothing: the sound, and
+      // the moment it belongs to, go on (#592).
+      const [minute, hour] = await this.deps.counters
+        .get([soundKeys.minute(zone, at), soundKeys.hour(zone, at)])
+        .catch(() => [0, 0]);
       const once =
         cue.once_per_source &&
         t.source !== null &&
@@ -160,8 +164,10 @@ export class Cues {
       state = d.zone;
       await saveZone(c, zone, state);
       if (d.count) {
-        await this.deps.counters.incr(soundKeys.minute(zone, at), soundKeys.ttl.minute);
-        await this.deps.counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour);
+        await this.deps.counters
+          .incr(soundKeys.minute(zone, at), soundKeys.ttl.minute)
+          .catch(() => 0);
+        await this.deps.counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour).catch(() => 0);
       }
       if (d.once && t.source !== null) await rememberOnce(c, zone, cue.name, t.source, now);
       const missed = d.play === undefined ? null : missedOn(status, d.play);
@@ -179,54 +185,19 @@ export class Cues {
     return out;
   }
 
-  /**
-   * A story's video sound (contracts/moments.md, The video step): counted as one sound in the
-   * minute and the hour but never refused by them, muted where the zone's sound is off, muted or
-   * its energy is calm or quiet; while it plays every other non-urgent sound there is held.
-   * Answers the zones where the video plays muted.
-   */
-  async video(
-    c: SqlClient,
-    zones: string[],
-    untilMs: number,
-    source: string,
-    now: Date,
-  ): Promise<string[]> {
-    const settings = await loadSettings(c);
-    const at = now.getTime();
-    const muted: string[] = [];
-    for (const zone of [...(zones.length > 0 ? zones : await this.knownZones(c))].sort()) {
-      const status = await this.status(zone);
-      const off = !settings.enabled
-        ? "master_off"
-        : settings.muted_until !== null && Date.parse(settings.muted_until) > at
-          ? "muted"
-          : status !== null && status.device === null
-            ? "no_sound_screen"
-            : status?.energy === "calm" || status?.energy === "quiet"
-              ? status.energy
-              : null;
-      const log = { at: now, zone_key: zone, cue: VIDEO_CUE, sound: null, source, detail: null };
-      if (off !== null) {
-        muted.push(zone);
-        await writeLog(c, { ...log, outcome: "suppressed", reason: off });
-        continue;
-      }
-      await this.deps.counters.incr(soundKeys.minute(zone, at), soundKeys.ttl.minute);
-      await this.deps.counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour);
-      const state = await lockZone(c, zone);
-      await saveZone(c, zone, {
-        ...state,
-        playing: {
-          id: `video_${source}`,
-          cue: VIDEO_CUE,
-          category: "attention",
-          until_ms: untilMs,
-        },
-      });
-      await writeLog(c, { ...log, outcome: "played", reason: "free" });
-    }
-    return muted;
+  /** A story's video sound, planned before its moment is asked for (cues/video.ts). */
+  videoPlan(c: SqlClient, zones: string[], now: Date): Promise<VideoPlan> {
+    return planVideo(c, this.deps.screen, zones, now);
+  }
+
+  /** The video's moment started: counted and held where it sounds (cues/video.ts). */
+  videoStarted(c: SqlClient, plan: VideoPlan, untilMs: number, source: string, now: Date) {
+    return startVideo(c, this.deps.counters, plan, untilMs, source, now);
+  }
+
+  /** A paused video resumed: its hold moves to its new end (cues/video.ts). */
+  videoMoved(c: SqlClient, zones: string[], untilMs: number, source: string) {
+    return moveVideo(c, zones, untilMs, source);
   }
 
   /** A story step that does not sound on a zone: hidden there, or over the story's cap (SO2). */
@@ -338,6 +309,8 @@ export class Cues {
   }
 
   private async resolved(c: SqlClient, zone: string, d: Done, at: Date, library: LibrarySound[]) {
+    // Remembered when it was queued; let go now, it never played, so its source may sound later.
+    if (d.outcome === "dropped" && d.source !== null) await forgetOnce(c, zone, d.cue, d.source);
     await writeLog(c, {
       at,
       zone_key: zone,

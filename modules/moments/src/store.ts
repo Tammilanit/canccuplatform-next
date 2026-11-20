@@ -194,7 +194,6 @@ export async function dropPlacements(
   );
 }
 
-/** The event's zones, `main` first: every event starts with it (contracts/screen.md, Zones). */
 /** The zones already split off into overrides of their own (`<id>.<zone>`). */
 export async function splitZones(c: SqlClient, momentId: string): Promise<string[]> {
   const { rows } = await c.query(
@@ -204,6 +203,7 @@ export async function splitZones(c: SqlClient, momentId: string): Promise<string
   return rows.map((r) => (r.override_id as string).slice(momentId.length + 1));
 }
 
+/** The event's zones, `main` first: every event starts with it (contracts/screen.md, Zones). */
 export async function knownZones(c: SqlClient): Promise<string[]> {
   const { rows } = await c.query(
     `SELECT zone_key FROM moments_zones ORDER BY zone_key <> 'main', zone_key`,

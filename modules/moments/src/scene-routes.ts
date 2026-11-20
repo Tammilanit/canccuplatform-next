@@ -118,15 +118,20 @@ export function sceneRoutes(app: FastifyInstance, deps: AppDeps): void {
         if (scene === undefined) return failure(404, "not_found", "No such scene.");
         if (crewMinutes(scene) === null)
           return failure(400, "invalid_request", "That scene has no crew button.");
-        const crew = await pressCrew(c, scene, zones as string[], actor.user_id, now);
+        const { crew, before } = await pressCrew(c, scene, zones as string[], actor.user_id, now);
+        // The press it replaced or removed, while it still held.
+        const held = before !== null && before.until > now ? before : null;
         await deps.audit({
           tenant_id: tenantOf(request).tenant_id,
           actor_user_id: actor.user_id,
           action: crew === null ? "moments.scene.released" : "moments.scene.taken",
           target: { type: "scene", id: scene.key },
           changes: {
-            until: { old: null, new: crew?.until.toISOString() ?? null },
-            zones: { old: null, new: zones },
+            until: {
+              old: held?.until.toISOString() ?? null,
+              new: crew?.until.toISOString() ?? null,
+            },
+            zones: { old: held?.zones ?? null, new: zones },
           },
         });
         await evaluateScenes(c, deps.engine.outbox, {

@@ -11,6 +11,7 @@ import type { Engine } from "../engine.js";
 import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
 import { emergencyOn } from "../cues/store.js";
+import type { VideoPlan } from "../cues/video.js";
 import { fillContent } from "./fill.js";
 import type { FillContext } from "./fill.js";
 import { roundCount } from "./model.js";
@@ -165,13 +166,13 @@ async function startSegment(
   const video = seg.kind === "video";
   let zones = run.zones;
   let content = first.content as Record<string, unknown>;
+  let plan: VideoPlan | null = null;
   if (video) {
     zones = (await zonesWithout(ctx.c, run.zones, await quietZones(ctx.c))) ?? [];
     // A test-fire is silent unless the crew chose sound (#114): the film's own sound included.
     const silent = run.test && run.facts["@test_sound"] !== "1";
-    const muted = silent
-      ? zones
-      : ((await ctx.engine.sound?.video(ctx.c, zones, seg.until_ms, run.id, ctx.now)) ?? []);
+    plan = silent ? null : ((await ctx.engine.sound?.videoPlan(ctx.c, zones, ctx.now)) ?? null);
+    const muted = silent ? zones : (plan?.filter((p) => p.off !== null).map((p) => p.zone) ?? []);
     content = {
       ...content,
       started_at: new Date(seg.from_ms).toISOString(),
@@ -216,6 +217,9 @@ async function startSegment(
     );
     return "refused";
   }
+  // Only a video that starts holds and counts its sound.
+  if (plan !== null)
+    await ctx.engine.sound?.videoStarted(ctx.c, plan, seg.until_ms, run.id, ctx.now);
   return r.moment.id;
 }
 
@@ -318,6 +322,8 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
     // The story's later rounds move by the pause too (PV1).
     run.t = new Date(run.t.getTime() + d);
     m.expires_at = new Date(seg.until_ms);
+    // Its sound's hold too, else other sounds play over the video's last part.
+    await ctx.engine.sound?.videoMoved(ctx.c, run.zones, seg.until_ms, run.id);
     m.content = { ...m.content, started_at: new Date(seg.from_ms).toISOString(), paused_at: null };
     await saveMoment(ctx.c, m);
     await ctx.engine.show(ctx.c, m, null, "cleared");

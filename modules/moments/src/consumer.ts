@@ -16,6 +16,7 @@ import { recordSource, refreshBound } from "./sources.js";
 import { addZone } from "./store.js";
 import { storyEvent } from "./story/triggers.js";
 import { archive, noteTenant, zoneRemoved } from "./tick.js";
+import type { SceneTicker } from "./tick.js";
 
 export const TENANT_STREAMS = [
   "screen",
@@ -37,6 +38,8 @@ export interface ConsumerDeps {
   agenda?: AgendaReader;
   /** The event's time zone for the scenes' time conditions; UTC without it. */
   timeZoneOf?: (tenant: string) => Promise<string>;
+  /** The tick's scene pace: an agenda read that failed here is the tick's to read again. */
+  scenes?: SceneTicker;
 }
 
 /** One tenant event, run inside its tenant (the kit's subscribeTenants sets it). */
@@ -60,7 +63,11 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
   // Reads go before the transaction, so none holds it open while another module answers.
   const agenda =
     e.source === "agenda" && typeof e.data.agenda_version === "number" && deps.agenda
-      ? await deps.agenda(e.tenant).catch(() => null)
+      ? await deps.agenda(e.tenant).catch(() => {
+          // Else the old agenda stays until its next edit: the tick reads only what it never read.
+          deps.scenes?.read.delete(e.tenant as string);
+          return null;
+        })
       : null;
   const timeZone = (await deps.timeZoneOf?.(e.tenant)) ?? "UTC";
   await deps.db.tenant(async (c) => {
@@ -75,6 +82,8 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
     } else if (e.type === "screen.photo.added" && typeof e.data.photo_id === "string") {
+      // An archived event is read-only (E10): no sound, no story run.
+      if (await isArchived(c, e.tenant as string)) return;
       // A new photo's sound is a Moments cue (contracts/screen.md, A new photo); Screen draws its pop.
       const id = e.data.photo_id;
       await deps.engine.fireCue(
@@ -176,11 +185,14 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
         [JSON.stringify(s.scenes)],
       );
     }
-    // The stories with their on/off and settings (SD8); never a run or the event's facts.
+    // The stories with their on/off and settings (SD8); never a run or the event's facts. Over
+    // the presets a tick may have copied first (revision 0), as the scenes.
     for (const st of stories) {
       await c.query(
         `INSERT INTO moments_stories (stories, settings, event, revision) VALUES ($1, $2, '{}', 1)
-         ON CONFLICT DO NOTHING`,
+         ON CONFLICT (tenant_id) DO UPDATE SET stories = EXCLUDED.stories,
+           settings = EXCLUDED.settings, revision = EXCLUDED.revision
+         WHERE moments_stories.revision = 0`,
         [JSON.stringify(st.stories), JSON.stringify(st.settings)],
       );
     }
