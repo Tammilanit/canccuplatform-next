@@ -16,39 +16,12 @@ import type { As } from "./policy.js";
 import { facts, orderFor } from "./present.js";
 import { getItem, getOrder, itemsOf, logStep } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { getReceipt, receiptView, receiptsOf } from "./receipts.js";
-import { bad, parsePrice, parseTotal } from "./validate.js";
+import { moneyView } from "./money-view.js";
+import { getReceipt } from "./receipts.js";
+import { InvalidBody, bad, parsePrice, parseTotal } from "./validate.js";
 
 type Params = { id: string };
 type Changes = Record<string, { old: unknown; new: unknown }>;
-
-async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<string, unknown>> {
-  const items = await itemsOf(c, [o.id]);
-  const a = amounts(o, items);
-  return {
-    order_id: o.id,
-    payer: o.payer_user_id === null ? null : { user_id: o.payer_user_id, name: o.payer_name },
-    total_cents: o.total_cents,
-    total_set_at: o.total_set_at?.toISOString() ?? null,
-    total_set_by: o.total_set_by_name === null ? null : { name: o.total_set_by_name },
-    total_receipt_id: o.total_receipt_id,
-    split: o.split,
-    split_effective: a.split,
-    exact_possible: a.exact_possible,
-    estimated: a.estimated,
-    extras_cents: a.extras_cents,
-    settle_to: o.settle_to,
-    total_effective_cents: a.total_cents,
-    people: a.people,
-    receipts: (await receiptsOf(c, o.id)).map(receiptView),
-    prices: items.map((i) => ({
-      item_id: i.id,
-      user_id: i.user_id,
-      label: i.label,
-      price_cents: i.price_cents,
-    })),
-  };
-}
 
 const amountsOf = async (c: SqlClient, o: OrderRow): Promise<Amounts> =>
   amounts(o, await itemsOf(c, [o.id]));
@@ -58,7 +31,7 @@ async function afterChange(
   c: SqlClient,
   deps: AppDeps,
   w: WriteCtx,
-  before: { order: OrderRow; amounts: Amounts },
+  before: { order: OrderRow; amounts: Amounts; as: As },
   changes: Changes,
 ): Promise<OrderRow> {
   const order = (await getOrder(c, before.order.id)) as OrderRow;
@@ -71,6 +44,8 @@ async function afterChange(
     "money_changed",
     {
       fields: Object.keys(changes),
+      // The record flags the crew's money edits after call-in, not the holder entering the total.
+      crew: before.as === "crew",
     },
   );
   if (order.state === "open") return order;
@@ -130,13 +105,13 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.patch<{ Params: Params }>("/api/pizza/orders/:id/money", (request, reply) =>
     write(deps, request, reply, async (c, w) => {
       const b = body(request);
-      const { order } = await forMoney(
+      const { order, as } = await forMoney(
         c,
         w,
         request.params.id,
         b.payer_user_id === undefined ? "money.edit" : "money.payer",
       );
-      const before = { order, amounts: await amountsOf(c, order) };
+      const before = { order, as, amounts: await amountsOf(c, order) };
       const items = await itemsOf(c, [order.id]);
       const changes: Changes = {};
       const sets: string[] = [];
@@ -172,7 +147,8 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         for (const p of b.prices as unknown[]) {
           const e = (p ?? {}) as Record<string, unknown>;
           const item = items.find((i) => i.id === e.item_id);
-          if (item === undefined) bad("prices", "every item_id must be a pizza of this order");
+          if (item === undefined)
+            throw new InvalidBody("prices", "every item_id must be a pizza of this order");
           const price = parsePrice(e.price_cents, "price_cents");
           if (price === item.price_cents) continue;
           await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [
@@ -234,8 +210,8 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
     write(deps, request, reply, async (c, w) => {
       const item = await getItem(c, request.params.id);
       if (item === null) throw notFound("pizza");
-      const { order } = await forMoney(c, w, item.order_id, "money.edit");
-      const before = { order, amounts: await amountsOf(c, order) };
+      const { order, as } = await forMoney(c, w, item.order_id, "money.edit");
+      const before = { order, as, amounts: await amountsOf(c, order) };
       const price = parsePrice(body(request).price_cents, "price_cents");
       const changes: Changes = {};
       if (price !== item.price_cents) {

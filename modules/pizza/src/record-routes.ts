@@ -12,11 +12,14 @@ import type { AppDeps } from "./http.js";
 import { amounts } from "./money.js";
 import { NO_FACTS, authorize } from "./policy.js";
 import { present } from "./present.js";
+import { payDetailsOf } from "./paid.js";
 import { forgetUser } from "./privacy.js";
+import { readerAvailable } from "./reader-key.js";
+import { PROVIDER } from "./reader.js";
 import { buildRecord } from "./record.js";
 import { itemsOf, ordersWhere } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { DAY } from "./time.js";
+import { DAY, dayTurn } from "./time.js";
 import { InvalidBody } from "./validate.js";
 
 type DayQuery = { Querystring: { day?: string } };
@@ -78,13 +81,51 @@ export function recordRoutes(app: FastifyInstance, deps: AppDeps): void {
         c,
         orders.map((o) => o.id),
       );
+      const count = async (sql: string) => {
+        const { rows } = await c.query(sql, []);
+        return new Map((rows as { order_id: string; n: number }[]).map((r) => [r.order_id, r.n]));
+      };
+      // After the call-in the payment system may have the order: pizzas changed by anyone, and
+      // money the crew changed, are what the treasurer checks (the holder entering it is the norm).
+      const edits = await count(
+        `SELECT l.order_id, count(*)::int AS n FROM pizza_order_log l
+           JOIN pizza_orders o ON o.id = l.order_id
+          WHERE o.placed_at IS NOT NULL AND l.at > o.placed_at
+            AND (l.kind IN ('item_changed', 'item_removed')
+                 OR (l.kind = 'money_changed' AND l.detail->>'crew' = 'true'))
+          GROUP BY l.order_id`,
+      );
+      const paid = await count(`SELECT order_id, count(*)::int AS n FROM pizza_paid GROUP BY order_id`);
+      const receipts = await count(
+        `SELECT order_id, count(*)::int AS n FROM pizza_receipts GROUP BY order_id`,
+      );
+      const zone = tenantOf(request).time_zone;
+      const iso = (d: Date | null) => d?.toISOString() ?? null;
       return buildRecord(
-        orders.map((o) => ({
-          ...o,
-          pizzeria: o.pizzeria_name,
-          cancelled_after_placed: o.state === "cancelled" && o.placed_at !== null,
-          rows: items.filter((i) => i.order_id === o.id),
-        })),
+        orders.map((o) => {
+          const rows = items.filter((i) => i.order_id === o.id);
+          return {
+            ...o,
+            pizzeria: o.pizzeria_name,
+            placed_at: iso(o.placed_at),
+            arrived_at: iso(o.arrived_at),
+            done_at: iso(o.done_at),
+            cancelled_after_placed: o.state === "cancelled" && o.placed_at !== null,
+            edits_after_placed: edits.get(o.id) ?? 0,
+            // The timer's done, or the day's turn cancelling an order nobody called in.
+            closed_by_timer:
+              o.done_reason === "timer" ||
+              (o.state === "cancelled" &&
+                o.cancelled_by_user_id === null &&
+                rows.length > 0 &&
+                o.cancelled_at !== null &&
+                o.cancelled_at.getTime() >= dayTurn(o.day, zone).getTime()),
+            total_from_receipt: o.total_receipt_id !== null,
+            paid_count: paid.get(o.id) ?? 0,
+            receipts: receipts.get(o.id) ?? 0,
+            rows,
+          };
+        }),
       );
     });
   });
@@ -182,6 +223,16 @@ export function recordRoutes(app: FastifyInstance, deps: AppDeps): void {
             paid: o.payer_user_id === me,
             total_cents: o.payer_user_id === me ? o.total_cents : null,
           })),
+        pay_details: await payDetailsOf(c, me),
+        paid_marks: (
+          await c.query(`SELECT order_id, at FROM pizza_paid WHERE user_id = $1 ORDER BY at`, [me])
+        ).rows.map((r) => ({
+          order_id: (r as { order_id: string }).order_id,
+          at: (r as { at: Date }).at.toISOString(),
+        })),
+        reader: (await readerAvailable(deps, tenantOf(request).tenant_id))
+          ? { provider: PROVIDER.name, reads: "receipt and menu photos, sent without names" }
+          : null,
         history: (history as { order_id: string; at: Date; kind: string }[]).map((h) => ({
           order_id: h.order_id,
           at: h.at.toISOString(),

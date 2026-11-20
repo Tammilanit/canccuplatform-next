@@ -88,6 +88,7 @@ describe.skipIf(!DATABASE_URL)("the daily record", () => {
     expect(all.flags).toEqual([
       {
         order_id: expect.any(String) as unknown,
+        kind: "no_total",
         text: "2026-10-29 order 2 (Demo Grill): total missing",
       },
     ]);
@@ -142,6 +143,46 @@ describe.skipIf(!DATABASE_URL)("the export", () => {
     expect(flags.map((f) => f.text)).toContain(
       "2026-10-29 order 1 (Demo Pizzeria): cancelled after call-in, remove it in the payment system",
     );
+  });
+});
+
+describe.skipIf(!DATABASE_URL)("the record's flags and an order's money (mockup 12)", () => {
+  const record = async () => json(await w.call("treasurer", "GET", "/api/pizza/record"));
+  const kinds = async () =>
+    ((await record()).flags as { order_id: string; kind: string }[]).map((f) => [f.order_id, f.kind]);
+
+  it("flags pizzas and crew money edits after call-in, never the holder typing the total", async () => {
+    const [one] = await twoDays();
+    expect(await kinds()).not.toContainEqual([one, "edited_after_placed"]);
+    const items = json(await w.call("crew", "GET", `/api/pizza/orders/${must(one)}`)).items as {
+      id: string;
+    }[];
+    await w.call("crew", "PUT", `/api/pizza/items/${must(items[0]).id}/price`, { price_cents: 700 });
+    await w.call("crew", "DELETE", `/api/pizza/items/${must(items[1]).id}`);
+    const flag = ((await record()).flags as { order_id: string; kind: string; text: string }[]).find(
+      (f) => f.kind === "edited_after_placed",
+    );
+    expect(flag).toMatchObject({ order_id: one, text: expect.stringContaining("(2 edits)") });
+  });
+
+  it("flags an order the timer closed", async () => {
+    const [, two] = await twoDays();
+    await w.tx("demo", async (c) => {
+      await c.query(`UPDATE pizza_orders SET state = 'done', done_reason = 'timer', done_at = now() WHERE id = $1`, [two]);
+    });
+    expect(await kinds()).toContainEqual([two, "closed_by_timer"]);
+  });
+
+  it("gives each order its times, where its total came from and its Paid marks", async () => {
+    const [one] = await twoDays();
+    const order = ((await record()).days as { orders: Record<string, unknown>[] }[])[0]?.orders[0];
+    expect(order).toMatchObject({
+      id: one,
+      placed_at: "2026-10-29T16:20:00.000Z",
+      total_from_receipt: false,
+      paid_count: 0,
+      receipts: 0,
+    });
   });
 });
 

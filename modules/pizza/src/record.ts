@@ -20,6 +20,10 @@ export interface RecordOrder {
   auto_released: boolean;
   /** Cancelled once it was called in: the payment system may already have it. */
   cancelled_after_placed: boolean;
+  /** Pizzas changed, or money changed by the crew, after the call-in (the history, D16). */
+  edits_after_placed: number;
+  /** Done by the timer, or cancelled at the day's turn, with nobody's hand on it. */
+  closed_by_timer: boolean;
   rows: {
     user_id: string | null;
     name: string | null;
@@ -46,9 +50,16 @@ export interface RecordDay {
   orders: (Omit<RecordOrder, "rows"> & { split_effective: Split; people: RecordPerson[] })[];
 }
 
+export type FlagKind =
+  | "no_total"
+  | "edited_after_placed"
+  | "released"
+  | "cancelled_after_placed"
+  | "closed_by_timer";
+
 export interface DailyRecord {
   days: RecordDay[];
-  flags: { order_id: string; text: string }[];
+  flags: { order_id: string; kind: FlagKind; text: string }[];
 }
 
 export function buildRecord(orders: RecordOrder[]): DailyRecord {
@@ -80,18 +91,20 @@ export function buildRecord(orders: RecordOrder[]): DailyRecord {
       people: money.people.map((p) => ({ ...p, comments: comments.get(p.user_id) ?? [] })),
     });
     day.order_count++;
-    if (o.cancelled_after_placed) {
-      flags.push({
-        order_id: o.id,
-        text: `${where}: cancelled after call-in, remove it in the payment system`,
-      });
+    const flag = (kind: FlagKind, text: string) =>
+      flags.push({ order_id: o.id, kind, text: `${where}: ${text}` });
+    if (o.cancelled_after_placed)
+      flag("cancelled_after_placed", "cancelled after call-in, remove it in the payment system");
+    if (o.auto_released) flag("released", "released automatically, check the payer");
+    if (o.edits_after_placed > 0) {
+      const n = o.edits_after_placed;
+      flag("edited_after_placed", `edited after call-in (${n} ${n === 1 ? "edit" : "edits"})`);
     }
-    if (o.auto_released)
-      flags.push({ order_id: o.id, text: `${where}: released automatically, check the payer` });
+    if (o.closed_by_timer) flag("closed_by_timer", "closed by the timer, check it");
     if (CALLED_IN.includes(o.state)) {
       if (o.total_cents === null) {
         day.incomplete = true;
-        flags.push({ order_id: o.id, text: `${where}: total missing` });
+        flag("no_total", "total missing");
       } else day.total_cents += o.total_cents;
     }
   }

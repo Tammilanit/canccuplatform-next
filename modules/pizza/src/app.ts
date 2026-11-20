@@ -10,6 +10,7 @@ import { MAX_BYTES } from "./menu-csv.js";
 import { menuRoutes } from "./menu-routes.js";
 import { moneyRoutes } from "./money-routes.js";
 import { orderRoutes } from "./order-routes.js";
+import { paidRoutes } from "./paid.js";
 import { pageRoutes } from "./pages/index.js";
 import { photoBodies } from "./photos.js";
 import { readerKeyRoutes } from "./reader-key.js";
@@ -61,6 +62,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     itemRoutes(event, deps);
     moneyRoutes(event, deps);
     receiptRoutes(event, deps);
+    paidRoutes(event, deps);
     readerRoutes(event, deps);
     readerKeyRoutes(event, deps);
     menuRoutes(event, deps);

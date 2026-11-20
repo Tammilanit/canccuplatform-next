@@ -56,7 +56,7 @@ export async function receiptsOf(c: SqlClient, orderId: string): Promise<Receipt
     `SELECT * FROM pizza_receipts WHERE order_id = $1 ORDER BY added_at, id`,
     [orderId],
   );
-  return rows as ReceiptRow[];
+  return rows as unknown as ReceiptRow[];
 }
 
 export async function getReceipt(c: SqlClient, id: string): Promise<ReceiptRow | null> {
@@ -113,7 +113,7 @@ export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
         [id, order.id, file, type, clean.length, w.now, w.session.userId, w.session.userName],
       );
       await logStep(c, order.id, w.now, { user_id: w.session.userId, name: w.session.userName }, "receipt_added");
-      return ok(receiptView(rows[0] as ReceiptRow), 201);
+      return ok(receiptView(rows[0] as unknown as ReceiptRow), 201);
     }),
   );
 

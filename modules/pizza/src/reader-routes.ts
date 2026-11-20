@@ -78,7 +78,7 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
         JSON.stringify(read),
       ]),
     );
-    return receiptView(rows[0] as ReceiptRow);
+    return receiptView(rows[0] as unknown as ReceiptRow);
   });
 
   app.post<{ Querystring: { pizzeria_id?: string } }>("/api/pizza/menu/read", async (request) => {

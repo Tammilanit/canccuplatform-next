@@ -82,6 +82,12 @@ export async function forgetUser(
      WHERE $1 IN (holder_user_id, payer_user_id, opened_by_user_id, cancelled_by_user_id)`,
     [userId],
   );
+  await c.query(`DELETE FROM pizza_pay_details WHERE user_id = $1`, [userId]);
+  await c.query(`DELETE FROM pizza_paid WHERE user_id = $1`, [userId]);
+  await c.query(
+    `UPDATE pizza_receipts SET added_by_user_id = NULL, added_by_name = NULL WHERE added_by_user_id = $1`,
+    [userId],
+  );
   await c.query(
     `UPDATE pizza_order_log SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
     [userId],

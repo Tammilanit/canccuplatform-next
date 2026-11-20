@@ -17,6 +17,8 @@ const base = {
   settle_to: "organiser" as const,
   auto_released: false,
   cancelled_after_placed: false,
+  edits_after_placed: 0,
+  closed_by_timer: false,
 };
 const orders: RecordOrder[] = [
   {
@@ -91,7 +93,11 @@ describe("buildRecord", () => {
   });
   it("flags a called-in order without its total and leaves cancelled ones out of the total", () => {
     expect(r.flags).toEqual([
-      { order_id: "po_2", text: "2026-10-29 order 2 (Demo Pizzeria): total missing" },
+      {
+        order_id: "po_2",
+        kind: "no_total",
+        text: "2026-10-29 order 2 (Demo Pizzeria): total missing",
+      },
     ]);
   });
   it("flags an order released automatically, and one cancelled after call-in", () => {
@@ -103,5 +109,16 @@ describe("buildRecord", () => {
       "2026-10-29 order 3 (Demo Pizzeria): cancelled after call-in, remove it in the payment system",
       "2026-10-30 order 1 (Demo Pizzeria): released automatically, check the payer",
     ]);
+  });
+  it("flags an order edited after call-in, with the count, and one closed by the timer", () => {
+    const flagged = buildRecord([
+      { ...must(orders[1]), edits_after_placed: 2 },
+      { ...must(orders[3]), closed_by_timer: true },
+    ]);
+    expect(flagged.flags.map((f) => [f.kind, f.text])).toEqual([
+      ["edited_after_placed", "2026-10-29 order 1 (Demo Pizzeria): edited after call-in (2 edits)"],
+      ["closed_by_timer", "2026-10-30 order 1 (Demo Pizzeria): closed by the timer, check it"],
+    ]);
+    expect(flagged.days[0]?.orders[0]?.edits_after_placed).toBe(2);
   });
 });

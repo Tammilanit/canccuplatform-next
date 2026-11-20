@@ -65,7 +65,12 @@ export function orderView(
   items: ItemRow[],
   caller: Caller | null,
   seen: Seen,
-  ctx: { today: string; pizzeria: PizzeriaRow | null },
+  ctx: {
+    today: string;
+    pizzeria: PizzeriaRow | null;
+    /** Who the payer marked paid, and how to pay them, when the order settles to its payer. */
+    settling?: { paid: ReadonlySet<string>; payTo: Record<string, unknown> | null };
+  },
 ): Record<string, unknown> {
   const base: Record<string, unknown> = {
     id: o.id,
@@ -107,6 +112,16 @@ export function orderView(
     mine: mine.map((i) => itemView(i, caller, false)),
     my_amount_cents: myAmount,
   };
+  // Each person in the order: whom they pay and their own mark, never anyone else's (U12 A).
+  if (mine.length > 0 || seen === "manager") {
+    const owes =
+      o.settle_to === "payer" && caller !== null && mine.length > 0 && caller.user_id !== o.payer_user_id;
+    Object.assign(member, {
+      settle_to: o.settle_to,
+      pay_to: ctx.settling?.payTo ?? null,
+      my_paid: owes && caller !== null ? (ctx.settling?.paid.has(caller.user_id) ?? false) : null,
+    });
+  }
   if (seen === "member") return { ...member, lines: linesOf(items) };
   return {
     ...member,
