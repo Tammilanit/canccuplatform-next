@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 900" width="1900" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 16: When things fail</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="900" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">16 · When things fail: what each person sees, and what the platform does (everyone)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the session's edge-case round. E1–E12, U7, U9, D9. One row per failure; nothing here needs a person at a screen PC.</text>
+<rect x="32" y="130" width="1836" height="740" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52" y="166" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">FAILURE</text>
+<text x="302" y="166" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ATTENDEES IN THE HALL</text>
+<text x="602" y="166" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">ORGANISERS AND CREW</text>
+<text x="932" y="166" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">SUPERADMIN</text>
+<text x="1262" y="166" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE PLATFORM</text>
+<line x1="52" y1="190" x2="1848" y2="190" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="220" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Venue uplink down (E3)</text>
+<text x="302" y="220" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The last picture; most never notice</text>
+<text x="602" y="220" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Studio: “the venue uplink may be down”</text>
+<text x="932" y="220" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Waits up to 30 min; switches only if asked</text>
+<text x="1262" y="220" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Screens keep their state (built); phones on mobile data still work</text>
+<line x1="52" y1="250" x2="1848" y2="250" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="280" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">VM lost (U6)</text>
+<text x="302" y="280" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">A few quiet minutes, then live again</text>
+<text x="602" y="280" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">One line in their channel; Studio on the</text>
+<text x="602" y="301" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">laptop</text>
+<text x="932" y="280" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Promotes the laptop with the kit</text>
+<text x="1262" y="280" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Fence, restore, verify; screens follow the laptop</text>
+<line x1="52" y1="331" x2="1848" y2="331" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="361" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">VM back while laptop is</text>
+<text x="52" y="382" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">primary (E1)</text>
+<text x="302" y="361" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="602" y="361" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Studio on the laptop stays the truth</text>
+<text x="932" y="361" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Moves data back after the event (E2)</text>
+<text x="1262" y="361" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The VM serves read-only: “the event runs on the fallback”</text>
+<line x1="52" y1="412" x2="1848" y2="412" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="442" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Backups stopped (E4)</text>
+<text x="302" y="442" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="602" y="442" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Readiness: Backups red</text>
+<text x="932" y="442" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Alert: backup older than 26 h</text>
+<text x="1262" y="442" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Restore picks the newest base that passes its check</text>
+<line x1="52" y1="472" x2="1848" y2="472" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="502" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Watchdog silent (E9)</text>
+<text x="302" y="502" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="602" y="502" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Readiness: Watchdog red</text>
+<text x="932" y="502" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Health: “not answering for 10 min”</text>
+<text x="1262" y="502" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The heartbeat sender notices the missing answer</text>
+<line x1="52" y1="532" x2="1848" y2="532" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="562" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Secrets key lost (E5)</text>
+<text x="302" y="562" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Push stops until phones resubscribe</text>
+<text x="602" y="562" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Re-enter the bot token and others</text>
+<text x="932" y="562" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Restores data; follows the list</text>
+<text x="1262" y="562" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Names each secret it cannot open, and how to re-enter it</text>
+<line x1="52" y1="592" x2="1848" y2="592" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="622" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">Disk filling (E12)</text>
+<text x="302" y="622" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="602" y="622" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="932" y="622" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Alert at 85 %; WAL push failing alerts at</text>
+<text x="932" y="643" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">once</text>
+<text x="1262" y="622" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">WAL is never deleted before it is archived</text>
+<line x1="52" y1="673" x2="1848" y2="673" stroke="#e5e7eb" stroke-width="1"/>
+<text x="52" y="703" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">A deploy during a live event</text>
+<text x="52" y="724" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start">(E11)</text>
+<text x="302" y="703" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Nothing</text>
+<text x="602" y="703" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Readiness: “a release waits”</text>
+<text x="932" y="703" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">May mark a hotfix</text>
+<text x="1262" y="703" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Holds it; a hotfix runs a backup first, rollback as built</text>
+</svg>

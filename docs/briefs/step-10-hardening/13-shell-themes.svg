@@ -1,0 +1,261 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1230" width="1900" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 13: Shell themes</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="ph32_146"><rect x="42" y="156" width="390" height="844" rx="38"/></clipPath><clipPath id="ph492_146"><rect x="502" y="156" width="390" height="844" rx="38"/></clipPath><clipPath id="ph952_146"><rect x="962" y="156" width="390" height="844" rx="38"/></clipPath><clipPath id="ph1412_146"><rect x="1422" y="156" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1230" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">13 · Shell themes: Dark, Light and high contrast, chosen by each person (organiser)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: an organiser plans in a bright office by day and runs the hall by night. L6, L7; the event's admin tokens still apply on top, with the contrast fallback.</text>
+<rect x="32" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="237" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">Dark (today's shell)</text>
+<g clip-path="url(#ph32_146)">
+<rect x="42" y="156" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="76" y="186" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="368" y="175" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="370" y="177" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="42" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="58" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="94" y="238" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="202" y="222" width="52" height="20" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="228" y="236" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Draft</text>
+<rect x="392" y="224" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="231" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="392" y="238" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="58" y="286" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ More</text>
+<text x="58" y="316" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Readiness</text>
+<rect x="58" y="340" width="84.4044" height="22" rx="11" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="100.202" y="354.5" font-size="12" fill="#ff98a6" font-weight="600" text-anchor="middle">2 blockers</text>
+<rect x="154" y="340" width="88.1745" height="22" rx="11" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="198.087" y="354.5" font-size="12" fill="#ffd27a" font-weight="600" text-anchor="middle">2 warnings</text>
+<rect x="258" y="340" width="66.0032" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="291.002" y="354.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle">9 ready</text>
+<rect x="58" y="380" width="358" height="124" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.5"/>
+<circle cx="80" cy="406" r="6" fill="#ff5d73"/>
+<text x="96" y="411" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Hostname verified</text>
+<rect x="334.948" y="395" width="65.0516" height="21.5" rx="10.75" fill="#3a1824" stroke="#a33a4f" stroke-width="1"/>
+<text x="367.474" y="409" font-size="11.5" fill="#ff98a6" font-weight="600" text-anchor="middle">Blocker</text>
+<text x="74" y="436" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">demo.platform.example is not verified, so sign-in and</text>
+<text x="74" y="454.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">the hub link fail.</text>
+<text x="74" y="488" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Verify the hostname ›</text>
+<rect x="58" y="516" width="358" height="124" rx="12" fill="#161a2e" stroke="#9a7426" stroke-width="1.5"/>
+<circle cx="80" cy="542" r="6" fill="#f0b23e"/>
+<text x="96" y="547" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Screens online</text>
+<rect x="332.209" y="531" width="67.7907" height="21.5" rx="10.75" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="366.105" y="545" font-size="11.5" fill="#ffd27a" font-weight="600" text-anchor="middle">Warning</text>
+<text x="74" y="572" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">café is offline since 17:02. It was last seen at the</text>
+<text x="74" y="590.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">venue.</text>
+<text x="74" y="624" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">Open Devices ›</text>
+<rect x="58" y="652" width="358" height="124" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="80" cy="678" r="6" fill="#3ee39a"/>
+<text x="96" y="683" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Theme published</text>
+<text x="74" y="708" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Demo night, published Thu 19 Nov at 14:20.</text>
+<rect x="58" y="788" width="358" height="124" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="80" cy="814" r="6" fill="#3ee39a"/>
+<text x="96" y="819" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Language</text>
+<text x="74" y="844" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Finnish. Every page and screen word has its Finnish</text>
+<text x="74" y="862.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">text.</text>
+<rect x="42" y="916" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="73" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="81" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="151" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="159" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="237" cy="940" r="15" fill="#3ddcff"/>
+<text x="237" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="307" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="315" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="385" y="930" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="393" y="970" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="170" y="988" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<rect x="492" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="697" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">Light</text>
+<g clip-path="url(#ph492_146)">
+<rect x="502" y="156" width="390" height="844" rx="0" fill="#f6f7fb"/>
+<text x="536" y="186" font-size="15" fill="#111827" font-weight="600" text-anchor="start">21:32</text>
+<rect x="828" y="175" width="26" height="12" rx="3" fill="none" stroke="#111827" stroke-width="1.2"/>
+<rect x="830" y="177" width="18" height="8" rx="1.5" fill="#111827"/>
+<rect x="502" y="206" width="390" height="52" rx="0" fill="#ffffff"/>
+<rect x="518" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="554" y="238" font-size="15" fill="#111827" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="662" y="222" width="52" height="20" rx="10" fill="#ffffff" stroke="#9ca3af" stroke-width="1"/>
+<text x="688" y="236" font-size="11.5" fill="#374151" font-weight="600" text-anchor="middle">Draft</text>
+<rect x="852" y="224" width="20" height="2" rx="1" fill="#111827"/>
+<rect x="852" y="231" width="20" height="2" rx="1" fill="#111827"/>
+<rect x="852" y="238" width="20" height="2" rx="1" fill="#111827"/>
+<text x="518" y="286" font-size="13" fill="#374151" font-weight="400" text-anchor="start">‹ More</text>
+<text x="518" y="316" font-size="22" fill="#111827" font-weight="600" text-anchor="start">Readiness</text>
+<rect x="518" y="340" width="84.4044" height="22" rx="11" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+<text x="560.202" y="354.5" font-size="12" fill="#991b1b" font-weight="600" text-anchor="middle">2 blockers</text>
+<rect x="614" y="340" width="88.1745" height="22" rx="11" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+<text x="658.087" y="354.5" font-size="12" fill="#92400e" font-weight="600" text-anchor="middle">2 warnings</text>
+<rect x="718" y="340" width="66.0032" height="22" rx="11" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+<text x="751.002" y="354.5" font-size="12" fill="#166534" font-weight="600" text-anchor="middle">9 ready</text>
+<rect x="518" y="380" width="358" height="124" rx="12" fill="#ffffff" stroke="#f87171" stroke-width="1.5"/>
+<circle cx="540" cy="406" r="6" fill="#dc2626"/>
+<text x="556" y="411" font-size="15" fill="#111827" font-weight="600" text-anchor="start">Hostname verified</text>
+<rect x="794.948" y="395" width="65.0516" height="21.5" rx="10.75" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+<text x="827.474" y="409" font-size="11.5" fill="#991b1b" font-weight="600" text-anchor="middle">Blocker</text>
+<text x="534" y="436" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">demo.platform.example is not verified, so sign-in and</text>
+<text x="534" y="454.125" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">the hub link fail.</text>
+<text x="534" y="488" font-size="13" fill="#0e7490" font-weight="600" text-anchor="start">Verify the hostname ›</text>
+<rect x="518" y="516" width="358" height="124" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+<circle cx="540" cy="542" r="6" fill="#d97706"/>
+<text x="556" y="547" font-size="15" fill="#111827" font-weight="600" text-anchor="start">Screens online</text>
+<rect x="792.209" y="531" width="67.7907" height="21.5" rx="10.75" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+<text x="826.105" y="545" font-size="11.5" fill="#92400e" font-weight="600" text-anchor="middle">Warning</text>
+<text x="534" y="572" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">café is offline since 17:02. It was last seen at the</text>
+<text x="534" y="590.125" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">venue.</text>
+<text x="534" y="624" font-size="13" fill="#0e7490" font-weight="600" text-anchor="start">Open Devices ›</text>
+<rect x="518" y="652" width="358" height="124" rx="12" fill="#ffffff" stroke="#d7dbe8" stroke-width="1"/>
+<circle cx="540" cy="678" r="6" fill="#16a34a"/>
+<text x="556" y="683" font-size="15" fill="#111827" font-weight="600" text-anchor="start">Theme published</text>
+<text x="534" y="708" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">Demo night, published Thu 19 Nov at 14:20.</text>
+<rect x="518" y="788" width="358" height="124" rx="12" fill="#ffffff" stroke="#d7dbe8" stroke-width="1"/>
+<circle cx="540" cy="814" r="6" fill="#16a34a"/>
+<text x="556" y="819" font-size="15" fill="#111827" font-weight="600" text-anchor="start">Language</text>
+<text x="534" y="844" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">Finnish. Every page and screen word has its Finnish</text>
+<text x="534" y="862.125" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">text.</text>
+<rect x="502" y="916" width="390" height="84" rx="0" fill="#ffffff"/>
+<rect x="533" y="930" width="16" height="16" rx="4" fill="none" stroke="#374151" stroke-width="1.6"/>
+<text x="541" y="970" font-size="10.5" fill="#374151" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="611" y="930" width="16" height="16" rx="4" fill="none" stroke="#374151" stroke-width="1.6"/>
+<text x="619" y="970" font-size="10.5" fill="#374151" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="697" cy="940" r="15" fill="#0e7490"/>
+<text x="697" y="970" font-size="10.5" fill="#374151" font-weight="400" text-anchor="middle">Add</text>
+<rect x="767" y="930" width="16" height="16" rx="4" fill="none" stroke="#374151" stroke-width="1.6"/>
+<text x="775" y="970" font-size="10.5" fill="#374151" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="845" y="930" width="16" height="16" rx="4" fill="none" stroke="#0e7490" stroke-width="1.6"/>
+<text x="853" y="970" font-size="10.5" fill="#0e7490" font-weight="600" text-anchor="middle">More</text>
+<rect x="630" y="988" width="134" height="5" rx="3" fill="#111827"/>
+</g>
+<rect x="952" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1157" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">High contrast (a Light variant)</text>
+<g clip-path="url(#ph952_146)">
+<rect x="962" y="156" width="390" height="844" rx="0" fill="#ffffff"/>
+<text x="996" y="186" font-size="15" fill="#000000" font-weight="600" text-anchor="start">21:32</text>
+<rect x="1288" y="175" width="26" height="12" rx="3" fill="none" stroke="#000000" stroke-width="1.2"/>
+<rect x="1290" y="177" width="18" height="8" rx="1.5" fill="#000000"/>
+<rect x="962" y="206" width="390" height="52" rx="0" fill="#ffffff"/>
+<rect x="978" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1014" y="238" font-size="15" fill="#000000" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1122" y="222" width="52" height="20" rx="10" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+<text x="1148" y="236" font-size="11.5" fill="#000000" font-weight="600" text-anchor="middle">Draft</text>
+<rect x="1312" y="224" width="20" height="2" rx="1" fill="#000000"/>
+<rect x="1312" y="231" width="20" height="2" rx="1" fill="#000000"/>
+<rect x="1312" y="238" width="20" height="2" rx="1" fill="#000000"/>
+<text x="978" y="286" font-size="13" fill="#000000" font-weight="400" text-anchor="start">‹ More</text>
+<text x="978" y="316" font-size="22" fill="#000000" font-weight="600" text-anchor="start">Readiness</text>
+<rect x="978" y="340" width="84.4044" height="22" rx="11" fill="#fee2e2" stroke="#991b1b" stroke-width="1"/>
+<text x="1020.2" y="354.5" font-size="12" fill="#991b1b" font-weight="600" text-anchor="middle">2 blockers</text>
+<rect x="1074" y="340" width="88.1745" height="22" rx="11" fill="#fef3c7" stroke="#92400e" stroke-width="1"/>
+<text x="1118.09" y="354.5" font-size="12" fill="#92400e" font-weight="600" text-anchor="middle">2 warnings</text>
+<rect x="1178" y="340" width="66.0032" height="22" rx="11" fill="#dcfce7" stroke="#166534" stroke-width="1"/>
+<text x="1211" y="354.5" font-size="12" fill="#166534" font-weight="600" text-anchor="middle">9 ready</text>
+<rect x="978" y="380" width="358" height="124" rx="12" fill="#ffffff" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="1000" cy="406" r="6" fill="#dc2626"/>
+<text x="1016" y="411" font-size="15" fill="#000000" font-weight="600" text-anchor="start">Hostname verified</text>
+<rect x="1254.95" y="395" width="65.0516" height="21.5" rx="10.75" fill="#fee2e2" stroke="#991b1b" stroke-width="1"/>
+<text x="1287.47" y="409" font-size="11.5" fill="#991b1b" font-weight="600" text-anchor="middle">Blocker</text>
+<text x="994" y="436" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">demo.platform.example is not verified, so sign-in and</text>
+<text x="994" y="454.125" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">the hub link fail.</text>
+<text x="994" y="488" font-size="13" fill="#0040a0" font-weight="600" text-anchor="start">Verify the hostname ›</text>
+<rect x="978" y="516" width="358" height="124" rx="12" fill="#ffffff" stroke="#92400e" stroke-width="1.5"/>
+<circle cx="1000" cy="542" r="6" fill="#d97706"/>
+<text x="1016" y="547" font-size="15" fill="#000000" font-weight="600" text-anchor="start">Screens online</text>
+<rect x="1252.21" y="531" width="67.7907" height="21.5" rx="10.75" fill="#fef3c7" stroke="#92400e" stroke-width="1"/>
+<text x="1286.1" y="545" font-size="11.5" fill="#92400e" font-weight="600" text-anchor="middle">Warning</text>
+<text x="994" y="572" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">café is offline since 17:02. It was last seen at the</text>
+<text x="994" y="590.125" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">venue.</text>
+<text x="994" y="624" font-size="13" fill="#0040a0" font-weight="600" text-anchor="start">Open Devices ›</text>
+<rect x="978" y="652" width="358" height="124" rx="12" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+<circle cx="1000" cy="678" r="6" fill="#16a34a"/>
+<text x="1016" y="683" font-size="15" fill="#000000" font-weight="600" text-anchor="start">Theme published</text>
+<text x="994" y="708" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">Demo night, published Thu 19 Nov at 14:20.</text>
+<rect x="978" y="788" width="358" height="124" rx="12" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+<circle cx="1000" cy="814" r="6" fill="#16a34a"/>
+<text x="1016" y="819" font-size="15" fill="#000000" font-weight="600" text-anchor="start">Language</text>
+<text x="994" y="844" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">Finnish. Every page and screen word has its Finnish</text>
+<text x="994" y="862.125" font-size="12.5" fill="#111111" font-weight="400" text-anchor="start">text.</text>
+<rect x="962" y="916" width="390" height="84" rx="0" fill="#ffffff"/>
+<rect x="993" y="930" width="16" height="16" rx="4" fill="none" stroke="#000000" stroke-width="1.6"/>
+<text x="1001" y="970" font-size="10.5" fill="#000000" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1071" y="930" width="16" height="16" rx="4" fill="none" stroke="#000000" stroke-width="1.6"/>
+<text x="1079" y="970" font-size="10.5" fill="#000000" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1157" cy="940" r="15" fill="#0040a0"/>
+<text x="1157" y="970" font-size="10.5" fill="#000000" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1227" y="930" width="16" height="16" rx="4" fill="none" stroke="#000000" stroke-width="1.6"/>
+<text x="1235" y="970" font-size="10.5" fill="#000000" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="1305" y="930" width="16" height="16" rx="4" fill="none" stroke="#0040a0" stroke-width="1.6"/>
+<text x="1313" y="970" font-size="10.5" fill="#0040a0" font-weight="600" text-anchor="middle">More</text>
+<rect x="1090" y="988" width="134" height="5" rx="3" fill="#000000"/>
+</g>
+<rect x="1412" y="146" width="410" height="864" rx="46" fill="#000000"/>
+<text x="1617" y="1046" font-size="16" fill="#374151" font-weight="600" text-anchor="middle">Per person, saved with the account</text>
+<g clip-path="url(#ph1412_146)">
+<rect x="1422" y="156" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1456" y="186" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="1748" y="175" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1750" y="177" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1422" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1438" y="219" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1474" y="238" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1582" y="222" width="52" height="20" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1608" y="236" font-size="11.5" fill="#c5cae3" font-weight="600" text-anchor="middle">Draft</text>
+<rect x="1772" y="224" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1772" y="231" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1772" y="238" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1438" y="286" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ You</text>
+<text x="1438" y="316" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Appearance</text>
+<rect x="1438" y="350" width="358" height="80" rx="12" fill="#1c2a44" stroke="#2a7b96" stroke-width="1.5"/>
+<circle cx="1464" cy="390" r="9" fill="none" stroke="#3ddcff" stroke-width="2"/>
+<circle cx="1464" cy="390" r="4.5" fill="#3ddcff"/>
+<text x="1486" y="384" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Follow this device</text>
+<text x="1486" y="408" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Dark at night, Light by day, as the phone is set</text>
+<rect x="1438" y="442" width="358" height="80" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1464" cy="482" r="9" fill="none" stroke="#c5cae3" stroke-width="2"/>
+<text x="1486" y="476" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Dark</text>
+<text x="1486" y="500" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">The shell as it is today</text>
+<rect x="1438" y="534" width="358" height="80" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1464" cy="574" r="9" fill="none" stroke="#c5cae3" stroke-width="2"/>
+<text x="1486" y="568" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Light</text>
+<text x="1486" y="592" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">For bright rooms</text>
+<rect x="1438" y="626" width="358" height="80" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1464" cy="666" r="9" fill="none" stroke="#c5cae3" stroke-width="2"/>
+<text x="1486" y="660" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">High contrast</text>
+<text x="1486" y="684" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Black on white, thicker lines</text>
+<text x="1438" y="740" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">The screens never follow this: they take the event's theme.</text>
+<text x="1438" y="758.125" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Organiser pages take the event's admin tokens when they</text>
+<text x="1438" y="776.25" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">pass the contrast rules.</text>
+<rect x="1422" y="916" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1453" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1461" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1531" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1539" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1617" cy="940" r="15" fill="#3ddcff"/>
+<text x="1617" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1687" y="930" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1695" y="970" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Screens</text>
+<rect x="1765" y="930" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1773" y="970" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="1550" y="988" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<circle cx="44" cy="1112" r="12" fill="#f59e0b"/>
+<text x="44" y="1117" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="66" y="1118" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Same layout, three palettes (L6)</text>
+<text x="66" y="1142" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Only tokens change; every component of packages/ui draws</text>
+<text x="66" y="1162" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">from them, so a page needs no theme code of its own.</text>
+<circle cx="504" cy="1112" r="12" fill="#f59e0b"/>
+<text x="504" y="1117" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="526" y="1118" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Contrast is checked</text>
+<text x="526" y="1142" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Each palette passes WCAG AA for text and AAA in high</text>
+<text x="526" y="1162" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">contrast; CI's a11y run shoots one page per theme.</text>
+<circle cx="964" cy="1112" r="12" fill="#f59e0b"/>
+<text x="964" y="1117" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="986" y="1118" font-size="16" fill="#111827" font-weight="600" text-anchor="start">What 'theme' means here (L7)</text>
+<text x="986" y="1142" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The organiser shell's own choice. Screens keep the event's</text>
+<text x="986" y="1162" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">theme and the built-in Default; no new screen theme in this</text>
+<text x="986" y="1182" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">step.</text>
+<circle cx="1424" cy="1112" r="12" fill="#f59e0b"/>
+<text x="1424" y="1117" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1446" y="1118" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Per person, not per event (L6)</text>
+<text x="1446" y="1142" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Saved with the account and used at every event; 'Follow this</text>
+<text x="1446" y="1162" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">device' is the default for new accounts.</text>
+</svg>

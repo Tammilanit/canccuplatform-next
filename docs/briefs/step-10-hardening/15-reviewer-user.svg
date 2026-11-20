@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 720" width="1900" height="720" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 15: The reviewer's own OS user</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1900" height="720" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">15 · The reviewer's own OS user: only it holds the reviewer token (maintainer)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the privileged set-up step 0014 and 0012 name for step 10. O8. Today author and reviewer sessions run as one OS user.</text>
+<rect x="32" y="120" width="900" height="560" rx="16" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="60" y="160" font-size="22" fill="#111827" font-weight="700" text-anchor="start">Today</text>
+<rect x="72" y="190" width="820" height="450" rx="14" fill="#f9fafb" stroke="#d1d5db" stroke-width="1" stroke-dasharray="6 5"/>
+<text x="92" y="216" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE DEV VM</text>
+<rect x="102" y="250" width="760" height="230" rx="10" fill="#fee2e2" stroke="#f87171" stroke-width="1.4"/>
+<text x="482" y="370" font-size="15" fill="#111827" font-weight="700" text-anchor="middle"></text>
+<text x="128" y="286" font-size="17" fill="#111827" font-weight="700" text-anchor="start">OS user: dev</text>
+<text x="128" y="320" font-size="15" fill="#374151" font-weight="400" text-anchor="start">author sessions (worker runs)</text>
+<text x="128" y="348" font-size="15" fill="#374151" font-weight="400" text-anchor="start">reviewer sessions</text>
+<text x="128" y="376" font-size="15" fill="#991b1b" font-weight="600" text-anchor="start">reviewer token in ~/.config, readable by every session</text>
+<text x="128" y="420" font-size="14" fill="#374151" font-weight="400" text-anchor="start">Only deny rules in the tool settings keep authors away from it (0014, Known limits).</text>
+<text x="102" y="540" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Risk: an author session could read the token and post a verdict as the reviewer, so the review gate</text>
+<text x="102" y="563" font-size="15" fill="#374151" font-weight="400" text-anchor="start">would trust a verdict nobody independent gave.</text>
+<rect x="972" y="120" width="900" height="560" rx="16" fill="#ffffff" stroke="#0e7490" stroke-width="2"/>
+<text x="1000" y="160" font-size="22" fill="#111827" font-weight="700" text-anchor="start">After step 10</text>
+<rect x="1012" y="190" width="820" height="450" rx="14" fill="#f9fafb" stroke="#d1d5db" stroke-width="1" stroke-dasharray="6 5"/>
+<text x="1032" y="216" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1.2">THE DEV VM</text>
+<rect x="1042" y="250" width="360" height="230" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.4"/>
+<text x="1222" y="370" font-size="15" fill="#111827" font-weight="700" text-anchor="middle"></text>
+<text x="1068" y="286" font-size="17" fill="#111827" font-weight="700" text-anchor="start">OS user: dev</text>
+<text x="1068" y="320" font-size="15" fill="#374151" font-weight="400" text-anchor="start">author sessions</text>
+<text x="1068" y="350" font-size="14" fill="#374151" font-weight="400" text-anchor="start">may run one command as the reviewer user,</text>
+<text x="1068" y="370.3" font-size="14" fill="#374151" font-weight="400" text-anchor="start">nothing else</text>
+<rect x="1442" y="250" width="360" height="230" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+<text x="1622" y="370" font-size="15" fill="#111827" font-weight="700" text-anchor="middle"></text>
+<text x="1468" y="286" font-size="17" fill="#111827" font-weight="700" text-anchor="start">OS user: canccu-review</text>
+<text x="1468" y="320" font-size="15" fill="#374151" font-weight="400" text-anchor="start">reviewer sessions</text>
+<text x="1468" y="350" font-size="14" fill="#374151" font-weight="400" text-anchor="start">the token in its own home, mode 600; no login</text>
+<text x="1468" y="370.3" font-size="14" fill="#374151" font-weight="400" text-anchor="start">shell</text>
+<path d="M1402,420 L1442,420" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1042" y="540" font-size="13.5" fill="#374151" font-weight="600" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" xml:space="preserve">sudoers: dev ALL=(canccu-review) NOPASSWD: /usr/local/bin/canccu-review-run</text>
+<text x="1042" y="590" font-size="15" fill="#374151" font-weight="400" text-anchor="start">A maintainer sets it up once per VM, following setup/README.md (O8 B); the review gate is unchanged.</text>
+</svg>

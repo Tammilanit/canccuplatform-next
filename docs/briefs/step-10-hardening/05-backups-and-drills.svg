@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1080" width="2000" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 05: Backups and drills (superadmin)</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="dk0"><rect x="0" y="0" width="1280" height="1050" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="2000" height="1080" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">05 · Backups and drills: what is kept, and proof that it restores (superadmin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the week before an event the superadmin confirms the last drill and the laptop's check. D2, D3, O1, O2, O3, U10; tables stay tables (amendment 3).</text>
+<text x="32" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start">1280 px at 85 %</text>
+<g transform="translate(32,146) scale(0.85)" clip-path="url(#dk0)">
+<rect x="0" y="0" width="1280" height="1050" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Sat 21 – Sun 22 Nov</text>
+<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1260" y="35" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="0" y="57" width="255" height="993" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="1050" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26" y="111" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="123" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26" y="153" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="165" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26" y="195" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="207" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="26" y="278" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="290" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26" y="320" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="332" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26" y="403" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="415" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26" y="445" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="457" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Readiness</text>
+<rect x="12" y="476" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="476" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="487" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="499" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Health</text>
+<rect x="26" y="529" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="541" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26" y="571" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="583" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296" y="92" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Health</text>
+<text x="296" y="122" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start">Backups and drills</text>
+<text x="296" y="144" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Made by the nightly job (#55), kept off the VM, restored every week to prove it.</text>
+<rect x="296" y="194" width="224" height="96" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1.2"/>
+<text x="312" y="220" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Data loss now</text>
+<text x="312" y="254" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start">≤ 2 min</text>
+<text x="312" y="278" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">WAL pushed 2 min ago</text>
+<rect x="536" y="194" width="224" height="96" rx="12" fill="#161a2e" stroke="#9a7426" stroke-width="1.2"/>
+<text x="552" y="220" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Restore time</text>
+<text x="552" y="254" font-size="26" fill="#ffd27a" font-weight="600" text-anchor="start">31 min</text>
+<text x="552" y="278" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">last laptop drill · target 30</text>
+<rect x="776" y="194" width="224" height="96" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1.2"/>
+<text x="792" y="220" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Kept</text>
+<text x="792" y="254" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start">7 + 4</text>
+<text x="792" y="278" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">daily + weekly base backups</text>
+<rect x="1016" y="194" width="224" height="96" rx="12" fill="#161a2e" stroke="#a33a4f" stroke-width="1.2"/>
+<text x="1032" y="220" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Laptop check</text>
+<text x="1032" y="254" font-size="26" fill="#ff98a6" font-weight="600" text-anchor="start">18 days</text>
+<text x="1032" y="278" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">ago · due before Sat</text>
+<text x="296" y="318" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">BACKUPS</text>
+<rect x="296" y="332" width="944" height="254" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">WHEN</text>
+<text x="486" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">KIND</text>
+<text x="646" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">SIZE</text>
+<text x="756" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">CHECK</text>
+<text x="916" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">KEPT UNTIL</text>
+<text x="1096" y="362" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1"></text>
+<text x="316" y="396" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Fri 20 Nov 03:00</text>
+<text x="486" y="396" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Base (daily)</text>
+<text x="646" y="396" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">486 MB</text>
+<rect x="756" y="381" width="70.7645" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="791.382" y="395" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">checked</text>
+<text x="916" y="396" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Fri 27 Nov</text>
+<line x1="316" y1="410" x2="1220" y2="410" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="434" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Fri 20 Nov 03:20</text>
+<text x="486" y="434" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Files (daily)</text>
+<text x="646" y="434" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">212 MB</text>
+<rect x="756" y="419" width="70.7645" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="791.382" y="433" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">checked</text>
+<text x="916" y="434" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Fri 27 Nov</text>
+<line x1="316" y1="448" x2="1220" y2="448" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="472" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Thu 19 Nov 03:00</text>
+<text x="486" y="472" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Base (daily)</text>
+<text x="646" y="472" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">481 MB</text>
+<rect x="756" y="457" width="70.7645" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="791.382" y="471" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">checked</text>
+<text x="916" y="472" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Thu 26 Nov</text>
+<line x1="316" y1="486" x2="1220" y2="486" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="510" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Sun 15 Nov 03:00</text>
+<text x="486" y="510" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Base (weekly)</text>
+<text x="646" y="510" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">474 MB</text>
+<rect x="756" y="495" width="70.7645" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="791.382" y="509" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">checked</text>
+<text x="916" y="510" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sun 13 Dec</text>
+<line x1="316" y1="524" x2="1220" y2="524" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="548" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">WAL</text>
+<text x="486" y="548" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Continuous</text>
+<text x="646" y="548" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">3.1 GB</text>
+<rect x="756" y="533" width="70.7645" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="791.382" y="547" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">checked</text>
+<text x="916" y="548" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">7 days</text>
+<line x1="316" y1="562" x2="1220" y2="562" stroke="#343c66" stroke-width="1"/>
+<text x="296" y="608" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">DRILLS</text>
+<rect x="296" y="622" width="944" height="214" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316" y="652" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">WHEN</text>
+<text x="486" y="652" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">WHERE</text>
+<text x="676" y="652" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">TOOK</text>
+<text x="776" y="652" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">DATA AGE</text>
+<text x="916" y="652" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">RESULT</text>
+<text x="316" y="686" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Sun 15 Nov 03:43</text>
+<text x="486" y="686" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">CI, weekly</text>
+<text x="676" y="686" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">11 min 40 s</text>
+<text x="776" y="686" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">0 min</text>
+<rect x="916" y="671" width="63.5124" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="947.756" y="685" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">passed</text>
+<line x1="316" y1="700" x2="1220" y2="700" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="724" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Sun 8 Nov 03:43</text>
+<text x="486" y="724" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">CI, weekly</text>
+<text x="676" y="724" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">12 min 02 s</text>
+<text x="776" y="724" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">0 min</text>
+<rect x="916" y="709" width="63.5124" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="947.756" y="723" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">passed</text>
+<line x1="316" y1="738" x2="1220" y2="738" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="762" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Sun 1 Nov 03:43</text>
+<text x="486" y="762" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">CI, weekly</text>
+<text x="676" y="762" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">11 min 55 s</text>
+<text x="776" y="762" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">0 min</text>
+<rect x="916" y="747" width="63.5124" height="21.5" rx="10.75" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="947.756" y="761" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">passed</text>
+<line x1="316" y1="776" x2="1220" y2="776" stroke="#343c66" stroke-width="1"/>
+<text x="316" y="800" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Mon 2 Nov 18:40</text>
+<text x="486" y="800" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Fallback laptop</text>
+<text x="676" y="800" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">31 min</text>
+<text x="776" y="800" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">6 min</text>
+<rect x="916" y="785" width="83.0774" height="21.5" rx="10.75" fill="#3a2f17" stroke="#9a7426" stroke-width="1"/>
+<text x="957.539" y="799" font-size="11.5" fill="#ffd27a" font-weight="600" text-anchor="middle">over target</text>
+<line x1="316" y1="814" x2="1220" y2="814" stroke="#343c66" stroke-width="1"/>
+<rect x="296" y="858" width="560" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="316" y="892" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Emergency kit</text>
+<text x="316" y="920" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Key version 3 and deploy/.env, encrypted with a passphrase two people know.</text>
+<text x="316" y="938.85" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Two copies: the laptop bag and the superadmin's safe. Last opened on the laptop</text>
+<text x="316" y="957.7" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Mon 2 Nov.</text>
+</g>
+<circle cx="269.6" cy="316" r="11" fill="#f59e0b"/>
+<text x="269.6" y="320.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<circle cx="269.6" cy="435" r="11" fill="#f59e0b"/>
+<text x="269.6" y="439.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<circle cx="269.6" cy="673" r="11" fill="#f59e0b"/>
+<text x="269.6" y="677.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<circle cx="269.6" cy="877" r="11" fill="#f59e0b"/>
+<text x="269.6" y="881.5" font-size="12" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<circle cx="1162" cy="162" r="12" fill="#f59e0b"/>
+<text x="1162" y="167" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="1184" y="168" font-size="16" fill="#111827" font-weight="600" text-anchor="start">The two numbers that matter (D2)</text>
+<text x="1184" y="192" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">How much data a restore would lose now, and how long the last restore took,</text>
+<text x="1184" y="212" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">against the 30-minute target. The laptop's check is due before every event (U10).</text>
+<circle cx="1162" cy="252" r="12" fill="#f59e0b"/>
+<text x="1162" y="257" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1184" y="258" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Backups (#55's, shown here)</text>
+<text x="1184" y="282" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">Each base backup is checked after it is made; 7 daily and 4 weekly are kept,</text>
+<text x="1184" y="302" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">WAL for 7 days (O3). This step only shows and restores them.</text>
+<circle cx="1162" cy="342" r="12" fill="#f59e0b"/>
+<text x="1162" y="347" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="1184" y="348" font-size="16" fill="#111827" font-weight="600" text-anchor="start">Drills, every week and before each event (O1)</text>
+<text x="1184" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">CI restores the demo stack every Sunday (O4); the superadmin runs the laptop's</text>
+<text x="1184" y="392" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">check before an event. Each posts its time, data age and result (O2). A drill over</text>
+<text x="1184" y="412" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">target is amber and says so.</text>
+<circle cx="1162" cy="452" r="12" fill="#f59e0b"/>
+<text x="1162" y="457" font-size="13" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1184" y="458" font-size="16" fill="#111827" font-weight="600" text-anchor="start">The emergency kit (D3)</text>
+<text x="1184" y="482" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">The secrets key and deploy/.env, never next to the dump; encrypted, two</text>
+<text x="1184" y="502" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start">copies. The page shows where and when it was last opened, never its content.</text>
+</svg>
