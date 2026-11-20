@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 7 mockup 14: Follow along: standings, a live session, champions, the rules (attendees, spectators)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">14 · Follow along: standings, a live session, champions, the rules (attendees, spectators)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: anyone at the event follows the tournament from the hub without playing: what&#x27;s on, who leads, who won</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 312.0">1 · Standings</text>
+<text x="352.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="352.0 632.0">2 · Follow a session</text>
+<text x="672.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="672.0 952.0">3 · Champions</text>
+<text x="992.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="992.0 1272.0">4 · The rules</text>
+<text x="1312.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1592.0">5 · After the event</text>
+<g transform="translate(32.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Tournament</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Standings</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26.0" y="128.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">After 5 of 6 sessions · top 10 to the final</text>
+<rect x="26.0" y="146.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="178.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">1</text>
+<text x="74.0" y="178.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Five</text>
+<text x="310.0" y="178.0" font-size="12" fill="#3ee39a" font-weight="700" text-anchor="end">▲1</text>
+<text x="346.0" y="178.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">14</text>
+<rect x="26.0" y="206.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="44.0" y="238.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">2</text>
+<text x="74.0" y="238.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Demo Player (you)</text>
+<text x="310.0" y="238.0" font-size="12" fill="#ff6b81" font-weight="700" text-anchor="end">▼1</text>
+<text x="346.0" y="238.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">13</text>
+<rect x="26.0" y="266.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="298.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">3</text>
+<text x="74.0" y="298.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Two</text>
+<text x="346.0" y="298.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">12</text>
+<rect x="26.0" y="326.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="358.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">4</text>
+<text x="74.0" y="358.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Nine</text>
+<text x="346.0" y="358.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">8</text>
+<rect x="26.0" y="386.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="418.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">5</text>
+<text x="74.0" y="418.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Seven</text>
+<text x="310.0" y="418.0" font-size="12" fill="#3ee39a" font-weight="700" text-anchor="end">▲2</text>
+<text x="346.0" y="418.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">8</text>
+<rect x="26.0" y="446.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="478.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">6</text>
+<text x="74.0" y="478.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Three</text>
+<text x="346.0" y="478.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">8</text>
+<rect x="26.0" y="506.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="538.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">7</text>
+<text x="74.0" y="538.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Eight</text>
+<text x="310.0" y="538.0" font-size="12" fill="#ff6b81" font-weight="700" text-anchor="end">▼3</text>
+<text x="346.0" y="538.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">7</text>
+<rect x="26.0" y="566.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="598.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="start">8</text>
+<text x="74.0" y="598.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="74.0 270.0">Player Eleven</text>
+<text x="346.0" y="598.0" font-size="15" fill="#f3f5ff" font-weight="800" text-anchor="end">6</text>
+</g>
+<g transform="translate(352.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">20:02</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Tournament</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Demo Arena 5v5</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="149.8" height="22.0" rx="11.0" fill="#1e4244"/>
+<text x="100.9" y="126.0" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="30.0 171.8">Live · semi-finals</text>
+<rect x="26.0" y="150.0" width="338.0" height="124.0" rx="16" fill="#1d2442" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="44.0" y="178.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="44.0 346.0">Semi-final 1</text>
+<text x="44.0" y="214.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Team Alpha</text>
+<text x="346.0" y="214.0" font-size="18" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
+<text x="44.0" y="250.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Team Gamma</text>
+<text x="346.0" y="250.0" font-size="18" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
+<rect x="26.0" y="290.0" width="338.0" height="124.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="318.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="44.0 346.0">Semi-final 2</text>
+<text x="44.0" y="354.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Team Beta</text>
+<text x="346.0" y="354.0" font-size="18" fill="#f3f5ff" font-weight="800" text-anchor="end">2</text>
+<text x="44.0" y="390.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Team Delta</text>
+<text x="346.0" y="390.0" font-size="18" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
+<rect x="26.0" y="430.0" width="338.0" height="124.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="458.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="44.0 346.0">Final · 21:00</text>
+<text x="44.0" y="494.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Winner of semi 1</text>
+<text x="44.0" y="530.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 300.0">Team Beta</text>
+<text x="26.0" y="600.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Quarter-finals ›</text>
+</g>
+<g transform="translate(672.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Tournament</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Champions</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="338.0" height="230.0" rx="16" fill="#2a2f6a"/>
+<text x="195.0" y="230.0" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle">winner photo</text>
+<text x="26.0" y="378.0" font-size="22" fill="#f3f5ff" font-weight="800" text-anchor="start">Player Five</text>
+<text x="26.0" y="404.0" font-size="14" fill="#ffc94d" font-weight="700" text-anchor="start">Demo Game Cup champion</text>
+<rect x="26.0" y="428.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="460.0" font-size="14" fill="#a9b1d6" font-weight="700" text-anchor="start">2nd</text>
+<text x="96.0" y="460.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="96.0 346.0">Player Two</text>
+<rect x="26.0" y="490.0" width="338.0" height="52.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="522.0" font-size="14" fill="#a9b1d6" font-weight="700" text-anchor="start">3rd</text>
+<text x="96.0" y="522.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="96.0 346.0">Demo Player</text>
+<text x="26.0" y="580.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Session winners ›</text>
+</g>
+<g transform="translate(992.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Tournament</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Rules</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26.0" y="136.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Several sessions in different games</text>
+<text x="26.0" y="164.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">make one tournament. Each session</text>
+<text x="26.0" y="192.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">gives points: winner 3, runner-up 2,</text>
+<text x="26.0" y="220.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">played 1, no-show 0.</text>
+<text x="26.0" y="276.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">The top 10 play the final on Sunday.</text>
+<text x="26.0" y="304.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Ties: more wins, then more</text>
+<text x="26.0" y="332.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">sessions, then a tie-break game.</text>
+<text x="26.0" y="388.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">Written by the organiser; the points</text>
+<text x="26.0" y="416.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">come from the settings, so the page</text>
+<text x="26.0" y="444.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">never disagrees with the scores.</text>
+</g>
+<g transform="translate(1312.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Mon</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Tournament</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Demo Game Cup</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="338.0" height="160.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="146.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start">Thanks for playing</text>
+<text x="44.0" y="176.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">You: 3rd in the final, 13 points,</text>
+<text x="44.0" y="200.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">5 sessions, 2 wins.</text>
+<text x="44.0" y="236.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Seeds the next event&#x27;s final.</text>
+<text x="26.0" y="310.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">Results stay with the event; names</text>
+<text x="26.0" y="332.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">are anonymised after 12 months.</text>
+</g>
+<circle cx="45.0" cy="785.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Standings and the live view are public inside the event: no sign-in for reading (U15).</text>
+<circle cx="985.0" cy="785.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">The live session is the bracket widget&#x27;s data on a phone; it updates by push (D10).</text>
+<circle cx="45.0" cy="819.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A champions page per event: the final&#x27;s top three with photos, then each session&#x27;s winner (U16).</text>
+<circle cx="985.0" cy="819.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">The rules page is written by the organiser; the points come from the settings, never typed twice.</text>
+<circle cx="45.0" cy="853.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">After the event: the player&#x27;s own summary; results seed the next event in the same series (D13).</text>
+<circle cx="985.0" cy="853.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="1006.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Retention: results anonymised after 12 months, counts and totals stay (tenants contract).</text>
+</svg>
