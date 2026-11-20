@@ -54,8 +54,8 @@ export const ANNOUNCE_PAGES = [
 export const UPDATED_PAGES = [
   screen("announce-screen-updated", "main", "Updated"),
 ];
-/** The urgent announcement's ticker line: its title and body joined (announce/service.ts). */
-const URGENT_LINE = "Semis in 15 min · Players to the stage now";
+/** The urgent announcement's body: the ticker may break the joined line, so the shot waits for this part. */
+const URGENT_LINE = "Players to the stage now";
 export const URGENT_PAGES = [
   screen("announce-screen-urgent", "main", "Semis in 15 min"),
   screen("announce-screen-urgent-4k", "main", "Semis in 15 min", SCREEN_4K),
