@@ -47,11 +47,11 @@ The pack's eight, kept; principle 5 amended for D6 B.
 8. **The event's voice, the event's language.** The bot's nickname, colour and language are the event's (L6, L8, U5).
 
 ### Chat activity (D6 B)
-A new kind of graph: how busy the event's Discord is, hour by hour.
+A third metric, `messages`, on Screen's existing `activity_graph` widget (beside `online` and `in_voice`): how busy the event's Discord is, hour by hour. It is not a new widget.
 - **What is counted.** Each message posted in a channel of the bound server that everyone in it can read. The bot needs the guild messages intent (not a privileged one) and never the message-content intent (D5), so Discord sends no text. Messages from bots, from webhooks and from people who hid their activity are dropped before counting (E7): the author's id is read only for that filter and never stored. Private channels, the crew channel among them, are not counted.
 - **What is kept.** A count per minute, folded per hour on Postgres with the other counts (D7). No content, no author, no channel id or name. The counts stay with the event as anonymous statistics, like the presence counts.
 - **What is published.** `bot.messages.counted` every interval (`counted_at`, `interval_seconds`, `messages`), event-wide and `public` like `bot.presence.counted`, and a `messages` value per hour in the series of `GET /api/bot/stats`. Both are additive and ship with #122.
-- **What is not built here.** Screen's chat activity widget. [Mockup 16](step-6-bot/16-chat-activity.svg) draws it beside the online and voice graph, quiet and busy, and [the widget catalogue](../design/widgets.md#proposals-for-later) lists it as a proposal (`chat_activity`). It is built once the product owner has seen it; the feed is ready for it.
+- **The metric.** `activity_graph` gets `metric: messages` (additive in `contracts/screen.md`, Widgets: `online`, `in_voice` or `messages`), drawn with the same scale, labels and animation as the other two, and "Collecting…" under 3 hours. [Mockup 16](step-6-bot/16-chat-activity.svg) draws it beside the online graph, quiet and busy, and [the widget catalogue](../design/widgets.md) lists `messages` in `activity_graph`'s metrics. #122 adds it once the product owner has seen mockup 16.
 
 ### The switch
 - **What moves:** the import moves the legacy bot's token, its server and channels, its admin role, its two settings and its finals state, and nothing else (D9, D10).
@@ -97,6 +97,7 @@ Three large tickets, one full review each, no sub-epics (P2). Each issue below i
 - **Criteria:**
   - [ ] **Counts, never people** (D7): per minute (members, online, idle, in voice; players per activity; messages), folded per hour on Postgres, with player-minutes per activity; no user id or name stored; built on the legacy trackers and their logic, with a test for each tracker.
   - [ ] **Chat activity** (D6 B) as [this plan](#chat-activity-d6-b) says: messages counted per minute and hour in the channels everyone can read; no content, author or channel kept; bots, webhooks and people who hid dropped; `bot.messages.counted` and the hourly `messages` series in `GET /api/bot/stats`; a test that the database holds no author, channel or text after a burst.
+  - [ ] **The `messages` metric on `activity_graph`** (additive, `contracts/screen.md`, Widgets: `metric` is `online`, `in_voice` or `messages`), drawn with the same scale, labels and animation, fed from the hourly `messages` series; added only after the product owner has seen [mockup 16](step-6-bot/16-chat-activity.svg).
   - [ ] **The live state:** who plays what and who is in which public voice room, live only in Valkey, behind `GET /api/bot/presence/playing` and `/voice` as bot.md says; a module path for Screen's `now_playing`.
   - [ ] **Published:** `bot.presence.counted` and `bot.activities.counted` as the catalog outlines; new `bot.voice.counted` for Screen's `voice_rooms` (D8) and `bot.messages.counted`; `GET /api/bot/stats` for the hourly series (online, in voice, messages) and the top games by player-hours. Screen's `voice_rooms` fed (its first user, so its part ships here).
   - [ ] **The opt-out filter:** someone who hid is never listed or counted, from the next read, in every output, messages included; tested at each one (E7).
@@ -107,7 +108,7 @@ Three large tickets, one full review each, no sub-epics (P2). Each issue below i
   - [ ] **Living messages** (L1, L2): the pinned now-and-next board (now, next and a food line) and one message per food order from `pizza.order.*`, edited in place, at most once a minute per channel, re-synced after a gap and posted again if deleted or unpinned (E1, E2, E4); the food channel names counts and the holder only (L9) ([mockup 10](step-6-bot/10-living-messages.svg)). The run-of-show posts as bot.md and L7 say.
   - [ ] **Notify's DMs** (D12): `notify.dm.requested` delivered as a Discord DM; the platform decides who is told what, the bot only delivers, in order, through the event's queue (E4).
   - [ ] The fake Discord's transcripts of every command, answer and living message, checked against mockups 07–10; a stack test from a pizza and an agenda event to an edited living message.
-- **Out of scope:** Screen's chat activity widget (built once the product owner has seen [mockup 16](step-6-bot/16-chat-activity.svg)); surges, the hot game and covers (Games track, D13); the tournament's commands, board and channels (step 7, P3); crew alert DMs with Acknowledge (step 8, P5); members' photos through a moderated queue (later, U12 note); native Discord scheduled events.
+- **Out of scope:** surges, the hot game and covers (Games track, D13); the tournament's commands, board and channels (step 7, P3); crew alert DMs with Acknowledge (step 8, P5); members' photos through a moderated queue (later, U12 note); native Discord scheduled events.
 - **Risk:** high: presence, the opt-out filter and the message feed, even with counts only. Large by design (P2). If its package passes about 4,000 changed lines, the lead splits it at its link: counts, the live state and the opt-out filter first; commands, living messages and DMs second; both high.
 
 #### #125 · feat(bot): the legacy bot import, with a dry run, and the switch's runbook
@@ -127,7 +128,6 @@ Three large tickets, one full review each, no sub-epics (P2). Each issue below i
 - Crew alert DMs with an Acknowledge button and `/platform status`: step 8 (P5, OC4).
 - Surges, the hot game and covers: the Games track (D13, P4).
 - `/finals` and the finals posts: the Finals track, on #121's framework (P8).
-- Screen's chat activity widget: after the product owner has seen [mockup 16](step-6-bot/16-chat-activity.svg).
 - Members' photos to the screen through a moderated queue (U12 note).
 - Running the switch: an operator's task when `/finals` is live, neither step 6's build nor step 11's (O5).
 - Polls, the RSS ticker, `/adminlink`, `/help`, `/stream`, per-person message counts and top chatters (the pack's [Drop](#drop) list).
@@ -330,7 +330,7 @@ Not connected, a refused token, removed from the server, archived, Discord down,
 | [13-bot-health.svg](step-6-bot/13-bot-health.svg) | The Overview tab: six cards and what happened; the phone's tab menu, open (Plan) | crew |
 | [14-legacy-import.svg](step-6-bot/14-legacy-import.svg) | The import's dry run and its second run | operator |
 | [15-edge-states.svg](step-6-bot/15-edge-states.svg) | Six states, each with its one action | event admin, attendee |
-| [16-chat-activity.svg](step-6-bot/16-chat-activity.svg) | New for the Plan: the chat activity widget beside the online and voice graph; quiet, busy and collecting (D6 B) | attendees in the hall |
+| [16-chat-activity.svg](step-6-bot/16-chat-activity.svg) | New for the Plan: `activity_graph` with `metric: messages` beside the online graph; quiet, busy and collecting (D6 B) | attendees in the hall |
 
 ## Port, drop or invent
 Each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)). "Tests" means the legacy test file comes along as the spec, adapted.
