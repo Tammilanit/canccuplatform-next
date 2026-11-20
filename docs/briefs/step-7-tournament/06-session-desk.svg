@@ -17,7 +17,7 @@
 <rect x="355.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
 <circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
 <text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
-<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">19:31</text>
+<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">20:52</text>
 <text x="1900.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
 <rect x="0.0" y="57.0" width="255.0" height="943.0" rx="0" fill="#0e1122"/>
 <line x1="255.0" y1="57.0" x2="255.0" y2="1000.0" stroke="#343c66" stroke-width="1"/>
@@ -58,7 +58,7 @@
 <text x="684.2" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
 <line x1="296.0" y1="187.0" x2="1880.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
 <rect x="1733.9" y="96.0" width="146.1" height="24.0" rx="12.0" fill="#1e4244"/>
-<text x="1807.0" y="112.0" font-size="14" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1737.9 1876.0">Running · 19:31</text>
+<text x="1807.0" y="112.0" font-size="14" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1737.9 1876.0">Running · 20:52</text>
 <rect x="296.0" y="215.0" width="1584.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <line x1="326.0" y1="245.0" x2="570.0" y2="245.0" stroke="#3ddcff" stroke-width="3"/>
 <circle cx="326.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
@@ -109,43 +109,54 @@
 <rect x="1496.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="1516.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">2</text>
 <text x="1576.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1576.0 1868.0">teams waiting</text>
-<text x="296.0" y="487.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">MATCHES · QUARTER-FINALS DONE · SEMI-FINALS NOW</text>
-<rect x="296.0" y="503.0" width="304.0" height="132.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="312.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="312.0 470.0">Quarter-final 1</text>
-<rect x="537.9" y="515.0" width="46.1" height="21.5" rx="10.75" fill="#22263f"/>
-<text x="561.0" y="528.5" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="541.9 580.0">Done</text>
-<text x="312.0" y="565.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312.0 550.0">Team Alpha</text>
-<text x="584.0" y="565.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">2</text>
-<text x="312.0" y="595.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312.0 550.0">Team Eta</text>
-<text x="584.0" y="595.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">0</text>
-<rect x="616.0" y="503.0" width="304.0" height="132.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="632.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="632.0 790.0">Quarter-final 2</text>
-<rect x="857.9" y="515.0" width="46.1" height="21.5" rx="10.75" fill="#22263f"/>
-<text x="881.0" y="528.5" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="861.9 900.0">Done</text>
-<text x="632.0" y="565.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="632.0 870.0">Team Gamma</text>
-<text x="904.0" y="565.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">2</text>
-<text x="632.0" y="595.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="632.0 870.0">Team Zeta</text>
-<text x="904.0" y="595.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
-<rect x="936.0" y="503.0" width="304.0" height="132.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
-<text x="952.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="952.0 1110.0">Semi-final 1</text>
-<rect x="1121.8" y="515.0" width="102.2" height="21.5" rx="10.75" fill="#3a3320"/>
-<text x="1172.9" y="528.5" font-size="11.5" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="1125.8 1220.0">Called 19:31</text>
-<text x="952.0" y="565.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="952.0 1190.0">Team Alpha</text>
-<text x="952.0" y="595.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="952.0 1190.0">Team Gamma</text>
-<rect x="1256.0" y="503.0" width="304.0" height="132.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
-<text x="1272.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1272.0 1430.0">Semi-final 2</text>
-<rect x="1434.8" y="515.0" width="109.2" height="21.5" rx="10.75" fill="#1e4244"/>
-<text x="1489.4" y="528.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1438.8 1540.0">Live · game 2</text>
-<text x="1272.0" y="565.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1272.0 1510.0">Team Beta</text>
-<text x="1544.0" y="565.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
-<text x="1272.0" y="595.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1272.0 1510.0">Team Delta</text>
-<text x="1544.0" y="595.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="end">0</text>
-<rect x="1576.0" y="503.0" width="304.0" height="132.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1592.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1592.0 1750.0">Final</text>
-<rect x="1810.9" y="515.0" width="53.1" height="21.5" rx="10.75" fill="#22263f"/>
-<text x="1837.5" y="528.5" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1814.9 1860.0">21:00</text>
-<text x="1592.0" y="565.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1592.0 1830.0">Winner of semi 1</text>
-<text x="1592.0" y="595.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1592.0 1830.0">Winner of semi 2</text>
+<text x="296.0" y="487.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">MATCHES · IN TIME ORDER · QUARTER-FINALS DONE · SEMI-FINALS NOW</text>
+<line x1="376.0" y1="520.0" x2="376.0" y2="725.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">19:35</text>
+<circle cx="376.0" cy="525.0" r="5" fill="#3c446c"/>
+<rect x="396.0" y="503.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="412.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Quarter-final 1</text>
+<text x="596.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Alpha</text>
+<text x="916.0" y="531.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">2 – 0</text>
+<text x="996.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Eta</text>
+<rect x="1815.3" y="514.0" width="48.7" height="22.0" rx="11" fill="#22263f"/>
+<text x="1839.7" y="529.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1819.3 1860.0">Done</text>
+<text x="296.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:00</text>
+<circle cx="376.0" cy="575.0" r="5" fill="#3c446c"/>
+<rect x="396.0" y="553.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="412.0" y="581.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Quarter-final 2</text>
+<text x="596.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Gamma</text>
+<text x="916.0" y="581.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">2 – 1</text>
+<text x="996.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Zeta</text>
+<rect x="1815.3" y="564.0" width="48.7" height="22.0" rx="11" fill="#22263f"/>
+<text x="1839.7" y="579.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1819.3 1860.0">Done</text>
+<text x="296.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:30</text>
+<circle cx="376.0" cy="625.0" r="5" fill="#3ee39a"/>
+<rect x="396.0" y="603.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
+<text x="412.0" y="631.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Semi-final 2</text>
+<text x="596.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Beta</text>
+<text x="916.0" y="631.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">1 – 0</text>
+<text x="996.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Delta</text>
+<rect x="1755.3" y="614.0" width="108.7" height="22.0" rx="11" fill="#1e4244"/>
+<text x="1809.6" y="629.0" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1759.3 1860.0">Live · game 2</text>
+<text x="296.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:50</text>
+<circle cx="376.0" cy="675.0" r="5" fill="#3ee39a"/>
+<rect x="396.0" y="653.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
+<text x="412.0" y="681.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Semi-final 1</text>
+<text x="596.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Alpha</text>
+<text x="916.0" y="681.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="856.0 976.0">vs</text>
+<text x="996.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Gamma</text>
+<rect x="1762.0" y="664.0" width="102.0" height="22.0" rx="11" fill="#3a3320"/>
+<text x="1813.0" y="679.0" font-size="11.5" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="1766.0 1860.0">Called 20:48</text>
+<text x="296.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">21:15</text>
+<circle cx="376.0" cy="725.0" r="5" fill="#3ddcff"/>
+<rect x="396.0" y="703.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="412.0" y="731.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Final</text>
+<text x="596.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Winner of semi 1</text>
+<text x="916.0" y="731.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="856.0 976.0">vs</text>
+<text x="996.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Winner of semi 2</text>
+<rect x="1808.7" y="714.0" width="55.3" height="22.0" rx="11" fill="#22263f"/>
+<text x="1836.3" y="729.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1812.7 1860.0">Later</text>
+<g transform="translate(0,125)">
 <text x="296.0" y="659.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">PLAYERS · 2 NEED YOU</text>
 <text x="296.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">TEAM</text>
 <text x="496.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">PLAYER</text>
@@ -158,7 +169,7 @@
 <rect x="716.0" y="710.0" width="61.9" height="22.0" rx="11.0" fill="#3d1f2a"/>
 <text x="747.0" y="724.0" font-size="12" fill="#ff6b81" font-weight="600" text-anchor="middle" data-box="720.0 773.9">Not in</text>
 <text x="896.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">none</text>
-<text x="1096.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Asked at the stage 19:27</text>
+<text x="1096.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Asked at the stage 20:47</text>
 <rect x="1766.2" y="705.0" width="113.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="1823.1" y="724.3" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1770.2 1876.0">Mark present</text>
 <line x1="296.0" y1="741.0" x2="1880.0" y2="741.0" stroke="#262c4a" stroke-width="1"/>
@@ -185,6 +196,7 @@
 <text x="896.0" y="846.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">none</text>
 <text x="1096.0" y="846.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">No platform account</text>
 <line x1="296.0" y1="861.0" x2="1880.0" y2="861.0" stroke="#262c4a" stroke-width="1"/>
+</g>
 </g></g>
 <circle cx="1593.0" cy="135.0" r="13" fill="#f59e0b"/>
 <text x="1593.0" y="140.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
@@ -202,9 +214,9 @@
 <text x="1614.0" y="323.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">the session&#x27;s revision (D10).</text>
 <circle cx="1593.0" cy="357.0" r="13" fill="#f59e0b"/>
 <text x="1593.0" y="362.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1614.0" y="362.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Matches are a card grid (card</text>
-<text x="1614.0" y="383.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">size): the called and the live</text>
-<text x="1614.0" y="404.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">match are framed (L2).</text>
+<text x="1614.0" y="362.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Matches are a list in time</text>
+<text x="1614.0" y="383.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">order, as the run of show: the</text>
+<text x="1614.0" y="404.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">called and live ones are framed (L2).</text>
 <circle cx="1593.0" cy="438.0" r="13" fill="#f59e0b"/>
 <text x="1593.0" y="443.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
 <text x="1614.0" y="443.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Players stay a table: compared</text>
