@@ -165,7 +165,7 @@ jobs:
       # Even when a shot fails, so screen-diff still names the tag it compared with.
       - name: The base's tag beside its shots
         if: always() && matrix.side == 'base'
-        run: if [ -f "$RUNNER_TEMP/tag" ]; then mkdir -p screenshots && cp "$RUNNER_TEMP/tag" screenshots/base-tag.txt; fi
+        run: if [ -f "$RUNNER_TEMP/tag" ] && [ -d screenshots ]; then cp "$RUNNER_TEMP/tag" screenshots/base-tag.txt; fi
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -82,9 +82,15 @@ export function run({ gh, env, dryRun = false }) {
   const runs = { ci: newest(WORKFLOWS.ci), demo: newest(WORKFLOWS.demo) };
   const refs = list(gh, `repos/${repo}/git/matching-refs/tags/`);
   const tags = refs.map((r) => r.ref.replace(/^refs\/tags\//, ""));
-  const tagsAtSha = refs.filter((r) => peel(gh, repo, r.object) === sha).map((r) => r.ref.replace(/^refs\/tags\//, ""));
   const mainHead = get(gh, `repos/${repo}/commits/main`).sha;
-  const decision = decide({ sha, mainHead, runs, tagsAtSha });
+  let decision = decide({ sha, mainHead, runs, tagsAtSha: [] });
+  // Only the tag path looks at the tags' objects, so a failed lookup cannot stop a release-red issue.
+  if (decision.action === "tag") {
+    const tagsAtSha = refs
+      .filter((r) => /^refs\/tags\/v0\.\d+\.\d+$/.test(r.ref) && peel(gh, repo, r.object) === sha)
+      .map((r) => r.ref.replace(/^refs\/tags\//, ""));
+    decision = decide({ sha, mainHead, runs, tagsAtSha });
+  }
 
   if (decision.action === "red") {
     const marker = markerOf(LABEL, sha);

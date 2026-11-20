@@ -176,3 +176,19 @@ test("an annotated tag at the sha counts as its tag", () => {
   assert.deepEqual(run({ gh: annotated, env }), { action: "skip", reason: "already tagged" });
   assert.deepEqual(gh.writes, []);
 });
+
+test("a red push with a failing tag lookup still files its issue", () => {
+  const gh = repo({ demo: "failure", tags: [["step-3", "c".repeat(40)]] });
+  const TAG_OBJECT = "e".repeat(40);
+  const broken = (args) => {
+    const path = args.at(-1);
+    if (path === "repos/o/r/git/matching-refs/tags/") {
+      return [{ ref: "refs/tags/v0.4.0", object: { sha: TAG_OBJECT, type: "tag" } }]
+        .map((r) => JSON.stringify(r)).join("\n");
+    }
+    if (path.startsWith("repos/o/r/git/tags/")) throw new Error("404");
+    return gh(args);
+  };
+  broken.writes = gh.writes;
+  assert.deepEqual(run({ gh: broken, env }), { action: "red", filed: true });
+});
