@@ -9,11 +9,27 @@ Nothing here is copied from the legacy repo: it is described. Short identifiers 
 - **What it is.** The legacy system repo: a map of the other repos, the cross-repo contracts, plans, one runbook, one systemd unit, and the operator scripts (status, logs, restart, deploy over SSH). It runs no service, holds no data and has no migrations.
 - **What it ties together.** Five running pieces on three kinds of host: the signage server and the mini-tourney inside WSL2 on a venue laptop, the Discord bot on a home-server guest, the signup site on a hosted serverless platform, and the planned manager on its own home-server container. The links between them are tailnet HTTP, bearer tokens and one browser `postMessage` protocol, all written down here as contracts.
 - **Size.** 36 tracked files, 3730 lines; 63 commits from 2026-10-15 to 2026-10-30, one author. Read at commit `d5e3bb4d01` (`main`, 2026-10-30).
+- **Refreshed** on 2026-11-20 at commit `0dff5d01c6` (`main`, 2026-11-13), issue #677: the 17 commits since, their diffs and the 27 files they add, read in a fresh clone; the two script tests run. Now 63 tracked files, 6505 lines; 80 commits to 2026-11-13. What changed is in [Refresh 2026-11-20](#refresh-2026-11-20); the sections below carry it in place, each changed fact with its commit or file, and facts without a link hold at both commits. In one line: the repo now also runs the mini-tourney off the LAN, on a public cloud host, and holds the contract the bot's `/finals` uses.
 - **Port verdict.** Almost nothing ports as code. The scripts, unit, runbook and Windows steps are dropped ([0010](../decisions/0010-scope.md)). The contracts are the valuable part: they are the most exact description of how the legacy pieces talk, and each one feeds a new contract (Screen #35, event catalog #34, the module contracts written at the start of each port).
+
+## Refresh 2026-11-20
+
+The 17 commits from `d5e3bb4d01` to `0dff5d01c6` (2026-11-07 to 2026-11-13), as facts. Host names, addresses, ids and hashes in them are counted under [Event-specific content](#event-specific-content), not named.
+
+- **A new contract, `docs/contracts/finals-provider-api.md`** ([3f63353], 155 lines): what a finals provider offers the bot's `/finals`. `GET {base}/status` (the newest open season, else the newest finished, else `null`), `POST {base}/seasons/{id}/entries` (sign-up by Discord user; `201` new, `200` with `created: false` when the user already has one), `GET` and `DELETE {base}/seasons/{id}/entries/by-discord/{discord_user_id}`, and `POST {base}/links` (a personal page link and its expiry). JSON in snake_case, opaque string ids, ISO 8601 UTC times, errors `{error: {code, message}}` with seven codes (`no_season`, `registration_closed`, `name_taken`, `not_registered`, `rate_limited`, `unauthorized`, `invalid_request`), consumers branch on `code`; an additive rule. Three providers in its base-URL table: the staging and the public mini-tourney (bearer) and, later, the platform's `finals` module at `/api/finals` (no bearer; the event from the hostname). It says the platform's `contracts/finals.md` stub copies these shapes and a change is passed between the two. Its "Verified against" still says "not yet implemented", although the provider shipped the same day ([mini tourney inventory](thefinals_mini_tourney.md#refresh-2026-11-20)). It lists `/finals register` and `/finals cancel` subcommands; the bot shipped one `/finals` command with buttons ([canccubot inventory](canccubot.md#discord-slash-commands-35-34-at-the-first-read-and-context-menus-4)). Its source doc is a private chat artifact.
+- **`docs/contracts/tourney-api.md`** ([3f63353], [40cd19a]): the formats `fourqc` and `three` and their capacities; base URLs per deployment (a staging base on the private network, the public base through a tunnel; the venue LAN link and the private-network read base retired); a **read gate** section: with the provider's gate on, reads and the SSE stream need a session cookie (from a `/finals` link) or the same bearer as the provider API, else `401` with a plain-string `error`; it ships off, consumers send the bearer first, then it is turned on; `update` is not sent after `POST /api/session` or `POST /api/provider/links`. Verified against the staging and the public instance. The state `cancelled`, added upstream on 2026-11-12, is not in it.
+- **Three contracts renamed their provider repo** ([46d2761]): `lan-display-views.md`, `screen-postmessage.md` and `site-api.md` now name the signup site's repo under the organization instead of a personal account. Nothing else changed in them.
+- **Six plans** (facts only; each has its status log): `docs/plans/issue-157.md` ([4b1ae7d]: the provider API and the Discord link session, built upstream), `issue-163.md` ([c807dc7]: extract the ladder, rankings and team builder into [finals-core](https://github.com/glyzer/finals-core), tag only, npm later), `issue-159.md` ([00b0639]: a staging tourney and a dev bot, one season end to end on a test Discord server), `issue-160.md` ([878df44]: the public host, the tunnel, backups and the switch of the tourney's hostname from the venue LAN to the cloud), `issue-186.md` ([9c9a0d2]: a forced-command deploy user, releases and rollback), `issue-194.md` ([0dff5d0]: the venue database replacing the public one).
+- **Runbooks** (facts only): `docs/runbooks/finals-off-lan.md` ([3e84a42]: running a season off the LAN: checks before, opening a season from a `/finals` admin link, players and links, admin roles and revocation by rotating the link secret, the backup table, restore, secret rotation, after the season); `tourney-aws.md` ([878df44]: the host, its tunnel with no inbound ports, backups, the retired venue instance); `tourney-aws-deploy.md` ([9c9a0d2], [be06a84], [82f35c4], [0dff5d0]: the deploy path, the upstream workflow's text and exit codes, key rotation, replacing the database from another instance, manual rollback, "ROLLBACK FAILED"); `tourney-staging.md` ([00b0639], [c982a48]); the venue runbook carries a "Retired" banner ([3e84a42]).
+- **The off-LAN Finals hosting, as built** ([878df44], [9c9a0d2], [be06a84]): the upstream app runs on one small cloud VM as a hardened systemd unit under its own system user (`deploy/thefinals-tourney-aws.service`); the public hostname reaches it only through an outbound tunnel connector, so the VM has no inbound ports and admin SSH goes over the private network. `READ_GATE=1` and `INDIVIDUAL_ONLY=1` are set there. Backups: a nightly integrity-checked SQLite backup on the host (7 kept) and a pull to the bot's guest an hour later over a key limited by source address and a forced command (30 kept). Deploys: every merge to the upstream `main` runs `test`, then a GitHub runner joins the private network with a tag that may reach only the VM's SSH and calls `deploy/finals-deploy` (162 lines) as a forced command: one 40-hex sha that must be on `main`, a lock, a build as a separate user into a read-only release directory, a database backup, an atomic switch, a health check within 60 s, and on failure a restore and the previous release (exit codes 0–4; 5 releases and 20 backups kept). A manual fallback runs the same script. The venue instance was retired on 2026-11-10, and on 2026-11-13 the venue database replaced the cloud one after a backup ([0dff5d0]).
+- **Staging** ([00b0639]): a second tourney instance on the venue laptop (port 3001, HTTPS on the private network only) and a dev bot on the bot guest (health port 8081) that talks only to a test Discord server, each with its unit (`deploy/thefinals-tourney-staging.service`, `deploy/canccubot-staging.service`). At the read commit staging still runs; its teardown waits on a later legacy issue.
+- **Scripts** ([00b0639], [878df44], [9c9a0d2]): `status`, `logs`, `restart` and `deploy` know three more services, `tourney-staging`, `bot-staging` and `tourney-aws` (host and directory from the environment only), in bash and PowerShell; `deploy.sh --service tourney-aws [--sha]` runs the host's script; the deploy word of one service never deploys another. `scripts/test-finals-deploy.sh` (new) runs the real deploy script against a temp root with fakes; `scripts/test-deploy-guard.sh` grows from 5 to 15 checks.
+- **`tailscale/policy.hujson`** ([9c9a0d2]): the private network's access policy kept as a file: tags for the tourney VM and the CI runner, grants (members anywhere; shared users and the runner only to the VM's SSH), an SSH check rule, and policy tests that the VM cannot reach the other hosts.
+- **Map and upstream rules** ([878df44], [c232cf9], [de0b3e2], [54c480d], [0777f3e], [be06a84]): `CLAUDE.md` adds the cloud host, the tunnel, staging and [finals-core](https://github.com/glyzer/finals-core) as a platform repo; `docs/upstream/thefinals_mini_tourney.md` now says CI runs `npm test` on every PR, the finals-core pin must be a release tag, bump PRs come from a daily workflow with a fine-grained token that has no expiry by choice, every merge to `main` is a production deploy, and the step asking the tourney's author to review a PR is dropped.
 
 ## Coverage
 
-Every tracked file was read in full; nothing was skipped. "Lines" is `wc -l`.
+Every tracked file was read in full; nothing was skipped. "Lines" is `wc -l`. At the refresh the 27 added files and every diff were read in full; the table is the first read's.
 
 | Directory | Files | Lines | Files read |
 |---|---|---|---|
@@ -38,7 +54,7 @@ This repo serves nothing itself. Its features are either operator tools that run
 
 | # | Feature | Where | Reached by |
 |---|---|---|---|
-| O1 | Service status: `systemctl is-active` of one unit over SSH, exit 0 only when active | `scripts/status.sh`, `scripts/status.ps1`, `scripts/lib.sh` | Command `status.sh --service signage\|bot\|tourney\|manager` (PowerShell: signage, bot, tourney only) |
+| O1 | Service status: `systemctl is-active` of one unit over SSH, exit 0 only when active | `scripts/status.sh`, `scripts/status.ps1`, `scripts/lib.sh` | Command `status.sh --service signage\|bot\|tourney\|manager` (PowerShell: signage, bot, tourney only); since [00b0639] and [878df44] also `tourney-staging`, `bot-staging`, `tourney-aws`, in both shells |
 | O2 | Service logs: last N journal lines (1–5000, default 100) of one unit over SSH | `scripts/logs.sh`, `scripts/logs.ps1` | Command `logs.sh --service … [--lines N]` |
 | O3 | Service restart: `sudo systemctl restart` of one unit, with a prompt | `scripts/restart.sh`, `scripts/restart.ps1` | Command `restart.sh --service … [--yes]` |
 | O4 | Deploy: one SSH call runs a remote script with named steps (sync to `origin/main` with a hard reset, Node check, install, build, version, restart, kiosk); a failure names the step | `scripts/deploy.sh`, `scripts/deploy.ps1` | Command `deploy.sh --service …`; the `deploy` workflow word |
@@ -48,11 +64,16 @@ This repo serves nothing itself. Its features are either operator tools that run
 | O8 | Kiosk reload after a signage deploy: kill the kiosk browser, wait 3 s, start the kiosk scheduled task on Windows; the "restart display" action the manager was to reuse | `scripts/deploy.sh`, `scripts/deploy.ps1`, `docs/lessons.md` | Deploy of signage |
 | O9 | Manager deploy with a sudoers pre-check (the deploy user may run only `daemon-reload` and the unit restart) | `scripts/deploy.sh`, `deploy/README.md` | `deploy.sh --service manager` (bash only) |
 | O10 | SSH hard timeout per call (`CANCCU_SSH_TIMEOUT`, default 120 s), failing with the step name; WSL wrapping (`--distro`) for Windows OpenSSH hosts | `scripts/lib.sh` | All bash scripts |
-| O11 | Mini-tourney host setup: systemd unit (user substituted at install, secrets in a root-only env file), venue LAN exposure via a Windows port proxy 80 → 3000 and a firewall rule, DNS-only record for a LAN hostname, on-site checklist | `deploy/thefinals-tourney.service`, `docs/runbooks/thefinals-tourney-venue.md` | Manual runbook |
+| O11 | Mini-tourney host setup: systemd unit (user substituted at install, secrets in a root-only env file), venue LAN exposure via a Windows port proxy 80 → 3000 and a firewall rule, DNS-only record for a LAN hostname, on-site checklist. **Retired** on 2026-11-10 ([878df44], [3e84a42]) | `deploy/thefinals-tourney.service`, `docs/runbooks/thefinals-tourney-venue.md` | Manual runbook |
 | O12 | CI: PowerShell static analysis, shellcheck, markdown link check | `.github/workflows/ci.yml`, `.lycheeignore` | Every PR and push to `main` |
 | O13 | Workflow: the one-word commands (`issues`, `<n>`, `execute`, `finish`, `ship`, `pause`, `resume`, `groom`), standard issue body, ready chain, contracts-first rule, lessons | `CLAUDE.md`, `docs/lessons.md` | Claude Code sessions |
 | O14 | Upstream rules for the mini-tourney repo (minimum changes by PR, no tooling files there, issues tracked here with a `tourney` label, `npm test` as the only gate) | `docs/upstream/thefinals_mini_tourney.md`, `CLAUDE.md` | Sessions in the tourney clone (loaded through an untracked local file) |
 | O15 | System map: repos, hosts, network paths, contract list | `CLAUDE.md` | Reading |
+| O16 | Public mini-tourney host (new, [878df44], [9c9a0d2]): hardened unit, outbound tunnel, no inbound ports, nightly backup on the host and a pull to the bot guest, restore and secret-rotation steps | `deploy/thefinals-tourney-aws.service`, `deploy/thefinals-tourney-backup.*`, `deploy/finals-backup-pull.*`, `deploy/finals-backup-send`, `docs/runbooks/tourney-aws.md`, `docs/runbooks/finals-off-lan.md` | Manual runbook; `status.sh`, `logs.sh`, `restart.sh --service tourney-aws` |
+| O17 | Deploy on merge with release directories and automatic rollback (new, [9c9a0d2], [be06a84]): the forced-command `deploy` user, its sudoers rule and sshd drop-in, the pinned host key | `deploy/finals-deploy`, `deploy/finals-deploy.sudoers`, `deploy/finals-deploy-sshd.conf`, a `.known_hosts` file named after the host, `docs/runbooks/tourney-aws-deploy.md` | The upstream deploy workflow; by hand `deploy.sh --service tourney-aws [--sha]` |
+| O18 | Staging pair (new, [00b0639]): a second tourney and a dev bot for a test Discord server | `deploy/thefinals-tourney-staging.service`, `deploy/canccubot-staging.service`, `docs/runbooks/tourney-staging.md` | `--service tourney-staging`, `--service bot-staging` |
+| O19 | The private network's access policy as a file, with policy tests (new, [9c9a0d2]) | `tailscale/policy.hujson` | Pasted into the network's admin console |
+| O20 | Replace the tourney database from another instance, with a backup and a rollback (new, [0dff5d0]) | `docs/runbooks/tourney-aws-deploy.md`, `docs/plans/issue-194.md` | Manual runbook |
 
 ### Cross-repo features (defined here, implemented elsewhere)
 
@@ -72,11 +93,12 @@ This repo serves nothing itself. Its features are either operator tools that run
 | X12 | Pizza ticker and pizza sound cues on the screen | Everyone | `docs/contracts/signage-control-api.md`, `docs/plans/pizza-orders-v1.md` | signage (polls the site) | `GET /api/screen/state` field `pizzaCue` |
 | X13 | Tournament events, registration, roster, scores, leaderboard with per-route auth | Players, admins | `docs/contracts/site-api.md` | signup site, bot | `/api/tournament/**`, `/tournament register` |
 | X14 | Polls and Discord stats snapshots pushed by the bot | Everyone (screen), voters | `docs/contracts/site-api.md` | bot, signup site | `/api/polls*`, `/api/snapshots/*` |
-| X15 | Mini-tourney read API and live updates | Bot watcher | `docs/contracts/tourney-api.md` | tourney | `/api/seasons`, `/api/events` (SSE) |
+| X15 | Mini-tourney read API and live updates; since [3f63353] behind a read gate (session cookie or the bot's bearer) and with base URLs per deployment | Bot watcher | `docs/contracts/tourney-api.md` | tourney | `/api/seasons`, `/api/events` (SSE) |
 | X16 | Manager: health poller, state history, alerts to Discord with Acknowledge, mute, logs on demand, restart and restart-display actions with a live-cast guard, action log, auto-restart policy (planned; contract written before the code) | Operators, bot admins | `docs/contracts/manager-api.md`, `docs/plans/canccumanager.md`, `docs/plans/PLAN_17_CANCCUMANAGER_REBUILD.md` | canccumanager, bot (`/platform …`, `/alert`) | Tailnet API, status page, Discord |
 | X17 | Manager heartbeat: the manager pushes to the signup site every 60 s; a scheduled check alerts a Discord webhook when it stops (planned) | Operators | `docs/contracts/manager-heartbeat.md` | canccumanager, signup site | `POST /api/manager-heartbeat` |
 | X18 | Low-latency casting: anyone on the LAN casts a screen, window or tab to the projector over WebRTC through a relay; hooks post the takeover; stall guard; End cast (planned) | Attendees, crew | `docs/plans/PLAN_15_LOW_LATENCY_CASTING.md` | signage with a MediaMTX relay, bot (`/cast`) | Cast page, WHIP, `/cast stop` |
-| X19 | Mini-tourney on the venue LAN by hostname | Players | `docs/runbooks/thefinals-tourney-venue.md` | tourney | A LAN hostname, `/admin.html` |
+| X19 | Mini-tourney on the venue LAN by hostname. **Retired** ([878df44]): the hostname now points at the public host | Players | `docs/runbooks/thefinals-tourney-venue.md` | tourney | A LAN hostname, `/admin.html` |
+| X20 | Finals by Discord (new, [3f63353]): `/finals` shows the season, signs a player up or withdraws them, and hands out a personal page link that signs them in (admin when they hold an admin role) | Players, finals admins | `docs/contracts/finals-provider-api.md`, `docs/runbooks/finals-off-lan.md` | tourney (provider), bot (`/finals`) | `/finals`, then the page |
 
 ## Interfaces
 
@@ -90,7 +112,10 @@ This repo serves no HTTP, has no Discord client, no socket and no bus. Below, A 
 | `scripts/logs.sh` / `logs.ps1` | as above plus `--lines N` (1–5000) [`-Lines`] | Prints journal lines | ssh exit |
 | `scripts/restart.sh` / `restart.ps1` | as status plus `--yes` [`-Confirm:$false`] | Restarts the unit after a prompt | 1 on failure or abort |
 | `scripts/deploy.sh` / `deploy.ps1` | as restart plus `--*-dir` overrides [`-*Dir`] | Remote steps `sync`, `node`, `install`, `build`, `version` (bot), `sudoers` (manager), `restart`, `kiosk` (signage), `done` | 1 with the failed step |
-| `scripts/test-deploy-guard.sh` | none | Five cases against a fake `ssh` on `PATH` | 1 on any failure |
+| `scripts/test-deploy-guard.sh` | none | Five cases against a fake `ssh` on `PATH` (15 since [00b0639], [878df44], [9c9a0d2]) | 1 on any failure |
+| `scripts/test-finals-deploy.sh` (new, [9c9a0d2]) | none | 36 checks of `deploy/finals-deploy` against a temp root with fake `systemctl`, `curl`, `npm`, `sqlite3` and a local git upstream | 1 on any failure |
+
+Since [00b0639] and [878df44] three more services: `tourney-staging` (venue laptop, a second checkout and unit), `bot-staging` (bot guest, a second checkout and unit) and `tourney-aws` (the cloud VM as `ubuntu`, `/opt/finals/current`, unit `thefinals-tourney`; `deploy` calls the host's `finals-deploy` with a sha, default the head of upstream `main`). They take hosts and directories from `CANCCU_*` variables only, no flags.
 
 Service table (bash defaults; each overridable by `CANCCU_<NAME>` and by flag): signage → venue laptop host, `~/canccusignage`, unit `canccusignage-supervisor`, `npm ci` + `npm run build`; tourney → venue laptop host, `~/thefinals_mini_tourney`, unit `thefinals-tourney`, `npm ci --omit=dev`; bot → bot guest host, `/opt/canccubot`, unit `canccubot`, `.venv/bin/pip install -e .`; manager → manager container host, `/opt/canccumanager`, unit `canccumanager`, `npm ci` + `npm run build`. Unreachable-host messages name the host kind ("check that it is powered and on the tailnet").
 
@@ -172,16 +197,30 @@ Pizza routes, all under `/api/pizza` (the signage server reads `GET /api/pizza/s
 
 Error codes: `400 invalid_body`; `401 token_expired` (else a plain 401); `403 closed`, `not_owner`, `not_orderer`; `404`; `409 another_open`, `claimed`, `has_pizzas`, `placed`, `not_placed`.
 
-**Mini-tourney (provider thefinals_mini_tourney; read-only contract, no auth).**
+**Mini-tourney (provider thefinals_mini_tourney; read-only contract, no auth; since [3f63353] a read gate, below).**
 
 | Method and path | Response |
 |---|---|
-| `GET /api/seasons` | Array, newest first: `id`, `name` (≤ 60), `state` (`register`\|`active`\|`finished`), `format` (`twelve`, `nine`, `eight`, `six`, `four`), `created_at` (SQLite UTC text), `team_count`, `mode` (`teams`\|`individual`) |
+| `GET /api/seasons` | Array, newest first: `id`, `name` (≤ 60), `state` (`register`\|`active`\|`finished`), `format` (`twelve`, `nine`, `eight`, `six`, `four`; `fourqc` and `three` since [3f63353]), `created_at` (SQLite UTC text), `team_count`, `mode` (`teams`\|`individual`) |
 | `GET /api/seasons/:id` | `season` (adds `started_at`, `finished_at`, arena fields), `capacity`, `individuals.count`, `teams[]` (`id`, `name`, `players` of 3), `champion`; `404`; never edit tokens |
 | `GET /api/events` | SSE (section D) |
 | `GET /api/healthz` | Health shape, check `database`, version = short sha |
 
 Creating a season while one is not finished is `409`. Write routes and `/admin.html` are outside the contract (#73).
+
+Since [3f63353] and [40cd19a]: the base URL is per deployment (staging on the private network, the public host; the venue LAN link and the private-network base retired); with the provider's read gate on, every route above needs a session cookie or `Authorization: Bearer <secret>` (the provider API's), else `401 {"error": "Sign in with the Discord link"}`; `update` is not sent after `POST /api/session` or `POST /api/provider/links`. The provider also returns the state `cancelled` since 2026-11-12, which the contract does not list ([mini tourney inventory](thefinals_mini_tourney.md#refresh-2026-11-20)).
+
+**Finals provider (new, [3f63353]; providers: the mini-tourney with a bearer, later the platform's `finals` module without one; consumer: the bot's `/finals`).** Paths relative to `{base}` (`…/api/provider` on the mini-tourney, `…/api/finals` on the platform). Errors `{error: {code, message}}`.
+
+| Method and path | Request | Response |
+|---|---|---|
+| `GET /status` | none | `200 {season: {id, name, state, mode, format, registered, capacity, champion} \| null}` |
+| `POST /seasons/{id}/entries` | `{discord_user_id, name}` | `201 {id, created: true}`; `200 {id, created: false}` when the user has one; `no_season`, `registration_closed` (not `register`, or team mode), `name_taken`, `invalid_request` |
+| `GET /seasons/{id}/entries/by-discord/{discord_user_id}` | none | `200 {id, name, team_id}`; `no_season`, `not_registered` |
+| `DELETE /seasons/{id}/entries/by-discord/{discord_user_id}` | none | `204`; `no_season`, `not_registered`, `registration_closed` |
+| `POST /links` | `{discord_user_id, discord_username, role_ids?}` | `200 {url, expires_at}` (about 15 min on the mini-tourney; a hub URL on the platform); `invalid_request` |
+
+Also `rate_limited` (429) and `unauthorized` (401) on any route.
 
 **Manager (provider canccumanager; planned; tailnet only; `Authorization: Bearer` per client plus `X-Caller`; errors `{error:{code, message, warnings?}}`).**
 
@@ -214,6 +253,7 @@ Implemented in canccubot (#69); named here only.
 | `/adminlink` | Mints the signage login link after a role check (lifetime 300 s, fresh `jti`) | `docs/contracts/admin-link-auth.md` |
 | `/tournament register` | Mints or reuses the attendee token (7 days) and links the registration page | `docs/contracts/site-api.md` |
 | `/pizza order`, `/pizza claim` | Ephemeral link buttons to `/pizza` and `/pizza/orderer` with the same token | `docs/plans/pizza-orders-v1.md` |
+| `/finals`, `/finals register`, `/finals cancel` (new, [3f63353]) | Season status, sign-up and withdraw, a page link; the bot shipped one `/finals` command with buttons instead of subcommands | `docs/contracts/finals-provider-api.md` |
 | `/platform status [subsystem]`, `/platform logs`, `/platform restart`, `/platform update`, `/platform deploy`, `/platform mute` | Manager through the bot, admin role only (planned) | `docs/plans/canccumanager.md` |
 | `/platform event-mode` | Only in the older manager plan; dropped in the newer one | `docs/plans/PLAN_17_CANCCUMANAGER_REBUILD.md` |
 | `/stream` → `/cast status`, `/cast stop` | Legacy stream commands to be repurposed for casting (planned) | `docs/plans/PLAN_15_LOW_LATENCY_CASTING.md` |
@@ -226,7 +266,7 @@ Implemented in canccubot (#69); named here only.
 
 ### D. WebSocket, SSE and streams
 
-- `GET /api/events` on the mini-tourney: SSE; `: connected` on connect, then `data: update` after every successful non-GET under `/api`; no id, no replay; clients re-read.
+- `GET /api/events` on the mini-tourney: SSE; `: connected` on connect, then `data: update` after every successful non-GET under `/api`; no id, no replay; clients re-read. Since [3f63353] behind the read gate; the 30 s keepalive ping the provider added is in the [mini tourney inventory](thefinals_mini_tourney.md#c-websocket-sse-and-streams).
 - Manager actions "stream" their output; the transport is not specified.
 - Cast: WHIP in, WebRTC out (planned).
 - No WebSocket anywhere.
@@ -284,13 +324,13 @@ This repo stores no data and has no migrations. The stores below are the ones it
 | `pizza_orders` | signup site | `id`, `date`, `seq` (unique per date), `pizzeria_id`, `target_at`, `note`, `opened_at`, `opened_by_name`, `closed_at`, `orderer_discord_user_id`, `orderer_name`, `claimed_at`, `placed_at`, `payer_discord_user_id`, `payer_name`, `bill_total_cents`, `cancelled_at`, `cancelled_by_name`, `created_at`; partial unique index allows one open order | per event | permanent (for the bill system) |
 | `pizza_order_log` | signup site | `id`, `order_id`, `at`, `discord_user_id`, `display_name`, `event`, `detail` (JSON); append-only | per event | permanent |
 | `pizza_items` | signup site | `id`, `order_id`, `discord_user_id`, `display_name`, `kind`, `menu_item_id`, `custom_toppings`, `text`, `note`, `comment`, `created_at`, `updated_at` | per event | permanent |
-| Tourney database (SQLite file `DB_FILE`) | tourney | seasons, teams (with edit tokens), individuals, matches, rounds, champion | per event | not stated |
+| Tourney database (SQLite file `DB_FILE`) | tourney | seasons, teams (with edit tokens), individuals, matches, rounds, champion | per event | not stated; since [878df44] on the cloud VM with a nightly backup kept 7 days on the host and 30 days on the bot guest, plus a backup before each deploy (20 kept, [9c9a0d2]); the venue copies archived on the bot guest; replaced by the venue database on 2026-11-13 ([0dff5d0]) |
 | Manager database (SQLite, planned) | manager | state history, events, acknowledgements (who), mutes, action log | global | not stated |
 | `config/subsystems.yaml` (planned) | manager | subsystems, health URL, host, action catalog, `autoRestart`, `confirmPolls`, `cooldownSeconds`, `maxAttempts` | global (hosts are venue and home) | repo |
 | Bot finals memory | bot | last `{seasonId, phase}`, cards shown, "cleared since last push" | per event | not stated |
-| Host files | hosts | tourney env file (mode 600), manager env file, signage auth env file (`AUTH_ENV_FILE`), adapter env file, bot systemd drop-in, deploy sudoers rule | per host | until changed |
+| Host files | hosts | tourney env file (mode 600), manager env file, signage auth env file (`AUTH_ENV_FILE`), adapter env file, bot systemd drop-in, deploy sudoers rule; since the refresh also the cloud VM's env file, tunnel token file, deploy log, release directories and the staging env files | per host | until changed |
 
-Nothing in the repo describes backups of any of these.
+Nothing in the repo describes backups of any of these. Since [878df44] and [9c9a0d2] the tourney's database is the exception (above, and the runbook `docs/runbooks/finals-off-lan.md` § Backups and § Restore).
 
 ## Configuration
 
@@ -305,6 +345,7 @@ Secret values are never in the repo and none are copied here.
 | `CANCCU_SIGNAGE_UNIT`, `CANCCU_TOURNEY_UNIT`, `CANCCU_BOT_UNIT`, `CANCCU_MANAGER_UNIT` | `canccusignage-supervisor`, `thefinals-tourney`, `canccubot`, `canccumanager` | systemd unit |
 | `CANCCU_SSH_TIMEOUT` | 120 | Seconds per SSH call |
 | `DEPLOY_CONFIRM` | unset | Must equal the service for `--yes`; set only by the deploy word |
+| `CANCCU_TOURNEY_STAGING_HOST`, `CANCCU_BOT_STAGING_HOST`, `CANCCU_TOURNEY_AWS_HOST`, and the matching `_DIR` and `_UNIT` names, `CANCCU_TOURNEY_AWS_UPSTREAM` (new, [00b0639], [878df44]) | private-network host names; the staging checkouts and units; `/opt/finals/current`; the upstream repo slug | The three new services; environment only, no flags |
 | Internal names `SIGNAGE_HOST`, `TOURNEY_HOST`, `BOT_HOST`, `MANAGER_HOST`, `SIGNAGE_DIR`, `TOURNEY_DIR`, `BOT_DIR`, `MANAGER_DIR`, `SIGNAGE_UNIT`, `TOURNEY_UNIT`, `BOT_UNIT`, `MANAGER_UNIT`, `SSH_HOST`, `SSH_TIMEOUT` | from the above | Shell variables in `scripts/lib.sh`, not read from the environment |
 | PowerShell `-SignageHost`, `-TourneyHost`, `-BotHost`, `-SignageDir`, `-TourneyDir`, `-BotDir`, `-SignageUnit`, `-TourneyUnit`, `-BotUnit` | same values | No manager entries and no environment overrides |
 
@@ -315,9 +356,10 @@ Secret values are never in the repo and none are copied here.
 | `BOT_VERSION` | short git sha | Bot `/healthz` version (drop-in) |
 | `HEALTH_PORT` | 8080 | Bot health listener port (drop-in) |
 | `HEALTH_HOST` | the guest's tailnet IPv4 | Bot health bind address (drop-in) |
-| `ADMIN_PASSWORD` | secret, chosen at install | Tourney shared admin password (env file) |
-| `PORT` | 3000 | Tourney port |
-| `DB_FILE` | absolute path under the user's state directory | Tourney SQLite file |
+| `ADMIN_PASSWORD` | secret, chosen at install | Tourney shared admin password (env file); gone from the app since 2026-11-08 |
+| `PORT` | 3000 | Tourney port (3001 for staging, [00b0639]) |
+| `DB_FILE` | absolute path under the user's state directory | Tourney SQLite file (under `/var/lib/thefinals-tourney/` on the cloud VM) |
+| `PUBLIC_BASE_URL`, `TRUST_PROXY` (`loopback` behind the tunnel), `PROVIDER_TOKEN`, `LINK_SECRET`, `ADMIN_ROLE_IDS`, `READ_GATE=1`, `INDIVIDUAL_ONLY=1` (new, [878df44]) | names only; secrets set on the host | The cloud VM's tourney env file (root, mode 600); `PROVIDER_TOKEN` equals the bot's `FINALS_PROVIDER_TOKEN` |
 
 ### Named by the contracts (other repos)
 
@@ -351,6 +393,8 @@ Secret values are never in the repo and none are copied here.
 | Admin Discord webhook | site, manager | secret | Stale-heartbeat and fallback alerts |
 | `STREAM_TOKEN`, `CONTROL_URL`, `CAST_DIRECTIVE`, `STALL_SECONDS` | cast hooks (planned) | secret, none, none, 300 | Hook environment |
 | `ADMIN_PASSWORD`, `PORT`, `DB_FILE` | tourney | see above | |
+| `FINALS_PROVIDER_TOKEN` (new, [3f63353]) | bot | secret | The provider bearer; the tourney's `PROVIDER_TOKEN` |
+| `FINALS_CORE_BUMP_TOKEN` (new, [0777f3e]) | tourney repo secret | a fine-grained token, no expiry by choice | Opens finals-core bump PRs |
 
 Settings (not env): the nine trigger settings (`gameThreshold` 4, `bannerDisplaySeconds` 120, `bannerCooldownSeconds` 900, `testMode` false, `pollHighlightSeconds` 60, `pollResultSeconds` 180, `announceDefaultSeconds` 60, deprecated `finalsOpenSeconds` and `finalsStartSeconds` 60); sound settings (`catchUpEnabled` false, flood guard limits, per-cue sounds); carousel `spotlightDurationSeconds` 60; the lan-display URL params in section B; manager `subsystems.yaml` keys.
 
@@ -359,13 +403,16 @@ Settings (not env): the nine trigger settings (`gameThreshold` 4, `bannerDisplay
 | Integration | Used for | Needs |
 |---|---|---|
 | Discord | Commands, presence/voice/game data, login links, alerts, Acknowledge, carousel photos | The bot's token and intents (in canccubot); role ids; an admin channel; two webhooks (admin, pizza) |
-| Tailscale | Every operator and service path between dev PC, venue laptop, bot guest and manager | All hosts on one tailnet with MagicDNS; Tailscale inside WSL2 (not on Windows); `tailscale ip -4` on the bot guest |
+| Tailscale | Every operator and service path between dev PC, venue laptop, bot guest and manager | All hosts on one tailnet with MagicDNS; Tailscale inside WSL2 (not on Windows); `tailscale ip -4` on the bot guest. Since the refresh also the cloud VM and the CI runner, the access policy kept as `tailscale/policy.hujson` ([9c9a0d2]), and `tailscale serve` for the staging HTTPS ([00b0639]) |
 | SSH | All scripts; the manager's action catalog | Key-based login (`BatchMode`), Windows OpenSSH or sshd in WSL, passwordless `sudo` for restarts |
 | systemd and journald | Units, restarts, logs, drop-ins | On every Linux host, including WSL2 |
 | Windows | Kiosk browser and its scheduled task, port proxy 80 → 3000 (IP Helper service), firewall rule (private and domain profiles), the cast relay | Admin PowerShell once per laptop |
 | Hosted serverless platform of the signup site | The site, its SQL database, scheduled checks, DNS records, logs API | Its account (held by the site's maintainer); CI deploys on merge |
 | DNS | A DNS-only record pointing a LAN hostname to a venue static lease; planned certificate for a cast hostname by DNS validation | Venue lease known in advance; venue resolver must not strip private answers |
 | Proxmox | Bot guest, manager container; planned guest restart through its API | API token on the manager |
+| A public cloud VM (new, [878df44]) | The public mini-tourney: one small VM, no inbound rules, recovery through the cloud's session manager | The tourney author's cloud account; the VM on the private network with its own tag |
+| An outbound tunnel of the DNS provider (new, [878df44]) | The public hostname to the VM without open ports; security headers and a write rate limit at the edge | A tunnel token on the VM only; the dashboard of the DNS account |
+| GitHub Actions in the tourney repo (new, [be06a84]) | Deploy on merge: a runner joins the private network as an ephemeral tagged node through an OAuth client and runs the forced-command deploy | OAuth client secrets, a deploy key and the pinned host key as repo secrets |
 | GitHub Actions | CI here; site deploys on merge | |
 | MediaMTX, WebRTC/WHIP (planned) | Casting | Binary on the Windows side, UDP and TCP ports open, H.264 senders, a trusted certificate |
 | YouTube | Assets on signage; private videos only by casting a tab | |
@@ -378,18 +425,19 @@ Settings (not env): the nine trigger settings (`gameThreshold` 4, `bannerDisplay
 | File | Covers |
 |---|---|
 | `scripts/test-deploy-guard.sh` | `deploy.sh` guard with a fake `ssh`: `--yes` without `DEPLOY_CONFIRM` refused; wrong value refused; matching value reaches the host once; `--dry-run` needs no confirm; non-interactive without `--yes` refused |
+| `scripts/test-finals-deploy.sh` (new, [9c9a0d2]) | The real `deploy/finals-deploy` against a temp root: the sha checks and exit codes, the lock, the build user, read-only releases and reuse, the pre-deploy backup, the switch, a failed health check rolling back the database and the release, retention of releases and backups. Run at the refresh: 36 passed |
 | `.github/workflows/ci.yml` | Static checks only: PSScriptAnalyzer (errors and warnings) on `scripts/`, shellcheck on `scripts/*.sh`, lychee on `CLAUDE.md` and `docs/**/*.md` (one private repo ignored) |
 
 Gaps that matter for the port:
 
-- The guard test is not run in CI; it runs only by hand.
+- The guard test is not run in CI; it runs only by hand. At the refresh it has 15 checks (the new services' deploy words never deploy one another), all passing, and the new `test-finals-deploy.sh` is not in CI either.
 - No tests for `scripts/lib.sh` argument parsing, `status`, `logs`, `restart`, the Node check, the kiosk step or the timeout; the PowerShell scripts have no tests at all.
 - Contracts are checked by hand against code ("Verified against" rows), never by a machine. The manager and heartbeat contracts and the lan-display fade param were never verified.
 - None of this matters for code (the scripts are dropped), but the new contracts need contract tests in CI from the start (already in the merge rules).
 
 ## Known problems
 
-From the files and the commit history.
+From the files and the commit history. At the refresh: 11 is retired with the venue instance, 12 and 14 are eased for the tourney, and 18–23 are new.
 
 1. **Incident: kiosk not relaunched after deploy** (#115): the remote script arrives on stdin and a Windows `.exe` read the rest of it, so the scheduled task never ran. Fixed by redirecting each call's stdin.
 2. **Incident: hung SSH calls blocked scripts** (#122): fixed with a timeout wrapper in bash only.
@@ -401,13 +449,19 @@ From the files and the commit history.
 8. **Unspecified responses:** the five kiosk POST routes, polls and snapshots have no documented response shape.
 9. **Two manager plans disagree:** the newer plan drops event mode, keeps the laptop's host name, DMs admins and polls the bot; the older one keeps event mode, renames the laptop and posts only in the channel. Health path for the tourney is `/healthz` in the manager plan but `/api/healthz` in the health contract. Open questions in the newer plan (rename, DM scope, who may see status, `/cast` vs `/platform`, watching Proxmox) were never closed.
 10. **Contracts ahead of code:** manager API, heartbeat and pizza routes were written before implementation; "Verified against" says so.
-11. **Insecure exposure at the venue:** the mini-tourney runs plain HTTP on the venue LAN with one shared admin password and no login rate limit (the runbook puts TLS and rate limiting out of scope); the LAN hostname depends on the venue resolver allowing private answers.
-12. **Single points:** one venue laptop runs signage, the tourney and the planned relay; the tailnet is the only path for operators and for the bot → signage control calls.
+11. **Insecure exposure at the venue:** the mini-tourney runs plain HTTP on the venue LAN with one shared admin password and no login rate limit (the runbook puts TLS and rate limiting out of scope); the LAN hostname depends on the venue resolver allowing private answers. **At the refresh: retired** ([878df44]): the tourney is on HTTPS through a tunnel, with Discord sign-in, a write limit and the read gate.
+12. **Single points:** one venue laptop runs signage, the tourney and the planned relay; the tailnet is the only path for operators and for the bot → signage control calls. **At the refresh:** the tourney left the laptop for a cloud VM ([878df44]); signage and the relay are still there.
 13. **Hard-coded origin:** the screen accepts messages only from one fixed site origin, so another host cannot embed the display.
-14. **Retention gaps:** no backup or retention rule for any store except the 7-day sound and token windows; pizza data is kept forever.
+14. **Retention gaps:** no backup or retention rule for any store except the 7-day sound and token windows; pizza data is kept forever. **At the refresh:** the tourney's database has nightly backups on and off the host and a restore runbook ([878df44], [9c9a0d2]); the rest is unchanged.
 15. **Doc links that rot:** links into a private, now archived docs repo (ignored by the link check) and three links to private chat artifacts in the manager plan.
 16. **Time-bound plans:** the pizza plan and the event-2026 references are dated to one event; the casting plan assumes the relay is on the venue LAN.
 17. **No TODO or FIXME markers** in the repo.
+18. **The provider contract lags its provider** ([3f63353]): "Verified against" still reads "not yet implemented", the consumer list names `/finals register` and `/finals cancel` subcommands that the bot never shipped, and the provider never answers `rate_limited`: its write limit exempts the bearer, and a call without the bearer gets a plain `{error}` `429` before the contract's error object applies.
+19. **The tourney contract misses a state:** `cancelled` (upstream since 2026-11-12) is not in `tourney-api.md`.
+20. **Every upstream merge is a production deploy** with no branch protection ([be06a84]); the runbook asks for updates "between seasons", which nothing enforces.
+21. **Real values in plans and runbooks:** the new plans record real Discord ids of a test server, a public cloud host name and address, private-network addresses, a host-key fingerprint, backup hashes and personal home paths (counted under [Event-specific content](#event-specific-content)).
+22. **Two copies of one contract:** the provider contract here and the platform's `contracts/finals.md` stub must be kept in step by hand ([0025](../decisions/0025-finals-and-games-modules.md)).
+23. **A long-lived token:** the token that opens finals-core bump PRs has no expiry, by choice ([0777f3e]).
 
 ## Port recommendation
 
@@ -422,7 +476,7 @@ Targets use the roadmap's steps. "Drop" follows [0010](../decisions/0010-scope.m
 | O8 kiosk reload | rewrite | A per-device "reload" action on paired screens, not a Windows task | screen, admin | 3, 8 |
 | O9 manager deploy and sudoers check | drop | No hosts to SSH into | — | — |
 | O10 SSH timeout and step naming | drop (idea kept) | The named-step failure pattern is worth reusing in `setup/` scripts | setup | 1 (#12) |
-| O11 tourney unit, venue runbook | drop | No service runs at the venue; the VM is remote ([0011](../decisions/0011-hosting-on-remote-vm.md)) | — | — |
+| O11 tourney unit, venue runbook (retired upstream at the refresh) | drop | No service runs at the venue; the VM is remote ([0011](../decisions/0011-hosting-on-remote-vm.md)) | — | — |
 | O12 CI checks | port with changes | Keep a link check and shellcheck for `setup/`; drop PowerShell analysis | ci | 1 |
 | O13 workflow rules | done | Already carried into `AGENTS.md` and `CLAUDE.md` | — | — |
 | O14 upstream rules for the tourney repo | drop | The tourney code is ported (after its author's OK), not patched upstream | games | Games track |
@@ -442,11 +496,16 @@ Targets use the roadmap's steps. "Drop" follows [0010](../decisions/0010-scope.m
 | X13 tournament routes | port with changes | Scoring, leaderboard and final ported; tokens, voice handshake and admin UI rewritten; registration inside the module | tournament | 7 |
 | X14 polls | drop | Polls dropped ([0005](../decisions/0005-signup-site-stays-outside.md)) | — | — |
 | X14 stats snapshots | port with changes | Bot presence, voice and game data as bot events | bot | 6 |
-| X15 tourney read API and SSE | rewrite | Storage and API rewritten; SSE becomes bus events | games | Games track |
+| X15 tourney read API and SSE | rewrite | Storage and API rewritten; SSE becomes bus events; the read gate goes with platform sign-in | finals (games at the first read; [0025](../decisions/0025-finals-and-games-modules.md)) | Finals track |
 | X16 manager | port with changes | Debounce, alerts as events consumed by the bot, ack, mute, restart policy; the executor designed first; subsystem list becomes module list | admin | 8 |
 | X17 heartbeat to the site | drop | Manager dead-man's switch dropped; the hardening watchdog covers it | — | 10 |
 | X18 casting | port with changes | Takeover lifecycle, stall guard, End cast and the encoder findings kept; relay placement open with a remote VM | cast | Cast track |
 | X19 tourney on a LAN hostname | drop | Everything is served from the VM over HTTPS | — | — |
+| X20 and `finals-provider-api.md` (new at the refresh, [3f63353]) | port with changes | Already carried: [0025](../decisions/0025-finals-and-games-modules.md) makes it the shared interface for `/finals`, and `contracts/finals.md` copies its shapes until the Finals track writes the full contract; findings 18 and 19 go to that track | finals, bot | Finals track, 6 |
+| O16 public tourney host: tunnel, backups and pull, restore, secret rotation (new at the refresh) | drop as code, keep as lessons | The off-LAN app stays outside the platform (0025); the backup with an integrity check, the off-host pull with a forced command and the restore order match what step 10 plans | — | 10 (lessons) |
+| O17 deploy on merge, releases and automatic rollback (new at the refresh) | drop as code, keep as lessons | The platform's auto-deploy already rolls back; the database backup before each switch, the sha-only forced command and the exit codes are worth comparing in step 10 | setup | 10 (lessons) |
+| O18 staging pair and O19 the access policy file (new at the refresh) | drop | The platform's demo stack and CI cover staging; no private network on the remote VM | — | — |
+| O20 replace a database from another instance (new at the refresh) | drop as code, keep as lessons | The hash at every hop, the row-count compare and the rollback target are the checks a per-event import needs | setup | 10, 11 (lessons) |
 
 ## Tenancy questions
 
@@ -473,6 +532,10 @@ What this repo implies for the tenancy design (#48). Each is a question for the 
 11. The venue LAN assumptions (LAN hostname, private DNS answers, static lease, port proxy, LAN-only casting, "anyone on the LAN may cast") end with a remote VM. Does any per-venue network setting survive besides the venue IP addresses of item 33, for example for casting?
 12. Local time zone and number format appear in the pizza plan (dates, CSV). Is the time zone a venue property or a tenant setting?
 
+**Raised by the refresh**
+
+13. The provider contract takes the event from the hostname ([3f63353]), and the standalone off-LAN app has no event at all. Is the bot's finals provider (base URL and bearer) a per-tenant bot setting, so one tenant's `/finals` can point at the off-LAN app while another's points at its own `finals` module?
+
 ## Event-specific content
 
 Named by kind and counted only; no value appears in this file. The location of each value is listed in the PR, for a follow-up issue in the event repo.
@@ -498,4 +561,38 @@ Named by kind and counted only; no value appears in this file. The location of e
 | Links into the private legacy docs repo | 1 repo | 20 | 9 |
 | Discord ids, venue IP addresses | 0 real (placeholders and loopback only) | — | — |
 
+Added by the 17 commits of the refresh (counted in the added lines; a line can hold several kinds):
+
+| Kind | Distinct values | Lines | Files |
+|---|---|---|---|
+| The signup site's domain, mostly in the tourney's public hostname | 1 | 44 | 18 |
+| Tailnet name | 1 | 26 | 10 |
+| Tailnet host names, the cloud VM's new one included (also in a file name) | 4 | over 100 | 20 |
+| Private-network addresses | 3 | 9 | 4 |
+| The cloud VM's public host name and address, and its cloud region | 2 | 7 | 4 |
+| Real Discord ids (a test server's guild, channel and admin role) | 3 | 3 | 1 |
+| Personal accounts (the tourney author's, the legacy repo owner's, the signup site maintainer's) and a personal home path | 4 | over 150 | 25 |
+| A personal domain on the cloud VM's old web server | 1 | 1 | 1 |
+| Host-key fingerprint, backup and copy hashes | 10 | 11 | 4 |
+| Links to private chat artifacts (the decided spec of the off-LAN hosting) | 1 | 3 | 3 |
+| Secrets | 0 | — | — |
+
 Menus, photos and other media: none in this repo.
+
+[3f63353]: https://github.com/glyzer/canccuplatform/commit/3f63353
+[de0b3e2]: https://github.com/glyzer/canccuplatform/commit/de0b3e2
+[46d2761]: https://github.com/glyzer/canccuplatform/commit/46d2761
+[40cd19a]: https://github.com/glyzer/canccuplatform/commit/40cd19a
+[00b0639]: https://github.com/glyzer/canccuplatform/commit/00b0639
+[878df44]: https://github.com/glyzer/canccuplatform/commit/878df44
+[c982a48]: https://github.com/glyzer/canccuplatform/commit/c982a48
+[3e84a42]: https://github.com/glyzer/canccuplatform/commit/3e84a42
+[c232cf9]: https://github.com/glyzer/canccuplatform/commit/c232cf9
+[54c480d]: https://github.com/glyzer/canccuplatform/commit/54c480d
+[0777f3e]: https://github.com/glyzer/canccuplatform/commit/0777f3e
+[9c9a0d2]: https://github.com/glyzer/canccuplatform/commit/9c9a0d2
+[be06a84]: https://github.com/glyzer/canccuplatform/commit/be06a84
+[82f35c4]: https://github.com/glyzer/canccuplatform/commit/82f35c4
+[0dff5d0]: https://github.com/glyzer/canccuplatform/commit/0dff5d0
+[4b1ae7d]: https://github.com/glyzer/canccuplatform/commit/4b1ae7d
+[c807dc7]: https://github.com/glyzer/canccuplatform/commit/c807dc7
