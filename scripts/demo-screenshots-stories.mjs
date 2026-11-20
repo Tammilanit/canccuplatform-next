@@ -14,6 +14,7 @@ import { readFileSync } from "node:fs";
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { image, moments, placed } from "./demo-screenshots-moments.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
+import { placeStories } from "./demo-screenshots-fire-inputs.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
 const SCREEN_4K = { width: 3840, height: 2160 };
@@ -165,6 +166,15 @@ export const FIRE_PAGES = [
   ["stories-on-air-fired", "/moments/on-air", DESK],
   ["stories-on-air-fired-phone", "/moments/on-air", PHONE, { touch: true }],
 ];
+/** Fire with two of the event's own stories that both ask `{place}`: once for each (#646). */
+export const INPUT_PAGES = [
+  [
+    "stories-on-air-fire-inputs",
+    "/moments/on-air",
+    DESK,
+    { ready: chooserOpen },
+  ],
+];
 export const LIVE_PAGES = [
   ["stories-on-air-phone", "/moments/on-air", PHONE, { touch: true }],
 ];
@@ -275,6 +285,7 @@ export function storiesListed(at) {
     [PRESET_PAGES, "a preset's message step, test-fired on the main hall"],
     [PREMIERE_PAGES, "Premiere on the demo event, its builder and its steps"],
     [FIRE_PAGES, "On air before and after Starting soon fired from the page"],
+    [INPUT_PAGES, "Fire's inputs, each under the story that asks it"],
     [LIVE_PAGES, "a live loop with Stop loop"],
     [PHOTO_PAGES, "a crew photo spotlight"],
   ]
@@ -628,6 +639,10 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
     const [before, beforePhone, fired, firedPhone] = FIRE_PAGES;
     for (const [name, path, viewport, o] of [before, beforePhone])
       await shot(name, path, viewport, SESSION, o);
+    await placeStories(true);
+    for (const [name, path, viewport, o] of INPUT_PAGES)
+      await shot(name, path, viewport, SESSION, o);
+    await placeStories(false);
     let answered = null;
     await shot(fired[0], fired[1], fired[2], SESSION, {
       ready: async (page) => {
@@ -652,6 +667,7 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
   } finally {
     try {
       for (const run of runs) await stop(run);
+      await placeStories(false);
       await resetPremiere();
       await add.undo();
       if (screenOn !== null) {
