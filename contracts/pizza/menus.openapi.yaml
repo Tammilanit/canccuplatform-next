@@ -1,0 +1,369 @@
+# Part of pizza.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/api/pizza/pizzerias:
+  get:
+    tags: [menus]
+    operationId: listPizzerias
+    summary: The event's pizzerias
+    description: |
+      Guests where the info-page mode lets them in. The phone for the crew and the menu writers;
+      `hidden=true` (right `pizza.menu.write`) includes hidden ones.
+    parameters:
+      - name: hidden
+        in: query
+        description: Include hidden pizzerias.
+        schema:
+          type: boolean
+    responses:
+      "200":
+        description: The pizzerias, by name, without their menus.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pizzerias]
+              properties:
+                pizzerias:
+                  type: array
+                  items:
+                    $ref: "../pizza.openapi.yaml#/components/schemas/Pizzeria"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [menus]
+    operationId: addPizzeria
+    summary: Add a pizzeria
+    description: Right `pizza.menu.write`; audited. 409 `pizzeria_exists` for a name already here, in any case.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/PizzeriaSave"
+    responses:
+      "201":
+        description: The pizzeria.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Pizzeria"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/pizzerias/{pizzeria_id}:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/PizzeriaId"
+  get:
+    tags: [menus]
+    operationId: getPizzeria
+    summary: A pizzeria and its menu
+    description: As the list; `hidden=true` (right `pizza.menu.write`) also shows its hidden items, marked.
+    parameters:
+      - name: hidden
+        in: query
+        description: Include hidden items.
+        schema:
+          type: boolean
+    responses:
+      "200":
+        description: The pizzeria with its menu.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Pizzeria"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [menus]
+    operationId: editPizzeria
+    summary: Edit or hide a pizzeria
+    description: Right `pizza.menu.write`; audited. Hidden, never deleted (D17).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/PizzeriaSave"
+    responses:
+      "200":
+        description: The pizzeria.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Pizzeria"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/pizzerias/{pizzeria_id}/menu:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/PizzeriaId"
+  put:
+    tags: [menus]
+    operationId: replaceMenu
+    summary: Replace a menu
+    description: |
+      Right `pizza.menu.write`; audited with its counts. Items matched by number are updated, new ones added,
+      missing ones hidden; the base and toppings are replaced as a set.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/MenuInput"
+    responses:
+      "200":
+        description: The pizzeria with its menu.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Pizzeria"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+/api/pizza/menu/import/preview:
+  post:
+    tags: [menus]
+    operationId: previewMenuImport
+    summary: Preview a menu CSV
+    description: Right `pizza.menu.write`. Changes nothing (contracts/pizza.md, The menu CSV).
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        text/csv:
+          schema:
+            type: string
+    responses:
+      "200":
+        description: What the import would do, with every error and warning by row and column.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/ImportPreview"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "415":
+        $ref: "../pizza.openapi.yaml#/components/responses/UnsupportedMediaType"
+/api/pizza/menu/import:
+  post:
+    tags: [menus]
+    operationId: importMenu
+    summary: Import a menu CSV
+    description: |
+      Right `pizza.menu.write`. 400 `menu_csv_invalid` with `errors` changes nothing; otherwise each pizzeria
+      in the file is matched or added and its menu replaced. One audit entry with the counts.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        text/csv:
+          schema:
+            type: string
+    responses:
+      "200":
+        description: What was imported.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/ImportResult"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "415":
+        $ref: "../pizza.openapi.yaml#/components/responses/UnsupportedMediaType"
+/api/pizza/menu.csv:
+  get:
+    tags: [menus]
+    operationId: downloadMenu
+    summary: Download menus as a menu CSV
+    description: Right `pizza.menu.write`. One pizzeria with `pizzeria_id`, else all; never hidden items.
+    security:
+      - session: []
+    parameters:
+      - name: pizzeria_id
+        in: query
+        description: One pizzeria.
+        schema:
+          $ref: "../pizza.openapi.yaml#/components/schemas/Id"
+    responses:
+      "200":
+        description: The menu CSV.
+        content:
+          text/csv:
+            schema:
+              type: string
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+/api/pizza/record:
+  get:
+    tags: [record]
+    operationId: dailyRecord
+    summary: The daily record
+    description: Right `pizza.record.read`. Per event day, with each person's amount and the flags.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/Day"
+    responses:
+      "200":
+        description: The record.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Record"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+/api/pizza/export:
+  get:
+    tags: [record]
+    operationId: exportJson
+    summary: The export, with the orders left out
+    description: Right `pizza.record.read`. The export CSV as a string, its file name and the orders left out.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/Day"
+    responses:
+      "200":
+        description: The export.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Export"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+/api/pizza/export.csv:
+  get:
+    tags: [record]
+    operationId: exportCsv
+    summary: The export CSV for the payment system
+    description: Right `pizza.record.read` (contracts/pizza.md, The export CSV).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/Day"
+    responses:
+      "200":
+        description: The file, as an attachment.
+        headers:
+          canccu-left-out:
+            description: The `order_id`s of the called-in orders left out (no total), comma-separated.
+            schema:
+              type: string
+        content:
+          text/csv:
+            schema:
+              type: string
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+/api/pizza/me/orders:
+  get:
+    tags: [me]
+    operationId: myOrders
+    summary: The caller's own orders
+    description: This event's orders the caller has pizzas in, holds or opened, newest first (D14).
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The orders as the caller sees them.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orders]
+              properties:
+                orders:
+                  type: array
+                  items:
+                    $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+/api/pizza/me/export:
+  get:
+    tags: [me]
+    operationId: myExport
+    summary: The privacy export
+    description: Everything the module holds on the caller at this event.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The export.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/MyExport"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+/api/pizza/me:
+  delete:
+    tags: [me]
+    operationId: deleteMe
+    summary: The privacy delete
+    description: |
+      Releases the caller's holds on orders not called in, takes their pizzas out of open orders, and
+      anonymises the rest; counts and totals stay. Also when the event is archived.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
