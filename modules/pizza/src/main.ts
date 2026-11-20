@@ -93,6 +93,8 @@ async function main(): Promise<void> {
   const admin = new AdminClient(config.adminUrl);
   const rights = new RightsChecker(admin);
   const settings = new SettingsClient(admin, config.module, { service });
+  // Admin's own settings hold the event's language, the one module's settings another may read.
+  const adminSettings = new SettingsClient(admin, "admin", { service });
   const db = poolDb(pool);
   const outbox = new Outbox(new Bus(store, config.module, log), db, { log });
   const now = () => new Date();
@@ -111,6 +113,12 @@ async function main(): Promise<void> {
   const scheduler = new Scheduler(base);
   const deps = {
     ...base,
+    admin,
+    language: (tenant: string) =>
+      withTenant(tenant, async () => {
+        await adminSettings.ensure();
+        return String(adminSettings.get("language", "en"));
+      }),
     health: createHealth({
       module: config.module,
       version: config.version,
@@ -129,8 +137,10 @@ async function main(): Promise<void> {
     } else rights.handleEvent(event);
   });
   listener.subscribeTenants(["tenants", "admin"], async (event) => {
-    if (event.source === "admin") await settings.handleEvent(event);
-    else await handleTenantEvent(deps, event);
+    if (event.source === "admin") {
+      await settings.handleEvent(event);
+      await adminSettings.handleEvent(event);
+    } else await handleTenantEvent(deps, event);
   });
 
   const app = buildApp(deps);

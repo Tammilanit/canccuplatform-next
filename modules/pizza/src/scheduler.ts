@@ -16,7 +16,7 @@ import type { Emitter } from "./events.js";
 import type { AppDeps } from "./http.js";
 import { scheduled } from "./lifecycle.js";
 import type { PizzaSettings } from "./settings.js";
-import { getOrder, ordersWhere } from "./store.js";
+import { getOrder, logStep, ordersWhere } from "./store.js";
 import type { OrderRow } from "./store.js";
 
 export const TICK_MS = 30_000;
@@ -186,6 +186,7 @@ export class Scheduler {
         // A last call after the close would be news of the past.
         if (o.closes_at.getTime() <= now.getTime()) return false;
         await emitOrder(c, e, "pizza.order.closing", o, { closes_at: o.closes_at.toISOString() });
+        await logStep(c, o.id, now, null, "last_call");
         return true;
       case "close":
         return scheduled(c, e, o.id, "close", now);
@@ -208,24 +209,37 @@ export class Scheduler {
           after,
           { kind: "released", minutes: minutesSince(o, now), to: "crew_only", family: "release" },
           holder,
+          now,
         );
         return true;
       }
       case "remind":
         if (d.remind === undefined) return false;
-        await this.remind(c, o, d.remind, null);
+        await this.remind(c, o, d.remind, null, now);
         return true;
     }
   }
 
   /** One `pizza.reminder.triggered` per person who hears it (D12). */
-  private async remind(c: SqlClient, o: OrderRow, r: Remind, skip: string | null): Promise<void> {
+  private async remind(
+    c: SqlClient,
+    o: OrderRow,
+    r: Remind,
+    skip: string | null,
+    now: Date,
+  ): Promise<void> {
     const crew = (await crewOf(c)).filter((u) => u !== o.holder_user_id && u !== skip);
     const to: { user_id: string; role: "holder" | "crew" }[] = [];
     if (r.to !== "crew_only" && o.holder_user_id !== null)
       to.push({ user_id: o.holder_user_id, role: "holder" });
     if (r.to !== "holder" || o.holder_user_id === null)
       for (const u of crew) to.push({ user_id: u, role: "crew" });
+    if (to.length > 0)
+      await logStep(c, o.id, now, null, "reminded", {
+        kind: r.kind,
+        minutes: r.minutes,
+        to: to.some((p) => p.role === "crew") ? "crew" : "holder",
+      });
     for (const p of to) {
       await emitOrder(c, this.deps, "pizza.reminder.triggered", o, {
         kind: r.kind,

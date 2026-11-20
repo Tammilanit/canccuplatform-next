@@ -1,6 +1,7 @@
 /** What the routes share: the app's dependencies, who the caller is, and the write wrapper. */
 import { KitError, NotSignedIn, checkAdminAccess, checkInfoAccess } from "@canccu/kit";
 import type {
+  AdminClient,
   Health,
   Logger,
   Outbox,
@@ -26,6 +27,10 @@ import { InvalidBody } from "./validate.js";
 
 export interface AppDeps {
   db: Db;
+  /** Admin's API, for the Food settings page, which saves through it as the person. */
+  admin: Pick<AdminClient, "request">;
+  /** The event's language (admin's own `language` setting): `en` or `fi`. */
+  language: (tenant: string) => Promise<string>;
   outbox: Outbox;
   rights: RightsChecker;
   tenants: TenantResolver;
