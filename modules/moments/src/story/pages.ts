@@ -24,7 +24,7 @@ import { duplicated, toggled } from "./picker.js";
 import type { PickerItem } from "./picker.js";
 import { pickerView } from "./picker-view.js";
 import { builderHead, builderView } from "./builder.js";
-import { fireResult } from "./fire-words.js";
+import { fireResult, untilEventAt } from "./fire-words.js";
 import { crewStories, fireChoices, takesWords } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
@@ -288,10 +288,12 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     async (request, reply) => {
       const f = raw(request);
       const to = one(f.back) === "storyboards" ? "storyboards" : "on-air";
+      // Only this story's inputs (story/views.ts): another story's value never fills its texts.
+      const own = `var-${request.params.key}-`;
       const variables = Object.fromEntries(
         Object.entries(f)
-          .filter(([k]) => k.startsWith("var_"))
-          .map(([k, v]) => [k.slice(4), one(v)]),
+          .filter(([k]) => k.startsWith(own))
+          .map(([k, v]) => [k.slice(own.length), one(v)]),
       );
       const s = await state(deps, request);
       const story = s.stories.find((x) => x.key === request.params.key);
@@ -320,12 +322,23 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         { variables, ...(item === "" ? {} : { item_id: item }) },
       );
       if (a.status >= 400 || story === undefined) return after(reply, to, a, "Fired.");
+      // The take's own time (the run's start), not this page's earlier read: a round due at the
+      // fire is on now, not "starts at" a minute already gone.
+      const firedAt = Date.parse(String(a.body.started_at));
+      const t = Date.parse(String(a.body.t));
       const done = fireResult({
         story,
-        t: Date.parse(String(a.body.t)),
+        t,
         anchored: item !== "",
         settings: s.settings,
-        now: s.now,
+        startedAt: firedAt,
+        untilAt: untilEventAt(
+          story,
+          s.agenda.find((i) => i.id === item),
+          s.agenda,
+          t,
+        ),
+        now: firedAt,
         timeZone: s.timeZone,
       });
       return back(reply, to, "done", done);

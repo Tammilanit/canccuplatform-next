@@ -62,6 +62,7 @@ const stories = (title?: string) =>
     stories: [JSON.parse(JSON.stringify(presetOf("starting_soon"))) as Story],
     runs: [],
     items: [],
+    agenda: [],
     now: NOW.getTime(),
     canTake: true,
     back: "on-air",

@@ -155,6 +155,7 @@ export function pickerView(o: {
     stories: o.stories,
     runs: o.runs,
     items: o.items,
+    agenda: o.ctx.items,
     now: o.now,
     canTake: o.canTake,
     back: "storyboards",

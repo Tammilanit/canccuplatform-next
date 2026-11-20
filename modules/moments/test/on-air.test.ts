@@ -9,7 +9,6 @@ import { applyClaims } from "../src/placements.js";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
 import { DEFAULT_SETTINGS, writeStories } from "../src/story/store.js";
-import type { Story } from "../src/story/model.js";
 import { DATABASE_URL, claims, freshDatabase } from "./helpers.js";
 import { appWorld, idOf } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -243,7 +242,7 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
         until_event: { kind: "item_starts" },
         crew: true,
       },
-    } as Partial<Story>);
+    });
     await w.tx("demo", (c) => writeStories(c, [loop], DEFAULT_SETTINGS, 1));
     const fired = await w.call(
       "crew",
@@ -305,6 +304,6 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     expect(fired.statusCode).toBe(303);
     const sent = w.audit.find((e) => e.action === "moments.storyboard.fired");
     expect(sent?.target).toEqual({ type: "storyboard", id: "photo" });
-    expect(sent?.changes.variables).toEqual({ old: null, new: { place: "the lobby" } });
+    expect(sent?.changes?.variables).toEqual({ old: null, new: { place: "the lobby" } });
   });
 });

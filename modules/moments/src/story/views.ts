@@ -7,7 +7,8 @@ import { randomBytes } from "node:crypto";
 import type { Html } from "@canccu/ui";
 import { html, notice } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
-import { itemTime, nextRound } from "./fire-words.js";
+import type { RunItem } from "../announce/store.js";
+import { itemTime, nextRound, untilEventAt } from "./fire-words.js";
 import { freeVariablesOf } from "./model.js";
 import type { Story } from "./model.js";
 import type { Timing } from "./timing.js";
@@ -90,6 +91,8 @@ export function crewStories(o: {
   stories: Story[];
   runs: RunView[];
   items: ItemChoice[];
+  /** The whole run of show, for when a live loop's `until_event` comes; never printed. */
+  agenda: RunItem[];
   now: number;
   canTake: boolean;
   back: string;
@@ -111,7 +114,9 @@ export function crewStories(o: {
     .filter((i) => chosen.has(i))
     .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
   const needsItem = takes.some((s) => s.triggers.some((t) => t.kind === "item"));
-  const vars = [...new Set(takes.flatMap((s) => freeVariablesOf(s)))];
+  // Each story's own inputs (`var-<story>-<name>`; neither part may hold a hyphen): its Fire sends
+  // only those, so a name two stories share is asked of each, under the story's name.
+  const vars = takes.flatMap((s) => freeVariablesOf(s).map((name) => ({ s, name })));
   const fire =
     takes.length === 0
       ? ""
@@ -156,23 +161,27 @@ export function crewStories(o: {
               </div>
             </details>
           </div>
-          ${vars.map((v) => html`<label class="canccu-field__label" for="fire-${v}">{${v}}</label><input class="canccu-input" id="fire-${v}" name="var_${v}" maxlength="120" />`)}
+          ${vars.map(({ s, name }) => html`<label class="canccu-field__label" for="fire-${s.key}-${name}">${s.name}: {${name}}</label><input class="canccu-input" id="fire-${s.key}-${name}" name="var-${s.key}-${name}" maxlength="120" />`)}
         </form>`;
   const story = (key: string) => o.stories.find((s) => s.key === key);
   const between = (r: RunView): string => {
     const s = story(r.story_key);
-    const next =
-      s === undefined
-        ? null
-        : nextRound({
-            story: s,
-            t: Date.parse(r.t),
-            // A run on an item counts its rounds from it (triggers.ts names its source so).
-            anchored: r.source.startsWith("item:"),
-            settings: o.settings,
-            now: o.now,
-            timeZone: o.timeZone,
-          });
+    if (s === undefined) return "between rounds";
+    // A run on an item counts its rounds from it (triggers.ts names its source so).
+    const item = r.source.startsWith("item:")
+      ? o.agenda.find((i) => `item:${i.id}` === r.source)
+      : undefined;
+    const t = Date.parse(r.t);
+    const next = nextRound({
+      story: s,
+      t,
+      anchored: r.source.startsWith("item:"),
+      settings: o.settings,
+      startedAt: Date.parse(r.started_at),
+      untilAt: untilEventAt(s, item, o.agenda, t),
+      now: o.now,
+      timeZone: o.timeZone,
+    });
     return next ?? "between rounds";
   };
   const running = live.map(

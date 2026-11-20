@@ -249,6 +249,12 @@ export async function viaApi(
 }
 
 /** The API's refusal in a sentence for the page's notice. */
+export const refusal = (a: ApiAnswer): string =>
+  ((a.body.error as { message?: string } | undefined)?.message ?? "That did not work.").replace(
+    /`/g,
+    "",
+  );
+
 /** A zone as people know it ("Main hall"), or its key while Screen does not name it (#638). */
 export type ZoneName = (key: string) => string;
 
@@ -258,9 +264,3 @@ export async function zoneNames(deps: AppDeps, request: FastifyRequest): Promise
   );
   return (key) => names.get(key) ?? key;
 }
-
-export const refusal = (a: ApiAnswer): string =>
-  ((a.body.error as { message?: string } | undefined)?.message ?? "That did not work.").replace(
-    /`/g,
-    "",
-  );

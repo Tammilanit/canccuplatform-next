@@ -144,18 +144,19 @@ export function onAirView(o: {
     const here = o.moments.filter(
       (m) => (m.zones.length === 0 || m.zones.includes(zone)) && !m.left.includes(zone),
     );
-    const placed = here.filter((m) =>
-      m.placements.some((p) => p.zone_key === zone && p.state === "placed"),
-    );
-    const summary =
-      here.length === 0
-        ? ""
-        : [
-            placed.length === 0 ? null : `${String(placed.length)} on air`,
-            here.length === placed.length ? null : `${String(here.length - placed.length)} waiting`,
-          ]
-            .filter((x) => x !== null)
-            .join(" · ");
+    const count = (state: string) =>
+      here.filter((m) => m.placements.some((p) => p.zone_key === zone && p.state === state)).length;
+    // Hidden ones are under a full-screen moment, back when it ends: not waiting for a region.
+    const placed = count("placed");
+    const hidden = count("hidden");
+    const summary = [
+      [placed, "on air"],
+      [hidden, "hidden"],
+      [here.length - placed - hidden, "waiting"],
+    ]
+      .filter(([n]) => n !== 0)
+      .map(([n, what]) => `${String(n)} ${String(what)}`)
+      .join(" · ");
     const row = (m: MomentView) => momentRow(m, zone, o.now, o.canTake && !o.archived);
     const more = here.slice(ZONE_ROWS);
     return html`<li class="canccu-card moments-zone">
