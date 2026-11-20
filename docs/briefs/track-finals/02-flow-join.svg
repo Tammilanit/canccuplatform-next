@@ -1,0 +1,464 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 960" width="1920" height="960" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Flow: joining a season, from the screen to your drawn team (attendee)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="960.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">02 · Flow: joining a season, from the screen to your drawn team (attendee)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: Demo Player sees the open season on the screen, scans, joins solo in two taps, and learns their team when the season starts</text>
+<g transform="translate(32.0,250.0) scale(0.185)"><g>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<rect x="40.0" y="40.0" width="1840.0" height="1000.0" rx="30" fill="#161a2e" stroke="#b98cff" stroke-width="6"/>
+<text x="120.0" y="190.0" font-size="110" fill="#f3f5ff" font-weight="800" text-anchor="start">Finals are open</text>
+<text x="120.0" y="290.0" font-size="52" fill="#a9b1d6" font-weight="500" text-anchor="start">Demo Finals · teams of three, drawn for you</text>
+<circle cx="520.0" cy="650.0" r="220.0" fill="none" stroke="#1d2442" stroke-width="46"/>
+<path d="M520.0,430.0 A220,220 0 1 1 444.8,856.7" stroke="#3ddcff" stroke-width="46" fill="none"/>
+<text x="520.0" y="670.0" font-size="110" fill="#f3f5ff" font-weight="800" text-anchor="middle">15 / 27</text>
+<text x="520.0" y="760.0" font-size="48" fill="#a9b1d6" font-weight="500" text-anchor="middle">players in</text>
+<rect x="1220.0" y="360.0" width="520.0" height="520.0" rx="31.2" fill="#ffffff"/>
+<rect x="1261.6" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="401.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="422.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="443.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="464.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="484.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="505.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="526.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="547.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="568.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="588.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="609.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="630.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="651.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="672.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="692.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1511.2" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="713.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1573.6" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="734.4" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="755.2" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1428.0" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1490.4" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1532.0" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1615.2" y="776.0" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1469.6" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1594.4" y="796.8" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1261.6" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1282.4" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1303.2" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1324.0" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1344.8" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1365.6" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1386.4" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1407.2" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1448.8" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1552.8" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1636.0" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1656.8" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<rect x="1677.6" y="817.6" width="21.2" height="21.2" rx="0" fill="#0b0d1a"/>
+<text x="1480.0" y="960.0" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="middle">Scan to join</text>
+</g></g>
+<text x="32.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 372.0">The season-open card on the venue screen:</text>
+<text x="32.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 372.0">the count fills as people join; the QR opens</text>
+<text x="32.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 372.0">the Finals page in the hub.</text>
+<text x="32.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · On the screen</text>
+<line x1="382.0" y1="220.0" x2="400.0" y2="220.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="391.0" y="210.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="middle">scan</text>
+<g transform="translate(412.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph2"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph2)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="300.0" rx="14" fill="#161a2e" stroke="#b98cff" stroke-width="2"/>
+<rect x="36.0" y="152.0" width="180.6" height="24.0" rx="12.0" fill="#2a1f4d"/>
+<text x="126.3" y="168.7" font-size="13" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="38.0 214.6">Open · closes when full</text>
+<text x="36.0" y="214.0" font-size="30" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="244.0" font-size="16" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three, drawn for you</text>
+<circle cx="96.0" cy="330.0" r="52.0" fill="none" stroke="#1d2442" stroke-width="12"/>
+<path d="M96.0,278.0 A52,52 0 1 1 78.2,378.9" stroke="#3ddcff" stroke-width="12" fill="none"/>
+<text x="96.0" y="338.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="middle">15</text>
+<text x="170.0" y="320.0" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start">of 27 places</text>
+<text x="170.0" y="346.0" font-size="14.0" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="170.0 360.0">starts at 21:00 or when full</text>
+<rect x="36.0" y="380.0" width="318.0" height="50.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="410.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Join solo</text>
+<rect x="16.0" y="452.0" width="358.0" height="130.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="490.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">How it works</text>
+<text x="36.0" y="518.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">Groups of three teams, then groups of four,</text>
+<text x="36.0" y="538.2" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">a semi-final and a best-of-three final. Every</text>
+<text x="36.0" y="558.5" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">team plays at least twice.</text>
+<rect x="16.0" y="600.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="636.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Last champions</text>
+<text x="36.0" y="668.0" font-size="18" fill="#ffc94d" font-weight="700" text-anchor="start">🏆 Team Gamma</text>
+<text x="36.0" y="694.0" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="36.0 360.0">Player Five · Player Six · Player Seven</text>
+<text x="36.0" y="728.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start">All champions ›</text>
+</g></g>
+</g></g>
+<text x="412.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">2 · The Finals page</text>
+<text x="412.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">In the hub's frame under Play. Signed in</text>
+<text x="412.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">and a member, one tap joins. Your name</text>
+<text x="412.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">in the season is your display name; you</text>
+<text x="412.0" y="790.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">can change it here.</text>
+<line x1="686.0" y1="300.0" x2="780.0" y2="300.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="733.0" y="290.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="middle">Join solo</text>
+<g transform="translate(792.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph3"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph3)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="236.0" rx="14" fill="#161a2e" stroke="#3ee39a" stroke-width="2"/>
+<text x="195.0" y="200.0" font-size="50" fill="#3ee39a" font-weight="800" text-anchor="middle">✓</text>
+<text x="195.0" y="250.0" font-size="30" fill="#f3f5ff" font-weight="800" text-anchor="middle">You're in</text>
+<text x="195.0" y="282.0" font-size="16" fill="#a9b1d6" font-weight="500" text-anchor="middle">Your team is drawn at the start</text>
+<text x="195.0" y="330.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="middle">as Demo Player · change</text>
+<rect x="16.0" y="386.0" width="358.0" height="170.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="422.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Start early?</text>
+<text x="36.0" y="448.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">16 of 27 are in. If 6 vote, the season starts</text>
+<text x="36.0" y="468.2" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">now with the teams the sign-ups fill.</text>
+<rect x="36.0" y="500.0" width="200.0" height="42.0" rx="10" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="136.0" y="526.4" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="42.0 230.0">Vote to start</text>
+<text x="354.0" y="528.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="end">4 of 6</text>
+<rect x="16.0" y="572.0" width="358.0" height="130.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="608.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Players in</text>
+<circle cx="52.0" cy="650.0" r="17.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="52.0" y="656.5" font-size="17.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">A</text>
+<circle cx="96.0" cy="650.0" r="17.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="96.0" y="656.5" font-size="17.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">B</text>
+<circle cx="140.0" cy="650.0" r="17.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="140.0" y="656.5" font-size="17.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">C</text>
+<circle cx="184.0" cy="650.0" r="17.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="184.0" y="656.5" font-size="17.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">D</text>
+<circle cx="228.0" cy="650.0" r="17.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="228.0" y="656.5" font-size="17.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">E</text>
+<text x="280.0" y="656.0" font-size="16" fill="#a9b1d6" font-weight="600" text-anchor="start">+ 11</text>
+<rect x="36.0" y="716.0" width="318.0" height="40.0" rx="10" fill="#161a2e" stroke="#ff6b81" stroke-width="1.5"/>
+<text x="195.0" y="741.0" font-size="14" fill="#ff6b81" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Leave the season</text>
+</g></g>
+</g></g>
+<text x="792.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">3 · You're in</text>
+<text x="792.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">One entry per person, from the hub or</text>
+<text x="792.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">Discord alike. Voting to start early is the</text>
+<text x="792.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">legacy rule; the threshold is a setting.</text>
+<line x1="1066.0" y1="300.0" x2="1160.0" y2="300.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="1113.0" y="290.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="middle">21:00</text>
+<g transform="translate(1172.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph4"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph4)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Your team</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="480.0" rx="18" fill="#1d2442" stroke="#b98cff" stroke-width="2.5"/>
+<text x="195.0" y="196.0" font-size="17" fill="#a9b1d6" font-weight="600" text-anchor="middle">The season has started</text>
+<text x="195.0" y="262.0" font-size="52" fill="#b98cff" font-weight="800" text-anchor="middle">Team Delta</text>
+<rect x="40.0" y="320.0" width="310.0" height="62.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
+<circle cx="76.0" cy="351.0" r="20.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="76.0" y="358.6" font-size="20.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">D</text>
+<text x="110.0" y="358.0" font-size="19" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="110.0 340.0">Demo Player  · you</text>
+<rect x="40.0" y="396.0" width="310.0" height="62.0" rx="12" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<circle cx="76.0" cy="427.0" r="20.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="76.0" y="434.6" font-size="20.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">P</text>
+<text x="110.0" y="434.0" font-size="19" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="110.0 340.0">Player Two</text>
+<rect x="40.0" y="472.0" width="310.0" height="62.0" rx="12" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<circle cx="76.0" cy="503.0" r="20.0" fill="#1d2442" stroke="#2c3560" stroke-width="1"/>
+<text x="76.0" y="510.6" font-size="20.0" fill="#f3f5ff" font-weight="700" text-anchor="middle">P</text>
+<text x="110.0" y="510.0" font-size="19" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="110.0 340.0">Player Three</text>
+<text x="195.0" y="584.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="middle">Group A · first match at 21:05</text>
+<rect x="36.0" y="640.0" width="318.0" height="50.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="670.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Open my match</text>
+</g></g>
+</g></g>
+<text x="1172.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">4 · The reveal</text>
+<text x="1172.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">The team builder balances the drawn</text>
+<text x="1172.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">teams by ranking. Everyone's phone</text>
+<text x="1172.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">shows their own team at once; the screen</text>
+<text x="1172.0" y="790.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">shows all teams.</text>
+<g transform="translate(1552.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph5"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph5)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="280.0" rx="14" fill="#161a2e" stroke="#ffc94d" stroke-width="2"/>
+<text x="36.0" y="186.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start">Not in this season</text>
+<text x="36.0" y="222.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">The season started early with 24 places.</text>
+<text x="36.0" y="243.6" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">You joined last, so you're first on the</text>
+<text x="36.0" y="265.2" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">substitutes' list.</text>
+<text x="195.0" y="330.0" font-size="58" fill="#ffc94d" font-weight="800" text-anchor="middle">1st</text>
+<text x="195.0" y="366.0" font-size="16" fill="#a9b1d6" font-weight="500" text-anchor="middle">substitute</text>
+<rect x="16.0" y="432.0" width="358.0" height="120.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="470.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">We'll tell you</text>
+<text x="36.0" y="496.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">If a player drops out before the first result,</text>
+<text x="36.0" y="516.2" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">the crew can put you in.</text>
+</g></g>
+</g></g>
+<text x="1552.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">5 · Left out</text>
+<text x="1552.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">The legacy's 'left out' list becomes a</text>
+<text x="1552.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">substitutes' list the crew draws from</text>
+<text x="1552.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">(U14).</text>
+<rect x="32.0" y="840.0" width="1856.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="868.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
+<text x="48.0" y="892.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">Questions for the session: U2 (how people join), U3 (solo, teams or both), U6 (voting to start early), U14 (substitutes), L11 (the reveal). The names in the season come from the person's display name; a guest added by the crew has a nickname only</text>
+<text x="48.0" y="912.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">(U5).</text>
+</svg>

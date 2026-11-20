@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 980" width="1920" height="980" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>The crew phone: start, settle, swap (crew, venue staff)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="980.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">11 · The crew phone: start, settle, swap (crew, venue staff)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: one crew member runs the finals from the stage with a phone: starts the season, settles a dispute, swaps a player who had to leave</text>
+<g transform="translate(32.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="sp7"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#sp7)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">19:42</text>
+<rect x="0.0" y="50.0" width="390.0" height="52.0" rx="0" fill="#1e293b"/>
+<rect x="16.0" y="62.0" width="56.0" height="28.0" rx="8" fill="#3b82f6"/>
+<text x="44.0" y="81.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">Demo</text>
+<text x="84.0" y="82.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="300.0" y="64.0" width="62.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="331.2" y="80.3" font-size="12" fill="#86efac" font-weight="600" text-anchor="middle" data-box="302.0 360.4">● Live</text>
+<text x="20.0" y="166.0" font-size="24" fill="#f8fafc" font-weight="800" text-anchor="start" data-box="16.0 370.0">Demo Finals</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#1e293b"/>
+<line x1="0.0" y1="770.0" x2="390.0" y2="770.0" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="39.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="1.0 77.0">Run of show</text>
+<rect x="110.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="117.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="79.0 155.0">Finals</text>
+<circle cx="195.0" cy="800.0" r="20.0" fill="#3b82f6"/>
+<text x="195.0" y="807.0" font-size="22" fill="#0f172a" font-weight="700" text-anchor="middle">+</text>
+<rect x="266.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
+<rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="351.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="313.0 389.0">More</text>
+<rect x="16.0" y="190.0" width="358.0" height="360.0" rx="16" fill="#273449" stroke="#3b82f6" stroke-width="2"/>
+<circle cx="195.0" cy="320.0" r="92.0" fill="none" stroke="#273449" stroke-width="18"/>
+<path d="M195.0,228.0 A92,92 0 1 1 194.9,228.0" stroke="#22c55e" stroke-width="18" fill="none"/>
+<text x="195.0" y="318.0" font-size="60" fill="#f8fafc" font-weight="800" text-anchor="middle">27</text>
+<text x="195.0" y="350.0" font-size="16" fill="#94a3b8" font-weight="500" text-anchor="middle">of 27 in</text>
+<text x="195.0" y="452.0" font-size="22" fill="#f8fafc" font-weight="800" text-anchor="middle">Full: ready to draw</text>
+<text x="195.0" y="482.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="middle">Nine teams, balanced by ranking</text>
+<rect x="32.0" y="498.0" width="326.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="195.0" y="523.4" font-size="15" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="38.0 352.0">Draw the teams and start</text>
+<rect x="16.0" y="570.0" width="358.0" height="120.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="32.0" y="604.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start">The screen shows</text>
+<text x="32.0" y="634.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">the team reveal, then the bracket</text>
+<text x="32.0" y="664.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">Phones get their own team</text>
+</g></g>
+</g></g>
+<text x="32.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · Start</text>
+<text x="32.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 362.0">When the season is full (or the crew</text>
+<text x="32.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 362.0">starts it early), one tap draws and starts.</text>
+<g transform="translate(412.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="sp8"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#sp8)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">19:42</text>
+<rect x="0.0" y="50.0" width="390.0" height="52.0" rx="0" fill="#1e293b"/>
+<rect x="16.0" y="62.0" width="56.0" height="28.0" rx="8" fill="#3b82f6"/>
+<text x="44.0" y="81.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">Demo</text>
+<text x="84.0" y="82.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="300.0" y="64.0" width="62.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="331.2" y="80.3" font-size="12" fill="#86efac" font-weight="600" text-anchor="middle" data-box="302.0 360.4">● Live</text>
+<text x="20.0" y="166.0" font-size="24" fill="#f8fafc" font-weight="800" text-anchor="start" data-box="16.0 370.0">Demo Finals</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#1e293b"/>
+<line x1="0.0" y1="770.0" x2="390.0" y2="770.0" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="39.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="1.0 77.0">Run of show</text>
+<rect x="110.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="117.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="79.0 155.0">Finals</text>
+<circle cx="195.0" cy="800.0" r="20.0" fill="#3b82f6"/>
+<text x="195.0" y="807.0" font-size="22" fill="#0f172a" font-weight="700" text-anchor="middle">+</text>
+<rect x="266.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
+<rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="351.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="313.0 389.0">More</text>
+<rect x="16.0" y="190.0" width="358.0" height="200.0" rx="14" fill="#1e293b" stroke="#eab308" stroke-width="2.5"/>
+<text x="32.0" y="226.0" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Next</text>
+<text x="32.0" y="270.0" font-size="30" fill="#f8fafc" font-weight="800" text-anchor="start">Settle group E</text>
+<text x="32.0" y="302.0" font-size="15" fill="#94a3b8" font-weight="500" text-anchor="start">The reports differ · 4 min</text>
+<rect x="32.0" y="330.0" width="326.0" height="44.0" rx="10" fill="#3b82f6"/>
+<text x="195.0" y="357.4" font-size="15" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="38.0 352.0">Decide</text>
+<rect x="16.0" y="410.0" width="358.0" height="70.0" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="32.0" y="440.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Group D</text>
+<text x="32.0" y="464.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start">live · code K7Q2</text>
+<rect x="16.0" y="492.0" width="358.0" height="70.0" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="32.0" y="522.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Group E</text>
+<text x="32.0" y="546.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start">reports differ</text>
+<rect x="16.0" y="574.0" width="358.0" height="70.0" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="32.0" y="604.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Semi-final</text>
+<text x="32.0" y="628.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start">waits for both</text>
+</g></g>
+</g></g>
+<text x="412.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">2 · Now</text>
+<text x="412.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">The next act fills the top; groups follow in</text>
+<text x="412.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">play order.</text>
+<g transform="translate(792.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="sp9"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#sp9)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">19:42</text>
+<rect x="0.0" y="50.0" width="390.0" height="52.0" rx="0" fill="#1e293b"/>
+<rect x="16.0" y="62.0" width="56.0" height="28.0" rx="8" fill="#3b82f6"/>
+<text x="44.0" y="81.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">Demo</text>
+<text x="84.0" y="82.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="300.0" y="64.0" width="62.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="331.2" y="80.3" font-size="12" fill="#86efac" font-weight="600" text-anchor="middle" data-box="302.0 360.4">● Live</text>
+<text x="20.0" y="132.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start" data-box="20.0 250.0">‹ Demo Finals</text>
+<text x="20.0" y="166.0" font-size="24" fill="#f8fafc" font-weight="800" text-anchor="start" data-box="16.0 370.0">Group E</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#1e293b"/>
+<line x1="0.0" y1="770.0" x2="390.0" y2="770.0" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="39.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="1.0 77.0">Run of show</text>
+<rect x="110.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="117.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="79.0 155.0">Finals</text>
+<circle cx="195.0" cy="800.0" r="20.0" fill="#3b82f6"/>
+<text x="195.0" y="807.0" font-size="22" fill="#0f172a" font-weight="700" text-anchor="middle">+</text>
+<rect x="266.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
+<rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="351.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="313.0 389.0">More</text>
+<text x="20.0" y="210.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start">Tap the report you agree with</text>
+<rect x="16.0" y="226.0" width="358.0" height="112.0" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2.5"/>
+<text x="32.0" y="262.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start">Team Delta's report</text>
+<text x="32.0" y="296.0" font-size="15" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="32.0 360.0">Delta · Gamma · Beta · Epsilon</text>
+<text x="32.0" y="322.0" font-size="13" fill="#22c55e" font-weight="600" text-anchor="start">matches the stage desk's replay</text>
+<rect x="16.0" y="354.0" width="358.0" height="112.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="32.0" y="390.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start">Team Gamma's report</text>
+<text x="32.0" y="424.0" font-size="15" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="32.0 360.0">Gamma · Delta · Beta · Epsilon</text>
+<text x="20.0" y="504.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start">or drag your own order</text>
+<rect x="16.0" y="530.0" width="358.0" height="48.0" rx="10" fill="#3b82f6"/>
+<text x="195.0" y="559.4" font-size="15" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="22.0 368.0">Decide with Team Delta's order</text>
+</g></g>
+</g></g>
+<text x="792.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">3 · Settle</text>
+<text x="792.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">The two reports as cards; the drag order</text>
+<text x="792.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">is one tap away.</text>
+<g transform="translate(1172.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="sp10"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#sp10)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">19:42</text>
+<rect x="0.0" y="50.0" width="390.0" height="52.0" rx="0" fill="#1e293b"/>
+<rect x="16.0" y="62.0" width="56.0" height="28.0" rx="8" fill="#3b82f6"/>
+<text x="44.0" y="81.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">Demo</text>
+<text x="84.0" y="82.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="300.0" y="64.0" width="62.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="331.2" y="80.3" font-size="12" fill="#86efac" font-weight="600" text-anchor="middle" data-box="302.0 360.4">● Live</text>
+<text x="20.0" y="132.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start" data-box="20.0 250.0">‹ Demo Finals</text>
+<text x="20.0" y="166.0" font-size="24" fill="#f8fafc" font-weight="800" text-anchor="start" data-box="16.0 370.0">Swap players</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#1e293b"/>
+<line x1="0.0" y1="770.0" x2="390.0" y2="770.0" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="39.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="1.0 77.0">Run of show</text>
+<rect x="110.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="117.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="79.0 155.0">Finals</text>
+<circle cx="195.0" cy="800.0" r="20.0" fill="#3b82f6"/>
+<text x="195.0" y="807.0" font-size="22" fill="#0f172a" font-weight="700" text-anchor="middle">+</text>
+<rect x="266.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
+<rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="351.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="313.0 389.0">More</text>
+<text x="20.0" y="204.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="20.0 370.0">Drag a player onto another. Possible until a team's</text>
+<text x="20.0" y="222.9" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="20.0 370.0">first result.</text>
+<text x="20.0" y="262.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Team Eta</text>
+<rect x="16.0" y="276.0" width="358.0" height="50.0" rx="10" fill="#273449" stroke="#eab308" stroke-width="2"/>
+<text x="36.0" y="308.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">⠿  Player Four</text>
+<text x="358.0" y="308.0" font-size="13" fill="#eab308" font-weight="700" text-anchor="end">left</text>
+<rect x="16.0" y="336.0" width="358.0" height="50.0" rx="10" fill="#273449"/>
+<text x="36.0" y="368.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">⠿  Player Twenty</text>
+<rect x="16.0" y="396.0" width="358.0" height="50.0" rx="10" fill="#273449"/>
+<text x="36.0" y="428.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">⠿  Player Nine</text>
+<text x="20.0" y="492.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Substitutes</text>
+<rect x="16.0" y="506.0" width="358.0" height="50.0" rx="10" fill="#273449" stroke="#eab308" stroke-width="2"/>
+<text x="36.0" y="538.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">⠿  Player Thirteen</text>
+<rect x="16.0" y="566.0" width="358.0" height="50.0" rx="10" fill="#273449"/>
+<text x="36.0" y="598.0" font-size="16" fill="#f8fafc" font-weight="600" text-anchor="start">⠿  Player Fourteen</text>
+<line x1="195.0" y1="330.0" x2="195.0" y2="502.0" stroke="#eab308" stroke-width="2" stroke-dasharray="5 5"/>
+<rect x="16.0" y="640.0" width="358.0" height="46.0" rx="10" fill="#3b82f6"/>
+<text x="195.0" y="668.0" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="22.0 368.0">Swap Player Four for Player Thirteen</text>
+</g></g>
+</g></g>
+<text x="1172.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">4 · Swap</text>
+<text x="1172.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">The legacy's live swap, plus the</text>
+<text x="1172.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">substitutes' list from the left-out players</text>
+<text x="1172.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">(U14).</text>
+<g transform="translate(1552.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="sp11"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#sp11)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">19:42</text>
+<rect x="0.0" y="50.0" width="390.0" height="52.0" rx="0" fill="#1e293b"/>
+<rect x="16.0" y="62.0" width="56.0" height="28.0" rx="8" fill="#3b82f6"/>
+<text x="44.0" y="81.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">Demo</text>
+<text x="84.0" y="82.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="300.0" y="64.0" width="62.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="331.2" y="80.3" font-size="12" fill="#86efac" font-weight="600" text-anchor="middle" data-box="302.0 360.4">● Live</text>
+<text x="20.0" y="132.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start" data-box="20.0 250.0">‹ Demo Finals</text>
+<text x="20.0" y="166.0" font-size="24" fill="#f8fafc" font-weight="800" text-anchor="start" data-box="16.0 370.0">Group D</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#1e293b"/>
+<line x1="0.0" y1="770.0" x2="390.0" y2="770.0" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="39.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="1.0 77.0">Run of show</text>
+<rect x="110.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="117.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="79.0 155.0">Finals</text>
+<circle cx="195.0" cy="800.0" r="20.0" fill="#3b82f6"/>
+<text x="195.0" y="807.0" font-size="22" fill="#0f172a" font-weight="700" text-anchor="middle">+</text>
+<rect x="266.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
+<rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="351.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="313.0 389.0">More</text>
+<rect x="16.0" y="196.0" width="358.0" height="230.0" rx="14" fill="#1e293b" stroke="#eab308" stroke-width="2"/>
+<text x="32.0" y="236.0" font-size="22" fill="#f8fafc" font-weight="800" text-anchor="start">No lobby code yet</text>
+<text x="32.0" y="268.0" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="32.0 352.0">Two minutes since the group was called.</text>
+<text x="32.0" y="288.2" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="32.0 352.0">Ask the teams, or set the code from the</text>
+<text x="32.0" y="308.5" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="32.0 352.0">stage PC.</text>
+<rect x="32.0" y="330.0" width="326.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="195.0" y="355.4" font-size="15" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="38.0 352.0">Ask the teams again</text>
+<rect x="32.0" y="378.0" width="326.0" height="40.0" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="195.0" y="403.4" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="middle" data-box="38.0 352.0">Set the code myself</text>
+<rect x="16.0" y="446.0" width="358.0" height="250.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<text x="32.0" y="482.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">In this group</text>
+<text x="32.0" y="524.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Team Alpha</text>
+<text x="358.0" y="524.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="end">at the PCs</text>
+<text x="32.0" y="564.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Team Zeta</text>
+<text x="358.0" y="564.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="end">at the PCs</text>
+<text x="32.0" y="604.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Team Theta</text>
+<text x="358.0" y="604.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="end">at the PCs</text>
+<text x="32.0" y="644.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Team Eta</text>
+<text x="358.0" y="644.0" font-size="13" fill="#eab308" font-weight="600" text-anchor="end">one player away</text>
+</g></g>
+</g></g>
+<text x="1552.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">5 · A missing code</text>
+<text x="1552.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">The crew may set any match's lobby</text>
+<text x="1552.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">code, as the legacy's admin could.</text>
+<rect x="32.0" y="830.0" width="1856.0" height="78.2" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="858.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
+<text x="48.0" y="882.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">The crew phone is the organiser shell at phone width, not a separate app; the rights decide what it shows (O5). Pings for a long dispute or a missing code go to the crew who are on duty for the finals (O3).</text>
+</svg>

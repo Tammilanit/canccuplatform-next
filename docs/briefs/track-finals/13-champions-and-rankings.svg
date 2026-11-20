@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1180" width="1920" height="1180" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Champions on the screen, in the app's own look (attendees in the hall)</title>
+<defs>
+<radialGradient id="ladder" cx="30%" cy="20%" r="100%"><stop offset="0" stop-color="#8c0f1f"/><stop offset="0.5" stop-color="#4a0710"/><stop offset="1" stop-color="#1a0206"/></radialGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7b731"/><stop offset="1" stop-color="#b8780a"/></linearGradient>
+<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect x="0" y="0" width="1920" height="1180" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">13 · Champions on the screen, in the app's own look (attendees in the hall)</text>
+<text x="32" y="80" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32 1888">Use case: after the final, the champions list takes its turn in the screen's rotation; the new champion is in gold</text>
+<defs><clipPath id="clip13"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
+<g transform="translate(96,110) scale(0.9)"><g clip-path="url(#clip13)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="url(#ladder)"/>
+<text x="80" y="86" font-size="38" fill="#ffffff" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic">THE FINALS</text><text x="361.2" y="86" font-size="38" fill="#ff4f6d" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic">MINI TOURNEY</text>
+<text x="80" y="172" font-size="64" fill="#ffffff" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="80 1500">CHAMPIONS OF THE SERIES</text>
+<rect x="80" y="225" width="560" height="390" rx="16" fill="#f7b731" filter="url(#glow)" opacity="0.5"/>
+<rect x="80" y="225" width="560" height="390" rx="16" fill="url(#gold)" stroke="#ffffff" stroke-width="5"/>
+<text x="110" y="279" font-size="24" fill="#3a2600" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · 8 NOV</text>
+<text x="110" y="355" font-size="56" fill="#111111" font-weight="400" text-anchor="start">🏆</text>
+<text x="190" y="359" font-size="56" fill="#111111" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="190 610">TEAM DELTA</text>
+<line x1="110" y1="399" x2="610" y2="399" stroke="#000000" stroke-opacity="0.25" stroke-width="2"/>
+<text x="110" y="437" font-size="34" fill="#111111" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO PLAYER</text>
+<line x1="110" y1="451" x2="610" y2="451" stroke="#000000" stroke-opacity="0.25" stroke-width="2"/>
+<text x="110" y="489" font-size="34" fill="#111111" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER TWO</text>
+<line x1="110" y1="503" x2="610" y2="503" stroke="#000000" stroke-opacity="0.25" stroke-width="2"/>
+<text x="110" y="541" font-size="34" fill="#111111" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER THREE</text>
+<rect x="450" y="555" width="160" height="38" rx="19" fill="#111111"/>
+<text x="530" y="581" font-size="20" fill="#f7b731" font-weight="700" text-anchor="middle" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="454 606">NEW TONIGHT</text>
+<rect x="680" y="225" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
+<text x="710" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">FRIDAY FINALS · 6 NOV</text>
+<text x="710" y="355" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
+<text x="790" y="359" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="790 1210">TEAM GAMMA</text>
+<line x1="710" y1="399" x2="1210" y2="399" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="437" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER FIVE</text>
+<line x1="710" y1="451" x2="1210" y2="451" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="489" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER SIX</text>
+<line x1="710" y1="503" x2="1210" y2="503" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="541" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER SEVEN</text>
+<rect x="1280" y="225" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
+<text x="1310" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · 12 APR</text>
+<text x="1310" y="355" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
+<text x="1390" y="359" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1390 1810">TEAM ALPHA</text>
+<line x1="1310" y1="399" x2="1810" y2="399" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="437" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER FOUR</text>
+<line x1="1310" y1="451" x2="1810" y2="451" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="489" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER EIGHT</text>
+<line x1="1310" y1="503" x2="1810" y2="503" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="541" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER NINE</text>
+<rect x="80" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
+<text x="110" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · 18 JAN</text>
+<text x="110" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
+<text x="190" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="190 610">TEAM GAMMA</text>
+<line x1="110" y1="819" x2="610" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="110" y="857" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER FIVE</text>
+<line x1="110" y1="871" x2="610" y2="871" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="110" y="909" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER SIX</text>
+<line x1="110" y1="923" x2="610" y2="923" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="110" y="961" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER TEN</text>
+<rect x="680" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
+<text x="710" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">DEMO FINALS · 20 OCT</text>
+<text x="710" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
+<text x="790" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="790 1210">TEAM BETA</text>
+<line x1="710" y1="819" x2="1210" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="857" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER SEVEN</text>
+<line x1="710" y1="871" x2="1210" y2="871" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="909" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER EIGHT</text>
+<line x1="710" y1="923" x2="1210" y2="923" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="710" y="961" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER ELEVEN</text>
+<rect x="1280" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
+<text x="1310" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · 14 JUL</text>
+<text x="1310" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
+<text x="1390" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1390 1810">TEAM IOTA</text>
+<line x1="1310" y1="819" x2="1810" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="857" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER TWENTY-FIVE</text>
+<line x1="1310" y1="871" x2="1810" y2="871" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="909" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER TWENTY-SIX</text>
+<line x1="1310" y1="923" x2="1810" y2="923" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+<text x="1310" y="961" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER TWENTY-SEVEN</text>
+</g></g>
+<text x="96" y="1112" font-size="19" fill="#111827" font-weight="600" text-anchor="start">The champions list</text>
+<text x="96" y="1138" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="96 1824">Each season's champions with its players, newest first, from the list the app exposes (D9). Rankings and "My finals" stay in the app.</text>
+</svg>

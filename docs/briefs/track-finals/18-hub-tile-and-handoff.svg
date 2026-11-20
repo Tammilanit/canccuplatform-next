@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>The hub tile, the hand-off and the unreachable state</title>
+<rect x="0" y="0" width="1920" height="1000" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">18 · The hub's Finals tile, the hand-off to the app, and the unreachable state</text>
+<text x="32" y="80" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32 1888">Use case: a signed-in attendee opens Finals from the hub; the platform asks the event's connected app for their link and sends them there signed in (D18); if the app cannot be reached, a plain page says so (E7).</text>
+<rect x="32" y="120" width="400" height="760" rx="28" fill="#0f172a"/>
+<rect x="44" y="132" width="376" height="736" rx="20" fill="#111827"/>
+<text x="232" y="168" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="52 412">Demo Event</text>
+<text x="60" y="212" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="60 404">Play</text>
+<rect x="56" y="230" width="352" height="96" rx="14" fill="#1e293b"/>
+<text x="76" y="266" font-size="17" fill="#f8fafc" font-weight="600" text-anchor="start" data-box="76 388">Tournament</text>
+<text x="76" y="296" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="76 388">Bracket and my next match</text>
+<rect x="56" y="342" width="352" height="112" rx="14" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+<text x="76" y="378" font-size="19" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="76 282">Finals</text>
+<rect x="312" y="356" width="76" height="26" rx="13" fill="#14532d"/>
+<text x="350" y="374" font-size="13" fill="#86efac" font-weight="600" text-anchor="middle" data-box="316 384">Open</text>
+<text x="76" y="410" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-box="76 388">Demo Finals · sign-ups are open</text>
+<text x="76" y="436" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="76 388">Opens the app, signed in</text>
+<rect x="56" y="470" width="352" height="96" rx="14" fill="#1e293b"/>
+<text x="76" y="506" font-size="17" fill="#f8fafc" font-weight="600" text-anchor="start" data-box="76 388">Games</text>
+<text x="76" y="536" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="76 388">Tonight's games</text>
+<text x="32" y="912" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32 432">1 · The hub: one tile among the others,</text>
+<text x="32" y="934" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32 432">shown to a signed-in attendee when an app is set.</text>
+<line x1="450" y1="500" x2="680" y2="500" stroke="#6b7280" stroke-width="3"/>
+<path d="M680,488 L704,500 L680,512 z" fill="#6b7280"/>
+<text x="577" y="470" font-size="15" fill="#4b5563" font-weight="600" text-anchor="middle" data-box="460 690">tap</text>
+<text x="577" y="536" font-size="13" fill="#4b5563" font-weight="400" text-anchor="middle" data-box="440 714">platform asks the app</text>
+<text x="577" y="556" font-size="13" fill="#4b5563" font-weight="400" text-anchor="middle" data-box="440 714">for this person's link</text>
+<rect x="720" y="120" width="400" height="760" rx="28" fill="#0f172a"/>
+<rect x="732" y="132" width="376" height="736" rx="20" fill="#111827"/>
+<text x="920" y="168" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="740 1100">The Finals app</text>
+<rect x="744" y="200" width="352" height="150" rx="14" fill="#1e293b"/>
+<text x="764" y="238" font-size="19" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="764 1076">Demo Finals</text>
+<text x="764" y="268" font-size="14" fill="#86efac" font-weight="400" text-anchor="start" data-box="764 1076">Signed in as Demo Player</text>
+<text x="764" y="298" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-box="764 1076">Sign-ups are open · 12 of 18 places</text>
+<rect x="764" y="312" width="150" height="30" rx="8" fill="#3b82f6"/>
+<text x="839" y="333" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="768 910">Sign up</text>
+<rect x="744" y="366" width="352" height="96" rx="14" fill="#1e293b"/>
+<text x="764" y="404" font-size="15" fill="#cbd5e1" font-weight="600" text-anchor="start" data-box="764 1076">Your team</text>
+<text x="764" y="430" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-box="764 1076">Drawn when the season starts</text>
+<text x="720" y="912" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="720 1120">2 · The hand-off: the app's own page, signed in;</text>
+<text x="720" y="934" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="720 1120">no link or token is shown or stored here.</text>
+<rect x="1250" y="120" width="400" height="760" rx="28" fill="#0f172a"/>
+<rect x="1262" y="132" width="376" height="736" rx="20" fill="#111827"/>
+<text x="1450" y="168" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1270 1630">Demo Event</text>
+<rect x="1274" y="230" width="352" height="300" rx="14" fill="#2a2118"/>
+<text x="1450" y="290" font-size="16" fill="#fbbf24" font-weight="700" text-anchor="middle" data-box="1286 1614">Finals is unavailable right now</text>
+<text x="1450" y="326" font-size="15" fill="#e2e8f0" font-weight="400" text-anchor="middle" data-box="1286 1614">Try again in a moment, or use /finals.</text>
+<rect x="1310" y="360" width="280" height="40" rx="10" fill="#3b82f6"/>
+<text x="1450" y="386" font-size="15" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="1320 1580">Try again</text>
+<rect x="1310" y="416" width="280" height="40" rx="10" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+<text x="1450" y="442" font-size="15" fill="#e2e8f0" font-weight="600" text-anchor="middle" data-box="1320 1580">Back to the hub</text>
+<text x="1250" y="912" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">3 · The unreachable state (E7): a plain page;</text>
+<text x="1250" y="934" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">/finals in Discord works while the bot runs.</text>
+</svg>

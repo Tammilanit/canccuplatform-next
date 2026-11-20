@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1160" width="1920" height="1160" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Grids that scale: the Finals seasons page (organiser)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1160.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">17 · Grids that scale: the Finals seasons page (organiser)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: one season or twelve, at 1280 px, 1920 px and on a phone: one auto-fill grid at card size, nothing stretched or stranded</text>
+<defs><clipPath id="clip11"><rect x="0" y="0" width="1280" height="600" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,130.0) scale(0.66)"><g clip-path="url(#clip11)">
+<rect x="0.0" y="0.0" width="1280.0" height="600.0" rx="10" fill="#0f172a"/>
+<text x="28.0" y="50.0" font-size="30" fill="#f8fafc" font-weight="800" text-anchor="start">Finals</text>
+<rect x="1080.0" y="22.0" width="172.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="1166.0" y="47.0" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="1086.0 1246.0">New season</text>
+<text x="28.0" y="84.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">1 season at this event</text>
+<rect x="28.0" y="110.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+<text x="46.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 304.0">Demo Finals</text>
+<rect x="46.0" y="162.0" width="149.8" height="24.0" rx="12.0" fill="#0c3a52"/>
+<text x="120.9" y="178.3" font-size="12" fill="#7dd3fc" font-weight="600" text-anchor="middle" data-box="48.0 193.8">Live · groups of four</text>
+<text x="46.0" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="46.0 304.0">9 teams of three</text>
+</g></g>
+<text x="32.0" y="556.0" font-size="17" fill="#111827" font-weight="600" text-anchor="start">1280 px · one season</text>
+<defs><clipPath id="clip12"><rect x="0" y="0" width="1280" height="600" rx="10"/></clipPath></defs>
+<g transform="translate(912.0,130.0) scale(0.66)"><g clip-path="url(#clip12)">
+<rect x="0.0" y="0.0" width="1280.0" height="600.0" rx="10" fill="#0f172a"/>
+<text x="28.0" y="50.0" font-size="30" fill="#f8fafc" font-weight="800" text-anchor="start">Finals</text>
+<rect x="1080.0" y="22.0" width="172.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="1166.0" y="47.0" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="1086.0 1246.0">New season</text>
+<text x="28.0" y="84.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">12 seasons at this event</text>
+<rect x="28.0" y="110.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+<text x="46.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 304.0">Demo Finals</text>
+<rect x="46.0" y="162.0" width="149.8" height="24.0" rx="12.0" fill="#0c3a52"/>
+<text x="120.9" y="178.3" font-size="12" fill="#7dd3fc" font-weight="600" text-anchor="middle" data-box="48.0 193.8">Live · groups of four</text>
+<text x="46.0" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="46.0 304.0">9 teams of three</text>
+<rect x="338.0" y="110.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="356.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="356.0 614.0">Friday finals</text>
+<rect x="356.0" y="162.0" width="122.9" height="24.0" rx="12.0" fill="#273449"/>
+<text x="417.4" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="358.0 476.9">Open · 15 of 27</text>
+<text x="356.0" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="356.0 614.0">9 teams of three</text>
+<rect x="648.0" y="110.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="666.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="666.0 924.0">Late night finals</text>
+<rect x="666.0" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="703.7" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="668.0 739.5">Finished</text>
+<text x="666.0" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="666.0 924.0">🏆 Team Gamma</text>
+<rect x="958.0" y="110.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="976.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="976.0 1234.0">Saturday cup</text>
+<rect x="976.0" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1013.7" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="978.0 1049.5">Finished</text>
+<text x="976.0" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="976.0 1234.0">🏆 Team Gamma</text>
+<rect x="28.0" y="260.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="46.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 304.0">Pick-up finals</text>
+<rect x="46.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="83.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="48.0 119.5">Finished</text>
+<text x="46.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="46.0 304.0">🏆 Team Gamma</text>
+<rect x="338.0" y="260.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="356.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="356.0 614.0">Morning finals</text>
+<rect x="356.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="393.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="358.0 429.5">Finished</text>
+<text x="356.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="356.0 614.0">🏆 Team Gamma</text>
+<rect x="648.0" y="260.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="666.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="666.0 924.0">Demo Finals 2</text>
+<rect x="666.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="703.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="668.0 739.5">Finished</text>
+<text x="666.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="666.0 924.0">🏆 Team Gamma</text>
+<rect x="958.0" y="260.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="976.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="976.0 1234.0">Friday finals 2</text>
+<rect x="976.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1013.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="978.0 1049.5">Finished</text>
+<text x="976.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="976.0 1234.0">🏆 Team Gamma</text>
+<rect x="28.0" y="410.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="46.0" y="446.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 304.0">Late night finals 2</text>
+<rect x="46.0" y="462.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="83.7" y="478.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="48.0 119.5">Finished</text>
+<text x="46.0" y="522.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="46.0 304.0">🏆 Team Gamma</text>
+<rect x="338.0" y="410.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="356.0" y="446.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="356.0 614.0">Saturday cup 2</text>
+<rect x="356.0" y="462.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="393.7" y="478.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="358.0 429.5">Finished</text>
+<text x="356.0" y="522.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="356.0 614.0">🏆 Team Gamma</text>
+<rect x="648.0" y="410.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="666.0" y="446.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="666.0 924.0">Pick-up finals 2</text>
+<rect x="666.0" y="462.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="703.7" y="478.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="668.0 739.5">Finished</text>
+<text x="666.0" y="522.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="666.0 924.0">🏆 Team Gamma</text>
+<rect x="958.0" y="410.0" width="294.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="976.0" y="446.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="976.0 1234.0">Morning finals 2</text>
+<rect x="976.0" y="462.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1013.7" y="478.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="978.0 1049.5">Finished</text>
+<text x="976.0" y="522.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="976.0 1234.0">🏆 Team Gamma</text>
+</g></g>
+<text x="912.0" y="556.0" font-size="17" fill="#111827" font-weight="600" text-anchor="start">1280 px · twelve seasons (four to a row)</text>
+<defs><clipPath id="clip13"><rect x="0" y="0" width="1920" height="440" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,610.0) scale(0.6)"><g clip-path="url(#clip13)">
+<rect x="0.0" y="0.0" width="1920.0" height="440.0" rx="10" fill="#0f172a"/>
+<text x="28.0" y="50.0" font-size="30" fill="#f8fafc" font-weight="800" text-anchor="start">Finals</text>
+<rect x="1720.0" y="22.0" width="172.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="1806.0" y="47.0" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="1726.0 1886.0">New season</text>
+<text x="28.0" y="84.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">12 seasons at this event</text>
+<rect x="28.0" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+<text x="46.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 307.3">Demo Finals</text>
+<rect x="46.0" y="162.0" width="149.8" height="24.0" rx="12.0" fill="#0c3a52"/>
+<text x="120.9" y="178.3" font-size="12" fill="#7dd3fc" font-weight="600" text-anchor="middle" data-box="48.0 193.8">Live · groups of four</text>
+<text x="46.0" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="46.0 307.3">9 teams of three</text>
+<rect x="341.3" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="359.3" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="359.3 620.7">Friday finals</text>
+<rect x="359.3" y="162.0" width="122.9" height="24.0" rx="12.0" fill="#273449"/>
+<text x="420.8" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="361.3 480.2">Open · 15 of 27</text>
+<text x="359.3" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="359.3 620.7">9 teams of three</text>
+<rect x="654.7" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="672.7" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="672.7 934.0">Late night finals</text>
+<rect x="672.7" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="710.4" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="674.7 746.2">Finished</text>
+<text x="672.7" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="672.7 934.0">🏆 Team Gamma</text>
+<rect x="968.0" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="986.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="986.0 1247.3">Saturday cup</text>
+<rect x="986.0" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1023.7" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="988.0 1059.5">Finished</text>
+<text x="986.0" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="986.0 1247.3">🏆 Team Gamma</text>
+<rect x="1281.3" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1299.3" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="1299.3 1560.7">Pick-up finals</text>
+<rect x="1299.3" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1337.1" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1301.3 1372.8">Finished</text>
+<text x="1299.3" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="1299.3 1560.7">🏆 Team Gamma</text>
+<rect x="1594.7" y="110.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1612.7" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="1612.7 1874.0">Morning finals</text>
+<rect x="1612.7" y="162.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1650.4" y="178.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1614.7 1686.2">Finished</text>
+<text x="1612.7" y="222.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="1612.7 1874.0">🏆 Team Gamma</text>
+<rect x="28.0" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="46.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 307.3">Demo Finals 2</text>
+<rect x="46.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="83.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="48.0 119.5">Finished</text>
+<text x="46.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="46.0 307.3">🏆 Team Gamma</text>
+<rect x="341.3" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="359.3" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="359.3 620.7">Friday finals 2</text>
+<rect x="359.3" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="397.1" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="361.3 432.8">Finished</text>
+<text x="359.3" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="359.3 620.7">🏆 Team Gamma</text>
+<rect x="654.7" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="672.7" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="672.7 934.0">Late night finals 2</text>
+<rect x="672.7" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="710.4" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="674.7 746.2">Finished</text>
+<text x="672.7" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="672.7 934.0">🏆 Team Gamma</text>
+<rect x="968.0" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="986.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="986.0 1247.3">Saturday cup 2</text>
+<rect x="986.0" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1023.7" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="988.0 1059.5">Finished</text>
+<text x="986.0" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="986.0 1247.3">🏆 Team Gamma</text>
+<rect x="1281.3" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1299.3" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="1299.3 1560.7">Pick-up finals 2</text>
+<rect x="1299.3" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1337.1" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1301.3 1372.8">Finished</text>
+<text x="1299.3" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="1299.3 1560.7">🏆 Team Gamma</text>
+<rect x="1594.7" y="260.0" width="297.3" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1612.7" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="1612.7 1874.0">Morning finals 2</text>
+<rect x="1612.7" y="312.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="1650.4" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1614.7 1686.2">Finished</text>
+<text x="1612.7" y="372.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="1612.7 1874.0">🏆 Team Gamma</text>
+</g></g>
+<text x="32.0" y="900.0" font-size="17" fill="#111827" font-weight="600" text-anchor="start">1920 px · twelve seasons (six to a row)</text>
+<defs><clipPath id="clip14"><rect x="0" y="0" width="390" height="680" rx="10"/></clipPath></defs>
+<g transform="translate(1352.0,610.0) scale(0.7)"><g clip-path="url(#clip14)">
+<rect x="0.0" y="0.0" width="390.0" height="680.0" rx="10" fill="#0f172a"/>
+<text x="28.0" y="50.0" font-size="30" fill="#f8fafc" font-weight="800" text-anchor="start">Finals</text>
+<rect x="190.0" y="22.0" width="172.0" height="40.0" rx="10" fill="#3b82f6"/>
+<text x="276.0" y="47.0" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle" data-box="196.0 356.0">New season</text>
+<text x="28.0" y="84.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">4 seasons at this event</text>
+<rect x="28.0" y="110.0" width="334.0" height="136.0" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+<text x="46.0" y="146.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 344.0">Demo Finals</text>
+<rect x="46.0" y="162.0" width="149.8" height="24.0" rx="12.0" fill="#0c3a52"/>
+<text x="120.9" y="178.3" font-size="12" fill="#7dd3fc" font-weight="600" text-anchor="middle" data-box="48.0 193.8">Live · groups of four</text>
+<text x="46.0" y="222.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="46.0 344.0">9 teams of three</text>
+<rect x="28.0" y="260.0" width="334.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="46.0" y="296.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 344.0">Friday finals</text>
+<rect x="46.0" y="312.0" width="122.9" height="24.0" rx="12.0" fill="#273449"/>
+<text x="107.4" y="328.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="48.0 166.9">Open · 15 of 27</text>
+<text x="46.0" y="372.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="46.0 344.0">9 teams of three</text>
+<rect x="28.0" y="410.0" width="334.0" height="136.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="46.0" y="446.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="46.0 344.0">Late night finals</text>
+<rect x="46.0" y="462.0" width="75.5" height="24.0" rx="12.0" fill="#273449"/>
+<text x="83.7" y="478.3" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="48.0 119.5">Finished</text>
+<text x="46.0" y="522.0" font-size="14" fill="#eab308" font-weight="600" text-anchor="start" data-box="46.0 344.0">🏆 Team Gamma</text>
+</g></g>
+<text x="1352.0" y="1110.0" font-size="17" fill="#111827" font-weight="600" text-anchor="start">390 px · one to a row</text>
+<rect x="32.0" y="960.0" width="1240.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="988.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1256.0">Why</text>
+<text x="48.0" y="1012.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1256.0">The seasons are a collection, so they use the shared grid class at card size (amendment 3); the registrations, the roster and the history stay tables, compared column</text>
+<text x="48.0" y="1032.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1256.0">by column (L10).</text>
+</svg>

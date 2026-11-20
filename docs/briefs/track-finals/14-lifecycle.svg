@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1220" width="1920" height="1220" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>A season's life: states, what each surface does, what the module emits (everyone)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1220.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">14 · A season's life: states, what each surface does, what the module emits (everyone)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the reader's map of one season from open to champion; event and path names here are for the reader, never on a screen</text>
+<rect x="220.0" y="120.0" width="300.0" height="96.0" rx="14" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+<text x="244.0" y="160.0" font-size="24" fill="#111827" font-weight="800" text-anchor="start">Open</text>
+<text x="244.0" y="192.0" font-size="15" fill="#4b5563" font-weight="500" text-anchor="start" data-box="244.0 506.0">sign-ups, votes, teams form</text>
+<line x1="520.0" y1="168.0" x2="620.0" y2="168.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620.0" y="120.0" width="300.0" height="96.0" rx="14" fill="#ffffff" stroke="#8b5cf6" stroke-width="3"/>
+<text x="644.0" y="160.0" font-size="24" fill="#111827" font-weight="800" text-anchor="start">Started</text>
+<text x="644.0" y="192.0" font-size="15" fill="#4b5563" font-weight="500" text-anchor="start" data-box="644.0 906.0">teams drawn, groups play</text>
+<line x1="920.0" y1="168.0" x2="1020.0" y2="168.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="1020.0" y="120.0" width="300.0" height="96.0" rx="14" fill="#ffffff" stroke="#f59e0b" stroke-width="3"/>
+<text x="1044.0" y="160.0" font-size="24" fill="#111827" font-weight="800" text-anchor="start">Final</text>
+<text x="1044.0" y="192.0" font-size="15" fill="#4b5563" font-weight="500" text-anchor="start" data-box="1044.0 1306.0">best of three</text>
+<line x1="1320.0" y1="168.0" x2="1420.0" y2="168.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="1420.0" y="120.0" width="300.0" height="96.0" rx="14" fill="#ffffff" stroke="#22c55e" stroke-width="3"/>
+<text x="1444.0" y="160.0" font-size="24" fill="#111827" font-weight="800" text-anchor="start">Finished</text>
+<text x="1444.0" y="192.0" font-size="15" fill="#4b5563" font-weight="500" text-anchor="start" data-box="1444.0 1706.0">champion, rankings move</text>
+<rect x="220.0" y="250.0" width="300.0" height="60.0" rx="12" fill="#ffffff" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="244.0" y="287.0" font-size="16" fill="#111827" font-weight="600" text-anchor="start" data-box="244.0 496.0">Cancelled (any time before Finished)</text>
+<rect x="620.0" y="250.0" width="700.0" height="60.0" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="644.0" y="287.0" font-size="16" fill="#111827" font-weight="600" text-anchor="start" data-box="644.0 1300.0">Disputed and corrected matches loop inside Started and Final</text>
+<rect x="32.0" y="350.0" width="1856.0" height="118.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="390.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Venue screen</text>
+<text x="220.0" y="386.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">'Finals are open' takeover with count and QR;</text>
+<text x="220.0" y="406.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">again before the close</text>
+<text x="620.0" y="386.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">'Teams drawn' takeover; then the bracket as the</text>
+<text x="620.0" y="406.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">Pulse hero</text>
+<text x="1020.0" y="386.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">The final in the hero; the series score</text>
+<text x="1420.0" y="386.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">Champion takeover; then the hall in rotation</text>
+<rect x="32.0" y="480.0" width="1856.0" height="118.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="520.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Phones (hub)</text>
+<text x="220.0" y="516.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">Finals page: join, vote, invite; push when it opens</text>
+<text x="220.0" y="536.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">(event-wide)</text>
+<text x="620.0" y="516.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">Your team (push); my match with the lobby code;</text>
+<text x="620.0" y="536.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">report</text>
+<text x="1020.0" y="516.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">Your final (push); report each game</text>
+<text x="1420.0" y="516.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">Champion; ranking move; summary</text>
+<rect x="32.0" y="610.0" width="1856.0" height="118.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="650.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Discord</text>
+<text x="220.0" y="646.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">'New season' post; /finals: status, Register,</text>
+<text x="220.0" y="666.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">Withdraw, the page button</text>
+<text x="620.0" y="646.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">'Started' post with the teams</text>
+<text x="1020.0" y="646.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">—</text>
+<text x="1420.0" y="646.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">'Champions' post</text>
+<rect x="32.0" y="740.0" width="1856.0" height="118.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="780.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Crew</text>
+<text x="220.0" y="776.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="220.0 580.0">Desk: counts, start now, change size</text>
+<text x="620.0" y="776.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="620.0 980.0">Needs you: disputes, codes, short teams; swaps</text>
+<text x="1020.0" y="776.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">Settle the final's games</text>
+<text x="1420.0" y="776.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">Corrections with a reason; History</text>
+<rect x="32.0" y="870.0" width="1856.0" height="118.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="910.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Emits</text>
+<text x="220.0" y="906.0" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="220.0 580.0">finals.season.opened · finals.entry.added ·</text>
+<text x="220.0" y="926.2" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="220.0 580.0">finals.entry.withdrawn</text>
+<text x="620.0" y="906.0" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="620.0 980.0">finals.season.started · finals.match.ready ·</text>
+<text x="620.0" y="926.2" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="620.0 980.0">finals.match.decided · finals.match.disputed</text>
+<text x="1020.0" y="906.0" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">finals.match.decided (each game) ·</text>
+<text x="1020.0" y="926.2" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="1020.0 1380.0">finals.match.corrected</text>
+<text x="1420.0" y="906.0" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">finals.season.finished · finals.season.cancelled ·</text>
+<text x="1420.0" y="926.2" font-size="15" fill="#1d4ed8" font-weight="400" text-anchor="start" data-box="1420.0 1780.0">finals.rankings.changed</text>
+<text x="32.0" y="1030.0" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Two providers, one contract for /finals</text>
+<rect x="32.0" y="1050.0" width="420.0" height="150.0" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52.0" y="1090.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start">The bot's /finals</text>
+<text x="52.0" y="1120.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="52.0 432.0">one full base per provider; status, entries, links</text>
+<rect x="620.0" y="1040.0" width="560.0" height="76.0" rx="12" fill="#ffffff" stroke="#22c55e" stroke-width="2"/>
+<text x="640.0" y="1072.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start">This event's finals module</text>
+<text x="640.0" y="1100.0" font-size="14" fill="#4b5563" font-weight="500" text-anchor="start" data-box="640.0 1170.0">/internal/finals/provider · tenant_id · service header</text>
+<rect x="620.0" y="1136.0" width="560.0" height="76.0" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="640.0" y="1168.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start">The standalone off-LAN app</text>
+<text x="640.0" y="1196.0" font-size="14" fill="#4b5563" font-weight="500" text-anchor="start" data-box="640.0 1170.0">&lt;off-LAN host&gt;/api/provider · bearer secret · its own data</text>
+<line x1="452.0" y1="1110.0" x2="616.0" y2="1078.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="452.0" y1="1140.0" x2="616.0" y2="1172.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="1240.0" y="1060.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1240.0 1880.0">No data moves between the two: a season lives in one of them (0025). The bot's</text>
+<text x="1240.0" y="1081.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1240.0 1880.0">tests run against both with the same fixtures (D14).</text>
+<text x="1240.0" y="1103.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1240.0 1880.0">The base is the whole path: the legacy bot's root plus a fixed</text>
+<text x="1240.0" y="1124.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1240.0 1880.0">/api/provider fits only the off-LAN app (D7).</text>
+</svg>
