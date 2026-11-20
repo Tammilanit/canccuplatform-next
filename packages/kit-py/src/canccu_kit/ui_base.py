@@ -45,7 +45,7 @@ MENU: dict[str, Any] = {
                     "label": "Food",
                     "href": "/pizza/crew",
                     "icon": "food",
-                    "rights": ["pizza.order.manage", "pizza.menu.write", "admin.settings.write"],
+                    "rights": ["pizza.order.manage", "pizza.menu.write"],
                 },
             ],
         },
