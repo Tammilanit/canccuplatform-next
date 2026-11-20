@@ -11,12 +11,12 @@
 <line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
 <rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
 <text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
-<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
-<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
-<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
-<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
-<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
-<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 218">Demo Event</text>
+<line x1="222" y1="18" x2="222" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="232" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="228 372">Sat 21 – Sun 22 Nov</text>
+<rect x="378" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="390" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="398" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="395 427">Live</text>
 <text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
 <rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
 <line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
@@ -61,7 +61,7 @@
 <circle cx="326" cy="286" r="4.5" fill="#3ddcff"/>
 <text x="346" y="291" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312 744">The platform&#x27;s bot (recommended)</text>
 <text x="346" y="322" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Ready now: nothing to create.</text>
-<text x="346" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Named Canccu Platform in your server.</text>
+<text x="346" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Named Demo Event in your server.</text>
 <text x="346" y="370" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 740">Shares Discord&#x27;s limits with other events.</text>
 <rect x="776" y="256" width="464" height="170" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <circle cx="806" cy="286" r="9" fill="none" stroke="#616788" stroke-width="2"/>

@@ -11,12 +11,12 @@
 <line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
 <rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
 <text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
-<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
-<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
-<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
-<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
-<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
-<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 218">Demo Event</text>
+<line x1="222" y1="18" x2="222" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="232" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="228 372">Sat 21 – Sun 22 Nov</text>
+<rect x="378" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="390" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="398" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="395 427">Live</text>
 <text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
 <rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
 <line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
@@ -47,12 +47,12 @@
 <text x="55" y="584" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="50 250">Discord</text>
 <text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Discord</text>
 <text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Demo Community · bound</text>
-<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 378.48">Overview</text>
-<text x="384.48" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="382.48 462.96">Channels</text>
-<text x="468.96" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="466.96 607.92">Roles and rights</text>
-<line x1="464.96" y1="186" x2="595.92" y2="186" stroke="#3ddcff" stroke-width="2"/>
-<text x="613.92" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="611.92 692.4">Commands</text>
-<text x="698.4" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="696.4 754.2">Check</text>
+<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 388">Overview</text>
+<text x="394" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="392 486">Channels</text>
+<text x="492" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="490 626">Roles and rights</text>
+<line x1="488" y1="186" x2="637" y2="186" stroke="#3ddcff" stroke-width="2"/>
+<text x="632" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="630 734">Commands</text>
+<text x="740" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="738 840">Check</text>
 <line x1="296" y1="187" x2="1240" y2="187" stroke="#343c66" stroke-width="1"/>
 <text x="296" y="222" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">A role grants rights only to people who signed in and joined Demo Event.</text>
 <rect x="1090" y="200" width="150" height="36" rx="8" fill="#3ddcff"/>
@@ -157,5 +157,5 @@
 <text x="1577" y="552.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1416 1738">Edit granted rights</text>
 <text x="1412" y="600" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1742">Change @Crew rights on the Discord page.</text>
 </g>
-<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: People shows where each right comes from</text>
+<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: People shows each right&#x27;s source</text>
 </svg>

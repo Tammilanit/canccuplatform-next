@@ -98,15 +98,16 @@
 <rect x="1324" y="240" width="220" height="150" rx="6" fill="#4a5070"/>
 <path d="M1324 390 l70 -70 l50 40 l40 -30 l60 60 z" fill="#6b7396"/>
 <circle cx="1482" cy="280" r="16" fill="#8b93b8"/>
-<rect x="1562" y="230" width="230" height="150" rx="6" fill="#111214"/>
-<text x="1576" y="258" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Reply</text>
-<text x="1576" y="286" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1572 1782">Apps  ›</text>
-<rect x="1798" y="266" width="260" height="92" rx="6" fill="#111214"/>
-<rect x="1804" y="272" width="248" height="34" rx="4" fill="#5865f2"/>
-<text x="1816" y="294" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1810 2050">Send to the screen</text>
-<text x="1816" y="338" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1810 2050">Remove from the screen</text>
-<text x="1576" y="314" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Copy message link</text>
-<text x="1576" y="342" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Pin message</text>
+<rect x="1360" y="230" width="200" height="150" rx="6" fill="#111214" stroke="#2b2d31" stroke-width="1"/>
+<rect x="1366" y="268" width="188" height="28" rx="4" fill="#2e3035"/>
+<text x="1374" y="258" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1370 1554">Reply</text>
+<text x="1374" y="287" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1370 1554">Apps  ›</text>
+<rect x="1566" y="266" width="240" height="92" rx="6" fill="#111214" stroke="#2b2d31" stroke-width="1"/>
+<rect x="1572" y="272" width="228" height="34" rx="4" fill="#5865f2"/>
+<text x="1584" y="294" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1578 1798">Send to the screen</text>
+<text x="1584" y="338" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1578 1798">Remove from the screen</text>
+<text x="1374" y="314" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1370 1554">Copy message link</text>
+<text x="1374" y="342" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1370 1554">Pin message</text>
 <text x="1324" y="410" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1260 1844">↱ Crew One used Send to the screen</text>
 <circle cx="1290" cy="438" r="18" fill="#5865f2"/>
 <text x="1290" y="443" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1272 1308">DB</text>

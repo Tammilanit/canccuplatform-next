@@ -11,12 +11,12 @@
 <line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
 <rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
 <text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
-<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
-<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
-<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
-<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
-<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
-<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 218">Demo Event</text>
+<line x1="222" y1="18" x2="222" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="232" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="228 372">Sat 21 – Sun 22 Nov</text>
+<rect x="378" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="390" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="398" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="395 427">Live</text>
 <text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
 <rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
 <line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
@@ -47,12 +47,12 @@
 <text x="55" y="584" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="50 250">Discord</text>
 <text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Discord</text>
 <text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Demo Community · bound</text>
-<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 378.48">Overview</text>
-<text x="384.48" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="382.48 462.96">Channels</text>
-<text x="468.96" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="466.96 607.92">Roles and rights</text>
-<text x="613.92" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="611.92 692.4">Commands</text>
-<line x1="609.92" y1="186" x2="680.4" y2="186" stroke="#3ddcff" stroke-width="2"/>
-<text x="698.4" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="696.4 754.2">Check</text>
+<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 388">Overview</text>
+<text x="394" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="392 486">Channels</text>
+<text x="492" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="490 626">Roles and rights</text>
+<text x="632" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="630 734">Commands</text>
+<line x1="628" y1="186" x2="705" y2="186" stroke="#3ddcff" stroke-width="2"/>
+<text x="740" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="738 840">Check</text>
 <line x1="296" y1="187" x2="1240" y2="187" stroke="#343c66" stroke-width="1"/>
 <circle cx="304" cy="214" r="8" fill="#3ee39a"/>
 <path d="M300.32,214.32 l2.72,2.72 l4.8,-5.76" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -106,13 +106,13 @@
 <rect x="310" y="705" width="40" height="22" rx="11" fill="#2a2f4d"/>
 <circle cx="321" cy="716" r="8" fill="#a9b1d6"/>
 <text x="386" y="722" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="384 546">Tournament</text>
-<text x="556" y="722" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/tournament … (step 7)</text>
+<text x="556" y="722" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/tournament …</text>
 <text x="1096" y="722" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Crew parts by right</text>
 <rect x="296" y="750" width="944" height="52" rx="8" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
 <rect x="310" y="765" width="40" height="22" rx="11" fill="#2a2f4d"/>
 <circle cx="321" cy="776" r="8" fill="#a9b1d6"/>
 <text x="386" y="782" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="384 546">Finals</text>
-<text x="556" y="782" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/finals … (Finals track)</text>
+<text x="556" y="782" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/finals · Register and Withdraw buttons</text>
 <text x="1096" y="782" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
 </g>
 </g>
@@ -133,12 +133,10 @@
 <rect x="1732" y="192" width="20" height="2" rx="1" fill="#f3f5ff"/>
 <text x="1398" y="240" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1382 1772">‹ More</text>
 <text x="1398" y="270" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Discord</text>
-<rect x="1398" y="286" width="86.24" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
-<text x="1441.12" y="306" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1402 1480.24">Overview</text>
-<rect x="1492.24" y="286" width="86.24" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
-<text x="1535.36" y="306" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1496.24 1574.48">Commands</text>
-<rect x="1586.48" y="286" width="64.4" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
-<text x="1618.68" y="306" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1590.48 1646.88">Check</text>
+<rect x="1398" y="284" width="358" height="34" rx="8" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="306" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1408 1648">Commands</text>
+<text x="1716" y="306" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1648 1718">4 of 5</text>
+<path d="M1726,298 l6,6 l6,-6" fill="none" stroke="#c5cae3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1382" y="870" width="390" height="84" rx="0" fill="#121528"/>
 <rect x="1413" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
 <text x="1421" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1382 1460">Run of show</text>
@@ -154,36 +152,39 @@
 <circle cx="1406" cy="342" r="8" fill="#3ee39a"/>
 <path d="M1402.32,342.32 l2.72,2.72 l4.8,-5.76" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="1422" y="347" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1398 1756">9 commands, 2 menus · 20:02</text>
-<rect x="1398" y="366" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="393" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Food</text>
-<rect x="1702" y="378" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="389" r="8" fill="#0b0d1a"/>
-<text x="1412" y="418" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/food</text>
-<rect x="1398" y="446" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="473" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Run of show</text>
-<rect x="1702" y="458" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="469" r="8" fill="#0b0d1a"/>
-<text x="1412" y="498" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/now</text>
-<rect x="1398" y="526" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="553" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Announcements</text>
-<rect x="1702" y="538" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="549" r="8" fill="#0b0d1a"/>
-<text x="1412" y="578" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/announce</text>
-<rect x="1398" y="606" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="633" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Ticker</text>
-<rect x="1702" y="618" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="629" r="8" fill="#0b0d1a"/>
-<text x="1412" y="658" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker set · stop · status · schedu…</text>
-<rect x="1398" y="686" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="713" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Photo wall</text>
-<rect x="1702" y="698" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="709" r="8" fill="#0b0d1a"/>
-<text x="1412" y="738" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">Menus: Send to the screen · Remove f…</text>
-<rect x="1398" y="766" width="358" height="70" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1412" y="793" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Who plays what</text>
-<rect x="1702" y="778" width="40" height="22" rx="11" fill="#3ddcff"/>
-<circle cx="1731" cy="789" r="8" fill="#0b0d1a"/>
-<text x="1412" y="818" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">No command: counts for the screens, …</text>
+<rect x="1398" y="364" width="358" height="62" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="389" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Food</text>
+<rect x="1702" y="376" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="387" r="8" fill="#0b0d1a"/>
+<text x="1412" y="412" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/food</text>
+<rect x="1398" y="434" width="358" height="62" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="459" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Run of show</text>
+<rect x="1702" y="446" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="457" r="8" fill="#0b0d1a"/>
+<text x="1412" y="482" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/now</text>
+<rect x="1398" y="504" width="358" height="62" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="529" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Announcements</text>
+<rect x="1702" y="516" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="527" r="8" fill="#0b0d1a"/>
+<text x="1412" y="552" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/announce</text>
+<rect x="1398" y="574" width="358" height="82" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="599" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Ticker</text>
+<rect x="1702" y="586" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="597" r="8" fill="#0b0d1a"/>
+<text x="1412" y="622" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker set · stop · status</text>
+<text x="1412" y="641" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742" font-family="ui-monospace, monospace">/ticker schedule add · list · remove</text>
+<rect x="1398" y="664" width="358" height="82" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="689" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Photo wall</text>
+<rect x="1702" y="676" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="687" r="8" fill="#0b0d1a"/>
+<text x="1412" y="712" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">Menu: Send to the screen</text>
+<text x="1412" y="731" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">Menu: Remove from the screen</text>
+<rect x="1398" y="754" width="358" height="62" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1412" y="779" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1690">Who plays what</text>
+<rect x="1702" y="766" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1731" cy="777" r="8" fill="#0b0d1a"/>
+<text x="1412" y="802" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">No command; it feeds the screens</text>
+<text x="1412" y="840" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1398 1756">Tournament and Finals are off  ›</text>
 </g>
-<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: the same switches</text>
+<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: every command whole</text>
 </svg>

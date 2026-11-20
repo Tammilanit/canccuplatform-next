@@ -1,0 +1,71 @@
+# Step 6 decisions (product owner, 2026-11-20)
+
+Every question in `docs/briefs/step-6-bot/questions.md`, answered by the product owner on the decisions page. "rec" means the recommendation was taken as written.
+
+- **U1** A (rec).
+- **U2** A (rec).
+- **U3** A (rec).
+- **U4** A (rec).
+- **U5** A (rec).
+- **U6** A (rec).
+- **U7** A (rec).
+- **U8** A (rec).
+- **U9** A (rec).
+- **U10** A (rec).
+- **U11** A (rec).
+- **U12** A (rec). PO note: B should also be possible at some point, moderated with notification to crew when there is something to moderate
+- **U13** A (rec).
+- **L1** A (rec).
+- **L2** A (rec).
+- **L3** A (rec).
+- **L4** A (rec).
+- **L5** A (rec).
+- **L6** A (rec).
+- **L7** A (rec).
+- **L8** A (rec).
+- **L9** A (rec).
+- **D1** A (rec).
+- **D2** A (rec).
+- **D3** A (rec).
+- **D4** A (rec).
+- **D5** A (rec).
+- **D6** B, not the recommended A: "Messages per hour, counts only, for an activity graph." PO note: Chat activity is a nice new graph type. To be defined.
+- **D7** A (rec).
+- **D8** A (rec).
+- **D9** A (rec).
+- **D10** A (rec). PO note: What is "the import"?
+- **D11** A (rec).
+- **D12** A (rec). PO note: The platform should still be able to send notifications to people via bot -- I assume this is what you mean, i.e., bot itself does not do the decisions but they come from the platform.
+- **D13** A (rec).
+- **D14** A (rec).
+- **D15** A (rec).
+- **D16** A (rec).
+- **E1** A (rec).
+- **E2** A (rec).
+- **E3** A (rec).
+- **E4** A (rec).
+- **E5** A (rec).
+- **E6** A (rec).
+- **E7** A (rec).
+- **E8** A (rec).
+- **O1** A (rec).
+- **O2** A (rec).
+- **O3** A (rec).
+- **O4** A (rec).
+- **O5** A (rec). PO note: The switch can be done with low effort since we are now very well between two events and the current legacy bot is mostly useless. There however is the /finals command which is being used so we cannot just ditch the legacy bot suddenly.
+- **O6** A (rec).
+- **P1** C (rec).
+- **P2** A (rec). PO note: The issues to follow the V2 workflow with very big tickets and only batched full reviews, avoiding epics.
+- **P3** B (rec).
+- **P4** A (rec).
+- **P5** A (rec).
+- **P6** A (rec).
+- **P7** A (rec).
+- **P8** A (rec). PO note: Yes. This is also currently already in use, albeit not integrated with the new platform.
+- **P9** A (rec).
+
+Answered in chat after the page (2026-11-20):
+- **O5, the switch:** the switch is easy now, between events, and the legacy bot is mostly unused, but its `/finals` is in use. The import moves the legacy bot's identity, so the legacy bot stops at the switch. Decision: step 6 builds and tests the import; the switch happens as soon as the Finals track's `/finals` is live on the new bot (P8), not in step 11. The Finals track's first package runs beside step 6 so that is soon. The legacy bot runs untouched until then.
+- **D10, answered:** "the import" is the one-time move of the legacy bot into the platform at the switch: its Discord identity (token), its server and channels, its admin role, its two settings and its finals state (D9). Nothing else.
+- **D12, confirmed:** yes. The platform decides who is told what (Notify, the person's own choices and quiet hours); the bot only delivers it as a Discord DM.
+- **P2, the issue shape:** three large tickets, no sub-epics, one full review each: #121 takes in #124, #122 takes in #123, #125 stays. #123 and #124 close into them.

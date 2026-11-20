@@ -4,13 +4,14 @@
 <rect x="0" y="0" width="1900" height="1560" rx="0" fill="#f3f4f6"/>
 <text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">11 · Presence, privacy first: counts are kept, people are not</text>
 <text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: the session sees what the bot reads, what it drops, what it keeps and for how long; an attendee hides their activity from the hub or Discord (#122, tenants.md Privacy).</text>
-<rect x="32" y="130" width="300" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<rect x="32" y="130" width="300" height="172" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
 <text x="46" y="156" font-size="16" fill="#111827" font-weight="700" text-anchor="start" data-box="46 318">Discord gateway</text>
 <text x="46" y="182" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">Presence and activities</text>
 <text x="46" y="203" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">Voice states</text>
 <text x="46" y="224" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">Members and roles</text>
-<text x="46" y="245" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">(privileged intents: presence,</text>
-<text x="46" y="266" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">members; never message text)</text>
+<text x="46" y="245" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">Messages, counted (no text)</text>
+<text x="46" y="266" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">(privileged intents: presence,</text>
+<text x="46" y="287" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="46 318">members; never message text)</text>
 <line x1="332" y1="205" x2="392" y2="205" stroke="#6b7280" stroke-width="2"/>
 <path d="M392,205 L382.789,208.894 L382.789,201.106 Z" fill="#6b7280"/>
 <rect x="392" y="130" width="360" height="210" rx="10" fill="#fff7ed" stroke="#ffb454" stroke-width="1.5"/>
@@ -32,10 +33,11 @@
 <text x="836" y="204" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">event is archived. Read through the bot&#x27;s API only.</text>
 <rect x="822" y="280" width="470" height="170" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5"/>
 <text x="836" y="306" font-size="16" fill="#111827" font-weight="700" text-anchor="start" data-box="836 1278">Kept (Postgres): counts, never who</text>
-<text x="836" y="332" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">Per minute: online, idle, in voice; per game: players.</text>
-<text x="836" y="353" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">Folded per hour: averages, peaks, player-hours per game.</text>
-<text x="836" y="374" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">No user ids, no names: anonymous event statistics,</text>
-<text x="836" y="395" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">kept with the event; survive a restart.</text>
+<text x="836" y="332" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">Per minute: online, idle, in voice, messages;</text>
+<text x="836" y="353" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">per game: players. Folded per hour: averages,</text>
+<text x="836" y="374" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">peaks, player-hours per game. No user ids, no names,</text>
+<text x="836" y="395" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">no channels: anonymous event statistics, kept</text>
+<text x="836" y="416" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="836 1278">with the event; survive a restart.</text>
 <line x1="1292" y1="185" x2="1352" y2="185" stroke="#6b7280" stroke-width="2"/>
 <path d="M1352,185 L1342.79,188.894 L1342.79,181.106 Z" fill="#6b7280"/>
 <line x1="1292" y1="365" x2="1352" y2="365" stroke="#6b7280" stroke-width="2"/>
@@ -49,7 +51,8 @@
 <text x="1366" y="332" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">bot.presence.counted → the screens&#x27; numbers and graph</text>
 <text x="1366" y="353" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">bot.activities.counted → Games: matching, surges, hot game</text>
 <text x="1366" y="374" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">bot.voice.counted (new) → the voice rooms box</text>
-<text x="1366" y="395" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">GET /api/bot/stats (new) → top games by player-hours</text>
+<text x="1366" y="395" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">bot.messages.counted (new) → chat activity, later</text>
+<text x="1366" y="416" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1366 1854">GET /api/bot/stats (new) → hourly series, top games</text>
 <rect x="392" y="370" width="360" height="160" rx="10" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
 <text x="406" y="396" font-size="16" fill="#111827" font-weight="700" text-anchor="start" data-box="406 738">Tournament dwell (step 7)</text>
 <text x="406" y="422" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="406 738">Who stayed in a match&#x27;s voice</text>
@@ -57,7 +60,7 @@
 <text x="406" y="464" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="406 738">for one match; sent once as</text>
 <text x="406" y="485" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="406 738">bot.voice_roster.captured, then gone.</text>
 <text x="32" y="590" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1282">Retention: nothing raw about a person is stored, so the 30-day presence rule holds by design; the live state goes at archiving;</text>
-<text x="32" y="611.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1282">the counts stay with the event as anonymous statistics until it is deleted. Message counts and the top chatters are not ported (Q D6).</text>
+<text x="32" y="611.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1282">the counts stay with the event as anonymous statistics until it is deleted. Messages are counted per hour, never who wrote them (D6 B).</text>
 <g clip-path="url(#c1)">
 <rect x="32" y="660" width="1250" height="330" rx="0" fill="#313338"/>
 <line x1="32" y1="708" x2="1282" y2="708" stroke="#1f2023" stroke-width="1"/>
@@ -71,7 +74,7 @@
 <text x="220.8" y="754" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 1270">20:30</text>
 <text x="102" y="778" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 1270">Your activity is shown: the hub lists you under the game you play and the voice room you are in.</text>
 <text x="102" y="800" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 1270">Hide it and you are left out of every list and count, at every event, from now on.</text>
-<rect x="102" y="824" width="170" height="32" rx="4" fill="#da373c"/>
+<rect x="102" y="824" width="170" height="32" rx="4" fill="#5865f2"/>
 <text x="187" y="845" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="106 268">Hide my activity</text>
 <rect x="280" y="824" width="140" height="32" rx="4" fill="#4e5058"/>
 <text x="350" y="845" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="284 416">Privacy page ↗</text>
@@ -95,7 +98,7 @@
 <text x="700" y="1203" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="696 896">Valkey, per match</text>
 <text x="900" y="1203" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="896 1276">Until the roster is sent (step 7)</text>
 <rect x="32" y="1220" width="1250" height="36" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
-<text x="44" y="1243" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="40 464">Counts per minute and per hour, per game</text>
+<text x="44" y="1243" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="40 464">Counts per minute and hour: presence, games, messages</text>
 <text x="470" y="1243" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="466 694">none (anonymous)</text>
 <text x="700" y="1243" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="696 896">Postgres</text>
 <text x="900" y="1243" font-size="13.5" fill="#111827" font-weight="400" text-anchor="start" data-box="896 1276">With the event, until it is deleted</text>
