@@ -260,7 +260,7 @@ export class Subscription {
   ): Promise<void> {
     let event: Event;
     try {
-      event = parseEnvelope(fields.event ?? "");
+      event = { ...parseEnvelope(fields.event ?? ""), entry_id: entryId };
     } catch (err) {
       this.log?.warn({ stream, entry: entryId, reason: String(err) }, "skipped invalid event");
       return;

@@ -142,6 +142,16 @@ run("the cue editor", () => {
     expect(words).toContain("Reset to default");
   });
 
+  // #657: where a window before the start measures from, said where the window is kept.
+  it("says what a cue's window before the start measures from, and only on a cue with one", async () => {
+    const pre = text((await w.call("admin", "GET", "/cues/edit/tournament.pre")).body);
+    expect(pre).toContain(
+      "Sounds only from 14 to 2 min before the start of its run-of-show item. A moment with no item, such as a rule's, counts from its own start, so the cue stays silent there; a storyboard step plays it at the step's own time.",
+    );
+    const start = text((await w.call("admin", "GET", "/cues/edit/tournament.start")).body);
+    expect(start).not.toContain("before the start of its run-of-show item");
+  });
+
   it("keeps a not-again-for the stops do not name as a stop of its own", async () => {
     await w.call(
       "admin",

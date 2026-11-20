@@ -147,10 +147,11 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
 
   it("logs a new photo's sound on the retry of a run that failed", async () => {
     const photo = event("screen.photo.added", { photo_id: "ph_1" });
-    const zoneSound = w.screen.zoneSound;
-    w.screen.zoneSound = () => Promise.reject(new Error("Screen fell over"));
+    const screen = w.screen;
+    const zoneSound = screen.zoneSound.bind(screen);
+    screen.zoneSound = () => Promise.reject(new Error("Screen fell over"));
     await expect(deliver(photo)).rejects.toThrow("Screen fell over");
-    w.screen.zoneSound = zoneSound;
+    screen.zoneSound = zoneSound;
     await deliver(photo);
     expect(await rows(`SELECT zone_key, outcome FROM moments_sound_log`)).toEqual([
       { zone_key: "main", outcome: "played" },

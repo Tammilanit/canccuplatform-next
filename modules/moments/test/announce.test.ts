@@ -277,9 +277,7 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
       // 19:00 start, sent at 18:45: T−15.
       await tick(w.at(45 * 60));
       const { rows } = await pool.query(`SELECT cue, outcome, reason FROM moments_sound_log`);
-      expect(rows).toEqual([
-        { cue: "announce.attention", outcome, reason },
-      ]);
+      expect(rows).toEqual([{ cue: "announce.attention", outcome, reason }]);
     },
   );
 

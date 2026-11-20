@@ -305,6 +305,10 @@ components:
                       type: string
                   rule_off:
                     type: [string, "null"]
+                    description: |
+                      The built-in rule this story takes over while on (SD6), or null. Pizza orders ready takes
+                      over only the arrived orders (`pizza.order.arrived`): its `pizza` rule still shows each
+                      order placed.
         settings:
           $ref: "moments/storyboard.schema.json#/$defs/Settings"
         revision:
@@ -916,7 +920,10 @@ components:
         catch_up_before_start:
           description: |
             Minutes before the source's start, `[from, to]`: the cue sounds only in that window, and catches up
-            until its end (the legacy tournament windows, T−29 to T−15 and T−14 to T−2).
+            until its end (the legacy tournament windows, T−29 to T−15 and T−14 to T−2). A moment's cue measures
+            from its source's start where it has one (a run-of-show item's, as an announcement's), else from the
+            moment's own start, which is past the window: there the cue does not sound. A new photo's or a
+            storyboard step's cue has no start to measure from and is not held to the window.
           oneOf:
             - type: "null"
             - type: array

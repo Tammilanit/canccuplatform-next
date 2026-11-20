@@ -17,6 +17,11 @@ export interface Event {
   tenant?: string;
   correlation_id?: string;
   data: Record<string, unknown>;
+  /**
+   * The stream entry a subscription read it from (Valkey's `<ms>-<seq>`): the stream's own order,
+   * which ids minted on several hosts' clocks are not. Never part of the published envelope.
+   */
+  entry_id?: string;
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> =>

@@ -26,4 +26,14 @@ describe.skipIf(!VALKEY_URL)("the sound counters on Valkey", () => {
       expect(await counters.get([minute])).toEqual([0]);
     });
   });
+
+  // #657: every container gets a new photo; the first to claim it sounds it, and on a retry too.
+  it("gives a claim to its first owner only, for its time", async () => {
+    const key = `canccu:test:claim:${String(Math.random())}`;
+    expect(await counters.claim(key, "one", 1500)).toBe(true);
+    expect(await counters.claim(key, "two", 1500)).toBe(false);
+    expect(await counters.claim(key, "one", 1500)).toBe(true);
+    await new Promise((r) => setTimeout(r, 1700));
+    expect(await counters.claim(key, "two", 1500)).toBe(true);
+  });
 });

@@ -65,6 +65,8 @@ export interface MomentRequest {
   refuse?: boolean;
   /** A story's round starts at its planned time, so its steps and an on-the-dot step land on it. */
   starts_at?: Date;
+  /** The start of what it is about (its run-of-show item): its cue's window measures from it. */
+  source_starts_at?: Date;
   /** Its planned end, to the millisecond (a story's round); else from `ttl_seconds`. */
   expires_at?: Date;
 }
@@ -216,7 +218,7 @@ export class Engine {
     await insertMoment(c, moment);
     await this.history(c, moment, now, { action: "started", actor: r.actor ?? null });
     await reconcile(this.outbox, c, moment, r.actor ?? null, "cleared", orders, zones);
-    if (r.cue != null) await this.cues?.started(c, moment, r.cue, now);
+    if (r.cue != null) await this.cues?.started(c, moment, r.cue, now, r.source_starts_at ?? null);
     return { status: "started", moment };
   }
 

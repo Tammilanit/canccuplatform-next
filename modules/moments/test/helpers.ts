@@ -90,7 +90,7 @@ export interface World {
   counters: MemoryCounters;
 }
 
-/** Valkey's counters in memory; their keys name their minute or hour, so none needs expiring. */
+/** Valkey's counters and claims in memory; their keys name their minute, hour or event, so none expires. */
 export class MemoryCounters implements Counters {
   readonly values = new Map<string, number>();
   /** Valkey down: every call fails, as the client's do once its retries are spent. */
@@ -104,6 +104,13 @@ export class MemoryCounters implements Counters {
     const n = (this.values.get(key) ?? 0) + 1;
     this.values.set(key, n);
     return Promise.resolve(n);
+  }
+  readonly claims = new Map<string, string>();
+  claim(key: string, owner: string): Promise<boolean> {
+    if (this.down) return Promise.reject(new Error("Connection is closed."));
+    const held = this.claims.get(key) ?? owner;
+    this.claims.set(key, held);
+    return Promise.resolve(held === owner);
   }
   close(): Promise<void> {
     return Promise.resolve();

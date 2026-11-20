@@ -59,6 +59,8 @@ const rights = new RightsChecker(admin);
 const session = await rights.requireSuperadmin(request.headers.cookie);
 
 bus.subscribeTenants(["admin"], (event) => settings.handleEvent(event)); // re-reads that tenant
+// A received event carries `entry_id`, its stream entry: the stream's order, unlike ids minted
+// on several hosts' clocks.
 bus.subscribe(["admin"], (event) => {
   rights.handleEvent(event); // drops the cache on admin.rights.changed
 });
