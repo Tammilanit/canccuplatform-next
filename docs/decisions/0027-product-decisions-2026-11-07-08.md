@@ -1,6 +1,6 @@
 # 0027. The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming
 
-- **Status:** Accepted (amends [0022](0022-product-vision.md) without superseding it); its finals item is settled by [0030](0030-finals-integrated-one-tourney-core.md): the finals tourney is the Apps track's first app, integrated as an external app, and 0025 stands only in part
+- **Status:** Accepted (amends [0022](0022-product-vision.md) without superseding it); its finals item is settled by [0030](0030-finals-integrated-one-tourney-core.md): the finals tourney is the Apps track's first app, integrated as an external app each event connects to, and 0025 stands only in part
 - **Date:** 2026-11-08
 
 ## Context
