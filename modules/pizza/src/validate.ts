@@ -52,8 +52,11 @@ export function requiredText(v: unknown, field: string, max: number): string {
   return optionalText(v, field, max) ?? bad(field, "required");
 }
 
+/** RFC 3339 (the contract's `date-time`): without its offset, `Date` would read a time in the host's zone. */
+const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
 export function parseTime(v: unknown, field: string): Date {
-  const ok = typeof v === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v);
+  const ok = typeof v === "string" && RFC3339.test(v);
   const t = ok ? new Date(v) : null;
   if (t === null || Number.isNaN(t.getTime())) return bad(field, "must be an RFC 3339 time");
   return t;

@@ -30,7 +30,8 @@ async function itemFor(
 ): Promise<{ item: ItemRow; order: OrderRow; as: As }> {
   const item = await getItem(c, id);
   if (item === null) throw notFound("pizza");
-  const order = await getOrder(c, item.order_id);
+  // Locked, as in orderFor: the holder's rights are checked against the row the write changes.
+  const order = await getOrder(c, item.order_id, true);
   if (order === null) throw notFound("pizza");
   return { item, order, as: authorize(action, w.caller, facts(w.ctx, w.now, order, item)).as };
 }
@@ -38,7 +39,15 @@ async function itemFor(
 export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: Params }>("/api/pizza/orders/:id/items", (request, reply) =>
     write(deps, request, reply, async (c, w) => {
-      const { order } = await orderFor(c, request.params.id, "item.add", w.caller, w.ctx, w.now);
+      const { order } = await orderFor(
+        c,
+        request.params.id,
+        "item.add",
+        w.caller,
+        w.ctx,
+        w.now,
+        true,
+      );
       const menu = await liveMenu(c, order.pizzeria_id);
       const input = parseItemBody(body(request), menu);
       const settings = await deps.settings(w.ctx.tenant_id);
@@ -130,6 +139,7 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
         w.caller,
         w.ctx,
         w.now,
+        true,
       );
       const m = await handOutAll(w.step(c), order.id);
       return ok(await present(c, w.caller, w.ctx, w.now, m.row));

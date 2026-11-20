@@ -251,13 +251,13 @@ export function menuRoutes(app: FastifyInstance, deps: AppDeps): void {
           added++;
           await c.query(
             `INSERT INTO pizza_pizzerias (id, name, phone, website, service) VALUES ($1, $2, $3, $4, $5)`,
-            [id, p.file.name, p.file.phone, p.file.website, p.file.service],
+            [id, p.file.name, p.file.phone, p.file.website, p.file.service ?? "delivery"],
           );
         } else {
           // Fields the file leaves empty stay as they are.
           await c.query(
             `UPDATE pizza_pizzerias SET phone = COALESCE($2, phone), website = COALESCE($3, website),
-               service = $4, updated_at = $5 WHERE id = $1`,
+               service = COALESCE($4, service), updated_at = $5 WHERE id = $1`,
             [id, p.file.phone, p.file.website, p.file.service, w.now],
           );
         }

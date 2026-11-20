@@ -40,14 +40,17 @@ beforeEach(async () => {
   margherita = await itemId(w, pz, "1");
 });
 
-/** Until another session waits on a row lock (bounded: a request that never blocks fails the test). */
+/**
+ * Until another session waits on the holder's lock (bounded: a request that never blocks fails the
+ * test). Polled outside the holder's transaction, which would keep its first pg_stat_activity
+ * snapshot to the end.
+ */
 async function waitForLockWaiter(holder: pg.PoolClient): Promise<void> {
   const pid = ((await holder.query("SELECT pg_backend_pid() AS pid")).rows[0] as { pid: number })
     .pid;
-  for (let i = 0; i < 200; i++) {
-    const { rows } = await holder.query(
-      `SELECT count(*)::int AS n FROM pg_stat_activity
-        WHERE wait_event_type = 'Lock' AND datname = current_database() AND pid <> $1`,
+  for (let i = 0; i < 160; i++) {
+    const { rows } = await pool.query(
+      `SELECT count(*)::int AS n FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid))`,
       [pid],
     );
     if ((rows[0] as { n: number }).n > 0) return;

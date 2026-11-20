@@ -46,10 +46,14 @@ function offsetMinutes(at: Date, timeZone: string): number {
   return Math.round((local - Math.floor(at.getTime() / 1000) * 1000) / 60_000);
 }
 
-/** The event day `YYYY-MM-DD` of an instant. */
+/**
+ * The event day `YYYY-MM-DD` of an instant: its local date, or the date before until 06:00 local.
+ * Read on the local clock, not by going back 6 real hours, which a clock change would make 5 or 7.
+ */
 export function eventDay(at: Date, timeZone: string): string {
-  const p = partsIn(new Date(at.getTime() - TURN_HOURS * 3_600_000), timeZone);
-  return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
+  const p = partsIn(at, timeZone);
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.hour < TURN_HOURS ? p.day - 1 : p.day));
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
 /** When `day` ends: 06:00 local on the next calendar day. */

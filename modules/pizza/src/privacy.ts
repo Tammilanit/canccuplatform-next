@@ -87,8 +87,13 @@ export async function forgetUser(
   await c.query(`UPDATE pizza_order_log SET detail = '{}' WHERE strpos(detail::text, $1) > 0`, [
     userId,
   ]);
-  // Stored answers are views that may name them.
-  await c.query(`DELETE FROM pizza_idempotency WHERE user_id = $1`, [userId]);
+  // Stored answers are views that may name them: their own, and anyone's that shows them (a
+  // holder's view lists every pizza with its person). A write's answer names a person only as
+  // `{ user_id, name }`, so the id finds every one. A retry of a dropped key runs again (E2).
+  await c.query(
+    `DELETE FROM pizza_idempotency WHERE user_id = $1 OR strpos(body::text, to_jsonb($1::text)::text) > 0`,
+    [userId],
+  );
 }
 
 /** The 12-month retention (`personal`): every person at the event, anonymised; totals stay. */
