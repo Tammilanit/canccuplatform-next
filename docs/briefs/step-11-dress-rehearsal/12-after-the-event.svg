@@ -81,7 +81,7 @@
 <circle cx="312.0" cy="702.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
 <text x="312.0" y="707.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
 <text x="334.0" y="700.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Bot connected</text>
-<text x="334.0" y="720.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">No cutover this time: the bot binding was cloned</text>
+<text x="334.0" y="720.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">No cutover this time: the clone moved the bot's binding over</text>
 <circle cx="312.0" cy="758.0" r="12" fill="none" stroke="#94a3b8" stroke-width="2"/>
 <text x="312.0" y="763.0" font-size="13" fill="#94a3b8" font-weight="800" text-anchor="middle" data-maxw="20">○</text>
 <text x="334.0" y="756.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Venue-day check</text>
