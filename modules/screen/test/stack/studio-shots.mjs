@@ -294,10 +294,7 @@ async function studioReady(page) {
   await page.waitForTimeout(1500);
 }
 
-/**
- * A paired screen playing in its own browser context, at its own size. The context goes into
- * `contexts` as soon as it exists, so the run's cleanup closes it also when a wait here fails.
- */
+/** A paired screen playing in its own context, in `contexts` at once: closed also if a wait fails. */
 async function play(browser, contexts, at, cookieOn, device, viewport) {
   const context = await browser.newContext({ viewport });
   contexts.push(context);
