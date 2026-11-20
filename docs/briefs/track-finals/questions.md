@@ -2,13 +2,13 @@
 
 Every open question the research for [the Finals track brief](../track-finals.md) found, grouped by theme, each with its options and a recommendation, for the product owner's brainstorming session (#172, epic #161). IDs are stable, so the session can answer "U2: A" and the mockups can point here.
 
-**The product owner's direction of 2026-11-20 (decision 0030, written in parallel in #680) changed the bank.** Finals is integrated as it is, not rebuilt. Of the 80 questions, **47 are marked "Dropped (0030)"** (they asked how to redesign the app; each stays as the record of what was weighed), **31 are kept or reworded for the integration** (two of them, P1 and D15, are now decided) and **2 are new** (D17 and D18).
+**The product owner's direction of 2026-11-20 (decision 0030, written in parallel in #680) changed the bank.** Finals is integrated as it is, not rebuilt. Of the 80 questions, **47 are marked "Dropped (0030)"** (they asked how to redesign the app; each stays as the record of what was weighed), **31 are kept or reworded for the integration** (three of them, P1, D15 and D18, are now decided) and **2 are new** (D17 and D18).
 
 The themes: **U** who uses it and how · **L** look and feel · **D** data and integrations · **E** edge cases and failure · **O** operations and scale · **P** plan and scope.
 
-**Decide first** (they change the most): D18 (sign-in through the platform), D17 (how the platform gets the app's news), D9 (what the app must expose), D7 (how the bot reaches the app), U17 (the `/finals` command), P2 (the issue set), P5 (the order).
+**Decide first** (they change the most): D17 (how the platform gets the app's news), D9 (what the app must expose), D7 (how the bot reaches the app), U17 (the `/finals` command), P2 (the issue set), P5 (the order).
 
-**Already decided, so not asked again:** Finals is integrated as the existing app, unchanged, as an external app at the Apps track's level 3, the pilot of #193; hosting is the host's choice (its own server, or a container beside the platform; we never host it for other events) and the platform connects per event, with the app's address and a write-only bearer secret set by an event admin, no app set meaning Finals is off (#683); Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's page link carries no token ([0010](../../decisions/0010-scope.md)); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
+**Already decided, so not asked again:** Finals is integrated as the existing app, unchanged, as an external app at the Apps track's level 3, the pilot of #193; hosting is the host's choice (its own server, or a container beside the platform; we never host it for other events) and the platform connects per event, with the app's address and a write-only bearer secret set by an event admin, no app set meaning Finals is off (#683); a person signed in to the platform opens Finals from the hub signed in, through the app's own link that the platform asks for (D18); Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's own links carry no token ([0010](../../decisions/0010-scope.md); the hub's route makes the app's link per click and never stores or shows it, D18); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
 
 A question marked **contract** needs a contract change if the recommendation is taken; all of them are additive except the removal of the stub's provisional platform base (D7).
 
@@ -24,9 +24,9 @@ The legacy mini tourney runs one team game, teams of three, in seven fixed forma
 
 ### U2. How people join a season
 Joining happens in the app. The platform adds doors to it, never a second sign-up.
-- **A.** Four doors to the app's own page: a tile or link in the hub, `/finals` and its Register button in Discord, the QR on the screen's "Finals are open" card, and the crew's word. The app keeps one entry per person; the platform holds none.
+- **A.** Four doors to the app's own page: a tile or link in the hub that opens it signed in (D18), `/finals` and its Register button in Discord, the QR on the screen's "Finals are open" card, and the crew's word. The app keeps one entry per person; the platform holds none.
 - **B.** The hub's tile only.
-- **Recommendation: A** ([mockup 03](03-discord.svg), [mockup 12](12-venue-screen.svg)). The exit criterion asks for the `/finals` sign-up; the QR is how the hall finds the app. Every link is the app's plain public page, with no token in it (0010).
+- **Recommendation: A** ([mockup 03](03-discord.svg), [mockup 12](12-venue-screen.svg)). The exit criterion asks for one sign-up through the hub's link and one through `/finals`; the QR is how the hall finds the app. The tile and the QR link to plain URLs with no token in them (0010); the hub's tile goes through a platform route that makes the person's link at that moment (D18).
 
 ### U3. Solo, teams or both
 > **Dropped (0030):** The app keeps its modes and its team builder as they are. Kept below as the record of what was weighed.
@@ -299,7 +299,7 @@ The app's `test/provider.test.js` already pins the live behaviour: the bearer on
 - **Decided (0030).** Finals is an external app at the Apps track's level 3, the pilot of #193; the platform talks to it through the provider contract and what D9 adds. The platform builds no app interface for it here, and the app stays independent of the platform with no data sync (0025).
 
 ### D16. What the platform sends the app, and what leaves with a person
-- **A.** The platform sends the app only what `/finals` already sends (the Discord id and the display name) and nothing else. The app's data stay in the app, outside the platform's export, delete and 12-month anonymisation (0027); the hub's privacy page says so beside the tile.
+- **A.** The platform sends the app only what `/finals` already sends (the Discord id, the name and the role ids, on the hub's link, D18) and nothing else. The app's data stay in the app, outside the platform's export, delete and 12-month anonymisation (0027); the hub's privacy page says so beside the tile.
 - **B.** The contract adds a call the platform makes when it erases a user, and the app deletes or anonymises that person.
 - **Recommendation: A now.** B is a request to the app's author and a new record, not this track's; a `Roadmap note:` if the product owner wants it.
 
@@ -309,10 +309,13 @@ The app's `test/provider.test.js` already pins the live behaviour: the bearer on
 - **Recommendation: B until the pilot's connector exists, then A.** B needs only the reads of D9 and is proven by the legacy watcher; A is the clean end state. The contract names the events either way.
 
 ### D18. Sign-in through the platform
-Today the bot's link button opens the app already signed in, through a 15-minute link the app makes (the person's Discord id, name and role ids go to the app).
-- **A.** The platform's Discord sign-in hands the app a signed assertion (who, display name) under the Apps track's level-3 interface (#193); the app's own link session stays for people who come from outside the platform.
-- **B.** The link button stays the only door, as live; the platform adds nothing.
-- **Recommendation: A, built in the pilot; B until then.** B works today. A is sign-in work, so its issue is high risk and waits for #193 (P5). The platform stops sending role ids either way.
+- **Decided (the product owner, 2026-11-20).** The platform hands out the same kind of link `/finals` does. An attendee already signed in to the platform (Discord, through the central sign-in) opens Finals from a tile or link in the hub; the platform asks the event's connected app for that person's link through the provider contract (`POST /links`, the call the bot's `/finals` makes, with the Discord user id, the name and the role ids) and sends them there, signed in. No bot is needed on that path. `/finals` in Discord stays the second way in; outside events the app keeps working through the bot as today. The app's sign-in itself does not change (a 15-minute `#d=` link swapped for a 7-day session, admin decided by role ids when the link is made).
+
+What the link call needs for a caller that is not the bot is listed in [the brief](../track-finals.md#the-provider-contract-four-sides): the contract names any holder of the connection's bearer as a caller; the platform sends the user's platform name; the returned URL is checked against the app's public origin; the link is made per click and never stored or shown. **Open for the session:** where the platform gets the person's role ids in the event's Discord server, since its sign-in does not hold them.
+- **A.** From the bot module's view of the event's guild (a read by Discord id), when the bot runs; no role ids otherwise.
+- **B.** From Discord at sign-in (a scope that reads the member in the event's server), kept with the session.
+- **C.** None from the hub: its link is never admin, and Finals admins come in through `/finals`.
+- **Recommendation: C first, then A.** C needs nothing new and admins already use `/finals`; A adds admin from the hub once the bot module has the guild, without a new sign-in scope. B asks every attendee for a wider Discord permission for one app.
 
 ## E · Edge cases and failure
 
@@ -352,7 +355,7 @@ The legacy did not revert ranking changes when a season was deleted.
 - **Recommendation: A.**
 
 ### E7. The bot is down, or the app cannot be reached
-- **A.** `/finals` says "try again later" (one sentence for every failure); the screen shows the last Finals card until its window ends and nothing else for Finals; the hub tile still links; the app works without the platform.
+- **A.** `/finals` says "try again later" (one sentence for every failure); the screen shows the last Finals card until its window ends and nothing else for Finals; the hub's tile needs no bot, and when the app cannot be reached it says so and offers the app's plain page; the app works without the platform.
 - **Recommendation: A** ([mockup 03](03-discord.svg)).
 
 ### E8. Names
@@ -460,7 +463,7 @@ The off-LAN app makes anyone holding a listed Discord role an admin, decided whe
 - **Recommendation:** as the brief's [Proposed issue changes](../track-finals.md#proposed-issue-changes): the integration only.
 
 ### P3. The exit criterion
-- **Recommendation:** as the brief's [Proposed exit criteria](../track-finals.md#proposed-exit-criteria): a season runs end to end on the app (the demo event points at a test instance), with a `/finals` sign-up through the new bot, its bracket on a venue screen and the champion in Moments.
+- **Recommendation:** as the brief's [Proposed exit criteria](../track-finals.md#proposed-exit-criteria): a season runs end to end on the app (the demo event points at a test instance), with one sign-up through the hub's link and one through `/finals` on the new bot, its bracket on a venue screen and the champion in Moments.
 
 ### P4. Aligning with the app's author
 The core is released and the provider contract is implemented and live; what is left is what the app must expose (D9), the fixtures (D14) and, for the author, the two core fixes (the reshuffle's bound and the unused export).
@@ -470,7 +473,7 @@ The core is released and the provider contract is implemented and live; what is 
 
 ### P5. Order against the bot, the hub and the Apps track
 The bot module (step 6), the hub's frame (App track) and the pilot (#193) are not built; Moments, Screen and Notify are.
-- **A.** The contract first, then the screen and Moments on the demo feed (O7), then `/finals` when the bot's command framework exists, then the hub tile and the sign-in with the pilot. The exit waits for the bot and the app's additions.
+- **A.** The contract first, then the screen and Moments on the demo feed (O7), then `/finals` when the bot's command framework exists, and the hub tile with its signed-in link when the hub's frame exists. The exit waits for the bot, the hub and the app's additions.
 - **B.** Wait for all three before starting.
 - **Recommendation: A.** The screen part needs neither the bot nor the hub.
 
