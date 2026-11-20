@@ -1,8 +1,9 @@
-// The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 07–11 and
-// 17): one order taken by the CI session from open to handed out, with the holder's page at each
-// step on a phone; the crew's Food page and the order's page; pizzerias, a pizzeria and the menu
-// CSV's preview; Food settings. The group has a shard of its own, so its orders never reach the
-// screens of another group's shots (Moments' pizza stories). The order ends done.
+// The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 02–11, 16
+// and 17): one order taken by the CI session from open to handed out, with the attendee's Food
+// page, menu and order page and the holder's page at each step on a phone (the guest's Food page
+// too); the crew's Food page and the order's page; pizzerias, a pizzeria and the menu CSV's
+// preview; Food settings. The group has a shard of its own, so its orders never reach the screens
+// of another group's shots (Moments' pizza stories). The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -39,19 +40,39 @@ const CHANGED_MENU = [
 
 const ORDER = "<order>";
 const PIZZERIA = "<pizzeria>";
-/** [name, path, viewport, step]: the step the order is at when the shot is taken. */
+const GUEST = null;
+/**
+ * [name, path, viewport, step, cookie]: the step the order is at when the shot is taken, and who
+ * looks (the CI session unless GUEST). The attendee's shots are named as attendee.browser.test.ts
+ * walks the flow: the Food page, the menu, my order at each step.
+ */
 const SHOTS = [
+  ["pizza-food-phone", "/pizza/", PHONE, "open"],
+  ["pizza-food", "/pizza/", DESK, "open"],
+  ["pizza-food-guest-phone", "/pizza/", PHONE, "open", GUEST],
+  ["pizza-food-start-phone", "/pizza/start", PHONE, "open"],
+  ["pizza-food-menu-phone", `/pizza/orders/${ORDER}/add`, PHONE, "open"],
+  ["pizza-food-menu-filter-phone", `/pizza/orders/${ORDER}/add?q=kebab`, PHONE, "open"],
+  ["pizza-food-own-pizza-phone", `/pizza/orders/${ORDER}/add?tab=own`, PHONE, "open"],
+  ["pizza-food-other-phone", `/pizza/orders/${ORDER}/add?tab=other`, PHONE, "open"],
+  ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
+  ["pizza-food-added", `/pizza/orders/${ORDER}?added=1`, DESK, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
+  ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
   ["pizza-holder-call-phone", `/pizza/hold/${ORDER}/call`, PHONE, "closed"],
   ["pizza-holder-called-in-phone", `/pizza/hold/${ORDER}/called-in`, PHONE, "closed"],
   ["pizza-holder-placed-phone", `/pizza/hold/${ORDER}`, PHONE, "placed"],
+  ["pizza-food-on-the-way-phone", `/pizza/orders/${ORDER}`, PHONE, "placed"],
   ["pizza-holder-here-phone", `/pizza/hold/${ORDER}/here`, PHONE, "placed"],
   ["pizza-crew", "/pizza/crew", DESK, "placed"],
   ["pizza-crew-phone", "/pizza/crew", PHONE, "placed"],
   ["pizza-crew-order", `/pizza/crew/orders/${ORDER}`, DESK, "placed"],
   ["pizza-crew-order-phone", `/pizza/crew/orders/${ORDER}`, PHONE, "placed"],
+  ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
   ["pizza-holder-done-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "done"],
+  ["pizza-food-done-phone", `/pizza/orders/${ORDER}`, PHONE, "done"],
+  ["pizza-food-earlier-phone", "/pizza/", PHONE, "done"],
   ["pizza-pizzerias", "/pizza/crew/pizzerias", DESK, "done"],
   ["pizza-pizzerias-phone", "/pizza/crew/pizzerias", PHONE, "done"],
   ["pizza-pizzeria", `/pizza/crew/pizzerias/${PIZZERIA}`, DESK, "done"],
@@ -200,7 +221,7 @@ export async function pizzaShots({ shot, fail }) {
     done: () => api("POST", `/api/pizza/orders/${order}/hand-out`),
   };
   let at = "open";
-  for (const [name, path, viewport, step] of SHOTS) {
+  for (const [name, path, viewport, step, cookie = SESSION] of SHOTS) {
     if (step !== at) {
       try {
         expect(await steps[step](), 200, `the order: ${step}`);
@@ -215,9 +236,13 @@ export async function pizzaShots({ shot, fail }) {
       name,
       path.replace(ORDER, order).replace(PIZZERIA, pz),
       viewport,
-      SESSION,
+      cookie,
       {
         touch: viewport === PHONE,
+        // The attendee's pages keep their live stream open, so the network never goes idle.
+        ...(name.startsWith("pizza-food")
+          ? { ready: (page) => page.locator(".pizza-hub__main").waitFor() }
+          : {}),
         ...(preview
           ? {
               // The preview is the answer to the import's form: the shot is of that page.
