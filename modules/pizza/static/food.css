@@ -77,6 +77,7 @@
   white-space: nowrap;
 }
 .pizza-choices--stack {
+  /* canccu-grid: fixed row — lays out one item's own parts: one choice per line */
   grid-template-columns: minmax(0, 1fr);
 }
 .pizza-choice > .pizza-choice__stack {
