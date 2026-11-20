@@ -20,6 +20,9 @@ import type { Event, SqlClient, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import { FakeReader } from "../src/fake-reader.js";
+import { fakeAdminSettings } from "./fake-admin.js";
+import type { AdminSettings } from "./fake-admin.js";
+export type { AdminSettings } from "./fake-admin.js";
 import { LiveHub } from "../src/live.js";
 import type { AuditEntry } from "../src/audit.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
@@ -144,44 +147,6 @@ function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Re
   );
 }
 
-/** Admin's settings API for the Food settings page: one event's pizza settings, versioned. */
-export interface AdminSettings {
-  values: Record<string, unknown>;
-  version: number;
-  writes: { host: string; values: Record<string, unknown> }[];
-  /** Admin's status for a read instead of the settings, e.g. 404 or 503. */
-  readStatus?: number;
-}
-
-function fakeAdminSettings(store: AdminSettings): AppDeps["admin"] {
-  return {
-    request: (method, path, o = {}) => {
-      const id = (o.headers?.cookie ?? "").replace("canccu_session=", "");
-      const rights = RIGHTS[id] ?? [];
-      const status = (code: number, body: unknown) => Promise.resolve({ status: code, body });
-      if (path !== "/api/admin/settings/pizza") return status(404, {});
-      if (!rights.includes(method === "GET" ? "admin.settings.read" : "admin.settings.write"))
-        return status(403, { error: { code: "missing_right", message: "needs a right" } });
-      if (method === "GET" && store.readStatus !== undefined)
-        return status(store.readStatus, { error: { code: "not_found", message: "no" } });
-      if (method === "PUT") {
-        const b = o.json as { settings_version: number; values: Record<string, unknown> };
-        if (b.settings_version !== store.version)
-          return status(409, { error: { code: "version_conflict", message: "stale" } });
-        store.values = b.values;
-        store.version += 1;
-        store.writes.push({ host: o.headers?.host ?? "", values: b.values });
-      }
-      return status(200, {
-        module: "pizza",
-        values: store.values,
-        settings_version: store.version,
-        groups: [],
-      });
-    },
-  };
-}
-
 export const T0 = new Date("2026-10-29T16:00:00Z"); // 18:00 in Helsinki, event day 2026-10-29
 
 export const json = (r: LightMyRequestResponse): Record<string, unknown> =>
@@ -241,7 +206,7 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
   const filesRoot = mkdtempSync(join(tmpdir(), "pizza-files-"));
   const deps: AppDeps = {
     db,
-    admin: fakeAdminSettings(adminSettings),
+    admin: fakeAdminSettings(adminSettings, (id) => RIGHTS[id] ?? []),
     language: (tenant) => Promise.resolve(languages.get(tenant) ?? "en"),
     outbox,
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),

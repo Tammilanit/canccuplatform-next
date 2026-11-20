@@ -40,6 +40,8 @@ ADMIN_RIGHTS = frozenset(
         "admin.settings.write",
         "admin.profile.read",
         "admin.profile.write",
+        # The event's integrations: today the Food AI reader's provider key (contracts/pizza.md).
+        "admin.integrations.write",
     }
 )
 # Other modules' rights join these sets as their modules land; the event-admin role per tenant

@@ -30,7 +30,7 @@
           "label": "Food",
           "href": "/pizza/crew",
           "icon": "food",
-          "rights": ["pizza.order.manage", "pizza.menu.write"]
+          "rights": ["pizza.order.manage", "pizza.menu.write", "pizza.record.read"]
         }
       ]
     },
@@ -89,6 +89,13 @@
           "href": "/admin/people",
           "icon": "users",
           "rights": ["admin.rights.write"]
+        },
+        {
+          "id": "integrations",
+          "label": "Integrations",
+          "href": "/pizza/integrations",
+          "icon": "lock",
+          "rights": ["admin.integrations.write"]
         }
       ]
     }

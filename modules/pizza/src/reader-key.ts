@@ -28,7 +28,7 @@ interface KeyRow {
 }
 
 /** What binds a sealed key to its row: a key copied to another event does not open there. */
-const aad = (tenant: string) => `pizza:reader_key:${tenant}`;
+const aad = (tenant: string) => `pizza/reader_key/${tenant}`;
 const KEY_RE = /^[\x21-\x7e]{8,300}$/;
 
 export const readerOff = () =>
