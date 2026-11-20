@@ -1,8 +1,18 @@
 /** The daily record and the export, per event day and for the whole event (O10, M4), and me/orders (D14). */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
-import { DATABASE_URL, errorOf, freshDatabase, itemId, json, open, seedPizzerias, world } from "./helpers.js";
+import {
+  DATABASE_URL,
+  errorOf,
+  freshDatabase,
+  itemId,
+  json,
+  open,
+  seedPizzerias,
+  world,
+} from "./helpers.js";
 import type { World } from "./helpers.js";
+import { must } from "./fixtures.js";
 
 let pool: pg.Pool;
 let w: World;
@@ -13,7 +23,7 @@ beforeAll(async () => {
   if (DATABASE_URL) pool = await freshDatabase();
 });
 afterAll(async () => {
-  await pool?.end();
+  if (DATABASE_URL) await pool.end();
 });
 beforeEach(async () => {
   if (!DATABASE_URL) return;
@@ -28,8 +38,15 @@ beforeEach(async () => {
 async function twoDays(): Promise<string[]> {
   const margherita = await itemId(w, pz, "1");
   const one = json(await open(w, "pena", pz)).id as string;
-  await w.call("anni", "POST", `/api/pizza/orders/${one}/items`, { kind: "menu", menu_item_id: margherita, comment: "split" });
-  await w.call("anni", "POST", `/api/pizza/orders/${one}/items`, { kind: "menu", menu_item_id: margherita });
+  await w.call("anni", "POST", `/api/pizza/orders/${one}/items`, {
+    kind: "menu",
+    menu_item_id: margherita,
+    comment: "split",
+  });
+  await w.call("anni", "POST", `/api/pizza/orders/${one}/items`, {
+    kind: "menu",
+    menu_item_id: margherita,
+  });
   await w.call("pena", "POST", `/api/pizza/orders/${one}/items`, { kind: "text", text: "XL" });
   await w.call("pena", "POST", `/api/pizza/orders/${one}/place`, { at: "2026-10-29T16:20:00Z" });
   await w.call("pena", "PATCH", `/api/pizza/orders/${one}/money`, { total_cents: 3000 });
@@ -38,7 +55,10 @@ async function twoDays(): Promise<string[]> {
   await w.call("anni", "POST", `/api/pizza/orders/${two}/place`, {});
   w.advance(24 * 60);
   const three = json(await open(w, "mikko", pz)).id as string;
-  await w.call("tero", "POST", `/api/pizza/orders/${three}/items`, { kind: "menu", menu_item_id: margherita });
+  await w.call("tero", "POST", `/api/pizza/orders/${three}/items`, {
+    kind: "menu",
+    menu_item_id: margherita,
+  });
   await w.call("mikko", "POST", `/api/pizza/orders/${three}/place`, { at: "2026-10-30T15:00:00Z" });
   await w.call("mikko", "PATCH", `/api/pizza/orders/${three}/money`, { total_cents: 900 });
   return [one, two, three];
@@ -52,7 +72,11 @@ describe.skipIf(!DATABASE_URL)("the daily record", () => {
   it("groups the whole event by day, or one day, with amounts and flags", async () => {
     await twoDays();
     const all = json(await w.call("treasurer", "GET", "/api/pizza/record"));
-    const days = all.days as { day: string; total_cents: number; orders: { seq: number; people: { name: string; amount_cents: number }[] }[] }[];
+    const days = all.days as {
+      day: string;
+      total_cents: number;
+      orders: { seq: number; people: { name: string; amount_cents: number }[] }[];
+    }[];
     expect(days.map((d) => [d.day, d.total_cents])).toEqual([
       ["2026-10-29", 3000],
       ["2026-10-30", 900],
@@ -61,10 +85,17 @@ describe.skipIf(!DATABASE_URL)("the daily record", () => {
       ["Anni", 2000],
       ["Pena", 1000],
     ]);
-    expect(all.flags).toEqual([{ order_id: expect.any(String) as unknown, text: "2026-10-29 order 2 (Demo Grill): total missing" }]);
+    expect(all.flags).toEqual([
+      {
+        order_id: expect.any(String) as unknown,
+        text: "2026-10-29 order 2 (Demo Grill): total missing",
+      },
+    ]);
     const one = json(await w.call("treasurer", "GET", "/api/pizza/record?day=2026-10-30"));
     expect((one.days as unknown[]).length).toBe(1);
-    expect(errorOf(await w.call("treasurer", "GET", "/api/pizza/record?day=30.10.")).field).toBe("day");
+    expect(errorOf(await w.call("treasurer", "GET", "/api/pizza/record?day=30.10.")).field).toBe(
+      "day",
+    );
   });
 });
 
@@ -86,7 +117,9 @@ describe.skipIf(!DATABASE_URL)("the export", () => {
     expect(r.headers["canccu-left-out"]).toBe("2026-10-29-2");
     const day = await w.call("treasurer", "GET", "/api/pizza/export.csv?day=2026-10-30");
     expect(day.body.split("\n")).toHaveLength(3);
-    expect(day.headers["content-disposition"]).toBe('attachment; filename="pizza-demo-2026-10-30.csv"');
+    expect(day.headers["content-disposition"]).toBe(
+      'attachment; filename="pizza-demo-2026-10-30.csv"',
+    );
   });
   it("names the orders left out in the JSON answer", async () => {
     await twoDays();
@@ -99,10 +132,16 @@ describe.skipIf(!DATABASE_URL)("the export", () => {
   });
   it("leaves out an order cancelled after call-in, which the record flags", async () => {
     const [one] = await twoDays();
-    await w.call("crew", "POST", `/api/pizza/orders/${one!}/cancel`, {});
-    expect((await w.call("treasurer", "GET", "/api/pizza/export.csv")).body).not.toContain("2026-10-29-1,");
-    const flags = json(await w.call("treasurer", "GET", "/api/pizza/record")).flags as { text: string }[];
-    expect(flags.map((f) => f.text)).toContain("2026-10-29 order 1 (Demo Pizzeria): cancelled after call-in, remove it in the payment system");
+    await w.call("crew", "POST", `/api/pizza/orders/${must(one)}/cancel`, {});
+    expect((await w.call("treasurer", "GET", "/api/pizza/export.csv")).body).not.toContain(
+      "2026-10-29-1,",
+    );
+    const flags = json(await w.call("treasurer", "GET", "/api/pizza/record")).flags as {
+      text: string;
+    }[];
+    expect(flags.map((f) => f.text)).toContain(
+      "2026-10-29 order 1 (Demo Pizzeria): cancelled after call-in, remove it in the payment system",
+    );
   });
 });
 

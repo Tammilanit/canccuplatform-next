@@ -16,6 +16,7 @@ import {
   world,
 } from "./helpers.js";
 import type { World } from "./helpers.js";
+import { must } from "./fixtures.js";
 
 let pool: pg.Pool;
 let w: World;
@@ -27,7 +28,7 @@ beforeAll(async () => {
   if (DATABASE_URL) pool = await freshDatabase();
 });
 afterAll(async () => {
-  await pool?.end();
+  if (DATABASE_URL) await pool.end();
 });
 beforeEach(async () => {
   if (!DATABASE_URL) return;
@@ -43,8 +44,11 @@ const post = (who: string | null, path: string, body: unknown = {}) =>
   w.call(who, "POST", `/api/pizza/${path}`, body);
 const get = (who: string | null, path: string) => w.call(who, "GET", `/api/pizza/${path}`);
 const history = async (id: string) =>
-  (json(await get("crew", `orders/${id}/history`)).entries as { kind: string }[]).map((e) => e.kind);
-const opened = async (who = "pena", pizzeria = pz) => json(await open(w, who, pizzeria)).id as string;
+  (json(await get("crew", `orders/${id}/history`)).entries as { kind: string }[]).map(
+    (e) => e.kind,
+  );
+const opened = async (who = "pena", pizzeria = pz) =>
+  json(await open(w, who, pizzeria)).id as string;
 
 describe.skipIf(!DATABASE_URL)("opening", () => {
   it("makes the caller the holder, numbered for the event day, and says so on the bus", async () => {
@@ -57,7 +61,7 @@ describe.skipIf(!DATABASE_URL)("opening", () => {
       holder: { user_id: "u_pena", name: "Pena" },
       you_hold: true,
     });
-    const e = w.events().at(-1)!;
+    const e = must(w.events().at(-1));
     expect(e.type).toBe("pizza.order.opened");
     expect(e.data).toMatchObject({
       actor_user_id: "u_pena",
@@ -77,9 +81,17 @@ describe.skipIf(!DATABASE_URL)("opening", () => {
     expect(await history(json(r).id as string)).toEqual(["opened"]);
   });
   it("needs a known pizzeria and a close time in the future", async () => {
-    expect(errorOf(await post("pena", "orders", { pizzeria_id: "pz_nope", closes_at: "2026-10-29T17:00:00Z" }))).toMatchObject({ field: "pizzeria_id" });
-    expect(errorOf(await post("pena", "orders", { pizzeria_id: pz, closes_at: "soon" }))).toMatchObject({ field: "closes_at" });
-    expect(errorOf(await post("pena", "orders", { pizzeria_id: pz, closes_at: "2026-10-29T15:00:00Z" }))).toMatchObject({ field: "closes_at" });
+    expect(
+      errorOf(
+        await post("pena", "orders", { pizzeria_id: "pz_nope", closes_at: "2026-10-29T17:00:00Z" }),
+      ),
+    ).toMatchObject({ field: "pizzeria_id" });
+    expect(
+      errorOf(await post("pena", "orders", { pizzeria_id: pz, closes_at: "soon" })),
+    ).toMatchObject({ field: "closes_at" });
+    expect(
+      errorOf(await post("pena", "orders", { pizzeria_id: pz, closes_at: "2026-10-29T15:00:00Z" })),
+    ).toMatchObject({ field: "closes_at" });
   });
   it("refuses a second open order at one pizzeria with 409 another_open and that order", async () => {
     const first = await opened("pena");
@@ -124,21 +136,27 @@ describe.skipIf(!DATABASE_URL)("claim, take over and release", () => {
     expect((await post("pena", `orders/${id}/claim`)).statusCode).toBe(200);
     const held = await post("anni", `orders/${id}/claim`);
     expect(held.statusCode).toBe(409);
-    expect(errorOf(held)).toMatchObject({ code: "claimed", holder: "Pena", since: "2026-10-29T16:00:00.000Z" });
+    expect(errorOf(held)).toMatchObject({
+      code: "claimed",
+      holder: "Pena",
+      since: "2026-10-29T16:00:00.000Z",
+    });
     expect((await post("pena", `orders/${id}/release`)).statusCode).toBe(200);
     const taken = await post("anni", `orders/${id}/claim`);
     expect(json(taken).holder).toMatchObject({ name: "Anni" });
-    expect(types(w.events()).slice(1)).toEqual([
-      "pizza.order.released",
-      "pizza.order.claimed",
-    ]);
-    expect(w.events()[1]?.data).toMatchObject({ reason: "released", previous_holder: { name: "Pena" } });
+    expect(types(w.events()).slice(1)).toEqual(["pizza.order.released", "pizza.order.claimed"]);
+    expect(w.events()[1]?.data).toMatchObject({
+      reason: "released",
+      previous_holder: { name: "Pena" },
+    });
   });
   it("refuses release by a stranger; the crew's forced release is audited", async () => {
     const no = await post("anni", `orders/${id}/release`);
     expect(no.statusCode).toBe(403);
     expect(errorOf(no).code).toBe("not_holder");
-    expect((await post("crew", `orders/${id}/release`, { reason: "gone home" })).statusCode).toBe(200);
+    expect((await post("crew", `orders/${id}/release`, { reason: "gone home" })).statusCode).toBe(
+      200,
+    );
     expect(w.events().at(-1)?.data).toMatchObject({ reason: "forced", actor_user_id: "u_crew" });
     expect(w.audit.at(-1)).toMatchObject({
       action: "pizza.order.released",
@@ -155,7 +173,10 @@ describe.skipIf(!DATABASE_URL)("claim, take over and release", () => {
       type: "pizza.order.claimed",
       data: { previous_holder: { name: "Pena" }, actor_user_id: "u_crew" },
     });
-    expect(w.audit.at(-1)).toMatchObject({ action: "pizza.order.taken_over", changes: { holder: { old: "u_pena", new: "u_crew" } } });
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "pizza.order.taken_over",
+      changes: { holder: { old: "u_pena", new: "u_crew" } },
+    });
     expect((await post("anni", `orders/${id}/take-over`)).statusCode).toBe(403);
   });
   it("keeps the pizzas through a release", async () => {
@@ -166,9 +187,15 @@ describe.skipIf(!DATABASE_URL)("claim, take over and release", () => {
     expect(d.items).toHaveLength(1);
   });
   it("locks the pizzeria once there are pizzas (409 has_pizzas)", async () => {
-    const other = (await w.call("menus", "POST", "/api/pizza/pizzerias", { name: "Third" })).json<{ id: string }>().id;
-    expect((await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: other })).statusCode).toBe(200);
-    expect((await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: pz })).statusCode).toBe(200);
+    const other = (await w.call("menus", "POST", "/api/pizza/pizzerias", { name: "Third" })).json<{
+      id: string;
+    }>().id;
+    expect(
+      (await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: other })).statusCode,
+    ).toBe(200);
+    expect(
+      (await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: pz })).statusCode,
+    ).toBe(200);
     await post("anni", `orders/${id}/items`, { kind: "text", text: "XL" });
     const r = await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: other });
     expect(r.statusCode).toBe(409);
@@ -192,7 +219,10 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     expect(errorOf(r).code).toBe("placed");
   });
   it("calls in: closes the order, sets the payer to the holder and the estimate", async () => {
-    const r = await post("pena", `orders/${id}/place`, { estimate_minutes: 45, at: "2026-10-29T16:05:00Z" });
+    const r = await post("pena", `orders/${id}/place`, {
+      estimate_minutes: 45,
+      at: "2026-10-29T16:05:00Z",
+    });
     expect(json(r)).toMatchObject({
       state: "placed",
       placed_at: "2026-10-29T16:05:00.000Z",
@@ -200,14 +230,17 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
       payer: { user_id: "u_pena", name: "Pena" },
     });
     expect(json(r).closed_at).toBeTruthy();
-    expect((await post("pena", `orders/${id}/place`)).statusCode).toBe(409);
+    // E2: a repeated call-in is a no-op, never a second event (the legacy answered 409).
+    expect((await post("pena", `orders/${id}/place`)).statusCode).toBe(200);
     expect(types(w.events()).slice(-2)).toEqual(["pizza.order.closed", "pizza.order.placed"]);
   });
   it("lets the holder name another payer at call-in, a person of the order", async () => {
     const r = await post("pena", `orders/${id}/place`, { payer_user_id: "u_anni" });
     expect(json(r).payer).toMatchObject({ name: "Anni" });
     expect((await post("pena", `orders/${id}/undo`)).statusCode).toBe(200);
-    expect(errorOf(await post("pena", `orders/${id}/place`, { payer_user_id: "u_tero" }))).toMatchObject({ field: "payer_user_id" });
+    expect(
+      errorOf(await post("pena", `orders/${id}/place`, { payer_user_id: "u_tero" })),
+    ).toMatchObject({ field: "payer_user_id" });
   });
   it("a stranger cannot call in; the crew can, and the payer is still set (U13)", async () => {
     expect((await post("anni", `orders/${id}/place`)).statusCode).toBe(403);
@@ -224,12 +257,17 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
       data: { user_ids: ["u_anni", "u_mikko"], order: { pickup: "Info desk" } },
     });
     const items = json(await get("pena", `orders/${id}`)).items as { id: string }[];
-    expect((await post("anni", `items/${items[0]!.id}/hand-out`, { handed_out: true })).statusCode).toBe(200);
+    expect(
+      (await post("anni", `items/${must(items[0]).id}/hand-out`, { handed_out: true })).statusCode,
+    ).toBe(200);
     expect(json(await get("pena", `orders/${id}`)).state).toBe("arrived");
-    await post("pena", `items/${items[1]!.id}/hand-out`, { handed_out: true });
+    await post("pena", `items/${must(items[1]).id}/hand-out`, { handed_out: true });
     const done = json(await get("pena", `orders/${id}`));
     expect(done).toMatchObject({ state: "done", done_reason: "handed_out" });
-    expect(w.events().at(-1)).toMatchObject({ type: "pizza.order.done", data: { reason: "handed_out" } });
+    expect(w.events().at(-1)).toMatchObject({
+      type: "pizza.order.done",
+      data: { reason: "handed_out" },
+    });
   });
   it("ticks everyone at once with Everyone got theirs (U4)", async () => {
     await post("pena", `orders/${id}/place`);
@@ -243,7 +281,10 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     await post("pena", `orders/${id}/place`);
     expect((await post("pena", `orders/${id}/done`)).statusCode).toBe(409);
     await post("pena", `orders/${id}/arrive`);
-    expect(json(await post("pena", `orders/${id}/done`))).toMatchObject({ state: "done", done_reason: "holder" });
+    expect(json(await post("pena", `orders/${id}/done`))).toMatchObject({
+      state: "done",
+      done_reason: "holder",
+    });
   });
   it("undoes arrived to placed and placed to closed, keeping the total but not the payer", async () => {
     await post("pena", `orders/${id}/place`);
@@ -252,7 +293,12 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     expect(json(await post("pena", `orders/${id}/undo`)).state).toBe("placed");
     const u = json(await post("pena", `orders/${id}/undo`));
     expect(u).toMatchObject({ state: "closed", placed_at: null, payer: null, total_cents: 1600 });
-    expect(w.events().filter((e) => e.type === "pizza.order.reverted").map((e) => e.data.from_state)).toEqual(["arrived", "placed"]);
+    expect(
+      w
+        .events()
+        .filter((e) => e.type === "pizza.order.reverted")
+        .map((e) => e.data.from_state),
+    ).toEqual(["arrived", "placed"]);
     expect((await post("pena", `orders/${id}/undo`)).statusCode).toBe(409);
   });
   it("cannot undo a call-in while another order of the pizzeria is open", async () => {
@@ -264,7 +310,9 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
   });
   it("corrects the call-in time of a placed order", async () => {
     await post("pena", `orders/${id}/place`);
-    const r = await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { placed_at: "2026-10-29T16:20:00Z" });
+    const r = await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, {
+      placed_at: "2026-10-29T16:20:00Z",
+    });
     expect(json(r).placed_at).toBe("2026-10-29T16:20:00.000Z");
   });
   it("writes every step to the order's history", async () => {
@@ -276,7 +324,16 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     await post("anni", `orders/${id}/undo`);
     await post("anni", `orders/${id}/cancel`, { reason: "closed today" });
     expect(await history(id)).toEqual([
-      "opened", "item_added", "item_added", "closed", "reopened", "released", "claimed", "placed", "reverted", "cancelled",
+      "opened",
+      "item_added",
+      "item_added",
+      "closed",
+      "reopened",
+      "released",
+      "claimed",
+      "placed",
+      "reverted",
+      "cancelled",
     ]);
   });
 });
@@ -290,12 +347,18 @@ describe.skipIf(!DATABASE_URL)("cancel", () => {
     expect((await post("anni", `orders/${id}/cancel`)).statusCode).toBe(403);
     await post("anni", `orders/${id}/items`, { kind: "menu", menu_item_id: margherita });
     const r = await post("pena", `orders/${id}/cancel`, { reason: "The pizzeria is closed today" });
-    expect(json(r)).toMatchObject({ state: "cancelled", cancel_reason: "The pizzeria is closed today" });
+    expect(json(r)).toMatchObject({
+      state: "cancelled",
+      cancel_reason: "The pizzeria is closed today",
+    });
     expect(w.events().at(-1)).toMatchObject({
       type: "pizza.order.cancelled",
       data: { reason: "cancelled", user_ids: ["u_anni"], actor_user_id: "u_pena" },
     });
-    expect((await post("pena", `orders/${id}/cancel`)).statusCode).toBe(409);
+    // E2: a repeat is a no-op without a second event.
+    const sent = w.events().length;
+    expect((await post("pena", `orders/${id}/cancel`)).statusCode).toBe(200);
+    expect(w.events()).toHaveLength(sent);
   });
   it("lets any member cancel an order left over from an earlier day (E10), as stale", async () => {
     w.advance(24 * 60);
@@ -308,8 +371,13 @@ describe.skipIf(!DATABASE_URL)("cancel", () => {
   it("lets the crew cancel a called-in order, audited; the holder cannot", async () => {
     await post("pena", `orders/${id}/place`);
     expect(errorOf(await post("pena", `orders/${id}/cancel`)).code).toBe("placed");
-    expect(json(await post("crew", `orders/${id}/cancel`, { reason: "never came" })).state).toBe("cancelled");
-    expect(w.audit.at(-1)).toMatchObject({ action: "pizza.order.cancelled", changes: { state: { old: "placed", new: "cancelled" } } });
+    expect(json(await post("crew", `orders/${id}/cancel`, { reason: "never came" })).state).toBe(
+      "cancelled",
+    );
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "pizza.order.cancelled",
+      changes: { state: { old: "placed", new: "cancelled" } },
+    });
   });
   it("never reopens a cancelled order, which keeps its pizzas", async () => {
     await post("anni", `orders/${id}/items`, { kind: "menu", menu_item_id: margherita });
@@ -326,8 +394,20 @@ describe.skipIf(!DATABASE_URL)("cancel", () => {
 describe.skipIf(!DATABASE_URL)("idempotency (E2)", () => {
   it("answers a repeated close with the first answer and sends one event", async () => {
     const id = await opened("pena");
-    const a = await w.call("pena", "POST", `/api/pizza/orders/${id}/close`, {}, { key: "close-once-1" });
-    const b = await w.call("pena", "POST", `/api/pizza/orders/${id}/close`, {}, { key: "close-once-1" });
+    const a = await w.call(
+      "pena",
+      "POST",
+      `/api/pizza/orders/${id}/close`,
+      {},
+      { key: "close-once-1" },
+    );
+    const b = await w.call(
+      "pena",
+      "POST",
+      `/api/pizza/orders/${id}/close`,
+      {},
+      { key: "close-once-1" },
+    );
     expect(b.statusCode).toBe(a.statusCode);
     expect(json(b)).toEqual(json(a));
     expect(types(w.events()).filter((t) => t === "pizza.order.closed")).toHaveLength(1);
@@ -337,7 +417,11 @@ describe.skipIf(!DATABASE_URL)("idempotency (E2)", () => {
     const r = await w.app.inject({
       method: "POST",
       url: `/api/pizza/orders/${id}/close`,
-      headers: { host: "demo.test", cookie: "canccu_session=pena", "content-type": "application/json" },
+      headers: {
+        host: "demo.test",
+        cookie: "canccu_session=pena",
+        "content-type": "application/json",
+      },
       payload: "{}",
     });
     expect(r.statusCode).toBe(400);

@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildRecord } from "../src/record.js";
 import type { RecordOrder } from "../src/record.js";
+import { must } from "./fixtures.js";
 
 const row = (name: string, o: { price_cents?: number | null; comment?: string | null } = {}) => ({
   user_id: `u_${name}`,
@@ -18,7 +19,16 @@ const base = {
   cancelled_after_placed: false,
 };
 const orders: RecordOrder[] = [
-  { ...base, id: "po_2", day: "2026-10-29", seq: 2, state: "placed", total_cents: null, payer_name: "Anni", rows: [row("Anni")] },
+  {
+    ...base,
+    id: "po_2",
+    day: "2026-10-29",
+    seq: 2,
+    state: "placed",
+    total_cents: null,
+    payer_name: "Anni",
+    rows: [row("Anni")],
+  },
   {
     ...base,
     id: "po_1",
@@ -26,19 +36,41 @@ const orders: RecordOrder[] = [
     seq: 1,
     state: "done",
     total_cents: 18260,
-    rows: [row("glyzer", { comment: "split with Pena" }), row("glyzer", { comment: "extra" }), row("Anni")],
+    rows: [
+      row("glyzer", { comment: "split with Pena" }),
+      row("glyzer", { comment: "extra" }),
+      row("Anni"),
+    ],
   },
-  { ...base, id: "po_3", day: "2026-10-29", seq: 3, state: "cancelled", total_cents: null, rows: [row("Mikko")] },
-  { ...base, id: "po_4", day: "2026-10-30", seq: 1, state: "arrived", total_cents: 5000, rows: [row("Mikko"), row("Mikko")] },
+  {
+    ...base,
+    id: "po_3",
+    day: "2026-10-29",
+    seq: 3,
+    state: "cancelled",
+    total_cents: null,
+    rows: [row("Mikko")],
+  },
+  {
+    ...base,
+    id: "po_4",
+    day: "2026-10-30",
+    seq: 1,
+    state: "arrived",
+    total_cents: 5000,
+    rows: [row("Mikko"), row("Mikko")],
+  },
 ];
 
 describe("buildRecord", () => {
   const r = buildRecord(orders);
   it("groups orders by day, oldest first, with each day's total", () => {
-    expect(r.days.map((d) => [d.day, d.label, d.order_count, d.total_cents, d.incomplete])).toEqual([
-      ["2026-10-29", "Thu 29.10.", 3, 18260, true],
-      ["2026-10-30", "Fri 30.10.", 1, 5000, false],
-    ]);
+    expect(r.days.map((d) => [d.day, d.label, d.order_count, d.total_cents, d.incomplete])).toEqual(
+      [
+        ["2026-10-29", "Thu 29.10.", 3, 18260, true],
+        ["2026-10-30", "Fri 30.10.", 1, 5000, false],
+      ],
+    );
     expect(r.days[0]?.orders.map((o) => [o.seq, o.state])).toEqual([
       [1, "done"],
       [2, "placed"],
@@ -64,8 +96,8 @@ describe("buildRecord", () => {
   });
   it("flags an order released automatically, and one cancelled after call-in", () => {
     const flagged = buildRecord([
-      { ...orders[3]!, auto_released: true },
-      { ...orders[2]!, cancelled_after_placed: true },
+      { ...must(orders[3]), auto_released: true },
+      { ...must(orders[2]), cancelled_after_placed: true },
     ]);
     expect(flagged.flags.map((f) => f.text)).toEqual([
       "2026-10-29 order 3 (Demo Pizzeria): cancelled after call-in, remove it in the payment system",

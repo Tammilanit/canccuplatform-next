@@ -63,7 +63,18 @@ describe("authorize", () => {
     ["order.claim", ["member", "member", "member", "member", "member", "member", "member"]],
     ["item.add", ["member", "member", "member", "member", "member", "member", "member"]],
     ["order.read", ["member", "member", "member", "member", "member", "member", "member"]],
-    ["order.take_over", ["403 missing_right", "403 missing_right", "403 missing_right", "crew", "403 missing_right", "403 missing_right", "403 missing_right"]],
+    [
+      "order.take_over",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "crew",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+      ],
+    ],
     ...(
       [
         "order.release",
@@ -87,14 +98,78 @@ describe("authorize", () => {
     ).map((a): [Action, string[]] => [a, [NH, NH, ...held, NH, NH, NH]]),
     ["money.read", [NH, NH, ...held, NH, NH, "right"]],
     ["receipt.read", [NH, NH, ...held, NH, NH, "right"]],
-    ["item.edit", ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"]],
-    ["item.remove", ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"]],
-    ["item.hand_out", ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"]],
-    ["menu.write", ["403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "right", "403 missing_right"]],
-    ["menu.read_photo", ["403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "right", "403 missing_right"]],
-    ["menu.read_hidden", ["403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "right", "403 missing_right"]],
-    ["record.read", ["403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "right"]],
-    ["record.export", ["403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "403 missing_right", "right"]],
+    [
+      "item.edit",
+      ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"],
+    ],
+    [
+      "item.remove",
+      ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"],
+    ],
+    [
+      "item.hand_out",
+      ["403 not_owner", "owner", ...held, "403 not_owner", "403 not_owner", "403 not_owner"],
+    ],
+    [
+      "menu.write",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "right",
+        "403 missing_right",
+      ],
+    ],
+    [
+      "menu.read_photo",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "right",
+        "403 missing_right",
+      ],
+    ],
+    [
+      "menu.read_hidden",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "right",
+        "403 missing_right",
+      ],
+    ],
+    [
+      "record.read",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "right",
+      ],
+    ],
+    [
+      "record.export",
+      [
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "403 missing_right",
+        "right",
+      ],
+    ],
   ])("%s", (action, expected) => {
     expect(row(action).slice(2)).toEqual(expected);
   });

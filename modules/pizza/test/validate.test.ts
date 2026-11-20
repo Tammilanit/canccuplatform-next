@@ -57,9 +57,9 @@ describe("parseItemBody", () => {
       /menu_item_id/,
     );
     expect(() => parseItemBody({ kind: "text", text: "x".repeat(81) }, ctx)).toThrow(/text/);
-    expect(() => parseItemBody({ kind: "text", text: "XL", comment: "x".repeat(121) }, ctx)).toThrow(
-      /comment/,
-    );
+    expect(() =>
+      parseItemBody({ kind: "text", text: "XL", comment: "x".repeat(121) }, ctx),
+    ).toThrow(/comment/);
     expect(() => parseItemBody({ kind: "text", text: "" }, ctx)).toThrow(/text/);
     expect(() => parseItemBody({ kind: "pasta" }, ctx)).toThrow(/kind/);
   });
@@ -93,10 +93,16 @@ describe("snapshotOf (D15: a row keeps what was ordered, its price included)", (
     });
   });
   it("prices an own pizza as its base plus each topping", () => {
-    const s = snapshotOf(parseItemBody({ kind: "custom", toppings: ["KINKKU", "ananas"] }, ctx), ctx);
+    const s = snapshotOf(
+      parseItemBody({ kind: "custom", toppings: ["KINKKU", "ananas"] }, ctx),
+      ctx,
+    );
     expect(s).toMatchObject({ label: "Oma pizza: kinkku, ananas", price_cents: 900 });
     const unpriced = { ...ctx, toppings: [entry({ id: "t", kind: "topping", name: "kinkku" })] };
-    const t = snapshotOf(parseItemBody({ kind: "custom", toppings: ["kinkku"] }, unpriced), unpriced);
+    const t = snapshotOf(
+      parseItemBody({ kind: "custom", toppings: ["kinkku"] }, unpriced),
+      unpriced,
+    );
     expect(t.price_cents).toBeNull();
   });
   it("leaves Other without a price", () => {

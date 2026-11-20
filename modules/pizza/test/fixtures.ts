@@ -26,3 +26,8 @@ export const SPEC_EXPORT = [
   "",
 ].join("\n");
 
+/** The value, or the test fails here: for lookups the test knows succeed. */
+export function must<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) throw new Error("expected a value");
+  return value;
+}

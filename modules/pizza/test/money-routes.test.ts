@@ -4,7 +4,16 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
-import { DATABASE_URL, errorOf, freshDatabase, itemId, json, open, seedPizzerias, world } from "./helpers.js";
+import {
+  DATABASE_URL,
+  errorOf,
+  freshDatabase,
+  itemId,
+  json,
+  open,
+  seedPizzerias,
+  world,
+} from "./helpers.js";
 import type { World } from "./helpers.js";
 
 let pool: pg.Pool;
@@ -17,7 +26,7 @@ beforeAll(async () => {
   if (DATABASE_URL) pool = await freshDatabase();
 });
 afterAll(async () => {
-  await pool?.end();
+  if (DATABASE_URL) await pool.end();
 });
 beforeEach(async () => {
   if (!DATABASE_URL) return;
@@ -28,12 +37,18 @@ beforeEach(async () => {
   ({ pz } = await seedPizzerias(w));
   id = json(await open(w, "pena", pz)).id as string;
   const add = async (who: string, number: string) =>
-    json(await w.call(who, "POST", `/api/pizza/orders/${id}/items`, { kind: "menu", menu_item_id: await itemId(w, pz, number) })).id as string;
+    json(
+      await w.call(who, "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: await itemId(w, pz, number),
+      }),
+    ).id as string;
   items = { anni: await add("anni", "1"), mikko: await add("mikko", "12") };
 });
 
 const money = (who = "pena") => w.call(who, "GET", `/api/pizza/orders/${id}/money`);
-const patch = (who: string, body: unknown) => w.call(who, "PATCH", `/api/pizza/orders/${id}/money`, body);
+const patch = (who: string, body: unknown) =>
+  w.call(who, "PATCH", `/api/pizza/orders/${id}/money`, body);
 const place = () => w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
 
 describe.skipIf(!DATABASE_URL)("money", () => {
@@ -53,7 +68,11 @@ describe.skipIf(!DATABASE_URL)("money", () => {
   it("splits the extras per pizza once the total is in", async () => {
     await place();
     const r = await patch("pena", { total_cents: 1950 });
-    expect(json(r)).toMatchObject({ total_cents: 1950, extras_cents: 200, people: [{ amount_cents: 900 }, { amount_cents: 1050 }] });
+    expect(json(r)).toMatchObject({
+      total_cents: 1950,
+      extras_cents: 200,
+      people: [{ amount_cents: 900 }, { amount_cents: 1050 }],
+    });
   });
   it("needs a call-in before a total (409 not_placed), and checks its range", async () => {
     expect(errorOf(await patch("pena", { total_cents: 100 })).code).toBe("not_placed");
@@ -73,10 +92,16 @@ describe.skipIf(!DATABASE_URL)("money", () => {
   });
   it("lets the holder correct the payer to someone in the order; the crew too, audited", async () => {
     await place();
-    expect(json(await patch("pena", { payer_user_id: "u_mikko" })).payer).toMatchObject({ name: "Mikko" });
+    expect(json(await patch("pena", { payer_user_id: "u_mikko" })).payer).toMatchObject({
+      name: "Mikko",
+    });
     expect(errorOf(await patch("crew", { payer_user_id: "u_tero" })).field).toBe("payer_user_id");
     await patch("crew", { payer_user_id: "u_anni" });
-    expect(w.audit.at(-1)).toMatchObject({ action: "pizza.order.money_changed", actor_user_id: "u_crew", changes: { payer: { old: "u_mikko", new: "u_anni" } } });
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "pizza.order.money_changed",
+      actor_user_id: "u_crew",
+      changes: { payer: { old: "u_mikko", new: "u_anni" } },
+    });
   });
   it("is the holder's until the event day turns at 06:00, the crew's after", async () => {
     await place();
@@ -100,10 +125,17 @@ describe.skipIf(!DATABASE_URL)("money", () => {
     await w.call("pena", "PUT", `/api/pizza/items/${items.mikko}/price`, { price_cents: 1050 });
     const told = w.events().slice(before);
     expect(told).toEqual([
-      expect.objectContaining({ type: "pizza.amount.changed", data: { order_id: id, user_ids: ["u_anni", "u_mikko"], actor_user_id: "u_pena" } }),
+      expect.objectContaining({
+        type: "pizza.amount.changed",
+        data: { order_id: id, user_ids: ["u_anni", "u_mikko"], actor_user_id: "u_pena" },
+      }),
     ]);
-    expect(w.audit.at(-1)).toMatchObject({ action: "pizza.order.money_changed", changes: { [`price:${items.mikko}`]: { old: 950, new: 1050 } } });
-    for (const e of w.events()) expect(JSON.stringify(e.data)).not.toMatch(/total|price|amount_cents|cents/);
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "pizza.order.money_changed",
+      changes: { [`price:${items.mikko}`]: { old: 950, new: 1050 } },
+    });
+    for (const e of w.events())
+      expect(JSON.stringify(e.data)).not.toMatch(/total|price|amount_cents|cents/);
   });
   it("tells nobody while the order is still open", async () => {
     await w.call("pena", "PUT", `/api/pizza/items/${items.mikko}/price`, { price_cents: 1050 });

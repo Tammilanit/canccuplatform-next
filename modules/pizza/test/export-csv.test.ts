@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { buildExport } from "../src/export-csv.js";
 import type { ExportOrder } from "../src/export-csv.js";
-import { SPEC_EXPORT } from "./fixtures.js";
+import { SPEC_EXPORT, must } from "./fixtures.js";
 
 const rows = (spec: [string, (number | null)[]][]) =>
   spec.flatMap(([name, prices]) =>
@@ -52,7 +52,13 @@ const SPEC_ORDERS: ExportOrder[] = [
   }),
   order({ seq: 2, pizzeria: "Demo Corner Grill", total_cents: null, rows: rows([["A", [null]]]) }),
   order({ seq: 4, state: "cancelled", rows: rows([["B", [900]]]) }),
-  order({ seq: 5, state: "closed", placed_at: null, total_cents: null, rows: rows([["C", [900]]]) }),
+  order({
+    seq: 5,
+    state: "closed",
+    placed_at: null,
+    total_cents: null,
+    rows: rows([["C", [900]]]),
+  }),
 ];
 
 describe("buildExport", () => {
@@ -67,7 +73,7 @@ describe("buildExport", () => {
     ]);
   });
   it("writes amount on every row of an exact order and on none of an even one", () => {
-    const even = buildExport([{ ...SPEC_ORDERS[0]!, split: "even" }], "UTC").csv;
+    const even = buildExport([{ ...must(SPEC_ORDERS[0]), split: "even" }], "UTC").csv;
     expect(even.split("\n")[1]?.endsWith(",2,")).toBe(true);
   });
   it("quotes a field with a comma, a quote or a line break, and writes the discord id", () => {
@@ -76,7 +82,14 @@ describe("buildExport", () => {
         order({
           pizzeria: 'Pizza "Uno", Demo',
           payer_name: "Line\nBreak",
-          rows: [{ user_id: "u_1", name: "Comma, Nick", discord_id: "100000000000000001", price_cents: null }],
+          rows: [
+            {
+              user_id: "u_1",
+              name: "Comma, Nick",
+              discord_id: "100000000000000001",
+              price_cents: null,
+            },
+          ],
         }),
       ],
       "UTC",
@@ -97,10 +110,12 @@ describe("buildExport", () => {
       [10, 9].map((seq) => order({ seq, rows: rows([["A", [null]]]) })),
       "UTC",
     ).csv;
-    expect(out.split("\n").slice(1, 3).map((l) => l.split(",")[0])).toEqual([
-      "2026-11-21-9",
-      "2026-11-21-10",
-    ]);
+    expect(
+      out
+        .split("\n")
+        .slice(1, 3)
+        .map((l) => l.split(",")[0]),
+    ).toEqual(["2026-11-21-9", "2026-11-21-10"]);
   });
   it("is only the header when nothing is called in", () => {
     expect(buildExport([], "UTC")).toEqual({

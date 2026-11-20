@@ -28,7 +28,7 @@ beforeAll(async () => {
   if (DATABASE_URL) pool = await freshDatabase();
 });
 afterAll(async () => {
-  await pool?.end();
+  if (DATABASE_URL) await pool.end();
 });
 beforeEach(async () => {
   if (!DATABASE_URL) return;
@@ -51,10 +51,22 @@ describe.skipIf(!DATABASE_URL)("adding pizzas", () => {
   it("adds a member's pizza with its snapshot and price, and counts it on the bus", async () => {
     const r = await add("anni", { ...mine, menu_item_id: margherita });
     expect(r.statusCode).toBe(201);
-    expect(json(r)).toMatchObject({ label: "#1 Margherita", price_cents: 800, note: "no onion", mine: true });
+    expect(json(r)).toMatchObject({
+      label: "#1 Margherita",
+      price_cents: 800,
+      note: "no onion",
+      mine: true,
+    });
     expect(w.events().at(-1)).toMatchObject({
       type: "pizza.item.added",
-      data: { order_id: id, user_id: "u_anni", pizza_count: 1, people_count: 1, order_revision: 2, person: { name: "Anni" } },
+      data: {
+        order_id: id,
+        user_id: "u_anni",
+        pizza_count: 1,
+        people_count: 1,
+        order_revision: 2,
+        person: { name: "Anni" },
+      },
     });
   });
   it("needs sign-in and membership (E15)", async () => {
@@ -64,7 +76,10 @@ describe.skipIf(!DATABASE_URL)("adding pizzas", () => {
     expect(errorOf(r).code).toBe("not_a_member");
   });
   it("refuses a body that is not JSON (415) and a bad one with the field (400)", async () => {
-    const t = await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, undefined, { raw: "x", contentType: "text/plain" });
+    const t = await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, undefined, {
+      raw: "x",
+      contentType: "text/plain",
+    });
     expect(t.statusCode).toBe(415);
     const r = await add("anni", { kind: "menu", menu_item_id: "mi_999" });
     expect(r.statusCode).toBe(400);
@@ -72,10 +87,13 @@ describe.skipIf(!DATABASE_URL)("adding pizzas", () => {
   });
   it("refuses an item of another pizzeria", async () => {
     const burger = await itemId(w, grill, "1");
-    expect(errorOf(await add("anni", { kind: "menu", menu_item_id: burger })).field).toBe("menu_item_id");
+    expect(errorOf(await add("anni", { kind: "menu", menu_item_id: burger })).field).toBe(
+      "menu_item_id",
+    );
   });
   it("caps one person's pizzas in one order (U18), 5 by default", async () => {
-    for (let i = 0; i < 5; i++) expect((await add("anni", { kind: "text", text: `#${i}` })).statusCode).toBe(201);
+    for (let i = 0; i < 5; i++)
+      expect((await add("anni", { kind: "text", text: `#${i}` })).statusCode).toBe(201);
     const r = await add("anni", { kind: "text", text: "sixth" });
     expect(r.statusCode).toBe(409);
     expect(errorOf(r).code).toBe("item_limit");
@@ -114,8 +132,14 @@ describe.skipIf(!DATABASE_URL)("editing and removing", () => {
     item = json(await add("anni", { ...mine, menu_item_id: margherita })).id as string;
   });
   it("lets the owner edit and remove; others get 403 not_owner", async () => {
-    expect((await w.call("anni", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "XL" })).statusCode).toBe(200);
-    const stranger = await w.call("mikko", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "no" });
+    expect(
+      (await w.call("anni", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "XL" }))
+        .statusCode,
+    ).toBe(200);
+    const stranger = await w.call("mikko", "PUT", `/api/pizza/items/${item}`, {
+      kind: "text",
+      text: "no",
+    });
     expect(stranger.statusCode).toBe(403);
     expect(errorOf(stranger).code).toBe("not_owner");
     expect((await w.call("mikko", "DELETE", `/api/pizza/items/${item}`)).statusCode).toBe(403);
@@ -125,8 +149,14 @@ describe.skipIf(!DATABASE_URL)("editing and removing", () => {
   });
   it("after close: the owner is refused, the holder edits, the owner is told and it is audited (U14)", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/close`, {});
-    expect(errorOf(await w.call("anni", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "x" })).code).toBe("closed");
-    const r = await w.call("pena", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "no #1 today" });
+    expect(
+      errorOf(await w.call("anni", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "x" }))
+        .code,
+    ).toBe("closed");
+    const r = await w.call("pena", "PUT", `/api/pizza/items/${item}`, {
+      kind: "text",
+      text: "no #1 today",
+    });
     expect(r.statusCode).toBe(200);
     expect(w.events().at(-1)).toMatchObject({
       type: "pizza.item.changed",
@@ -136,18 +166,26 @@ describe.skipIf(!DATABASE_URL)("editing and removing", () => {
       action: "pizza.item.changed",
       changes: { label: { old: "#1 Margherita", new: "Other: no #1 today" } },
     });
-    const h = json(await w.call("pena", "GET", `/api/pizza/orders/${id}/history`)).entries as { kind: string }[];
+    const h = json(await w.call("pena", "GET", `/api/pizza/orders/${id}/history`)).entries as {
+      kind: string;
+    }[];
     expect(h.at(-1)?.kind).toBe("item_changed");
   });
   it("lets the crew remove a pizza from a called-in order, which tells the owner", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
     expect((await w.call("crew", "DELETE", `/api/pizza/items/${item}`)).statusCode).toBe(204);
-    expect(w.events().at(-1)).toMatchObject({ type: "pizza.item.removed", data: { user_id: "u_anni", actor_user_id: "u_crew" } });
+    expect(w.events().at(-1)).toMatchObject({
+      type: "pizza.item.removed",
+      data: { user_id: "u_anni", actor_user_id: "u_crew" },
+    });
     expect(w.audit.at(-1)?.action).toBe("pizza.item.removed");
   });
   it("refuses changes to a done or cancelled order", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/cancel`, {});
-    expect(errorOf(await w.call("crew", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "x" })).code).toBe("cancelled");
+    expect(
+      errorOf(await w.call("crew", "PUT", `/api/pizza/items/${item}`, { kind: "text", text: "x" }))
+        .code,
+    ).toBe("cancelled");
   });
 });
 
@@ -165,7 +203,13 @@ describe.skipIf(!DATABASE_URL)("who sees what (D9, U15)", () => {
       { count: 1, label: "Other: Kebab XL" },
     ]);
     expect(d.items).toBeUndefined();
-    expect(d.mine).toEqual([expect.objectContaining({ label: "Other: Kebab XL", comment: "for a friend", price_cents: null })]);
+    expect(d.mine).toEqual([
+      expect.objectContaining({
+        label: "Other: Kebab XL",
+        comment: "for a friend",
+        price_cents: null,
+      }),
+    ]);
     const text = JSON.stringify(d);
     expect(text).not.toContain("Anni");
     expect(text).not.toContain("no onion");
@@ -176,13 +220,20 @@ describe.skipIf(!DATABASE_URL)("who sees what (D9, U15)", () => {
     for (const who of ["pena", "crew"]) {
       const d = json(await get(who));
       expect(d.items).toHaveLength(3);
-      expect(d.items).toContainEqual(expect.objectContaining({ name: "Anni", note: "no onion", comment: "split with Pena" }));
+      expect(d.items).toContainEqual(
+        expect.objectContaining({ name: "Anni", note: "no onion", comment: "split with Pena" }),
+      );
       expect(d.pizzeria).toMatchObject({ phone: "+000 000 0000" });
     }
   });
   it("shows a guest counts only, no names, when the info pages are public (U15)", async () => {
     const d = json(await get(null));
-    expect(d).toMatchObject({ state: "open", pizza_count: 3, people_count: 2, pizzeria: { name: "Demo Pizzeria" } });
+    expect(d).toMatchObject({
+      state: "open",
+      pizza_count: 3,
+      people_count: 2,
+      pizzeria: { name: "Demo Pizzeria" },
+    });
     expect(d.holder).toBeUndefined();
     expect(d.lines).toBeUndefined();
     expect(JSON.stringify(d)).not.toMatch(/Pena|Anni|Mikko|Kebab/);
@@ -190,11 +241,27 @@ describe.skipIf(!DATABASE_URL)("who sees what (D9, U15)", () => {
     expect(JSON.stringify(list)).not.toMatch(/Pena|Anni/);
   });
   it("refuses a guest where the info pages are closed, and away from the venue for venue_only", async () => {
-    const closedOrders = await w.call(null, "GET", "/api/pizza/orders", undefined, { host: "closed.test" });
+    const closedOrders = await w.call(null, "GET", "/api/pizza/orders", undefined, {
+      host: "closed.test",
+    });
     expect(closedOrders.statusCode).toBe(403);
     expect(errorOf(closedOrders).code).toBe("info_pages_closed");
-    expect((await w.call(null, "GET", "/api/pizza/orders", undefined, { host: "venue.test", ip: "192.0.2.1" })).statusCode).toBe(403);
-    expect((await w.call(null, "GET", "/api/pizza/orders", undefined, { host: "venue.test", ip: "10.0.0.7" })).statusCode).toBe(200);
+    expect(
+      (
+        await w.call(null, "GET", "/api/pizza/orders", undefined, {
+          host: "venue.test",
+          ip: "192.0.2.1",
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await w.call(null, "GET", "/api/pizza/orders", undefined, {
+          host: "venue.test",
+          ip: "10.0.0.7",
+        })
+      ).statusCode,
+    ).toBe(200);
   });
   it("shows a signed-in non-member what a guest sees", async () => {
     const d = json(await get("outsider"));
@@ -204,7 +271,7 @@ describe.skipIf(!DATABASE_URL)("who sees what (D9, U15)", () => {
   it("keeps the summary and the history for the holder and the crew", async () => {
     expect((await w.call("anni", "GET", `/api/pizza/orders/${id}/summary`)).statusCode).toBe(403);
     const s = json(await w.call("pena", "GET", `/api/pizza/orders/${id}/summary`));
-    expect(s.text).toContain("2 × #1 Margherita");
+    expect(s.text).toContain("1 × #1 Margherita — no onion");
     expect(s.text).not.toContain("split with");
     expect((await w.call("anni", "GET", `/api/pizza/orders/${id}/history`)).statusCode).toBe(403);
   });
@@ -224,6 +291,8 @@ describe.skipIf(!DATABASE_URL)("who sees what (D9, U15)", () => {
     expect(errorOf(take).code).toBe("admin_access_restricted");
     const read = json(await w.call("crew", "GET", `/api/pizza/orders/${o}`, undefined, away));
     expect(read.items).toBeUndefined(); // a member's view away from the venue
-    expect((await w.call("crew", "POST", `/api/pizza/orders/${o}/take-over`, {}, venue)).statusCode).toBe(200);
+    expect(
+      (await w.call("crew", "POST", `/api/pizza/orders/${o}/take-over`, {}, venue)).statusCode,
+    ).toBe(200);
   });
 });

@@ -232,19 +232,28 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
         await outbox.flush();
         return out;
       }),
-  }) as World;
+  });
 }
 
 export const types = (events: Event[]): string[] => events.map((e) => e.type);
 
 /** Two pizzerias on the demo event, through the API: Demo Pizzeria (menu, base, toppings) and Demo Grill. */
-export async function seedPizzerias(w: World, host = "demo.test"): Promise<{ pz: string; grill: string }> {
+export async function seedPizzerias(
+  w: World,
+  host = "demo.test",
+): Promise<{ pz: string; grill: string }> {
   const pz = json(
-    await w.call("menus", "POST", "/api/pizza/pizzerias", {
-      name: "Demo Pizzeria",
-      phone: "+000 000 0000",
-      website: "https://pizzeria.example",
-    }, { host }),
+    await w.call(
+      "menus",
+      "POST",
+      "/api/pizza/pizzerias",
+      {
+        name: "Demo Pizzeria",
+        phone: "+000 000 0000",
+        website: "https://pizzeria.example",
+      },
+      { host },
+    ),
   ).id as string;
   await w.call(
     "menus",
@@ -266,11 +275,23 @@ export async function seedPizzerias(w: World, host = "demo.test"): Promise<{ pz:
     { host },
   );
   const grill = json(
-    await w.call("menus", "POST", "/api/pizza/pizzerias", { name: "Demo Grill", service: "takeaway" }, { host }),
+    await w.call(
+      "menus",
+      "POST",
+      "/api/pizza/pizzerias",
+      { name: "Demo Grill", service: "takeaway" },
+      { host },
+    ),
   ).id as string;
-  await w.call("menus", "PUT", `/api/pizza/pizzerias/${grill}/menu`, {
-    items: [{ number: "1", name: "Demo Burger", price: 1000 }],
-  }, { host });
+  await w.call(
+    "menus",
+    "PUT",
+    `/api/pizza/pizzerias/${grill}/menu`,
+    {
+      items: [{ number: "1", name: "Demo Burger", price: 1000 }],
+    },
+    { host },
+  );
   return { pz, grill };
 }
 
@@ -287,6 +308,15 @@ export const closesAt = (w: World, minutes = 60) =>
   new Date(w.now.getTime() + minutes * 60_000).toISOString();
 
 /** Opens an order as `who` at a pizzeria; answers the response. */
-export function open(w: World, who: string | null, pizzeria: string, extra: Record<string, unknown> = {}) {
-  return w.call(who, "POST", "/api/pizza/orders", { pizzeria_id: pizzeria, closes_at: closesAt(w), ...extra });
+export function open(
+  w: World,
+  who: string | null,
+  pizzeria: string,
+  extra: Record<string, unknown> = {},
+) {
+  return w.call(who, "POST", "/api/pizza/orders", {
+    pizzeria_id: pizzeria,
+    closes_at: closesAt(w),
+    ...extra,
+  });
 }

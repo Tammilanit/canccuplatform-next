@@ -1,7 +1,7 @@
 /** The menu import's contract part (contracts/pizza.md, The menu CSV): the spec's example and each rule. */
 import { describe, expect, it } from "vitest";
 import { MAX_BYTES, parseMenuCsv, writeMenuCsv } from "../src/menu-csv.js";
-import { SPEC_MENU } from "./fixtures.js";
+import { SPEC_MENU, must } from "./fixtures.js";
 
 const HEAD = "pizzeria,kind,number,name,price";
 const csv = (...lines: string[]) => [HEAD, ...lines].join("\n") + "\n";
@@ -15,19 +15,21 @@ describe("the spec's example", () => {
       ["Demo Trattoria", "+000 000 0000", "https://trattoria.example", "delivery"],
       ["Demo Corner Grill", "+000 000 0001", null, "takeaway"],
     ]);
-    const t = r.pizzerias[0]!.menu;
+    const t = must(r.pizzerias[0]).menu;
     expect(t.items).toEqual([
       { number: "4", name: "Margherita", description: "tomato, mozzarella", price_cents: 800 },
       { number: "7", name: "Funghi", description: "mushroom, mozzarella", price_cents: 850 },
       { number: "12", name: "Kebab", description: "kebab, onion, chili", price_cents: 950 },
     ]);
-    expect(t.base).toEqual({ name: "Own pizza", description: "tomato, mozzarella", price_cents: 700 });
+    expect(t.base).toEqual({
+      name: "Own pizza",
+      description: "tomato, mozzarella",
+      price_cents: 700,
+    });
     expect(t.toppings).toEqual([{ name: "Olives", description: null, price_cents: 100 }]);
   });
   it("warns, without stopping, of an item without a price", () => {
-    expect(r.warnings).toEqual([
-      { row: 7, column: "price", message: "Demo Burger has no price" },
-    ]);
+    expect(r.warnings).toEqual([{ row: 7, column: "price", message: "Demo Burger has no price" }]);
   });
   it("writes the same file back from what it read", () => {
     expect(writeMenuCsv(r.pizzerias)).toBe(SPEC_MENU);
@@ -87,7 +89,9 @@ describe("rules", () => {
       const r = parseMenuCsv(`pizzeria,number,name,price\nDemo,1,A,"${bad}"\n`);
       expect(r.errors[0], bad).toMatchObject({ row: 2, column: "price" });
     }
-    const ok = parseMenuCsv("pizzeria,number,name,price\nDemo,1,A,999.99\nDemo,2,B,0\nDemo,3,C,7.5\n");
+    const ok = parseMenuCsv(
+      "pizzeria,number,name,price\nDemo,1,A,999.99\nDemo,2,B,0\nDemo,3,C,7.5\n",
+    );
     expect(ok.pizzerias[0]?.menu.items.map((i) => i.price_cents)).toEqual([99999, 0, 750]);
   });
   it("checks the description's length, the web page and the service", () => {
@@ -98,7 +102,10 @@ describe("rules", () => {
     expect(e("Demo,1,A,,not a url,")).toMatchObject({ column: "website" });
     expect(e("Demo,1,A,,,boat")).toMatchObject({ column: "service" });
     const fine = parseMenuCsv(`${head}\nDemo,1,A,,http://x.example/menu,\n`);
-    expect(fine.pizzerias[0]).toMatchObject({ service: "delivery", website: "http://x.example/menu" });
+    expect(fine.pizzerias[0]).toMatchObject({
+      service: "delivery",
+      website: "http://x.example/menu",
+    });
   });
   it("groups rows by pizzeria in any case, under the first spelling", () => {
     const r = parseMenuCsv(csv("Demo Pizza,item,1,A,1", "DEMO PIZZA,item,2,B,1"));
