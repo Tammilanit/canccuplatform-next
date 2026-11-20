@@ -3,7 +3,9 @@
 // in the real player, on a desk and a phone; then on the main hall an info card in the rail with its
 // ticker line, the same card edited ("Updated"), an urgent one with its ticker line and a
 // full-screen one. The entrance's rail is hidden for the run, so there the card degrades to the
-// ticker and shows both lines (L4); it is shown again afterwards. Last, a withdrawn one opened from its Edit link: read-only (#603).
+// ticker on one line, its title and its ticker line (L4, #668); it is shown again afterwards. A
+// scheduled one waits in the list with its text filled (#668). Last, a withdrawn one opened from
+// its Edit link: read-only (#603), on a desk and a phone.
 // Every announcement sent here is withdrawn and every screen revoked.
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { saveZone } from "../modules/screen/test/stack/fixture.mjs";
@@ -47,6 +49,13 @@ export const ANNOUNCE_PAGES = [
     { ready: previewed },
   ],
   ["announce-composer-phone", "/moments/announce", PHONE, { touch: true }],
+  // The preview's screen card: its title over its body (#668, O13).
+  [
+    "announce-composer-preview-phone",
+    "/moments/announce?template=food",
+    PHONE,
+    { touch: true, ready: previewed },
+  ],
   screen("announce-screen-info", "main", "Pizza is here"),
   screen("announce-screen-info-4k", "main", "Pizza is here", SCREEN_4K),
   screen("announce-screen-both-lines", "entrance", "Pizza is here"),
@@ -78,6 +87,12 @@ export const WITHDRAWN_PAGES = [
     "/moments/announce?edit=",
     DESK,
     { ready: shows("can no longer be changed") },
+  ],
+  [
+    "announce-withdrawn-phone",
+    "/moments/announce?edit=",
+    PHONE,
+    { touch: true, ready: shows("can no longer be changed") },
   ],
 ];
 
@@ -131,6 +146,19 @@ export async function announceShots({ demo, shot, fail }) {
     };
     const first = await send(info);
     sent.push(first);
+    // Scheduled in two hours: the list shows "Prize draw at the stage", not its template (#668).
+    const later = await moments("POST", "/api/moments/announcements", {
+      title: "Prize draw at {place}",
+      body: "Bring your ticket",
+      variables: { place: "the stage" },
+      level: "info",
+      channels: { screen: true },
+      duration_seconds: 300,
+      when: { mode: "at", at: new Date(Date.now() + 2 * 3_600_000).toISOString() },
+    });
+    if (later.status !== 201)
+      throw new Error(`schedule: HTTP ${later.status} ${JSON.stringify(later.body)}`);
+    sent.push(later.body.id);
     const pages = [
       [ANNOUNCE_PAGES, null],
       [
