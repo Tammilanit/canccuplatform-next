@@ -50,6 +50,12 @@ describe.skipIf(!DATABASE_URL)("the storyboard builder's page", () => {
     expect(b.body).toContain('name="s1_title"');
   });
 
+  // #668 (R21): the preview fills what no item gives with the test-fire's sample text.
+  it("previews a domain story's placeholders with sample text", async () => {
+    const b = await w.call("admin", "GET", "/storyboards?edit=match_called");
+    expect(b.body).toContain("Fills with: Match called: Semi-final 1");
+  });
+
   it("saves rounds as chips, a dragged order and a moved step through the same API", async () => {
     const b = await w.call("admin", "GET", "/storyboards?edit=midnight");
     const key = /name="idempotency_key"\s+value="([^"]+)"/.exec(b.body)?.[1] ?? "k-1";

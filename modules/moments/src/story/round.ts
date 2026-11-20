@@ -12,7 +12,7 @@ import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
 import { emergencyOn } from "../cues/store.js";
 import type { VideoPlan } from "../cues/video.js";
-import { fillContent } from "./fill.js";
+import { SAMPLE, fillContent } from "./fill.js";
 import type { FillContext } from "./fill.js";
 import { roundCount } from "./model.js";
 import type { Story } from "./model.js";
@@ -106,6 +106,7 @@ export async function buildRound(
 ): Promise<RoundState> {
   const fill: FillContext = {
     facts: run.facts,
+    ...(run.test ? { sample: SAMPLE } : {}),
     now: ctx.now.getTime(),
     t: run.t.getTime(),
     timeZone: ctx.event.time_zone,

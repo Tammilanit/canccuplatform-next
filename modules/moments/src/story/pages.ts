@@ -12,7 +12,7 @@ import { knownZones } from "../store.js";
 import { loadCues } from "../cues/store.js";
 import { canSee, runOfShow } from "../announce/store.js";
 import { describeStory } from "./describe.js";
-import { itemFacts, fillText } from "./fill.js";
+import { SAMPLE, itemFacts, fillText } from "./fill.js";
 import type { FillContext } from "./fill.js";
 import { one, stepAfter, storyFromForm } from "./form.js";
 import type { Story } from "./model.js";
@@ -133,11 +133,13 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
       });
     const zones = await deps.db.tenant((c) => knownZones(c));
     const cues = (await deps.db.tenant((c) => loadCues(c))).map((c) => c.name);
-    // The sample the builder fills placeholders with: the story's next item and the event.
+    // The sample the builder fills placeholders with: the story's next item and the event, and
+    // a test-fire's sample text for the rest, so the preview shows what a test-fire shows.
     const next = fireChoices(story, s.items, s.now)[0];
     const item = next === undefined ? undefined : s.agenda.find((i) => i.id === next.id);
     const fill: FillContext = {
       facts: item === undefined ? {} : itemFacts(item, doc.event.time_zone),
+      sample: SAMPLE,
       now: s.now,
       t: item === undefined ? s.now : Date.parse(item.starts_at),
       timeZone: doc.event.time_zone,
