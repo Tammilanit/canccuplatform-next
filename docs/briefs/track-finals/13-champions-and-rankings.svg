@@ -15,7 +15,7 @@
 <text x="80" y="172" font-size="64" fill="#ffffff" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="80 1500">CHAMPIONS OF THE SERIES</text>
 <rect x="80" y="225" width="560" height="390" rx="16" fill="#f7b731" filter="url(#glow)" opacity="0.5"/>
 <rect x="80" y="225" width="560" height="390" rx="16" fill="url(#gold)" stroke="#ffffff" stroke-width="5"/>
-<text x="110" y="279" font-size="24" fill="#3a2600" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · SAT · THIS EVENT</text>
+<text x="110" y="279" font-size="24" fill="#3a2600" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · 8 NOV</text>
 <text x="110" y="355" font-size="56" fill="#111111" font-weight="400" text-anchor="start">🏆</text>
 <text x="190" y="359" font-size="56" fill="#111111" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="190 610">TEAM DELTA</text>
 <line x1="110" y1="399" x2="610" y2="399" stroke="#000000" stroke-opacity="0.25" stroke-width="2"/>
@@ -27,7 +27,7 @@
 <rect x="450" y="555" width="160" height="38" rx="19" fill="#111111"/>
 <text x="530" y="581" font-size="20" fill="#f7b731" font-weight="700" text-anchor="middle" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="454 606">NEW TONIGHT</text>
 <rect x="680" y="225" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
-<text x="710" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">FRIDAY FINALS · FRI · THIS EVENT</text>
+<text x="710" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">FRIDAY FINALS · 6 NOV</text>
 <text x="710" y="355" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
 <text x="790" y="359" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="790 1210">TEAM GAMMA</text>
 <line x1="710" y1="399" x2="1210" y2="399" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
@@ -37,7 +37,7 @@
 <line x1="710" y1="503" x2="1210" y2="503" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
 <text x="710" y="541" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER SEVEN</text>
 <rect x="1280" y="225" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
-<text x="1310" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · SPRING EVENT</text>
+<text x="1310" y="279" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · 12 APR</text>
 <text x="1310" y="355" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
 <text x="1390" y="359" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1390 1810">TEAM ALPHA</text>
 <line x1="1310" y1="399" x2="1810" y2="399" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
@@ -47,7 +47,7 @@
 <line x1="1310" y1="503" x2="1810" y2="503" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
 <text x="1310" y="541" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">PLAYER NINE</text>
 <rect x="80" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
-<text x="110" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · WINTER EVENT</text>
+<text x="110" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">DEMO FINALS · 18 JAN</text>
 <text x="110" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
 <text x="190" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="190 610">TEAM GAMMA</text>
 <line x1="110" y1="819" x2="610" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
@@ -57,7 +57,7 @@
 <line x1="110" y1="923" x2="610" y2="923" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
 <text x="110" y="961" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="110 610">PLAYER TEN</text>
 <rect x="680" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
-<text x="710" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">DEMO FINALS · AUTUMN EVENT</text>
+<text x="710" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">DEMO FINALS · 20 OCT</text>
 <text x="710" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
 <text x="790" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="790 1210">TEAM BETA</text>
 <line x1="710" y1="819" x2="1210" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
@@ -67,7 +67,7 @@
 <line x1="710" y1="923" x2="1210" y2="923" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
 <text x="710" y="961" font-size="34" fill="#ffffff" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="710 1210">PLAYER ELEVEN</text>
 <rect x="1280" y="645" width="560" height="390" rx="16" fill="#2a050b" stroke="#ffffff" stroke-width="3"/>
-<text x="1310" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · SUMMER EVENT</text>
+<text x="1310" y="699" font-size="24" fill="#ee66aa" font-weight="700" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1310 1810">DEMO FINALS · 14 JUL</text>
 <text x="1310" y="775" font-size="56" fill="#ffffff" font-weight="400" text-anchor="start">🏆</text>
 <text x="1390" y="779" font-size="56" fill="#f7b731" font-weight="800" text-anchor="start" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1390 1810">TEAM IOTA</text>
 <line x1="1310" y1="819" x2="1810" y2="819" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>

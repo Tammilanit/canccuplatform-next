@@ -44,12 +44,12 @@
 <rect x="1262" y="132" width="376" height="736" rx="20" fill="#111827"/>
 <text x="1450" y="168" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="middle" data-box="1270 1630">Demo Event</text>
 <rect x="1274" y="230" width="352" height="300" rx="14" fill="#2a2118"/>
-<text x="1450" y="290" font-size="16" fill="#fbbf24" font-weight="700" text-anchor="middle" data-box="1286 1614">Finals can't be reached right now</text>
-<text x="1450" y="326" font-size="15" fill="#e2e8f0" font-weight="400" text-anchor="middle" data-box="1286 1614">Try again in a moment.</text>
+<text x="1450" y="290" font-size="16" fill="#fbbf24" font-weight="700" text-anchor="middle" data-box="1286 1614">Finals is unavailable right now</text>
+<text x="1450" y="326" font-size="15" fill="#e2e8f0" font-weight="400" text-anchor="middle" data-box="1286 1614">Try again in a moment, or use /finals.</text>
 <rect x="1310" y="360" width="280" height="40" rx="10" fill="#3b82f6"/>
 <text x="1450" y="386" font-size="15" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="1320 1580">Try again</text>
 <rect x="1310" y="416" width="280" height="40" rx="10" fill="#1e293b" stroke="#475569" stroke-width="2"/>
-<text x="1450" y="442" font-size="15" fill="#e2e8f0" font-weight="600" text-anchor="middle" data-box="1320 1580">Open the app's own page</text>
-<text x="1250" y="912" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">3 · The unreachable state (E7): a retry and</text>
-<text x="1250" y="934" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">the app's plain page, no platform needed.</text>
+<text x="1450" y="442" font-size="15" fill="#e2e8f0" font-weight="600" text-anchor="middle" data-box="1320 1580">Back to the hub</text>
+<text x="1250" y="912" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">3 · The unreachable state (E7): a plain page;</text>
+<text x="1250" y="934" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1250 1650">/finals in Discord works while the bot runs.</text>
 </svg>

@@ -2,7 +2,7 @@
 
 Every open question the research for [the Finals track brief](../track-finals.md) found, grouped by theme, each with its options and a recommendation, for the product owner's brainstorming session (#172, epic #161). IDs are stable, so the session can answer "U2: A" and the mockups can point here.
 
-**The product owner's direction of 2026-11-20 (decision 0030, written in parallel in #680) changed the bank.** Finals is integrated as it is, not rebuilt. Of the 80 questions, **47 are marked "Dropped (0030)"** (they asked how to redesign the app; each stays as the record of what was weighed), **31 are kept or reworded for the integration** (three of them, P1, D15 and D18, are now decided) and **2 are new** (D17 and D18).
+**The product owner's direction of 2026-11-20 (decision 0030, written in parallel in #680) changed the bank.** Finals is integrated as it is, not rebuilt. Of the 80 questions, **47 are marked "Dropped (0030)"** (they asked how to redesign the app; each stays as the record of what was weighed), **31 are kept or reworded for the integration** (three of them, P1, D15 and L12, are now decided) and **2 are new** (D17, open, and D18, decided): 33 stay, four of them decided.
 
 The themes: **U** who uses it and how · **L** look and feel · **D** data and integrations · **E** edge cases and failure · **O** operations and scale · **P** plan and scope.
 
@@ -24,9 +24,9 @@ The legacy mini tourney runs one team game, THE FINALS, teams of three, in seven
 
 ### U2. How people join a season
 Joining happens in the app. The platform adds doors to it, never a second sign-up.
-- **A.** Four doors to the app's own page: a tile or link in the hub that opens it signed in (D18), `/finals` and its Register button in Discord, the QR on the screen's "Finals are open" card, and the crew's word. The app keeps one entry per person; the platform holds none.
+- **A.** Four doors to the app's own page: a tile or link in the hub that opens it signed in (D18), `/finals` and its Register button in Discord, the QR on the screen's "Finals are open" card (it opens the hub's Finals tile, not the app, so the sign-in comes first), and the crew's word. The app keeps one entry per person; the platform holds none.
 - **B.** The hub's tile only.
-- **Recommendation: A** ([mockup 03](03-discord.svg), [mockup 12](12-venue-screen.svg)). The exit criterion asks for one sign-up through the hub's link and one through `/finals`; the QR is how the hall finds the app. The tile and the QR link to plain URLs with no token in them (0010); the hub's tile goes through a platform route that makes the person's link at that moment (D18).
+- **Recommendation: A** ([mockup 03](03-discord.svg), [mockup 12](12-venue-screen.svg)). The exit criterion asks for one sign-up through the hub's link and one through `/finals`; the QR is how the hall finds the tile. The tile and the QR link to plain URLs with no token in them (0010); the hub's tile goes through a platform route that makes the person's link at that moment (D18).
 
 ### U3. Solo, teams or both
 > **Dropped (0030):** The app keeps its modes and its team builder as they are. Kept below as the record of what was weighed.
@@ -253,9 +253,9 @@ The stub: one entry per (season, `discord_user_id`); the link between a user and
 
 ### D7. How the bot reaches the Finals app
 The live provider (the app) answers under `/api/provider` with a bearer secret; the live bot keeps one root and always adds `/api/provider` to it. The stub also describes a platform provider at `https://<event host>/api/finals`, which this direction no longer builds. The four sides are compared row by row in [the brief](../track-finals.md#the-provider-contract-four-sides).
-- **A.** The bot module holds one full base per provider: the app's `https://<app host>/api/provider` with its bearer and its public origin, taken from the event's connection (O4, O9). The paths after the base and every shape stay the live provider's; `GET status` stays public too. The stub's platform base is removed in the contract issue.
+- **A.** The bot module holds one full base per provider: the app's `https://<app host>/api/provider` with its bearer and its public origin, taken from the event's connection (O4, O9): the address the platform calls, and as an optional second field the public address people open (the default is the same address). The paths after the base and every shape stay the live provider's; `GET status` stays public too. The stub's platform base is removed in the contract issue.
 - **B.** Keep one root and the fixed suffix.
-- **Recommendation: A.** It is the smallest change to the live client (it drops the fixed suffix) and the one place that knows the app's address and secret. The stub marks its base provisional, so removing it is not a breaking change to a released contract, but the review should look at it ([mockup 14](14-lifecycle.svg)). **Contract:** finals.md.
+- **Recommendation: A.** It is the smallest change to the live client (it drops the fixed suffix) and the one place that knows the app's address and secret. The stub marks its base provisional, so removing it is not a breaking change to a released contract, but the review should look at it **Contract:** finals.md.
 
 ### D8. The full finals contract
 - **A.** `contracts/finals.md` becomes the contract of an external app (the mini tourney): the provider part as the app answers it today, with fixtures (D14); the reads and events the app exposes (D9); the events the platform republishes; the settings (O4). Shared OpenAPI components keep it small.
@@ -264,7 +264,7 @@ The live provider (the app) answers under `/api/provider` with a bearer secret; 
 
 ### D9. What the app must expose
 Today the app's provider API gives the bot a status, sign-up and a link, and its other reads sit behind the read gate with a payload-less SSE ping. The screen and Moments need more.
-- **A.** Events: season opened, started, finished (with the champion) and cancelled; match decided. Reads: the season's bracket (rounds, groups, places, the live round) and the champions list. Public data only: names, places, counts; never a lobby code or a Discord id. They reach the platform as `finals.season.opened`, `.started`, `.finished`, `.cancelled`, `finals.match.decided` ([mockup 14](14-lifecycle.svg)).
+- **A.** Events: season opened, started, finished (with the champion) and cancelled; match decided. Reads: the season's bracket (rounds, groups, places, the live round) and the champions list. Public data only: names, places, counts; never a lobby code or a Discord id. They reach the platform as `finals.season.opened`, `.started`, `.finished`, `.cancelled`, `finals.match.decided`.
 - **B.** Only status: the screen shows "open", "started" and "champion" cards, no bracket.
 - **Recommendation: A.** The bracket on the Pulse is the point of the screen part. The additions go to the app's author as a request and into the provider contract as additive fields (P4, D17).
 
@@ -359,8 +359,8 @@ The legacy did not revert ranking changes when a season was deleted.
 - **Recommendation: A.**
 
 ### E7. The bot is down, or the app cannot be reached
-- **A.** `/finals` says "try again later" (one sentence for every failure); the screen shows the last Finals card until its window ends and nothing else for Finals; the hub's tile needs no bot, and when the app cannot be reached it says so and offers the app's plain page; the app works without the platform.
-- **Recommendation: A** ([mockup 03](03-discord.svg)).
+- **A.** `/finals` says "try again later" (one sentence for every failure); the screen shows the last Finals card until its window ends and nothing else for Finals; the hub's tile needs no bot. The app's page is no door on its own (its read gate shows nothing to a visitor without a session), so when the platform cannot reach the app there is no link to offer: the fallback is `/finals` in Discord while the bot runs, and otherwise a plain "Finals is unavailable right now" state; the app works without the platform.
+- **Recommendation: A** ([mockup 18](18-hub-tile-and-handoff.svg), [mockup 03](03-discord.svg)).
 
 ### E8. Names
 - **A.** The bot cleans the nickname to the live rule (letters, digits, spaces, `_ - .`, 18 at most) and sends it; the app is the final judge, and its reason or the name dialog is shown. The platform keeps no name rule of its own.
@@ -381,7 +381,7 @@ The inventory's bug 1: a full solo `fourqc` season is saved as `four`; its probl
 ### E11. A cancelled season
 The app cancels a season while open or running and keeps it in history.
 - **A.** The app reports it (D9); the screen card is removed at once and the channel post says the season was cancelled.
-- **Recommendation: A** ([mockup 14](14-lifecycle.svg)).
+- **Recommendation: A.**
 
 ### E12. Late arrivals
 > **Dropped (0030):** The app keeps its own late-arrival rules. Kept below as the record of what was weighed.
@@ -423,7 +423,7 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 - **Recommendation: A** ([mockup 11](11-crew-phone.svg)).
 
 ### O4. Settings and their defaults
-- **A.** Per event: the connection (the app's address, its bearer secret write-only and encrypted, a "test connection" check; none set means Finals is off), show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), which app (O9). The hub tile has no setting of its own: it shows when an app is set ([mockup 18](18-hub-tile-and-handoff.svg)).
+- **A.** Per event: the connection (the address the platform calls; as an optional second field, the public address people open, the same by default; its bearer secret write-only and encrypted; a "test connection" check; none set means Finals is off), show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), which app (O9). The hub tile has no setting of its own: it shows when an app is set ([mockup 18](18-hub-tile-and-handoff.svg)).
 - **Recommendation: A.** **Contract:** settings in finals.md.
 
 ### O5. Rights
@@ -447,7 +447,7 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 
 ### O9. The provider switch
 The live bot holds three values for its one provider: the root, the bearer, and the public origin its guard allows links to.
-- **A.** The Discord side follows the event's connection (O4): no app set means `/finals` is off; otherwise the bot uses the app's address and secret that the event admin set ([mockup 03](03-discord.svg)). There is no separate bot-side secret.
+- **A.** The Discord side follows the event's connection (O4): no app set means `/finals` is off; otherwise the bot uses the app's address, public origin (the second field, the same address by default) and secret that the event admin set ([mockup 03](03-discord.svg)). There is no separate bot-side secret.
 - **B.** The same without "off".
 - **Recommendation: A.** One place holds the address and secret; the secret is write-only. **Contract:** the setting in finals.md and bot.md.
 

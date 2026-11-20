@@ -265,7 +265,7 @@
 <rect x="1612.0" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
 <rect x="1633.6" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
 <rect x="1100" y="930" width="700" height="90" rx="8" fill="#F7BB2B" stroke="#181B24" stroke-width="4"/>
-<text x="1450" y="989" font-size="32" fill="#111111" font-weight="700" text-anchor="middle" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1116 1784">SCAN TO JOIN · OR /FINALS</text>
+<text x="1450" y="989" font-size="32" fill="#111111" font-weight="700" text-anchor="middle" font-family="Bahnschrift, 'Arial Narrow', Impact, sans-serif" font-style="italic" data-box="1116 1784">SCAN TO OPEN FINALS · OR /FINALS</text>
 </g></g>
 <text x="32" y="660.8" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · Finals are open</text>
 <text x="32" y="686.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32 912">A takeover when the season opens and again before it closes: the count fills, the QR joins.</text>

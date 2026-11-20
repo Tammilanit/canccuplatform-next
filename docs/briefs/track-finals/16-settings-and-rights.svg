@@ -81,17 +81,20 @@
 <rect x="972.0" y="188.0" width="396.0" height="640.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
 <text x="992.0" y="224.0" font-size="20" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="992.0 1348.0">Finals app connection</text>
 <text x="992.0" y="250.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">Per event. No address set: Finals is off here</text>
-<text x="992.0" y="290.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">App address</text>
+<text x="992.0" y="290.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">App address (the platform calls it)</text>
 <rect x="992.0" y="300.0" width="356.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
 <text x="1004.0" y="324.0" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">https://finals.example.org</text>
-<text x="992.0" y="366.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">Bearer secret (write-only)</text>
+<text x="992.0" y="366.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">Public address (optional)</text>
 <rect x="992.0" y="376.0" width="356.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-<text x="1004.0" y="400.0" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">●●●●●●●●●●●●  Replace…</text>
-<rect x="992.0" y="446.0" width="150.0" height="36.0" rx="10" fill="#3b82f6"/>
-<text x="1067.0" y="469.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="998.0 1136.0">Test connection</text>
-<text x="1158.0" y="469.0" font-size="13" fill="#86efac" font-weight="600" text-anchor="start" data-box="1158.0 1348.0">✓ Reached, secret accepted</text>
-<text x="992.0" y="520.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The secret is stored encrypted and never shown again.</text>
-<text x="992.0" y="542.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The host runs the app: its own server or beside the platform.</text>
+<text x="1004.0" y="400.0" font-size="14" fill="#64748b" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">Same as the address above</text>
+<text x="992.0" y="442.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">Bearer secret (write-only)</text>
+<rect x="992.0" y="452.0" width="356.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="1004.0" y="476.0" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">●●●●●●●●●●●●  Replace…</text>
+<rect x="992.0" y="522.0" width="150.0" height="36.0" rx="10" fill="#3b82f6"/>
+<text x="1067.0" y="545.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="998.0 1136.0">Test connection</text>
+<text x="1158.0" y="545.0" font-size="13" fill="#86efac" font-weight="600" text-anchor="start" data-box="1158.0 1348.0">✓ Reached, secret accepted</text>
+<text x="992.0" y="596.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The secret is stored encrypted and never shown again.</text>
+<text x="992.0" y="618.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The host runs the app: its own server or beside the platform.</text>
 </g></g>
 <g transform="translate(1480.0,110.0) scale(0.7)"><g>
 <rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
@@ -119,29 +122,32 @@
 <text x="273.0" y="822.0" font-size="11" fill="#94a3b8" font-weight="500" text-anchor="middle" data-box="235.0 311.0">Screens</text>
 <rect x="344.0" y="785.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#3b82f6" stroke-width="1.6"/>
 <text x="351.0" y="822.0" font-size="11" fill="#3b82f6" font-weight="600" text-anchor="middle" data-box="313.0 389.0">More</text>
-<rect x="16.0" y="190.0" width="358.0" height="400.0" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+<rect x="16.0" y="190.0" width="358.0" height="476.0" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
 <text x="36" y="226" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="36.0 354.0">Finals app connection</text>
 <text x="36" y="250" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="36.0 354.0">Per event. No address set: Finals is off here</text>
-<text x="36" y="288" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="36.0 354.0">App address</text>
+<text x="36" y="288" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="36.0 354.0">App address (the platform calls it)</text>
 <rect x="36.0" y="298.0" width="318.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
 <text x="48" y="322" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="48.0 342.0">https://finals.example.org</text>
-<text x="36" y="364" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="36.0 354.0">Bearer secret (write-only)</text>
+<text x="36" y="364" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="36.0 354.0">Public address (optional)</text>
 <rect x="36.0" y="374.0" width="318.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-<text x="48" y="398" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="48.0 342.0">●●●●●●●●●●●●  Replace…</text>
-<rect x="36.0" y="432.0" width="150.0" height="36.0" rx="10" fill="#3b82f6"/>
-<text x="111" y="455" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="42.0 180.0">Test connection</text>
-<text x="36" y="492" font-size="13" fill="#86efac" font-weight="600" text-anchor="start" data-box="36.0 354.0">✓ Reached, secret accepted</text>
-<text x="36" y="540" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="36.0 354.0">Stored encrypted and never shown again.</text>
-<text x="36" y="562" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="36.0 354.0">The host runs the app, wherever it lives.</text>
+<text x="48" y="398" font-size="14" fill="#64748b" font-weight="500" text-anchor="start" data-box="48.0 342.0">Same as the address above</text>
+<text x="36" y="440" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="36.0 354.0">Bearer secret (write-only)</text>
+<rect x="36.0" y="450.0" width="318.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="48" y="474" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="48.0 342.0">●●●●●●●●●●●●  Replace…</text>
+<rect x="36.0" y="508.0" width="150.0" height="36.0" rx="10" fill="#3b82f6"/>
+<text x="111" y="531" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="42.0 180.0">Test connection</text>
+<text x="36" y="568" font-size="13" fill="#86efac" font-weight="600" text-anchor="start" data-box="36.0 354.0">✓ Reached, secret accepted</text>
+<text x="36" y="616" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="36.0 354.0">Stored encrypted and never shown again.</text>
+<text x="36" y="638" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="36.0 354.0">The host runs the app, wherever it lives.</text>
 </g></g>
 </g></g>
 <text x="1480.0" y="720.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">At phone width</text>
 <text x="1480" y="746" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1480.0 1880.0">The connection card leads on a phone:</text>
-<text x="1480" y="767.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1480.0 1880.0">address, write-only secret, test.</text>
+<text x="1480" y="767.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1480.0 1880.0">address, public address, secret, test.</text>
 <circle cx="45.0" cy="1063.0" r="13.0" fill="#f59e0b"/>
 <text x="45.0" y="1069.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">1</text>
 <text x="68.0" y="1068.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">Platform settings only: Finals on the screens and the two card windows, 15 and 10 minutes, the legacy's defaults (O4). The app's own settings stay in the app.</text>
 <circle cx="45.0" cy="1106.6" r="13.0" fill="#f59e0b"/>
 <text x="45.0" y="1112.6" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="68.0" y="1111.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">The connection (address, write-only secret, test) is the platform's; the event admin's existing settings right covers it (O5).</text>
+<text x="68.0" y="1111.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">The connection (address, optional public address, write-only secret, test) is the platform's; the event admin's existing settings right covers it (O5).</text>
 </svg>

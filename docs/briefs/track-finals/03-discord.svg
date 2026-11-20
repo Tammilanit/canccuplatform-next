@@ -149,6 +149,6 @@
 <rect x="32.0" y="1076.0" width="1856.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
 <text x="48.0" y="1104.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
 <text x="48.0" y="1128.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">As the live command: one /finals, no subcommands; a status line, Register or Withdraw (with Yes / No) while an individual season is open, and a link button. A taken or unusable nickname opens a name dialog. Posts carry no link</text>
-<text x="48.0" y="1148.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">and point to /finals. The button opens the app, signed in; the app keeps its own admin rights. Questions: U17, D6, D7, O9, U9.</text>
+<text x="48.0" y="1148.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">and point to /finals. The button opens the app, signed in; the app keeps its own admin rights. Questions: U17, D7, O9, U9.</text>
 </g>
 </svg>
