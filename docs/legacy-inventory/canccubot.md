@@ -3,9 +3,10 @@
 The Discord bot of the old system, inventoried for [roadmap step 2a](../roadmap.md#2a-legacy-inventory) (epic #46) so the product owner can confirm what exists before the tenancy foundation and the contracts are designed. Nothing here is copied from the legacy repo: code and docs are described, and only short identifiers (commands, routes, env var names, JSON keys) are named. Event-specific values are counted by kind only (see [Event-specific content](#event-specific-content)).
 
 - **Source:** the read-only clone of `canccubot` on the dev VM, at its last commit of 2026-10-30. History: 201 commits from 2026-02-15 to 2026-10-30, mostly February–March and October 2026.
+- **Read at:** commit `3e7030fbbe` (`main`, 2026-10-30), read on 2026-10-30. **Refreshed** on 2026-11-20 at commit `12f2b03d90` (`main`, 2026-11-11), issue #677: the 7 commits since ([e23c97d], [77e80cf], [6f57e2a], [85840fd], [e030370], [3403d75], [12f2b03]), their diffs and the files they add, read in a fresh clone. History now: 208 commits to 2026-11-11; 182 tracked files, 31,640 lines. Every fact the refresh changed links its commit or file; facts without a link hold at both commits.
 - **Stack:** Python 3.10+, discord.py 2.x, aiohttp (HTTP client and two small HTTP listeners), python-dotenv, python-dateutil. Tests use pytest with pytest-asyncio, and formatting uses black. A TypeScript Cloudflare Worker stub (`worker/`) is also in the repo, but it is not deployed.
 - **Runs as:** one process per event (`python -m bot.main`), from a systemd unit as root in a Proxmox LXC. It is bound to one guild through `GUILD_ID` and configured entirely from `.env`.
-- **Tests run for this inventory:** the unit suite on a temp copy, `pytest tests` → **496 passed, 5 skipped, 8 deselected** (the deselected 8 are the live integration tests, which are off by default). Line coverage of `bot/` is **73 %** (6175 statements).
+- **Tests run for this inventory:** the unit suite on a temp copy, `pytest tests` → **496 passed, 5 skipped, 8 deselected** (the deselected 8 are the live integration tests, which are off by default). Line coverage of `bot/` is **73 %** (6175 statements). At the refresh (`12f2b03d90`): **546 passed, 5 skipped, 8 deselected**, coverage **74 %** (6433 statements).
 
 ## Contents
 1. [What the bot is](#what-the-bot-is)
@@ -26,7 +27,7 @@ canccubot is the event's Discord bot and also the glue between the old system's 
 - It **counts** guild activity (presence, voice occupancy, games played and message counts) every 30–60 s. It keeps the counts in memory and pushes them to the signup site's API, whose LAN display shows them.
 - It **drives the venue screen** (canccusignage) through a control API. It sets full-screen "directives" (an announcement, a hot-game banner, a poll, the tournament leaderboard, finals cards) and the ticker overlay, and it uploads photos to the carousel.
 - It is the **Discord face of the tournament and pizza features** of the signup site. It hands out personal links (tokens), sends reminders by DM, creates and cleans up per-game voice channels, and posts a dwell-based roster.
-- It **posts the mini-tourney's seasons and champions** and mirrors the open season to the signup site.
+- It **posts the mini-tourney's seasons and champions** and mirrors the open season to the signup site. Since [e23c97d] it is also the mini-tourney's **Discord front door**: `/finals` signs players up, withdraws them and hands out personal page links through the finals provider API.
 - It **relays canccumanager alerts** to admins (DMs and a channel post with an Acknowledge button) and shows platform status.
 
 The bot owns almost no durable data. Its own stores are in memory, plus two small JSON state files. Everything durable lives in the signup site's hosted database behind its API, which is a different repo (see [Data](#data)).
@@ -44,7 +45,8 @@ The bot owns almost no durable data. Its own stores are in memory, plus two smal
 | Tournament reminders by DM (registration closed, starting now) and a public "starts in 1 hour" post | `bot/services/tournament_manager.py` | Scheduled per tournament event |
 | Tournament voice channels (a `Tournament` category with one channel per entry in the event's `vc_plan`) | `bot/services/tournament_discord_channels.py`, `tournament_manager.py` | Created at T−15 min or on "create now"; deleted on cleanup |
 | Pizza order and orderer links | `bot/cogs/pizza.py` | `/pizza order`, `/pizza claim`; needs `TOURNAMENT_CHANNEL_ID` because the links reuse the tournament token |
-| Mini-tourney announcements (new season, season started, champion) | `bot/cogs/tourney_watcher.py`, `bot/services/tourney_watcher.py` | Posts in the finals channel (or the test channel for seasons whose name starts with "test"); needs `FINALS_CHANNEL_ID` |
+| Mini-tourney announcements (new season, season started, champion). Since [12f2b03] they carry no URL and no button and end with a pointer to `/finals`; since [3403d75] they are sent with mentions off and any URL not on `TOURNEY_PUBLIC_URL` is cut | `bot/cogs/tourney_watcher.py`, `bot/services/tourney_watcher.py`, `bot/utils/tourney_guard.py` | Posts in the finals channel (or the test channel for seasons whose name starts with "test"); needs `FINALS_CHANNEL_ID` |
+| **Finals: page link, sign-up and withdraw** ([e23c97d]). One ephemeral reply: a status line (season, state, registered/capacity or the champion, "you're signed up as …"), an **Open The Finals Tourney** link button with a personal signed link ([6f57e2a], label [e030370]), and while an individual-mode season is in `register` a **Register** button (the server nickname, cleaned to the tourney's name rules, max 18; a name dialog when it is empty or taken) or a red **Withdraw registration** button behind a Yes / No confirm. Team-mode, running and finished seasons get the link only. The buttons and the link expire after 15 min. The link carries the caller's role ids, so a member of the provider's admin roles gets an admin session from the same link | `bot/cogs/finals.py`, `bot/services/finals_provider.py`, `bot/utils/link_button.py`, `bot/utils/tourney_guard.py` | `/finals`; loaded when `TOURNEY_BASE_URL` is set |
 | On the venue screen (not in Discord): hot-game banner, poll views, tournament leaderboard pin, finals open/start cards, ticker, photo carousel, and the stats on the signup site's LAN display | See the operator features and the integrations below | Automatic |
 | Casting | `bot/cogs/stream.py` | `/stream help/on/off/spotlight/auto/status`; every subcommand only answers "not available" |
 
@@ -74,7 +76,7 @@ The bot owns almost no durable data. Its own stores are in memory, plus two smal
 
 ## Interfaces
 
-### Discord slash commands (34) and context menus (4)
+### Discord slash commands (35; 34 at the first read) and context menus (4)
 All are registered **per guild**: at start-up the bot copies its global tree to `GUILD_ID` and syncs it. Admin checks are made in the handler; Discord's default permissions are not used.
 
 | Command | Parameters | Who | Effect |
@@ -90,6 +92,7 @@ All are registered **per guild**: at start-up the bot copies its global tree to 
 | `/signage-reset` | – | admin | Hard reset: clears every bot directive so the schedule resumes |
 | `/adminlink` | – | admin | Single-use signage admin login URL |
 | `/platform status` | `subsystem?` (5 fixed choices) | admin | Overview, or one subsystem's checks and last 5 events |
+| `/finals` | – | all | Status line, the personal page link button, and Register or Withdraw while an individual season is open ([e23c97d]); mentions off, foreign URLs dropped ([3403d75]) |
 | `/pizza order` | – | all | Link button to the pizza page (`<site>/pizza?token=`) |
 | `/pizza claim` | – | all | Link button to the orderer page (`<site>/pizza/orderer?token=`) |
 | `/stream help`, `on`, `off`, `spotlight`, `auto`, `status` | – | all | Stubs that answer "not available" |
@@ -115,7 +118,8 @@ Components:
 - **Poll option buttons** (`custom_id` `poll_<poll>_option_<option>`): votes; one vote per user, which can be changed.
 - **Acknowledge** on alerts: a persistent `DynamicItem` with `custom_id` `alert_ack:<eventId>`. It posts the ack to the manager as `discord:<user id>`.
 - **Clear confirm/cancel** buttons (120 s, only the requester can use them).
-- **Link buttons** that carry the personal URLs.
+- **Link buttons** that carry the personal URLs; for the finals page one **Open The Finals Tourney** button ([6f57e2a], [e030370]).
+- **Finals Register / Withdraw** buttons, the **Yes / No** withdraw confirm and the **Finals sign-up** name dialog ([e23c97d]); views time out after 900 s, with the link.
 
 ### Discord gateway event handlers
 | Handler | Where | Does |
@@ -195,9 +199,19 @@ The directive labels (one row per label on signage) are `announce`, `poll_active
 
 According to the bot's own comments, the ack and heartbeat endpoints were not yet shipped by the manager.
 
-**Mini-tourney** (`TOURNEY_BASE_URL`, no auth):
+**Mini-tourney** (`TOURNEY_BASE_URL`; no auth at the first read, since [e23c97d] `Authorization: Bearer <FINALS_PROVIDER_TOKEN>` on every call when the token is set, for the tourney's read gate):
 - `GET /api/seasons` and `GET /api/seasons/:id` (season, teams or individuals, capacity).
 - **SSE** `GET /api/events`: every `data: update` line triggers a re-sync. It reconnects with a backoff from 5 to 60 s, and a 60 s poll runs as a backstop.
+
+**Finals provider API** (since [e23c97d]; `{TOURNEY_BASE_URL}/api/provider`, the same bearer, 10 s timeout; contract `docs/contracts/finals-provider-api.md` in the canccuplatform repo, see [its inventory](canccuplatform.md#b-http-routes)). Errors come as `{error: {code, message}}`; the client maps `no_season`, `registration_closed`, `name_taken`, `not_registered` and `invalid_request` to their own replies and everything else (`unauthorized`, `rate_limited`, a transport failure) to one "not reachable, try later" reply.
+
+| Method and path | Body or result | Used by |
+|---|---|---|
+| `GET /status` | → `{season: {id, name, state, mode, format, registered, capacity, champion} \| null}` | `/finals` |
+| `POST /links` | `{discord_user_id, discord_username, role_ids[]}` → `{url, expires_at}`; `discord_username` is the server nickname since [85840fd] | `/finals` |
+| `GET /seasons/{id}/entries/by-discord/{discord_user_id}` | → `{id, name, team_id}`; `404 not_registered` | `/finals` (which button to show) |
+| `POST /seasons/{id}/entries` | `{discord_user_id, name}` → `{id, created}` | Register |
+| `DELETE /seasons/{id}/entries/by-discord/{discord_user_id}` | → `204` | Withdraw (after Yes) |
 
 **Steam store** (no auth): `GET /api/storesearch/` and `GET /api/appdetails`. These find a game's header image when Discord gives no cover. Results are cached in memory for 7 days (a hit) or 1 hour (a miss).
 
@@ -246,7 +260,7 @@ The bot has **no database**. The stores below are everything it keeps; "per even
 **Venue rather than event:**
 - signage's trigger settings, which the bot's own comments call "venue-editable" (game threshold, banner, poll and finals card durations);
 - the signage control URL and the venue display itself;
-- the "on the venue network only" wording of the mini-tourney link;
+- the "on the venue network only" wording of the mini-tourney link (gone since [12f2b03]);
 - the event timezone (it follows the venue's location).
 
 The guild, channels, admin role and Discord users belong to the organizer's community, not to a venue.
@@ -272,8 +286,10 @@ Everything comes from environment variables (`bot/config.py`, which loads `.env`
 | `TOURNAMENT_CHANNEL_ID` | unset | Enables tournament and pizza; public posts and admin pings go here |
 | `FRONTEND_URL` | an event-domain URL | Tournament site base for the links; its origin is used for the pizza links |
 | `FINALS_CHANNEL_ID`, `FINALS_TEST_CHANNEL_ID` | unset | Enable the tourney watcher; target channels |
-| `TOURNEY_BASE_URL` | the internal mini-tourney host on port 3000 | Mini-tourney API |
-| `TOURNEY_PUBLIC_URL` | an event-domain URL | Link in the announcements |
+| `TOURNEY_BASE_URL` | the internal mini-tourney host on port 3000 | Mini-tourney API; since [e23c97d] also the finals provider root, and set = the `/finals` cog loads |
+| `TOURNEY_PUBLIC_URL` | an event-domain URL | Link in the announcements at the first read; since [12f2b03] only the site push `link`, and since [3403d75] the one prefix a URL in a tourney-derived message or link button may have |
+| `FINALS_PROVIDER_TOKEN` | unset (no header sent) | Bearer for the finals provider API and the tourney read gate (secret); added in [e23c97d] |
+| `TOURNEY_URL_NOTE` | – | Added in [77e80cf] (the "network only" suffix, empty for a public URL) and removed again in [12f2b03]; the two env examples still list it |
 | `TOURNEY_WATCHER_STATE_PATH`, `FINALS_CARD_STATE_PATH` | `data/tourney_watcher.json`, `data/finals_cards.json` | JSON state files |
 | `FINALS_REGISTRATION_MIN`, `FINALS_STARTED_MIN` | 15, 10 | Finals card windows (min) |
 | `TOKEN_EXPIRY_DAYS` | 7 | Registration token lifetime (admin tokens are hard-coded to 7 days) |
@@ -319,7 +335,7 @@ Other config files:
 | The signup site's LAN-display page | Its URL (`LAN_DISPLAY_URL`), used as the target for screen directives | The screen loads that page; the bot only builds URLs |
 | canccusignage | Control URL, control token, carousel token, an HMAC secret and instance id for admin links | Override rows keyed by `source`+`label`; the trigger settings live there |
 | canccumanager | URL, a bot→manager token, a manager→bot token, DM user ids, an alert channel | The ack and heartbeat endpoints were not yet live |
-| Mini-tourney (thefinals_mini_tourney) | Base URL on the internal network; no auth; SSE | Read only |
+| Mini-tourney (thefinals_mini_tourney) | Base URL on the internal network; no auth; SSE. Since [e23c97d]: the bearer on reads and SSE, and the finals provider API. The code default is unchanged; the live provider moved to a public HTTPS host ([canccuplatform inventory](canccuplatform.md#refresh-2026-11-20)) | Read only at the first read; since [e23c97d] it also signs people up, withdraws them and asks for page links |
 | Steam store web API | Outbound HTTPS; no key | Cover-image fallback |
 | Files and media | Downloads Discord image attachments (png, jpg, gif, webp) and re-uploads them to signage. Writes two JSON files and a log file locally. Sounds are named only (`bell`, `fanfare`, `alert`). | The bot keeps no media |
 | Devices | None directly: the venue screen is reached only through signage | – |
@@ -329,7 +345,7 @@ Other config files:
 - **Setup:** pytest with `asyncio_mode = auto` and `pythonpath = bot, tests`. CI (`.github/workflows/ci.yml`) runs `black --check`, `pytest tests/bot` on Python 3.10, and the Worker's vitest.
 - **Fixtures:** `tests/conftest.py` builds a fake config, a mock bot and an in-memory store.
 - **Live tests:** the integration tests need a live signage dev stack and are deselected unless asked for.
-- **Result:** run for this inventory: 496 passed, 5 skipped (the dev-URL guard tests without integration env), 8 deselected.
+- **Result:** run for this inventory: 496 passed, 5 skipped (the dev-URL guard tests without integration env), 8 deselected. At the refresh (`12f2b03d90`): 546 passed, 5 skipped, 8 deselected; the 50 new tests are the three rows marked below.
 
 | Test file | Tests | Covers |
 |---|---|---|
@@ -344,6 +360,8 @@ Other config files:
 | `tests/bot/test_display_control.py` | 4 | Directive and URL helpers |
 | `tests/bot/test_event_tracking.py` | 8 | Message counts, time series, game duration, last closed poll |
 | `tests/bot/test_finals_cards.py` | 9 | Finals card watcher (show, end, TTL, restart state) |
+| `tests/bot/test_finals_cog.py` (new, [e23c97d]) | 25 | `/finals` reply per season state and mode, Register and the name dialog, Withdraw and its confirm, error texts, the link button, the mention and URL guard |
+| `tests/bot/test_finals_provider.py` (new, [e23c97d]) | 22 | Provider client: paths, bearer, error codes, transport failure, nickname cleaning |
 | `tests/bot/test_formatters.py` | 6 | Poll and stats embeds |
 | `tests/bot/test_game_detection.py` | 15 | Game counting, banner episodes, cooldown, cover choice |
 | `tests/bot/test_game_play_duration.py` | 5 | Time-weighted play duration |
@@ -373,7 +391,7 @@ Other config files:
 | `tests/bot/test_tournament_dwell.py` | 5 | Dwell tracking and the roster |
 | `tests/bot/test_tournament_manager.py` | 39 | Tokens, reminders, T−15, scoring, cleanup, backstop, the poll loop |
 | `tests/bot/test_tournament_memory_store.py` | 20 | In-memory tournament backend |
-| `tests/bot/test_tourney_watcher.py` | 17 | Announcements, restart safety, test-channel routing, summary push |
+| `tests/bot/test_tourney_watcher.py` | 20 (17 at the first read) | Announcements, restart safety, test-channel routing, summary push; since [12f2b03] the `/finals` pointer and no URL; since [3403d75] the guard on posts |
 | `tests/bot/test_trigger_settings.py` | 15 | Trigger fetch, fallback, validation, precedence |
 | `tests/bot/test_validators.py` | 16 | Admin role, poll validation, durations, game names, links |
 | `tests/bot/test_voice_tracker.py` | 2 | Voice snapshot (occupied channels only) |
@@ -385,7 +403,7 @@ Support files without tests: `tests/conftest.py`, `tests/integration/__init__.py
 
 **Gaps that matter for the port:**
 - `bot/main.py` (start-up wiring, cog loading, guild sync, `on_message`) has **0 %** coverage.
-- The two polling cogs, `cogs/finals_cards.py` and `cogs/tourney_watcher.py` (including the SSE reconnect loop), have 0 %.
+- The two polling cogs, `cogs/finals_cards.py` and `cogs/tourney_watcher.py` (including the SSE reconnect loop), have 0 %. At the refresh `cogs/tourney_watcher.py` has 38 % (its post path is tested, the SSE loop still is not); the new `cogs/finals.py` has 93 %, and `services/finals_provider.py`, `utils/link_button.py` and `utils/tourney_guard.py` 100 %.
 - `presence_tracker.py` has 25 %, with no own test file. `voice_tracker.py` has 58 % and `ticker_rss_server.py` 51 %.
 - `cogs/ticker.py` has 44 %, and `cogs/polls.py` and `help_cog.py` 52 % each.
 - No test covers a restart (what is lost from memory), several guilds, or rights by role id.
@@ -424,6 +442,11 @@ From the code:
 14. The systemd unit runs the bot **as root**. The log file is not rotated by the app.
 15. Naive UTC datetimes (`datetime.utcnow()`) are used throughout.
 16. The mini-tourney test-channel routing is by **season name prefix** ("test").
+17. **One secret for two jobs** (since [e23c97d]): `FINALS_PROVIDER_TOKEN` both reads the tourney through its read gate and signs people up or withdraws them. When it is unset, no header is sent and a gated provider answers `401`, which `/finals` shows as "not reachable, try later".
+18. **Stale env examples** (since [12f2b03]): `.env.example` and `deployment/configs/environment.example` still describe `TOURNEY_URL_NOTE`, which the code no longer reads, with an organization-named default.
+19. **The watcher's site push still links the plain season page** (`TOURNEY_PUBLIC_URL/?season=<id>`, [12f2b03]), while the provider's pages now need a session from a `/finals` link: a reader without one sees only the sign-in note (see the [mini tourney's refresh](thefinals_mini_tourney.md#refresh-2026-11-20)).
+
+Fixed since the first read: the "event network only" wording in the season posts (5 above, the mini-tourney strings) is gone ([12f2b03]); tourney-derived messages could ping (`@everyone`, roles) or carry any link from a season or team name, and now cannot ([3403d75]).
 
 From the commit history (fixes and incidents, mostly in the October 2026 burst):
 - **Tournament:**
@@ -435,7 +458,7 @@ From the commit history (fixes and incidents, mostly in the October 2026 burst):
   - tournament times shown in UTC (fixed to the event timezone);
   - the site's admin-token endpoint returning 500 (a legacy context doc tracks it);
   - `my-registrations` missing event links.
-- **Finals:** the display-state envelope was not unwrapped, so finals cards never fired, and the card TTL was wrong (fixed to the time left in the window).
+- **Finals:** the display-state envelope was not unwrapped, so finals cards never fired, and the card TTL was wrong (fixed to the time left in the window). After the first read: `/finals` sent the account name instead of the server nickname as `discord_username` ([85840fd]); long URLs in replies and posts gave way to link buttons ([6f57e2a]), and the posts then dropped the button for a `/finals` pointer ([12f2b03]).
 - **Pizza:** links were built from the wrong base (fixed to use the `FRONTEND_URL` origin).
 - **Alerts and health:**
   - alert DMs lacked the Acknowledge button;
@@ -489,8 +512,10 @@ This follows the porting plan in the [roadmap](../roadmap.md#porting-plan) and [
 | Tournament VCs: create-once, dwell roster, cleanup, backstop, create-now (`tournament_manager.py`, `tournament_dwell.py`, `tournament_discord_channels.py`) | Port with changes | Porting plan "tournament pure parts"; the polling of site flags becomes the voice handshake through events (roadmap step 7); keep the three legacy ADR rules (polling not push, create-once, disconnect → delete → ack) as the spec | bot · 6, tournament · 7 |
 | Tournament screen pin T−15..T+10 | Rewrite | An event consumed by Moments and Screen | moments · 4, wired in 9 |
 | `TournamentMemoryStore` | Drop | Test double for the site API; the port tests against Postgres | – |
-| Mini-tourney watcher posts and finals summary (`tourney_watcher.py`) | Port with changes **(new)** | The Games module publishes season and champion events; the bot posts them; the restart-safe "announced ids" become rows | games (track), bot · 6 |
-| Finals cards (`finals_cards.py`) | Rewrite **(new)** | A Moments takeover driven by Games events | moments · 4, games (track) |
+| Mini-tourney watcher posts and finals summary (`tourney_watcher.py`) | Port with changes **(new)** | The Games module publishes season and champion events; the bot posts them; the restart-safe "announced ids" become rows. Since [12f2b03] the posts carry no link and point to `/finals`; [0025](../decisions/0025-finals-and-games-modules.md) makes the emitter the `finals` module | finals (track; games at the first read), bot · 6 |
+| `/finals`: link, Register, Withdraw (`cogs/finals.py`, `services/finals_provider.py`, `utils/link_button.py`; [e23c97d]) | Port with changes **(new at the refresh)** | One command against one provider contract and a base URL ([0025](../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../contracts/finals.md)): the standalone off-LAN app or the platform's `finals` module. Keep the one ephemeral reply, the buttons, the withdraw confirm and the nickname cleaning; the platform link is a sign-in link to the hub, not a signed token | bot · 6, finals (track) |
+| Mention and link guard (`utils/tourney_guard.py`; [3403d75]) | Port with changes **(new at the refresh)** | The rule, no pings and only own-host links in any message built from names people type, fits every bot post (tournament, finals, pizza), not just the tourney's | bot · 6 |
+| Finals cards (`finals_cards.py`) | Rewrite **(new)** | A Moments takeover driven by `finals` events ([0025](../decisions/0025-finals-and-games-modules.md); Games events at the first read) | moments · 4, finals (track) |
 | Roster nick backfill (`roster_nick_backfill.py`, `scripts/`) | Drop | A one-off repair | – |
 | Site API client (`api_client.py`) | Drop as a client | Each call becomes a contract endpoint or a bus event of the owning module | – |
 | Validators and formatters (`utils/`) | Port as-is (the surviving parts) | Porting plan; the poll validators and poll embeds go with polls, and `has_admin_role` is replaced | bot · 6 |
@@ -510,7 +535,7 @@ What this repo implies for the tenancy design (#48), as questions for the produc
 5. **Venue or event:**
    - the hot-game, poll and finals trigger settings (legacy: "venue-editable" on signage);
    - the timezone;
-   - the "venue network only" link hint.
+   - the "venue network only" link hint (gone from the posts since [12f2b03]: the tourney is public now).
 
    Do these become venue attributes, or tenant settings with venue defaults?
 6. **Global data:** the Steam cover cache, and the Discord user identity (users are global, 0013 item 30). The activity snapshots, message counts and tournament data are per tenant.
@@ -531,7 +556,7 @@ Counted by kind only. The exact non-secret values are kept off GitHub, in the lo
 | Real Discord ids | 1 channel id | A planning doc (the others are placeholders) |
 | Discord channel names | 2 | A cog docstring and a planning doc |
 | Event edition title and slogan | 1 | The RSS filler item title |
-| "Event network only" wording | 2 strings | Mini-tourney announcement posts |
+| "Event network only" wording | 2 strings at the first read; 0 in code at the refresh ([12f2b03]), 2 commented example lines in the env examples ([77e80cf]) | Mini-tourney announcement posts; env examples |
 | Event name as a subsystem choice | 1 | `/platform status` choices |
 | Event schedule | 1 file, 10 `/tournament add` lines (game names and dates) | `docs/` |
 | Event timezone (IANA name) | 33 lines in 16 files | Config default, 6 runtime fallbacks in 3 bot source files, docstrings, tests, docs |
@@ -547,6 +572,8 @@ Every tracked file (175 files, 30,580 lines) was examined:
 - the unit test suite was run, with coverage.
 
 Nothing was skipped. `worker/package-lock.json` (2,794 lines) was checked only as a dependency lock, and the two `.gitkeep` files and the two migrations are empty. Line counts include blank lines.
+
+**The refresh (2026-11-20)** read the 7 commits after `3e7030fbbe` in full: 17 files changed, 1,084 lines added and 24 removed. New files: `bot/cogs/finals.py` (254 lines), `bot/services/finals_provider.py` (118), `bot/utils/link_button.py` (23), `bot/utils/tourney_guard.py` (30), `docs/ai/areas/finals-commands.md` (19), `tests/bot/test_finals_cog.py` (331), `tests/bot/test_finals_provider.py` (180). The suite was run again with coverage. The table below is the first read's; at `12f2b03d90` the repo has 182 tracked files and 31,640 lines.
 
 | Directory | Files | Lines | Content |
 |---|---|---|---|
@@ -582,3 +609,11 @@ Nothing was skipped. `worker/package-lock.json` (2,794 lines) was checked only a
 | `worker/migrations` | 2 | 2 | Empty schema and index files |
 | `worker/src` | 4 | 43 | Health route only; auth and db files are empty stubs |
 | **Total** | **175** | **30,580** | |
+
+[e23c97d]: https://github.com/glyzer/canccubot/commit/e23c97d
+[77e80cf]: https://github.com/glyzer/canccubot/commit/77e80cf
+[6f57e2a]: https://github.com/glyzer/canccubot/commit/6f57e2a
+[85840fd]: https://github.com/glyzer/canccubot/commit/85840fd
+[e030370]: https://github.com/glyzer/canccubot/commit/e030370
+[3403d75]: https://github.com/glyzer/canccubot/commit/3403d75
+[12f2b03]: https://github.com/glyzer/canccubot/commit/12f2b03
