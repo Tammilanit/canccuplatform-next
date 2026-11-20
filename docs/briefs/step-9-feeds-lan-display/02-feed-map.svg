@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, &#x27;Segoe UI&#x27;, Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 9 mockup 02: the feed map</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="1000" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">02 · The feed map: which module feeds which box, and who builds each part</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Solid arrows are events on the bus (counts and public data); dashed arrows are module reads (names, history, catch-up). Colours say where each part stands.</text>
+<text x="32" y="108" font-size="18" fill="#374151" font-weight="600" text-anchor="start">Use case: the session sees the whole step at once; the planner sees the dependencies (P5, O6).</text>
+<rect x="40" y="160" width="560" height="106" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="160" width="8" height="106" rx="2" fill="#3ee39a"/>
+<text x="68" y="194" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Pizza</text>
+<text x="584" y="194" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">step 5</text>
+<text x="68" y="224" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">pizza.order.*, pizza.item.*</text>
+<text x="68" y="250" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">Screen&#x27;s food box: step 5&#x27;s plan</text>
+<rect x="40" y="288" width="560" height="132" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="288" width="8" height="132" rx="2" fill="#ffc94d"/>
+<text x="68" y="322" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Bot</text>
+<text x="584" y="322" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">step 6</text>
+<text x="68" y="352" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">bot.presence.counted (+ voice_rooms, D3)</text>
+<text x="68" y="378" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">read: who plays what (D2)</text>
+<text x="68" y="404" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">read: history series, top games (D4–D7)</text>
+<rect x="40" y="442" width="560" height="132" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="442" width="8" height="132" rx="2" fill="#ffc94d"/>
+<text x="68" y="476" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Tournament</text>
+<text x="584" y="476" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">step 7</text>
+<text x="68" y="506" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">tournament.session.*, .match.*</text>
+<text x="68" y="532" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">tournament.leaderboard.changed</text>
+<text x="68" y="558" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">read: catch-up after a restart (D8)</text>
+<rect x="40" y="596" width="560" height="80" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="596" width="8" height="80" rx="2" fill="#9ca3af"/>
+<text x="68" y="630" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Games</text>
+<text x="584" y="630" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">Games track</text>
+<text x="68" y="660" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">games.surge.*, games.game.* (covers)</text>
+<rect x="40" y="698" width="560" height="80" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="698" width="8" height="80" rx="2" fill="#9ca3af"/>
+<text x="68" y="732" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Finals</text>
+<text x="584" y="732" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">Finals track</text>
+<text x="68" y="762" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">finals.* (not in the catalog yet, D12)</text>
+<rect x="40" y="800" width="560" height="80" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="40" y="800" width="8" height="80" rx="2" fill="#3ee39a"/>
+<text x="68" y="834" font-size="21" fill="#111827" font-weight="700" text-anchor="start">Agenda, Notify, photos, ticker</text>
+<text x="584" y="834" font-size="16" fill="#6b7280" font-weight="600" text-anchor="end">step 3</text>
+<text x="68" y="864" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">built and live</text>
+<rect x="760" y="300" width="420" height="260" rx="14" fill="#ffffff" stroke="#111827" stroke-width="2"/>
+<text x="970" y="345" font-size="26" fill="#111827" font-weight="700" text-anchor="middle">Screen</text>
+<text x="790" y="385" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Composed state per zone: view-models,</text>
+<text x="790" y="408" font-size="16" fill="#374151" font-weight="400" text-anchor="start">trend arrows, peaks, chips. Counts kept 24</text>
+<text x="790" y="431" font-size="16" fill="#374151" font-weight="400" text-anchor="start">h in Valkey; names never stored.</text>
+<rect x="760" y="620" width="420" height="200" rx="14" fill="#ffffff" stroke="#111827" stroke-width="2"/>
+<text x="970" y="665" font-size="26" fill="#111827" font-weight="700" text-anchor="middle">Moments</text>
+<text x="790" y="705" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Rules and stories: match called, standings,</text>
+<text x="790" y="728" font-size="16" fill="#374151" font-weight="400" text-anchor="start">hot game, record crowd; the new</text>
+<text x="790" y="751" font-size="16" fill="#374151" font-weight="400" text-anchor="start">milestones (U8, D14).</text>
+<line x1="600" y1="213" x2="756" y2="430" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="600" y1="354" x2="756" y2="430" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+<line x1="600" y1="508" x2="756" y2="430" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+<line x1="600" y1="636" x2="756" y2="430" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="600" y1="738" x2="756" y2="700" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="600" y1="840" x2="756" y2="430" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="970" y1="616" x2="970" y2="564" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<text x="985" y="594" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">claims (Moments reads the same events)</text>
+<text x="1280" y="160" font-size="22" fill="#111827" font-weight="700" text-anchor="start">Widgets and pages</text>
+<rect x="1280" y="190" width="600" height="1" rx="0" fill="#d1d5db"/>
+<rect x="1280" y="208" width="16" height="16" rx="4" fill="#3ee39a"/>
+<text x="1306" y="222" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Live since step 3</text>
+<text x="1306" y="250" font-size="16" fill="#374151" font-weight="400" text-anchor="start">clock, agenda_now, countdown, checkin_qr, venue_info, photo,</text>
+<text x="1306" y="273" font-size="16" fill="#374151" font-weight="400" text-anchor="start">announcement, ticker, playlist</text>
+<rect x="1280" y="310" width="600" height="1" rx="0" fill="#d1d5db"/>
+<rect x="1280" y="328" width="16" height="16" rx="4" fill="#3ee39a"/>
+<text x="1306" y="342" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Fed by step 5</text>
+<text x="1306" y="370" font-size="16" fill="#374151" font-weight="400" text-anchor="start">food_status (several orders)</text>
+<rect x="1280" y="407" width="600" height="1" rx="0" fill="#d1d5db"/>
+<rect x="1280" y="425" width="16" height="16" rx="4" fill="#ffc94d"/>
+<text x="1306" y="439" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Step 9 wires the feed</text>
+<text x="1306" y="467" font-size="16" fill="#374151" font-weight="400" text-anchor="start">stats, activity_graph, today_numbers (bot counts); now_playing</text>
+<text x="1306" y="490" font-size="16" fill="#374151" font-weight="400" text-anchor="start">(names opt-in); hot_game and card art (covers); bracket, leaderboard,</text>
+<text x="1306" y="513" font-size="16" fill="#374151" font-weight="400" text-anchor="start">countdown&#x27;s game and teams_left; checkin_qr for a session</text>
+<rect x="1280" y="550" width="600" height="1" rx="0" fill="#d1d5db"/>
+<rect x="1280" y="568" width="16" height="16" rx="4" fill="#3ddcff"/>
+<text x="1306" y="582" font-size="18" fill="#111827" font-weight="700" text-anchor="start">New in step 9</text>
+<text x="1306" y="610" font-size="16" fill="#374151" font-weight="400" text-anchor="start">top_games, voice_rooms (its view-model), tournament_progress, the</text>
+<text x="1306" y="633" font-size="16" fill="#374151" font-weight="400" text-anchor="start">HOT, VOICE and SPIKE chips, milestones; the LAN board layout; Live</text>
+<text x="1306" y="656" font-size="16" fill="#374151" font-weight="400" text-anchor="start">data in Screen studio</text>
+<rect x="1280" y="693" width="600" height="1" rx="0" fill="#d1d5db"/>
+<rect x="1280" y="711" width="16" height="16" rx="4" fill="#9ca3af"/>
+<text x="1306" y="725" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Waits for the Finals track</text>
+<text x="1306" y="753" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the finals cards (season open, started, champion)</text>
+<line x1="1180" y1="430" x2="1276" y2="260" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="1180" y1="430" x2="1276" y2="420" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="1180" y1="430" x2="1276" y2="580" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="40" y1="950" x2="110" y2="950" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)"/>
+<text x="124" y="956" font-size="16" fill="#374151" font-weight="400" text-anchor="start">event on the bus</text>
+<line x1="320" y1="950" x2="390" y2="950" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah)"/>
+<text x="404" y="956" font-size="16" fill="#374151" font-weight="400" text-anchor="start">module read</text>
+<rect x="600" y="940" width="16" height="16" rx="4" fill="#3ee39a"/>
+<text x="626" y="954" font-size="16" fill="#374151" font-weight="400" text-anchor="start">built or planned elsewhere</text>
+<rect x="900" y="940" width="16" height="16" rx="4" fill="#ffc94d"/>
+<text x="926" y="954" font-size="16" fill="#374151" font-weight="400" text-anchor="start">step 9 builds the consumer</text>
+<rect x="1200" y="940" width="16" height="16" rx="4" fill="#3ddcff"/>
+<text x="1226" y="954" font-size="16" fill="#374151" font-weight="400" text-anchor="start">new in step 9</text>
+<rect x="1500" y="940" width="16" height="16" rx="4" fill="#9ca3af"/>
+<text x="1526" y="954" font-size="16" fill="#374151" font-weight="400" text-anchor="start">waits for another track</text>
+</svg>

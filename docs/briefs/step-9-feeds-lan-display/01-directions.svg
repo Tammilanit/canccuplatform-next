@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 920" width="1920" height="920" font-family="system-ui, -apple-system, &#x27;Segoe UI&#x27;, Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 9 mockup 01: three directions</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="c1"><rect x="32" y="140" width="600" height="337.5" rx="6"/></clipPath><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><clipPath id="c3"><rect x="40" y="140" width="1210" height="780" rx="24"/></clipPath><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#7a2a55"/></linearGradient><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a00"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient><clipPath id="c7"><rect x="660" y="140" width="600" height="337.5" rx="6"/></clipPath><clipPath id="c8"><rect x="1288" y="140" width="600" height="337.5" rx="6"/></clipPath><linearGradient id="g9" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><clipPath id="c10"><rect x="40" y="140" width="1210" height="780" rx="24"/></clipPath><linearGradient id="g11" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#7a2a55"/></linearGradient><linearGradient id="g12" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#7a2a55"/></linearGradient><clipPath id="c13"><rect x="1274" y="680" width="606" height="240" rx="20"/></clipPath><linearGradient id="g14" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient></defs>
+<rect x="0" y="0" width="1920" height="920" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">01 · Three directions for live data on the screens</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">The same moment in each: Saturday 19:52, heat 2 of the Demo Cup is about to start and one game is surging.</text>
+<text x="32" y="108" font-size="18" fill="#374151" font-weight="600" text-anchor="start">Use case: the brainstorming session picks a direction (P1).</text>
+<g clip-path="url(#c1)">
+<g transform="translate(32,140) scale(0.3125)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="40" y="32" width="1840" height="84" rx="16" fill="#161a2e"/>
+<rect x="64" y="48" width="52" height="52" rx="12" fill="url(#g2)"/>
+<text x="136" y="90" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1848" y="92" font-size="48" fill="#f3f5ff" font-weight="700" text-anchor="end">19:52</text>
+<g transform="translate(0,0)" clip-path="url(#c3)">
+<rect x="40" y="140" width="1210" height="780" rx="0" fill="url(#g4)"/>
+<rect x="40" y="140" width="1210" height="780" rx="0" fill="url(#g5)"/>
+<rect x="40" y="467.6" width="1210" height="452.4" rx="0" fill="#0b0d1a" opacity="0.78"/>
+</g>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="96" y="230" font-size="40" fill="#3ddcff" font-weight="700" text-anchor="start">DEMO CUP · NEXT</text>
+<text x="96" y="670" font-size="88" fill="#f3f5ff" font-weight="800" text-anchor="start">Heat 2 · Demo Racer</text>
+<text x="96" y="740" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">16 players · 4 heats</text>
+<text x="96" y="856" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start">08:12</text>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="200" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="1310" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">231</text>
+<path d="M1484.8576,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1310" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="1577" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">64</text>
+<rect x="1698.24" y="270" width="36" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1577" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="470" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Now playing</text>
+<path d="M1810,564.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="562" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">18</text>
+<text x="1310" y="562" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="1577.79" y="525" width="118.388" height="53" rx="26.5" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="1595.79" y="564" font-size="33" fill="#ffc94d" font-weight="700" text-anchor="start">HOT</text>
+<rect x="1810" y="602.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="614" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">11</text>
+<rect x="1310" y="580" width="92" height="34" rx="8" fill="url(#g6)"/>
+<text x="1422" y="614" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="740" font-size="34" fill="#3ddcff" font-weight="800" text-anchor="start">FOOD</text>
+<text x="1310" y="804" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Trattoria</text>
+<text x="1310" y="854" font-size="36" fill="#3ee39a" font-weight="600" text-anchor="start">On the way · about 20:15</text>
+<rect x="40" y="948" width="1840" height="96" rx="16" fill="#161a2e"/>
+<rect x="64" y="977" width="110.488" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="82" y="1016" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">Info</text>
+<text x="198.488" y="1011" font-size="45" fill="#f3f5ff" font-weight="500" text-anchor="start">Breakfast from 09:00 in the café</text>
+</g>
+</g>
+<rect x="32" y="140" width="600" height="337.5" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="32" y="527.5" font-size="24" fill="#111827" font-weight="700" text-anchor="start">A · Plug in the feeds</text>
+<text x="632" y="527.5" font-size="20" fill="#6b7280" font-weight="600" text-anchor="end">Cost: S–M</text>
+<text x="32" y="563.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Attendees</text>
+<text x="32" y="587.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">the boxes they know fill with live numbers: Right now, now playing,</text>
+<text x="32" y="611.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">standings, food.</text>
+<text x="32" y="645.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Organisers</text>
+<text x="32" y="669.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">nothing to set up; an empty box just stays empty, and nobody says</text>
+<text x="32" y="693.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">why.</text>
+<text x="32" y="727.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Venue staff</text>
+<text x="32" y="751.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">nothing changes.</text>
+<text x="32" y="785.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Trade-offs</text>
+<text x="32" y="809.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">cheapest; leaves out the legacy LAN display&#x27;s best views (top</text>
+<text x="32" y="833.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">games, voice rooms, trends, alive chips) and the design catalogue&#x27;s</text>
+<text x="32" y="857.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">new widgets.</text>
+<g clip-path="url(#c7)">
+<g transform="translate(660,140) scale(0.3125)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#05060a"/>
+<rect x="0" y="0" width="1920" height="110" rx="0" fill="#14161f"/>
+<text x="48" y="76" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start">ARENA · DEMO EVENT</text>
+<text x="1872" y="76" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">PLAYING 58</text>
+<text x="1533.98" y="76" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">VOICE 64</text>
+<text x="1262.54" y="76" font-size="40" fill="#3ddcff" font-weight="700" text-anchor="end">ONLINE 231</text>
+<rect x="40" y="150" width="1100" height="720" rx="0" fill="#10121a" stroke="#2a2d3a" stroke-width="3"/>
+<text x="80" y="220" font-size="40" fill="#ffc94d" font-weight="800" text-anchor="start">DEMO CUP · STANDINGS</text>
+<rect x="80" y="240" width="1020" height="96" rx="0" fill="#1d2030"/>
+<text x="110" y="310" font-size="56" fill="#a9b1d6" font-weight="800" text-anchor="start">1</text>
+<text x="200" y="310" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="start">Player Two</text>
+<text x="1070" y="310" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="end">21</text>
+<rect x="80" y="350" width="1020" height="96" rx="0" fill="#171a26"/>
+<text x="110" y="420" font-size="56" fill="#a9b1d6" font-weight="800" text-anchor="start">2</text>
+<text x="200" y="420" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Player</text>
+<text x="1070" y="420" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="end">19</text>
+<rect x="80" y="460" width="1020" height="96" rx="0" fill="#1d2030"/>
+<text x="110" y="530" font-size="56" fill="#a9b1d6" font-weight="800" text-anchor="start">3</text>
+<text x="200" y="530" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="start">Player Five</text>
+<text x="1070" y="530" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="end">14</text>
+<rect x="80" y="570" width="1020" height="96" rx="0" fill="#171a26"/>
+<text x="110" y="640" font-size="56" fill="#a9b1d6" font-weight="800" text-anchor="start">4</text>
+<text x="200" y="640" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="start">Player Six</text>
+<text x="1070" y="640" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="end">12</text>
+<rect x="80" y="680" width="1020" height="96" rx="0" fill="#1d2030"/>
+<text x="110" y="750" font-size="56" fill="#a9b1d6" font-weight="800" text-anchor="start">5</text>
+<text x="200" y="750" font-size="56" fill="#f3f5ff" font-weight="700" text-anchor="start">Player Seven</text>
+<text x="1070" y="750" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="end">9</text>
+<rect x="1180" y="150" width="700" height="340" rx="0" fill="#10121a" stroke="#2a2d3a" stroke-width="3"/>
+<text x="1220" y="220" font-size="40" fill="#ffc94d" font-weight="800" text-anchor="start">TOP GAMES 96 H</text>
+<text x="1220" y="300" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Racer</text>
+<text x="1850" y="300" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">41 h</text>
+<text x="1220" y="366" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Block Builders</text>
+<text x="1850" y="366" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">33 h</text>
+<text x="1220" y="432" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Space Duel</text>
+<text x="1850" y="432" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">19 h</text>
+<rect x="1180" y="530" width="700" height="340" rx="0" fill="#10121a" stroke="#2a2d3a" stroke-width="3"/>
+<text x="1220" y="600" font-size="40" fill="#ffc94d" font-weight="800" text-anchor="start">VOICE</text>
+<text x="1220" y="680" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Squad 2</text>
+<text x="1850" y="680" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="1220" y="746" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Lounge</text>
+<text x="1850" y="746" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="1220" y="812" font-size="44" fill="#f3f5ff" font-weight="600" text-anchor="start">Racing</text>
+<text x="1850" y="812" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">6</text>
+<rect x="0" y="920" width="1920" height="160" rx="0" fill="#c8102e"/>
+<text x="48" y="1020" font-size="56" fill="#ffffff" font-weight="800" text-anchor="start">LIVE · Heat 2 · Demo Racer · starts in 08:12</text>
+</g>
+</g>
+<rect x="660" y="140" width="600" height="337.5" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="660" y="527.5" font-size="24" fill="#111827" font-weight="700" text-anchor="start">B · The arena board</text>
+<text x="1260" y="527.5" font-size="20" fill="#6b7280" font-weight="600" text-anchor="end">Cost: L</text>
+<text x="660" y="563.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Attendees</text>
+<text x="660" y="587.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">a separate broadcast-style page, dense with numbers and standings</text>
+<text x="660" y="611.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">and a live lower third: the legacy LAN display rebuilt view by view.</text>
+<text x="660" y="645.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Organisers</text>
+<text x="660" y="669.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">a second product beside Pulse: its own views, settings and look.</text>
+<text x="660" y="703.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Venue staff</text>
+<text x="660" y="727.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">a link to open on any TV.</text>
+<text x="660" y="761.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Trade-offs</text>
+<text x="660" y="785.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">closest to the legacy, but a second renderer outside layouts and</text>
+<text x="660" y="809.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">themes, which the design and 0010 (no embedded pages) rule out;</text>
+<text x="660" y="833.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">twice the tests.</text>
+<g clip-path="url(#c8)">
+<g transform="translate(1288,140) scale(0.3125)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="40" y="32" width="1840" height="84" rx="16" fill="#161a2e"/>
+<rect x="64" y="48" width="52" height="52" rx="12" fill="url(#g9)"/>
+<text x="136" y="90" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1848" y="92" font-size="48" fill="#f3f5ff" font-weight="700" text-anchor="end">19:52</text>
+<g transform="translate(0,0)" clip-path="url(#c10)">
+<rect x="40" y="140" width="1210" height="780" rx="0" fill="url(#g11)"/>
+<rect x="40" y="413" width="1210" height="507" rx="0" fill="#0b0d1a" opacity="0.7"/>
+</g>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="none" stroke="#ffc94d" stroke-width="8"/>
+<rect x="96" y="194" width="427.704" height="60" rx="30" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="114" y="240" font-size="40" fill="#ffc94d" font-weight="700" text-anchor="start">HOT RIGHT NOW</text>
+<text x="96" y="690" font-size="110" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Racer</text>
+<text x="96" y="780" font-size="52" fill="#f3f5ff" font-weight="600" text-anchor="start">18 playing ▲ · since 19:31</text>
+<text x="96" y="856" font-size="40" fill="#a9b1d6" font-weight="500" text-anchor="start">Follow it in the hub</text>
+<rect x="1034" y="704" width="170" height="170" rx="8" fill="#f3f5ff"/>
+<rect x="1042" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1144.67" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1178.89" y="712" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1144.67" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1178.89" y="729.111" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1144.67" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1178.89" y="746.222" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1110.44" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1127.56" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="763.333" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="780.444" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1144.67" y="780.444" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="780.444" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="797.556" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="797.556" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1178.89" y="797.556" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="814.667" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="814.667" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="814.667" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="814.667" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1127.56" y="814.667" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1127.56" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1144.67" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1161.78" y="831.778" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1042" y="848.889" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1059.11" y="848.889" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1076.22" y="848.889" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1093.33" y="848.889" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1110.44" y="848.889" width="17.1111" height="17.1111" rx="0" fill="#0b0d1a"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="none" stroke="#3ddcff" stroke-width="6"/>
+<text x="1310" y="200" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="1310" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">231</text>
+<path d="M1484.8576,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1310" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="1577" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">64</text>
+<rect x="1698.24" y="270" width="36" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1577" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="470" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Voice rooms</text>
+<path d="M1810,564.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="562" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="1310" y="562" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 2</text>
+<rect x="1494.16" y="525" width="160.146" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="1512.16" y="564" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">VOICE</text>
+<rect x="1810" y="602.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="614" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="1310" y="614" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Lounge</text>
+<g transform="translate(0,0)" clip-path="url(#c13)">
+<rect x="1274" y="680" width="606" height="240" rx="0" fill="url(#g12)"/>
+<rect x="1274" y="680" width="606" height="240" rx="0" fill="#161a2e" opacity="0.72"/>
+</g>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="740" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Top games</text>
+<text x="1844" y="832" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">41 h</text>
+<text x="1310" y="832" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="1577.79" y="795" width="87.1632" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="1595.79" y="834" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">▲2</text>
+<text x="1844" y="884" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">33 h</text>
+<rect x="1310" y="850" width="92" height="34" rx="8" fill="url(#g14)"/>
+<text x="1422" y="884" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<rect x="40" y="948" width="1840" height="96" rx="16" fill="#161a2e"/>
+<rect x="64" y="977" width="110.488" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="82" y="1016" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">Info</text>
+<text x="198.488" y="1011" font-size="45" fill="#f3f5ff" font-weight="500" text-anchor="start">Breakfast from 09:00 in the café</text>
+</g>
+</g>
+<rect x="1288" y="140" width="600" height="337.5" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="1288" y="527.5" font-size="24" fill="#111827" font-weight="700" text-anchor="start">C · The living venue</text>
+<text x="1888" y="527.5" font-size="20" fill="#6b7280" font-weight="600" text-anchor="end">Cost: M–L</text>
+<rect x="1588" y="503.5" width="140" height="30" rx="15" fill="#111827"/>
+<text x="1658" y="524.5" font-size="15" fill="#ffffff" font-weight="700" text-anchor="middle">Recommended</text>
+<text x="1288" y="563.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Attendees</text>
+<text x="1288" y="587.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">every box live within a second; the new data widgets (top games,</text>
+<text x="1288" y="611.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">voice rooms, the day&#x27;s graph, milestones) and the LAN board for the</text>
+<text x="1288" y="635.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">night and the café TV.</text>
+<text x="1288" y="669.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Organisers</text>
+<text x="1288" y="693.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">a Live data page that says what each feed does and why a box is</text>
+<text x="1288" y="717.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">empty; widget settings with sample data.</text>
+<text x="1288" y="751.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Venue staff</text>
+<text x="1288" y="775.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">the LAN board on the lobby or café TV, paired like any screen.</text>
+<text x="1288" y="809.5" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Trade-offs</text>
+<text x="1288" y="833.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">more widgets and one history read; still one renderer, one look, one</text>
+<text x="1288" y="857.5" font-size="17" fill="#374151" font-weight="400" text-anchor="start">set of rules.</text>
+</svg>

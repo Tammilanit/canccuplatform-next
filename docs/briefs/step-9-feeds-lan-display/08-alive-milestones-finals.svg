@@ -1,0 +1,406 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1360" width="1920" height="1360" font-family="system-ui, -apple-system, &#x27;Segoe UI&#x27;, Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 9 mockup 08: alive chips, milestones and the finals cards</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><clipPath id="c1"><rect x="32" y="180" width="436.8" height="296.8" rx="6"/></clipPath><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a8cff"/><stop offset="1" stop-color="#2a1d5c"/></linearGradient><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d8f"/><stop offset="1" stop-color="#4a1d3a"/></linearGradient><clipPath id="c5"><rect x="502" y="180" width="436.8" height="296.8" rx="6"/></clipPath><clipPath id="c6"><rect x="972" y="180" width="436.8" height="296.8" rx="6"/></clipPath><clipPath id="c7"><rect x="32" y="656" width="556.8" height="313.2" rx="6"/></clipPath><linearGradient id="g8" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><clipPath id="c9"><rect x="40" y="140" width="1210" height="780" rx="24"/></clipPath><linearGradient id="g10" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a8cff"/><stop offset="1" stop-color="#2a1d5c"/></linearGradient><linearGradient id="g11" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a00"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient><linearGradient id="g12" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient><clipPath id="c13"><rect x="637" y="656" width="556.8" height="313.2" rx="6"/></clipPath><linearGradient id="g14" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="r15" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffc94d" stop-opacity="0.22"/><stop offset="1" stop-color="#ffc94d" stop-opacity="0"/></radialGradient><linearGradient id="g16" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient><clipPath id="c17"><rect x="1242" y="656" width="556.8" height="313.2" rx="6"/></clipPath><linearGradient id="g18" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="r19" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffc94d" stop-opacity="0.22"/><stop offset="1" stop-color="#ffc94d" stop-opacity="0"/></radialGradient><linearGradient id="g20" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3dd68c"/><stop offset="1" stop-color="#1d4d7a"/></linearGradient><clipPath id="c21"><rect x="32" y="1095" width="450" height="244.8" rx="6"/></clipPath><radialGradient id="r22" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.25"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><clipPath id="c23"><rect x="502" y="1095" width="450" height="244.8" rx="6"/></clipPath><radialGradient id="r24" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.25"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><clipPath id="c25"><rect x="972" y="1095" width="450" height="244.8" rx="6"/></clipPath><radialGradient id="r26" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.25"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient></defs>
+<rect x="0" y="0" width="1920" height="1360" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">08 · Alive chips, milestones and the finals cards</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">The legacy alive chrome becomes chips on the boxes they describe; milestones follow the energy levels (amendment 1); the finals cards are drawn for the Finals track.</text>
+<text x="32" y="108" font-size="18" fill="#374151" font-weight="600" text-anchor="start">Use case: attendees notice what is happening right now without reading numbers.</text>
+<text x="32" y="160" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Chips: on the box they describe, thresholds from the legacy (O7)</text>
+<g clip-path="url(#c1)">
+<g transform="translate(32,180) scale(0.7)">
+<rect x="0" y="0" width="624" height="424" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="#161a2e"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="56" y="80" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Now playing</text>
+<path d="M534,179.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="516" y="177" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">18</text>
+<text x="56" y="177" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="298.413" y="140" width="118.388" height="53" rx="26.5" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="316.413" y="179" font-size="33" fill="#ffc94d" font-weight="700" text-anchor="start">HOT</text>
+<rect x="534" y="227.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="516" y="239" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">11</text>
+<rect x="56" y="200" width="92" height="44" rx="8" fill="url(#g2)"/>
+<text x="168" y="239" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<path d="M534,279.2 l15.3,23.799999999999997 l15.3,-23.799999999999997 z" fill="#ff6b7d"/>
+<text x="516" y="301" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<rect x="56" y="262" width="92" height="44" rx="8" fill="url(#g3)"/>
+<text x="168" y="301" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Space Duel</text>
+<rect x="534" y="351.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="516" y="363" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">5</text>
+<rect x="56" y="324" width="92" height="44" rx="8" fill="url(#g4)"/>
+<text x="168" y="363" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Pixel Arena</text>
+</g>
+</g>
+<rect x="32" y="180" width="436.8" height="296.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<text x="32" y="506.8" font-size="16" fill="#374151" font-weight="400" text-anchor="start">HOT: a game with 4 or more players now; the hero</text>
+<text x="32" y="528.8" font-size="16" fill="#374151" font-weight="400" text-anchor="start">may showcase it (Games&#x27; surge)</text>
+<g clip-path="url(#c5)">
+<g transform="translate(502,180) scale(0.7)">
+<rect x="0" y="0" width="624" height="424" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="#161a2e"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="56" y="80" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Voice rooms</text>
+<path d="M534,179.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="516" y="177" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="56" y="177" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 2</text>
+<rect x="240.156" y="140" width="160.146" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="258.156" y="179" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">VOICE</text>
+<rect x="534" y="227.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="516" y="239" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="56" y="239" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Lounge</text>
+<path d="M534,303.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="516" y="301" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">6</text>
+<text x="56" y="301" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Racing</text>
+<path d="M534,341.2 l15.3,23.799999999999997 l15.3,-23.799999999999997 z" fill="#ff6b7d"/>
+<text x="516" y="363" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">4</text>
+<text x="56" y="363" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 1</text>
+</g>
+</g>
+<rect x="502" y="180" width="436.8" height="296.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<text x="502" y="506.8" font-size="16" fill="#374151" font-weight="400" text-anchor="start">VOICE: a public room with 5 or more people</text>
+<g clip-path="url(#c6)">
+<g transform="translate(972,180) scale(0.7)">
+<rect x="0" y="0" width="624" height="424" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="#161a2e"/>
+<rect x="20" y="20" width="584" height="384" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="56" y="80" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="56" y="190" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">243</text>
+<path d="M230.8576,186 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="56" y="236" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="312" y="190" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">66</text>
+<rect x="433.238" y="170" width="36" height="6" rx="3" fill="#a9b1d6"/>
+<text x="312" y="236" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<text x="56" y="374" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">peak 248 · 18:40</text>
+<rect x="320.576" y="43" width="247.424" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ee39a" stroke-width="3"/>
+<text x="338.576" y="82" font-size="33" fill="#3ee39a" font-weight="700" text-anchor="start">SPIKE +12</text>
+</g>
+</g>
+<rect x="972" y="180" width="436.8" height="296.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<text x="972" y="506.8" font-size="16" fill="#374151" font-weight="400" text-anchor="start">SPIKE: 5 or more came online in 10 minutes; never on</text>
+<text x="972" y="528.8" font-size="16" fill="#374151" font-weight="400" text-anchor="start">a reconnect (E14)</text>
+<circle cx="1455" cy="195" r="15" fill="#111827"/>
+<text x="1455" y="201" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">1</text>
+<text x="1480" y="200" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">A chip holds at least 60 s and fades out, like the</text>
+<text x="1480" y="222.4" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">arrows; at most one chip a box.</text>
+<circle cx="1455" cy="249.8" r="15" fill="#111827"/>
+<text x="1455" y="255.8" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">2</text>
+<text x="1480" y="254.8" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">Chips are words, never colour alone: HOT, VOICE,</text>
+<text x="1480" y="277.2" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">SPIKE (and the theme&#x27;s colours back them).</text>
+<circle cx="1455" cy="304.6" r="15" fill="#111827"/>
+<text x="1455" y="310.6" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">3</text>
+<text x="1480" y="309.6" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">Off at the none level; each chip can be switched</text>
+<text x="1480" y="332" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">off per event.</text>
+<text x="32" y="600" font-size="20" fill="#111827" font-weight="700" text-anchor="start">A milestone at each energy level: 250 online, a new peak (Record crowd, U8, L7)</text>
+<text x="32" y="640" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Calm</text>
+<g clip-path="url(#c7)">
+<g transform="translate(32,656) scale(0.29)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="40" y="32" width="1840" height="84" rx="16" fill="#161a2e"/>
+<rect x="64" y="48" width="52" height="52" rx="12" fill="url(#g8)"/>
+<text x="136" y="90" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1848" y="92" font-size="48" fill="#f3f5ff" font-weight="700" text-anchor="end">21:04</text>
+<g transform="translate(0,0)" clip-path="url(#c9)">
+<rect x="40" y="140" width="1210" height="780" rx="0" fill="url(#g10)"/>
+<rect x="40" y="140" width="1210" height="780" rx="0" fill="url(#g11)"/>
+<rect x="40" y="467.6" width="1210" height="452.4" rx="0" fill="#0b0d1a" opacity="0.78"/>
+</g>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="96" y="230" font-size="40" fill="#3ddcff" font-weight="700" text-anchor="start">DEMO CUP · NEXT</text>
+<text x="96" y="670" font-size="88" fill="#f3f5ff" font-weight="800" text-anchor="start">Final · Space Duel</text>
+<text x="96" y="740" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">16 players</text>
+<text x="96" y="856" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start">starts in 6:00</text>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="200" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="1310" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">250</text>
+<path d="M1484.8576,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1310" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="1577" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">71</text>
+<path d="M1698.2384,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1577" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="470" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Now playing</text>
+<path d="M1810,564.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="562" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">18</text>
+<text x="1310" y="562" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="1577.79" y="525" width="118.388" height="53" rx="26.5" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="1595.79" y="564" font-size="33" fill="#ffc94d" font-weight="700" text-anchor="start">HOT</text>
+<rect x="1810" y="602.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="614" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">11</text>
+<rect x="1310" y="580" width="92" height="34" rx="8" fill="url(#g12)"/>
+<text x="1422" y="614" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="740" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Voice rooms</text>
+<path d="M1810,834.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="832" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="1310" y="832" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 2</text>
+<rect x="1494.16" y="795" width="160.146" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="1512.16" y="834" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">VOICE</text>
+<rect x="1810" y="872.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="884" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="1310" y="884" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Lounge</text>
+<rect x="40" y="948" width="1840" height="96" rx="16" fill="#161a2e"/>
+<rect x="64" y="977" width="110.488" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="82" y="1016" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">Info</text>
+<text x="198.488" y="1011" font-size="45" fill="#f3f5ff" font-weight="500" text-anchor="start">Doors close at 02:00</text>
+</g>
+</g>
+<rect x="32" y="656" width="556.8" height="313.2" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="32" y="999.2" font-size="16" fill="#374151" font-weight="400" text-anchor="start">The number rolls to 250 in its box; no celebration.</text>
+<text x="637" y="640" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Lively</text>
+<g clip-path="url(#c13)">
+<g transform="translate(637,656) scale(0.29)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="40" y="32" width="1840" height="84" rx="16" fill="#161a2e"/>
+<rect x="64" y="48" width="52" height="52" rx="12" fill="url(#g14)"/>
+<text x="136" y="90" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1848" y="92" font-size="48" fill="#f3f5ff" font-weight="700" text-anchor="end">21:04</text>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="#161a2e"/>
+<circle cx="947.5" cy="374" r="420" fill="url(#r15)"/>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="none" stroke="#ffc94d" stroke-width="6"/>
+<text x="96" y="236" font-size="40" fill="#ffc94d" font-weight="700" text-anchor="start">NEW PEAK</text>
+<text x="96" y="540" font-size="84" fill="#f3f5ff" font-weight="800" text-anchor="start">250 of us online</text>
+<text x="96" y="620" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">The most this event so far</text>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="none" stroke="#ffc94d" stroke-width="6"/>
+<text x="1310" y="200" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="1310" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">250</text>
+<path d="M1484.8576,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1310" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="1577" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">71</text>
+<path d="M1698.2384,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1577" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="470" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Now playing</text>
+<path d="M1810,564.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="562" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">18</text>
+<text x="1310" y="562" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="1577.79" y="525" width="118.388" height="53" rx="26.5" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="1595.79" y="564" font-size="33" fill="#ffc94d" font-weight="700" text-anchor="start">HOT</text>
+<rect x="1810" y="602.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="614" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">11</text>
+<rect x="1310" y="580" width="92" height="34" rx="8" fill="url(#g16)"/>
+<text x="1422" y="614" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="740" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Voice rooms</text>
+<path d="M1810,834.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="832" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="1310" y="832" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 2</text>
+<rect x="1494.16" y="795" width="160.146" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="1512.16" y="834" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">VOICE</text>
+<rect x="1810" y="872.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="884" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="1310" y="884" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Lounge</text>
+<rect x="40" y="948" width="1840" height="96" rx="16" fill="#161a2e"/>
+<rect x="64" y="977" width="110.488" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="82" y="1016" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">Info</text>
+<text x="198.488" y="1011" font-size="45" fill="#f3f5ff" font-weight="500" text-anchor="start">Doors close at 02:00</text>
+</g>
+</g>
+<rect x="637" y="656" width="556.8" height="313.2" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="637" y="999.2" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Record crowd (a step 4 preset, off by default) plays once a day: a</text>
+<text x="637" y="1021.2" font-size="16" fill="#374151" font-weight="400" text-anchor="start">sweep, no sound by default.</text>
+<text x="1242" y="640" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Party</text>
+<g clip-path="url(#c17)">
+<g transform="translate(1242,656) scale(0.29)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<rect x="40" y="32" width="1840" height="84" rx="16" fill="#161a2e"/>
+<rect x="64" y="48" width="52" height="52" rx="12" fill="url(#g18)"/>
+<text x="136" y="90" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1848" y="92" font-size="48" fill="#f3f5ff" font-weight="700" text-anchor="end">21:04</text>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="#161a2e"/>
+<circle cx="947.5" cy="374" r="420" fill="url(#r19)"/>
+<rect x="40" y="140" width="1210" height="780" rx="24" fill="none" stroke="#ffc94d" stroke-width="6"/>
+<text x="96" y="236" font-size="40" fill="#ffc94d" font-weight="700" text-anchor="start">NEW PEAK</text>
+<text x="96" y="540" font-size="84" fill="#f3f5ff" font-weight="800" text-anchor="start">250 of us online</text>
+<text x="96" y="620" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">The most this event so far</text>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="140" width="606" height="240" rx="20" fill="none" stroke="#ffc94d" stroke-width="6"/>
+<text x="1310" y="200" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Right now</text>
+<text x="1310" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">250</text>
+<path d="M1484.8576,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1310" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">online</text>
+<text x="1577" y="290" font-size="71" fill="#f3f5ff" font-weight="800" text-anchor="start">71</text>
+<path d="M1698.2384,286 l18.0,-28.0 l18.0,28.0 z" fill="#3ee39a"/>
+<text x="1577" y="336" font-size="33" fill="#a9b1d6" font-weight="500" text-anchor="start">in voice</text>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="410" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="470" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Now playing</text>
+<path d="M1810,564.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="562" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">18</text>
+<text x="1310" y="562" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Demo Racer</text>
+<rect x="1577.79" y="525" width="118.388" height="53" rx="26.5" fill="#0b0d1a" stroke="#ffc94d" stroke-width="3"/>
+<text x="1595.79" y="564" font-size="33" fill="#ffc94d" font-weight="700" text-anchor="start">HOT</text>
+<rect x="1810" y="602.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="614" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">11</text>
+<rect x="1310" y="580" width="92" height="34" rx="8" fill="url(#g20)"/>
+<text x="1422" y="614" font-size="36" fill="#f3f5ff" font-weight="500" text-anchor="start">Block Builders</text>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="#161a2e"/>
+<rect x="1274" y="680" width="606" height="240" rx="20" fill="none" stroke="#343c66" stroke-width="3"/>
+<text x="1310" y="740" font-size="34" fill="#a9b1d6" font-weight="600" text-anchor="start">Voice rooms</text>
+<path d="M1810,834.0 l15.3,-23.799999999999997 l15.3,23.799999999999997 z" fill="#3ee39a"/>
+<text x="1792" y="832" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
+<text x="1310" y="832" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Squad 2</text>
+<rect x="1494.16" y="795" width="160.146" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="1512.16" y="834" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">VOICE</text>
+<rect x="1810" y="872.4" width="30.6" height="6" rx="3" fill="#a9b1d6"/>
+<text x="1792" y="884" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
+<text x="1310" y="884" font-size="40" fill="#f3f5ff" font-weight="500" text-anchor="start">Lounge</text>
+<rect x="40" y="948" width="1840" height="96" rx="16" fill="#161a2e"/>
+<rect x="64" y="977" width="110.488" height="53" rx="26.5" fill="#0b0d1a" stroke="#3ddcff" stroke-width="3"/>
+<text x="82" y="1016" font-size="33" fill="#3ddcff" font-weight="700" text-anchor="start">Info</text>
+<text x="198.488" y="1011" font-size="45" fill="#f3f5ff" font-weight="500" text-anchor="start">Doors close at 02:00</text>
+<rect x="639.84" y="345.14" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="91.52" y="755.42" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1545.12" y="391.94" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="496.32" y="889.58" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="183.52" y="713.3" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1519.36" y="599.42" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1736.48" y="535.46" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="1644.48" y="296.78" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="1523.04" y="594.74" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="430.08" y="468.38" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="544.16" y="342.02" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="1276.48" y="552.62" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="1876.32" y="619.7" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1563.52" y="811.58" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1839.52" y="304.58" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="1261.76" y="515.18" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="875.36" y="657.14" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1637.12" y="568.22" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1412.64" y="816.26" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="143.04" y="502.7" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="1876.32" y="301.46" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="856.96" y="593.18" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="735.52" y="760.1" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="555.2" y="652.46" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="1272.8" y="663.38" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1372.16" y="630.62" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1059.36" y="335.78" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="1512" y="265.58" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="904.8" y="607.22" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1401.6" y="150.14" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1868.96" y="859.94" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="569.92" y="596.3" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="669.28" y="906.74" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="459.52" y="200.06" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="220.32" y="279.62" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="790.72" y="771.02" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="595.68" y="232.82" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="901.12" y="281.18" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1486.24" y="841.22" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="393.28" y="471.5" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="330.72" y="245.3" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1180.8" y="586.94" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+<rect x="1103.52" y="859.94" width="16" height="28" rx="4" fill="#b98cff" opacity="0.9"/>
+<rect x="967.36" y="140.78" width="16" height="28" rx="4" fill="#3ee39a" opacity="0.9"/>
+<rect x="1581.92" y="781.94" width="16" height="28" rx="4" fill="#ffc94d" opacity="0.9"/>
+<rect x="1784.32" y="505.82" width="16" height="28" rx="4" fill="#3ddcff" opacity="0.9"/>
+</g>
+</g>
+<rect x="1242" y="656" width="556.8" height="313.2" rx="6" fill="none" stroke="#0f172a" stroke-width="4"/>
+<text x="1242" y="999.2" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Plus confetti and the story&#x27;s cue, within the sound budget.</text>
+<text x="32" y="1075" font-size="20" fill="#111827" font-weight="700" text-anchor="start">The finals cards (Finals track; D12): season open, starts, champions</text>
+<g clip-path="url(#c21)">
+<g transform="translate(32,1095) scale(0.36)">
+<rect x="0" y="0" width="1250" height="680" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="#161a2e"/>
+<circle cx="867" cy="212" r="360" fill="url(#r22)"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="none" stroke="#b98cff" stroke-width="6"/>
+<text x="68" y="110" font-size="38" fill="#b98cff" font-weight="800" text-anchor="start">DEMO FINALS · SEASON OPEN</text>
+<text x="68" y="220" font-size="72" fill="#f3f5ff" font-weight="800" text-anchor="start">Sign up your team</text>
+<text x="68" y="300" font-size="40" fill="#a9b1d6" font-weight="500" text-anchor="start">12 of 16 teams · closes 21:00</text>
+<rect x="68" y="340" width="810" height="26" rx="13" fill="#2a2f4d"/>
+<rect x="68" y="340" width="607.5" height="26" rx="13" fill="#b98cff"/>
+<rect x="940" y="370" width="240" height="240" rx="8" fill="#f3f5ff"/>
+<rect x="948" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1022.67" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="378" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="948" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1047.56" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="402.889" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="948" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="427.778" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="452.667" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="452.667" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="452.667" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="452.667" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="477.556" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1022.67" y="477.556" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1072.44" y="477.556" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="502.444" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1022.67" y="502.444" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1047.56" y="502.444" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="948" y="527.333" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="527.333" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="527.333" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="527.333" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="527.333" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="948" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1022.67" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1072.44" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="552.222" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="948" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="972.889" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="997.778" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1022.67" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1047.56" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1097.33" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1122.22" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+<rect x="1147.11" y="577.111" width="24.8889" height="24.8889" rx="0" fill="#0b0d1a"/>
+</g>
+</g>
+<rect x="32" y="1095" width="450" height="244.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<g clip-path="url(#c23)">
+<g transform="translate(502,1095) scale(0.36)">
+<rect x="0" y="0" width="1250" height="680" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="#161a2e"/>
+<circle cx="867" cy="212" r="360" fill="url(#r24)"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="none" stroke="#b98cff" stroke-width="6"/>
+<text x="68" y="110" font-size="38" fill="#b98cff" font-weight="800" text-anchor="start">DEMO FINALS</text>
+<text x="68" y="250" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start">Starts now</text>
+<text x="68" y="340" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">16 teams · round 1 of 4</text>
+</g>
+</g>
+<rect x="502" y="1095" width="450" height="244.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<g clip-path="url(#c25)">
+<g transform="translate(972,1095) scale(0.36)">
+<rect x="0" y="0" width="1250" height="680" rx="0" fill="#0b0d1a"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="#161a2e"/>
+<circle cx="867" cy="212" r="360" fill="url(#r26)"/>
+<rect x="20" y="20" width="1210" height="640" rx="24" fill="none" stroke="#b98cff" stroke-width="6"/>
+<text x="68" y="110" font-size="38" fill="#ffc94d" font-weight="800" text-anchor="start">DEMO FINALS · CHAMPIONS</text>
+<text x="68" y="250" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Demo</text>
+<text x="68" y="340" font-size="40" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Two · Player Five · Player Six</text>
+</g>
+</g>
+<rect x="972" y="1095" width="450" height="244.8" rx="6" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+<circle cx="1455" cy="1110" r="15" fill="#111827"/>
+<text x="1455" y="1116" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">4</text>
+<text x="1480" y="1115" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">The legacy finals cards (D11) keep their phases</text>
+<text x="1480" y="1137.4" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">and hold windows as the spec.</text>
+<circle cx="1455" cy="1164.8" r="15" fill="#111827"/>
+<text x="1455" y="1170.8" font-size="16" fill="#ffffff" font-weight="700" text-anchor="middle">5</text>
+<text x="1480" y="1169.8" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">Built with the finals module&#x27;s events; Moments&#x27;</text>
+<text x="1480" y="1192.2" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">takeover per card, Screen&#x27;s widget for the steady</text>
+<text x="1480" y="1214.6" font-size="16" fill="#1f2937" font-weight="400" text-anchor="start">box.</text>
+</svg>
