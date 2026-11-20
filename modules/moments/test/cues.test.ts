@@ -220,6 +220,28 @@ live("cues", () => {
     ]);
   });
 
+  // #592: Valkey's counts sit inside the moment's transaction; without them only the count is lost.
+  it("starts the moment and plays its sound while Valkey is down", async () => {
+    w.counters.down = true;
+    const r = await pizza(1, T0);
+    expect(r.status).toBe("started");
+    expect(sounds()).toHaveLength(1);
+    expect((await log()).map((x) => [x.cue, x.outcome])).toEqual([["pizza.placed", "played"]]);
+  });
+
+  // #592: a once-per-source cue that waited and was let go never played, so it may sound later.
+  it("forgets a once-per-source sound that dropped from the queue", async () => {
+    await w.tx("demo", (c) =>
+      w.cues.fire(c, { cue: "tournament.post", zones: ["main"], key: "m1", source: "m1" }, T0),
+    );
+    await pizza(1, w.at(0.5));
+    expect((await log()).at(-1)).toMatchObject({ cue: "pizza.placed", outcome: "queued" });
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(5)));
+    expect((await log()).at(-1)).toMatchObject({ cue: "pizza.placed", reason: "stale" });
+    const { rows } = await pool.query(`SELECT 1 FROM moments_sound_sources`);
+    expect(rows).toEqual([]);
+  });
+
   it("a sound check plays on the chosen zones, past every gate but the master", async () => {
     w.zoneStatus.set("main", { energy: "quiet", device: w.soundScreen });
     await w.tx("demo", (c) => w.cues.check(c, ["main"], "pack.gong", T0));

@@ -4,12 +4,13 @@
  * loses it and the change waits for the 10 s refresh. A container that loses the claim keeps the
  * zone planned, and the tick's stored playback reaches every container's streams.
  */
-import { tenantKey, withTenant } from "@canccu/kit";
+import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COALESCE_MS, FOLLOW_MS, PushHub } from "../src/push/hub.js";
 import type { HubDeps } from "../src/push/hub.js";
 import type { DeviceStream } from "../src/push/stream.js";
 import { MemoryFanout } from "../src/push/store.js";
+import { PREVIEW_CHANNEL } from "../src/preview/store.js";
 
 const T0 = Date.parse("2026-03-14T18:00:00Z");
 const TENANT = "alpha";
@@ -80,6 +81,7 @@ describe("a zone shown in two containers", () => {
   let builds: string[];
   let failing: Set<string>;
   let hubs: Record<"a" | "b", PushHub>;
+  let fanout: MemoryFanout;
 
   beforeEach(() => {
     vi.useFakeTimers({ now: T0 });
@@ -98,7 +100,7 @@ describe("a zone shown in two containers", () => {
         return Promise.resolve(true);
       },
     };
-    const fanout = new MemoryFanout();
+    fanout = new MemoryFanout();
     // A build reaches `contextOf` first; answering null ends it there, as a moved hostname does.
     const hub = (name: "a" | "b") =>
       new PushHub({
@@ -124,6 +126,16 @@ describe("a zone shown in two containers", () => {
     hubs.a.played(TENANT, ["stage", "lobby"]);
     await vi.advanceTimersByTimeAsync(COALESCE_MS);
     expect(builds.sort()).toEqual(["a", "b"]);
+  });
+
+  // #621: a notice of JSON `null` (or any non-object) is ignored like one that is not JSON.
+  it("ignores a fanout notice that is not an object", async () => {
+    hubs.a.add(stream("stage"));
+    for (const channel of [platformKey("screen", "zone", "played"), PREVIEW_CHANNEL])
+      for (const message of ["null", "3", '"stage"'])
+        await expect(fanout.publish(channel, message)).resolves.toBeUndefined();
+    await vi.advanceTimersByTimeAsync(COALESCE_MS);
+    expect(builds).toEqual([]);
   });
 
   it("builds in the container that lost the claim when the winner's stream went", async () => {

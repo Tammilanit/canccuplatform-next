@@ -167,6 +167,18 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
     const resumed = await k.tx((c) => lockMoment(c, video.id as string));
     expect(resumed?.content).toMatchObject({ started_at: w.at(45).toISOString(), paused_at: null });
     expect(resumed?.expires_at?.toISOString()).toBe(w.at(165).toISOString());
+    // #605: the zone's video hold moves with the pause too, so no other sound plays over its end.
+    await k.tx((c) =>
+      w.engine.fireCue(
+        c,
+        { cue: "announce.attention", zones: ["main"], key: "y", source: "y" },
+        w.at(140),
+      ),
+    );
+    expect((await k.soundLog()).at(-1)).toMatchObject({
+      cue: "announce.attention",
+      reason: "video",
+    });
     await k.tick(w.at(165));
     expect(k.started().filter((o) => o.rank === 65)[2]?.starts_at).toBe(w.at(165).toISOString());
   });

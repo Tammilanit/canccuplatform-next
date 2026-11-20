@@ -173,7 +173,14 @@ run("scenes", () => {
     const again = await w.call("crew", "POST", "/api/moments/scenes/peak/take", {});
     expect(json(again).crew).toBeNull();
     expect(last("main")?.data.scene).toMatchObject({ key: "daytime" });
-    expect(w.audit.at(-1)).toMatchObject({ action: "moments.scene.released" });
+    // #592: the release records the press it removed.
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "moments.scene.released",
+      changes: {
+        until: { old: new Date(w.now.getTime() + 30 * 60_000).toISOString(), new: null },
+        zones: { old: [], new: [] },
+      },
+    });
     // Its time ends by itself, on the zones it was pressed for.
     await w.call("crew", "POST", "/api/moments/scenes/peak/take", { zones: ["stage"] });
     expect(last("stage")?.data.scene).toMatchObject({ key: "peak" });

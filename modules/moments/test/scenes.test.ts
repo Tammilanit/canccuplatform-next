@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { PRESETS, checkScenes, sceneEvent } from "../src/scenes.js";
 import type { Scene } from "../src/scenes.js";
 import { bandsOf, heartbeatOf, pickScene } from "../src/scene-eval.js";
+import { chartSpan } from "../src/scene-pages.js";
 import type { SceneFacts } from "../src/scene-eval.js";
 
 const fixture = JSON.parse(
@@ -84,6 +85,25 @@ describe("scenes", () => {
     expect(
       pickScene([empty], facts("2026-03-13T12:00:00Z", { online: 3 }), "main", null),
     ).not.toBeNull();
+  });
+
+  // #592: without the event's dates the chart draws the event's own day, not UTC's.
+  it("draws today in the event's time zone when the event has no dates", () => {
+    expect(chartSpan(null, new Date("2026-03-13T23:30:00Z"), "Europe/Helsinki")).toEqual({
+      from: Date.parse("2026-03-13T22:00:00Z"),
+      to: Date.parse("2026-03-14T22:00:00Z"),
+    });
+  });
+
+  // #592 (E7): a press lasts until its time ends or it is pressed again, never its hold on top.
+  it("holds no scene the crew pressed once the press is over", () => {
+    const pressed = scene("pressed", { when: [{ type: "crew", minutes: 30 }], hold_minutes: 20 });
+    const rest = scene("rest");
+    const since = Date.parse("2026-03-13T12:00:00Z");
+    const current = { key: "pressed", since, crew: true };
+    expect(pickScene([pressed, rest], facts(since + 60_000), "main", current)?.scene.key).toBe(
+      "rest",
+    );
   });
 
   it("keeps a scene for its hold time, unless one higher in the list holds", () => {
