@@ -94,7 +94,7 @@ export function hubPage(
     body: Slot;
     status?: number;
     /** The live stream the page follows (static/food.js): a change redraws it, no polling (D13). */
-    live?: string;
+    live?: { url: string; offline: string };
   },
 ): FastifyReply {
   const nonce = newNonce();
@@ -111,17 +111,18 @@ export function hubPage(
         <link rel="stylesheet" href="${PREFIX}static/ui.css" />
         <link rel="stylesheet" href="/theming/current/tokens.css" />
         <link rel="stylesheet" href="${PREFIX}static/pizza.css" />
+        <link rel="stylesheet" href="${PREFIX}static/food.css" />
       </head>
       <body class="canccu-page canccu-surface canccu-surface--hub pizza-hub">
         <header class="pizza-hub__head">
           ${back}
           <h1 class="pizza-hub__title">${o.title}</h1>
         </header>
-        <main${attrs({ class: "pizza-hub__main", "data-live": o.live })}>
+        <main${attrs({ class: "pizza-hub__main", "data-live": o.live?.url, "data-offline": o.live?.offline })}>
           ${o.body}
         </main>
         <script src="${PREFIX}static/pizza.js" defer></script>
-        ${o.live === undefined ? "" : html`<script src="${PREFIX}static/food.js" defer></script>`}
+        <script src="${PREFIX}static/food.js" defer></script>
       </body>
     </html> `;
   return send(request, reply, doc, { status: o.status ?? 200, page: "surface", nonce });
@@ -221,6 +222,7 @@ const TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "pizza.css": "text/css; charset=utf-8",
   "crew.css": "text/css; charset=utf-8",
+  "food.css": "text/css; charset=utf-8",
   "pizza.js": "text/javascript; charset=utf-8",
   "food.js": "text/javascript; charset=utf-8",
 };

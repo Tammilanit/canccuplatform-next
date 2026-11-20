@@ -65,11 +65,13 @@ function orderCard(c: FoodCtx, o: OrderView): Html {
     </span>
     <span class="pizza-card__meta">${standing(c, o)} · ${counts(c, o)}</span>
     ${holder === "" ? "" : html`<span class="pizza-card__meta">${holder}</span>`}
-    ${stake === 0
-      ? ""
-      : html`<span class="pizza-badge pizza-badge--ok"
-          >${c.t(stake === 1 ? "food.stake_one" : "food.stake", { n: stake })}</span
-        >`}
+    ${
+      stake === 0
+        ? ""
+        : html`<span class="pizza-badge pizza-badge--ok"
+            >${c.t(stake === 1 ? "food.stake_one" : "food.stake", { n: stake })}</span
+          >`
+    }
   </a>`;
 }
 
@@ -101,13 +103,15 @@ function staleCard(c: FoodCtx, o: OrderView): Html {
   return html`<section class="pizza-card">
     <p class="pizza-card__title">${c.t("food.stale", { seq: o.seq, day: o.day })}</p>
     <p class="pizza-muted">${c.t("food.stale_text")}</p>
-    ${c.member
-      ? post(
-          `${orderHref(o)}/step/cancel`,
-          c.t("food.stale_cancel"),
-          "canccu-button--secondary pizza-wide",
-        )
-      : ""}
+    ${
+      c.member
+        ? post(
+            `${orderHref(o)}/step/cancel`,
+            c.t("food.stale_cancel"),
+            "canccu-button--secondary pizza-wide",
+          )
+        : ""
+    }
   </section>`;
 }
 
@@ -132,9 +136,7 @@ export function foodView(
   if (orders === null) return html`${flash(o.error)}${closed}${wayIn(c, PREFIX)}`;
   const open = orders.filter(isOpen);
   const stale = orders.filter((x) => x.stale);
-  const earlier = orders
-    .filter((x) => !isOpen(x) && !x.stale)
-    .sort((a, b) => b.seq - a.seq);
+  const earlier = orders.filter((x) => !isOpen(x) && !x.stale).sort((a, b) => b.seq - a.seq);
   const openPart =
     open.length > 0
       ? html`<h2 class="pizza-section">${c.t("food.open_orders")}</h2>
@@ -148,11 +150,13 @@ export function foodView(
           })
         : html`<p class="pizza-muted">${c.t("food.none_open")}</p>`;
   return html`${flash(o.error)}${closed}${stale.map((x) => staleCard(c, x))} ${openPart}
-    ${earlier.length === 0
+  ${
+    earlier.length === 0
       ? ""
       : html`<h2 class="pizza-section">${c.t("food.earlier")}</h2>
-          ${earlier.map((x) => orderCard(c, x))}`}
-    ${wayIn(c, PREFIX)}`;
+          ${earlier.map((x) => orderCard(c, x))}`
+  }
+  ${wayIn(c, PREFIX)}`;
 }
 
 export interface PizzeriaChoice {
@@ -174,7 +178,7 @@ export function startView(
   const choices = pizzerias.map((p) => {
     const has = openAt.get(p.id);
     if (has !== undefined)
-      return html`<div class="pizza-choice">
+      return html`<div class="pizza-card">
         <span class="pizza-card__title">${p.name}</span>
         <a href="${orderHref(has)}/add">${c.t("start.join_instead", { seq: has.seq })}</a>
       </div>`;
@@ -182,9 +186,9 @@ export function startView(
     first = false;
     return html`<label class="pizza-choice">
       <input type="radio" name="pizzeria_id" value="${p.id}" ${checked ? "checked" : ""} required />
-      <span
+      <span class="pizza-choice__stack"
         ><span class="pizza-card__title">${p.name}</span>
-        <span class="pizza-muted"
+        <span class="pizza-choice__hint"
           >${c.t(p.service === "takeaway" ? "start.takeaway" : "start.delivery")}</span
         ></span
       >
@@ -195,22 +199,29 @@ export function startView(
       ${formKey()}
       <fieldset class="pizza-fieldset">
         <legend>${c.t("start.pizzeria")}</legend>
-        <div class="pizza-choices">${choices}</div>
+        <div class="pizza-choices pizza-choices--stack">${choices}</div>
       </fieldset>
       <fieldset class="pizza-fieldset">
         <legend>${c.t("start.closes")}</legend>
-        <div class="pizza-choices pizza-choices--row">
+        <div class="pizza-choices">
           ${times.map(
             (t, i) =>
-              html`<label class="pizza-choice pizza-choice--row"
-                ><input type="radio" name="closes" value="${t}" ${i === 0 ? "checked" : ""} />
-                ${t}</label
+              html`<label class="pizza-choice"
+                ><input type="radio" name="closes" value="${t}" ${i === 0 ? "checked" : ""} /><span
+                  >${t}</span
+                ></label
               >`,
           )}
-          <label class="pizza-choice pizza-choice--row"
-            >${c.t("start.other_time")} <input type="time" name="closes_other"
-          /></label>
+          <label class="pizza-choice"
+            ><input type="radio" name="closes" value="other" /><span
+              >${c.t("start.other_time")}</span
+            ></label
+          >
         </div>
+        <label class="canccu-field"
+          ><span class="canccu-field__label">${c.t("start.other_time")}</span>
+          <input class="canccu-input" type="time" name="closes_other"
+        /></label>
         <p class="pizza-muted">${c.t("start.closes_hint")}</p>
       </fieldset>
       <label class="canccu-field"

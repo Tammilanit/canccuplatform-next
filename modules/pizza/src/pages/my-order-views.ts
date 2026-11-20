@@ -7,7 +7,7 @@ import { attrs, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { PREFIX } from "./kit.js";
 import { flash, post, time } from "./order-view.js";
-import type { MineView, OrderView } from "./order-view.js";
+import type { OrderView } from "./order-view.js";
 import { orderHref, orderName, wayIn } from "./food-views.js";
 import type { FoodCtx } from "./food-views.js";
 
@@ -46,7 +46,10 @@ function steps(c: FoodCtx, o: OrderView): Html {
         ? c.t("mine.closes", { time: time(c, o.closes_at) })
         : `${time(c, o.opened_at)}–${time(c, o.closed_at ?? o.placed_at)}`,
     ],
-    [c.t("state.closed"), o.state === "closed" ? c.t("mine.since", { time: time(c, o.closed_at) }) : ""],
+    [
+      c.t("state.closed"),
+      o.state === "closed" ? c.t("mine.since", { time: time(c, o.closed_at) }) : "",
+    ],
     [c.t("mine.called_in"), time(c, o.placed_at)],
     [
       c.t("state.placed"),
@@ -85,22 +88,28 @@ function myPizzas(c: FoodCtx, o: OrderView): Slot {
             ><span class="pizza-line__label">${p.label}</span>
             ${extra === "" ? "" : html`<span class="pizza-line__note">${extra}</span>`}</span
           >
-          ${editable
-            ? html`<a class="canccu-button canccu-button--ghost canccu-button--sm" href="${orderHref(o)}/add?edit=${p.id}"
-                  >${c.t("mine.edit")}</a
-                >${post(
-                  `${PREFIX}items/${p.id}/delete`,
-                  c.t("mine.remove"),
-                  "canccu-button--ghost canccu-button--sm",
-                  html`<input type="hidden" name="order_id" value="${o.id}" />`,
-                )}`
-            : ""}
+          ${
+            editable
+              ? html`<a
+                    class="canccu-button canccu-button--ghost canccu-button--sm"
+                    href="${orderHref(o)}/add?edit=${p.id}"
+                    >${c.t("mine.edit")}</a
+                  >${post(
+                    `${PREFIX}items/${p.id}/delete`,
+                    c.t("mine.remove"),
+                    "canccu-button--ghost canccu-button--sm",
+                    html`<input type="hidden" name="order_id" value="${o.id}" />`,
+                  )}`
+              : ""
+          }
         </li>`;
       })}
     </ul>
-    ${o.state === "closed"
-      ? html`<p class="pizza-muted">${c.t("mine.locked", { name: holderName(c, o) })}</p>`
-      : ""}`;
+    ${
+      o.state === "closed"
+        ? html`<p class="pizza-muted">${c.t("mine.locked", { name: holderName(c, o) })}</p>`
+        : ""
+    }`;
 }
 
 /** Arrived: where to collect it, and the tick that takes you off the holder's list. */
@@ -114,14 +123,16 @@ function hereCard(c: FoodCtx, o: OrderView): Slot {
       ${c.t("mine.arrived", { seq: o.seq, time: time(c, o.arrived_at) })}
     </p>
     ${o.pickup === null ? "" : html`<p>${c.t("mine.collect_at", { pickup: o.pickup })}</p>`}
-    ${mine.length === 0
-      ? ""
-      : got
-        ? html`<p class="pizza-badge pizza-badge--ok">${c.t("mine.got")}</p>`
-        : o.state === "arrived"
-          ? html`${post(`${orderHref(o)}/got-mine`, c.t("mine.got_mine"), "canccu-button--primary pizza-wide")}
-              <p class="pizza-muted">${c.t("mine.got_mine_hint")}</p>`
-          : ""}
+    ${
+      mine.length === 0
+        ? ""
+        : got
+          ? html`<p class="pizza-badge pizza-badge--ok">${c.t("mine.got")}</p>`
+          : o.state === "arrived"
+            ? html`${post(`${orderHref(o)}/got-mine`, c.t("mine.got_mine"), "canccu-button--primary pizza-wide")}
+                <p class="pizza-muted">${c.t("mine.got_mine_hint")}</p>`
+            : ""
+    }
   </section>`;
 }
 
@@ -142,9 +153,15 @@ function nobodyCard(c: FoodCtx, o: OrderView): Html {
   return html`<section class="pizza-card">
     <p class="pizza-card__title">${c.t("mine.nobody", { seq: o.seq })}</p>
     <p class="pizza-muted">${c.t("mine.nobody_text")}</p>
-    ${c.member
-      ? post(`${orderHref(o)}/step/claim`, c.t("hold.take_over"), "canccu-button--primary pizza-wide")
-      : ""}
+    ${
+      c.member
+        ? post(
+            `${orderHref(o)}/step/claim`,
+            c.t("hold.take_over"),
+            "canccu-button--primary pizza-wide",
+          )
+        : ""
+    }
   </section>`;
 }
 
@@ -156,11 +173,13 @@ export function myOrderView(
   const header = html`<section class="pizza-card">
     <p class="pizza-card__title">${orderName(c, o)}</p>
     <p class="pizza-card__meta">${status(c, o)}</p>
-    ${o.holder === undefined
-      ? ""
-      : html`<p class="pizza-card__meta">
-          ${o.holder === null ? c.t("hold.nobody") : c.t("food.held_by", { name: o.holder.name ?? "—" })}
-        </p>`}
+    ${
+      o.holder === undefined
+        ? ""
+        : html`<p class="pizza-card__meta">
+            ${o.holder === null ? c.t("hold.nobody") : c.t("food.held_by", { name: o.holder.name ?? "—" })}
+          </p>`
+    }
     ${o.note ? html`<p class="pizza-muted">${o.note}</p>` : ""}
   </section>`;
   if (o.state === "cancelled")
@@ -180,7 +199,11 @@ export function myOrderView(
       : "";
   const added =
     q.added === true
-      ? notice({ kind: "ok", title: c.t("mine.added", { seq: o.seq }), text: c.t("mine.added_text") })
+      ? notice({
+          kind: "ok",
+          title: c.t("mine.added", { seq: o.seq }),
+          text: c.t("mine.added_text"),
+        })
       : "";
   const add =
     o.state === "open" && c.member
@@ -190,9 +213,9 @@ export function myOrderView(
       : "";
   const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
   return html`${flash(q.error)}${opened}${added}${header}${hereCard(c, o)}
-    ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${add}
-    ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
-    ${steps(c, o)} ${wayIn(c, orderHref(o))}`;
+  ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${add}
+  ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
+  ${steps(c, o)} ${wayIn(c, orderHref(o))}`;
 }
 
 /** Mockup 16: the order closed while you chose (E3); the API names the orders still open. */
@@ -202,16 +225,19 @@ export function closedWhileView(
   others: { id: string; seq: number; pizzeria: { name: string } }[],
 ): Html {
   return html`<section class="pizza-card">
-    <p class="pizza-card__title">
-      ${c.t("mine.closed_while", { seq: o.seq, time: time(c, o.closed_at ?? o.placed_at) })}
-    </p>
-    <p>${c.t("mine.not_added")}</p>
-  </section>
-  ${others.map(
-    (x) => html`<a class="pizza-card pizza-card--link" href="${orderHref(x)}/add">
-      <span class="pizza-card__title">${orderName(c, x)}</span>
-      <span class="pizza-card__meta">${c.t("mine.add_there")}</span>
-    </a>`,
-  )}
-  <a class="canccu-button canccu-button--secondary pizza-wide" href="${PREFIX}">${c.t("mine.see_open")}</a>`;
+      <p class="pizza-card__title">
+        ${c.t("mine.closed_while", { seq: o.seq, time: time(c, o.closed_at ?? o.placed_at) })}
+      </p>
+      <p>${c.t("mine.not_added")}</p>
+    </section>
+    ${others.map(
+      (x) =>
+        html`<a class="pizza-card pizza-card--link" href="${orderHref(x)}/add">
+          <span class="pizza-card__title">${orderName(c, x)}</span>
+          <span class="pizza-card__meta">${c.t("mine.add_there")}</span>
+        </a>`,
+    )}
+    <a class="canccu-button canccu-button--secondary pizza-wide" href="${PREFIX}"
+      >${c.t("mine.see_open")}</a
+    >`;
 }

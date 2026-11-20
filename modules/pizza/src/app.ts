@@ -5,6 +5,7 @@ import { install, installTenancy } from "@canccu/kit/fastify";
 import { noteTenant } from "./db.js";
 import type { AppDeps } from "./http.js";
 import { itemRoutes } from "./item-routes.js";
+import { liveRoutes } from "./live.js";
 import { MAX_BYTES } from "./menu-csv.js";
 import { menuRoutes } from "./menu-routes.js";
 import { moneyRoutes } from "./money-routes.js";
@@ -56,6 +57,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     moneyRoutes(event, deps);
     menuRoutes(event, deps);
     recordRoutes(event, deps);
+    liveRoutes(event, deps);
     pageRoutes(event, deps);
     done();
   });

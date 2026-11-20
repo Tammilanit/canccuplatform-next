@@ -251,7 +251,9 @@ describe.skipIf(!DATABASE_URL)("my order", () => {
   it("sends a guest to sign in before the menu", async () => {
     const r = await view(w, null, `/orders/${id}/add`);
     expect(r.statusCode).toBe(303);
-    expect(location(r)).toBe(`/admin/sign-in?next=${encodeURIComponent(`/pizza/orders/${id}/add`)}`);
+    expect(location(r)).toBe(
+      `/admin/sign-in?next=${encodeURIComponent(`/pizza/orders/${id}/add`)}`,
+    );
   });
 
   it("reads in Finnish", async () => {

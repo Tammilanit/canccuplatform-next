@@ -40,8 +40,12 @@ export function price(c: Pick<FoodCtx, "lang">, cents: number | null): string {
 }
 
 /** The form's fields that say what the pizza is: the same for a new pizza and "the same again". */
-export function pizzaFields(p: Pick<MineView, "kind" | "toppings" | "text">, menuItem?: string): Html {
-  if (p.kind === "menu") return html`<input type="hidden" name="menu_item_id" value="${menuItem ?? ""}" />`;
+export function pizzaFields(
+  p: Pick<MineView, "kind" | "toppings" | "text">,
+  menuItem?: string,
+): Html {
+  if (p.kind === "menu")
+    return html`<input type="hidden" name="menu_item_id" value="${menuItem ?? ""}" />`;
   if (p.kind === "custom")
     return html`${(p.toppings ?? []).map((t) => html`<input type="hidden" name="toppings" value="${t}" />`)}`;
   return html`<input type="hidden" name="text" value="${p.text ?? ""}" />`;
@@ -50,7 +54,11 @@ export function pizzaFields(p: Pick<MineView, "kind" | "toppings" | "text">, men
 const kindOf = { menu: "menu", own: "custom", other: "text" } as const;
 
 /** U6: the last pizza from this pizzeria, when it can still be ordered as it was. */
-function lastTime(c: FoodCtx, o: OrderView, last: { pizza: MineView; when: string; menuItem?: string } | null): Slot {
+function lastTime(
+  c: FoodCtx,
+  o: OrderView,
+  last: { pizza: MineView; when: string; menuItem?: string } | null,
+): Slot {
   if (last === null) return "";
   const p = last.pizza;
   const extra = [p.note, p.comment].filter((x): x is string => x !== null);
@@ -68,12 +76,26 @@ function lastTime(c: FoodCtx, o: OrderView, last: { pizza: MineView; when: strin
   </form>`;
 }
 
-function textField(name: string, label: string, max: number, value: string | null, rows = false): Html {
+function textField(
+  name: string,
+  label: string,
+  max: number,
+  value: string | null,
+  rows = false,
+): Html {
   return html`<label class="canccu-field"
     ><span class="canccu-field__label">${label}</span>
-    ${rows
-      ? html`<textarea class="canccu-input" name="${name}" maxlength="${max}" rows="2" required>${value ?? ""}</textarea>`
-      : html`<input class="canccu-input" name="${name}" maxlength="${max}" value="${value ?? ""}" />`}
+    ${
+      rows
+        ? html`<textarea class="canccu-input" name="${name}" maxlength="${max}" rows="2" required>
+${value ?? ""}</textarea>`
+        : html`<input
+            class="canccu-input"
+            name="${name}"
+            maxlength="${max}"
+            value="${value ?? ""}"
+          />`
+    }
   </label>`;
 }
 
@@ -96,8 +118,8 @@ export function pickView(
   ];
   const edit = q.edit;
   const here = (t: Tab) => `${orderHref(o)}/add?tab=${t}${edit === null ? "" : `&edit=${edit.id}`}`;
-  const nav = html`<nav class="pizza-tabs" aria-label="${c.t("pick.kinds")}">
-    ${tabs.map(([t, label]) => html`<a${attrs({ class: "pizza-tab", href: here(t), "aria-current": t === q.tab ? "page" : undefined })}>${label}</a>`)}
+  const nav = html`<nav class="canccu-tabs" aria-label="${c.t("pick.kinds")}">
+    ${tabs.map(([t, label]) => html`<a${attrs({ href: here(t), "aria-current": t === q.tab ? "page" : undefined })}>${label}</a>`)}
   </nav>`;
   let body: Slot;
   if (q.tab === "own" && menu.base !== null) {
@@ -111,12 +133,19 @@ export function pickView(
       </p>
       <fieldset class="pizza-fieldset" data-toppings="${LIMITS.toppings}">
         <legend>${c.t("pick.toppings", { max: LIMITS.toppings })}</legend>
-        <div class="pizza-choices pizza-choices--row">
+        <div class="pizza-choices">
           ${menu.toppings.map(
-            (t) => html`<label class="pizza-choice pizza-choice--row"
-              ><input type="checkbox" name="toppings" value="${t.name}" ${chosen.has(t.name) ? "checked" : ""} />
-              ${t.name}${t.price_cents === null ? "" : html` <span class="pizza-muted">+${price(c, t.price_cents)}</span>`}</label
-            >`,
+            (t) =>
+              html`<label class="pizza-choice"
+                ><input
+                  type="checkbox"
+                  name="toppings"
+                  value="${t.name}"
+                  ${chosen.has(t.name) ? "checked" : ""}
+                /><span
+                  >${t.name}${t.price_cents === null ? "" : ` +${price(c, t.price_cents)}`}</span
+                ></label
+              >`,
           )}
         </div>
       </fieldset>`;
@@ -130,7 +159,14 @@ export function pickView(
       <div class="pizza-filter" role="search">
         <label class="canccu-field"
           ><span class="canccu-field__label">${c.t("pick.filter")}</span>
-          <input class="canccu-input" type="search" name="q" value="${q.query}" form="pizza-filter" data-filter />
+          <input
+            class="canccu-input"
+            type="search"
+            name="q"
+            value="${q.query}"
+            form="pizza-filter"
+            data-filter
+          />
         </label>
         <button class="canccu-button canccu-button--secondary" type="submit" form="pizza-filter">
           ${c.t("pick.filter_go")}
@@ -140,16 +176,23 @@ export function pickView(
         <legend class="pizza-sr">${c.t("pick.menu")}</legend>
         <ul class="pizza-menu">
           ${shown.map(
-            (i, n) => html`<li data-item="${`${i.name} ${i.description ?? ""}`.toLowerCase()}">
-              <label class="pizza-menu__item"
-                ><input type="radio" name="menu_item_id" value="${i.id}" required ${(picked === null ? n === 0 && shown.length === 1 : i.number === picked) ? "checked" : ""} />
-                <span class="pizza-menu__text"
-                  ><span class="pizza-card__title">#${i.number ?? ""} ${i.name}</span>
-                  ${i.description === null ? "" : html`<span class="pizza-muted">${i.description}</span>`}</span
+            (i, n) =>
+              html`<li data-item="${`${i.name} ${i.description ?? ""}`.toLowerCase()}">
+                <label class="pizza-menu__item"
+                  ><input
+                    type="radio"
+                    name="menu_item_id"
+                    value="${i.id}"
+                    required
+                    ${(picked === null ? n === 0 && shown.length === 1 : i.number === picked) ? "checked" : ""}
+                  />
+                  <span class="pizza-menu__text"
+                    ><span class="pizza-card__title">#${i.number ?? ""} ${i.name}</span>
+                    ${i.description === null ? "" : html`<span class="pizza-muted">${i.description}</span>`}</span
+                  >
+                  <span class="pizza-menu__price">${price(c, i.price_cents)}</span></label
                 >
-                <span class="pizza-menu__price">${price(c, i.price_cents)}</span></label
-              >
-            </li>`,
+              </li>`,
           )}
         </ul>
         ${shown.length === 0 ? html`<p class="pizza-muted">${c.t("pick.no_match")}</p>` : ""}
@@ -160,8 +203,7 @@ export function pickView(
     <form method="post" action="${orderHref(o)}/add" class="pizza-form">
       ${formKey()}
       <input type="hidden" name="kind" value="${kindOf[q.tab]}" />
-      ${edit === null ? "" : html`<input type="hidden" name="edit" value="${edit.id}" />`}
-      ${body}
+      ${edit === null ? "" : html`<input type="hidden" name="edit" value="${edit.id}" />`} ${body}
       ${textField("note", c.t("pick.note"), LIMITS.note, edit?.note ?? null)}
       ${textField("comment", c.t("pick.comment"), LIMITS.comment, edit?.comment ?? null)}
       <button class="canccu-button canccu-button--primary pizza-wide" type="submit">

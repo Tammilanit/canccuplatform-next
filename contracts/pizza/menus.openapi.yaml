@@ -367,3 +367,36 @@
         description: Deleted.
       "401":
         $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+/api/pizza/stream:
+  get:
+    tags: [orders]
+    operationId: liveStream
+    summary: The pages' live stream
+    description: |
+      Server-sent events while the Food pages are open (#119, D13; contracts/pizza.md, Live): `ready` when
+      the stream starts, again after every reconnect, and `change` for each `pizza.order.*` and
+      `pizza.item.*` of the event, with the order's id, its state (an order's event) and its revision,
+      never who or what. A page reads the order again through the API on each. Guests only where the
+      info-page mode lets them in, as the orders' reads.
+    parameters:
+      - name: order
+        in: query
+        description: Only this order's changes (an order's page); without it, every order of the event.
+        schema:
+          type: string
+          pattern: "^po_[A-Za-z0-9_-]{1,40}$"
+    responses:
+      "200":
+        description: An event stream; each `change` frame's `data` is one `LiveChange` as JSON.
+        content:
+          text/event-stream:
+            schema:
+              type: string
+              contentMediaType: application/json
+              contentSchema:
+                $ref: "../pizza.openapi.yaml#/components/schemas/LiveChange"
+            examples:
+              change:
+                value: "event: change\ndata: {\"type\": \"pizza.order.closed\", \"order_id\": \"po_1\", \"state\": \"closed\", \"revision\": 7}\n\n"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"

@@ -23,6 +23,7 @@ import { buildApp } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { handlePlatformEvent, handleTenantEvent } from "./consumer.js";
 import { hostFetch } from "./host-fetch.js";
+import { LiveHub } from "./live.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { dropOldKeys } from "./idempotency.js";
 import { everySessionIsMember, tenantsPeople } from "./people.js";
@@ -81,6 +82,8 @@ async function main(): Promise<void> {
   // Subscriptions block in XREAD on their connection; the health check's PING gets its own.
   const listenStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const listener = new Bus(listenStore, config.module, log);
+  // The pages' live streams read pizza's own event streams, on a connection of their own.
+  const liveStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const tenantsUrl = env("CANCCU_TENANTS_URL");
   const tenants = new TenantResolver({
     tenantsUrl,
@@ -112,8 +115,10 @@ async function main(): Promise<void> {
     settings: settingsReader(settings),
   };
   const scheduler = new Scheduler(base);
+  const live = new LiveHub();
   const deps = {
     ...base,
+    live,
     // The Food settings page calls admin's settings API as the person, on the event's Host.
     admin: new AdminClient(config.adminUrl, { fetch: hostFetch }),
     language: (tenant: string) =>
@@ -143,6 +148,10 @@ async function main(): Promise<void> {
       await settings.handleEvent(event);
       await adminSettings.handleEvent(event);
     } else await handleTenantEvent(deps, event);
+  });
+
+  new Bus(liveStore, config.module, log).subscribeTenants([config.module], (event) => {
+    live.handle(event);
   });
 
   const app = buildApp(deps);
@@ -180,7 +189,7 @@ async function main(): Promise<void> {
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
     await Promise.race([
-      Promise.allSettled([store.close(), listenStore.close(), pool.end()]),
+      Promise.allSettled([store.close(), listenStore.close(), liveStore.close(), pool.end()]),
       grace,
     ]);
     process.exit(0);

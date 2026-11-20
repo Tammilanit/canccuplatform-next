@@ -13,6 +13,10 @@ const BROWSER = Object.fromEntries(
     "FormData",
     "URLSearchParams",
     "HTMLFormElement",
+    "fetch",
+    "location",
+    "DOMParser",
+    "EventSource",
   ].map((name) => [name, "readonly"]),
 );
 

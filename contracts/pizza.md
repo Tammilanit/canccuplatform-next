@@ -100,6 +100,9 @@ The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-
 - `GET /api/pizza/orders`: the orders not over yet and today's; `?day=YYYY-MM-DD` for one event day. `GET /api/pizza/orders/{order_id}`. Each as the caller may see it.
 - `GET /api/pizza/me/orders` (signed in): this event's orders the caller has pizzas in, holds or opened, newest first, with their own pizzas, status and amount (D14). `me/summary` comes when the App track takes its D18.
 
+### Live
+The Food pages stay live without polling (D13, E16): `GET /api/pizza/stream` is a server-sent event stream for whoever may read the orders (guests as the info-page mode lets them in). It sends `ready` when it starts and `change` for each `pizza.order.*` and `pizza.item.*` of the event, as `{"type", "order_id", "state", "revision"}` (`state` on an order's events only): never who, what or how much, so it needs no filtering per caller. `?order=` keeps one order's changes. A page reads the order again through the API on a change, and again after every reconnect (EventSource's own, `retry` 3 s), so a phone that was offline catches up from the order's read and nothing is replayed. A comment line every 25 s keeps proxies from dropping a quiet stream. Every container reads the event's stream off the bus, so a change made on another replica reaches its pages too.
+
 ## Pizzas
 A pizza (`Item`) is one of: `menu` (`menu_item_id`, an item of the order's pizzeria's live menu), `custom` (the own pizza: the pizzeria's base and 1 to 4 of its toppings by name, `toppings`), or `text` ("Other", 1 to 80 characters). Each has an optional `note` for the pizzeria (120) and `comment` for the holder (120; "one is for a friend", U16).
 
@@ -197,6 +200,7 @@ Saved through admin's settings API with `admin.settings.write` ([admin.md](admin
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `ordering_open` | boolean | `true` | Off: no new orders (O3) |
+| `ordering_note` | string, up to 200 | `""` | The organiser's note on the Food page while ordering is off (O3: "Breakfast orders open at 09:00") |
 | `open_by` | `anyone` or `crew` | `anyone` | `crew`: only `pizza.order.open` starts orders (U2) |
 | `max_open_orders` | integer 1–20 | 3 | Orders open at once in the event (O5) |
 | `max_items_per_person` | integer 1–20 | 5 | One person's pizzas in one order (U18) |
@@ -248,4 +252,4 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 **Consumes:** `tenants.status.changed` (archived: E11), `tenants.retention.reached`, `tenants.member.left`, `tenants.tenant.cloned` on the event's stream; `tenants.user.deleted`, `tenants.tenant.deleted` on the platform stream; `admin.settings.changed`.
 
 ## Not in this contract
-The attendee's pages and their live stream (#119); receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the screens' food box and Notify's food triggers (their own issue); the bot (step 6). Moving any money.
+Receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the screens' food box and Notify's food triggers (their own issue); the bot (step 6). Moving any money.

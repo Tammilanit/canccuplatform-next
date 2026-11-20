@@ -98,6 +98,8 @@ paths:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me~1export"
   /api/pizza/me:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me"
+  /api/pizza/stream:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1stream"
   /api/pizza/health:
     get:
       tags: [orders]
@@ -353,6 +355,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Order"
+    LiveChange:
+      type: object
+      description: One `change` of the live stream; never who or what (contracts/pizza.md, Live).
+      required: [type, order_id, revision]
+      properties:
+        type:
+          type: string
+          description: The `pizza.order.*` or `pizza.item.*` event behind it.
+        order_id:
+          $ref: "#/components/schemas/Id"
+        state:
+          type: string
+          description: The order's state, on an order's event.
+        revision:
+          type: integer
     OrderNew:
       type: object
       required: [pizzeria_id, closes_at]

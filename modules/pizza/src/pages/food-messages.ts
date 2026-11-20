@@ -70,7 +70,8 @@ export const FOOD_EN = {
   "mine.collect_at": "Collect at {pickup}",
   "mine.collect_from": "Collect from {name}",
   "mine.got_mine": "I’ve got mine",
-  "mine.got_mine_hint": "Ticks you off the holder’s hand-out list. The holder can tick it for you too.",
+  "mine.got_mine_hint":
+    "Ticks you off the holder’s hand-out list. The holder can tick it for you too.",
   "mine.got": "You’ve got yours",
   "mine.cancelled": "Order {seq} was cancelled",
   "mine.not_ordered": "Your pizza was not ordered.",
@@ -99,6 +100,8 @@ export const FOOD_EN = {
   "pick.comment": "Comment for the holder (never read out)",
   "pick.add": "Add to the order",
   "pick.save": "Save",
+  "live.offline": "Reconnecting… The page keeps the last state it had.",
+  "settings.ordering_note": "Off: the Food page shows your note",
 } as const;
 
 export const FOOD_FI: Record<keyof typeof FOOD_EN, string> = {
@@ -198,4 +201,6 @@ export const FOOD_FI: Record<keyof typeof FOOD_EN, string> = {
   "pick.comment": "Kommentti vastuuhenkilölle (ei lueta ääneen)",
   "pick.add": "Lisää tilaukseen",
   "pick.save": "Tallenna",
+  "live.offline": "Yhdistetään uudelleen… Sivu näyttää viimeisimmän tilan.",
+  "settings.ordering_note": "Suljettuna: Ruoka-sivu näyttää viestisi",
 };

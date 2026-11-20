@@ -37,9 +37,7 @@ async function foodCtx(deps: AppDeps, request: FastifyRequest): Promise<FoodCtx>
     signedIn: session !== null,
     member,
     mayStart:
-      member &&
-      s.ordering_open &&
-      (s.open_by === "anyone" || (session?.rights.has(OPEN) ?? false)),
+      member && s.ordering_open && (s.open_by === "anyone" || (session?.rights.has(OPEN) ?? false)),
   };
 }
 
@@ -73,7 +71,9 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     part?: number,
   ) => viaApi(app, request, method, url, payload, part);
   const order = async (request: FastifyRequest, id: string) =>
-    must(await api(request, "GET", `/api/pizza/orders/${encodeURIComponent(id)}`)) as unknown as OrderView;
+    must(
+      await api(request, "GET", `/api/pizza/orders/${encodeURIComponent(id)}`),
+    ) as unknown as OrderView;
   const page = (
     request: FastifyRequest,
     reply: FastifyReply,
@@ -83,7 +83,7 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     hubPage(request, reply, c, {
       title: o.title,
       ...(o.back === undefined ? {} : { back: { href: o.back, label: c.t("hold.food") } }),
-      ...(o.live === undefined ? {} : { live: o.live }),
+      ...(o.live === undefined ? {} : { live: { url: o.live, offline: c.t("live.offline") } }),
       body: o.body,
     });
 
@@ -120,7 +120,8 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     if (!c.mayStart) return reply.redirect("/pizza/", 303);
     const pizzerias = (must(await api(request, "GET", "/api/pizza/pizzerias")).pizzerias ??
       []) as PizzeriaChoice[];
-    const orders = (must(await api(request, "GET", "/api/pizza/orders")).orders ?? []) as OrderView[];
+    const orders = (must(await api(request, "GET", "/api/pizza/orders")).orders ??
+      []) as OrderView[];
     return page(request, reply, c, {
       title: c.t("start.title"),
       back: "/pizza/",
@@ -238,7 +239,8 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
       edit === null
         ? await api(request, "POST", `/api/pizza/orders/${id}/items`, payload)
         : await api(request, "PUT", `/api/pizza/items/${encodeURIComponent(edit)}`, payload);
-    if (a.status < 400) return reply.redirect(`/pizza/orders/${id}${edit === null ? "?added=1" : ""}`, 303);
+    if (a.status < 400)
+      return reply.redirect(`/pizza/orders/${id}${edit === null ? "?added=1" : ""}`, 303);
     const err = (a.body.error ?? {}) as { code?: string; open_orders?: [] };
     if (a.status === 409 && err.code === "closed" && edit === null) {
       const c = await foodCtx(deps, request);
@@ -258,7 +260,11 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
 
   app.post<{ Params: Params }>("/items/:id/delete", async (request, reply) => {
     const orderId = formText(request, "order_id") ?? "";
-    const a = await api(request, "DELETE", `/api/pizza/items/${encodeURIComponent(request.params.id)}`);
+    const a = await api(
+      request,
+      "DELETE",
+      `/api/pizza/items/${encodeURIComponent(request.params.id)}`,
+    );
     return back(reply, `orders/${encodeURIComponent(orderId)}`, a);
   });
 
@@ -266,18 +272,33 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     const o = await order(request, request.params.id);
     for (const [n, p] of (o.mine ?? ([] as MineView[])).entries()) {
       if (p.handed_out) continue;
-      const a = await api(request, "POST", `/api/pizza/items/${p.id}/hand-out`, { handed_out: true }, n);
+      const a = await api(
+        request,
+        "POST",
+        `/api/pizza/items/${p.id}/hand-out`,
+        { handed_out: true },
+        n,
+      );
       if (a.status >= 400) return back(reply, `orders/${o.id}`, a);
     }
     return back(reply, `orders/${o.id}`);
   });
 
   // Mockup 16: taking over an order nobody holds, and cancelling one left from an earlier day.
-  app.post<{ Params: Params & { step: string } }>("/orders/:id/step/:step", async (request, reply) => {
-    const { id, step } = request.params;
-    if (step !== "claim" && step !== "cancel") return reply.redirect("/pizza/", 303);
-    const a = await api(request, "POST", `/api/pizza/orders/${encodeURIComponent(id)}/${step}`, {});
-    if (step === "claim") return a.status >= 400 ? back(reply, `orders/${id}`, a) : back(reply, `hold/${id}`);
-    return back(reply, "", a);
-  });
+  app.post<{ Params: Params & { step: string } }>(
+    "/orders/:id/step/:step",
+    async (request, reply) => {
+      const { id, step } = request.params;
+      if (step !== "claim" && step !== "cancel") return reply.redirect("/pizza/", 303);
+      const a = await api(
+        request,
+        "POST",
+        `/api/pizza/orders/${encodeURIComponent(id)}/${step}`,
+        {},
+      );
+      if (step === "claim")
+        return a.status >= 400 ? back(reply, `orders/${id}`, a) : back(reply, `hold/${id}`);
+      return back(reply, "", a);
+    },
+  );
 }

@@ -15,6 +15,7 @@ import {
 import type { Event, SqlClient, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
+import { LiveHub } from "../src/live.js";
 import type { AuditEntry } from "../src/audit.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
@@ -225,6 +226,7 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
     people: (userId) =>
       Promise.resolve({ discord_user_id: userId === "u_pena" ? "100000000000000001" : null }),
     settings: (tenant) => Promise.resolve(settings.get(tenant) ?? DEFAULT_SETTINGS),
+    live: new LiveHub(),
     ...o,
   };
   const app = buildApp(deps);
