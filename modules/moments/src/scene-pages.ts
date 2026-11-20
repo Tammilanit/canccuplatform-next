@@ -13,6 +13,7 @@ import type { Condition, Scene, SceneMotion } from "./scenes.js";
 import { scenesPageView } from "./scene-views.js";
 import type { ZoneSceneView } from "./scene-views.js";
 import { knownZones } from "./store.js";
+import { zonedToUtc } from "./announce/pages.js";
 
 type Raw = Record<string, string | string[] | undefined>;
 const DAY_MS = 86_400_000;
@@ -90,17 +91,21 @@ function freeKey(scenes: readonly Scene[], base: string): string {
   }
 }
 
-/** The days the chart draws: the event's, at most a week, else today's 24 hours. */
-function chartSpan(
+/** The days the chart draws: the event's, at most a week, else today in the event's time zone. */
+export function chartSpan(
   event: { starts_at?: string | null; ends_at?: string | null } | null,
   now: Date,
+  timeZone: string,
 ): { from: number; to: number } {
   const from = Date.parse(event?.starts_at ?? "");
   const to = Date.parse(event?.ends_at ?? "");
   if (!Number.isNaN(from) && !Number.isNaN(to) && to > from)
     return { from, to: Math.min(to, from + MAX_DAYS * DAY_MS) };
-  const start = Math.floor(now.getTime() / DAY_MS) * DAY_MS;
-  return { from: start, to: start + DAY_MS };
+  // en-CA writes the date as YYYY-MM-DD; midnight to midnight, so a daylight-saving day keeps its length.
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);
+  const next = new Date(Date.parse(`${today}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
+  const start = zonedToUtc(`${today}T00:00`, timeZone)?.getTime() ?? now.getTime();
+  return { from: start, to: zonedToUtc(`${next}T00:00`, timeZone)?.getTime() ?? start + DAY_MS };
 }
 
 export function scenePages(pages: FastifyInstance, deps: AppDeps): void {
@@ -147,7 +152,7 @@ export function scenePages(pages: FastifyInstance, deps: AppDeps): void {
         timeZone: ctx.time_zone,
         items: state.items,
         zone: chartZone,
-        ...chartSpan(event, now),
+        ...chartSpan(event, now, ctx.time_zone),
       });
       const crew = state.crew !== null && state.crew.until > now ? state.crew : null;
       const writable = has(request, SETTINGS) && ctx.status !== "archived";

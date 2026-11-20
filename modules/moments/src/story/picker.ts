@@ -136,7 +136,8 @@ export function statusOf(s: Story, ctx: PickerCtx): string[] {
   const o = s.preset === null ? undefined : RULE_OF_PRESET[s.preset];
   if (o !== undefined) {
     const rule = `the built-in rule ${o.rule.replaceAll("_", " ")}`;
-    if (o.on !== undefined) out.push(`Takes the arrived order from ${rule}`);
+    if (o.on !== undefined)
+      out.push(`${s.enabled ? "Takes" : "Would take"} the arrived order from ${rule}`);
     else out.push(`${s.enabled ? "Replaces" : "Would replace"} ${rule}`);
   }
   return [...new Set(out)];

@@ -106,7 +106,8 @@ async function main(): Promise<void> {
   const now = () => new Date();
   const agenda = httpAgenda(env("CANCCU_AGENDA_URL"), service);
   const timeZoneOf = timeZones(tenants);
-  const consumer = { db, engine, flush: () => outbox.flush(), now, agenda, timeZoneOf };
+  const scenes = new SceneTicker();
+  const consumer = { db, engine, flush: () => outbox.flush(), now, agenda, timeZoneOf, scenes };
   listener.subscribe(["tenants", "admin"], async (event) => {
     if (event.source === "tenants") tenants.handleEvent(event);
     else rights.handleEvent(event);
@@ -142,7 +143,6 @@ async function main(): Promise<void> {
   // Notify may start after Moments; the registration waits for it without holding the start up.
   void registerTopic(process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080", service, { log });
 
-  const scenes = new SceneTicker();
   const statuses = new StatusTicker(async (t) => (await tenants.byId(t))?.status ?? null);
   // The tick owns every TTL and patience (E2); one pass at a time, never overlapping itself.
   let ticking = false;

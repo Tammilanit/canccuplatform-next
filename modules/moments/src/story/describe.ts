@@ -22,7 +22,7 @@ const min = (n: number): string =>
 export function triggerText(t: Trigger): string {
   switch (t.kind) {
     case "item":
-      return `${t.item_id !== null ? `The item ${t.item_id}` : `A run-of-show item of kind ${t.kinds.join(" or ")}`} · its ${t.anchor} · follows delays`;
+      return `${t.item_id !== null ? `The item ${t.item_id}` : t.kinds.length === 0 ? "One run-of-show item (pick it)" : `A run-of-show item of kind ${t.kinds.join(" or ")}`} · its ${t.anchor} · follows delays`;
     case "domain":
       return `When ${eventWords(t.type)}${t.final_only ? " in a final" : ""}`;
     case "clock":

@@ -5,7 +5,7 @@
  * `moments.scene.changed` for each zone whose scene or heartbeat changed.
  */
 import type { Event, Outbox, SqlClient } from "@canccu/kit";
-import { pickScene, heartbeatOf } from "./scene-eval.js";
+import { CREW_WHY, pickScene, heartbeatOf } from "./scene-eval.js";
 import type { AgendaItem, SceneFacts } from "./scene-eval.js";
 import { PRESETS, crewMinutes, sceneEvent } from "./scenes.js";
 import type { Scene } from "./scenes.js";
@@ -73,7 +73,9 @@ export async function recordFact(c: SqlClient, e: Event): Promise<boolean> {
     return true;
   }
   if (e.type === "bot.presence.counted" && typeof d.online === "number") {
-    const at = Date.parse(typeof d.counted_at === "string" ? d.counted_at : e.time);
+    // A count whose own time does not parse takes the event's, else it would fail on every delivery.
+    const counted = Date.parse(typeof d.counted_at === "string" ? d.counted_at : "");
+    const at = Number.isNaN(counted) ? Date.parse(e.time) : counted;
     await c.query(
       `INSERT INTO moments_sources (kind, ref, data, revision) VALUES ('presence', '', $1, $2)
        ON CONFLICT (tenant_id, kind, ref) DO UPDATE SET data = EXCLUDED.data, revision = EXCLUDED.revision
@@ -186,17 +188,23 @@ export async function evaluateScenes(
   const { scenes } = await ensureScenes(c);
   const facts = await factsOf(c, o.timeZone, o.now);
   const { rows } = await c.query(
-    `SELECT zone_key, scene_key, since, sent FROM moments_scene_zones`,
+    `SELECT zone_key, scene_key, since, why, sent FROM moments_scene_zones`,
     [],
   );
-  const states = new Map(
-    (rows as { zone_key: string; scene_key: string | null; since: Date; sent: unknown }[]).map(
-      (r) => [r.zone_key, r],
-    ),
-  );
+  type State = {
+    zone_key: string;
+    scene_key: string | null;
+    since: Date;
+    why: string;
+    sent: unknown;
+  };
+  const states = new Map((rows as State[]).map((r) => [r.zone_key, r]));
   for (const zone of await knownZones(c)) {
     const st = states.get(zone);
-    const current = st?.scene_key == null ? null : { key: st.scene_key, since: st.since.getTime() };
+    const current =
+      st?.scene_key == null
+        ? null
+        : { key: st.scene_key, since: st.since.getTime(), crew: st.why === CREW_WHY };
     const picked = pickScene(scenes, facts, zone, current);
     const key = picked?.scene.key ?? null;
     const scene = sceneEvent(picked?.scene ?? null, zone);
@@ -242,12 +250,12 @@ export async function pressCrew(
   zones: string[],
   actor: string,
   now: Date,
-): Promise<Crew | null> {
+): Promise<{ crew: Crew | null; before: Crew | null }> {
   await lockSettings(c, "scene-zones");
   const before = await loadCrew(c);
   if (before !== null && before.scene_key === scene.key && before.until > now) {
     await c.query(`DELETE FROM moments_scene_crew`, []);
-    return null;
+    return { crew: null, before };
   }
   const until = new Date(now.getTime() + (crewMinutes(scene) ?? 0) * 60_000);
   await c.query(
@@ -256,7 +264,7 @@ export async function pressCrew(
        until = EXCLUDED.until, actor_user_id = EXCLUDED.actor_user_id`,
     [scene.key, zones, until, actor],
   );
-  return { scene_key: scene.key, zones, until, actor_user_id: actor };
+  return { crew: { scene_key: scene.key, zones, until, actor_user_id: actor }, before };
 }
 
 /** Each zone's scene now, for the API and the pages. */

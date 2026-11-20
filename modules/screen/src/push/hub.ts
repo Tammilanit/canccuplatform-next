@@ -360,11 +360,15 @@ function plannedKey(zone: string): string {
   return tenantKey("screen", "zone", zone, "planned");
 }
 
-/** A fanout notice as sent, or undefined when it is not JSON (it is then ignored). */
+/** A fanout notice as sent, or undefined when it is not a JSON object (it is then ignored). */
 function parseNotice(message: string): Record<string, unknown> | undefined {
+  let value: unknown;
   try {
-    return JSON.parse(message) as Record<string, unknown>;
+    value = JSON.parse(message);
   } catch {
     return undefined;
   }
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 }

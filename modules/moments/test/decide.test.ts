@@ -123,6 +123,25 @@ describe("the gates, in order", () => {
     expect(out[1]?.detail).toContain("2 min");
   });
 
+  // #592: a second request past the 2 s coalescing, while the first still waits in the queue,
+  // would play right after it, inside the cooldown.
+  it("a cue still waiting in the queue counts for its cooldown", () => {
+    const ticker = cue("announce.attention", { cooldown_seconds: 60 });
+    const busy: ZoneSound = {
+      ...EMPTY_ZONE,
+      playing: { id: "p", cue: "other", category: "attention", until_ms: T + 10_000 },
+    };
+    const { out } = run(
+      [
+        { cue: ticker, key: "t1", source: "s1" },
+        { cue: ticker, key: "t2", source: "s2", now: T + 3000 },
+      ],
+      busy,
+    );
+    expect(out.map((d) => d.outcome)).toEqual(["queued", "suppressed"]);
+    expect(out[1]?.reason).toBe("cooldown");
+  });
+
   it("while an emergency runs, only urgent sounds", () => {
     expect(decide(input({ cue: cue("tournament.post"), emergency: true })).reason).toBe(
       "emergency",

@@ -87,15 +87,20 @@ export interface World {
   images: { id: string; title: string; url: string; type: string; body: Buffer }[];
   /** The zones' names the fake Screen gives, by key; a zone not set has none. */
   zoneNames: Map<string, string>;
+  counters: MemoryCounters;
 }
 
 /** Valkey's counters in memory; their keys name their minute or hour, so none needs expiring. */
 export class MemoryCounters implements Counters {
   readonly values = new Map<string, number>();
+  /** Valkey down: every call fails, as the client's do once its retries are spent. */
+  down = false;
   get(keys: string[]): Promise<number[]> {
+    if (this.down) return Promise.reject(new Error("Connection is closed."));
     return Promise.resolve(keys.map((k) => this.values.get(k) ?? 0));
   }
   incr(key: string): Promise<number> {
+    if (this.down) return Promise.reject(new Error("Connection is closed."));
     const n = (this.values.get(key) ?? 0) + 1;
     this.values.set(key, n);
     return Promise.resolve(n);
@@ -162,6 +167,7 @@ export function world(pool: pg.Pool): World {
     images,
     zoneNames,
     screen,
+    counters,
     now: T0,
     at: (s) => new Date(T0.getTime() + s * 1000),
     tx: (tenant, fn) =>

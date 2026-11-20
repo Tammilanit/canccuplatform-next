@@ -68,6 +68,10 @@ describe("the picker's words", () => {
     expect(soundShort(preset("premiere"))).toBe("the video's own");
     // The builder's sentences for a clock with no time yet and one round at T.
     expect(preset("premiere").triggers.map(triggerText).at(-1)).toBe("Once, at a time not set yet");
+    // #608: an item trigger with no kinds and no item is the one picked at Fire, as the picker says.
+    expect(preset("prize_draw").triggers.map(triggerText)[0]).toBe(
+      "One run-of-show item (pick it) · its start · follows delays",
+    );
     expect(roundsText(preset("premiere"))).toMatch(/^At T · 1 rounds/);
     // #638 (P14): events in words, as an item trigger reads (P11).
     expect(preset("match_called").triggers.map(triggerText)[0]).toBe("When a match is called");
@@ -108,6 +112,10 @@ describe("a preset's status", () => {
     );
     expect(statusOf(preset("pizza_arrived"), at())).toContain(
       "Takes the arrived order from the built-in rule pizza",
+    );
+    // #608: off, it only would, as the other presets say.
+    expect(statusOf({ ...preset("pizza_arrived"), enabled: false }, at())).toContain(
+      "Would take the arrived order from the built-in rule pizza",
     );
     const copy = { ...preset("hot_game"), key: "hot_game_copy", preset: null };
     expect(statusOf(copy, at()).join(" ")).not.toMatch(/rule/);

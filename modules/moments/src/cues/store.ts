@@ -214,6 +214,18 @@ export async function rememberOnce(
   );
 }
 
+export async function forgetOnce(
+  c: SqlClient,
+  zone: string,
+  cue: string,
+  source: string,
+): Promise<void> {
+  await c.query(
+    `DELETE FROM moments_sound_sources WHERE zone_key = $1 AND cue = $2 AND source = $3`,
+    [zone, cue, source],
+  );
+}
+
 export interface LogRow {
   at: Date;
   zone_key: string;

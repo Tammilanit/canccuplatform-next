@@ -6,6 +6,7 @@
  */
 import type { Logger, SqlClient } from "@canccu/kit";
 import { withTenant } from "@canccu/kit";
+import { isolated } from "./db.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { evaluateScenes, storeAgenda } from "./scene-store.js";
@@ -41,7 +42,12 @@ export async function tickTenant(
     if (m === null || m.ended_at !== null) continue;
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
-  await retryRules(c, engine, now);
+  // In a savepoint, as each story: one retry that throws must not undo this second's expiries.
+  await isolated(
+    c,
+    () => retryRules(c, engine, now),
+    (err) => log?.warn({ err }, "a rule's retry failed"),
+  );
   await tickAnnouncements(c, engine, now);
   await tickStories({ c, engine, now, log });
   await engine.pumpSounds(c, now);
@@ -91,6 +97,7 @@ export async function zoneRemoved(
   await c.query(`DELETE FROM moments_zones WHERE zone_key = $1`, [zone]);
   await c.query(`DELETE FROM moment_placements WHERE zone_key = $1`, [zone]);
   await c.query(`DELETE FROM moments_scene_zones WHERE zone_key = $1`, [zone]);
+  await c.query(`DELETE FROM moments_claims_marks WHERE zone_key = $1`, [zone]);
 }
 
 /** How often each event's zones are put in their scenes, besides on the events they follow. */
@@ -106,10 +113,16 @@ export class SceneTicker {
 /** How often a container reads each event's status again (E10, for an archive it missed). */
 export const STATUS_EVERY_MS = 60_000;
 
+/** How long the tick waits for the tenants module's answer before it goes on without it. */
+const STATUS_WAIT_MS = 1500;
+
 /** One container's pace of reading each event's status from the tenants module. */
 export class StatusTicker {
   readonly last = new Map<string, number>();
-  constructor(readonly statusOf: (tenant: string) => Promise<string | null>) {}
+  constructor(
+    readonly statusOf: (tenant: string) => Promise<string | null>,
+    readonly waitMs = STATUS_WAIT_MS,
+  ) {}
 }
 
 interface TickDeps {
@@ -152,7 +165,12 @@ async function archivedMeanwhile(deps: TickDeps, tenant: string): Promise<boolea
   const now = deps.now().getTime();
   if (now - (ticker.last.get(tenant) ?? Number.NEGATIVE_INFINITY) < STATUS_EVERY_MS) return false;
   ticker.last.set(tenant, now);
-  return (await ticker.statusOf(tenant).catch(() => null)) === "archived";
+  // The read has no timeout of its own, and the tick is one loop: a hang would stall every event.
+  let timer: NodeJS.Timeout | undefined;
+  const late = new Promise<null>((resolve) => (timer = setTimeout(resolve, ticker.waitMs, null)));
+  const status = await Promise.race([ticker.statusOf(tenant).catch(() => null), late]);
+  clearTimeout(timer);
+  return status === "archived";
 }
 
 /** One pass over every event: the tick, then the outbox and the 24-hour idempotency keys. */
