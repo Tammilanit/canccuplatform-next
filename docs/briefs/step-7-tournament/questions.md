@@ -5,7 +5,7 @@ Every open question the research for [the step 7 brief](../step-7-tournament.md)
 The themes: **U** who uses it and how · **L** look and feel · **D** data and integrations · **E** edge cases and failure · **O** operations and scale · **P** plan and scope · **F** Finals beside the tournament (added for 0030). **Later: mini tournaments (after version 1)** at the end holds the questions that wait: kept, not asked now.
 
 > **Revised for [0030](../../decisions/0030-finals-integrated-one-tourney-core.md) (2026-11-20, #682) and the product owner's lead round (2026-11-21, decision 0031, recorded in #695).** Finals is integrated as it is and stays apart; one tourney core is the engine of the cup, and it is still built fully general in step 7. Mini tournaments for any game wait until after version 1; the questions about them moved to [Later](#later-mini-tournaments-after-version-1). The earlier questions and their answers stay as they were. Where the core changes a question, a last bullet **Changed for 0030** says what changed and gives the recommendation now; a question the 0030 revision changed only for mini tournaments is back to its accepted answer, with one line saying so; new questions start with **New for 0030**. The core's design is the core plan of #681 (`docs/plans/tourney-core.md`, in PR #688 while this is written): its parameters, its API and THE FINALS preset; "the core plan" below means it.
-> - **Changed (the core):** U1, U6, L3, L5, D2, D3, D13, E13, P1, P2, P3, P4.
+> - **Changed (the core):** U1, U6, L2, L3, L5, D2, D3, D13, E13, P1, P2, P3, P4.
 > - **Back to the accepted answer:** U8, U16, U18, D12, D15, D16, O6, P5.
 > - **New:** D18, P9, F1 (F1 was M12).
 > - **Later:** D17, D19, O11 and M1–M11, M13–M15.
@@ -145,7 +145,8 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 ### L2. The organiser pages
 - **A.** One Tournament entry in "Run the event": tabs Sessions, Standings and final, Players and teams, Settings; each session opens its desk (Desk, Matches, Players and teams, Results, History).
 - **B.** One long page per session, as the legacy.
-- **Recommendation: A.** Sessions and a session's matches are things planned in time, so they are a day schedule, not a card grid: one day at a time, times down the side, items in time order like the run of show, with a day picker, and the same list at phone width. Players and history stay tables, crew actions sit in one band above ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), [15](15-day-schedule.svg)).
+- **Recommendation: A.** Sessions and matches are card grids at card size, players and history stay tables, crew actions in one band above (amendment 3) ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), 15 (the card-grid mockup, replaced by 15-day-schedule)).
+- **Changed for 0031 (the day schedule rule):** Sessions and a session's matches are things planned in time, so they are no longer card grids. **Recommendation now: A**, with sessions and a session's matches as a day schedule: one day at a time, times down the side, items in time order like the run of show, with a day picker, and the same list at phone width. Players and history stay tables, crew actions sit in one band above ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), [15](15-day-schedule.svg)).
 
 ### L3. The screen during a session
 - **A.** The Pulse shows the bracket (when the session has rounds) or the standings as the hero, with the check-in QR while it is open; Moments' rules and presets do the peaks.
