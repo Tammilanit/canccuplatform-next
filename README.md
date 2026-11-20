@@ -15,7 +15,7 @@ Status: skeleton. The stack runs with the hello and admin modules; `setup/instal
 | modules/pizza | CanccuPizza: pizzerias, menus, orders, bills |
 | modules/bot | CanccuBot: the Discord bot (Python) |
 | modules/admin | CanccuAdmin: sign-in, rights, settings, health, alerts, updates |
-| modules/games | CanccuGames: rosters and organizing players into games |
+| modules/games | CanccuGames: the game catalogue, activity matching, surges and each game's competition rules |
 | modules/moments | CanccuMoments: what the screens show and play, and when |
 | modules/voices | CanccuVoices: text to speech, cached |
 | modules/cast | CanccuCast: cast your screen to the big screen |
