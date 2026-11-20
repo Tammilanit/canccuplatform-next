@@ -109,8 +109,17 @@ describe("the preset catalogue", () => {
       rounds: { mode: "offsets", offsets_minutes: [0, 8] },
       end: { until_event: { kind: "domain", type: "pizza.order.closed" } },
     });
-    // An arrived order is already closed: its end is the count alone.
-    expect(preset("pizza_arrived").end).toMatchObject({ rounds: 3, until_event: null });
+    // L6 (#119): their QR lands on the Food page's only open order, or the list of them.
+    for (const key of ["pizza_order_open", "pizza_last_call"])
+      expect(preset(key).round.steps.map((x) => x.content.qr)).toContainEqual({
+        path: "/pizza/go",
+        label: "Order pizza in the hub",
+      });
+    // An arrived order is already closed: its end is the count, or the order's done (#643).
+    expect(preset("pizza_arrived").end).toMatchObject({
+      rounds: 3,
+      until_event: { kind: "domain", type: "pizza.order.done" },
+    });
     expect(preset("round_start").conditions.once).toBe("source");
     expect(preset("hot_game").conditions.cooldown_minutes).toBe(30);
     expect(preset("record_crowd").conditions.once).toBe("day");

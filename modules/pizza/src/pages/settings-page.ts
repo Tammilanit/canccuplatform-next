@@ -9,7 +9,7 @@ import { KitError } from "@canccu/kit";
 import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
-import { DEFAULT_SETTINGS, TIME_BOUNDS } from "../settings.js";
+import { DEFAULT_SETTINGS, NOTE_MAX, TIME_BOUNDS } from "../settings.js";
 import type { TimeKey } from "../settings.js";
 import { flash } from "./order-view.js";
 import { PREFIX, SETTINGS_WRITE, formKey, organiserPage, pageCtx } from "./kit.js";
@@ -71,6 +71,10 @@ function form(c: PageCtx, values: Values, version: number, error?: string): Html
       <section class="canccu-card pizza-form">
         <h2 class="canccu-card__title">${c.t("settings.ordering")}</h2>
         ${sw("ordering_open", "settings.ordering_open", "settings.ordering_open_hint")}
+        <label class="canccu-field"
+          ><span class="canccu-field__label">${c.t("settings.ordering_note")}</span>
+          <input${attrs({ class: "canccu-input", name: "ordering_note", maxlength: NOTE_MAX, value: typeof v.ordering_note === "string" ? v.ordering_note : "" })}
+        /></label>
         <fieldset class="pizza-fieldset">
           <legend class="pizza-switch__label">${c.t("settings.open_by")}</legend>
           <div class="pizza-choices pizza-choices--two">
@@ -116,6 +120,8 @@ export function valuesOf(form: Record<string, unknown>, read: Values): Values {
   };
   for (const k of ["ordering_open", "auto_close", "close_forgotten"]) flag(k);
   if (form.open_by === "anyone" || form.open_by === "crew") out.open_by = form.open_by;
+  if (typeof form.ordering_note === "string")
+    out.ordering_note = form.ordering_note.trim().slice(0, NOTE_MAX);
   const bounds: Record<string, readonly [number, number]> = { ...COUNTS, ...TIME_BOUNDS };
   for (const [k, [min, max]] of Object.entries(bounds)) {
     const n = Number(form[k]);

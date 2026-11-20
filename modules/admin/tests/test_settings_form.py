@@ -36,7 +36,7 @@ async def test_fields_come_in_their_groups_with_a_save_bar(
     browser = await screen_form(world, caplog)
     text = (await browser.get(SCREEN)).text
     titles = re.findall(r'<h2 class="canccu-card__title">([^<]+)</h2>', text)
-    assert titles == ["Playing", "Motion", "When the network is slow", "Web pages"]
+    assert titles == ["Playing", "Motion", "When the network is slow", "Web pages", "Food"]
     assert '<p class="canccu-card__desc">How long a screen waits before it says so.</p>' in text
     # Each setting once, in its group's card.
     assert text.count("name=offline_after_seconds") == 1
@@ -70,6 +70,7 @@ async def test_a_refused_save_keeps_what_was_typed(
             "progress_bars": "on",
             "follow_the_day": "on",
             "stage_art": "on",
+            "food_holder_names": "on",
         },
         headers=ORIGIN,
     )
@@ -99,6 +100,7 @@ async def test_a_conflict_compares_with_what_is_saved_now(
         "progress_bars": "on",
         "follow_the_day": "on",
         "stage_art": "on",
+        "food_holder_names": "on",
     }
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
     assert r.status_code == 409 and "Someone else saved these settings" in r.text
@@ -133,6 +135,7 @@ async def test_a_conflict_keeps_only_the_fields_the_user_changed(
         "progress_bars": "on",
         "follow_the_day": "on",
         "stage_art": "on",
+        "food_holder_names": "on",
     }
     assert form["heartbeat_seconds"] == bases["was.heartbeat_seconds"] == "15"
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
@@ -164,6 +167,7 @@ async def test_a_refused_save_on_a_stale_version_compares_with_what_is_saved_now
         "progress_bars": "on",
         "follow_the_day": "on",
         "stage_art": "on",
+        "food_holder_names": "on",
     }
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
     assert r.status_code == 400

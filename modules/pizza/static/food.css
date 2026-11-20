@@ -1,0 +1,94 @@
+/* The attendee's Food pages (#119, step 5 mockups 02–06 and 16): what pizza.css does not have
+   yet. Layout only, colours from ui.css's tokens, so the pages take the event's theme. */
+
+.pizza-section {
+  margin: 0.5rem 0 0;
+  font-size: var(--canccu-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--canccu-ink-muted);
+}
+.pizza-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.pizza-live {
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+/* The menu: one row per item, the whole row a 48 px target, the chosen one in the primary. */
+.pizza-filter {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+}
+/* The field's own bottom margin would lift it above the button beside it. */
+.pizza-filter > .canccu-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+.pizza-menu {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pizza-menu__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) * 1.5);
+  background: var(--canccu-color-surface);
+  cursor: pointer;
+}
+.pizza-menu__item > input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.pizza-menu__item:has(:checked) {
+  border-color: var(--canccu-color-primary);
+  box-shadow: inset 0 0 0 1px var(--canccu-color-primary);
+}
+.pizza-menu__item:has(:focus-visible) {
+  outline: 2px solid var(--canccu-color-primary);
+  outline-offset: 2px;
+}
+.pizza-menu__text {
+  display: grid;
+  flex: 1;
+  gap: 0.125rem;
+}
+.pizza-menu__price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pizza-choices--stack {
+  /* canccu-grid: fixed row — lays out one item's own parts: one choice per line */
+  grid-template-columns: minmax(0, 1fr);
+}
+.pizza-choice > .pizza-choice__stack {
+  display: grid;
+  gap: 0.125rem;
+  text-align: left;
+}
+.pizza-choice__hint {
+  font-size: var(--canccu-text-sm);
+  opacity: 0.8;
+}
+.pizza-choice > input:disabled + span {
+  opacity: 0.45;
+}

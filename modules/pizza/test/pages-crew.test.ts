@@ -217,6 +217,7 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
     const r = await form(w, "organiser", "/crew/settings", {
       settings_version: "1",
       ordering_open: "off",
+      ordering_note: "  Breakfast orders open at 09:00 ",
       open_by: "crew",
       max_open_orders: "4",
       max_items_per_person: "5",
@@ -237,6 +238,7 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
         ...DEFAULT_SETTINGS,
         settle_to_payer: true,
         ordering_open: false,
+        ordering_note: "Breakfast orders open at 09:00",
         open_by: "crew",
         max_open_orders: 4,
         last_call_minutes: 15,

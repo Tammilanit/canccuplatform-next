@@ -1,0 +1,152 @@
+# shellcheck shell=bash
+# Food's tests of scripts/demo-stack-test (#643), which sources this file after its helpers (call,
+# check, want, status_is, body_is) and its variables: pizza registers Notify's `food` topic at
+# start, and one order's events, from the pizza API alone, show in the main zone's food box and
+# reach a subscribed member's phone. The CI session is the order's holder and its one member; the
+# order ends done and ordering is switched off again, as the demo profile has it.
+
+# A JSON value of the pizza settings with one key changed, saved with the version read.
+# shellcheck disable=SC2329
+food_ordering() {
+  call GET /api/admin/settings/pizza -H "cookie: $COOKIE"
+  status_is 200 || return 1
+  jq -c --argjson on "$1" '{settings_version, values: (.values + {ordering_open: $on})}' \
+    "$TMP/body" > "$TMP/settings.json"
+  call PUT /api/admin/settings/pizza -H "cookie: $COOKIE" -H 'content-type: application/json' \
+    --data @"$TMP/settings.json"
+  status_is 200
+}
+
+# A pizza write as the CI session, with a fresh Idempotency-Key.
+# shellcheck disable=SC2329
+food_write() {
+  local method=$1 path=$2 body=$3
+  call "$method" "$path" -H "cookie: $COOKIE" -H 'content-type: application/json' \
+    -H "idempotency-key: stack-$(openssl rand -hex 8)" -d "$body"
+}
+
+# A call that needs an organiser's right, from inside the module's own container: its loopback is
+# an address of the demo venue, where admin rights count (contracts/tenants.md, admin access); this
+# runner reaches Caddy from Docker's gateway, which they refuse. Sets $code; body in $TMP/body.
+# shellcheck disable=SC2329
+food_local() {
+  local module=$1 method=$2 path=$3 type=${4:-} body=${5:-}
+  "${COMPOSE[@]}" exec -T "$module" node -e '
+    const [method, path, type, body, host, cookie, key] = process.argv.slice(1);
+    const headers = { host, cookie, "idempotency-key": key, ...(type ? { "content-type": type } : {}) };
+    const req = require("node:http").request(
+      { host: "127.0.0.1", port: 8080, method, path, headers },
+      (res) => {
+        let text = "";
+        res.on("data", (c) => (text += c));
+        res.on("end", () => process.stdout.write(`${res.statusCode}\n${text}`));
+      },
+    );
+    req.end(body || undefined);
+  ' "$method" "$path" "$type" "$body" "$DEMO_HOST" "$COOKIE" "stack-$(openssl rand -hex 8)" \
+    > "$TMP/local" || return 1
+  # shellcheck disable=SC2034  # $code is the caller's, as call() sets it
+  code=$(head -n1 "$TMP/local")
+  tail -n +2 "$TMP/local" > "$TMP/body"
+}
+
+# The main zone's food box as the hub reads it (contracts/screen.md, One source, two surfaces).
+# shellcheck disable=SC2329
+food_box() {
+  call GET '/api/screen/now?zone=main' -H "cookie: $COOKIE"
+  body_is 200 "$1"
+}
+
+# shellcheck disable=SC2329
+food_reaches() {
+  local p256 auth sub pz order seq sql
+  # A phone of the member, as agenda's test makes one: `.invalid` never resolves, so the push
+  # fails and its delivery row stays.
+  openssl ecparam -name prime256v1 -genkey -noout -out "$TMP/phone.pem" 2>/dev/null || return 1
+  p256=$(openssl ec -in "$TMP/phone.pem" -pubout -outform DER 2>/dev/null | tail -c 65 |
+    base64 -w0 | tr '+/' '-_' | tr -d '=')
+  auth=$(openssl rand 16 | base64 -w0 | tr '+/' '-_' | tr -d '=')
+  call POST /api/notify/subscriptions -H "cookie: $COOKIE" -H 'content-type: application/json' \
+    -d "{\"push\": {\"endpoint\": \"https://push.canccu-stack.invalid/food-$(openssl rand -hex 4)\",
+      \"keys\": {\"p256dh\": \"$p256\", \"auth\": \"$auth\"}}}"
+  status_is 201 || return 1
+  sub=$(jq -r .id "$TMP/body")
+  # The screens' default zones exist once Studio has read them.
+  food_local screen GET /api/screen/zones
+  status_is 200 || return 1
+  food_ordering true || return 1
+  call GET /api/pizza/pizzerias
+  pz=$(jq -r '.pizzerias[0].id // empty' "$TMP/body")
+  if [ -z "$pz" ]; then
+    # A stack that has not applied the profile's pizza section: one of its own by the menu CSV.
+    food_local pizza POST /api/pizza/menu/import text/csv \
+      $'pizzeria,kind,number,name,price\nStack Pizzeria,item,1,Margherita,8.00\n'
+    status_is 200 || return 1
+    call GET /api/pizza/pizzerias
+    pz=$(jq -r '.pizzerias[0].id // empty' "$TMP/body")
+  fi
+  [ -n "$pz" ] || return 1
+  # Pizza follows admin's settings.changed: the first open may still meet ordering off.
+  for _ in $(seq 20); do
+    food_write POST /api/pizza/orders \
+      "{\"pizzeria_id\": \"$pz\", \"closes_at\": \"$(date -u -d '+45 min' +%FT%TZ)\"}"
+    status_is 201 && break
+    sleep 1
+  done
+  status_is 201 || return 1
+  order=$(jq -r .id "$TMP/body")
+  seq=$(jq -r .seq "$TMP/body")
+  food_write POST "/api/pizza/orders/$order/items" '{"kind": "text", "text": "Stack test pizza"}'
+  status_is 201 || return 1
+  # The box shows it, counted, within the zone's rebuild.
+  for _ in $(seq 30); do
+    food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
+      | select(.seq == $seq and .state == \"open\" and .pizza_count == 1)] | length == 1" && break
+    sleep 1
+  done
+  food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
+    | select(.seq == $seq)] | length == 1" || return 1
+  food_write POST "/api/pizza/orders/$order/place" '{"estimate_minutes": 30}'
+  status_is 200 || return 1
+  food_write POST "/api/pizza/orders/$order/arrive" '{"pickup": "Stack table"}'
+  status_is 200 || return 1
+  # "Pizza is here" to the member's phone: its delivery row, read past RLS as agenda's test does.
+  sql="SELECT n.title || ' / ' || n.body FROM notify_deliveries d JOIN notify_notifications n
+    ON n.tenant_id = d.tenant_id AND n.id = d.notification_id WHERE d.channel = 'push'
+    AND n.topic = 'food' AND d.subscription_id = '$sub'"
+  for _ in $(seq 30); do
+    "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -tAc "$sql" > "$TMP/body"
+    grep -qxF "Pizza is here: order $seq / Collect at Stack table" "$TMP/body" && break
+    sleep 2
+  done
+  grep -qxF "Pizza is here: order $seq / Collect at Stack table" "$TMP/body" || return 1
+  # Everyone got theirs: the order is done and leaves the box.
+  food_write POST "/api/pizza/orders/$order/hand-out" '{}'
+  status_is 200 || return 1
+  for _ in $(seq 30); do
+    food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
+      | select(.seq == $seq)] | length == 0" && break
+    sleep 1
+  done
+  food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
+    | select(.seq == $seq)] | length == 0" || return 1
+  food_ordering false
+}
+
+if want pizza notify; then
+  # Pizza registers `food` with Notify at start, retrying until Notify answers (#643).
+  # shellcheck disable=SC2329
+  offers_food() {
+    for _ in $(seq 30); do
+      call GET /api/notify/topics -H "cookie: $COOKIE"
+      body_is 200 '.topics | map(select(.topic == "food" and .title == "Food")) | length == 1' &&
+        return
+      sleep 2
+    done
+    return 1
+  }
+  check "${TESTS[34]}" offers_food
+fi
+if want pizza screen notify; then
+  check "${TESTS[35]}" food_reaches
+fi

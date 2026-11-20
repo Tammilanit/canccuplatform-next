@@ -67,6 +67,11 @@ settings:
     type: boolean
     label: Show a hot game's art on the stage
     default: true
+  - key: food_holder_names
+    type: boolean
+    label: Name the holder of a pizza order in the food box ("collect from …")
+    short: Holder names
+    default: true
 groups:
   - id: playing
     label: Playing
@@ -84,3 +89,7 @@ groups:
     label: Web pages
     description: Outside pages a screen may show.
     keys: [web_allowlist]
+  - id: food
+    label: Food
+    description: What the screens' food box shows of the pizza orders.
+    keys: [food_holder_names]

@@ -15,6 +15,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import type { Step } from "./lifecycle.js";
+import type { LiveHub } from "./live.js";
 import { keyOf, once } from "./idempotency.js";
 import type { Answer } from "./idempotency.js";
 import type { Members, People } from "./people.js";
@@ -41,6 +42,8 @@ export interface AppDeps {
   members: Members;
   people: People;
   settings: (tenant: string) => Promise<PizzaSettings>;
+  /** The pages' live streams open on this container (live.ts). */
+  live: LiveHub;
 }
 
 export const tenantOf = (request: FastifyRequest): TenantContext => {

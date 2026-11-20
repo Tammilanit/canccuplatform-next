@@ -19,6 +19,27 @@
     color: var(--canccu-color-text);
   }
 
+  /*
+   * The food box (mockup 14 of step 5, #643): a row per order, its pizzeria on one line (an
+   * ellipsis ends a long name) and its state under it, most urgent first as the server orders them.
+   */
+  .canccu-widget--food_status .canccu-widget__row {
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: one order */
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+  }
+
+  .canccu-widget--food_status .canccu-widget__row + .canccu-widget__row {
+    padding-top: calc(1.5 * var(--canccu-u));
+  }
+
+  .canccu-widget--food_status .canccu-widget__name {
+    overflow: hidden;
+    color: var(--canccu-color-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .canccu-widget--agenda_now .canccu-widget__row {
     grid-template-areas: "state delay" "name name" "until where";
     /* canccu-grid: fixed screen — the player's or a layout's own grid: a row */

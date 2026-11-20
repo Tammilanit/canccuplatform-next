@@ -88,6 +88,8 @@ export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: read
     },
     "pizza.order.arrived": { source: "order", fills: ["order.seq", "order.pizza_count"] },
     "pizza.order.closed": { source: "order", fills: ["order.seq"] },
+    // D3: everyone got theirs, the holder's Done, or the timer (which starts nothing: triggers.ts).
+    "pizza.order.done": { source: "order", fills: ["order.seq"] },
     "games.surge.started": { source: "game", fills: ["game.name", "game.players"] },
     "screen.photo.added": { source: "photo", fills: [] },
   };

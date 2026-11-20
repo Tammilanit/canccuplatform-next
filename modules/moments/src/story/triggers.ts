@@ -242,6 +242,8 @@ export async function storyEvent(ctx: Omit<Ctx, "settings" | "event">, e: Event)
     if (t?.kind !== "domain") continue;
     if (t.final_only && (e.data.session as { is_final?: unknown } | undefined)?.is_final !== true)
       continue;
+    // A done the timer made: nobody marked it, so nothing happened in the hall to show.
+    if (e.type === "pizza.order.done" && e.data.reason === "timer") continue;
     const facts = {
       ...domainFacts(e.type, e.data, full.event.time_zone),
       "@happening": `${e.type}:${source.slice(source.indexOf(":") + 1)}`,

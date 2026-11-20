@@ -14,6 +14,20 @@ export interface ItemView {
   handed_out: boolean;
 }
 
+/** One of the caller's own pizzas, as a member reads it. */
+export interface MineView {
+  id: string;
+  kind: "menu" | "custom" | "text";
+  number: string | null;
+  label: string;
+  toppings: string[] | null;
+  text: string | null;
+  note: string | null;
+  comment: string | null;
+  price_cents: number | null;
+  handed_out: boolean;
+}
+
 /** An order as the API answers it to its holder and the crew (contracts/pizza.md, Orders). */
 export interface OrderView {
   id: string;
@@ -46,11 +60,13 @@ export interface OrderView {
   nudged_at?: string | null;
   note?: string | null;
   items?: ItemView[];
+  /** A member's own pizzas (contracts/pizza.md, Who sees what). */
+  mine?: MineView[];
   payer?: { user_id: string; name: string | null } | null;
 }
 
 export const base = (o: OrderView) => `${PREFIX}hold/${o.id}`;
-export const time = (c: PageCtx, iso: string | null | undefined) =>
+export const time = (c: Pick<PageCtx, "zone">, iso: string | null | undefined) =>
   iso === null || iso === undefined ? "" : timeLabel(iso, c.zone);
 
 /** A notice from the address (`?error=`), after a form. */
@@ -61,7 +77,7 @@ export function flash(error: string | undefined): Slot {
 }
 
 /** "8 pizzas · 6 people". */
-export const counts = (c: PageCtx, o: OrderView) =>
+export const counts = (c: Pick<PageCtx, "t">, o: OrderView) =>
   c.t("order.counts", { pizzas: o.pizza_count, people: o.people_count });
 
 export function post(action: string, label: string, cls: string, extra: Slot = ""): Html {

@@ -94,6 +94,37 @@ describe("the player's default templates", () => {
     expect(password?.classList.contains("canccu-widget__meta")).toBe(true);
   });
 
+  // contracts/screen.md, Widgets: the food box lists every order (#643, D2); a claim's content (the
+  // pizza rule's one order, without `orders`) draws as before.
+  it("lists each order in the food box, and draws one order's claim as it always did", () => {
+    const orders = [
+      { pizzeria_name: "Demo Pizzeria", status_text: "Open · closes 18:30 · 9 pizzas" },
+      { pizzeria_name: "Demo Trattoria", status_text: "On the way · about 19:31" },
+    ];
+    const box = draw(DEFAULT_TEMPLATES.food_status ?? [], {
+      title: "Food",
+      state: "open",
+      pizzeria_name: "Demo Pizzeria",
+      orders,
+    });
+    expect(box.querySelector(".canccu-widget__kicker")?.textContent).toBe("Food");
+    const rows = [...box.querySelectorAll(".canccu-widget__row")].map((r) => r.textContent);
+    expect(rows).toEqual([
+      "Demo PizzeriaOpen · closes 18:30 · 9 pizzas",
+      "Demo TrattoriaOn the way · about 19:31",
+    ]);
+    expect(box.querySelector(".canccu-widget__big")).toBeNull();
+    const claim = draw(DEFAULT_TEMPLATES.food_status ?? [], {
+      state: "placed",
+      pizzeria_name: "Demo Pizzeria",
+      target_at: "2026-01-01T18:30:00Z",
+    });
+    expect(claim.querySelector(".canccu-widget__title")?.textContent).toBe("Demo Pizzeria");
+    expect(claim.querySelector(".canccu-widget__big")?.textContent).toBe("placed");
+    expect(claim.querySelectorAll(".canccu-widget__row")).toHaveLength(0);
+    expect(claim.querySelector(".canccu-widget__kicker")).toBeNull();
+  });
+
   // contracts/screen.md, Trend arrows (#416): the direction in the class, no arrow without one.
   it("draws a trend arrow beside each statistic that has one", () => {
     const stats = draw(DEFAULT_TEMPLATES.stats ?? [], {

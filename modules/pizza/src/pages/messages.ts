@@ -3,6 +3,7 @@
  * picks the catalogue, English for any other. The shell around the organiser pages is
  * packages/ui's and stays English until the platform's step 10.
  */
+import { FOOD_EN } from "./food-messages.js";
 import { FI } from "./messages-fi.js";
 
 export const EN = {
@@ -269,6 +270,7 @@ export const EN = {
   "time.min": "{n} min",
   "time.h": "{n} h",
   "time.h_min": "{h} h {m} min",
+  ...FOOD_EN,
 } as const;
 
 export type MessageKey = keyof typeof EN;

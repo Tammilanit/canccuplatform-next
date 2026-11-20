@@ -11,6 +11,7 @@ import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
 import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
 import { countsOf } from "./stats.js";
+import { loadFood } from "./food.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
@@ -204,6 +205,7 @@ export async function composeZone(
       play: await zonePlay(c, zone.key, real.getTime()),
       prefetch: await zonePrefetch(c, zone.key),
       scene: await loadScene(c, zone.key),
+      food: await loadFood(c),
     };
   });
   if (read === null) return null;
@@ -244,6 +246,7 @@ export async function composeZone(
     embeds: theme?.embeds ?? [],
     phase: motion.phase,
     highlight: highlightOf(items, at.getTime()),
+    food: { orders: read.food, names: deps.settings.get("food_holder_names", true) !== false },
   };
   const build = (portrait: boolean): ZoneView => {
     const once = (showcase?: "grow" | "keep"): ZoneView => {
