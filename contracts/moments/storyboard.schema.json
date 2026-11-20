@@ -60,6 +60,7 @@
                 "pizza.order.placed",
                 "pizza.order.arrived",
                 "pizza.order.closed",
+                "pizza.order.done",
                 "games.surge.started",
                 "screen.photo.added"
               ]

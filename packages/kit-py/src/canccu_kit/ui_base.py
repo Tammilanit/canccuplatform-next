@@ -40,6 +40,13 @@ MENU: dict[str, Any] = {
                     "icon": "megaphone",
                     "rights": ["moments.announce"],
                 },
+                {
+                    "id": "food",
+                    "label": "Food",
+                    "href": "/pizza/crew",
+                    "icon": "food",
+                    "rights": ["pizza.order.manage", "pizza.menu.write"],
+                },
             ],
         },
         {

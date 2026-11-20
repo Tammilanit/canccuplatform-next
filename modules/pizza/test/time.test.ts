@@ -1,6 +1,13 @@
 /** The event day (D4, E8): it turns at 06:00 in the event's time zone, across a clock change too. */
 import { describe, expect, it } from "vitest";
-import { dayTurn, eventDay, formatDayLabel, localTime, withOffset } from "../src/time.js";
+import {
+  dayTurn,
+  eventDay,
+  formatDayLabel,
+  localTime,
+  nextLocalTime,
+  withOffset,
+} from "../src/time.js";
 
 const HKI = "Europe/Helsinki";
 
@@ -44,5 +51,24 @@ describe("formatting", () => {
   });
   it("labels a day", () => {
     expect(formatDayLabel("2026-10-29")).toBe("Thu 29.10.");
+  });
+});
+
+describe("nextLocalTime", () => {
+  const now = new Date("2026-11-21T16:00:00Z"); // 18:00 in Helsinki
+  it("reads a time on the zone's clock: today's while it is ahead, else tomorrow's", () => {
+    expect(nextLocalTime("18:45", HKI, now)).toBe("2026-11-21T16:45:00.000Z");
+    expect(nextLocalTime("01:30", HKI, now)).toBe("2026-11-21T23:30:00.000Z");
+    expect(nextLocalTime("17:59", HKI, now)).toBe("2026-11-22T15:59:00.000Z");
+  });
+  it("is null for anything that is not HH:MM", () => {
+    for (const bad of [null, "", "24:00", "7:30", "18:60", "18:45:00"])
+      expect(nextLocalTime(bad, HKI, now)).toBeNull();
+  });
+  it("lands on the wall clock across the October clock change", () => {
+    // 2026-10-25 04:00 local is back to 03:00; 12:00 that day is +2.
+    expect(nextLocalTime("12:00", HKI, new Date("2026-10-24T22:00:00Z"))).toBe(
+      "2026-10-25T10:00:00.000Z",
+    );
   });
 });

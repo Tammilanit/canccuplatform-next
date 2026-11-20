@@ -1,6 +1,25 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
+// The page script runs in the browser, untyped, so the typed rules skip it.
+const BROWSER = Object.fromEntries(
+  [
+    "document",
+    "window",
+    "navigator",
+    "localStorage",
+    "setTimeout",
+    "clearTimeout",
+    "FormData",
+    "URLSearchParams",
+    "HTMLFormElement",
+    "fetch",
+    "location",
+    "DOMParser",
+    "EventSource",
+  ].map((name) => [name, "readonly"]),
+);
+
 export default tseslint.config(
   { ignores: ["dist/", "node_modules/", "eslint.config.js"] },
   js.configs.recommended,
@@ -11,6 +30,15 @@ export default tseslint.config(
     },
     rules: {
       "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+    },
+  },
+  {
+    files: ["static/**/*.js"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      sourceType: "script",
+      globals: BROWSER,
     },
   },
 );

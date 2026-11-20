@@ -57,6 +57,7 @@ import { momentsListed, momentsShots } from "./demo-screenshots-moments.mjs";
 import { announceListed, announceShots } from "./demo-screenshots-announce.mjs";
 import { storiesListed, storiesShots } from "./demo-screenshots-stories.mjs";
 import { gridsListed, gridsShots } from "./demo-screenshots-grids.mjs";
+import { pizzaListed, pizzaShots } from "./demo-screenshots-pizza.mjs";
 import {
   DEVICE_PAGES,
   devicesShots,
@@ -138,6 +139,7 @@ if (opts["dry-run"]) {
           ...gridsListed(at),
         ]
       : []),
+    ...(want("pizza") ? pizzaListed(at) : []),
   ];
   for (const name of want("screens") ? planned(opts.check) : []) {
     lines.push(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
@@ -294,6 +296,8 @@ try {
     await storiesShots(run);
     await gridsShots(run);
   }
+  // The Food pages (step 5), on an order they take from open to done.
+  if (want("pizza")) await pizzaShots(run);
 } finally {
   await browser.close();
   await removeMade(demo, fail);

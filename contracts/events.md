@@ -205,7 +205,7 @@ An **Order**:
 | `pizza.order.changed` | Added: the close time, note, pizzeria, estimate, call-in time or pickup was edited | event-wide, `public` | screen | `order` (Order), `changed` (list of field names), `actor_user_id` |
 | `pizza.item.changed` | Added: someone else changed a person's pizza (U14) | personal (`user_id`) | notify | as `pizza.item.added` |
 | `pizza.amount.changed` | Added: a money change after the order closed changed these people's amounts (U14); no amounts | personal (`user_ids`) | notify | `order_id` (string), `user_ids` (list of string), `actor_user_id` |
-| `pizza.reminder.triggered` | An order is overdue: open past `target_at`, or closed but not placed, for `minutes` | event-wide, `public`, like every order event that names the holder | bot (posts in the event's channel, mentioning the holder) | `order` (Order), `kind` (string: `open_past_target`, `closed_not_placed`), `minutes` (integer) |
+| `pizza.reminder.triggered` | An order is overdue: open past `target_at`, or closed but not placed, for `minutes`. Added: one per person who hears it, also "has it arrived?", the crew told of a release, and the hand-out nudge (D12) | `order` event-wide, `public`, like every order event that names the holder; added: personal (`user_id`) | bot (posts in the event's channel, mentioning the holder), notify (`food`, personal part) | `order` (Order), `kind` (string: `open_past_target`, `closed_not_placed`; added: `not_arrived`, `released`, `not_collected`), `minutes` (integer); added: `user_id` (string: who hears it), `role` (string: `holder`, `crew`, `member`) |
 
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e70", "type": "pizza.order.opened", "version": 1,

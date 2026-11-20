@@ -192,7 +192,7 @@ Sequences for the peaks as data an organiser edits without code (the [storyboard
 - **`Storyboard`:** `key`, `name`, `preset` (or null), `enabled`, `triggers`, `conditions`, `run_mode`, `full_screen`, `round`, `rounds`, `end`, `finale`, `sound`. An event has at most 40.
 - **Triggers** (any one starts it, SD2, SD4), each with the trigger time **T** its rounds count from:
   - `item` (`kinds` or one `item_id`, `anchor` `start` or `end`): a public, scheduled run-of-show item; T is that moment of the item and follows its delays; a cancel or a removal ends the run silently (SE3, E15). With no kind and no item it never fires until the organiser picks one (a preset's "pick an item"); a take still asks for the item.
-  - `domain` (`type` from the fixed list in the schema, `final_only`): T is when the event arrives. A run keys on its source (`match:<id>`, `session:<id>`, `order:<id>`, `game:<id>`, `photo:<id>`).
+  - `domain` (`type` from the fixed list in the schema, `final_only`): T is when the event arrives. A `pizza.order.done` with `reason` `timer` starts nothing: the scheduler closed an order nobody marked, so nothing happened in the hall to show (D3). A run keys on its source (`match:<id>`, `session:<id>`, `order:<id>`, `game:<id>`, `photo:<id>`).
   - `clock`: `once` (a date-time; with none set, `at` null, it never fires), `daily` (HH:MM in the event's time zone), `event_start`, `event_end`, or `every` n minutes (15–240) within a window `from`–`until` on the event's days, each fire a run of its own aligned to the window's start. T is the clock time.
   - `take`: a person (below). A take of a story with an `item` trigger asks for the item, and T is that item's time (SU3).
   - `scene` (`scene_key`, `enters` or `leaves`): a zone's scene changes; the story plays on that zone. T is the change.
@@ -273,7 +273,7 @@ The history keeps the name and user id of whoever started or ended a moment. `GE
 |---|---|---|
 | screen | `screen.claims.changed`, `screen.zone.saved`, `screen.zone.removed`, `screen.photo.added` | Placements, the history, the event's zones; a new photo's cue |
 | tournament | `tournament.match.called`, `.match.started`, `.match.finished`, `.round.started`, `.checkin.opened`, `.checkin.closed`, `tournament.leaderboard.changed`, `tournament.session.*`, `tournament.result.corrected` | Rules; the spotlight's standings and bracket; stories' `domain` triggers and ends |
-| pizza | `pizza.order.opened`, `.closing`, `.placed`, `.arrived`, `.closed`, `.cancelled` | The `pizza` rule; stories' `domain` triggers and ends |
+| pizza | `pizza.order.opened`, `.closing`, `.placed`, `.arrived`, `.closed`, `.done`, `.cancelled` | The `pizza` rule; stories' `domain` triggers and ends (Pizza orders ready also ends on its order's `done`) |
 | games | `games.surge.started`, `games.surge.ended` | The `hot_game` rule; scenes' games condition |
 | agenda | `agenda.*` (each carries `agenda_version`); the event's whole agenda as a module, `GET /internal/agenda/items` (on those events, and once per container at its first scene pass) | Scenes' agenda conditions; announcements' item placeholders, `fire_at` and cancels (E15); stories' `item` triggers, delays and cancels |
 | notify | `notify.checkin.recorded` (purpose `arrival`) | Scenes' check-ins condition, the heartbeat |

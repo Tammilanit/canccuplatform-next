@@ -55,6 +55,8 @@ export async function leave(
       );
     }
   }
+  // No longer told as the crew: a member who left holds no right here.
+  await c.query(`DELETE FROM pizza_crew WHERE user_id = $1`, [userId]);
 }
 
 /** Everything about one person at this event, anonymised (the privacy delete, a deleted user). */
@@ -119,11 +121,14 @@ export async function anonymiseAll(c: SqlClient): Promise<void> {
     [],
   );
   await c.query(`DELETE FROM pizza_idempotency`, []);
+  await c.query(`DELETE FROM pizza_crew`, []);
 }
 
 /** A deleted event's rows, all of them. */
 export async function deleteTenantRows(c: SqlClient): Promise<void> {
   for (const table of [
+    "pizza_due",
+    "pizza_crew",
     "pizza_order_log",
     "pizza_items",
     "pizza_orders",

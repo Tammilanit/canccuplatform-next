@@ -13,6 +13,7 @@ export const GROUPS = [
   "screens",
   "screen-studio",
   "moments",
+  "pizza",
 ];
 
 /** The groups a `--groups a,b` option names; a typo fails the run rather than skip its shots. */
@@ -31,6 +32,7 @@ const PAGE_GROUPS = [
   ["/notify/", "notify"],
   ["/theming/", "theming"],
   ["/moments/", "moments"],
+  ["/pizza/", "pizza"],
   ["/screen/", "screens"],
 ];
 
@@ -54,6 +56,9 @@ export const SHARDS = [
   },
   { shard: "screens", groups: ["screens"] },
   { shard: "studio", groups: ["screen-studio"] },
+  // Food on a stack of its own: its open orders would start Moments' pizza stories on the screens
+  // of the pages shard's shots.
+  { shard: "food", groups: ["pizza"] },
 ];
 
 // What a changed path needs, first match wins (a `*` also matches `/`): `docs` (no stack),
@@ -81,6 +86,7 @@ const MAP = [
   ["modules/agenda/*", ["agenda"]],
   ["modules/notify/*", ["notify"]],
   ["modules/moments/*", ["moments"]],
+  ["modules/pizza/*", ["pizza"]],
   ["modules/screen-render/*", ["screens"]],
   ["modules/screen/*", ["screens", "screen-studio"]],
   ["modules/*", []],

@@ -1,0 +1,126 @@
+/* The crew's pages (mockups 10, 11 and 17), inside the organiser shell; pizza.css has what they
+   share with the holder's pages (cards, choices, forms). */
+.pizza-chips {
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.pizza-day {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.pizza-day label {
+  display: grid;
+}
+.pizza-needs__text {
+  color: var(--canccu-ink-degraded);
+}
+.pizza-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.pizza-phone {
+  display: none;
+}
+.pizza-cards {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 47.99rem) {
+  .pizza-desk {
+    display: none;
+  }
+  .pizza-phone {
+    display: block;
+  }
+}
+.pizza-order-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.pizza-stepin {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.pizza-crew-people {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pizza-crew-people > li {
+  display: grid;
+  gap: 0.125rem;
+}
+.pizza-crew-people__name {
+  font-weight: 600;
+}
+.pizza-menu-tools {
+  margin-bottom: 1rem;
+}
+.pizza-hidden {
+  opacity: 0.6;
+}
+.pizza-change--new {
+  color: var(--canccu-ink-ok);
+}
+.pizza-change--hidden {
+  color: var(--canccu-ink-degraded);
+}
+.pizza-csv {
+  font-family: var(--canccu-font-mono);
+}
+.pizza-switch,
+.pizza-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.pizza-switch__text {
+  display: grid;
+}
+.pizza-switch__label {
+  font-weight: 600;
+}
+.pizza-switch__box {
+  flex: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  accent-color: var(--canccu-color-primary);
+}
+.pizza-number {
+  width: 5.5rem;
+  text-align: center;
+}
+.pizza-slider {
+  display: grid;
+  /* canccu-grid: fixed form — a slider beside its value, as mockup 17 B */
+  grid-template-columns: minmax(0, 1fr) 6rem;
+  align-items: center;
+  gap: 0.25rem 1rem;
+}
+.pizza-slider > .pizza-switch__label {
+  grid-column: 1 / -1;
+  font-weight: 500;
+}
+.pizza-slider > input {
+  width: 100%;
+  accent-color: var(--canccu-color-primary);
+}
+.pizza-slider > output {
+  text-align: right;
+}

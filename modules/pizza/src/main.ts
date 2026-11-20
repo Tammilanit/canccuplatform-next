@@ -22,10 +22,14 @@ import {
 import { buildApp } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { handlePlatformEvent, handleTenantEvent } from "./consumer.js";
+import { hostFetch } from "./host-fetch.js";
+import { LiveHub } from "./live.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { dropOldKeys } from "./idempotency.js";
 import { everySessionIsMember, tenantsPeople } from "./people.js";
+import { Scheduler, TICK_MS } from "./scheduler.js";
 import { settingsReader } from "./settings.js";
+import { registerTopic } from "./topic.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the pizza migrations; each module has its own. */
@@ -79,6 +83,8 @@ async function main(): Promise<void> {
   // Subscriptions block in XREAD on their connection; the health check's PING gets its own.
   const listenStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const listener = new Bus(listenStore, config.module, log);
+  // The pages' live streams read pizza's own event streams, on a connection of their own.
+  const liveStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const tenantsUrl = env("CANCCU_TENANTS_URL");
   const tenants = new TenantResolver({
     tenantsUrl,
@@ -92,10 +98,12 @@ async function main(): Promise<void> {
   const admin = new AdminClient(config.adminUrl);
   const rights = new RightsChecker(admin);
   const settings = new SettingsClient(admin, config.module, { service });
+  // Admin's own settings hold the event's language, the one module's settings another may read.
+  const adminSettings = new SettingsClient(admin, "admin", { service });
   const db = poolDb(pool);
   const outbox = new Outbox(new Bus(store, config.module, log), db, { log });
   const now = () => new Date();
-  const deps = {
+  const base = {
     db,
     outbox,
     rights,
@@ -106,10 +114,28 @@ async function main(): Promise<void> {
     members: everySessionIsMember,
     people: tenantsPeople(tenantsUrl, service),
     settings: settingsReader(settings),
+  };
+  const scheduler = new Scheduler(base);
+  const live = new LiveHub();
+  const deps = {
+    ...base,
+    live,
+    // The Food settings page calls admin's settings API as the person, on the event's Host.
+    admin: new AdminClient(config.adminUrl, { fetch: hostFetch }),
+    language: (tenant: string) =>
+      withTenant(tenant, async () => {
+        await adminSettings.ensure();
+        return String(adminSettings.get("language", "en"));
+      }),
     health: createHealth({
       module: config.module,
       version: config.version,
-      checks: { valkey: valkeyCheck(store), postgres: postgresCheck(() => pool.query("SELECT 1")) },
+      checks: {
+        valkey: valkeyCheck(store),
+        postgres: postgresCheck(() => pool.query("SELECT 1")),
+        // O8: a late scheduler degrades the module; it never takes it down.
+        scheduler: { run: scheduler.check(), essential: false },
+      },
     }),
   };
   listener.subscribe(["tenants", "admin"], async (event) => {
@@ -119,9 +145,18 @@ async function main(): Promise<void> {
     } else rights.handleEvent(event);
   });
   listener.subscribeTenants(["tenants", "admin"], async (event) => {
-    if (event.source === "admin") await settings.handleEvent(event);
-    else await handleTenantEvent(deps, event);
+    if (event.source === "admin") {
+      await settings.handleEvent(event);
+      await adminSettings.handleEvent(event);
+    } else await handleTenantEvent(deps, event);
   });
+
+  new Bus(liveStore, config.module, log).subscribeTenants([config.module], (event) => {
+    live.handle(event);
+  });
+
+  // Without it Notify knows no `food` topic, and no phone hears of an order.
+  void registerTopic(process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080", service, { log });
 
   const app = buildApp(deps);
   await app.listen({ host: "0.0.0.0", port: PORT });
@@ -142,15 +177,23 @@ async function main(): Promise<void> {
       log.warn({ err }, "pizza upkeep failed");
     });
   }, UPKEEP_MS);
-  for (const t of [resend, hourly]) t.unref();
+  const runTick = () => {
+    scheduler.tick().catch((err: unknown) => {
+      log.warn({ err }, "the pizza scheduler failed");
+    });
+  };
+  // At once, so a restart catches up on what fell due while it was down.
+  runTick();
+  const tick = setInterval(runTick, TICK_MS);
+  for (const t of [resend, hourly, tick]) t.unref();
 
   const stop = async (): Promise<void> => {
-    for (const t of [resend, hourly]) clearInterval(t);
+    for (const t of [resend, hourly, tick]) clearInterval(t);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
     await Promise.race([
-      Promise.allSettled([store.close(), listenStore.close(), pool.end()]),
+      Promise.allSettled([store.close(), listenStore.close(), liveStore.close(), pool.end()]),
       grace,
     ]);
     process.exit(0);

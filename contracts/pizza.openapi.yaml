@@ -52,6 +52,8 @@ paths:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1arrive"
   /api/pizza/orders/{order_id}/hand-out:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1hand-out"
+  /api/pizza/orders/{order_id}/nudge:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1nudge"
   /api/pizza/orders/{order_id}/done:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1done"
   /api/pizza/orders/{order_id}/undo:
@@ -96,6 +98,8 @@ paths:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me~1export"
   /api/pizza/me:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me"
+  /api/pizza/stream:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1stream"
   /api/pizza/health:
     get:
       tags: [orders]
@@ -233,7 +237,7 @@ components:
         An order as the caller may see it (contracts/pizza.md, Who sees what). Every caller gets the base
         fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents` and
         `lines`; the holder and the crew `items` instead of `lines`, the pizzeria's `phone` and `website`,
-        `claimed_at`, `payer`, `total_cents`, `split` and `settle_to`.
+        `claimed_at`, `nudged_at`, `payer`, `total_cents`, `split` and `settle_to`.
       required: [id, seq, day, state, pizzeria, closes_at, target_at, pizza_count, people_count, revision, stale]
       properties:
         id:
@@ -328,6 +332,8 @@ components:
             $ref: "#/components/schemas/Item"
         claimed_at:
           $ref: "#/components/schemas/NullableTime"
+        nudged_at:
+          $ref: "#/components/schemas/NullableTime"
         payer:
           oneOf:
             - $ref: "#/components/schemas/UserRef"
@@ -349,6 +355,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Order"
+    LiveChange:
+      type: object
+      description: One `change` of the live stream; never who or what (contracts/pizza.md, Live).
+      required: [type, order_id, revision]
+      properties:
+        type:
+          type: string
+          description: The `pizza.order.*` or `pizza.item.*` event behind it.
+        order_id:
+          $ref: "#/components/schemas/Id"
+        state:
+          type: string
+          description: The order's state, on an order's event.
+        revision:
+          type: integer
     OrderNew:
       type: object
       required: [pizzeria_id, closes_at]

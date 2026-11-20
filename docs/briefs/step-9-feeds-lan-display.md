@@ -2,6 +2,11 @@
 
 The research pack for the product owner's brainstorming session on [step 9, Feeds and LAN display](../roadmap.md#9-feeds-and-lan-display) (epic #63), issue #168. It follows the [outline of a research pack](README.md#outline-of-a-research-pack) and is built like [step 5's pack](step-5-pizza.md). After this merges, the lead runs the session over as many rounds as it takes, writes the final plan into this brief (`## Plan`) and rewrites the step's issues; the product owner accepts the plan before any build starts.
 
+> **Source update (2026-11-20, #677).** The [canccubot](../legacy-inventory/canccubot.md), [mini tourney](../legacy-inventory/thefinals_mini_tourney.md#refresh-2026-11-20) and [canccuplatform](../legacy-inventory/canccuplatform.md#refresh-2026-11-20) inventories were refreshed; what this pack read on the trackers and the stats push is unchanged. For the finals cards and the tourney watcher, with no decision of this pack changed:
+> - The watcher's season posts no longer carry a link; they point to `/finals`. It still pushes the open season to the site with the plain season link and registered/capacity counts (players, not teams, in individual mode), and reads the tourney with a bearer through its new read gate; the tourney's stream now sends a ping every 30 s, and seasons gained the state `cancelled`.
+> - [L11](step-9-feeds-lan-display/questions.md#l11-the-finals-cards-look): the public tourney pages now show nothing without a session from a `/finals` link, so a QR on the "season open" card that opens the season page would land on a sign-in note. On the platform the QR goes to the hub; worth saying when the cards are drawn.
+> - [D12](step-9-feeds-lan-display/questions.md#d12-the-finals-cards-which-step-builds-them): unaffected; the cards still wait for the Finals track's events.
+
 **In this pack**
 - This file: goal, what was read, where step 9 starts, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, proposed issue changes and exit criteria.
 - [step-9-feeds-lan-display/questions.md](step-9-feeds-lan-display/questions.md): the question bank, 67 questions in six themes, each with options and a recommendation. IDs (U2, D4, …) are used throughout.

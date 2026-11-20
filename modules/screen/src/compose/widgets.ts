@@ -4,6 +4,8 @@
  */
 import qrcode from "qrcode-generator";
 import { graphFields, todayFields } from "./features.js";
+import { foodFields } from "./food.js";
+import type { FoodOrder } from "./food.js";
 import type { Presence } from "./features.js";
 import type { Props } from "./layouts.js";
 import type { MotionPhase } from "./motion.js";
@@ -48,6 +50,8 @@ export interface ZoneFacts {
   presence?: Presence | null;
   /** Photos shared in the last 24 hours; absent while the wall is off or not read. */
   photosToday?: number | null;
+  /** The pizza orders not over (food.ts), and whether the box names their holders (L8). */
+  food?: { orders: FoodOrder[]; names: boolean };
 }
 
 /** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
@@ -283,6 +287,14 @@ function fields(
       return facts.photos?.[wallKey(wallSettings(props))] ?? null;
     case "stats":
       return facts.stats ?? null;
+    case "food_status":
+      return facts.food === undefined
+        ? null
+        : foodFields(facts.food.orders, {
+            nowMs: facts.now.getTime(),
+            time: (iso) => textOf(iso, facts),
+            names: facts.food.names,
+          });
     case "checkin_qr":
       return facts.checkin == null ? null : checkinFields(facts.checkin, facts);
     case "embed": {

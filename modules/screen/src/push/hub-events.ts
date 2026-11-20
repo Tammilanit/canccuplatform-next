@@ -20,6 +20,9 @@ const REBUILDS = [
   "moments.sound.",
   "moments.scene.",
   "moments.prefetch.",
+  // Main hands these on once src/compose/food.ts has kept them.
+  "pizza.order.",
+  "pizza.item.",
 ];
 /** The event's context changed: every stream checks its device again and may redraw. */
 export const RECHECKS = new Set([

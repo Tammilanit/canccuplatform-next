@@ -65,6 +65,22 @@ export function dayTurn(day: string, timeZone: string): Date {
   return new Date(guess - offsetMinutes(new Date(guess), timeZone) * 60_000);
 }
 
+/**
+ * The next instant after `now` that reads `HH:MM` on the zone's clock (today's, or tomorrow's once
+ * it has passed); null for anything that is not such a time.
+ */
+export function nextLocalTime(hhmm: string | null, timeZone: string, now: Date): string | null {
+  const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(hhmm ?? "");
+  if (m === null) return null;
+  const p = partsIn(now, timeZone);
+  for (const plus of [0, 1]) {
+    const guess = Date.UTC(p.year, p.month - 1, p.day + plus, Number(m[1]), Number(m[2]));
+    const at = new Date(guess - offsetMinutes(new Date(guess), timeZone) * 60_000);
+    if (at.getTime() > now.getTime()) return at.toISOString();
+  }
+  return null;
+}
+
 /** `HH:MM` local. */
 export function localTime(at: Date, timeZone: string): string {
   const p = partsIn(at, timeZone);

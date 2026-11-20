@@ -12,6 +12,7 @@ import {
   card,
   domain,
   every,
+  food,
   hub,
   item,
   offsets,
@@ -96,7 +97,7 @@ export const PIZZA_ORDER_OPEN = preset({
         title: "Pizza order open",
         subtitle: "Order in the hub before {order.target_at|it closes}",
         image_url: null,
-        ...hub("Order pizza in the hub"),
+        ...food("Order pizza in the hub"),
       },
       20,
       { message: true, cue: "pizza.open" },
@@ -137,7 +138,7 @@ export const PIZZA_LAST_CALL = preset({
         title: "Last call: pizza order closes at {order.closes_at|any minute}",
         subtitle: "Order in the hub now",
         image_url: null,
-        ...hub("Order pizza in the hub"),
+        ...food("Order pizza in the hub"),
       },
       20,
       { message: true },
@@ -157,8 +158,9 @@ export const PIZZA_ARRIVED = preset({
     card("Pizza is here", "Order {order.seq|ready}: come and get it", 20, { message: true }),
   ],
   rounds: every(5),
-  // An arrived order is already closed, so no close can end it: the count does.
-  end: { ...NO_END, rounds: 3 },
+  // An arrived order is already closed, so no close can end it: the count does, or the order's
+  // done once everyone got theirs, whichever comes first.
+  end: { ...NO_END, rounds: 3, until_event: { kind: "domain", type: "pizza.order.done" } },
 });
 
 export const ROUND_START = preset({

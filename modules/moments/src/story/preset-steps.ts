@@ -33,6 +33,8 @@ export const sting = (text: string, s: number, o: Partial<StoryStep> = {}) =>
  * since a claim carries its whole view-model.
  */
 export const hub = (label: string) => ({ qr: { path: "/notify/", label } });
+/** The Food page's landing (#119, L6): the only open order's menu, else the list of orders. */
+export const food = (label: string) => ({ qr: { path: "/pizza/go", label } });
 
 export const NO_END: Ends = {
   rounds: null,

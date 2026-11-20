@@ -2,6 +2,10 @@
 
 The research pack for the product owner's brainstorming session on the [App track](../roadmap.md#app) (epic #160), issue #171. It follows the [outline of a research pack](README.md#outline-of-a-research-pack), the product owner's decisions of 2026-11-14 on #160 (the Wi-Fi password for members; following one run-of-show item), and the lead's note on #171 that points this track at the accepted design guideline ([docs/design](../design/README.md)). After this merges, the lead runs the session over as many rounds as it takes, writes the final plan into this brief (`## Plan`) and rewrites the track's issues; the product owner accepts the plan before any build starts.
 
+> **Source update (2026-11-20, #677).** The [mini tourney](../legacy-inventory/thefinals_mini_tourney.md#refresh-2026-11-20) and [canccubot](../legacy-inventory/canccubot.md) inventories were refreshed. The legacy now signs players in from a Discord link: `/finals` hands out a 15-minute signed token in the link's fragment, which the page swaps for a 7-day cookie and removes from the address; until then the page shows only "open the link from Discord". What it touches, with no decision of this pack changed:
+> - [E4](track-app/questions.md#e4-discords-in-app-browser-and-other-in-app-browsers) and [E5](track-app/questions.md#e5-signing-in-from-an-installed-hub): a live example of both. The link opens in Discord's own browser, so the session lives there only, and a player who later opens the page elsewhere is signed out.
+> - The port table's "`?token=` links" and "player rights kept in one browser's storage" rows: upstream the tourney already moved its player rights to a Discord session (individuals on any device); the drop stands, since the platform's sign-in replaces both.
+
 **In this pack**
 - This file: goal, what was read, what step 3 already built, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, proposed issue changes.
 - [track-app/questions.md](track-app/questions.md): the question bank, 79 questions in six themes, each with options and a recommendation. IDs (U3, D4, …) are used throughout.

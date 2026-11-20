@@ -661,6 +661,33 @@
         $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
       "409":
         $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/nudge:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: nudgeOrder
+    summary: Nudge the people still to collect
+    description: "Holder or crew, once arrived, once per order (D12): one `pizza.reminder.triggered` (`not_collected`) to each person with a pizza not ticked yet. Sets `nudged_at`; a second nudge is 409 `nudged`, before arrival 409 `not_placed` or `not_arrived`."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
 /api/pizza/orders/{order_id}/done:
   parameters:
     - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"

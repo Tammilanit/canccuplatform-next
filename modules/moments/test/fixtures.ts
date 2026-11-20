@@ -114,6 +114,8 @@ export const FIXTURES = {
       user_ids: ["u_1"],
       people: [person("u_1", "Demo Player")],
     }),
+  done: (reason: "handed_out" | "holder" | "timer" = "handed_out") =>
+    event("pizza.order.done", { order: order("done"), reason, actor_user_id: null }),
   cancelled: () =>
     event("pizza.order.cancelled", {
       order: order("cancelled"),

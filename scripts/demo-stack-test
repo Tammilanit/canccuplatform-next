@@ -70,6 +70,8 @@ TESTS=(
   "Moments brings a crew spotlight to a paired screen's stream within a second (p95 of 20)"
   "the screens of a zone start Moments' sound within 200 ms of each other; only its sound screen plays"
   "every health check probes every 2 s only while its container starts, then every 30 s"
+  "Notify offers the Food topic pizza registers at start"
+  "a pizza order shows in the main zone's food box and its arrival reaches a subscribed member's phone"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -77,7 +79,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform
+  moments moments platform "pizza notify" "pizza screen notify"
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -382,6 +384,9 @@ health_timing() {
   ' > "$TMP/body" && [ ! -s "$TMP/body" ]
 }
 check "${TESTS[33]}" health_timing
+
+# shellcheck source=scripts/demo-stack-test-food
+. scripts/demo-stack-test-food
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

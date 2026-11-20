@@ -24,6 +24,18 @@ The platform is not limited to porting. It is to be a much bigger, better and ri
 | [canccudocs](canccudocs.md) | #73 | Plans and requirements, no code | No code; 17 requirements are not yet in the roadmap ([Gaps](#gaps-from-the-legacy-plans)) |
 | [canccustream](canccustream.md) | #74 | An RTMP multi-camera compositor, decommissioned | Drop all code; ideas go to the Cast track |
 
+**Read at** (the commit each inventory describes; three were refreshed on 2026-11-20 by #677, which also read [finals-core](https://github.com/glyzer/finals-core)):
+- canccusignage: `c9d00e3` (`main`, 2026-10-30), read 2026-10-30.
+- canccubot: `3e7030fbbe` (2026-10-30), refreshed at `12f2b03d90` (`main`, 2026-11-11): `/finals` and its guard ([refresh](canccubot.md#legacy-inventory-canccubot)).
+- the signup site: `491480a` (`main`, 2026-11-03).
+- canccumanager: `def9bd721b` (2026-10-25).
+- thefinals_mini_tourney: `87d7c81004` (2026-11-04), refreshed at `1a4fe2a495` (`main`, 2026-11-16) ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)); [finals-core](https://github.com/glyzer/finals-core) at `9d65a846a2` (tag `v1.0.1`, 2026-11-12) ([the shared core](thefinals_mini_tourney.md#the-shared-core-finals-core)).
+- canccuplatform: `d5e3bb4d01` (2026-10-30), refreshed at `0dff5d01c6` (`main`, 2026-11-13) ([refresh](canccuplatform.md#refresh-2026-11-20)).
+- canccudocs: `57fffcfb5e` (`main`, 2026-10-13).
+- canccustream: `cc6eb71` (`master`, 2026-03-24).
+
+The rows below that the refresh changed say so and link the per-repo file.
+
 ## Contents
 1. [Feature map](#feature-map)
 2. [Cross-repo flows](#cross-repo-flows)
@@ -120,8 +132,10 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Tournament voice channels: create-once, dwell roster, cleanup, backstop, create-now | bot, tournament | 6, 7 | reuse with changes | Unique and proven; the flag polling becomes a voice handshake through events, with the legacy rules as the spec. The bot side is built in step 6 against the event catalog (#34) and goes live with step 7 (OC8) |
 | Tournament screen pin T−15 to T+10 | moments | 4; wired in 9 | rebuild | An event that Moments ranks |
 | `TournamentMemoryStore` test double | — | — | drop | Tests run against Postgres |
-| Mini-tourney watcher posts and finals summary **(new)** | games, bot | Games, 6 | reuse with changes | Games publishes season events; the bot posts them; announced ids become rows |
-| Finals cards **(new)** | moments, screen | 4, 9 | reuse with changes | The phases, hold windows and card content are reused as the spec; Games events drive a Moments takeover (step 4) and a Screen widget draws the card (step 9), without the site detour |
+| Mini-tourney watcher posts and finals summary **(new)** | finals, bot | Finals, 6 | reuse with changes | `finals` publishes season events ([0025](../decisions/0025-finals-and-games-modules.md); games at the first read); the bot posts them; announced ids become rows. Refresh: the posts now carry no link and point to `/finals` |
+| `/finals`: status, Register, Withdraw, the page link **(new at the refresh)** | bot, finals | 6, Finals | reuse with changes | One command against one provider contract ([contracts/finals.md](../../contracts/finals.md)); keep the one ephemeral reply, the buttons, the withdraw confirm and the nickname cleaning; on the platform the link is a sign-in link to the hub ([canccubot](canccubot.md#port-recommendation-per-feature)) |
+| Mention and link guard on messages built from names **(new at the refresh)** | bot | 6 | reuse with changes | No pings and only own-host links in any post built from what people type, for every bot post |
+| Finals cards **(new)** | moments, screen | 4, 9 | reuse with changes | The phases, hold windows and card content are reused as the spec; `finals` events (Games events at the first read) drive a Moments takeover (step 4) and a Screen widget draws the card (step 9), without the site detour |
 | Roster nick backfill | — | — | drop | A one-off repair |
 | Signup-site API client | — | — | drop | Each call becomes a contract endpoint or a bus event |
 | Validators and formatters (the surviving parts) | bot | 6 | reuse | Pure and tested |
@@ -193,17 +207,24 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | F18 systemd unit, deploy notes, CI | — | — | drop | Compose, setup and the new CI |
 
 ### thefinals_mini_tourney
-Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Building on the legacy).
+Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Building on the legacy). At the refresh: the OK was given on 2026-11-07, and [0025](../decisions/0025-finals-and-games-modules.md) moves these rows to the `finals` module and the Finals track (read `games` and "Games" below as `finals` and "Finals"), with the pure core taken from [finals-core](https://github.com/glyzer/finals-core) as a pinned dependency. The upstream app now runs publicly off the LAN, fronted by the bot's `/finals` ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)).
 
 | Feature | Target module | Step | Verdict | Reason |
 |---|---|---|---|---|
-| Bracket engine: formats, draws, next round, result validation, champion | games | Games | reuse | Pure and tested per format; becomes rounds as data; two known bugs fixed on the way |
-| Team builder (A14 balancing) | games | Games | reuse | Pure balancing with a seeded random source |
+| Bracket engine: formats, draws, next round, result validation, champion | games | Games | reuse | Pure and tested per format; becomes rounds as data; two known bugs fixed on the way. Refresh: extracted unchanged into `finals-core` v1.0.1, both bugs still in it |
+| Team builder (A14 balancing) | games | Games | reuse | Pure balancing with a seeded random source. Refresh: in `finals-core`, now with its own tests |
 | A16 rankings and P10 ranking-change marks | games | Games | reuse with changes | Keyed by player id (a user or a guest player, TD4) instead of nickname; delta tables as data |
 | Service rules: P4–P5 registration, P6 and A5 early start and votes, P8 and A9 lobby id, A3–A4 format and arena changes, A6 individual registrations, A7 live swap, A10–A11 cancel and delete | games | Games | reuse with changes | Good rules with tests; each operation becomes one Postgres transaction with signed-in users |
 | P7 and A8 result reporting by two matching team reports, admin override | games | Games | reuse with changes | A clever low-effort flow; the reporter is a signed-in team member |
 | Result correction | games | Games | rebuild | Missing today: a decided match cannot be changed |
 | P9 public start | games, admin | Games | reuse with changes | A per-tenant setting for signed-in users, without calendar windows |
+| A10 cancel, A19 rename an open season (cancel of a running season, kept as `cancelled`) **(changed at the refresh)** | finals | Finals | reuse with changes | Good rules; `cancelled` becomes a contract state |
+| P14 availability voting, A21 its lock **(new at the refresh)** | finals | Finals | reuse with changes | Picking a day with the players; in the event's time zone, with a decision on who sees whose answers |
+| A20 nickname fixes in finished seasons **(new at the refresh)** | finals | Finals | rebuild | Names belong to users on the platform; what remains is the correction with an audit |
+| A23 individual-only server **(new at the refresh)** | finals, admin | Finals | reuse with changes | A per-tenant setting, not an env var |
+| P16 provider API for `/finals` **(new at the refresh)** | finals, bot | Finals, 6 | reuse with changes | The shared interface of 0025: the same shapes at `/api/finals`, no bearer inside the stack |
+| P15 Discord link session, host admin link, the read gate and the page's sign-in wall **(new at the refresh)** | — | — | drop | Platform sign-in, role-to-rights sync and the tenant's access rules replace them |
+| CI, finals-core bump PRs, deploy on merge **(new at the refresh)** | — | — | drop | The platform's CI, dependency updates and auto-deploy; deliberate core upgrades are already 0025's rule |
 | A12 debug fill and votes | games | Games | reuse with changes | Kept as test fixtures and the demo seed only |
 | Arena list | games | Games | reuse with changes | Becomes data in the games catalog |
 | A13 player roster, A15 add to registration | games | Games | reuse with changes | A per-tenant player table: each player is a global user or a guest entered by an admin (TD4); no nickname matching |
@@ -212,8 +233,8 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 | Storage (SQLite, in-code upgrades) | games, kit | Games | rebuild | Foreign keys were off; Postgres with RLS and versioned migrations |
 | HTTP API | games | Games | rebuild | A tenant-aware contract first; the route set is the starting list |
 | SSE `update` | games | Games, 9 | rebuild | Untargeted wake-ups; bus events with payloads instead |
-| A1 admin password | — | — | drop | Shared password kept in clear in the browser (goes to step 2b) |
-| Team and individual tokens | — | — | drop | Lived in one browser; signed-in users replace them |
+| A1 admin password | — | — | drop | Shared password kept in clear in the browser (goes to step 2b). Refresh: already gone upstream, replaced by Discord roles |
+| Team and individual tokens | — | — | drop | Lived in one browser; signed-in users replace them. Refresh: upstream a Discord session already stands in for an individual's token |
 | A18 health endpoint | — | — | drop | The kit health contract replaces it (the kit, done in step 1) |
 | P1–P3, P12–P13 public pages: season list, bracket, hover tracing, toasts, dialogs | games, ui | Games | rebuild | New frontend on the theme; the per-format layouts and connector routing are the visual spec |
 | Admin, team builder and settings pages | games, admin | Games, 8 | rebuild | Inside the admin UI |
@@ -253,11 +274,14 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 | X13 tournament routes | tournament | 7 | reuse with changes | Scoring, leaderboard and final reused; tokens and handshake rebuilt |
 | X14, polls part | — | — | drop | Polls are dropped |
 | X14, stats snapshots part | bot | 6 | reuse with changes | As D8: bot-owned tables and bot events |
-| X15 tourney read API and SSE | games | Games | rebuild | Storage and API rebuilt; SSE becomes events |
+| X15 tourney read API and SSE | finals | Finals | rebuild | Storage and API rebuilt; SSE becomes events. Refresh: behind a read gate upstream; target `finals` (0025) |
+| X20 finals provider contract **(new at the refresh)** | finals, bot | Finals, 6 | reuse with changes | Already carried as `contracts/finals.md` (0025); its lags (verification, subcommands, the `cancelled` state) go to the Finals track |
+| O16, O17, O20 public tourney host, deploy with rollback, database replace **(new at the refresh)** | — | 10, 11 | drop | The off-LAN app stays outside the platform; its backup, rollback and import checks are lessons for steps 10 and 11 ([canccuplatform](canccuplatform.md#port-recommendation)) |
+| O18 staging pair, O19 access policy file **(new at the refresh)** | — | — | drop | The demo stack and CI cover staging; no private network on the VM |
 | X16 manager | admin | 8 | reuse with changes | Debounce, alert rules, ack, mute and restart policy reused; the executor is designed first |
 | X17 heartbeat to the signup site | — | — | drop | The watchdog replaces it (the step 10 watchdog) |
 | X18 low-latency casting | cast | Cast | reuse with changes | Takeover lifecycle, stall guard and encoder findings reused; relay placement open |
-| X19 tourney on a venue LAN hostname | — | — | drop | Everything is served from the VM over HTTPS |
+| X19 tourney on a venue LAN hostname | — | — | drop | Everything is served from the VM over HTTPS. Refresh: retired upstream too |
 
 The legacy contracts in this repo (health, admin login link, signage control API, LAN display views, screen messages, site API, tourney API, manager API, manager heartbeat) are not imported ([0002](../decisions/0002-no-legacy-history-or-docs.md)); they are read as the spec when the event catalog (#34), the screen contract (#35) and each module's contract are written.
 
@@ -390,8 +414,8 @@ How the legacy pieces worked together, end to end, and what replaces each hop. L
 **Platform:** the bot (step 6) sends the files through the Screen API into the tenant's files volume. Screen (step 3) keeps the carousel playlist and the new-first and featured rules. The spotlight is a Moments takeover with a TTL (step 4).
 
 ### Flow 7. Mini-tourney seasons and finals cards
-**Legacy:** the bot listens to the mini-tourney's SSE stream (no auth) with a 60 s backstop poll. It posts "new season", "season started" and "champion" to the finals channel, and mirrors the open season to the site (`PUT /api/display/finals`). A second bot loop polls the site's display state every 30 s and posts `finals_open` or `finals_start` takeover cards to signage. Their target is the site page's finals views.
-**Platform:** the games module (Games track) publishes season events. The bot posts them to the tenant's finals channel and keeps the "already announced" ids as rows. Moments turns them into finals takeovers; Screen shows the card and the bracket widget (step 9). The site detour goes.
+**Legacy:** the bot listens to the mini-tourney's SSE stream (no auth) with a 60 s backstop poll. It posts "new season", "season started" and "champion" to the finals channel, and mirrors the open season to the site (`PUT /api/display/finals`). A second bot loop polls the site's display state every 30 s and posts `finals_open` or `finals_start` takeover cards to signage. Their target is the site page's finals views. **At the refresh** the bot reads with a bearer through the tourney's read gate, its posts end with a pointer to `/finals` instead of a link, and `/finals` signs players up, withdraws them and hands out a personal link that signs them in on the public tourney ([canccubot](canccubot.md#http-calls-made-by-the-bot), [mini tourney](thefinals_mini_tourney.md#refresh-2026-11-20)).
+**Platform:** the games module (Games track) publishes season events. The bot posts them to the tenant's finals channel and keeps the "already announced" ids as rows. Moments turns them into finals takeovers; Screen shows the card and the bracket widget (step 9). The site detour goes. (Since [0025](../decisions/0025-finals-and-games-modules.md): the `finals` module, Finals track, and the bot's `/finals` against the same provider contract.)
 
 ### Flow 8. Platform alerts
 **Legacy:** the manager polls five health endpoints every 30 s and debounces each change over two polls. On an incident it posts to the bot (`POST /alert`). The bot DMs the crew and posts in the admin channel with an Acknowledge button, which calls the manager's ack endpoint. A Discord webhook is the fallback when the bot is the subject or refuses. Reminders follow every 30 min. The manager also pushes a heartbeat to the site; a site cron alerts a webhook when it stops.
