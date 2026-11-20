@@ -37,8 +37,8 @@ const orders: RecordOrder[] = [
     state: "done",
     total_cents: 18260,
     rows: [
-      row("glyzer", { comment: "split with Pena" }),
-      row("glyzer", { comment: "extra" }),
+      row("alex", { comment: "split with Pena" }),
+      row("alex", { comment: "extra" }),
       row("Anni"),
     ],
   },
@@ -81,8 +81,8 @@ describe("buildRecord", () => {
     expect(r.days[0]?.orders[0]?.people).toEqual([
       { user_id: "u_Anni", name: "Anni", units: 1, amount_cents: 6087, comments: [] },
       {
-        user_id: "u_glyzer",
-        name: "glyzer",
+        user_id: "u_alex",
+        name: "alex",
         units: 2,
         amount_cents: 12173,
         comments: ["split with Pena", "extra"],
