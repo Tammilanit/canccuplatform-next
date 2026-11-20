@@ -193,6 +193,25 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
     expect(r.body).toContain("2 h");
   });
 
+  it("shows the defaults for an event whose food settings nobody has saved yet", async () => {
+    for (const unset of [{ version: 0 }, { readStatus: 404 }]) {
+      Object.assign(w.adminSettings, { values: {}, version: 0 }, unset);
+      const r = await view(w, "organiser", "/crew/settings");
+      expect(r.statusCode).toBe(200);
+      expect(r.body).toMatch(/name="settings_version" value="0"/);
+      expect(r.body).toMatch(/name="release_after_minutes"[^>]*value="120"/);
+      expect(r.body).toMatch(/name="ordering_open"[^>]*checked/);
+    }
+  });
+
+  it("says admin is unavailable only when admin fails", async () => {
+    w.adminSettings.readStatus = 503;
+    expect((await view(w, "organiser", "/crew/settings")).statusCode).toBe(502);
+    // A refusal of the person (the right taken since pizza checked it) stays theirs.
+    w.adminSettings.readStatus = 403;
+    expect((await view(w, "organiser", "/crew/settings")).statusCode).toBe(403);
+  });
+
   it("saves through admin's settings API, keeping what the page does not show", async () => {
     w.adminSettings.values = { settle_to_payer: true, max_open_orders: 3 };
     const r = await form(w, "organiser", "/crew/settings", {

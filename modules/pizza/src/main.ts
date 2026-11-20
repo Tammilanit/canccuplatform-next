@@ -22,6 +22,7 @@ import {
 import { buildApp } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { handlePlatformEvent, handleTenantEvent } from "./consumer.js";
+import { hostFetch } from "./host-fetch.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { dropOldKeys } from "./idempotency.js";
 import { everySessionIsMember, tenantsPeople } from "./people.js";
@@ -113,7 +114,8 @@ async function main(): Promise<void> {
   const scheduler = new Scheduler(base);
   const deps = {
     ...base,
-    admin,
+    // The Food settings page calls admin's settings API as the person, on the event's Host.
+    admin: new AdminClient(config.adminUrl, { fetch: hostFetch }),
     language: (tenant: string) =>
       withTenant(tenant, async () => {
         await adminSettings.ensure();

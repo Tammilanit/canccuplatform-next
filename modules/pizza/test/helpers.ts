@@ -123,6 +123,8 @@ export interface AdminSettings {
   values: Record<string, unknown>;
   version: number;
   writes: { host: string; values: Record<string, unknown> }[];
+  /** Admin's status for a read instead of the settings, e.g. 404 or 503. */
+  readStatus?: number;
 }
 
 function fakeAdminSettings(store: AdminSettings): AppDeps["admin"] {
@@ -134,6 +136,8 @@ function fakeAdminSettings(store: AdminSettings): AppDeps["admin"] {
       if (path !== "/api/admin/settings/pizza") return status(404, {});
       if (!rights.includes(method === "GET" ? "admin.settings.read" : "admin.settings.write"))
         return status(403, { error: { code: "missing_right", message: "needs a right" } });
+      if (method === "GET" && store.readStatus !== undefined)
+        return status(store.readStatus, { error: { code: "not_found", message: "no" } });
       if (method === "PUT") {
         const b = o.json as { settings_version: number; values: Record<string, unknown> };
         if (b.settings_version !== store.version)

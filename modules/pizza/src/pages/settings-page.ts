@@ -142,6 +142,17 @@ export function settingsPage(app: FastifyInstance, deps: AppDeps): void {
   };
   const read = async (request: FastifyRequest) => {
     const r = await deps.admin.request("GET", PATH, asPerson(request));
+    // Nothing saved yet is version 0 with no values; a 404 says admin keeps no food settings for
+    // the event: either way the form shows the defaults, and the first save makes them the event's.
+    if (r.status === 404) return { values: {}, version: 0 };
+    // The person's own refusal (signed out, the right taken meanwhile) is theirs, not admin failing.
+    if (r.status === 401 || r.status === 403) {
+      const e = (r.body as { error?: { code?: string; message?: string } } | undefined)?.error;
+      throw new KitError(e?.message ?? "Admin refused the settings.", {
+        status: r.status,
+        code: e?.code ?? (r.status === 401 ? "not_signed_in" : "missing_right"),
+      });
+    }
     if (r.status >= 400)
       throw new KitError("Admin did not answer with the settings.", {
         status: 502,

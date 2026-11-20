@@ -224,7 +224,8 @@ export async function pizzaShots({ shot, fail }) {
               ready: async (page) => {
                 await page.locator("textarea[name=csv]").fill(CHANGED_MENU);
                 await page.getByRole("button", { name: "Preview" }).click();
-                await page.getByText("Pizza bianca").waitFor();
+                // The change's row: the hidden CSV that Apply sends names the pizza too.
+                await page.locator(".canccu-list__title", { hasText: "Pizza bianca" }).waitFor();
               },
             }
           : {}),
