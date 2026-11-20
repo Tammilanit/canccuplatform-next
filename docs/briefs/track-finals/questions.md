@@ -8,7 +8,7 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 
 **Decide first** (they change the most): D17 (how the platform gets the app's news), D9 (what the app must expose), D7 (how the bot reaches the app), U17 (the `/finals` command), P2 (the issue set), P5 (the order).
 
-**Already decided, so not asked again:** Finals is integrated as the existing app, unchanged, as an external app at the Apps track's level 3, the pilot of #193; hosting is the host's choice (its own server, or a container beside the platform; we never host it for other events) and the platform connects per event, with the app's address and a write-only bearer secret set by an event admin, no app set meaning Finals is off (#683); a person signed in to the platform opens Finals from the hub signed in, through the app's own link that the platform asks for (D18); Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's own links carry no token ([0010](../../decisions/0010-scope.md); the hub's route makes the app's link per click and never stores or shows it, D18); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
+**Already decided, so not asked again:** Finals is integrated as the existing app, THE FINALS mini tourney, unchanged, as an external app at the Apps track's level 3, the pilot of #193; hosting is the host's choice (its own server, or a container beside the platform; we never host it for other events) and the platform connects per event, with the app's address and a write-only bearer secret set by an event admin, no app set meaning Finals is off (#683); a person signed in to the platform opens Finals from the hub signed in, through the app's own link that the platform asks for (D18); Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); on screen the Finals cards keep the app's own graphics and theming inside the platform's frame (L12); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's own links carry no token ([0010](../../decisions/0010-scope.md); the hub's route makes the app's link per click and never stores or shows it, D18); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
 
 A question marked **contract** needs a contract change if the recommendation is taken; all of them are additive except the removal of the stub's provisional platform base (D7).
 
@@ -16,7 +16,7 @@ A question marked **contract** needs a contract change if the recommendation is 
 
 ### U1. What Finals is at an event
 > **Dropped (0030):** Finals stays the mini tourney for one game, THE FINALS, as the app is; nothing here makes it generic. Kept below as the record of what was weighed.
-The legacy mini tourney runs one team game, teams of three, in seven fixed formats; the tournament (step 7) is the event's multi-game cup.
+The legacy mini tourney runs one team game, THE FINALS, teams of three, in seven fixed formats; the tournament (step 7) is the event's multi-game cup.
 - **A.** The night's side event for one team game, as the legacy: teams of three, the core's formats.
 - **B.** A generic bracket tool for any game and team size.
 - **C.** A, with the game (its name, arenas and round names) as data, so a second game of the same shape needs no code.
@@ -185,7 +185,7 @@ The legacy shows each nickname's change (+3, −2) in a finished season, on by d
 - **Recommendation: A** ([mockup 13](13-champions-and-rankings.svg), [mockup 16](16-settings-and-rights.svg)).
 
 ### L9. The champion moment
-- **A.** A takeover with the team and its players, from the champion the app reports (D9) ([mockup 12](12-venue-screen.svg)).
+- **A.** A takeover with the team and its players, from the champion the app reports (D9), in the app's own look (L12) ([mockup 12](12-venue-screen.svg)).
 - **B.** A, plus the champions list in rotation, once the app exposes it.
 - **Recommendation: A now, B when the app offers the list.** Photos stay out: personal data with consent and storage rules the app does not have.
 
@@ -202,8 +202,11 @@ The legacy shows each nickname's change (+3, −2) in a finished season, on by d
 - **Recommendation: A.** "Name revealed at start" was the legacy's tease; the reveal pays it off.
 
 ### L12. The finals cards' look
-- **A.** The step 9 pack's drawings (season open with capacity and QR, starts now, champions), in the theme's look, as Moments takeovers.
-- **Recommendation: A** ([mockup 12](12-venue-screen.svg)).
+Decided (the product owner, 2026-11-20): on screen Finals keeps the app's own graphics and theming and uses THE FINALS' game-specific elements; the bracket and champion cards and the Finals Moments are not redrawn in the platform's screen theme. The platform frame still gives the screen's grid and safe areas, the timing and the widget slot. The app's look at `1a4fe2a` is CSS and one emoji (the brief's "What was read"): a dark red ladder, white team bars with a black score cell, gold for advancing and for the champion, pink round labels, italic uppercase condensed type, the trophy, the wordmark. What is open is who draws it.
+- **A.** The platform draws the cards from the app's look, kept as a Finals look preset (palette, type stack, team-bar and champion-card shapes, connector styles) taken from the app's CSS; the app only sends data (D9).
+- **B.** The app serves its look: the same tokens as a small read the platform fetches with the bracket (so a change in the app follows by itself), or a card the app draws (HTML or an image) that the platform places in the widget slot.
+- **C.** The platform's screen theme (the step 9 pack's drawings). Not chosen: it contradicts the note above.
+- **Recommendation: A now, with B's token read when the app offers it.** An app-drawn card (B's second form) cannot take the screen's timing, safe areas or the Pulse's side boxes, and puts a screen's layout in the app; tokens keep layout with the platform and the look with the app. **Open inside it:** the app's type is Bahnschrift (Arial Narrow and Impact behind it), which the screens may lack; shipping a licensed condensed italic face with the preset is the product owner's decision. **Contract:** additive look fields in the Moments presets and Screen's `bracket`, and later in the provider contract ([mockups 12 and 13](12-venue-screen.svg)).
 
 ## D · Data and integrations
 
@@ -255,7 +258,7 @@ The live provider (the app) answers under `/api/provider` with a bearer secret; 
 - **Recommendation: A.** It is the smallest change to the live client (it drops the fixed suffix) and the one place that knows the app's address and secret. The stub marks its base provisional, so removing it is not a breaking change to a released contract, but the review should look at it ([mockup 14](14-lifecycle.svg)). **Contract:** finals.md.
 
 ### D8. The full finals contract
-- **A.** `contracts/finals.md` becomes the contract of an external Finals app: the provider part as the app answers it today, with fixtures (D14); the reads and events the app exposes (D9); the events the platform republishes; the settings (O4). Shared OpenAPI components keep it small.
+- **A.** `contracts/finals.md` becomes the contract of an external app (the mini tourney): the provider part as the app answers it today, with fixtures (D14); the reads and events the app exposes (D9); the events the platform republishes; the settings (O4). Shared OpenAPI components keep it small.
 - **B.** Keep the stub as it is.
 - **Recommendation: A**, split by part and shipped with the package that first uses each part ([0029](../../decisions/0029-additive-contracts-ship-with-consumers.md)).
 
@@ -420,7 +423,7 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 - **Recommendation: A** ([mockup 11](11-crew-phone.svg)).
 
 ### O4. Settings and their defaults
-- **A.** Per event: the connection (the app's address, its bearer secret write-only and encrypted, a "test connection" check; none set means Finals is off), show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), the hub tile (on), which app (O9).
+- **A.** Per event: the connection (the app's address, its bearer secret write-only and encrypted, a "test connection" check; none set means Finals is off), show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), which app (O9). The hub tile has no setting of its own: it shows when an app is set ([mockup 18](18-hub-tile-and-handoff.svg)).
 - **Recommendation: A.** **Contract:** settings in finals.md.
 
 ### O5. Rights
