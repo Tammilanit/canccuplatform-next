@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1030" width="1900" height="1030" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>10 · Living messages: one per thing, edited in place</title>
+<rect x="0" y="0" width="1900" height="1030" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">10 · Living messages: one per thing, edited in place</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: anyone glancing at # now-and-next or # food knows the state of the event without scrolling; the bot edits its own pinned messages from events (#123).</text>
+<text x="32" y="130" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="32 920">A · # now-and-next: the pinned board at three moments</text>
+<rect x="32" y="150" width="880" height="190" rx="8" fill="#313338"/>
+<circle cx="66" cy="184" r="18" fill="#5865f2"/>
+<text x="66" y="189" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="48 84">DB</text>
+<text x="100" y="180" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="42 902">Demo Bot</text>
+<rect x="176.8" y="168" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="193.8" y="180" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="176.8 210.8">APP</text>
+<text x="218.8" y="180" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="42 902">pinned</text>
+<rect x="100" y="190" width="640" height="136" rx="4" fill="#2b2d31"/>
+<rect x="100" y="190" width="4" height="136" rx="2" fill="#3ddcff"/>
+<text x="116" y="216" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="114 728">Demo Event · Saturday</text>
+<text x="116" y="240" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="114 728">Now · Doors open · café and hall</text>
+<text x="116" y="262" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Next · 19:30 · Match 2 · Space Racer</text>
+<text x="116" y="284" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Food · nothing open yet</text>
+<text x="116" y="308" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="114 728">Edited 19:02 · the run of show, live</text>
+<text x="902" y="176" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="792 904">19:02</text>
+<rect x="32" y="356" width="880" height="190" rx="8" fill="#313338"/>
+<circle cx="66" cy="390" r="18" fill="#5865f2"/>
+<text x="66" y="395" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="48 84">DB</text>
+<text x="100" y="386" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="42 902">Demo Bot</text>
+<rect x="176.8" y="374" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="193.8" y="386" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="176.8 210.8">APP</text>
+<text x="218.8" y="386" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="42 902">pinned</text>
+<rect x="100" y="396" width="640" height="136" rx="4" fill="#2b2d31"/>
+<rect x="100" y="396" width="4" height="136" rx="2" fill="#3ddcff"/>
+<text x="116" y="422" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="114 728">Demo Event · Saturday</text>
+<text x="116" y="446" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="114 728">Now · Match 3 · Demo Arena · on the stage</text>
+<text x="116" y="468" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Next · 21:00 · Pizza last call</text>
+<text x="116" y="490" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Food · order 3 open until 20:45 · order 2 on the way</text>
+<text x="116" y="514" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="114 728">Edited 20:14 · the run of show, live</text>
+<text x="902" y="382" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="792 904">20:14</text>
+<rect x="32" y="562" width="880" height="190" rx="8" fill="#313338"/>
+<circle cx="66" cy="596" r="18" fill="#5865f2"/>
+<text x="66" y="601" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="48 84">DB</text>
+<text x="100" y="592" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="42 902">Demo Bot</text>
+<rect x="176.8" y="580" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="193.8" y="592" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="176.8 210.8">APP</text>
+<text x="218.8" y="592" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="42 902">pinned</text>
+<rect x="100" y="602" width="640" height="136" rx="4" fill="#2b2d31"/>
+<rect x="100" y="602" width="4" height="136" rx="2" fill="#3ddcff"/>
+<text x="116" y="628" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="114 728">Demo Event · Saturday night</text>
+<text x="116" y="652" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="114 728">Now · Quiet hours in the hall until 08:00</text>
+<text x="116" y="674" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Next · 09:00 · Breakfast in the café</text>
+<text x="116" y="696" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="114 728">Food · nothing open</text>
+<text x="116" y="720" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="114 728">Edited 23:30 · the run of show, live</text>
+<text x="902" y="588" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="792 904">23:30</text>
+<text x="32" y="782" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="32 912">Edited on agenda.* and pizza.* events, at most once a minute per channel (Discord&#x27;s edit</text>
+<text x="32" y="803.025" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="32 912">limits); after a restart the bot finds its pinned message again by its stored id.</text>
+<text x="960" y="130" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="960 1870">B · # food: order 2 is one message from open to done</text>
+<rect x="960" y="150" width="900" height="150" rx="8" fill="#313338"/>
+<rect x="980" y="166" width="640" height="90" rx="4" fill="#2b2d31"/>
+<rect x="980" y="166" width="4" height="90" rx="2" fill="#f0b232"/>
+<text x="996" y="192" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="994 1608">Order 2 · Demo Trattoria</text>
+<text x="996" y="216" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="994 1608">Open until 20:08 · 3 pizzas · held by Player Two</text>
+<text x="996" y="238" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="994 1608">● open  ○ closed  ○ called in  ○ here</text>
+<rect x="980" y="256" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="1055" y="277" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="984 1126">Add a pizza ↗</text>
+<text x="1840" y="180" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="1730 1842">19:41</text>
+<rect x="960" y="312" width="900" height="150" rx="8" fill="#313338"/>
+<rect x="980" y="328" width="640" height="90" rx="4" fill="#2b2d31"/>
+<rect x="980" y="328" width="4" height="90" rx="2" fill="#f0b232"/>
+<text x="996" y="354" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="994 1608">Order 2 · Demo Trattoria</text>
+<text x="996" y="378" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="994 1608">Last call: closes 20:08 · 6 pizzas</text>
+<text x="996" y="400" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="994 1608">● open  ○ closed  ○ called in  ○ here</text>
+<rect x="980" y="418" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="1055" y="439" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="984 1126">Add a pizza ↗</text>
+<text x="1840" y="342" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="1730 1842">19:58</text>
+<rect x="960" y="474" width="900" height="150" rx="8" fill="#313338"/>
+<rect x="980" y="490" width="640" height="90" rx="4" fill="#2b2d31"/>
+<rect x="980" y="490" width="4" height="90" rx="2" fill="#3ee39a"/>
+<text x="996" y="516" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="994 1608">Order 2 · Demo Trattoria</text>
+<text x="996" y="540" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="994 1608">Called in · about 20:50 · 7 pizzas</text>
+<text x="996" y="562" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="994 1608">● open  ● closed  ● called in  ○ here</text>
+<rect x="980" y="580" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="1055" y="601" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="984 1126">My order ↗</text>
+<text x="1840" y="504" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="1730 1842">20:12</text>
+<rect x="960" y="636" width="900" height="150" rx="8" fill="#313338"/>
+<rect x="980" y="652" width="640" height="90" rx="4" fill="#2b2d31"/>
+<rect x="980" y="652" width="4" height="90" rx="2" fill="#3ee39a"/>
+<text x="996" y="678" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="994 1608">Order 2 · Demo Trattoria</text>
+<text x="996" y="702" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="994 1608">It&#x27;s here · pick up at the café counter</text>
+<text x="996" y="724" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="994 1608">● open  ● closed  ● called in  ● here</text>
+<rect x="980" y="742" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="1055" y="763" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="984 1126">My order ↗</text>
+<text x="1840" y="666" font-size="22" fill="#f2f3f5" font-weight="700" text-anchor="end" data-box="1730 1842">20:52</text>
+<text x="960" y="812" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">No names in the channel: counts and the holder only (step 5 D9). People with a pizza get</text>
+<text x="960" y="833.025" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">“It&#x27;s here” by Notify, as push or Discord DM, as they chose; the channel post never pings them.</text>
+</svg>

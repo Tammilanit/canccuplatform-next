@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1010" width="1900" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>05 · Roles and rights: a Discord role grants a preset, by role id</title>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="800" rx="10"/></clipPath><clipPath id="c2"><rect x="1382" y="110" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">05 · Roles and rights: a Discord role grants a preset, by role id</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: the event admin maps the server&#x27;s roles to the platform&#x27;s rights presets; holders get them while they hold the role (#121).</text>
+<g transform="translate(32,110) scale(1)">
+<g clip-path="url(#c1)">
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1280" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="22 102">Demo</text>
+<text x="116" y="34" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="110 210">Demo Event</text>
+<line x1="212" y1="18" x2="212" y2="38" stroke="#343c66" stroke-width="1"/>
+<text x="225" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="220 365">Sat 21 – Sun 22 Nov</text>
+<rect x="371" y="17" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="383" cy="28" r="3.5" fill="#3ee39a"/>
+<text x="391" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start" data-box="388 420">Live</text>
+<text x="1234" y="35" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1160 1240">20:14</text>
+<rect x="0" y="57" width="255" height="743" rx="0" fill="#0e1122"/>
+<line x1="255" y1="57" x2="255" y2="800" stroke="#343c66" stroke-width="1"/>
+<text x="24" y="86" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">RUN THE EVENT</text>
+<rect x="26" y="112" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="124" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Run of show</text>
+<rect x="26" y="154" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="166" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Notifications</text>
+<rect x="26" y="196" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="208" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Announcements</text>
+<text x="24" y="253" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">SCREENS AND LOOK</text>
+<rect x="26" y="279" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="291" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Screen studio</text>
+<rect x="26" y="321" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="333" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Theme studio</text>
+<text x="24" y="378" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="20 250">ADMIN</text>
+<rect x="26" y="404" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Settings</text>
+<rect x="26" y="446" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="458" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Health</text>
+<rect x="26" y="488" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="500" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">Event profile</text>
+<rect x="26" y="530" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="542" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="50 250">People</text>
+<rect x="12" y="561" width="230" height="36" rx="6" fill="#1c2a44"/>
+<rect x="12" y="561" width="3" height="36" rx="0" fill="#3ddcff"/>
+<rect x="26" y="572" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55" y="584" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="50 250">Discord</text>
+<text x="296" y="114" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 1240">Discord</text>
+<text x="296" y="136" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">Demo Community · bound</text>
+<text x="300" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="298 378.48">Overview</text>
+<text x="384.48" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="382.48 462.96">Channels</text>
+<text x="468.96" y="178" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="466.96 607.92">Roles and rights</text>
+<line x1="464.96" y1="186" x2="595.92" y2="186" stroke="#3ddcff" stroke-width="2"/>
+<text x="613.92" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="611.92 692.4">Commands</text>
+<text x="698.4" y="178" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="696.4 754.2">Check</text>
+<line x1="296" y1="187" x2="1240" y2="187" stroke="#343c66" stroke-width="1"/>
+<text x="296" y="222" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1240">A role grants rights only to people who signed in and joined Demo Event.</text>
+<rect x="1090" y="200" width="150" height="36" rx="8" fill="#3ddcff"/>
+<text x="1165" y="222.9" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1094 1236">Add a mapping</text>
+<text x="312" y="266" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296 1240">Discord role</text>
+<text x="542" y="266" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296 1240">Grants</text>
+<text x="922" y="266" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296 1240">Holders</text>
+<text x="1032" y="266" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296 1240">Signed in and joined</text>
+<line x1="296" y1="276" x2="1240" y2="276" stroke="#343c66" stroke-width="1"/>
+<rect x="296" y="280" width="944" height="58" rx="0" fill="#161a2e"/>
+<line x1="296" y1="338" x2="1240" y2="338" stroke="#343c66" stroke-width="1"/>
+<circle cx="322" cy="309" r="6" fill="#e67e22"/>
+<text x="336" y="314" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="334 536">@Crew</text>
+<rect x="542" y="298" width="98.56" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="591.28" y="313.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="545 637.56">Screen crew</text>
+<rect x="646.56" y="298" width="77.68" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="685.4" y="313.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="649.56 721.24">Announce</text>
+<rect x="730.24" y="298" width="84.64" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="772.56" y="313.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="733.24 811.88">Food crew</text>
+<text x="922" y="314" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 996">6</text>
+<text x="1032" y="314" font-size="13.5" fill="#ffb454" font-weight="400" text-anchor="start" data-box="1026 1180">5 · 1 not signed in</text>
+<text x="1210" y="314" font-size="18" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1190 1230">⋯</text>
+<rect x="296" y="338" width="944" height="58" rx="0" fill="#161a2e"/>
+<line x1="296" y1="396" x2="1240" y2="396" stroke="#343c66" stroke-width="1"/>
+<circle cx="322" cy="367" r="6" fill="#f1c40f"/>
+<text x="336" y="372" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="334 536">@Food crew</text>
+<rect x="542" y="356" width="84.64" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="584.32" y="371.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="545 623.64">Food crew</text>
+<text x="922" y="372" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 996">3</text>
+<text x="1032" y="372" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1026 1180">3</text>
+<text x="1210" y="372" font-size="18" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1190 1230">⋯</text>
+<rect x="296" y="396" width="944" height="58" rx="0" fill="#161a2e"/>
+<line x1="296" y1="454" x2="1240" y2="454" stroke="#343c66" stroke-width="1"/>
+<circle cx="322" cy="425" r="6" fill="#9b59b6"/>
+<text x="336" y="430" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="334 536">@Stage</text>
+<rect x="542" y="414" width="77.68" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="580.84" y="429.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="545 616.68">Announce</text>
+<text x="922" y="430" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 996">2</text>
+<text x="1032" y="430" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1026 1180">2</text>
+<text x="1210" y="430" font-size="18" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1190 1230">⋯</text>
+<rect x="296" y="454" width="944" height="58" rx="0" fill="#161a2e"/>
+<line x1="296" y1="512" x2="1240" y2="512" stroke="#343c66" stroke-width="1"/>
+<circle cx="322" cy="483" r="6" fill="#95a5a6"/>
+<text x="336" y="488" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="334 536">@Attendee</text>
+<text x="542" y="488" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="542 916">Nothing (membership stays by link or QR)</text>
+<text x="922" y="488" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="916 996">140</text>
+<text x="1032" y="488" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1026 1180">—</text>
+<text x="1210" y="488" font-size="18" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1190 1230">⋯</text>
+<rect x="296" y="542" width="944" height="150" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="312" y="570" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312 1224">The rules</text>
+<text x="312" y="598" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">· By role id: renaming a role in Discord changes nothing; someone making a new role called Crew gets nothing.</text>
+<text x="312" y="622" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">· The event-admin role and the role-only rights (admins, lifecycle, access) never come from Discord.</text>
+<text x="312" y="646" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">· Removing the role in Discord removes the rights within a minute; rights granted by hand in People stay apart.</text>
+<text x="312" y="670" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312 1224">· Every change of a mapping is audited; every grant or loss through a role is in the person&#x27;s history.</text>
+</g>
+</g>
+<text x="672" y="946" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · Desktop 1280 px: one row per mapped role</text>
+<rect x="1372" y="100" width="410" height="864" rx="46" fill="#000"/>
+<g clip-path="url(#c2)">
+<rect x="1382" y="110" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1416" y="140" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">20:14</text>
+<rect x="1708" y="129" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1710" y="131" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1382" y="160" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1398" y="173" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1434" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">Demo Event</text>
+<rect x="1542" y="176" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1565" y="190" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1544 1586">Live</text>
+<rect x="1732" y="178" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="185" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1732" y="192" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1398" y="240" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1382 1772">‹ More</text>
+<text x="1398" y="270" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1382 1772">People</text>
+<rect x="1382" y="870" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1413" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1421" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1382 1460">Run of show</text>
+<rect x="1491" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1499" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1460 1538">Notifications</text>
+<circle cx="1577" cy="894" r="15" fill="#3ddcff"/>
+<text x="1577" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1538 1616">Add</text>
+<rect x="1647" y="884" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1655" y="924" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1616 1694">Screens</text>
+<rect x="1725" y="884" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1733" y="924" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1694 1772">More</text>
+<rect x="1510" y="942" width="134" height="5" rx="3" fill="#f3f5ff"/>
+<rect x="1398" y="290" width="358" height="330" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1430" cy="322" r="18" fill="#2a7b96"/>
+<text x="1430" y="327" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1412 1448">P2</text>
+<text x="1462" y="320" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1742">Player Two</text>
+<text x="1462" y="340" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1742">Member since Sat 12:40</text>
+<text x="1412" y="378" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1412 1742">Rights</text>
+<rect x="1412" y="390" width="98.56" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1461.28" y="405.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1415 1507.56">Screen crew</text>
+<rect x="1528" y="390" width="77.68" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1566.84" y="405.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1531 1602.68">Announce</text>
+<text x="1412" y="434" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">via Discord role @Crew</text>
+<line x1="1412" y1="452" x2="1742" y2="452" stroke="#343c66" stroke-width="1"/>
+<rect x="1412" y="466" width="98.56" height="22" rx="11" fill="#1b1f36" stroke="#616788" stroke-width="1"/>
+<text x="1461.28" y="481.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1415 1507.56">Food record</text>
+<text x="1412" y="510" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1412 1742">granted by Demo Admin, Sat 13:05</text>
+<rect x="1412" y="530" width="330" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1577" y="552.9" font-size="14" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1416 1738">Edit granted rights</text>
+<text x="1412" y="600" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1742">Change @Crew rights on the Discord page.</text>
+</g>
+<text x="1577" y="990" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1782">B · Phone: People shows where each right comes from</text>
+</svg>

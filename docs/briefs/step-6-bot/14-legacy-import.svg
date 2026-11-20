@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1010" width="1900" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>14 · The legacy bot import: a dry run first, then once, then nothing</title>
+<rect x="0" y="0" width="1900" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">14 · The legacy bot import: a dry run first, then once, then nothing</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: at the switch (step 11) the operator imports the legacy bot&#x27;s token, server, channels, role and settings into its event; built and tested in step 6 (#125, 0004).</text>
+<rect x="32" y="110" width="1100" height="840" rx="10" fill="#0d1117"/>
+<rect x="32" y="110" width="1100" height="36" rx="10" fill="#161b22"/>
+<circle cx="52" cy="128" r="6" fill="#ff5f56"/>
+<circle cx="70" cy="128" r="6" fill="#ffbd2e"/>
+<circle cx="88" cy="128" r="6" fill="#27c93f"/>
+<text x="122" y="133" font-size="13" fill="#8b949e" font-weight="400" text-anchor="start" data-box="116 1122" font-family="ui-monospace, monospace">bot import-legacy --tenant demo --env legacy.env --state legacy-data/ --dry-run</text>
+<text x="56" y="180" font-size="14" fill="#e6edf3" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Legacy bot import · DRY RUN · nothing is written</text>
+<text x="56" y="232" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Bot application   1   own application 100000000000000002, token checked with Discord</text>
+<text x="56" y="258" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Server            1   Demo Community → binding (made in the guided setup)</text>
+<text x="56" y="284" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Channels          3   tournaments → Tournaments · finals → Finals · alerts → Crew</text>
+<text x="56" y="310" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Admin role        1   “the admin role” → role id 100000000000000007 → Screen crew, Announce</text>
+<text x="56" y="336" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Settings          2   game threshold 4 → Games surge_threshold · ticker TTL 1800 → default</text>
+<text x="56" y="362" font-size="14" fill="#d29922" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Finals state      3   announced season ids → Finals (track): kept for it</text>
+<text x="56" y="414" font-size="14" fill="#e6edf3" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Skipped           7</text>
+<text x="56" y="440" font-size="14" fill="#8b949e" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">  polls (dropped, 0010) · RSS ticker (dropped) · admin link secret (dropped)</text>
+<text x="56" y="466" font-size="14" fill="#8b949e" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">  manager URL, tokens and alert users (step 8, alerts)</text>
+<text x="56" y="492" font-size="14" fill="#8b949e" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">  intervals and retention (the platform&#x27;s own)</text>
+<text x="56" y="518" font-size="14" fill="#8b949e" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">  in-memory stats, message counts and ticker lines (never on disk)</text>
+<text x="56" y="570" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Checks            the legacy bot is stopped (no gateway session on the token) ✓</text>
+<text x="56" y="596" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">                  the event has no own application and no server yet ✓</text>
+<text x="56" y="648" font-size="14" fill="#e6edf3" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Would change 11 rows. Run without --dry-run to import.</text>
+<text x="56" y="700" font-size="14" fill="#8b949e" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">$ bot import-legacy … (second run)</text>
+<text x="56" y="726" font-size="14" fill="#7ee787" font-weight="400" text-anchor="start" data-box="52 1116" font-family="ui-monospace, monospace">Nothing to change: everything is already imported.</text>
+<text x="582" y="980" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1132">A · The command&#x27;s report (dry run, then a second run)</text>
+<text x="1170" y="140" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">What moves</text>
+<text x="1170" y="186" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Only what the legacy bot itself holds (TE6): its token,</text>
+<text x="1170" y="209" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">its server, three channel ids, its admin role, two settings</text>
+<text x="1170" y="232" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">and the finals state file. The signup site&#x27;s data stays</text>
+<text x="1170" y="255" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">behind (0004, 0005) unless the product owner widens it (Q D9).</text>
+<text x="1170" y="301" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Safe to repeat</text>
+<text x="1170" y="347" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Keyed by the legacy values: a second run changes nothing.</text>
+<text x="1170" y="370" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Nothing is deleted on the legacy side.</text>
+<text x="1170" y="416" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">The server is still proven</text>
+<text x="1170" y="462" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">The token moves into the event&#x27;s own application (checked</text>
+<text x="1170" y="485" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">and encrypted as any own token); the server binding is</text>
+<text x="1170" y="508" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">finished in the guided setup with Manage Server, as every</text>
+<text x="1170" y="531" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">bind is. The legacy bot must be stopped first: never two</text>
+<text x="1170" y="554" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">bots on one token (0013).</text>
+<text x="1170" y="600" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Tested in CI</text>
+<text x="1170" y="646" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">On a scrubbed copy: placeholder ids and names, a fake</text>
+<text x="1170" y="669" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1170 1870">Discord API; no real name in the fixture.</text>
+</svg>

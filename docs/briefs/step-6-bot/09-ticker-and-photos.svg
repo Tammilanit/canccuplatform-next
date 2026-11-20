@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1030" width="1900" height="1030" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>09 · The ticker and the photo wall, from Discord</title>
+<defs><clipPath id="c1"><rect x="32" y="110" width="900" height="820" rx="10"/></clipPath><clipPath id="c2"><rect x="960" y="110" width="900" height="560" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1030" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">09 · The ticker and the photo wall, from Discord</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: the crew sets the screens&#x27; ticker line and sends a photo from # photos to the wall, with their own rights (0018, screen.md Ticker and Photos, #123).</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="110" width="900" height="820" rx="0" fill="#313338"/>
+<rect x="32" y="110" width="72" height="820" rx="0" fill="#1e1f22"/>
+<circle cx="68" cy="146" r="22" fill="#5865f2"/>
+<circle cx="68" cy="204" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="262" r="22" fill="#3a3c43"/>
+<circle cx="68" cy="320" r="22" fill="#3a3c43"/>
+<text x="68" y="151" font-size="12" fill="#fff" font-weight="700" text-anchor="middle" data-box="46 90">DC</text>
+<rect x="104" y="110" width="220" height="820" rx="0" fill="#2b2d31"/>
+<text x="120" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="116 318">Demo Community</text>
+<line x1="104" y1="158" x2="324" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="124" y="186" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># announcements</text>
+<text x="124" y="218" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># now-and-next</text>
+<text x="124" y="250" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># food</text>
+<text x="124" y="282" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># photos</text>
+<text x="124" y="314" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316"># tournaments</text>
+<rect x="112" y="326" width="204" height="30" rx="4" fill="#404249"/>
+<text x="124" y="346" font-size="14.5" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="120 316"># crew</text>
+<text x="120" y="388" font-size="11.5" fill="#949ba4" font-weight="700" text-anchor="start" data-box="116 316">VOICE</text>
+<text x="124" y="418" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby</text>
+<text x="124" y="448" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="120 316">◁ Lobby 2</text>
+<line x1="324" y1="158" x2="932" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="342" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="332 912"># crew</text>
+<text x="396" y="180" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">↱ Crew One used /ticker set</text>
+<circle cx="362" cy="208" r="18" fill="#5865f2"/>
+<text x="362" y="213" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="204" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 916">Demo Bot</text>
+<rect x="472.8" y="192" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="204" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="204" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">20:20</text>
+<text x="396" y="228" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 916">The ticker says “Pizza last call at 21:00 · Quiet hours from 22:00”</text>
+<text x="396" y="250" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 916">on every screen until 21:00.</text>
+<rect x="396" y="274" width="100" height="32" rx="4" fill="#da373c"/>
+<text x="446" y="295" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="400 492">Stop now</text>
+<rect x="504" y="274" width="130" height="32" rx="4" fill="#4e5058"/>
+<text x="569" y="295" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="508 630">Keep until …</text>
+<text x="396" y="326" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 996">◉ Only you can see this · Dismiss message</text>
+<text x="396" y="362" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">↱ Crew One used /ticker status</text>
+<circle cx="362" cy="390" r="18" fill="#5865f2"/>
+<text x="362" y="395" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="386" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 916">Demo Bot</text>
+<rect x="472.8" y="374" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="386" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="386" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">20:21</text>
+<rect x="396" y="396" width="520" height="112" rx="4" fill="#2b2d31"/>
+<rect x="396" y="396" width="4" height="112" rx="2" fill="#3ddcff"/>
+<text x="412" y="422" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="410 904">The ticker now</text>
+<text x="412" y="446" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="410 904">“Pizza last call at 21:00 · Quiet hours from 22:00”</text>
+<text x="412" y="468" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="410 904">Set by Crew One · until 21:00</text>
+<text x="412" y="490" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="410 904">Windows: Sat and Sun 09:00–11:00 “Breakfast in the café”</text>
+<text x="396" y="530" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 916">◉ Only you can see this · Dismiss message</text>
+<text x="396" y="568" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">↱ Crew One used /ticker schedule add</text>
+<circle cx="362" cy="596" r="18" fill="#5865f2"/>
+<text x="362" y="601" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="344 380">DB</text>
+<text x="396" y="592" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="332 916">Demo Bot</text>
+<rect x="472.8" y="580" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="489.8" y="592" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="472.8 506.8">APP</text>
+<text x="514.8" y="592" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="332 916">20:22</text>
+<text x="396" y="616" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 916">Added: Sunday 12:00–13:00 “Doors close at 13:00”.</text>
+<text x="396" y="638" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="332 916">It repeats on Sundays; remove it with /ticker schedule remove.</text>
+<text x="396" y="664" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="396 916">◉ Only you can see this · Dismiss message</text>
+</g>
+<text x="482" y="966" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 932">A · The crew channel: set, status and a window</text>
+<g clip-path="url(#c2)">
+<rect x="960" y="110" width="900" height="560" rx="0" fill="#313338"/>
+<rect x="960" y="110" width="72" height="560" rx="0" fill="#1e1f22"/>
+<circle cx="996" cy="146" r="22" fill="#5865f2"/>
+<circle cx="996" cy="204" r="22" fill="#3a3c43"/>
+<circle cx="996" cy="262" r="22" fill="#3a3c43"/>
+<circle cx="996" cy="320" r="22" fill="#3a3c43"/>
+<text x="996" y="151" font-size="12" fill="#fff" font-weight="700" text-anchor="middle" data-box="974 1018">DC</text>
+<rect x="1032" y="110" width="220" height="560" rx="0" fill="#2b2d31"/>
+<text x="1048" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1044 1246">Demo Community</text>
+<line x1="1032" y1="158" x2="1252" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="1052" y="186" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244"># announcements</text>
+<text x="1052" y="218" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244"># now-and-next</text>
+<text x="1052" y="250" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244"># food</text>
+<rect x="1040" y="262" width="204" height="30" rx="4" fill="#404249"/>
+<text x="1052" y="282" font-size="14.5" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1048 1244"># photos</text>
+<text x="1052" y="314" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244"># tournaments</text>
+<text x="1052" y="346" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244"># crew</text>
+<text x="1048" y="388" font-size="11.5" fill="#949ba4" font-weight="700" text-anchor="start" data-box="1044 1244">VOICE</text>
+<text x="1052" y="418" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244">◁ Lobby</text>
+<text x="1052" y="448" font-size="14.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1048 1244">◁ Lobby 2</text>
+<line x1="1252" y1="158" x2="1860" y2="158" stroke="#1f2023" stroke-width="1"/>
+<text x="1270" y="140" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1260 1840"># photos</text>
+<circle cx="1290" cy="198" r="18" fill="#2a7b96"/>
+<text x="1290" y="203" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1272 1308">P2</text>
+<text x="1324" y="194" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1260 1844">Player Two</text>
+<text x="1418" y="194" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1260 1844">20:24</text>
+<text x="1324" y="218" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1260 1844">Our team after match 2!</text>
+<rect x="1324" y="240" width="220" height="150" rx="6" fill="#4a5070"/>
+<path d="M1324 390 l70 -70 l50 40 l40 -30 l60 60 z" fill="#6b7396"/>
+<circle cx="1482" cy="280" r="16" fill="#8b93b8"/>
+<rect x="1562" y="230" width="230" height="150" rx="6" fill="#111214"/>
+<text x="1576" y="258" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Reply</text>
+<text x="1576" y="286" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1572 1782">Apps  ›</text>
+<rect x="1798" y="266" width="260" height="92" rx="6" fill="#111214"/>
+<rect x="1804" y="272" width="248" height="34" rx="4" fill="#5865f2"/>
+<text x="1816" y="294" font-size="14" fill="#fff" font-weight="600" text-anchor="start" data-box="1810 2050">Send to the screen</text>
+<text x="1816" y="338" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1810 2050">Remove from the screen</text>
+<text x="1576" y="314" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Copy message link</text>
+<text x="1576" y="342" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1572 1782">Pin message</text>
+<text x="1324" y="410" font-size="12.5" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1260 1844">↱ Crew One used Send to the screen</text>
+<circle cx="1290" cy="438" r="18" fill="#5865f2"/>
+<text x="1290" y="443" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1272 1308">DB</text>
+<text x="1324" y="434" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1260 1844">Demo Bot</text>
+<rect x="1400.8" y="422" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="1417.8" y="434" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="1400.8 1434.8">APP</text>
+<text x="1442.8" y="434" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1260 1844">20:25</text>
+<text x="1324" y="458" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1260 1844">On the photo wall: “Our team after match 2!” by Player Two.</text>
+<text x="1324" y="480" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="1260 1844">It pops in for 10 seconds on zones that pop new photos.</text>
+<rect x="1324" y="504" width="90" height="32" rx="4" fill="#da373c"/>
+<text x="1369" y="525" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="1328 1410">Remove</text>
+<text x="1324" y="556" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1324 1844">◉ Only you can see this · Dismiss message</text>
+</g>
+<text x="1410" y="696" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="960 1860">B · # photos: the message menu, then the private answer</text>
+<text x="960" y="740" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">· Only a person with the Photos right sees it work; others get a private “you need the Photos right”.</text>
+<text x="960" y="761.025" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">· The picture goes through Screen&#x27;s photo API: checked by content, scaled, EXIF dropped, counted in the quota.</text>
+<text x="960" y="782.05" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">· The author&#x27;s platform name shows on the wall, never a Discord name; the wall is off unless the event turns it on.</text>
+<text x="960" y="803.075" font-size="14.5" fill="#111827" font-weight="400" text-anchor="start" data-box="960 1860">· A photo removed in Discord leaves the wall too (the message id is the photo&#x27;s source_ref).</text>
+</svg>

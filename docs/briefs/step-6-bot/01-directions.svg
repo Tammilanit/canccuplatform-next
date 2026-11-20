@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1060" width="1900" height="1060" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>01 · Three directions: the same Saturday 20:00 in the event&#x27;s Discord server</title>
+<defs><clipPath id="c1"><rect x="32" y="170" width="590" height="620" rx="10"/></clipPath><clipPath id="c2"><rect x="652" y="170" width="590" height="620" rx="10"/></clipPath><clipPath id="c3"><rect x="1272" y="170" width="590" height="620" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="1060" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="0 1900">01 · Three directions: the same Saturday 20:00 in the event&#x27;s Discord server</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="0 1900">Use case: the session compares how each direction feels in #food and #announcements while order 2 closes and the crew announces the next match.</text>
+<text x="32" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="32 622">A · The old bot, for many events</text>
+<text x="32" y="154" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 622">A stream of new posts, one per change</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="170" width="590" height="620" rx="0" fill="#313338"/>
+<line x1="32" y1="218" x2="622" y2="218" stroke="#1f2023" stroke-width="1"/>
+<text x="50" y="200" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="42 612"># food</text>
+<circle cx="68" cy="258" r="18" fill="#5865f2"/>
+<text x="68" y="263" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 86">DB</text>
+<text x="102" y="254" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="44 610">Demo Bot</text>
+<rect x="178.8" y="242" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="195.8" y="254" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="178.8 212.8">APP</text>
+<text x="220.8" y="254" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">19:41</text>
+<text x="102" y="278" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 610">Order 2 from Demo Trattoria is open. Add yours!</text>
+<circle cx="68" cy="324" r="18" fill="#5865f2"/>
+<text x="68" y="329" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 86">DB</text>
+<text x="102" y="320" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="44 610">Demo Bot</text>
+<rect x="178.8" y="308" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="195.8" y="320" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="178.8 212.8">APP</text>
+<text x="220.8" y="320" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">19:58</text>
+<text x="102" y="344" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 610">Last call for order 2: closes in 10 minutes.</text>
+<circle cx="68" cy="390" r="18" fill="#5865f2"/>
+<text x="68" y="395" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 86">DB</text>
+<text x="102" y="386" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="44 610">Demo Bot</text>
+<rect x="178.8" y="374" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="195.8" y="386" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="178.8 212.8">APP</text>
+<text x="220.8" y="386" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">20:08</text>
+<text x="102" y="410" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 610">Order 2 is closed. Player Two calls it in.</text>
+<circle cx="68" cy="456" r="18" fill="#5865f2"/>
+<text x="68" y="461" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 86">DB</text>
+<text x="102" y="452" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="44 610">Demo Bot</text>
+<rect x="178.8" y="440" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="195.8" y="452" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="178.8 212.8">APP</text>
+<text x="220.8" y="452" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">20:12</text>
+<text x="102" y="476" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 610">Order 2 was called in. About 20:50.</text>
+<circle cx="68" cy="522" r="18" fill="#5865f2"/>
+<text x="68" y="527" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 86">DB</text>
+<text x="102" y="518" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="44 610">Demo Bot</text>
+<rect x="178.8" y="506" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="195.8" y="518" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="178.8 212.8">APP</text>
+<text x="220.8" y="518" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">20:13</text>
+<text x="102" y="542" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="44 610">Order 3 from Demo Pizzeria is open.</text>
+<text x="50" y="578" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="44 610">… five posts for two orders; the channel scrolls away</text>
+</g>
+<text x="32" y="830" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">Attendees: familiar, but noisy; the channel is a log.</text>
+<text x="32" y="851.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">Organisers: the legacy commands, now on any server.</text>
+<text x="32" y="873.5" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">Venue staff: nothing new.</text>
+<text x="32" y="895.25" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">Trade-off: cheapest; keeps every legacy weak spot</text>
+<text x="32" y="917" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">(new posts per change, admin by role name fixed).</text>
+<text x="32" y="938.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="32 622">Cost: M (the pool and per-guild commands are M alone).</text>
+<text x="652" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="652 1242">B · Discord first</text>
+<text x="652" y="154" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" data-box="652 1242">Order, register and run the event inside Discord</text>
+<g clip-path="url(#c2)">
+<rect x="652" y="170" width="590" height="620" rx="0" fill="#313338"/>
+<line x1="652" y1="218" x2="1242" y2="218" stroke="#1f2023" stroke-width="1"/>
+<text x="670" y="200" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="662 1232"># food</text>
+<circle cx="688" cy="258" r="18" fill="#5865f2"/>
+<text x="688" y="263" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="670 706">DB</text>
+<text x="722" y="254" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="664 1230">Demo Bot</text>
+<rect x="798.8" y="242" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="815.8" y="254" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="798.8 832.8">APP</text>
+<text x="840.8" y="254" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="664 1230">19:41</text>
+<text x="722" y="278" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="664 1230">Order 2 · Demo Trattoria · closes 20:08</text>
+<rect x="722" y="300" width="210" height="34" rx="4" fill="#1e1f22" stroke="#4e5058" stroke-width="1"/>
+<text x="732" y="322" font-size="14" fill="#949ba4" font-weight="400" text-anchor="start" data-box="726 928">Pick a pizza …  ▾</text>
+<rect x="722" y="342" width="210" height="34" rx="4" fill="#1e1f22" stroke="#4e5058" stroke-width="1"/>
+<text x="732" y="364" font-size="14" fill="#949ba4" font-weight="400" text-anchor="start" data-box="726 928">Extra cheese, no olives  ▾</text>
+<rect x="722" y="386" width="140" height="32" rx="4" fill="#248046"/>
+<text x="792" y="407" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="726 858">Add to order</text>
+<rect x="870" y="386" width="100" height="32" rx="4" fill="#4e5058"/>
+<text x="920" y="407" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="874 966">My order</text>
+<circle cx="688" cy="450" r="18" fill="#5865f2"/>
+<text x="688" y="455" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="670 706">DB</text>
+<text x="722" y="446" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="664 1230">Demo Bot</text>
+<rect x="798.8" y="434" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="815.8" y="446" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="798.8 832.8">APP</text>
+<text x="840.8" y="446" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="664 1230">20:10</text>
+<text x="722" y="470" font-size="14.5" fill="#dbdee1" font-weight="400" text-anchor="start" data-box="664 1230">Match 3 · register your team:</text>
+<rect x="722" y="492" width="110" height="32" rx="4" fill="#5865f2"/>
+<text x="777" y="513" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="726 828">Register</text>
+<rect x="840" y="492" width="100" height="32" rx="4" fill="#4e5058"/>
+<text x="890" y="513" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="844 936">Check in</text>
+<text x="670" y="556" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="664 1230">Every page built twice: once on the web, once in Discord</text>
+</g>
+<text x="652" y="830" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">Attendees: never leave Discord; no hub needed.</text>
+<text x="652" y="851.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">Organisers: every flow twice, in pages and in Discord.</text>
+<text x="652" y="873.5" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">Venue staff: run the night from chat.</text>
+<text x="652" y="895.25" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">Trade-off: doubles every UI; Discord&#x27;s limits shape</text>
+<text x="652" y="917" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">the product; against 0022 (screen and hub first).</text>
+<text x="652" y="938.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="652 1242">Cost: XL.</text>
+<text x="1272" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="1272 1862">C · The living server (recommended)</text>
+<text x="1272" y="154" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1272 1862">One message per thing, edited in place</text>
+<g clip-path="url(#c3)">
+<rect x="1272" y="170" width="590" height="620" rx="0" fill="#313338"/>
+<line x1="1272" y1="218" x2="1862" y2="218" stroke="#1f2023" stroke-width="1"/>
+<text x="1290" y="200" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1282 1852"># food</text>
+<rect x="1290" y="240" width="554" height="158" rx="4" fill="#2b2d31"/>
+<rect x="1290" y="240" width="4" height="158" rx="2" fill="#3ee39a"/>
+<text x="1306" y="266" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1304 1832">Food · now</text>
+<text x="1306" y="290" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="1304 1832">Order 2 · Demo Trattoria · called in, about 20:50</text>
+<text x="1306" y="312" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="1304 1832">7 pizzas · held by Player Two</text>
+<text x="1306" y="334" font-size="14" fill="#dbdee1" font-weight="600" text-anchor="start" data-box="1304 1832">Order 3 · Demo Pizzeria · open until 20:45</text>
+<text x="1306" y="356" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="1304 1832">2 pizzas so far · held by Player Five</text>
+<text x="1306" y="380" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1304 1832">Pinned · updated 20:12</text>
+<rect x="1290" y="408" width="150" height="32" rx="4" fill="#4e5058"/>
+<text x="1365" y="429" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="1294 1436">Order food ↗</text>
+<circle cx="1308" cy="478" r="18" fill="#5865f2"/>
+<text x="1308" y="483" font-size="13" fill="#fff" font-weight="700" text-anchor="middle" data-box="1290 1326">DB</text>
+<text x="1342" y="474" font-size="15" fill="#f2f3f5" font-weight="600" text-anchor="start" data-box="1284 1850">Demo Bot</text>
+<rect x="1418.8" y="462" width="34" height="16" rx="3" fill="#5865f2"/>
+<text x="1435.8" y="474" font-size="10" fill="#fff" font-weight="700" text-anchor="middle" data-box="1418.8 1452.8">APP</text>
+<text x="1460.8" y="474" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1284 1850">20:12</text>
+<rect x="1342" y="484" width="502" height="114" rx="4" fill="#2b2d31"/>
+<rect x="1342" y="484" width="4" height="114" rx="2" fill="#f0b232"/>
+<text x="1358" y="510" font-size="15.5" fill="#f2f3f5" font-weight="700" text-anchor="start" data-box="1356 1832">Order 2 · Demo Trattoria</text>
+<text x="1358" y="534" font-size="14" fill="#dbdee1" font-weight="#dbdee1" text-anchor="start" data-box="1356 1832">● open  ● last call  ● closed  ● called in</text>
+<text x="1358" y="556" font-size="14" fill="#949ba4" font-weight="#dbdee1" text-anchor="start" data-box="1356 1832">About 20:50 · 7 pizzas</text>
+<text x="1358" y="580" font-size="12" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1356 1832">One message, edited as the order moves</text>
+<text x="1290" y="624" font-size="13" fill="#949ba4" font-weight="400" text-anchor="start" data-box="1284 1850">Two messages tell the whole story; nothing scrolls away</text>
+</g>
+<text x="1272" y="830" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">Attendees: glance at a channel and know where things are;</text>
+<text x="1272" y="851.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">one tap to the page that does it.</text>
+<text x="1272" y="873.5" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">Organisers: set up in minutes; crew act fast with 3 commands.</text>
+<text x="1272" y="895.25" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">Venue staff: the crew channel and DMs, nothing to learn.</text>
+<text x="1272" y="917" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">Trade-off: Discord-only people must open a page to act.</text>
+<text x="1272" y="938.75" font-size="15" fill="#111827" font-weight="400" text-anchor="start" data-box="1272 1862">Cost: M.</text>
+</svg>
