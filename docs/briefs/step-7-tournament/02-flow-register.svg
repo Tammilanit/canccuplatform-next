@@ -27,26 +27,41 @@
 <text x="44.0" y="140.0" font-size="12" fill="#3ddcff" font-weight="700" text-anchor="start" letter-spacing="1">FOR YOU</text>
 <text x="44.0" y="168.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 350.0">Demo Arena 5v5 · 19:30</text>
 <text x="44.0" y="194.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 350.0">Team Alpha · check-in opens 19:15</text>
-<text x="26.0" y="258.0" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" letter-spacing="1">SATURDAY</text>
-<rect x="26.0" y="272.0" width="338.0" height="80.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<text x="44.0" y="304.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 346.0">Demo Racer time trial</text>
-<text x="44.0" y="330.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 230.0">14:00 · solo</text>
-<rect x="254.8" y="316.0" width="91.2" height="22.0" rx="11.0" fill="#22263f"/>
-<text x="300.4" y="330.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="258.8 342.0">Done · 4th</text>
-<rect x="26.0" y="364.0" width="338.0" height="80.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<text x="44.0" y="396.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 346.0">Demo Arena 5v5</text>
-<text x="44.0" y="422.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 230.0">19:30 · teams of 5</text>
-<rect x="254.8" y="408.0" width="91.2" height="22.0" rx="11.0" fill="#1e4244"/>
-<text x="300.4" y="422.0" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="258.8 342.0">Registered</text>
-<rect x="26.0" y="456.0" width="338.0" height="80.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<text x="44.0" y="488.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 346.0">Demo Party</text>
-<text x="44.0" y="514.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 230.0">22:00 · solo · 24 places</text>
-<rect x="232.8" y="500.0" width="113.2" height="22.0" rx="11.0" fill="#1c2a44"/>
-<text x="289.4" y="514.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="236.8 342.0">Open · 9 left</text>
-<text x="26.0" y="570.0" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" letter-spacing="1">SUNDAY</text>
-<rect x="26.0" y="584.0" width="338.0" height="80.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<text x="44.0" y="616.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 250.0">Demo Arena final</text>
-<text x="44.0" y="642.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">13:00 · top 10 of the standings</text>
+<rect x="26.0" y="240.0" width="100.0" height="32.0" rx="16.0" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="76.0" y="260.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="30.0 122.0">Fri · 2</text>
+<rect x="134.0" y="240.0" width="100.0" height="32.0" rx="16.0" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="184.0" y="260.6" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="138.0 230.0">Sat · 3</text>
+<rect x="242.0" y="240.0" width="100.0" height="32.0" rx="16.0" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="292.0" y="260.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="246.0 338.0">Sun · 1</text>
+<line x1="80.0" y1="312.0" x2="80.0" y2="594.0" stroke="#343c66" stroke-width="1"/>
+<text x="26.0" y="316.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26.0 68.0">14:00</text>
+<circle cx="80.0" cy="312.0" r="5" fill="#3c446c"/>
+<rect x="96.0" y="292.0" width="268.0" height="86.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="350.0" y="318.0" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="112.0" y="318.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="112.0 324.0">Demo Racer time trial</text>
+<text x="112.0" y="338.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="112.0 348.0">Solo</text>
+<rect x="112.0" y="346.0" width="91.6" height="22.0" rx="11" fill="#22263f"/>
+<text x="157.8" y="361.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="116.0 199.6">Done · 4th</text>
+<line x1="72.0" y1="402.0" x2="364.0" y2="402.0" stroke="#3ddcff" stroke-width="1.5"/>
+<circle cx="80.0" cy="402.0" r="5" fill="#3ddcff"/>
+<text x="26.0" y="407.0" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="26.0 66.0">19:24</text>
+<text x="104.0" y="396.0" font-size="11" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="96.0 176.0">now</text>
+<text x="26.0" y="446.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26.0 68.0">19:30</text>
+<circle cx="80.0" cy="442.0" r="5" fill="#3ddcff"/>
+<rect x="96.0" y="422.0" width="268.0" height="86.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="350.0" y="448.0" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="112.0" y="448.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="112.0 324.0">Demo Arena 5v5</text>
+<text x="112.0" y="468.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="112.0 348.0">Teams of 5</text>
+<rect x="112.0" y="476.0" width="91.6" height="22.0" rx="11" fill="#1e4244"/>
+<text x="157.8" y="491.0" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="116.0 199.6">Registered</text>
+<text x="26.0" y="542.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26.0 68.0">22:00</text>
+<circle cx="80.0" cy="538.0" r="5" fill="#3ddcff"/>
+<rect x="96.0" y="518.0" width="268.0" height="86.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="350.0" y="544.0" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="112.0" y="544.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="112.0 324.0">Demo Party</text>
+<text x="112.0" y="564.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="112.0 348.0">Solo · 24 places</text>
+<rect x="112.0" y="572.0" width="112.5" height="22.0" rx="11" fill="#1c2a44"/>
+<text x="168.2" y="587.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="116.0 220.5">Open · 9 left</text>
 <text x="195.0" y="712.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle">Standings · Champions · Rules</text>
 </g>
 <g transform="translate(352.0,140.0) scale(0.72)">
@@ -194,7 +209,7 @@
 </g>
 <circle cx="45.0" cy="785.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The For you card leads; the list is by day, in the event&#x27;s time zone (O4).</text>
+<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The For you card leads; the list is one day at a time, times down the side, in the event&#x27;s time zone (O4).</text>
 <circle cx="985.0" cy="785.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
 <text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Format, places and the close time come from the session; the game art from the games catalogue (D15).</text>

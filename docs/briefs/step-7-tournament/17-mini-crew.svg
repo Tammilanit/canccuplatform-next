@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1150" width="1920" height="1150" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 7 mockup 17 · LATER (after version 1) · Mini tournaments for the crew: the queue, what runs, rules for one game, settings (crew, organiser)</title>
+<rect x="0" y="0" width="1920" height="1150" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">17 · LATER (after version 1) · Mini tournaments for the crew: the queue, what runs, rules for one game, settings (crew, organiser)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: on Saturday evening four mini tournaments are on beside the cup; the crew settles a dispute, confirms a lone report and starts one for a game the catalogue has no rules for</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1210.0">The Tournament page, Mini tournaments tab, at 1920 px</text>
+<text x="1262.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1262.0 1540.0">The crew phone: the queue</text>
+<text x="1582.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1582.0 1890.0">Rules for one tournament</text>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1920" height="1000" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,140.0) scale(0.6)"><g clip-path="url(#c1)">
+<rect x="0.0" y="0.0" width="1920.0" height="1000.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1920.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1920.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:12</text>
+<rect x="0.0" y="57.0" width="255.0" height="943.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="1000.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="117.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="129.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="159.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="171.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="201.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="213.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<rect x="12.0" y="232.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="232.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="243.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="255.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Tournament</text>
+<rect x="26.0" y="285.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="297.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Food</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1660.0">Tournament</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1660.0">Demo Game Cup · 3 mini tournaments live · 1 open for sign-up</text>
+<text x="300.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sessions</text>
+<text x="394.8" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Standings and final</text>
+<text x="573.2" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Players and teams</text>
+<text x="736.4" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Mini tournaments</text>
+<line x1="732.4" y1="186.0" x2="858.0" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="892.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<line x1="296.0" y1="187.0" x2="1880.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="226.0" font-size="11" fill="#ffc94d" font-weight="700" text-anchor="start" letter-spacing="1.2">NEEDS THE CREW · 3</text>
+<rect x="296.0" y="240.0" width="516.0" height="190.0" rx="12" fill="#1f2440" stroke="#ff6b81" stroke-width="1.5"/>
+<text x="316.0" y="274.0" font-size="17" fill="#ff6b81" font-weight="700" text-anchor="start" data-box="316.0 792.0">Different reports</text>
+<text x="316.0" y="300.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 792.0">Demo Squad cup · semi-final 2</text>
+<text x="316.0" y="336.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="316.0 792.0">Team 2 says: Team 2, Team 4</text>
+<text x="316.0" y="360.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="316.0 792.0">Team 4 says: Team 4, Team 2</text>
+<rect x="316.0" y="378.0" width="150.0" height="38.0" rx="12" fill="#3ddcff"/>
+<text x="391.0" y="401.9" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="322.0 460.0">Settle</text>
+<text x="486.0" y="403.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<rect x="828.0" y="240.0" width="516.0" height="190.0" rx="12" fill="#1f2440" stroke="#ffc94d" stroke-width="1.5"/>
+<text x="848.0" y="274.0" font-size="17" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="848.0 1324.0">One report, waiting 12 min</text>
+<text x="848.0" y="300.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="848.0 1324.0">Demo Racer heats · heat 4</text>
+<text x="848.0" y="336.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="848.0 1324.0">Player Six says: Player Six,</text>
+<text x="848.0" y="360.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="848.0 1324.0">Player Two, Player Nine</text>
+<rect x="848.0" y="378.0" width="150.0" height="38.0" rx="12" fill="#3ddcff"/>
+<text x="923.0" y="401.9" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="854.0 992.0">Confirm</text>
+<text x="1018.0" y="403.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<rect x="1360.0" y="240.0" width="516.0" height="190.0" rx="12" fill="#1f2440" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="1380.0" y="274.0" font-size="17" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1380.0 1856.0">A problem</text>
+<text x="1380.0" y="300.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1380.0 1856.0">Demo Party casual rounds</text>
+<text x="1380.0" y="336.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380.0 1856.0">“Our lobby is full, can we</text>
+<text x="1380.0" y="360.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1380.0 1856.0">switch to lobby 2?”</text>
+<rect x="1380.0" y="378.0" width="150.0" height="38.0" rx="12" fill="#3ddcff"/>
+<text x="1455.0" y="401.9" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1386.0 1524.0">Reply</text>
+<text x="1550.0" y="403.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<text x="296.0" y="476.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUNNING AND OPEN</text>
+<rect x="296.0" y="490.0" width="382.0" height="170.0" rx="12" fill="#1f2440"/>
+<text x="316.0" y="526.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="316.0 596.0">Demo Squad cup</text>
+<rect x="598.0" y="508.0" width="62.0" height="24.0" rx="12" fill="#1e4244"/>
+<text x="629.0" y="525.0" font-size="12.5" fill="#3ee39a" font-weight="600" text-anchor="middle" data-box="600.0 658.0">Live</text>
+<text x="316.0" y="556.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="316.0 658.0">Semi-finals · 4 teams of 3</text>
+<text x="316.0" y="582.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="316.0 658.0">Hosted by Player Two</text>
+<text x="316.0" y="636.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<text x="396.0" y="636.0" font-size="14" fill="#ff6b81" font-weight="600" text-anchor="start">Cancel…</text>
+<rect x="694.0" y="490.0" width="382.0" height="170.0" rx="12" fill="#1f2440"/>
+<text x="714.0" y="526.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="714.0 994.0">Demo Racer heats</text>
+<rect x="996.0" y="508.0" width="62.0" height="24.0" rx="12" fill="#1e4244"/>
+<text x="1027.0" y="525.0" font-size="12.5" fill="#3ee39a" font-weight="600" text-anchor="middle" data-box="998.0 1056.0">Live</text>
+<text x="714.0" y="556.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="714.0 1056.0">Heat 4 of 6 · 9 players</text>
+<text x="714.0" y="582.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="714.0 1056.0">Hosted by Player Six</text>
+<text x="714.0" y="636.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<text x="794.0" y="636.0" font-size="14" fill="#ff6b81" font-weight="600" text-anchor="start">Cancel…</text>
+<rect x="1092.0" y="490.0" width="382.0" height="170.0" rx="12" fill="#1f2440"/>
+<text x="1112.0" y="526.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1112.0 1392.0">Demo Party casual rounds</text>
+<rect x="1394.0" y="508.0" width="62.0" height="24.0" rx="12" fill="#1e4244"/>
+<text x="1425.0" y="525.0" font-size="12.5" fill="#3ee39a" font-weight="600" text-anchor="middle" data-box="1396.0 1454.0">Live</text>
+<text x="1112.0" y="556.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1112.0 1454.0">Round 5 · 14 in the roster</text>
+<text x="1112.0" y="582.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1112.0 1454.0">Hosted by Demo Player</text>
+<text x="1112.0" y="636.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<text x="1192.0" y="636.0" font-size="14" fill="#ff6b81" font-weight="600" text-anchor="start">Cancel…</text>
+<rect x="1490.0" y="490.0" width="382.0" height="170.0" rx="12" fill="#1f2440"/>
+<text x="1510.0" y="526.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1510.0 1790.0">Demo Arena 1v1</text>
+<rect x="1792.0" y="508.0" width="62.0" height="24.0" rx="12" fill="#1c2a44"/>
+<text x="1823.0" y="525.0" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1794.0 1852.0">Open</text>
+<text x="1510.0" y="556.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1510.0 1852.0">Sign-up until 22:00 · 7 in</text>
+<text x="1510.0" y="582.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1510.0 1852.0">Hosted by Player Four</text>
+<text x="1510.0" y="636.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Open</text>
+<text x="1590.0" y="636.0" font-size="14" fill="#ff6b81" font-weight="600" text-anchor="start">Cancel…</text>
+<rect x="296.0" y="700.0" width="260.0" height="44.0" rx="12" fill="#3ddcff"/>
+<text x="426.0" y="727.1" font-size="14.5" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="302.0 550.0">Start one for a game</text>
+<text x="580.0" y="728.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="580.0 1880.0">Players start their own from the hub; the crew can start one for any game.</text>
+<text x="296.0" y="800.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">HISTORY</text>
+<line x1="296.0" y1="850.0" x2="1880.0" y2="850.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="836.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">21:09</text>
+<text x="370.0" y="836.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="370.0 1880.0">Crew Lead settled Demo Arena 1v1, round 2: Player Two first; the two reports differed</text>
+<line x1="296.0" y1="890.0" x2="1880.0" y2="890.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="876.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">20:58</text>
+<text x="370.0" y="876.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="370.0 1880.0">Demo Racer heats started with 9 players; the draw can be replayed</text>
+<line x1="296.0" y1="930.0" x2="1880.0" y2="930.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="916.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start">20:41</text>
+<text x="370.0" y="916.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="370.0 1880.0">Player Four opened Demo Arena 1v1, sign-up until 22:00</text>
+</g></g>
+<g transform="translate(1262.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">21:12</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Desk</text>
+<text x="195.0" y="122.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="26.0 364.0">Mini tournaments</text>
+<text x="26.0" y="150.0" font-size="12" fill="#ffc94d" font-weight="700" text-anchor="start" letter-spacing="1.2">NEEDS THE CREW · 3</text>
+<rect x="26.0" y="162.0" width="338.0" height="360.0" rx="14" fill="#1f2440" stroke="#ff6b81" stroke-width="1.5"/>
+<text x="46.0" y="194.0" font-size="17" fill="#ff6b81" font-weight="700" text-anchor="start" data-box="46.0 344.0">Different reports</text>
+<text x="46.0" y="218.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="46.0 344.0">Demo Squad cup · semi-final 2</text>
+<rect x="46.0" y="236.0" width="298.0" height="64.0" rx="10" fill="#0f1430"/>
+<text x="62.0" y="262.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="62.0 330.0">Team 2 says</text>
+<text x="62.0" y="286.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="62.0 330.0">1 Team 2 · 2 Team 4</text>
+<rect x="46.0" y="310.0" width="298.0" height="64.0" rx="10" fill="#0f1430"/>
+<text x="62.0" y="336.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="62.0 330.0">Team 4 says</text>
+<text x="62.0" y="360.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="62.0 330.0">1 Team 4 · 2 Team 2</text>
+<rect x="46.0" y="396.0" width="142.0" height="42.0" rx="12" fill="#3ddcff"/>
+<text x="117.0" y="421.9" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="52.0 182.0">Team 2&#x27;s</text>
+<rect x="202.0" y="396.0" width="142.0" height="42.0" rx="12" fill="#3ddcff"/>
+<text x="273.0" y="421.9" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="208.0 338.0">Team 4&#x27;s</text>
+<rect x="46.0" y="450.0" width="298.0" height="42.0" rx="12" fill="none" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="195.0" y="475.9" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="52.0 338.0">Set the order myself</text>
+<rect x="26.0" y="540.0" width="338.0" height="96.0" rx="14" fill="#1f2440" stroke="#ffc94d" stroke-width="1.5"/>
+<text x="46.0" y="572.0" font-size="15.5" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="46.0 344.0">One report, waiting 12 min</text>
+<text x="46.0" y="598.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="46.0 344.0">Demo Racer heats · heat 4</text>
+<text x="344.0" y="622.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="end">Confirm ›</text>
+<rect x="26.0" y="652.0" width="338.0" height="64.0" rx="14" fill="#1f2440" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="46.0" y="690.0" font-size="15.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="46.0 344.0">A problem · Demo Party</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+</g>
+<g transform="translate(1582.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">21:14</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Mini tournaments</text>
+<text x="195.0" y="122.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="26.0 364.0">Start one</text>
+<rect x="26.0" y="140.0" width="338.0" height="96.0" rx="14" fill="#1f2440"/>
+<text x="46.0" y="176.0" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="46.0 344.0">Demo Racer</text>
+<text x="46.0" y="204.0" font-size="13.5" fill="#ffc94d" font-weight="400" text-anchor="start" data-box="46.0 344.0">No rules in the catalogue yet</text>
+<text x="46.0" y="226.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="46.0 344.0">Set here for this tournament only</text>
+<text x="26.0" y="272.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start">Players per team</text>
+<rect x="26.0" y="282.0" width="180.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="44.0" y="307.0" font-size="20" fill="#3ddcff" font-weight="700" text-anchor="middle">−</text>
+<text x="188.0" y="307.0" font-size="20" fill="#3ddcff" font-weight="700" text-anchor="middle">+</text>
+<text x="116.0" y="305.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="60.0 172.0">1 player</text>
+<text x="26.0" y="350.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26.0 364.0">Players or teams per race</text>
+<line x1="36.0" y1="384.0" x2="354.0" y2="384.0" stroke="#616788" stroke-width="4"/>
+<line x1="36.0" y1="384.0" x2="210.0" y2="384.0" stroke="#3ddcff" stroke-width="4"/>
+<circle cx="36.0" cy="384.0" r="10" fill="#3ddcff"/>
+<circle cx="210.0" cy="384.0" r="10" fill="#3ddcff"/>
+<text x="26.0" y="416.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">2</text>
+<text x="364.0" y="416.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end">16</text>
+<text x="195.0" y="416.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="150.0 240.0">2 to 8</text>
+<text x="26.0" y="456.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start">Format</text>
+<rect x="26.0" y="468.0" width="165.0" height="52.0" rx="10" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="40.0" y="500.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="34.0 183.0">Heats</text>
+<rect x="199.0" y="468.0" width="165.0" height="52.0" rx="10" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="213.0" y="500.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="207.0 356.0">Bracket</text>
+<rect x="26.0" y="530.0" width="165.0" height="52.0" rx="10" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="40.0" y="562.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="34.0 183.0">Casual rounds</text>
+<rect x="199.0" y="530.0" width="165.0" height="52.0" rx="10" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="213.0" y="562.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="207.0 356.0">One race</text>
+<rect x="26.0" y="660.0" width="338.0" height="50.0" rx="12" fill="#3ddcff"/>
+<text x="195.0" y="690.2" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Open sign-up</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+</g>
+<text x="32.0" y="790.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1210.0">Settings, Mini tournaments (part of the Settings tab)</text>
+<rect x="32.0" y="804.0" width="1152.0" height="150.0" rx="10" fill="#0b0d1a"/>
+<text x="56.0" y="844.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="56.0 400.0">Who may start one</text>
+<rect x="56.0" y="860.0" width="150.0" height="34.0" rx="17.0" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="131.0" y="881.9" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="60.0 202.0">Any member</text>
+<rect x="214.0" y="860.0" width="150.0" height="34.0" rx="17.0" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="289.0" y="881.9" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="218.0 360.0">The crew only</text>
+<text x="56.0" y="930.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56.0 560.0">Players start mini tournaments from a game&#x27;s page or Play.</text>
+<text x="620.0" y="844.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="620.0 1000.0">Show rating changes</text>
+<rect x="1100.0" y="828.0" width="44.0" height="24.0" rx="12" fill="#1e4244" stroke="#3ee39a" stroke-width="1"/>
+<circle cx="1132.0" cy="840.0" r="8" fill="#3ee39a"/>
+<text x="620.0" y="884.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="620.0 1000.0">A cap on mini tournaments at once</text>
+<rect x="1100.0" y="868.0" width="44.0" height="24.0" rx="12" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<circle cx="1112.0" cy="880.0" r="8" fill="#a9b1d6"/>
+<text x="620.0" y="930.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="620.0 1160.0">Off: one open sign-up per game at a time.</text>
+<circle cx="45.0" cy="1005.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="1010.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="66.0" y="1010.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 952.0">Differing reports, a lone report after 10 minutes and problem notes reach one queue (M8, M9).</text>
+<circle cx="985.0" cy="1005.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="1010.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1006.0" y="1010.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1892.0">The crew picks a report or drags the teams into order; each decision is kept in the history (M9).</text>
+<circle cx="45.0" cy="1039.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="1044.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="66.0" y="1044.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 952.0">Mini tournaments are cards at card size, the crew band above (amendment 3); the history stays a table.</text>
+<circle cx="985.0" cy="1039.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="1044.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1006.0" y="1044.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1892.0">The phone is the same page reflowed at 390 px (U14); cancel needs the crew&#x27;s right (M14, M15).</text>
+<circle cx="45.0" cy="1073.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="1078.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="66.0" y="1078.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 952.0">A game without catalogue rules: the crew sets them for this one tournament, never back into the catalogue (M2, D19).</text>
+<circle cx="985.0" cy="1073.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="1078.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="1006.0" y="1078.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1892.0">Who may start one and the cap are event settings; ratings change marks are on by default (M1, M4, O11).</text>
+</svg>

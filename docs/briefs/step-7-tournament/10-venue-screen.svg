@@ -123,7 +123,7 @@
 <rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
 <rect x="40.0" y="32.0" width="1840.0" height="86.0" rx="16" fill="#161a2e"/>
 <text x="80.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
-<text x="1840.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">19:31</text>
+<text x="1840.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">20:48</text>
 <text x="1640.0" y="92.0" font-size="28" fill="#a9b1d6" font-weight="500" text-anchor="end">Main hall</text>
 <rect x="40.0" y="150.0" width="1840.0" height="890.0" rx="24" fill="#10233a" stroke="#3ddcff" stroke-width="6"/>
 <text x="960.0" y="300.0" font-size="54" fill="#3ddcff" font-weight="800" text-anchor="middle" letter-spacing="6">MATCH CALLED</text>

@@ -3,8 +3,8 @@
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
 <rect x="0.0" y="0.0" width="1920.0" height="1060.0" rx="0" fill="#f3f4f6"/>
 <text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">05 · Organiser: the sessions, and a new session (organiser)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: an organiser plans the tournament&#x27;s sessions for the weekend and adds one; sessions are a card grid (amendment 3)</text>
-<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 932.0">Sessions · 1280 px: 3 columns of 304 px</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: an organiser plans the tournament&#x27;s sessions for the weekend and adds one; sessions are a day schedule, one day at a time, in time order</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 932.0">Sessions · 1280 px: one day, times down the side</text>
 <defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="1060" rx="10"/></clipPath></defs>
 <g transform="translate(32.0,140.0) scale(0.72)"><g clip-path="url(#c1)">
 <rect x="0.0" y="0.0" width="1280.0" height="1060.0" rx="0" fill="#0b0d1a"/>
@@ -64,61 +64,55 @@
 <rect x="634.9" y="215.0" width="102.2" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="686.0" y="235.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="638.9 733.1">Rules page</text>
 <text x="296.0" y="271.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">6 sessions · 1 open · 1 running · 2 done · 312 players registered</text>
-<text x="296.0" y="317.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SATURDAY</text>
-<rect x="296.0" y="333.0" width="304.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<rect x="296.0" y="333.0" width="304.0" height="64.0" rx="12" fill="#2a2f6a"/>
-<rect x="296.0" y="385.0" width="304.0" height="12.0" rx="0" fill="#2a2f6a"/>
-<rect x="312.0" y="349.0" width="47.3" height="22.0" rx="11.0" fill="#22263f"/>
-<text x="335.6" y="363.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="316.0 355.3">Done</text>
-<text x="312.0" y="425.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312.0 584.0">Demo Racer time trial</text>
-<text x="312.0" y="447.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="312.0 584.0">14:00 · solo · 41 played</text>
-<text x="312.0" y="473.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312.0 584.0">Results saved 15:20</text>
-<rect x="312.0" y="547.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="340.2" y="567.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="316.0 364.5">Open</text>
-<rect x="376.5" y="547.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="404.8" y="567.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="380.5 429.0">Edit</text>
-<rect x="616.0" y="333.0" width="304.0" height="262.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
-<rect x="616.0" y="333.0" width="304.0" height="64.0" rx="12" fill="#2a2f6a"/>
-<rect x="616.0" y="385.0" width="304.0" height="12.0" rx="0" fill="#2a2f6a"/>
-<rect x="632.0" y="349.0" width="135.1" height="22.0" rx="11.0" fill="#3a3320"/>
-<text x="699.6" y="363.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="636.0 763.1">Check-in · 31/40</text>
-<text x="632.0" y="425.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="632.0 904.0">Demo Arena 5v5</text>
-<text x="632.0" y="447.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="632.0 904.0">19:30 · teams of 5 · 8 of 8</text>
-<text x="632.0" y="473.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="632.0 904.0">Waiting list: 2 teams</text>
-<text x="632.0" y="493.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="632.0 904.0">Check-in closes 19:25</text>
-<text x="632.0" y="513.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="632.0 904.0">Matches: 4 quarters, 2 semis</text>
-<text x="632.0" y="533.0" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="632.0 904.0">+1 more</text>
-<rect x="632.0" y="547.0" width="94.6" height="32.0" rx="8" fill="#3ddcff"/>
-<text x="679.3" y="567.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="636.0 722.6">Open desk</text>
-<rect x="734.6" y="547.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="762.9" y="567.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="738.6 787.1">Edit</text>
-<rect x="936.0" y="333.0" width="304.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<rect x="936.0" y="333.0" width="304.0" height="64.0" rx="12" fill="#2a2f6a"/>
-<rect x="936.0" y="385.0" width="304.0" height="12.0" rx="0" fill="#2a2f6a"/>
-<rect x="952.0" y="349.0" width="47.3" height="22.0" rx="11.0" fill="#1c2a44"/>
-<text x="975.6" y="363.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="956.0 995.3">Open</text>
-<text x="952.0" y="425.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="952.0 1224.0">Demo Party</text>
-<text x="952.0" y="447.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="952.0 1224.0">22:00 · solo · 16 of 24</text>
-<text x="952.0" y="473.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="952.0 1224.0">Closes 21:30</text>
-<text x="952.0" y="493.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="952.0 1224.0">3 rounds · 4 per match</text>
-<rect x="952.0" y="547.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="980.2" y="567.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="956.0 1004.5">Open</text>
-<rect x="1016.5" y="547.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1044.8" y="567.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1020.5 1069.0">Edit</text>
-<text x="296.0" y="637.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SUNDAY</text>
-<rect x="296.0" y="653.0" width="304.0" height="262.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<rect x="296.0" y="653.0" width="304.0" height="64.0" rx="12" fill="#2a2f6a"/>
-<rect x="296.0" y="705.0" width="304.0" height="12.0" rx="0" fill="#2a2f6a"/>
-<rect x="312.0" y="669.0" width="83.9" height="22.0" rx="11.0" fill="#22263f"/>
-<text x="353.9" y="683.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="316.0 391.9">Scheduled</text>
-<text x="312.0" y="745.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="312.0 584.0">Demo Arena final</text>
-<text x="312.0" y="767.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="312.0 584.0">13:00 · final · top 10</text>
-<text x="312.0" y="793.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312.0 584.0">Finalists picked at 12:00</text>
-<text x="312.0" y="813.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="312.0 584.0">Photos: none yet</text>
-<rect x="312.0" y="867.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="340.2" y="887.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="316.0 364.5">Open</text>
-<rect x="376.5" y="867.0" width="56.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="404.8" y="887.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="380.5 429.0">Edit</text>
+<rect x="296.0" y="291.0" width="124.4" height="32.0" rx="16.0" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="358.2" y="311.7" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="300.0 416.4">Fri 6 Nov · 2</text>
+<rect x="428.4" y="291.0" width="124.4" height="32.0" rx="16.0" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="490.6" y="311.7" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="432.4 548.8">Sat 7 Nov · 3</text>
+<rect x="560.8" y="291.0" width="124.4" height="32.0" rx="16.0" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="623.0" y="311.7" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="564.8 681.2">Sun 8 Nov · 1</text>
+<text x="296.0" y="354.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SATURDAY 7 NOV · 3 SESSIONS · THE DAY RUNS 06:00 TO 06:00</text>
+<line x1="376.0" y1="392.0" x2="376.0" y2="590.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="396.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">14:00</text>
+<text x="296.0" y="415.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 15:20</text>
+<circle cx="376.0" cy="392.0" r="5" fill="#3c446c"/>
+<rect x="396.0" y="372.0" width="844.0" height="52.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1170.0" y="384.0" width="56.0" height="28.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1198.0" y="403.0" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1174.0 1222.0">Edit</text>
+<rect x="1106.0" y="384.0" width="56.0" height="28.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1134.0" y="403.0" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1110.0 1158.0">Open</text>
+<rect x="1042.2" y="384.0" width="49.8" height="22.0" rx="11" fill="#22263f"/>
+<text x="1067.1" y="399.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1046.2 1088.0">Done</text>
+<text x="412.0" y="398.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 1030.2">Demo Racer time trial</text>
+<text x="412.0" y="418.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1084.0">Solo · 41 played · results saved 15:20</text>
+<line x1="368.0" y1="448.0" x2="1240.0" y2="448.0" stroke="#3ddcff" stroke-width="1.5"/>
+<circle cx="376.0" cy="448.0" r="5" fill="#3ddcff"/>
+<text x="296.0" y="453.0" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="296.0 362.0">19:24</text>
+<text x="404.0" y="442.0" font-size="11" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="396.0 476.0">now</text>
+<text x="296.0" y="492.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">19:30</text>
+<text x="296.0" y="511.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 21:30</text>
+<circle cx="376.0" cy="488.0" r="5" fill="#3ee39a"/>
+<rect x="396.0" y="468.0" width="844.0" height="70.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
+<rect x="1170.0" y="489.0" width="56.0" height="28.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1198.0" y="508.0" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1174.0 1222.0">Edit</text>
+<rect x="1068.5" y="489.0" width="93.5" height="28.0" rx="8" fill="#3ddcff"/>
+<text x="1115.2" y="508.0" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1072.5 1158.0">Open desk</text>
+<rect x="921.1" y="480.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
+<text x="987.8" y="495.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="925.1 1050.5">Check-in · 31/40</text>
+<text x="412.0" y="494.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 909.1">Demo Arena 5v5</text>
+<text x="412.0" y="514.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1046.5">Stage · teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="412.0" y="532.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="412.0 1046.5">Check-in closes 19:25 · matches: 4 quarters, 2 semis</text>
+<text x="296.0" y="572.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">22:00</text>
+<text x="296.0" y="591.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 23:30</text>
+<circle cx="376.0" cy="568.0" r="5" fill="#3ddcff"/>
+<rect x="396.0" y="548.0" width="844.0" height="52.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1170.0" y="560.0" width="56.0" height="28.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1198.0" y="579.0" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1174.0 1222.0">Edit</text>
+<rect x="1106.0" y="560.0" width="56.0" height="28.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1134.0" y="579.0" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1110.0 1158.0">Open</text>
+<rect x="1042.2" y="560.0" width="49.8" height="22.0" rx="11" fill="#1c2a44"/>
+<text x="1067.1" y="575.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1046.2 1088.0">Open</text>
+<text x="412.0" y="574.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 1030.2">Demo Party</text>
+<text x="412.0" y="594.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1084.0">Solo · 16 of 24 · closes 21:30 · 3 rounds, 4 per match</text>
 </g></g>
 <text x="1000.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000.0 1880.0">New session · a form page (40 rem)</text>
 <defs><clipPath id="c2"><rect x="0" y="0" width="1220" height="1060" rx="10"/></clipPath></defs>
@@ -225,10 +219,10 @@
 </g></g>
 <circle cx="45.0" cy="945.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="950.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="66.0" y="950.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Sessions are one auto-fill grid per day (card size), with the crew band above: amendment 3.</text>
+<text x="66.0" y="950.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Sessions are a day schedule like the run of show: a day picker, times down the side, in time order.</text>
 <circle cx="985.0" cy="945.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="950.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="1006.0" y="950.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">A card shows 4 lines at most, then &#x27;+n more&#x27;; the session&#x27;s state pill leads.</text>
+<text x="1006.0" y="950.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">A row shows two lines at most, the state pill and the next action; a phone shows the same list.</text>
 <circle cx="45.0" cy="979.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="984.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
 <text x="66.0" y="984.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Copy from the last event uses the tenants clone (same series), shifting the times (O9).</text>
