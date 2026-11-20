@@ -24,12 +24,12 @@ The platform is not limited to porting. It is to be a much bigger, better and ri
 | [canccudocs](canccudocs.md) | #73 | Plans and requirements, no code | No code; 17 requirements are not yet in the roadmap ([Gaps](#gaps-from-the-legacy-plans)) |
 | [canccustream](canccustream.md) | #74 | An RTMP multi-camera compositor, decommissioned | Drop all code; ideas go to the Cast track |
 
-**Read at** (the commit each inventory describes; three were refreshed on 2026-11-20 by #677, which also read `glyzer/finals-core`):
+**Read at** (the commit each inventory describes; three were refreshed on 2026-11-20 by #677, which also read [finals-core](https://github.com/glyzer/finals-core)):
 - canccusignage: `c9d00e3` (`main`, 2026-10-30), read 2026-10-30.
 - canccubot: `3e7030fbbe` (2026-10-30), refreshed at `12f2b03d90` (`main`, 2026-11-11): `/finals` and its guard ([refresh](canccubot.md#legacy-inventory-canccubot)).
 - the signup site: `491480a` (`main`, 2026-11-03).
 - canccumanager: `def9bd721b` (2026-10-25).
-- thefinals_mini_tourney: `87d7c81004` (2026-11-04), refreshed at `1a4fe2a495` (`main`, 2026-11-16) ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)); `glyzer/finals-core` at `9d65a846a2` (tag `v1.0.1`, 2026-11-12) ([the shared core](thefinals_mini_tourney.md#the-shared-core-glyzerfinals-core)).
+- thefinals_mini_tourney: `87d7c81004` (2026-11-04), refreshed at `1a4fe2a495` (`main`, 2026-11-16) ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)); [finals-core](https://github.com/glyzer/finals-core) at `9d65a846a2` (tag `v1.0.1`, 2026-11-12) ([the shared core](thefinals_mini_tourney.md#the-shared-core-finals-core)).
 - canccuplatform: `d5e3bb4d01` (2026-10-30), refreshed at `0dff5d01c6` (`main`, 2026-11-13) ([refresh](canccuplatform.md#refresh-2026-11-20)).
 - canccudocs: `57fffcfb5e` (`main`, 2026-10-13).
 - canccustream: `cc6eb71` (`master`, 2026-03-24).
@@ -207,7 +207,7 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | F18 systemd unit, deploy notes, CI | — | — | drop | Compose, setup and the new CI |
 
 ### thefinals_mini_tourney
-Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Building on the legacy). At the refresh: the OK was given on 2026-11-07, and [0025](../decisions/0025-finals-and-games-modules.md) moves these rows to the `finals` module and the Finals track (read `games` and "Games" below as `finals` and "Finals"), with the pure core taken from `glyzer/finals-core` as a pinned dependency. The upstream app now runs publicly off the LAN, fronted by the bot's `/finals` ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)).
+Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Building on the legacy). At the refresh: the OK was given on 2026-11-07, and [0025](../decisions/0025-finals-and-games-modules.md) moves these rows to the `finals` module and the Finals track (read `games` and "Games" below as `finals` and "Finals"), with the pure core taken from [finals-core](https://github.com/glyzer/finals-core) as a pinned dependency. The upstream app now runs publicly off the LAN, fronted by the bot's `/finals` ([refresh](thefinals_mini_tourney.md#refresh-2026-11-20)).
 
 | Feature | Target module | Step | Verdict | Reason |
 |---|---|---|---|---|

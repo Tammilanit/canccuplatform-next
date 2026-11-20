@@ -2,6 +2,12 @@
 
 The research pack for the product owner's brainstorming session on [step 10, Hardening](../roadmap.md#10-hardening) (epic #64), issue #169. It follows the [outline of a research pack](README.md#outline-of-a-research-pack) and is built like step 5's pack ([step-5-pizza.md](step-5-pizza.md)). After this merges, the lead runs the session over as many rounds as it takes, writes the final plan into this brief (`## Plan`) and rewrites the step's issues; the product owner accepts the plan before any build starts.
 
+> **Source update (2026-11-20, #677).** The [canccuplatform inventory](../legacy-inventory/canccuplatform.md#refresh-2026-11-20) was refreshed: since 2026-11-10 the legacy runs the off-LAN mini tourney on a cloud VM with backups and a deploy path this pack did not see. Nightly SQLite backups with an integrity check, 7 on the host and 30 pulled off it over a key limited to one forced command; a written restore with a safety copy, and a rehearsal "once per event block"; deploys by sha only through a forced-command user with one sudo command, a lock, read-only releases, a database backup before the switch, a 60-second health check and an automatic restore and rollback, with exit codes; a deploy on every upstream merge, with only "between seasons" as advice; finals-core upgrades as bump PRs. What it touches, with no decision of this pack changed:
+> - Port as is, "the restore steps", and [D5](step-10-hardening/questions.md#d5-what-does-a-restore-check-before-it-says-done): the same order, plus hashes at every hop and row counts (the database replace of 2026-11-13).
+> - Drop, "backups to the same host only": no longer true of the newest legacy (the off-host pull exists, still unencrypted).
+> - [O8](step-10-hardening/questions.md#o8-the-reviewers-own-os-user): the forced-command deploy user is a closer precedent than the manager's user.
+> - [D12](step-10-hardening/questions.md#d12-the-deploy-window) and [E11](step-10-hardening/questions.md#e11-a-deploy-during-a-live-event): the legacy deploy path has no live-event hold at all, which is the gap recommendation A closes.
+
 **In this pack**
 - This file: goal, what was read, what is already built, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, proposed issue changes and exit criteria.
 - [step-10-hardening/questions.md](step-10-hardening/questions.md): the question bank, 75 questions in six themes, each with options and a recommendation. IDs (U6, D1, …) are used throughout.
