@@ -177,6 +177,39 @@ live("cues", () => {
     ]);
   });
 
+  it("Screen not answering takes the quiet energy: no ordinary cue sounds, the emergency still does (#660)", async () => {
+    // A timed-out read during quiet hours: only the zone's quiet energy keeps the hall silent.
+    w.zoneStatus.set("main", null);
+    await w.tx("demo", (c) =>
+      w.cues.fire(c, { cue: "photo.showcase", zones: ["main"], key: "photo:p1", source: "p1" }, T0),
+    );
+    await w.tx("demo", (c) =>
+      w.cues.fire(
+        c,
+        { cue: "announce.attention", zones: ["main"], key: "a1", source: null },
+        w.at(10),
+      ),
+    );
+    const actor = { user_id: "u_admin", name: "Demo admin" };
+    await w.tx("demo", (c) =>
+      w.engine.request(c, emergencyRequest({ zones: ["main"] }, actor, "test", w.at(20)), w.at(20)),
+    );
+    expect((await log()).map((r) => [r.cue, r.outcome, r.reason])).toEqual([
+      ["photo.showcase", "suppressed", "quiet"],
+      ["announce.attention", "suppressed", "quiet"],
+      ["emergency.start", "played", "free"],
+    ]);
+    expect(sounds().map((e) => (e.data.sound as Record<string, unknown>).cue)).toEqual([
+      "emergency.start",
+    ]);
+  });
+
+  it("Screen not answering holds a story video's sound as a quiet zone does (#660)", async () => {
+    w.zoneStatus.set("main", null);
+    const plan = await w.tx("demo", (c) => w.cues.videoPlan(c, ["main"], T0));
+    expect(plan).toEqual([{ zone: "main", off: "quiet" }]);
+  });
+
   it("a sound screen offline or locked misses the sound, with catch-up, and the log says so", async () => {
     w.zoneStatus.set("main", { energy: "lively", device: { ...w.soundScreen, online: false } });
     w.zoneStatus.set("cafe", {
