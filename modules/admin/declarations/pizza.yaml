@@ -3,6 +3,11 @@ settings:
     type: boolean
     label: People can order food
     default: true
+  - key: ordering_note
+    type: string
+    label: The note on the Food page while ordering is off
+    short: Note while closed
+    default: ""
   - key: open_by
     type: string
     choices: [anyone, crew]
@@ -88,7 +93,7 @@ groups:
   - id: ordering
     label: Ordering
     description: Who orders food, and how much at once.
-    keys: [ordering_open, open_by, max_open_orders, max_items_per_person]
+    keys: [ordering_open, ordering_note, open_by, max_open_orders, max_items_per_person]
   - id: settling
     label: Settling up
     description: Who people pay for their food after the event.

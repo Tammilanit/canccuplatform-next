@@ -10,7 +10,7 @@ import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import type { Session } from "@canccu/kit";
-import { errorTitle, errorView, html, shellPage } from "@canccu/ui";
+import { attrs, errorTitle, errorView, html, shellPage } from "@canccu/ui";
 import type { EventInfo, Html, Slot, Tab } from "@canccu/ui";
 import { tenantOf, whoIs } from "../http.js";
 import type { AppDeps } from "../http.js";
@@ -87,8 +87,15 @@ function send(
 export function hubPage(
   request: FastifyRequest,
   reply: FastifyReply,
-  c: PageCtx,
-  o: { title: string; back?: { href: string; label: string }; body: Slot; status?: number },
+  c: Pick<PageCtx, "lang">,
+  o: {
+    title: string;
+    back?: { href: string; label: string };
+    body: Slot;
+    status?: number;
+    /** The live stream the page follows (static/food.js): a change redraws it, no polling (D13). */
+    live?: string;
+  },
 ): FastifyReply {
   const nonce = newNonce();
   const back =
@@ -110,8 +117,11 @@ export function hubPage(
           ${back}
           <h1 class="pizza-hub__title">${o.title}</h1>
         </header>
-        <main class="pizza-hub__main">${o.body}</main>
+        <main${attrs({ class: "pizza-hub__main", "data-live": o.live })}>
+          ${o.body}
+        </main>
         <script src="${PREFIX}static/pizza.js" defer></script>
+        ${o.live === undefined ? "" : html`<script src="${PREFIX}static/food.js" defer></script>`}
       </body>
     </html> `;
   return send(request, reply, doc, { status: o.status ?? 200, page: "surface", nonce });
@@ -212,6 +222,7 @@ const TYPES: Record<string, string> = {
   "pizza.css": "text/css; charset=utf-8",
   "crew.css": "text/css; charset=utf-8",
   "pizza.js": "text/javascript; charset=utf-8",
+  "food.js": "text/javascript; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();
 

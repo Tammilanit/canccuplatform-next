@@ -41,7 +41,7 @@ export function needs(c: PageCtx, o: OrderView, s: PizzaSettings, now: Date): st
   return null;
 }
 
-export function stateLabel(c: PageCtx, o: OrderView): Html {
+export function stateLabel(c: Pick<PageCtx, "t">, o: OrderView): Html {
   const nobody = (o.state === "open" || o.state === "closed") && !o.holder;
   const kind =
     o.state === "done" || o.state === "cancelled"

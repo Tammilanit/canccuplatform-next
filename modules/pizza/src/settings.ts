@@ -8,6 +8,8 @@ import type { SettingsClient } from "@canccu/kit";
 export interface PizzaSettings {
   /** O3: off stops new orders; the Food page says why. */
   ordering_open: boolean;
+  /** O3: the organiser's words on the Food page while ordering is off ("" for none). */
+  ordering_note: string;
   /** U2: `crew` lets only `pizza.order.open` start orders. */
   open_by: "anyone" | "crew";
   /** O5. */
@@ -35,6 +37,7 @@ export interface PizzaSettings {
 
 export const DEFAULT_SETTINGS: PizzaSettings = {
   ordering_open: true,
+  ordering_note: "",
   open_by: "anyone",
   max_open_orders: 3,
   max_items_per_person: 5,
@@ -75,6 +78,10 @@ function times(get: (key: TimeKey) => unknown): Record<TimeKey, number> {
   return out;
 }
 
+/** Admin keeps any string; the page shows one line of it. */
+const noteOf = (v: unknown): string => (typeof v === "string" ? v.trim().slice(0, NOTE_MAX) : "");
+export const NOTE_MAX = 200;
+
 /** Reads the current settings of `tenant`, falling back to the defaults for anything not valid. */
 export function settingsReader(client: SettingsClient): (tenant: string) => Promise<PizzaSettings> {
   return (tenant) =>
@@ -83,6 +90,7 @@ export function settingsReader(client: SettingsClient): (tenant: string) => Prom
       const d = DEFAULT_SETTINGS;
       return {
         ordering_open: client.get("ordering_open", d.ordering_open) !== false,
+        ordering_note: noteOf(client.get("ordering_note", d.ordering_note)),
         open_by:
           client.get("open_by", d.open_by) === "crew" ? ("crew" as const) : ("anyone" as const),
         max_open_orders: int(client.get("max_open_orders"), d.max_open_orders, 1, 20),
