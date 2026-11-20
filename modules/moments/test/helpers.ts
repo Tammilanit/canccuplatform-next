@@ -78,7 +78,8 @@ export interface World {
   restart(): void;
   cues: Cues;
   /** What the fake Screen says of each zone's sound; a zone not set has `soundScreen`, lively. */
-  zoneStatus: Map<string, ZoneSoundStatus>;
+  /** A zone set to null is one Screen does not answer for (a timeout, an error). */
+  zoneStatus: Map<string, ZoneSoundStatus | null>;
   soundScreen: NonNullable<ZoneSoundStatus["device"]>;
   screen: ScreenClient;
   /** Audio assets the fake Screen holds, by id. */
@@ -122,7 +123,7 @@ export const T0 = new Date("2026-01-01T18:00:00Z");
 export function world(pool: pg.Pool): World {
   const db = poolDb(pool);
   const store = new MemoryStreamStore();
-  const zoneStatus = new Map<string, ZoneSoundStatus>();
+  const zoneStatus = new Map<string, ZoneSoundStatus | null>();
   const soundScreen = {
     id: "dv_sound",
     name: "Main hall sound",
@@ -135,7 +136,11 @@ export function world(pool: pg.Pool): World {
   const screen: ScreenClient = {
     zones: () => Promise.resolve([...zoneNames].map(([key, name]) => ({ key, name }))),
     zoneSound: (_tenant, zone) =>
-      Promise.resolve(zoneStatus.get(zone) ?? { energy: "lively", device: soundScreen }),
+      Promise.resolve(
+        zoneStatus.has(zone)
+          ? (zoneStatus.get(zone) ?? null)
+          : { energy: "lively", device: soundScreen },
+      ),
     asset: (_tenant, id) => Promise.resolve(assets.get(id) ?? null),
     images: () => Promise.resolve(images.map(({ id, title, url }) => ({ id, title, url }))),
     image: (_tenant, id) => {

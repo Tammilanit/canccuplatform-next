@@ -113,9 +113,15 @@ async function main(): Promise<void> {
     else rights.handleEvent(event);
     await handlePlatformEvent(consumer, event);
   });
-  listener.subscribeTenants(TENANT_STREAMS, (event) => handleTenantEvent(consumer, event));
+  // An event that has no stream yet at the scan at start (one made before this boot, first used
+  // after it) is found at the next rescan: every 5 seconds, as Screen's, not the kit's 30, so its
+  // first placements reach On air while its moments still run.
+  listener.subscribeTenants(TENANT_STREAMS, (event) => handleTenantEvent(consumer, event), {
+    rescanMs: 5000,
+  });
   listener.subscribeTenants(["screen"], (event) => handleZoneReplay(consumer, event), {
     fromId: "0",
+    rescanMs: 5000,
   });
 
   const app = buildApp({
