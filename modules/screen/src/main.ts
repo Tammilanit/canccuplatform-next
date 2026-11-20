@@ -29,6 +29,7 @@ import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
+import { applyFoodEvent } from "./compose/food.js";
 import { applyOverrideEvent } from "./compose/overrides.js";
 import { applyPrefetchEvent, applySoundEvent } from "./moments-sound.js";
 import { applySceneEvent } from "./compose/scenes.js";
@@ -262,20 +263,21 @@ async function main(): Promise<void> {
     // less than the zone refresh would (a scan reads 1000 keys a step, of the stream type only).
     { rescanMs: 5000 },
   );
-  // Moments' overrides (#307), from the streams' start at every boot as the agenda's above, so an
-  // end sent while no container ran still ends its claim. Each is kept before the hub hears of
-  // it, so the rebuild it starts reads it; its own connection, as XREAD blocks.
+  // Moments' overrides (#307) and pizza's orders (#643), from the streams' start at every boot as
+  // the agenda's above, so an end sent while no container ran still ends its claim or order. Each
+  // is kept before the hub hears of it, so its rebuild reads it; its own connection (XREAD blocks).
   const claimsStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   new Bus(claimsStore, config.module, log).subscribeTenants(
-    ["moments"],
+    ["moments", "pizza"],
     async (event) => {
       try {
+        await applyFoodEvent(db, event);
         await applyOverrideEvent(db, event);
         await applySoundEvent(db, event);
         await applyPrefetchEvent(db, event);
         await applySceneEvent(db, event);
       } catch (err) {
-        log.warn({ err, type: event.type }, "keeping a moments override, sound or scene failed");
+        log.warn({ err, type: event.type }, "keeping a moments or pizza event failed");
       }
       app.pushHub.handleEvent(event);
     },

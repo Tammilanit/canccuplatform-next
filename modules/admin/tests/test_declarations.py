@@ -65,6 +65,9 @@ def test_screen_declaration_matches_the_contract() -> None:
     assert (screen["follow_the_day"].type, screen["follow_the_day"].default) == ("boolean", True)
     # The stage's game art (contracts/screen.md, The stage).
     assert (screen["stage_art"].type, screen["stage_art"].default) == ("boolean", True)
+    # The food box names an order's holder unless the event says not to (#643, L8).
+    holders = screen["food_holder_names"]
+    assert (holders.type, holders.default) == ("boolean", True)
     assert set(screen) == set(bounded) | {
         "web_allowlist",
         "progress_bars",
@@ -74,6 +77,7 @@ def test_screen_declaration_matches_the_contract() -> None:
         "motion_level",
         "follow_the_day",
         "stage_art",
+        "food_holder_names",
     }
 
 

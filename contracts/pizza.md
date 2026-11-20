@@ -252,4 +252,4 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 **Consumes:** `tenants.status.changed` (archived: E11), `tenants.retention.reached`, `tenants.member.left`, `tenants.tenant.cloned` on the event's stream; `tenants.user.deleted`, `tenants.tenant.deleted` on the platform stream; `admin.settings.changed`.
 
 ## Not in this contract
-Receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the screens' food box and Notify's food triggers (their own issue); the bot (step 6). Moving any money.
+Receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the bot (step 6). Moving any money. The screens' food box and Notify's `food` topic read these events; their contracts say how ([screen.md](screen.md#widgets), [notify.md](notify.md#topics-and-sources)), and pizza registers the `food` topic at start.
