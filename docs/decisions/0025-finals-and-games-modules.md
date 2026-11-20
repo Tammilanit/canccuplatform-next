@@ -1,6 +1,6 @@
 # 0025. Finals and games are separate modules, on a shared tourney core
 
-- **Status:** Accepted
+- **Status:** Superseded in part by [0030](0030-finals-integrated-one-tourney-core.md): the `finals` platform module, the core shared only with it and the tournament module kept off the core no longer hold; Finals is integrated as an external app that each event connects to (hosted where its host chooses), and the core becomes the one engine of the `tournament` module. The off-LAN app's own data with no sync, the provider contract for `/finals`, the pinned core dependency and the licence and attribution stand.
 - **Date:** 2026-11-07
 
 ## Context
