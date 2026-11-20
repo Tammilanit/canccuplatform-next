@@ -128,15 +128,46 @@ async function pizzerias() {
   return again.body.pizzerias.find((p) => p.name === "Demo Pizzeria").id;
 }
 
+/**
+ * Ordering on: the demo profile has it off (events/demo/profile.yaml). Pizza follows admin's
+ * settings.changed event, so the first order may still meet the old setting for a moment.
+ */
+async function orderingOpen() {
+  const now = expect(
+    await api("GET", "/api/admin/settings/pizza"),
+    200,
+    "the pizza settings",
+  ).body;
+  if (now.values.ordering_open === true) return;
+  expect(
+    await api("PUT", "/api/admin/settings/pizza", {
+      settings_version: now.settings_version,
+      values: { ...now.values, ordering_open: true },
+    }),
+    200,
+    "turning ordering on",
+  );
+}
+
+async function openOrder(body) {
+  for (let tries = 1; ; tries++) {
+    const res = await api("POST", "/api/pizza/orders", body);
+    const closed = res.status === 403 && res.body?.error?.code === "ordering_closed";
+    if (!closed || tries === 20) return res;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
 export async function pizzaShots({ shot, fail }) {
   let pz;
   let order;
   try {
+    await orderingOpen();
     pz = await pizzerias();
     const menu = expect(await api("GET", `/api/pizza/pizzerias/${pz}`), 200, "the menu");
     const closes = new Date(Date.now() + 45 * 60_000).toISOString();
     order = expect(
-      await api("POST", "/api/pizza/orders", { pizzeria_id: pz, closes_at: closes }),
+      await openOrder({ pizzeria_id: pz, closes_at: closes }),
       201,
       "opening an order",
     ).body.id;

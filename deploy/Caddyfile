@@ -78,22 +78,30 @@
 		reverse_proxy agenda:8080
 	}
 
-	# The prefix rule below strips /agenda, so it would pass /agenda/internal/... on as agenda's
-	# internal paths (never routed, contracts/README.md), and /agenda/api/... and /agenda/health
-	# as a second way into what /api/agenda/ above already serves.
-	@agenda-hidden path /agenda/internal/* /agenda/api/* /agenda/health
-	handle @agenda-hidden {
-		respond "not found" 404
-	}
+	# The run-of-show pages, in one named-matcher block, as every module's pages below: Caddy
+	# sorts the top-level path routes, and a hidden-path rule next to its prefix lands behind it
+	# whenever a route is added or removed. Inside, only named matchers and a last catch-all,
+	# which Caddy keeps in the order written. The module's own paths start at /.
+	@agenda-pages path /agenda /agenda/*
+	handle @agenda-pages {
+		# The strip below would pass /agenda/internal/... on as agenda's internal paths (never
+		# routed, contracts/README.md), and /agenda/api/... and /agenda/health as a second way into
+		# what /api/agenda/ above already serves.
+		@agenda-hidden path /agenda/internal/* /agenda/api/* /agenda/health
+		handle @agenda-hidden {
+			respond "not found" 404
+		}
 
-	# The pages' links all start /agenda/, so the bare prefix goes there, with a link's query.
-	handle /agenda {
-		redir * /agenda/{?query} 308
-	}
+		# The pages' links all start /agenda/, so the bare prefix goes there, with a link's query.
+		@agenda-bare path /agenda
+		handle @agenda-bare {
+			redir * /agenda/{?query} 308
+		}
 
-	# The run-of-show pages; the module's own paths start at /.
-	handle_path /agenda/* {
-		reverse_proxy agenda:8080
+		handle {
+			uri strip_prefix /agenda
+			reverse_proxy agenda:8080
+		}
 	}
 
 	# The notify contract's paths are /api/notify/... too; /internal/notify/ is never routed.
@@ -106,23 +114,27 @@
 		reverse_proxy notify:8080
 	}
 
-	# As for agenda: the strip below would pass these on as notify's internal paths or as a
-	# second way into what /api/notify/ above already serves.
-	@notify-hidden path /notify/internal/* /notify/api/* /notify/health
-	handle @notify-hidden {
-		respond "not found" 404
-	}
-
-	# Notify has no page at /notify/; its first page is the topic list admin's menu links to.
-	@notify-bare path /notify /notify/
-	handle @notify-bare {
-		redir * /notify/admin/topics{?query} 308
-	}
-
 	# The notification pages under admin's "Event" menu and the check-in page a scanned QR
-	# opens; the module's own paths start at /.
-	handle_path /notify/* {
-		reverse_proxy notify:8080
+	# opens, in one block as for agenda; the module's own paths start at /.
+	@notify-pages path /notify /notify/*
+	handle @notify-pages {
+		# As for agenda: the strip below would pass these on as notify's internal paths or as a
+		# second way into what /api/notify/ above already serves.
+		@notify-hidden path /notify/internal/* /notify/api/* /notify/health
+		handle @notify-hidden {
+			respond "not found" 404
+		}
+
+		# Notify has no page at /notify/; its first page is the topic list admin's menu links to.
+		@notify-bare path /notify /notify/
+		handle @notify-bare {
+			redir * /notify/admin/topics{?query} 308
+		}
+
+		handle {
+			uri strip_prefix /notify
+			reverse_proxy notify:8080
+		}
 	}
 
 	# The pizza contract's paths are /api/pizza/...; its pages are under /pizza/.
@@ -135,21 +147,26 @@
 		reverse_proxy pizza:8080
 	}
 
-	# As for moments: the strip below would pass these on as pizza's internal paths or as a
-	# second way into what /api/pizza/ above already serves.
-	@pizza-hidden path /pizza/internal/* /pizza/api/* /pizza/health
-	handle @pizza-hidden {
-		respond "not found" 404
-	}
+	# The Food pages: the holder's (/pizza/hold/) and the crew's (/pizza/crew/), in one block as
+	# for agenda; the module's own paths start at /.
+	@pizza-pages path /pizza /pizza/*
+	handle @pizza-pages {
+		# As for agenda: the strip below would pass these on as pizza's internal paths or as a
+		# second way into what /api/pizza/ above already serves.
+		@pizza-hidden path /pizza/internal/* /pizza/api/* /pizza/health
+		handle @pizza-hidden {
+			respond "not found" 404
+		}
 
-	handle /pizza {
-		redir * /pizza/{?query} 308
-	}
+		@pizza-bare path /pizza
+		handle @pizza-bare {
+			redir * /pizza/{?query} 308
+		}
 
-	# The Food pages: the holder's (/pizza/hold/) and the crew's (/pizza/crew/); the module's own
-	# paths start at /.
-	handle_path /pizza/* {
-		reverse_proxy pizza:8080
+		handle {
+			uri strip_prefix /pizza
+			reverse_proxy pizza:8080
+		}
 	}
 
 	# The moments contract's paths are /api/moments/... too; /internal/moments/ is never routed.
@@ -162,26 +179,32 @@
 		reverse_proxy moments:8080
 	}
 
-	# As for agenda: the strip below would pass these on as moments' internal paths or as a
-	# second way into what /api/moments/ above already serves.
-	@moments-hidden path /moments/internal/* /moments/api/* /moments/health
-	handle @moments-hidden {
-		respond "not found" 404
-	}
+	# Studio → Moments (the Screen studio's Moments tab), in one block as for agenda; the module's
+	# own paths start at /.
+	@moments-pages path /moments /moments/*
+	handle @moments-pages {
+		# As for agenda: the strip below would pass these on as moments' internal paths or as a
+		# second way into what /api/moments/ above already serves.
+		@moments-hidden path /moments/internal/* /moments/api/* /moments/health
+		handle @moments-hidden {
+			respond "not found" 404
+		}
 
-	handle /moments {
-		redir * /moments/{?query} 308
-	}
+		@moments-bare path /moments
+		handle @moments-bare {
+			redir * /moments/{?query} 308
+		}
 
-	# Studio → Moments (the Screen studio's Moments tab); the module's own paths start at /.
-	handle_path /moments/* {
-		reverse_proxy moments:8080
+		handle {
+			uri strip_prefix /moments
+			reverse_proxy moments:8080
+		}
 	}
 
 	# Admin's pages, and inside them screen's Studio pages, which the kiosk's pairing QR opens
 	# (/admin/screen/devices#pair=, contracts/screen.md, Pairing): screen's own paths, given back
 	# their prefix. They sit in this block, not in a handle of their own: Caddy sorts the top-level
-	# path routes, and one more there reorders the hidden-path rules above behind their prefixes.
+	# path routes (see agenda's block above).
 	handle_path /admin/* {
 		@screen-studio path /screen/*
 		handle @screen-studio {
