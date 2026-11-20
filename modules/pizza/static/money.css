@@ -28,6 +28,7 @@
 }
 .pizza-pad__keys {
   display: grid;
+  /* canccu-grid: fixed control — the amount pad's 3×4 keys, a fixed shape like a phone dialler */
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
