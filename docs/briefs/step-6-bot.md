@@ -326,8 +326,8 @@ Not connected, a refused token, removed from the server, archived, Discord down,
 | [09-ticker-and-photos.svg](step-6-bot/09-ticker-and-photos.svg) | The ticker commands; "Send to the screen" | crew |
 | [10-living-messages.svg](step-6-bot/10-living-messages.svg) | The now-and-next board; one food order's message; both on a phone (Plan) | everyone in the server |
 | [11-presence-and-privacy.svg](step-6-bot/11-presence-and-privacy.svg) | What is read, dropped, kept live, kept as counts; data classes; `/privacy`; the hub's privacy page | everyone |
-| [12-on-the-screen.svg](step-6-bot/12-on-the-screen.svg) | The dashboard layout fed by the bot; the hub's now playing | attendees in the hall |
-| [13-bot-health.svg](step-6-bot/13-bot-health.svg) | The Overview tab: six cards and what happened | crew |
+| [12-on-the-screen.svg](step-6-bot/12-on-the-screen.svg) | The dashboard layout fed by the bot, alive with the widget catalogue (Plan); the hub's now playing | attendees in the hall |
+| [13-bot-health.svg](step-6-bot/13-bot-health.svg) | The Overview tab: six cards and what happened; the phone's tab menu, open (Plan) | crew |
 | [14-legacy-import.svg](step-6-bot/14-legacy-import.svg) | The import's dry run and its second run | operator |
 | [15-edge-states.svg](step-6-bot/15-edge-states.svg) | Six states, each with its one action | event admin, attendee |
 | [16-chat-activity.svg](step-6-bot/16-chat-activity.svg) | New for the Plan: the chat activity widget beside the online and voice graph; quiet, busy and collecting (D6 B) | attendees in the hall |

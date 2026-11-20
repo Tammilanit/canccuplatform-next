@@ -61,7 +61,8 @@ One entry per widget a screen can show. A widget is drawn by a theme template fr
 | `photo_pop` | The newest photo over the wall for 10 s | Screen's photos | Pop-in over the playlist, caption types in |
 | `player_spotlight` | A player card: most hours today, a winner (with consent, names as the hub shows them) | Bot totals, tournament results | Slide in, then a shimmer sweep |
 | `arrivals` | Who just checked in: "12 arrived in the last 10 minutes" | Check-in counts (no names by default) | The count rolls; a trend arrow; dots drop in |
+| `chat_activity` | How busy the event's Discord is, hour by hour, beside the online and voice graph ([step 6 plan](../briefs/step-6-bot.md#chat-activity-d6-b), [mockup 16](../briefs/step-6-bot/16-chat-activity.svg)). Settings: window (12 h, 24 h, the whole event), bars or area. States: *busy* (this hour above the event's usual hour so far: accent colour), *quiet* (below it: muted colours, no motion), *collecting* (under 3 hours of data); skipped when the event has no Discord | Messages per hour, counts only, from `bot.messages.counted` and the hourly series of `GET /api/bot/stats`: no text, no author, no channel | The count rolls with a trend arrow (the catalogue's 10-minute rule) and a sweep of light; bars grow from the baseline and the current hour grows live; when busy the chat icon pulses |
 
 ## Data note
 
-`stats_history`, `top_games` and `milestone` need the bot's history (presence, voice and play time per hour) in the platform's database. The widgets are designed now and show "Collecting…" until that data exists.
+`stats_history`, `top_games`, `milestone` and `chat_activity` need the bot's history (presence, voice, play time and messages per hour) in the platform's database. The widgets are designed now and show "Collecting…" until that data exists.
