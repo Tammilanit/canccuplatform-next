@@ -16,6 +16,7 @@ import { TransactionCounts, soundKeys } from "./counters.js";
 import type { Counters } from "./counters.js";
 import { moveVideo, planVideo, startVideo } from "./video.js";
 import type { VideoPlan } from "./video.js";
+import { gateEnergy } from "./screen.js";
 import type { ScreenClient, ZoneSoundStatus } from "./screen.js";
 import {
   emergencyOn,
@@ -180,7 +181,7 @@ export class Cues {
         now: at,
         settings,
         cue,
-        energy: status?.energy ?? "lively",
+        energy: gateEnergy(status),
         emergency,
         zone: state,
         key: t.key,

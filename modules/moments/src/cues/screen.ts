@@ -13,6 +13,13 @@ export interface ZoneSoundStatus {
   device: { id: string; name: string; online: boolean; audio_unlocked: boolean | null } | null;
 }
 
+/**
+ * The energy the sound gates read: the zone's, else `quiet` when Screen does not answer (#660,
+ * fail closed). Moments cannot tell quiet hours without Screen, so a timed-out read must not let a
+ * sound through them; urgent, the emergency's own sound, still passes `quiet`.
+ */
+export const gateEnergy = (status: ZoneSoundStatus | null): Energy => status?.energy ?? "quiet";
+
 export interface AudioAsset {
   id: string;
   kind: string;

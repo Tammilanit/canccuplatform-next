@@ -8,6 +8,7 @@
 import type { SqlClient } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
 import { VIDEO_CUE } from "./decide.js";
+import { gateEnergy } from "./screen.js";
 import type { ScreenClient } from "./screen.js";
 import { loadSettings, lockZone, saveZone, writeLog } from "./store.js";
 import { knownZones } from "../store.js";
@@ -26,14 +27,15 @@ export async function planVideo(
   const plan: VideoPlan = [];
   for (const zone of [...(zones.length > 0 ? zones : await knownZones(c))].sort()) {
     const status = await screen.zoneSound(requireTenant(), zone);
+    const energy = gateEnergy(status);
     const off = !settings.enabled
       ? "master_off"
       : settings.muted_until !== null && Date.parse(settings.muted_until) > at
         ? "muted"
         : status !== null && status.device === null
           ? "no_sound_screen"
-          : status?.energy === "calm" || status?.energy === "quiet"
-            ? status.energy
+          : energy === "calm" || energy === "quiet"
+            ? energy
             : null;
     plan.push({ zone, off });
   }
