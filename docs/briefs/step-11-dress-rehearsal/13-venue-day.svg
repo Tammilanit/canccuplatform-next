@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1120" width="1920" height="1120" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 13: The venue day and the attendee's side of the switch (venue crew, attendees)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker><clipPath id="ph42_166"><rect x="42" y="166" width="390" height="844" rx="38"/></clipPath><clipPath id="ph512_166"><rect x="512" y="166" width="390" height="844" rx="38"/></clipPath><clipPath id="ph982_166"><rect x="982" y="166" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1120.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">13 · The venue day and the attendee's side of the switch (venue crew, attendees)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: on the day before doors the venue crew walk the venue with a crew phone: every screen paired and drawing, sound on each zone, the uplink, the venue's address seen; attendees who follow an old link land on a</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">page that sends them to the hub.</text>
+<rect x="32.0" y="156.0" width="410.0" height="864.0" rx="46" fill="#000000"/>
+<g clip-path="url(#ph42_166)">
+<rect x="42.0" y="166.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="76.0" y="196.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="80">19:55</text>
+<text x="62.0" y="248.0" font-size="16" fill="#3b82f6" font-weight="600" text-anchor="start" data-maxw="120">‹ Go live</text>
+<text x="237.0" y="248.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="140">Venue check</text>
+<rect x="170.0" y="998.0" width="134.0" height="5.0" rx="3" fill="#f8fafc"/>
+</g>
+<circle cx="70.0" cy="294.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="70.0" y="299.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="92.0" y="292.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Screens: 4 of 4 drawing</text>
+<text x="92.0" y="312.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Main hall, Stage, Lobby, Food corner</text>
+<circle cx="70.0" cy="350.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="70.0" y="355.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="92.0" y="348.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Sound: Main hall and Stage</text>
+<text x="92.0" y="368.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Test cue heard; Lobby has no sound screen</text>
+<circle cx="70.0" cy="406.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="70.0" y="411.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="92.0" y="404.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Venue address seen</text>
+<text x="92.0" y="424.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">This phone is at the venue: the board's gate turns</text>
+<text x="92.0" y="442.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">green</text>
+<circle cx="70.0" cy="480.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="70.0" y="485.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="92.0" y="478.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Uplink</text>
+<text x="92.0" y="498.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Down 180 Mbit/s, up 40 Mbit/s, 18 ms to the VM</text>
+<circle cx="70.0" cy="536.0" r="12" fill="none" stroke="#eab308" stroke-width="2"/>
+<text x="70.0" y="541.0" font-size="13" fill="#eab308" font-weight="800" text-anchor="middle" data-maxw="20">!</text>
+<text x="92.0" y="534.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Projector PC: Lobby</text>
+<text x="92.0" y="554.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Browser flags ok; an old GPU (accepted gate)</text>
+<circle cx="70.0" cy="592.0" r="12" fill="none" stroke="#94a3b8" stroke-width="2"/>
+<text x="70.0" y="597.0" font-size="13" fill="#94a3b8" font-weight="800" text-anchor="middle" data-maxw="20">○</text>
+<text x="92.0" y="590.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Fallback laptop on the crew desk</text>
+<text x="92.0" y="610.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Charged, on the venue LAN; tick when seen</text>
+<circle cx="70.0" cy="648.0" r="12" fill="none" stroke="#94a3b8" stroke-width="2"/>
+<text x="70.0" y="653.0" font-size="13" fill="#94a3b8" font-weight="800" text-anchor="middle" data-maxw="20">○</text>
+<text x="92.0" y="646.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="318">Superadmin on Tailscale</text>
+<text x="92.0" y="666.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="318">Reach Stack health from here</text>
+<rect x="58.0" y="916.0" width="358.0" height="0.1" rx="0" fill="#0f172a"/>
+<text x="42.0" y="1046.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">The crew phone in the shell's look: one list, ticked on</text>
+<text x="42.0" y="1066.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">the spot (U6).</text>
+<rect x="502.0" y="156.0" width="410.0" height="864.0" rx="46" fill="#000000"/>
+<g clip-path="url(#ph512_166)">
+<rect x="512.0" y="166.0" width="390.0" height="844.0" rx="0" fill="#0f172a"/>
+<text x="546.0" y="196.0" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="80">19:55</text>
+<text x="532.0" y="248.0" font-size="16" fill="#3b82f6" font-weight="600" text-anchor="start" data-maxw="120">‹ Venue check</text>
+<text x="707.0" y="248.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="140">Main hall</text>
+<rect x="640.0" y="998.0" width="134.0" height="5.0" rx="3" fill="#f8fafc"/>
+</g>
+<rect x="528.0" y="276.0" width="358.0" height="200.0" rx="10" fill="#101330"/>
+<text x="544.0" y="316.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="326">Now on the stage</text>
+<text x="544.0" y="352.0" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="326">Doors open at 18:00</text>
+<text x="544.0" y="380.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="326">live preview of what the screen draws</text>
+<rect x="544.0" y="426.0" width="150.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="619.3" y="440.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="141">online · bundle v1.0.0</text>
+<text x="528.0" y="512.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="140">Zone</text>
+<text x="678.0" y="512.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">Main hall</text>
+<text x="528.0" y="544.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="140">Device</text>
+<text x="678.0" y="544.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">Projector PC 1</text>
+<text x="528.0" y="576.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="140">Sound screen</text>
+<text x="678.0" y="576.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">yes</text>
+<text x="528.0" y="608.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="140">Last seen</text>
+<text x="678.0" y="608.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">4 s ago</text>
+<rect x="528.0" y="650.0" width="145.8" height="34.0" rx="8" fill="#3b82f6"/>
+<text x="600.9" y="672.0" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-maxw="134">Play the test cue</text>
+<rect x="528.0" y="706.0" width="200.4" height="34.0" rx="8" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="628.2" y="728.0" font-size="14" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="188">Show the fallback image</text>
+<text x="528.0" y="776.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="358">The test cue plays only on this zone and counts in no budget</text>
+<text x="528.0" y="794.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="358">(the Moments sound check).</text>
+<text x="512.0" y="1046.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">One screen's detail: what it draws now, its bundle, and</text>
+<text x="512.0" y="1066.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">a sound check (E3's "screen blank" trigger starts</text>
+<text x="512.0" y="1086.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">here).</text>
+<rect x="972.0" y="156.0" width="410.0" height="864.0" rx="46" fill="#000000"/>
+<g clip-path="url(#ph982_166)">
+<rect x="982.0" y="166.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="1016.0" y="196.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-maxw="80">19:55</text>
+<text x="1177.0" y="248.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-maxw="140">Demo Event</text>
+<rect x="982.0" y="936.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="1021.0" y="972.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-maxw="74">Now</text>
+<text x="1099.0" y="972.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-maxw="74">Schedule</text>
+<text x="1177.0" y="972.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-maxw="74">Play</text>
+<text x="1255.0" y="972.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-maxw="74">Alerts</text>
+<text x="1333.0" y="972.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-maxw="74">More</text>
+<rect x="1110.0" y="998.0" width="134.0" height="5.0" rx="3" fill="#f3f5ff"/>
+</g>
+<rect x="998.0" y="276.0" width="358.0" height="330.0" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1018.0" y="320.0" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="318">This page has moved</text>
+<text x="1018.0" y="356.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="318">Pizza orders and the tournament are now in</text>
+<text x="1018.0" y="377.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="318">the event hub. Sign in once with Discord;</text>
+<text x="1018.0" y="398.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="318">your orders and matches are there.</text>
+<rect x="1018.0" y="476.0" width="161.1" height="34.0" rx="17.0" fill="#3ddcff"/>
+<text x="1098.6" y="498.0" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-maxw="149">Open the event hub</text>
+<text x="1018.0" y="566.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="318">Old link: the signup site's pizza page</text>
+<text x="982.0" y="1046.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">An attendee with an old pizza link from the signup site</text>
+<text x="982.0" y="1066.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="390">lands here (L5, D8).</text>
+<text x="1440.0" y="166.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="448">What the crew brings</text>
+<rect x="1440.0" y="182.0" width="448.0" height="520.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<circle cx="1464.0" cy="213.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="218.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">A crew phone signed in with the screen crew role.</text>
+<circle cx="1464.0" cy="246.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="251.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">The fallback laptop, charged, with the event repo and</text>
+<text x="1478.0" y="272.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">images.</text>
+<circle cx="1464.0" cy="300.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="305.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">The printed one-page rollback plan: triggers, targets,</text>
+<text x="1478.0" y="326.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">who calls it.</text>
+<circle cx="1464.0" cy="354.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="359.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">The venue's projector PCs set to open /screen/ at</text>
+<text x="1478.0" y="380.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">start.</text>
+<circle cx="1464.0" cy="408.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="413.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">A note of the venue's public address for the venue</text>
+<text x="1478.0" y="434.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">profile.</text>
+<circle cx="1464.0" cy="462.0" r="3" fill="#3b82f6"/>
+<text x="1478.0" y="467.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">The test cue's volume agreed with the venue's sound</text>
+<text x="1478.0" y="488.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="388">person.</text>
+<text x="1440.0" y="726.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="448">Home cannot test the venue's network, its PCs and its sound;</text>
+<text x="1440.0" y="746.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="448">this short check does, the day before doors, and closes the</text>
+<text x="1440.0" y="766.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="448">board's last automatic gate.</text>
+</svg>

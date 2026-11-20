@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1040" width="1920" height="1040" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 07: Failure drills: break it on purpose, time the way back (product owner, lead, superadmin)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1040.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">07 · Failure drills: break it on purpose, time the way back (product owner, lead, superadmin)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: during the rehearsal the team breaks one thing at a time and checks that people see what the plan says and that the way back fits its target; the drills become the rollback plan's evidence.</text>
+<rect x="32.0" y="134.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="50.0" y="166.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">Uplink out (home router)</text>
+<rect x="414.3" y="148.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="439.1" y="162.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="50.0" y="194.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="50.0" y="214.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">The home router is unplugged for 10 minutes.</text>
+<text x="50.0" y="237.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="50.0" y="257.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Screens keep their last state and a crew-only offline dot;</text>
+<text x="50.0" y="276.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">phones say they are offline.</text>
+<text x="50.0" y="352.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target back by itself · measured 41 s after</text>
+<rect x="498.0" y="134.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="516.0" y="166.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">A module crashes</text>
+<rect x="880.3" y="148.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="905.1" y="162.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="516.0" y="194.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="516.0" y="214.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">The pizza container is killed during an open order.</text>
+<text x="516.0" y="237.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="516.0" y="257.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Food pages say "back in a moment"; the order is intact; Health</text>
+<text x="516.0" y="276.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">turns red, then green.</text>
+<text x="516.0" y="352.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target 2 min · measured 38 s</text>
+<rect x="964.0" y="134.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="982.0" y="166.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">VM reboot</text>
+<rect x="1346.3" y="148.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1371.1" y="162.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="982.0" y="194.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="982.0" y="214.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">The superadmin reboots the VM.</text>
+<text x="982.0" y="237.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="982.0" y="257.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Screens hold; the stack comes back through boot survival;</text>
+<text x="982.0" y="276.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">check-boot shows ok.</text>
+<text x="982.0" y="352.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target 10 min · measured 4 min 10 s</text>
+<rect x="1430.0" y="134.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="1448.0" y="166.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">Database lost</text>
+<rect x="1812.3" y="148.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1837.1" y="162.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1448.0" y="194.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="1448.0" y="214.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Restore the database from the off-VM backup to a point in time.</text>
+<text x="1448.0" y="237.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="1448.0" y="257.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">A short maintenance page; then data as of the chosen minute.</text>
+<text x="1448.0" y="352.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target 30 min · measured 18 min</text>
+<rect x="32.0" y="390.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="50.0" y="422.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">Whole VM gone</text>
+<rect x="414.3" y="404.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="439.1" y="418.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="50.0" y="450.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="50.0" y="470.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">The VM is treated as lost; the fallback laptop takes over.</text>
+<text x="50.0" y="493.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="50.0" y="513.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Screens move to the laptop (mockup 08); phones follow the</text>
+<text x="50.0" y="532.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">same address.</text>
+<text x="50.0" y="608.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target 30 min · measured 22 min</text>
+<rect x="498.0" y="390.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="516.0" y="422.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">Bot token revoked</text>
+<rect x="880.3" y="404.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="905.1" y="418.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="516.0" y="450.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="516.0" y="470.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">The bot's token is reset in the Discord developer portal.</text>
+<text x="516.0" y="493.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="516.0" y="513.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Health names the bot; the new token is entered on the Discord</text>
+<text x="516.0" y="532.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">page; posts resume.</text>
+<text x="516.0" y="608.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target 15 min · measured 6 min</text>
+<rect x="964.0" y="390.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="982.0" y="422.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">Sign-in provider slow</text>
+<rect x="1346.3" y="404.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1371.1" y="418.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="982.0" y="450.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="982.0" y="470.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Discord sign-in is blocked from the attendee phone.</text>
+<text x="982.0" y="493.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="982.0" y="513.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Signed-in phones keep working; a new sign-in says Discord is</text>
+<text x="982.0" y="532.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">unreachable.</text>
+<text x="982.0" y="608.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target no lock-out · measured none</text>
+<rect x="1430.0" y="390.0" width="448.0" height="236.0" rx="12" fill="#1e293b" stroke="#eab308" stroke-width="1"/>
+<text x="1448.0" y="422.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="318">A deploy during live</text>
+<rect x="1804.3" y="404.0" width="57.7" height="23.0" rx="11.5" fill="#422006"/>
+<text x="1833.2" y="418.0" font-size="12" fill="#fde047" font-weight="700" text-anchor="middle" data-maxw="48">watch</text>
+<text x="1448.0" y="450.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="120">WE BREAK</text>
+<text x="1448.0" y="470.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">A merge reaches main while the copy is live.</text>
+<text x="1448.0" y="493.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">PEOPLE SHOULD SEE</text>
+<text x="1448.0" y="513.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">Nothing changes; Health says deploys are held; the timer tries</text>
+<text x="1448.0" y="532.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="412">again later.</text>
+<text x="1448.0" y="608.0" font-size="14" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="412">Target no change · measured held</text>
+<text x="32.0" y="666.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="900">What the TV shows while the uplink is out</text>
+<rect x="32.0" y="682.0" width="900.0" height="300.0" rx="10" fill="#101330"/>
+<rect x="52.0" y="702.0" width="560.0" height="260.0" rx="10" fill="#1b2150"/>
+<text x="72.0" y="742.0" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="520">Now on the stage</text>
+<text x="72.0" y="782.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="520">Tournament: semi-finals</text>
+<text x="72.0" y="816.0" font-size="18" fill="#a9b1d6" font-weight="400" text-anchor="start" data-maxw="520">next: Pizza last call at 19:30</text>
+<rect x="632.0" y="702.0" width="280.0" height="260.0" rx="10" fill="#1b2150"/>
+<text x="652.0" y="742.0" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-maxw="240">Top games</text>
+<rect x="652.0" y="762.0" width="240.0" height="36.0" rx="6" fill="#3ddcff" fill-opacity="0.35"/>
+<text x="664.0" y="786.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-maxw="200">Demo Racer</text>
+<rect x="652.0" y="814.0" width="190.0" height="36.0" rx="6" fill="#3ddcff" fill-opacity="0.35"/>
+<text x="664.0" y="838.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-maxw="200">Demo Arena</text>
+<rect x="652.0" y="866.0" width="140.0" height="36.0" rx="6" fill="#3ddcff" fill-opacity="0.35"/>
+<text x="664.0" y="890.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-maxw="200">Demo Tactics</text>
+<circle cx="900.0" cy="966.0" r="7" fill="#eab308"/>
+<text x="888.0" y="971.0" font-size="12" fill="#fde68a" font-weight="600" text-anchor="end" data-maxw="200">offline since 19:12</text>
+<text x="960.0" y="696.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="900">The screen keeps drawing its last state and assets (0011, the screen contract's offline rule); only a small dot, meant for the</text>
+<text x="960.0" y="716.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="900">crew, says it is offline. Phones show the shell's offline note (#440). Nothing on screen goes blank.</text>
+<text x="960.0" y="796.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="900">Which drills run is E1; the targets are E2; the triggers that turn a drill into a real rollback are E3. Each drill's timing goes into</text>
+<text x="960.0" y="816.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="900">the run sheet (mockup 06) and the rollback plan's tab on the go-live board (mockup 02).</text>
+</svg>

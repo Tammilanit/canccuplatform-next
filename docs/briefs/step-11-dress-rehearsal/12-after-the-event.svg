@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 12: After the event: archive, report, let the legacy go, and start the next one from here (organiser, lead, superadmin)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="900.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">12 · After the event: archive, report, let the legacy go, and start the next one from here (organiser, lead, superadmin)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: when the event ends the organiser archives it; deploys resume, the rehearsal and the event are compared in one report, the legacy bot's stopped container is removed after its grace period, and the next event</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">clones this one and pins its own tested release.</text>
+<rect x="32.0" y="166.0" width="95.1" height="25.0" rx="12.5" fill="#172554"/>
+<text x="79.6" y="182.0" font-size="14" fill="#93c5fd" font-weight="700" text-anchor="middle" data-maxw="85">Sun 18:00</text>
+<rect x="32.0" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="48.0" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">Archive</text>
+<text x="48.0" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">The organiser archives Demo Event.</text>
+<text x="48.0" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">Writes stop; retention dates are set.</text>
+<line x1="326.3" y1="300.0" x2="344.3" y2="300.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="344.3" y="166.0" width="95.1" height="25.0" rx="12.5" fill="#14532d"/>
+<text x="391.9" y="182.0" font-size="14" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="85">Sun 18:05</text>
+<rect x="344.3" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="360.3" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">Deploys resume</text>
+<text x="360.3" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">The hold lifts; the superadmin moves</text>
+<text x="360.3" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">the stack to the next stable release.</text>
+<line x1="638.7" y1="300.0" x2="656.7" y2="300.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="656.7" y="166.0" width="81.3" height="25.0" rx="12.5" fill="#1e293b"/>
+<text x="697.3" y="182.0" font-size="14" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="71">+1 week</text>
+<rect x="656.7" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="672.7" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">One report</text>
+<text x="672.7" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">What the rehearsal caught, what it</text>
+<text x="672.7" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">missed, every hotfix and why; scrubbed</text>
+<text x="672.7" y="306.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">summary in docs/reports.</text>
+<line x1="951.0" y1="300.0" x2="969.0" y2="300.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="969.0" y="166.0" width="86.1" height="25.0" rx="12.5" fill="#422006"/>
+<text x="1012.1" y="182.0" font-size="14" fill="#fde047" font-weight="700" text-anchor="middle" data-maxw="76">+30 days</text>
+<rect x="969.0" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="985.0" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">Legacy bot removed</text>
+<text x="985.0" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">Its stopped container and image are</text>
+<text x="985.0" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">deleted (O4); the archived repo stays</text>
+<text x="985.0" y="306.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">readable.</text>
+<line x1="1263.3" y1="300.0" x2="1281.3" y2="300.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1281.3" y="166.0" width="86.1" height="25.0" rx="12.5" fill="#1e293b"/>
+<text x="1324.4" y="182.0" font-size="14" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="76">+30 days</text>
+<rect x="1281.3" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1297.3" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">Presence deleted</text>
+<text x="1297.3" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">Raw presence data goes, as the tenants</text>
+<text x="1297.3" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">contract says.</text>
+<line x1="1575.7" y1="300.0" x2="1593.7" y2="300.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1593.7" y="166.0" width="103.5" height="25.0" rx="12.5" fill="#1e293b"/>
+<text x="1645.4" y="182.0" font-size="14" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="93">+12 months</text>
+<rect x="1593.7" y="206.0" width="294.3" height="150.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1609.7" y="238.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="262">Personal data anonymised</text>
+<text x="1609.7" y="266.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">Counts and totals stay; names and ids</text>
+<text x="1609.7" y="286.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="262">go.</text>
+<text x="32.0" y="400.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1100">The next event starts from here</text>
+<rect x="32.0" y="416.0" width="1240.0" height="470.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="416.0" width="1240.0" height="56.0" rx="12" fill="#1e293b"/>
+<rect x="32.0" y="460.0" width="1240.0" height="12.0" rx="0" fill="#1e293b"/>
+<line x1="32.0" y1="472.0" x2="1272.0" y2="472.0" stroke="#334155" stroke-width="1"/>
+<rect x="48.0" y="430.0" width="28.0" height="28.0" rx="7" fill="#3b82f6"/>
+<text x="62.0" y="449.0" font-size="12" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="26">DA</text>
+<text x="86.0" y="450.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="260">Demo Autumn Event</text>
+<text x="1254.0" y="450.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="end" data-maxw="360">Health ok · Organiser</text>
+<rect x="32.0" y="472.0" width="236.0" height="414.0" rx="0" fill="#111a2e"/>
+<line x1="268.0" y1="472.0" x2="268.0" y2="886.0" stroke="#334155" stroke-width="1"/>
+<text x="52.0" y="508.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">ADMIN</text>
+<text x="54.0" y="541.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Settings</text>
+<text x="54.0" y="577.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Health</text>
+<text x="54.0" y="613.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Event profile</text>
+<text x="54.0" y="649.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">People</text>
+<rect x="42.0" y="664.0" width="216.0" height="32.0" rx="6" fill="#1e3a8a"/>
+<text x="54.0" y="685.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="146">Go live</text>
+<rect x="209.2" y="671.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="683.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="300.0" y="522.0" font-size="24" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="300">Go live</text>
+<text x="300.0" y="550.0" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="700">Demo Autumn Event · draft · cloned from Demo Event</text>
+<circle cx="312.0" cy="590.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="312.0" y="595.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="334.0" y="588.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Pinned v1.1.0 (stable)</text>
+<text x="334.0" y="608.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">Changed since Demo Event: 3 modules; see what changed</text>
+<circle cx="312.0" cy="646.0" r="12" fill="none" stroke="#eab308" stroke-width="2"/>
+<text x="312.0" y="651.0" font-size="13" fill="#eab308" font-weight="800" text-anchor="middle" data-maxw="20">!</text>
+<text x="334.0" y="644.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Re-run the changed scenarios</text>
+<text x="334.0" y="664.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">11 of 34 touch what changed; the other 23 carry over from the last rehearsal</text>
+<circle cx="312.0" cy="702.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="312.0" y="707.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="334.0" y="700.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Bot connected</text>
+<text x="334.0" y="720.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">No cutover this time: the bot binding was cloned</text>
+<circle cx="312.0" cy="758.0" r="12" fill="none" stroke="#94a3b8" stroke-width="2"/>
+<text x="312.0" y="763.0" font-size="13" fill="#94a3b8" font-weight="800" text-anchor="middle" data-maxw="20">○</text>
+<text x="334.0" y="756.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="900">Venue-day check</text>
+<text x="334.0" y="776.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="900">Same venue; its address is copied from the venue profile</text>
+<text x="1304.0" y="400.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="584">What carries over</text>
+<rect x="1304.0" y="416.0" width="584.0" height="470.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<circle cx="1328.0" cy="447.0" r="3" fill="#3b82f6"/>
+<text x="1342.0" y="452.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">The run sheet, as a template; only scenarios touching what changed are</text>
+<text x="1342.0" y="473.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">re-run (E11).</text>
+<circle cx="1328.0" cy="499.0" r="3" fill="#3b82f6"/>
+<text x="1342.0" y="504.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">The rollback triggers and targets, until someone changes them.</text>
+<circle cx="1328.0" cy="530.0" r="3" fill="#3b82f6"/>
+<text x="1342.0" y="535.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">The drills' timings, as the bar the next restore must meet.</text>
+<circle cx="1328.0" cy="561.0" r="3" fill="#3b82f6"/>
+<text x="1342.0" y="566.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">The go-live board itself: the second event costs an afternoon, not a week.</text>
+<circle cx="1328.0" cy="592.0" r="3" fill="#3b82f6"/>
+<text x="1342.0" y="597.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">Not carried: the acceptance of a failed gate. Every event accepts its own</text>
+<text x="1342.0" y="618.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="524">risks.</text>
+</svg>

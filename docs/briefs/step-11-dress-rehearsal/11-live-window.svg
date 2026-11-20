@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 11: The live window: deploys hold, main keeps moving, a hotfix has its own lane (superadmin, lead)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1000.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">11 · The live window: deploys hold, main keeps moving, a hotfix has its own lane (superadmin, lead)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: while an event is live the stack does not follow new releases; main goes on merging (no freeze, 0021), and a fix the event needs travels as a patch of the pinned release, tested on the staging stack and applied by</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">the superadmin with a reason.</text>
+<text x="361.2" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Mon</text>
+<line x1="260.0" y1="190.0" x2="260.0" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="563.8" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Tue</text>
+<line x1="462.5" y1="190.0" x2="462.5" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="766.2" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Wed</text>
+<line x1="665.0" y1="190.0" x2="665.0" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="968.8" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Thu</text>
+<line x1="867.5" y1="190.0" x2="867.5" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="1171.2" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Fri</text>
+<line x1="1070.0" y1="190.0" x2="1070.0" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="1373.8" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Sat</text>
+<line x1="1272.5" y1="190.0" x2="1272.5" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="1576.2" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Sun</text>
+<line x1="1475.0" y1="190.0" x2="1475.0" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="1778.8" y="180.0" font-size="15" fill="#4b5563" font-weight="700" text-anchor="middle" data-maxw="192">Mon</text>
+<line x1="1677.5" y1="190.0" x2="1677.5" y2="670.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="32.0" y="244.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="200">Event</text>
+<rect x="262.0" y="218.0" width="947.8" height="44.0" rx="8" fill="#1e293b"/>
+<text x="274.0" y="246.0" font-size="14" fill="#cbd5e1" font-weight="600" text-anchor="start" data-maxw="924">draft</text>
+<rect x="1213.8" y="218.0" width="411.1" height="44.0" rx="8" fill="#14532d"/>
+<text x="1225.8" y="246.0" font-size="14" fill="#86efac" font-weight="600" text-anchor="start" data-maxw="387">live</text>
+<rect x="1628.9" y="218.0" width="249.1" height="44.0" rx="8" fill="#172554"/>
+<text x="1640.9" y="246.0" font-size="14" fill="#93c5fd" font-weight="600" text-anchor="start" data-maxw="225">archived</text>
+<text x="32.0" y="336.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="200">Stack</text>
+<rect x="262.0" y="310.0" width="947.8" height="44.0" rx="8" fill="#1e293b"/>
+<text x="274.0" y="338.0" font-size="14" fill="#cbd5e1" font-weight="600" text-anchor="start" data-maxw="924">v1.0.0, follows nothing</text>
+<rect x="1213.8" y="310.0" width="147.9" height="44.0" rx="8" fill="#422006"/>
+<text x="1225.8" y="338.0" font-size="14" fill="#fde047" font-weight="600" text-anchor="start" data-maxw="124">held at v1.0.0</text>
+<rect x="1365.6" y="310.0" width="259.2" height="44.0" rx="8" fill="#422006"/>
+<text x="1377.6" y="338.0" font-size="14" fill="#fde047" font-weight="600" text-anchor="start" data-maxw="235">held at v1.0.1 (hotfix)</text>
+<rect x="1628.9" y="310.0" width="249.1" height="44.0" rx="8" fill="#14532d"/>
+<text x="1640.9" y="338.0" font-size="14" fill="#86efac" font-weight="600" text-anchor="start" data-maxw="225">free: next stable</text>
+<text x="32.0" y="428.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="200">Screens</text>
+<rect x="262.0" y="402.0" width="1099.6" height="44.0" rx="8" fill="#172554"/>
+<text x="274.0" y="430.0" font-size="14" fill="#93c5fd" font-weight="600" text-anchor="start" data-maxw="1076">bundle v1.0.0 pinned</text>
+<rect x="1365.6" y="402.0" width="512.4" height="44.0" rx="8" fill="#172554"/>
+<text x="1377.6" y="430.0" font-size="14" fill="#93c5fd" font-weight="600" text-anchor="start" data-maxw="488">still v1.0.0 after the hotfix</text>
+<text x="32.0" y="520.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="200">Main</text>
+<rect x="262.0" y="494.0" width="1616.0" height="44.0" rx="8" fill="#1e293b"/>
+<text x="274.0" y="522.0" font-size="14" fill="#cbd5e1" font-weight="600" text-anchor="start" data-maxw="1592">merges go on: v0.12.3, v0.12.4, … tagged on edge; none reaches this stack</text>
+<text x="32.0" y="612.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="200">Bot</text>
+<rect x="262.0" y="586.0" width="401.0" height="44.0" rx="8" fill="#1e293b"/>
+<text x="274.0" y="614.0" font-size="14" fill="#cbd5e1" font-weight="600" text-anchor="start" data-maxw="377">legacy bot</text>
+<rect x="667.0" y="586.0" width="1211.0" height="44.0" rx="8" fill="#14532d"/>
+<text x="679.0" y="614.0" font-size="14" fill="#86efac" font-weight="600" text-anchor="start" data-maxw="1187">cut over Wed 10:20; legacy kept stopped</text>
+<line x1="1211.8" y1="200.0" x2="1211.8" y2="680.0" stroke="#22c55e" stroke-width="3"/>
+<text x="1217.8" y="695.0" font-size="14" fill="#15803d" font-weight="700" text-anchor="start" data-maxw="200">go live Fri 17:40</text>
+<line x1="1363.6" y1="200.0" x2="1363.6" y2="680.0" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4"/>
+<text x="1369.6" y="715.0" font-size="14" fill="#b45309" font-weight="700" text-anchor="start" data-maxw="220">hotfix v1.0.1 Sat 11:20</text>
+<line x1="1626.9" y1="200.0" x2="1626.9" y2="680.0" stroke="#3b82f6" stroke-width="3"/>
+<text x="1632.9" y="695.0" font-size="14" fill="#1d4ed8" font-weight="700" text-anchor="start" data-maxw="200">archive Sun 18:00</text>
+<text x="32.0" y="760.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1300">The hotfix lane</text>
+<rect x="32.0" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="48.0" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Issue</text>
+<text x="48.0" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">labelled hotfix, names the live</text>
+<text x="48.0" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">event</text>
+<line x1="281.7" y1="840.0" x2="299.7" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="299.7" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="315.7" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Fix</text>
+<text x="315.7" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">on release/v1.0, branched from</text>
+<text x="315.7" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the pinned tag</text>
+<line x1="549.4" y1="840.0" x2="567.4" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="567.4" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="583.4" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Review</text>
+<text x="583.4" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the independent review, as for</text>
+<text x="583.4" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">every PR</text>
+<line x1="817.1" y1="840.0" x2="835.1" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="835.1" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="851.1" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Tag</text>
+<text x="851.1" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">v1.0.1: CI and the demo stack</text>
+<text x="851.1" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">green</text>
+<line x1="1084.9" y1="840.0" x2="1102.9" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1102.9" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1118.9" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Stage</text>
+<text x="1118.9" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the staging stack with a copy of</text>
+<text x="1118.9" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the demo tenant</text>
+<line x1="1352.6" y1="840.0" x2="1370.6" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1370.6" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+<text x="1386.6" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Apply</text>
+<text x="1386.6" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the superadmin, with a reason;</text>
+<text x="1386.6" y="851.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">audited</text>
+<line x1="1620.3" y1="840.0" x2="1638.3" y2="840.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1638.3" y="776.0" width="249.7" height="130.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1654.3" y="806.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="218">Back to main</text>
+<text x="1654.3" y="832.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="218">the same fix merged to main too</text>
+<text x="32.0" y="940.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Two events live at once share the hold, and both must pin the release the stack runs (E12); the hold lifts when the last live event is archived (O11). Whether a held deploy waits quietly or opens an issue is O6. The numbering and the branch are D3 and D4; the hold</text>
+<text x="32.0" y="960.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">itself is D5.</text>
+</svg>
