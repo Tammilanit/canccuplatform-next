@@ -28,8 +28,10 @@
   align-items: end;
   gap: 0.5rem;
 }
+/* The field's own bottom margin would lift it above the button beside it. */
 .pizza-filter > .canccu-field {
   flex: 1;
+  margin-bottom: 0;
 }
 .pizza-menu {
   display: grid;

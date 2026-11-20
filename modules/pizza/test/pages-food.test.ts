@@ -91,6 +91,8 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(r.body).toContain("Order 1 · Demo Pizzeria");
     expect(r.body).toContain("1 pizzas · 1 people");
     expect(r.body).not.toContain("Pena");
+    // A guest is not told who holds it, so never that nobody does.
+    expect(r.body).not.toContain("Nobody holds it");
     expect(r.body).toContain("Order with your Discord account");
     expect(r.body).toContain('href="/admin/sign-in?next=%2Fpizza%2F"');
     expect(r.body).not.toContain('href="/pizza/start"');

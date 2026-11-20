@@ -41,6 +41,9 @@ const CHANGED_MENU = [
 const ORDER = "<order>";
 const PIZZERIA = "<pizzeria>";
 const GUEST = null;
+const HALL = { width: 1920, height: 1080 };
+/** The main zone's screen, as Studio mirrors it (#643, mockup 14): the food box in its rail. */
+const BOX = "/screen/zones/main";
 /**
  * [name, path, viewport, step, cookie]: the step the order is at when the shot is taken, and who
  * looks (the CI session unless GUEST). The attendee's shots are named as attendee.browser.test.ts
@@ -58,17 +61,20 @@ const SHOTS = [
   ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
   ["pizza-food-added", `/pizza/orders/${ORDER}?added=1`, DESK, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
+  ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
   ["pizza-holder-call-phone", `/pizza/hold/${ORDER}/call`, PHONE, "closed"],
   ["pizza-holder-called-in-phone", `/pizza/hold/${ORDER}/called-in`, PHONE, "closed"],
   ["pizza-holder-placed-phone", `/pizza/hold/${ORDER}`, PHONE, "placed"],
   ["pizza-food-on-the-way-phone", `/pizza/orders/${ORDER}`, PHONE, "placed"],
+  ["pizza-screen-food-on-the-way", BOX, HALL, "placed"],
   ["pizza-holder-here-phone", `/pizza/hold/${ORDER}/here`, PHONE, "placed"],
   ["pizza-crew", "/pizza/crew", DESK, "placed"],
   ["pizza-crew-phone", "/pizza/crew", PHONE, "placed"],
   ["pizza-crew-order", `/pizza/crew/orders/${ORDER}`, DESK, "placed"],
   ["pizza-crew-order-phone", `/pizza/crew/orders/${ORDER}`, PHONE, "placed"],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
+  ["pizza-screen-food-here", BOX, HALL, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
   ["pizza-holder-done-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "done"],
   ["pizza-food-done-phone", `/pizza/orders/${ORDER}`, PHONE, "done"],
@@ -184,6 +190,8 @@ export async function pizzaShots({ shot, fail }) {
   let order;
   try {
     await orderingOpen();
+    // The screens' default zones (the main one shows the food box) exist once Studio reads them.
+    expect(await api("GET", "/api/screen/zones"), 200, "the screens' zones");
     pz = await pizzerias();
     const menu = expect(await api("GET", `/api/pizza/pizzerias/${pz}`), 200, "the menu");
     const closes = new Date(Date.now() + 45 * 60_000).toISOString();
@@ -242,6 +250,26 @@ export async function pizzaShots({ shot, fail }) {
         // The attendee's pages keep their live stream open, so the network never goes idle.
         ...(name.startsWith("pizza-food")
           ? { ready: (page) => page.locator(".pizza-hub__main").waitFor() }
+          : {}),
+        // The screen draws the box once its state has the order: judged as every screen is.
+        ...(path === BOX
+          ? {
+              fullPage: false,
+              readable: true,
+              // The rail takes turns (venue info, the QR, the food box): shot once the box has
+              // faded in, and again from its next turn when the rail moved on meanwhile.
+              ready: async (page) => {
+                const box = page
+                  .locator(".canccu-widget--food_status .canccu-widget__row")
+                  .first();
+                for (let turn = 0; turn < 4; turn++) {
+                  await box.waitFor({ timeout: 60_000 });
+                  await page.waitForTimeout(900);
+                  if (await box.isVisible()) return;
+                }
+                throw new Error("the food box never stayed on the screen");
+              },
+            }
           : {}),
         ...(preview
           ? {

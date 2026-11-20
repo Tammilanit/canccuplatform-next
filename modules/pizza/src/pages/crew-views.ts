@@ -42,7 +42,8 @@ export function needs(c: PageCtx, o: OrderView, s: PizzaSettings, now: Date): st
 }
 
 export function stateLabel(c: Pick<PageCtx, "t">, o: OrderView): Html {
-  const nobody = (o.state === "open" || o.state === "closed") && !o.holder;
+  // `holder` is absent for a guest, who is not told who holds it: only null is nobody.
+  const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
   const kind =
     o.state === "done" || o.state === "cancelled"
       ? "plain"

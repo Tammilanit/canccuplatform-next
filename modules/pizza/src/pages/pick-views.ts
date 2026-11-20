@@ -155,8 +155,7 @@ export function pickView(
   } else {
     const shown = menu.items.filter((i) => menuMatches(i, q.query));
     const picked = edit?.kind === "menu" ? edit.number : null;
-    body = html`${edit === null ? lastTime(c, o, q.last) : ""}
-      <div class="pizza-filter" role="search">
+    body = html`<div class="pizza-filter" role="search">
         <label class="canccu-field"
           ><span class="canccu-field__label">${c.t("pick.filter")}</span>
           <input
@@ -198,7 +197,9 @@ export function pickView(
         ${shown.length === 0 ? html`<p class="pizza-muted">${c.t("pick.no_match")}</p>` : ""}
       </fieldset>`;
   }
-  return html`${flash(q.error)}${nav}
+  // A form never sits in another (the browser drops the inner one): the same again comes first.
+  const again = q.tab === "menu" && edit === null ? lastTime(c, o, q.last) : "";
+  return html`${flash(q.error)}${nav}${again}
     <form id="pizza-filter" method="get" action="${orderHref(o)}/add"></form>
     <form method="post" action="${orderHref(o)}/add" class="pizza-form">
       ${formKey()}

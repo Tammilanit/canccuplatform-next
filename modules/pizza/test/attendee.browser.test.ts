@@ -92,6 +92,34 @@ describe.skipIf(browser === undefined)(
       await context.close();
     });
 
+    it("adds the same again with one tap, from the last order at this pizzeria (U6)", async () => {
+      if (browser === undefined) return;
+      const pz = (
+        json(await w.call("anni", "GET", `/api/pizza/orders/${id}`)).pizzeria as {
+          id: string;
+        }
+      ).id;
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "text",
+        text: "Gluten-free margherita",
+        note: "well done",
+      });
+      await step("cancel", { reason: "too late" });
+      const next = json(await open(w, "pena", pz)).id as string;
+      const context = await signedIn(browser, s, "anni");
+      const page = await context.newPage();
+      await page.goto(`${s.origin}/pizza/orders/${next}/add`);
+      await page.getByText("Gluten-free margherita · well done").waitFor();
+      await page.getByRole("button", { name: "Add the same again" }).click();
+      await page.waitForURL(`**/pizza/orders/${next}?added=1`);
+      const mine = json(await w.call("anni", "GET", `/api/pizza/orders/${next}`)).mine as {
+        label: string;
+        note: string | null;
+      }[];
+      expect(mine).toMatchObject([{ label: "Other: Gluten-free margherita", note: "well done" }]);
+      await context.close();
+    });
+
     it("says Reconnecting while the stream is gone, and catches up when it is back (E16)", async () => {
       if (browser === undefined) return;
       const context = await signedIn(browser, s, "anni");

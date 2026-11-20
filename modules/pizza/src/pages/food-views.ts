@@ -219,7 +219,7 @@ export function startView(
           >
         </div>
         <label class="canccu-field"
-          ><span class="canccu-field__label">${c.t("start.other_time")}</span>
+          ><span class="canccu-field__label">${c.t("start.other_field")}</span>
           <input class="canccu-input" type="time" name="closes_other"
         /></label>
         <p class="pizza-muted">${c.t("start.closes_hint")}</p>
