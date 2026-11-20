@@ -169,9 +169,9 @@
 <text x="1420" y="802" font-size="22" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1540">18:00</text>
 <text x="1792" y="802" font-size="22" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1700 1796">now</text>
 <text x="1606.0" y="870" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1360 1852">C · activity_graph, metric: messages, under 3 hours: Collecting…</text>
-<text x="32" y="900" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1312">Data: bot.messages.counted and the hourly messages series of GET /api/bot/stats: counts only. No text (the message-content intent stays off), no author, no channel.</text>
+<text x="32" y="900" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1312">Data: the hourly bot.messages.counted event (Screen&#x27;s one source); the hour&#x27;s total, and messages_peak for the busiest hour: counts only. No text (the message-content intent stays off), no author, no channel.</text>
 <text x="32" y="921" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1312">Busy or quiet compares this hour with the event&#x27;s usual hour so far; the arrow follows the catalogue&#x27;s 10-minute rule. Busy: accent colour, a sweep of light when the count rolls,</text>
 <text x="32" y="942" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="32 1312">the chat icon pulses; quiet: muted colours, no motion. Collecting: under three hours of data. Same scale, labels and animation as the other metrics; settings are activity_graph&#x27;s own.</text>
-<text x="1400" y="930" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="1380 1880">Not built in step 6: the metric is added in #122 once the product owner</text>
-<text x="1400" y="951" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="1380 1880">has seen this. The feed ships with the bot (#122).</text>
+<text x="1400" y="930" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="1380 1880">The metric is added in #122 once the product owner has seen this.</text>
+<text x="1400" y="951" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-box="1380 1880">The feed ships with the bot (#122).</text>
 </svg>
