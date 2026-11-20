@@ -1,0 +1,398 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1480" width="1920" height="1480" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>The venue screen: open, teams drawn, the bracket live, champion (attendees in the hall)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1480.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">12 · The venue screen: open, teams drawn, the bracket live, champion (attendees in the hall)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the hall follows the finals without a phone; Moments shows the peaks, the bracket is a Pulse widget while the season runs</text>
+<defs><clipPath id="clip12"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,130.0) scale(0.46)"><g clip-path="url(#clip12)">
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<rect x="40.0" y="40.0" width="1840.0" height="1000.0" rx="30" fill="#161a2e" stroke="#b98cff" stroke-width="6"/>
+<text x="120.0" y="200.0" font-size="120" fill="#f3f5ff" font-weight="800" text-anchor="start">Finals are open</text>
+<text x="120.0" y="290.0" font-size="52" fill="#a9b1d6" font-weight="500" text-anchor="start">Demo Finals · teams of three, drawn for you</text>
+<circle cx="500.0" cy="650.0" r="280.0" fill="none" stroke="#1d2442" stroke-width="54"/>
+<path d="M500.0,370.0 A280,280 0 1 1 231.8,730.3" stroke="#3ddcff" stroke-width="54" fill="none"/>
+<text x="500.0" y="680.0" font-size="104" fill="#f3f5ff" font-weight="800" text-anchor="middle">19 / 27</text>
+<text x="500.0" y="770.0" font-size="48" fill="#a9b1d6" font-weight="500" text-anchor="middle">players in</text>
+<rect x="1180.0" y="340.0" width="540.0" height="540.0" rx="32.4" fill="#ffffff"/>
+<rect x="1223.2" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="383.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="404.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="426.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="448.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="469.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="491.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="512.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="534.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="534.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="534.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="534.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="534.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="556.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="577.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="599.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="620.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="642.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="664.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="685.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="707.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="728.8" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1568.8" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="750.4" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1396.0" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1482.4" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1547.2" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="772.0" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1374.4" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1504.0" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1655.2" y="793.6" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1223.2" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1244.8" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1266.4" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1288.0" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1309.6" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1331.2" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1352.8" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1417.6" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1439.2" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1460.8" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1525.6" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1590.4" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1612.0" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<rect x="1633.6" y="815.2" width="22.0" height="22.0" rx="0" fill="#0b0d1a"/>
+<text x="1450.0" y="960.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="middle">Scan to join · or /finals in Discord</text>
+</g></g>
+<text x="32.0" y="660.8" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · Finals are open</text>
+<text x="32.0" y="686.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 912.0">A takeover when the season opens and again before it closes: the count fills, the QR joins.</text>
+<defs><clipPath id="clip13"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
+<g transform="translate(988.0,130.0) scale(0.46)"><g clip-path="url(#clip13)">
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<text x="80.0" y="150.0" font-size="80" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Finals · the teams</text>
+<rect x="80.0" y="210.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="116.0" y="290.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Alpha</text>
+<text x="116.0" y="346.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Four</text>
+<text x="116.0" y="386.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Five</text>
+<text x="116.0" y="426.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Six</text>
+<rect x="680.0" y="210.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="716.0" y="290.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Beta</text>
+<text x="716.0" y="346.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Seven</text>
+<text x="716.0" y="386.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Eight</text>
+<text x="716.0" y="426.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Nine</text>
+<rect x="1280.0" y="210.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="1316.0" y="290.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Gamma</text>
+<text x="1316.0" y="346.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Ten</text>
+<text x="1316.0" y="386.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Eleven</text>
+<text x="1316.0" y="426.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twelve</text>
+<rect x="80.0" y="490.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#b98cff" stroke-width="4"/>
+<text x="116.0" y="570.0" font-size="56" fill="#b98cff" font-weight="800" text-anchor="start">Team Delta</text>
+<text x="116.0" y="626.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Demo Player</text>
+<text x="116.0" y="666.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Two</text>
+<text x="116.0" y="706.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Three</text>
+<rect x="680.0" y="490.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="716.0" y="570.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Epsilon</text>
+<text x="716.0" y="626.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Thirteen</text>
+<text x="716.0" y="666.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Fourteen</text>
+<text x="716.0" y="706.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Fifteen</text>
+<rect x="1280.0" y="490.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="1316.0" y="570.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Zeta</text>
+<text x="1316.0" y="626.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Sixteen</text>
+<text x="1316.0" y="666.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Seventeen</text>
+<text x="1316.0" y="706.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Eighteen</text>
+<rect x="80.0" y="770.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="116.0" y="850.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Eta</text>
+<text x="116.0" y="906.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Nineteen</text>
+<text x="116.0" y="946.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty</text>
+<text x="116.0" y="986.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-one</text>
+<rect x="680.0" y="770.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="716.0" y="850.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Theta</text>
+<text x="716.0" y="906.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-two</text>
+<text x="716.0" y="946.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-three</text>
+<text x="716.0" y="986.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-four</text>
+<rect x="1280.0" y="770.0" width="560.0" height="250.0" rx="22" fill="#161a2e" stroke="#2c3560" stroke-width="2"/>
+<text x="1316.0" y="850.0" font-size="56" fill="#f3f5ff" font-weight="800" text-anchor="start">Team Iota</text>
+<text x="1316.0" y="906.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-five</text>
+<text x="1316.0" y="946.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-six</text>
+<text x="1316.0" y="986.0" font-size="32" fill="#a9b1d6" font-weight="500" text-anchor="start">Player Twenty-seven</text>
+</g></g>
+<text x="988.0" y="660.8" font-size="19" fill="#111827" font-weight="600" text-anchor="start">2 · Teams drawn</text>
+<text x="988.0" y="686.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="988.0 1868.0">At the start: every team and its three players, then the bracket. Names follow the screen's names setting.</text>
+<defs><clipPath id="clip14"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,740.0) scale(0.46)"><g clip-path="url(#clip14)">
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<rect x="40.0" y="32.0" width="1840.0" height="86.0" rx="16" fill="#161a2e"/>
+<text x="80.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1840.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">21:02</text>
+<rect x="40.0" y="150.0" width="1340.0" height="890.0" rx="20" fill="#161a2e" stroke="#b98cff" stroke-width="4"/>
+<text x="80.0" y="220.0" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Finals · groups of four</text>
+<text x="80.0" y="282.0" font-size="26.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="80.0 344.0">Groups of 4</text>
+<rect x="80.0" y="365.3" width="264.0" height="272.0" rx="20.0" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="104.0" y="409.3" font-size="25.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="104.0 224.0">Group D</text>
+<text x="320.0" y="409.3" font-size="24.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="104.0" y="459.3" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Alpha</text>
+<text x="104.0" y="507.3" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Zeta</text>
+<text x="104.0" y="555.3" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Theta</text>
+<text x="104.0" y="603.3" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Eta</text>
+<rect x="80.0" y="692.7" width="264.0" height="272.0" rx="20.0" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="104.0" y="736.7" font-size="25.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="104.0 224.0">Group E</text>
+<text x="320.0" y="736.7" font-size="24.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="104.0" y="786.7" font-size="27.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Gamma</text>
+<text x="104.0" y="834.7" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Delta</text>
+<text x="104.0" y="882.7" font-size="30.0" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Beta</text>
+<text x="104.0" y="930.7" font-size="27.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.0 284.0">Team Epsilon</text>
+<text x="412.0" y="282.0" font-size="26.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="412.0 676.0">Semi-final</text>
+<rect x="412.0" y="529.0" width="264.0" height="272.0" rx="20.0" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="436.0" y="573.0" font-size="23.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="436.0 556.0">Semi-final</text>
+<text x="436.0" y="623.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="436.0 616.0">To be decided</text>
+<text x="436.0" y="671.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="436.0 616.0">To be decided</text>
+<text x="436.0" y="719.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="436.0 616.0">To be decided</text>
+<text x="436.0" y="767.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="436.0 616.0">To be decided</text>
+<text x="744.0" y="282.0" font-size="26.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="744.0 1008.0">Final · best of 3</text>
+<rect x="744.0" y="577.0" width="264.0" height="176.0" rx="20.0" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="768.0" y="621.0" font-size="25.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="768.0 888.0">Final</text>
+<text x="768.0" y="671.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="768.0 948.0">To be decided</text>
+<text x="768.0" y="719.0" font-size="26.5" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="768.0 948.0">To be decided</text>
+<path d="M344.0,501.3 H378.0 V665.0 H412.0" stroke="#2c3560" stroke-width="3.2" fill="none" opacity="0.9"/>
+<path d="M344.0,828.7 H378.0 V665.0 H412.0" stroke="#2c3560" stroke-width="3.2" fill="none" opacity="0.9"/>
+<path d="M676.0,665.0 H710.0 V665.0 H744.0" stroke="#2c3560" stroke-width="3.2" fill="none" opacity="0.9"/>
+<text x="1076.0" y="282.0" font-size="26.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1076.0 1340.0">Champion</text>
+<rect x="1076.0" y="545.0" width="264.0" height="240.0" rx="24.0" fill="none" stroke="#2c3560" stroke-width="1.5" stroke-dasharray="6 6"/>
+<text x="1208.0" y="677.0" font-size="28.0" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1082.0 1334.0">To be crowned</text>
+<line x1="1008.0" y1="665.0" x2="1076.0" y2="665.0" stroke="#2c3560" stroke-width="3.2"/>
+<rect x="1410.0" y="150.0" width="470.0" height="282.0" rx="20" fill="#161a2e"/>
+<text x="1450.0" y="220.0" font-size="36" fill="#a9b1d6" font-weight="600" text-anchor="start">Next</text>
+<text x="1450.0" y="290.0" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="1450.0 1850.0">Semi-final ·</text>
+<text x="1450.0" y="354.8" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="1450.0 1850.0">about 21:40</text>
+<rect x="1410.0" y="452.0" width="470.0" height="282.0" rx="20" fill="#161a2e"/>
+<text x="1450.0" y="522.0" font-size="36" fill="#a9b1d6" font-weight="600" text-anchor="start">Then</text>
+<text x="1450.0" y="592.0" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="1450.0 1850.0">Final · best of</text>
+<text x="1450.0" y="656.8" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="1450.0 1850.0">three</text>
+<rect x="1410.0" y="754.0" width="470.0" height="282.0" rx="20" fill="#161a2e"/>
+<text x="1450.0" y="824.0" font-size="36" fill="#a9b1d6" font-weight="600" text-anchor="start">Last champions</text>
+<text x="1450.0" y="894.0" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="1450.0 1850.0">Team Gamma</text>
+</g></g>
+<text x="32.0" y="1270.8" font-size="19" fill="#111827" font-weight="600" text-anchor="start">3 · The bracket on the Pulse</text>
+<text x="32.0" y="1296.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 912.0">While the season runs, the bracket is the hero widget from the live round on (played rounds fold away); side</text>
+<text x="32.0" y="1318.4" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 912.0">boxes show what's next.</text>
+<defs><clipPath id="clip15"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
+<g transform="translate(988.0,740.0) scale(0.46)"><g clip-path="url(#clip15)">
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#1a1430"/>
+<text x="960.0" y="250.0" font-size="180" fill="#ffc94d" font-weight="400" text-anchor="middle">🏆</text>
+<text x="960.0" y="420.0" font-size="170" fill="#ffc94d" font-weight="900" text-anchor="middle">Team Delta</text>
+<text x="960.0" y="520.0" font-size="56" fill="#f3f5ff" font-weight="600" text-anchor="middle">Champions of Demo Finals</text>
+<circle cx="540.0" cy="700.0" r="90.0" fill="#1d2442" stroke="#ffc94d" stroke-width="6"/>
+<text x="540.0" y="732.0" font-size="90" fill="#f3f5ff" font-weight="800" text-anchor="middle">D</text>
+<text x="540.0" y="860.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="middle">Demo Player</text>
+<circle cx="960.0" cy="700.0" r="90.0" fill="#1d2442" stroke="#ffc94d" stroke-width="6"/>
+<text x="960.0" y="732.0" font-size="90" fill="#f3f5ff" font-weight="800" text-anchor="middle">P</text>
+<text x="960.0" y="860.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="middle">Player Two</text>
+<circle cx="1380.0" cy="700.0" r="90.0" fill="#1d2442" stroke="#ffc94d" stroke-width="6"/>
+<text x="1380.0" y="732.0" font-size="90" fill="#f3f5ff" font-weight="800" text-anchor="middle">P</text>
+<text x="1380.0" y="860.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="middle">Player Three</text>
+<text x="960.0" y="980.0" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="middle">2 – 1 against Team Alpha in the final</text>
+</g></g>
+<text x="988.0" y="1270.8" font-size="19" fill="#111827" font-weight="600" text-anchor="start">4 · Champion</text>
+<text x="988.0" y="1296.8" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="988.0 1868.0">The deciding game of the final ends the season: the champions' takeover with the three players.</text>
+<rect x="32.0" y="1370.0" width="1856.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="1398.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
+<text x="48.0" y="1422.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">Lobby codes never appear on a screen (U8). The legacy's two card windows (open for 15 minutes, started for 10) become the takeovers' durations, set per event (O4). Moments' 'finals' class ranks these takeovers; which rules and presets is L6 and</text>
+<text x="48.0" y="1442.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">L7.</text>
+</svg>

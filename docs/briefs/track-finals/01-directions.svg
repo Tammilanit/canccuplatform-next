@@ -1,0 +1,413 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>The three directions side by side</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="900.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">01 · The three directions side by side</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the session picks one; the same moment in each: 20:40, the groups of four are being played, the final is next</text>
+<rect x="32.0" y="110.0" width="600.0" height="760.0" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="56.0" y="152.0" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="56.0 608.0">A · The mini tourney, moved in</text>
+<rect x="56.0" y="176.0" width="552.0" height="330.0" rx="12" fill="#0b0d1a"/>
+<g transform="translate(70.0,190.0) scale(0.55)"><g>
+<rect x="0.0" y="0.0" width="940.0" height="520.0" rx="14" fill="#161a2e"/>
+<text x="24.0" y="44.0" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals · Friday</text>
+<text x="24.0" y="74.0" font-size="17" fill="#a9b1d6" font-weight="500" text-anchor="start">Season ▾   Bracket   Champions</text>
+<text x="24.0" y="108.0" font-size="9.75" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="24.0 182.0">Groups of 3</text>
+<rect x="24.0" y="149.9" width="158.0" height="84.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="33.0" y="166.4" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="33.0 137.0">Group A</text>
+<text x="173.0" y="166.4" font-size="9.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="33.0" y="185.1" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Alpha</text>
+<text x="173.0" y="185.1" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="33.0" y="203.1" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Delta</text>
+<text x="173.0" y="203.1" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="33.0" y="221.1" font-size="11.25" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Eta</text>
+<text x="173.0" y="221.1" font-size="11.25" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="265.2" width="158.0" height="84.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="33.0" y="281.8" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="33.0 137.0">Group B</text>
+<text x="173.0" y="281.8" font-size="9.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="33.0" y="300.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Zeta</text>
+<text x="173.0" y="300.5" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="33.0" y="318.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Beta</text>
+<text x="173.0" y="318.5" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="33.0" y="336.5" font-size="11.25" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Iota</text>
+<text x="173.0" y="336.5" font-size="11.25" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="380.6" width="158.0" height="84.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="33.0" y="397.1" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="33.0 137.0">Group C</text>
+<text x="173.0" y="397.1" font-size="9.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="33.0" y="415.9" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Gamma</text>
+<text x="173.0" y="415.9" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="33.0" y="433.9" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Theta</text>
+<text x="173.0" y="433.9" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="33.0" y="451.9" font-size="11.25" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="33.0 159.5">Team Epsilon</text>
+<text x="173.0" y="451.9" font-size="11.25" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="207.5" y="108.0" font-size="9.75" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="207.5 365.5">Second chance</text>
+<rect x="207.5" y="265.2" width="158.0" height="84.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="216.5" y="281.8" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="216.5 320.5">Second chance</text>
+<text x="356.5" y="281.8" font-size="9.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="216.5" y="300.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="216.5 343.0">Team Epsilon</text>
+<text x="356.5" y="300.5" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="216.5" y="318.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="216.5 343.0">Team Eta</text>
+<text x="356.5" y="318.5" font-size="11.25" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="216.5" y="336.5" font-size="11.25" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="216.5 343.0">Team Iota</text>
+<text x="356.5" y="336.5" font-size="11.25" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="391.0" y="108.0" font-size="9.75" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="391.0 549.0">Groups of 4</text>
+<rect x="391.0" y="176.3" width="158.0" height="102.0" rx="7.5" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="400.0" y="192.8" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="400.0 504.0">Group D</text>
+<text x="540.0" y="192.8" font-size="9.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="400.0" y="211.6" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Alpha</text>
+<text x="400.0" y="229.6" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Zeta</text>
+<text x="400.0" y="247.6" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Theta</text>
+<text x="400.0" y="265.6" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Eta</text>
+<rect x="391.0" y="336.2" width="158.0" height="102.0" rx="7.5" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="400.0" y="352.7" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="400.0 504.0">Group E</text>
+<text x="540.0" y="352.7" font-size="9.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="400.0" y="371.4" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Gamma</text>
+<text x="400.0" y="389.4" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Delta</text>
+<text x="400.0" y="407.4" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Beta</text>
+<text x="400.0" y="425.4" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="400.0 526.5">Team Epsilon</text>
+<text x="574.5" y="108.0" font-size="9.75" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="574.5 732.5">Semi-final</text>
+<rect x="574.5" y="256.2" width="158.0" height="102.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="583.5" y="272.8" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="583.5 687.5">Semi-final</text>
+<text x="583.5" y="291.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="583.5 710.0">To be decided</text>
+<text x="583.5" y="309.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="583.5 710.0">To be decided</text>
+<text x="583.5" y="327.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="583.5 710.0">To be decided</text>
+<text x="583.5" y="345.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="583.5 710.0">To be decided</text>
+<text x="758.0" y="108.0" font-size="9.75" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="758.0 916.0">Final · best of 3</text>
+<rect x="758.0" y="274.2" width="158.0" height="66.0" rx="7.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="767.0" y="290.8" font-size="9.375" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="767.0 871.0">Final</text>
+<text x="767.0" y="309.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="767.0 893.5">To be decided</text>
+<text x="767.0" y="327.5" font-size="11.25" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="767.0 893.5">To be decided</text>
+<path d="M182.0,191.9 H194.8 V307.2 H207.5" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M182.0,307.2 H194.8 V307.2 H207.5" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M182.0,422.6 H194.8 V307.2 H207.5" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M365.5,307.2 H378.2 V227.3 H391.0" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M365.5,307.2 H378.2 V387.2 H391.0" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M549.0,227.3 H561.8 V307.2 H574.5" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M549.0,387.2 H561.8 V307.2 H574.5" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+<path d="M732.5,307.2 H745.2 V307.2 H758.0" stroke="#2c3560" stroke-width="1.2000000000000002" fill="none" opacity="0.9"/>
+</g></g>
+<circle cx="64.0" cy="534.0" r="4.0" fill="#4b5563"/>
+<text x="78.0" y="540.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">Attendees: the same pages they know (season, bracket,</text>
+<text x="78.0" y="563.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">sign-up, report), now in the hub with sign-in</text>
+<circle cx="64.0" cy="591.9" r="4.0" fill="#4b5563"/>
+<text x="78.0" y="597.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">Organisers: the three admin pages ported into the shell, one</text>
+<text x="78.0" y="620.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">open season per event</text>
+<circle cx="64.0" cy="649.8" r="4.0" fill="#4b5563"/>
+<text x="78.0" y="655.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">Venue staff: the screen shows the three finals cards and</text>
+<text x="78.0" y="678.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">nothing between them</text>
+<circle cx="64.0" cy="707.7" r="4.0" fill="#4b5563"/>
+<text x="78.0" y="713.7" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">Trade-off: cheapest and proven; the screen and the phones stay</text>
+<text x="78.0" y="736.6" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="78.0 598.0">quiet while the bracket runs</text>
+<rect x="56.0" y="820.0" width="98.3" height="30.0" rx="15.0" fill="#e5e7eb"/>
+<text x="105.2" y="840.4" font-size="15" fill="#111827" font-weight="600" text-anchor="middle" data-box="58.0 152.3">Cost S–M</text>
+<rect x="660.0" y="110.0" width="600.0" height="760.0" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="684.0" y="152.0" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="684.0 1236.0">B · One app, two homes</text>
+<rect x="684.0" y="176.0" width="552.0" height="330.0" rx="12" fill="#0b0d1a"/>
+<g transform="translate(704.0,196.0) scale(0.6)"><g>
+<rect x="0.0" y="0.0" width="420.0" height="230.0" rx="16" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="24.0" y="46.0" font-size="24" fill="#f3f5ff" font-weight="700" text-anchor="start">Online, between events</text>
+<text x="24.0" y="80.0" font-size="18" fill="#a9b1d6" font-weight="500" text-anchor="start">its own data and sign-in</text>
+<text x="24.0" y="101.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="24.0 89.7">Groups of 3</text>
+<rect x="24.0" y="106.3" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="113.4" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group A</text>
+<text x="85.9" y="113.4" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="121.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Alpha</text>
+<text x="85.9" y="121.4" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="129.0" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Delta</text>
+<text x="85.9" y="129.0" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="136.7" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Eta</text>
+<text x="85.9" y="136.7" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="142.9" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="149.9" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group B</text>
+<text x="85.9" y="149.9" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="157.9" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Zeta</text>
+<text x="85.9" y="157.9" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="165.6" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Beta</text>
+<text x="85.9" y="165.6" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="173.3" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Iota</text>
+<text x="85.9" y="173.3" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="179.4" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="186.5" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group C</text>
+<text x="85.9" y="186.5" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="194.5" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Gamma</text>
+<text x="85.9" y="194.5" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="202.2" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Theta</text>
+<text x="85.9" y="202.2" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="209.8" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Epsilon</text>
+<text x="85.9" y="209.8" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="100.6" y="101.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="100.6 166.3">Second chance</text>
+<rect x="100.6" y="142.9" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="104.4" y="149.9" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="104.4 147.1">Second chance</text>
+<text x="162.4" y="149.9" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="104.4" y="157.9" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Epsilon</text>
+<text x="162.4" y="157.9" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="104.4" y="165.6" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Eta</text>
+<text x="162.4" y="165.6" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="104.4" y="173.3" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Iota</text>
+<text x="162.4" y="173.3" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="177.2" y="101.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="177.2 242.8">Groups of 4</text>
+<rect x="177.2" y="113.4" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="181.0" y="120.4" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="181.0 223.6">Group D</text>
+<text x="239.0" y="120.4" font-size="3.84" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="181.0" y="128.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Alpha</text>
+<text x="181.0" y="136.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Zeta</text>
+<text x="181.0" y="143.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Theta</text>
+<text x="181.0" y="151.5" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Eta</text>
+<rect x="177.2" y="164.7" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="181.0" y="171.7" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="181.0 223.6">Group E</text>
+<text x="239.0" y="171.7" font-size="3.84" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="181.0" y="179.7" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Gamma</text>
+<text x="181.0" y="187.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Delta</text>
+<text x="181.0" y="195.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Beta</text>
+<text x="181.0" y="202.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Epsilon</text>
+<text x="253.7" y="101.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="253.7 319.4">Semi-final</text>
+<rect x="253.7" y="139.0" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="257.6" y="146.1" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="257.6 300.2">Semi-final</text>
+<text x="257.6" y="154.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="161.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="169.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="177.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="330.3" y="101.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="330.3 396.0">Final · best of 3</text>
+<rect x="330.3" y="146.7" width="65.7" height="28.2" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="334.1" y="153.8" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="334.1 376.8">Final</text>
+<text x="334.1" y="161.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="334.1 386.4">To be decided</text>
+<text x="334.1" y="169.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="334.1 386.4">To be decided</text>
+<path d="M89.7,124.2 H95.1 V160.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M89.7,160.8 H95.1 V160.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M89.7,197.4 H95.1 V160.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M166.3,160.8 H171.7 V135.1 H177.2" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M166.3,160.8 H171.7 V186.5 H177.2" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M242.8,135.1 H248.3 V160.8 H253.7" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M242.8,186.5 H248.3 V160.8 H253.7" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M319.4,160.8 H324.9 V160.8 H330.3" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<rect x="0.0" y="270.0" width="420.0" height="230.0" rx="16" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="24.0" y="316.0" font-size="24" fill="#f3f5ff" font-weight="700" text-anchor="start">At the LAN, installed</text>
+<text x="24.0" y="350.0" font-size="18" fill="#a9b1d6" font-weight="500" text-anchor="start">the event's data and sign-in</text>
+<text x="24.0" y="371.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="24.0 89.7">Groups of 3</text>
+<rect x="24.0" y="376.3" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="383.4" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group A</text>
+<text x="85.9" y="383.4" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="391.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Alpha</text>
+<text x="85.9" y="391.4" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="399.0" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Delta</text>
+<text x="85.9" y="399.0" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="406.7" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Eta</text>
+<text x="85.9" y="406.7" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="412.9" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="419.9" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group B</text>
+<text x="85.9" y="419.9" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="427.9" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Zeta</text>
+<text x="85.9" y="427.9" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="435.6" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Beta</text>
+<text x="85.9" y="435.6" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="443.3" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Iota</text>
+<text x="85.9" y="443.3" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="24.0" y="449.4" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="27.8" y="456.5" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="27.8 70.5">Group C</text>
+<text x="85.9" y="456.5" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="27.8" y="464.5" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Gamma</text>
+<text x="85.9" y="464.5" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="27.8" y="472.2" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Theta</text>
+<text x="85.9" y="472.2" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="27.8" y="479.8" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="27.8 80.1">Team Epsilon</text>
+<text x="85.9" y="479.8" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="100.6" y="371.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="100.6 166.3">Second chance</text>
+<rect x="100.6" y="412.9" width="65.7" height="35.8" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="104.4" y="419.9" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="104.4 147.1">Second chance</text>
+<text x="162.4" y="419.9" font-size="3.84" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="104.4" y="427.9" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Epsilon</text>
+<text x="162.4" y="427.9" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="104.4" y="435.6" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Eta</text>
+<text x="162.4" y="435.6" font-size="4.8" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="104.4" y="443.3" font-size="4.8" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="104.4 156.7">Team Iota</text>
+<text x="162.4" y="443.3" font-size="4.8" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="177.2" y="371.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="177.2 242.8">Groups of 4</text>
+<rect x="177.2" y="383.4" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="181.0" y="390.4" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="181.0 223.6">Group D</text>
+<text x="239.0" y="390.4" font-size="3.84" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="181.0" y="398.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Alpha</text>
+<text x="181.0" y="406.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Zeta</text>
+<text x="181.0" y="413.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Theta</text>
+<text x="181.0" y="421.5" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Eta</text>
+<rect x="177.2" y="434.7" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="181.0" y="441.7" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="181.0 223.6">Group E</text>
+<text x="239.0" y="441.7" font-size="3.84" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="181.0" y="449.7" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Gamma</text>
+<text x="181.0" y="457.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Delta</text>
+<text x="181.0" y="465.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Beta</text>
+<text x="181.0" y="472.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="181.0 233.2">Team Epsilon</text>
+<text x="253.7" y="371.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="253.7 319.4">Semi-final</text>
+<rect x="253.7" y="409.0" width="65.7" height="43.5" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="257.6" y="416.1" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="257.6 300.2">Semi-final</text>
+<text x="257.6" y="424.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="431.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="439.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="257.6" y="447.1" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="257.6 309.8">To be decided</text>
+<text x="330.3" y="371.1" font-size="4.16" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="330.3 396.0">Final · best of 3</text>
+<rect x="330.3" y="416.7" width="65.7" height="28.2" rx="3.2" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="334.1" y="423.8" font-size="4.0" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="334.1 376.8">Final</text>
+<text x="334.1" y="431.8" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="334.1 386.4">To be decided</text>
+<text x="334.1" y="439.4" font-size="4.8" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="334.1 386.4">To be decided</text>
+<path d="M89.7,394.2 H95.1 V430.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M89.7,430.8 H95.1 V430.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M89.7,467.4 H95.1 V430.8 H100.6" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M166.3,430.8 H171.7 V405.1 H177.2" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M166.3,430.8 H171.7 V456.5 H177.2" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M242.8,405.1 H248.3 V430.8 H253.7" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M242.8,456.5 H248.3 V430.8 H253.7" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<path d="M319.4,430.8 H324.9 V430.8 H330.3" stroke="#2c3560" stroke-width="0.512" fill="none" opacity="0.9"/>
+<rect x="500.0" y="150.0" width="360.0" height="190.0" rx="16" fill="#1d2442" stroke="#b98cff" stroke-width="2"/>
+<text x="680.0" y="220.0" font-size="28" fill="#b98cff" font-weight="800" text-anchor="middle">One codebase</text>
+<text x="680.0" y="260.0" font-size="20" fill="#a9b1d6" font-weight="500" text-anchor="middle">an app interface</text>
+<text x="680.0" y="290.0" font-size="20" fill="#a9b1d6" font-weight="500" text-anchor="middle">the platform offers</text>
+<line x1="420.0" y1="115.0" x2="500.0" y2="210.0" stroke="#b98cff" stroke-width="3"/>
+<line x1="420.0" y1="385.0" x2="500.0" y2="290.0" stroke="#b98cff" stroke-width="3"/>
+</g></g>
+<circle cx="692.0" cy="534.0" r="4.0" fill="#4b5563"/>
+<text x="706.0" y="540.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">Attendees: one Finals, online between events and at the LAN,</text>
+<text x="706.0" y="563.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">the same look in both</text>
+<circle cx="692.0" cy="591.9" r="4.0" fill="#4b5563"/>
+<text x="706.0" y="597.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">Organisers: one tool all year; the platform offers it sign-in,</text>
+<text x="706.0" y="620.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">storage and events</text>
+<circle cx="692.0" cy="649.8" r="4.0" fill="#4b5563"/>
+<text x="706.0" y="655.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">Venue staff: as C on the screen</text>
+<circle cx="692.0" cy="684.8" r="4.0" fill="#4b5563"/>
+<text x="706.0" y="690.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">Trade-off: designs the Apps track's interface before that</text>
+<text x="706.0" y="713.7" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="706.0 1226.0">track's session; two sign-in models; waits on both codebases</text>
+<rect x="684.0" y="820.0" width="105.1" height="30.0" rx="15.0" fill="#e5e7eb"/>
+<text x="736.5" y="840.4" font-size="15" fill="#111827" font-weight="600" text-anchor="middle" data-box="686.0 787.1">Cost L–XL</text>
+<rect x="1288.0" y="110.0" width="600.0" height="760.0" rx="14" fill="#ffffff" stroke="#f59e0b" stroke-width="3"/>
+<text x="1312.0" y="152.0" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1864.0">C · Finals night (recommended)</text>
+<rect x="1312.0" y="176.0" width="552.0" height="330.0" rx="12" fill="#0b0d1a"/>
+<g transform="translate(1324.0,188.0) scale(0.2)"><g>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
+<rect x="40.0" y="32.0" width="1840.0" height="86.0" rx="16" fill="#161a2e"/>
+<text x="80.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="1840.0" y="92.0" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">20:40</text>
+<rect x="40.0" y="150.0" width="1840.0" height="890.0" rx="20" fill="#161a2e" stroke="#b98cff" stroke-width="4"/>
+<text x="80.0" y="220.0" font-size="48" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Finals · groups of four, live</text>
+<text x="80.0" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="80.0 337.9">Groups of 3</text>
+<rect x="80.0" y="363.1" width="257.9" height="140.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="95.0" y="390.6" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="95.0 262.9">Group A</text>
+<text x="322.9" y="390.6" font-size="15.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="95.0" y="421.9" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Alpha</text>
+<text x="322.9" y="421.9" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="95.0" y="451.9" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Delta</text>
+<text x="322.9" y="451.9" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="95.0" y="481.9" font-size="18.75" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Eta</text>
+<text x="322.9" y="481.9" font-size="18.75" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="80.0" y="578.8" width="257.9" height="140.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="95.0" y="606.2" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="95.0 262.9">Group B</text>
+<text x="322.9" y="606.2" font-size="15.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="95.0" y="637.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Zeta</text>
+<text x="322.9" y="637.5" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="95.0" y="667.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Beta</text>
+<text x="322.9" y="667.5" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="95.0" y="697.5" font-size="18.75" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Iota</text>
+<text x="322.9" y="697.5" font-size="18.75" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<rect x="80.0" y="794.4" width="257.9" height="140.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="95.0" y="821.9" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="95.0 262.9">Group C</text>
+<text x="322.9" y="821.9" font-size="15.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="95.0" y="853.1" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Gamma</text>
+<text x="322.9" y="853.1" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="95.0" y="883.1" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Theta</text>
+<text x="322.9" y="883.1" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="95.0" y="913.1" font-size="18.75" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="95.0 300.4">Team Epsilon</text>
+<text x="322.9" y="913.1" font-size="18.75" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="380.4" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="380.4 638.3">Second chance</text>
+<rect x="380.4" y="578.8" width="257.9" height="140.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="395.4" y="606.2" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="395.4 563.3">Second chance</text>
+<text x="623.3" y="606.2" font-size="15.0" fill="#a9b1d6" font-weight="600" text-anchor="end">done</text>
+<text x="395.4" y="637.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="395.4 600.8">Team Epsilon</text>
+<text x="623.3" y="637.5" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">1</text>
+<text x="395.4" y="667.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="395.4 600.8">Team Eta</text>
+<text x="623.3" y="667.5" font-size="18.75" fill="#f3f5ff" font-weight="700" text-anchor="end">2</text>
+<text x="395.4" y="697.5" font-size="18.75" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="395.4 600.8">Team Iota</text>
+<text x="623.3" y="697.5" font-size="18.75" fill="#a9b1d6" font-weight="700" text-anchor="end">3</text>
+<text x="680.8" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="680.8 938.8">Groups of 4</text>
+<rect x="680.8" y="415.0" width="257.9" height="170.0" rx="12.5" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="695.8" y="442.5" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="695.8 863.8">Group D</text>
+<text x="923.8" y="442.5" font-size="15.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="695.8" y="473.8" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Alpha</text>
+<text x="695.8" y="503.8" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Zeta</text>
+<text x="695.8" y="533.8" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Theta</text>
+<text x="695.8" y="563.8" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Eta</text>
+<rect x="680.8" y="712.5" width="257.9" height="170.0" rx="12.5" fill="#161a2e" stroke="#3ddcff" stroke-width="2.2"/>
+<text x="695.8" y="740.0" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="695.8 863.8">Group E</text>
+<text x="923.8" y="740.0" font-size="15.0" fill="#3ddcff" font-weight="700" text-anchor="end">live</text>
+<text x="695.8" y="771.2" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Gamma</text>
+<text x="695.8" y="801.2" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Delta</text>
+<text x="695.8" y="831.2" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Beta</text>
+<text x="695.8" y="861.2" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="695.8 901.2">Team Epsilon</text>
+<text x="981.2" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="981.2 1239.2">Semi-final</text>
+<rect x="981.2" y="563.8" width="257.9" height="170.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="996.2" y="591.2" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="996.2 1164.2">Semi-final</text>
+<text x="996.2" y="622.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="996.2 1201.7">To be decided</text>
+<text x="996.2" y="652.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="996.2 1201.7">To be decided</text>
+<text x="996.2" y="682.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="996.2 1201.7">To be decided</text>
+<text x="996.2" y="712.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="996.2 1201.7">To be decided</text>
+<text x="1281.7" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1281.7 1539.6">Final · best of 3</text>
+<rect x="1281.7" y="593.8" width="257.9" height="110.0" rx="12.5" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="1296.7" y="621.2" font-size="15.625" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1296.7 1464.6">Final</text>
+<text x="1296.7" y="652.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="1296.7 1502.1">To be decided</text>
+<text x="1296.7" y="682.5" font-size="18.75" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="1296.7 1502.1">To be decided</text>
+<path d="M337.9,433.1 H359.2 V648.8 H380.4" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M337.9,648.8 H359.2 V648.8 H380.4" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M337.9,864.4 H359.2 V648.8 H380.4" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M638.3,648.8 H659.6 V500.0 H680.8" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M638.3,648.8 H659.6 V797.5 H680.8" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M938.8,500.0 H960.0 V648.8 H981.2" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M938.8,797.5 H960.0 V648.8 H981.2" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<path d="M1239.2,648.8 H1260.4 V648.8 H1281.7" stroke="#2c3560" stroke-width="2.0" fill="none" opacity="0.9"/>
+<text x="1582.1" y="270.0" font-size="16.25" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1582.1 1840.0">Champion</text>
+<rect x="1582.1" y="573.8" width="257.9" height="150.0" rx="15.0" fill="none" stroke="#2c3560" stroke-width="1.5" stroke-dasharray="6 6"/>
+<text x="1711.0" y="656.2" font-size="17.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1588.1 1834.0">To be crowned</text>
+<line x1="1539.6" y1="648.8" x2="1582.1" y2="648.8" stroke="#2c3560" stroke-width="2.0"/>
+</g></g>
+<g transform="translate(1712.0,190.0) scale(0.36)"><g>
+<g transform="translate(0.0,0.0) scale(1.0)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph1"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph1)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ Finals</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">My match</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="140.0" width="358.0" height="300.0" rx="14" fill="#161a2e" stroke="#3ddcff" stroke-width="2.5"/>
+<text x="40.0" y="184.0" font-size="17" fill="#a9b1d6" font-weight="600" text-anchor="start">Group E · you play now</text>
+<text x="195.0" y="300.0" font-size="84" fill="#3ddcff" font-weight="800" text-anchor="middle">K7Q2</text>
+<text x="195.0" y="350.0" font-size="18" fill="#a9b1d6" font-weight="500" text-anchor="middle">lobby code</text>
+<rect x="40.0" y="380.0" width="310.0" height="48.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="409.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="46.0 344.0">Report the result</text>
+</g></g>
+</g></g>
+</g></g>
+<circle cx="1320.0" cy="534.0" r="4.0" fill="#4b5563"/>
+<text x="1334.0" y="540.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">Attendees: join in seconds from the screen, the hub or Discord;</text>
+<text x="1334.0" y="563.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">the team reveal; my match with its lobby code; report by</text>
+<text x="1334.0" y="585.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">dragging; the champion moment</text>
+<circle cx="1320.0" cy="614.9" r="4.0" fill="#4b5563"/>
+<text x="1334.0" y="620.9" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">Organisers and crew: a season desk led by the next action, the</text>
+<text x="1334.0" y="643.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">team builder, disputes, corrections with a reason, a crew</text>
+<text x="1334.0" y="666.8" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">phone</text>
+<circle cx="1320.0" cy="695.7" r="4.0" fill="#4b5563"/>
+<text x="1334.0" y="701.7" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">Venue staff: the screen tells the story: open, teams drawn, the</text>
+<text x="1334.0" y="724.7" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">bracket live, champion</text>
+<circle cx="1320.0" cy="753.6" r="4.0" fill="#4b5563"/>
+<text x="1334.0" y="759.6" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">Trade-off: more than A (events, Moments, Screen, a correction</text>
+<text x="1334.0" y="782.6" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1334.0 1854.0">rule); the bot and the hub's frame carry parts of it</text>
+<rect x="1312.0" y="820.0" width="78.9" height="30.0" rx="15.0" fill="#fde68a"/>
+<text x="1351.4" y="840.4" font-size="15" fill="#111827" font-weight="600" text-anchor="middle" data-box="1314.0 1388.9">Cost M</text>
+</svg>

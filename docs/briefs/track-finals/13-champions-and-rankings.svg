@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1160" width="1920" height="1160" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Champions and rankings (attendees, players)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1160.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">13 · Champions and rankings (attendees, players)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: after the final, players see who won every season of the series, their own ranking move, and what it rests on</text>
+<defs><clipPath id="clip1"><rect x="0" y="0" width="1280" height="900" rx="12"/></clipPath></defs>
+<g transform="translate(32.0,110.0) scale(1.0)"><g clip-path="url(#clip1)">
+<rect x="0.0" y="0.0" width="1280.0" height="900.0" rx="12" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1280.0" height="64.0" rx="0" fill="#161a2e"/>
+<text x="28.0" y="41.0" font-size="20" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
+<text x="200.0" y="41.0" font-size="16" fill="#a9b1d6" font-weight="500" text-anchor="start">Now   Schedule   Play   Alerts</text>
+<text x="28.0" y="116.0" font-size="34" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Finals</text>
+<rect x="28.0" y="140.0" width="346.7" height="36.0" rx="18.0" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="71.1" y="163.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="32.0 110.2">Bracket</text>
+<text x="154.3" y="163.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="118.2 190.3">Teams</text>
+<rect x="197.3" y="143.0" width="103.3" height="30.0" rx="15.0" fill="#3ddcff"/>
+<text x="249.0" y="163.0" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="198.3 299.6">Champions</text>
+<text x="339.2" y="163.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="307.6 370.7">Rules</text>
+<text x="28.0" y="222.0" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Champions of the series</text>
+<rect x="28.0" y="240.0" width="397.3" height="160.0" rx="14" fill="#161a2e" stroke="#ffc94d" stroke-width="2"/>
+<text x="48.0" y="274.0" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="48.0 405.3">Demo Finals · Sat · this event</text>
+<text x="48.0" y="318.0" font-size="24" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="48.0 405.3">🏆 Team Delta</text>
+<text x="48.0" y="352.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="48.0 405.3">Demo Player · Player Two · Player Three</text>
+<rect x="48.0" y="364.0" width="96.4" height="22.0" rx="11.0" fill="#3b2f0b"/>
+<text x="96.2" y="379.3" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="50.0 142.4">new tonight</text>
+<rect x="441.3" y="240.0" width="397.3" height="160.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="461.3" y="274.0" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="461.3 818.7">Friday finals · Fri · this event</text>
+<text x="461.3" y="318.0" font-size="24" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="461.3 818.7">🏆 Team Gamma</text>
+<text x="461.3" y="352.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="461.3 818.7">Player Five · Player Six · Player Seven</text>
+<rect x="854.7" y="240.0" width="397.3" height="160.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="874.7" y="274.0" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="874.7 1232.0">Demo Finals · spring event</text>
+<text x="874.7" y="318.0" font-size="24" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="874.7 1232.0">🏆 Team Alpha</text>
+<text x="874.7" y="352.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="874.7 1232.0">Player Four · Player Eight · Player Nine</text>
+<rect x="28.0" y="416.0" width="397.3" height="160.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="48.0" y="450.0" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="48.0 405.3">Demo Finals · winter event</text>
+<text x="48.0" y="494.0" font-size="24" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="48.0 405.3">🏆 Team Gamma</text>
+<text x="48.0" y="528.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="48.0 405.3">Player Five · Player Six · Player Ten</text>
+<text x="28.0" y="640.0" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Most titles</text>
+<text x="28.0" y="670.0" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="28.0 440.0">PLAYER</text>
+<text x="448.0" y="670.0" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="448.0 740.0">TITLES</text>
+<text x="748.0" y="670.0" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="748.0 1244.0">LAST TITLE</text>
+<line x1="28.0" y1="684.0" x2="1252.0" y2="684.0" stroke="#2c3560" stroke-width="1"/>
+<text x="28.0" y="713.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="28.0 440.0">Player Five</text>
+<text x="448.0" y="713.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="448.0 740.0">🏆🏆 2</text>
+<text x="748.0" y="713.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="748.0 1244.0">Friday finals · this event</text>
+<line x1="28.0" y1="728.0" x2="1252.0" y2="728.0" stroke="#2c3560" stroke-width="1"/>
+<text x="28.0" y="757.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="28.0 440.0">Player Six</text>
+<text x="448.0" y="757.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="448.0 740.0">🏆🏆 2</text>
+<text x="748.0" y="757.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="748.0 1244.0">Friday finals · this event</text>
+<line x1="28.0" y1="772.0" x2="1252.0" y2="772.0" stroke="#2c3560" stroke-width="1"/>
+<text x="28.0" y="801.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="28.0 440.0">Demo Player</text>
+<text x="448.0" y="801.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="448.0 740.0">🏆 1</text>
+<text x="748.0" y="801.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="748.0 1244.0">Demo Finals · this event</text>
+<line x1="28.0" y1="816.0" x2="1252.0" y2="816.0" stroke="#2c3560" stroke-width="1"/>
+<text x="28.0" y="845.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="28.0 440.0">Player Four</text>
+<text x="448.0" y="845.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="448.0 740.0">🏆 1</text>
+<text x="748.0" y="845.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="748.0 1244.0">Demo Finals · spring event</text>
+<line x1="28.0" y1="860.0" x2="1252.0" y2="860.0" stroke="#2c3560" stroke-width="1"/>
+</g></g>
+<g transform="translate(1360.0,110.0) scale(0.7)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph2"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph2)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ Finals</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">My finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="330.0" rx="18" fill="#1d2442" stroke="#3ddcff" stroke-width="2"/>
+<text x="36.0" y="172.0" font-size="16" fill="#a9b1d6" font-weight="600" text-anchor="start">Your ranking</text>
+<text x="36.0" y="270.0" font-size="110" fill="#f3f5ff" font-weight="800" text-anchor="start">75</text>
+<text x="196.0" y="230.0" font-size="40" fill="#3ee39a" font-weight="800" text-anchor="start">+3</text>
+<text x="196.0" y="264.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">champions tonight</text>
+<line x1="36.0" y1="416.0" x2="67.0" y2="411.2" stroke="#3ddcff" stroke-width="3"/>
+<line x1="67.0" y1="411.2" x2="98.0" y2="418.4" stroke="#3ddcff" stroke-width="3"/>
+<line x1="98.0" y1="418.4" x2="129.0" y2="404.0" stroke="#3ddcff" stroke-width="3"/>
+<line x1="129.0" y1="404.0" x2="160.0" y2="396.8" stroke="#3ddcff" stroke-width="3"/>
+<line x1="160.0" y1="396.8" x2="191.0" y2="389.6" stroke="#3ddcff" stroke-width="3"/>
+<line x1="191.0" y1="389.6" x2="222.0" y2="392.0" stroke="#3ddcff" stroke-width="3"/>
+<line x1="222.0" y1="392.0" x2="253.0" y2="382.4" stroke="#3ddcff" stroke-width="3"/>
+<line x1="253.0" y1="382.4" x2="284.0" y2="377.6" stroke="#3ddcff" stroke-width="3"/>
+<line x1="284.0" y1="377.6" x2="315.0" y2="363.2" stroke="#3ddcff" stroke-width="3"/>
+<line x1="315.0" y1="363.2" x2="346.0" y2="356.0" stroke="#3ddcff" stroke-width="3"/>
+<text x="36.0" y="456.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="start">eleven seasons</text>
+<rect x="16.0" y="480.0" width="358.0" height="270.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="516.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Why it moved</text>
+<text x="36.0" y="556.0" font-size="16" fill="#f3f5ff" font-weight="500" text-anchor="start">Champion</text>
+<text x="354.0" y="556.0" font-size="16" fill="#3ee39a" font-weight="800" text-anchor="end">+3</text>
+<text x="36.0" y="596.0" font-size="16" fill="#f3f5ff" font-weight="500" text-anchor="start">Lost the final</text>
+<text x="354.0" y="596.0" font-size="16" fill="#3ee39a" font-weight="800" text-anchor="end">+2</text>
+<text x="36.0" y="636.0" font-size="16" fill="#f3f5ff" font-weight="500" text-anchor="start">Semi-final</text>
+<text x="354.0" y="636.0" font-size="16" fill="#3ee39a" font-weight="800" text-anchor="end">+1</text>
+<text x="36.0" y="676.0" font-size="16" fill="#f3f5ff" font-weight="500" text-anchor="start">Out before</text>
+<text x="354.0" y="676.0" font-size="16" fill="#ff6b81" font-weight="800" text-anchor="end">−2</text>
+<text x="36.0" y="730.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="start">Rankings carry to the next event</text>
+</g></g>
+</g></g>
+<text x="1360.0" y="740.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">My finals (phone)</text>
+<text x="1360.0" y="766.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1360.0 1880.0">The player's ranking fills the hero; the rule behind each move is</text>
+<text x="1360.0" y="787.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1360.0 1880.0">shown, as the legacy's table set it (D4, L8).</text>
+<circle cx="45.0" cy="1053.0" r="13.0" fill="#f59e0b"/>
+<text x="45.0" y="1059.0" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="68.0" y="1058.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">Champions of the series: this event's seasons and those carried from earlier events of the same series by the clone (D4).</text>
+<circle cx="45.0" cy="1096.6" r="13.0" fill="#f59e0b"/>
+<text x="45.0" y="1102.6" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="68.0" y="1101.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">Titles count per person, not per nickname: renaming no longer starts a new player (D5).</text>
+</svg>
