@@ -19,6 +19,8 @@ export function event(
     source: type.split(".")[0],
     tenant: "demo",
     data,
+    // As a subscription reads it: the order the events are made in is their stream's.
+    entry_id: `${String(1_000_000 + n)}-0`,
   } as Event;
 }
 

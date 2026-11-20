@@ -164,6 +164,14 @@ describe("subscribe", () => {
     expect(received[1]?.type).toBe("admin.thing.unknown_happened");
   });
 
+  it("gives each event the id of the stream entry it was read from", async () => {
+    const store = new MemoryStreamStore();
+    const first = store.appendRaw("events:admin", { event: envelope({ id: "a" }) });
+    const second = store.appendRaw("events:admin", { event: envelope({ id: "b" }) });
+    const received = await collect(store, ["admin"], 2);
+    expect(received.map((e) => e.entry_id)).toEqual([first, second]);
+  });
+
   it("reads several streams, including entries added while waiting", async () => {
     const store = new MemoryStreamStore();
     await new Bus(store, "admin").publish(

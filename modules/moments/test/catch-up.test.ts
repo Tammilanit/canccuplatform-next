@@ -100,6 +100,44 @@ run("catching up after a restart", () => {
     expect(await placement(id)).toBe("placed");
   });
 
+  // #657: two Screen replicas' clocks disagree, so their ids' time is not the stream's order.
+  it("orders claims reports by their stream entry, not by their ids' clock", async () => {
+    const id = await start();
+    const waiting = { ...report(id, false), id: "01928f3e-7a2b-7c4d-9e8f-ffffffffffff" };
+    const placed = { ...report(id, true), id: "01928f3e-7a2b-7c4d-9e8f-000000000001" };
+    // Entry ids compare as numbers, not as text: 999-5 comes before 1000-0.
+    waiting.entry_id = "999-5";
+    placed.entry_id = "1000-0";
+    await w.tx("demo", () => handleTenantEvent(deps(), waiting));
+    await w.tx("demo", () => handleTenantEvent(deps(), placed));
+    expect(await placement(id)).toBe("placed");
+    await w.tx("demo", () => handleTenantEvent(deps(), waiting));
+    await w.tx("demo", () => handleZoneReplay(deps(), waiting));
+    expect(await placement(id)).toBe("placed");
+  });
+
+  it("orders after a mark that predates stream entries by its event id, once", async () => {
+    const id = await start();
+    const old = report(id, false);
+    await w.tx("demo", (c) =>
+      c.query(`INSERT INTO moments_claims_marks (zone_key, claims_event_id) VALUES ('main', $1)`, [
+        old.id,
+      ]),
+    );
+    // Sent before the mark's report: older, whatever its entry.
+    const stale = { ...report(id, true), id: "01928f3e-7a2b-7c4d-9e8f-000000000000" };
+    await w.tx("demo", () => handleTenantEvent(deps(), stale));
+    expect(await placement(id)).toBeUndefined();
+    const placed = report(id, true);
+    await w.tx("demo", () => handleTenantEvent(deps(), placed));
+    expect(await placement(id)).toBe("placed");
+    // From then on the entry orders, even against an id from a later clock.
+    const late = { ...report(id, false), id: "01928f3e-7a2b-7c4d-9e8f-ffffffffffff" };
+    late.entry_id = "1-0";
+    await w.tx("demo", () => handleTenantEvent(deps(), late));
+    expect(await placement(id)).toBe("placed");
+  });
+
   it("never brings back a zone Screen removed when a claims report of it comes after (#642)", async () => {
     const id = await start();
     const zones = () => w.tx("demo", (c) => knownZones(c));
