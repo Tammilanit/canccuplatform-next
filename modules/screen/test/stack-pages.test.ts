@@ -97,29 +97,49 @@ describe("the screen shots' pages", () => {
 });
 
 type Handler = (route: FakeRoute) => Promise<void>;
+interface Fetched {
+  url: string;
+  headers: Record<string, string>;
+}
 interface FakeRoute {
-  fetch: () => Promise<{ json: () => Promise<object> }>;
+  request: () => { url: () => string; headers: () => Record<string, string> };
+  fetch: (options?: Fetched) => Promise<{ json: () => Promise<object> }>;
+  fetched?: Fetched;
   fulfill: (o: { json: object }) => Promise<void>;
   abort: () => Promise<void>;
   aborted?: boolean;
   handed?: object;
 }
 
-/** A page whose state requests the test sends itself (`request`), each failing or not. */
-function fakePage() {
+/**
+ * A page whose state requests (to `url`) the test sends itself (`request`), each failing or not.
+ * Its context holds the device's cookie for the demo event's hostname only, as a browser would.
+ */
+function fakePage(url = "http://demo.localhost/api/screen/device/state") {
   let handler: Handler = () => Promise.resolve();
   const page = {
     route: (_: string, h: Handler) => {
       handler = h;
       return Promise.resolve();
     },
+    context: () => ({
+      cookies: (on: string) =>
+        Promise.resolve(
+          new URL(on).hostname === "demo.localhost"
+            ? [{ name: "canccu_device", value: "the device's" }]
+            : [],
+        ),
+    }),
   };
   const request = async (fails: boolean) => {
     const route: FakeRoute = {
-      fetch: () =>
-        fails
+      request: () => ({ url: () => url, headers: () => ({ accept: "application/json" }) }),
+      fetch: (options) => {
+        route.fetched = options;
+        return fails
           ? Promise.reject(new Error("Target page, context or browser has been closed"))
-          : Promise.resolve({ json: () => Promise.resolve({ ticker: "the server's" }) }),
+          : Promise.resolve({ json: () => Promise.resolve({ ticker: "the server's" }) });
+      },
       fulfill: (o) => {
         route.handed = o.json;
         return Promise.resolve();
@@ -149,6 +169,29 @@ describe("a page handed its states", () => {
     const { page, request } = fakePage();
     await handStates(page, () => Promise.resolve(), change);
     expect((await request(false)).handed).toEqual({ ticker: "handed" });
+  });
+
+  // Chromium finds a `.localhost` name on the loopback itself; Node, which runs `route.fetch()`,
+  // asks the resolver, and on some runners that failed every handed view with ENOTFOUND (#655).
+  it("fetches a .localhost page's state through the loopback, naming the event in Host", async () => {
+    const { page, request } = fakePage("http://demo.localhost:8080/api/screen/device/state");
+    await handStates(page, () => Promise.resolve(), change);
+    const route = await request(false);
+    expect(route.fetched).toEqual({
+      url: "http://127.0.0.1:8080/api/screen/device/state",
+      headers: {
+        accept: "application/json",
+        host: "demo.localhost:8080",
+        cookie: "canccu_device=the device's",
+      },
+    });
+    expect(route.handed).toEqual({ ticker: "handed" });
+  });
+
+  it("fetches any other page's state as the page asked for it", async () => {
+    const { page, request } = fakePage("http://192.0.2.10/api/screen/device/state");
+    await handStates(page, () => Promise.resolve(), change);
+    expect((await request(false)).fetched).toBeUndefined();
   });
 
   it("fails the view on a state that cannot be handed", async () => {
