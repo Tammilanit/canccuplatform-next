@@ -16,7 +16,7 @@ import type { As } from "./policy.js";
 import { facts, orderFor } from "./present.js";
 import { getItem, getOrder, itemsOf, logStep } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { receiptView, receiptsOf } from "./receipts.js";
+import { getReceipt, receiptView, receiptsOf } from "./receipts.js";
 import { bad, parsePrice, parseTotal } from "./validate.js";
 
 type Params = { id: string };
@@ -29,6 +29,9 @@ async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<string, unkn
     order_id: o.id,
     payer: o.payer_user_id === null ? null : { user_id: o.payer_user_id, name: o.payer_name },
     total_cents: o.total_cents,
+    total_set_at: o.total_set_at?.toISOString() ?? null,
+    total_set_by: o.total_set_by_name === null ? null : { name: o.total_set_by_name },
+    total_receipt_id: o.total_receipt_id,
     split: o.split,
     split_effective: a.split,
     exact_possible: a.exact_possible,
@@ -147,13 +150,42 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (b.total_cents !== undefined) {
         // The total is what the pizzeria was paid: known once the order is called in.
         if (!CALLED_IN.includes(order.state)) throw cannot("total", order);
-        set(
-          "total_cents",
-          b.total_cents === null ? null : parseTotal(b.total_cents),
-          order.total_cents,
-        );
+        const total = b.total_cents === null ? null : parseTotal(b.total_cents);
+        // Confirming a read names its receipt; a total typed in names none (mockups 18 E, 19).
+        let receipt: string | null = null;
+        if (b.receipt_id !== undefined && b.receipt_id !== null) {
+          const r =
+            typeof b.receipt_id === "string" ? await getReceipt(c, b.receipt_id) : null;
+          if (r === null || r.order_id !== order.id)
+            bad("receipt_id", "must be a receipt of this order");
+          receipt = b.receipt_id as string;
+        }
+        set("total_cents", total, order.total_cents);
+        set("total_receipt_id", receipt, order.total_receipt_id, "");
+        if (total !== order.total_cents || receipt !== order.total_receipt_id) {
+          set("total_set_at", w.now, order.total_set_at, "");
+          set("total_set_by_name", w.session.userName, order.total_set_by_name, "");
+        }
+      }
+      if (b.prices !== undefined) {
+        if (!Array.isArray(b.prices)) bad("prices", "a list of { item_id, price_cents }");
+        for (const p of b.prices as unknown[]) {
+          const e = (p ?? {}) as Record<string, unknown>;
+          const item = items.find((i) => i.id === e.item_id);
+          if (item === undefined) bad("prices", "every item_id must be a pizza of this order");
+          const price = parsePrice(e.price_cents, "price_cents");
+          if (price === item.price_cents) continue;
+          await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [
+            item.id,
+            price,
+            w.now,
+          ]);
+          changes[`price:${item.id}`] = { old: item.price_cents, new: price };
+          item.price_cents = price;
+        }
       }
       if (b.split !== undefined) {
+        // After `prices`: a confirmed read may be what makes exact possible.
         if (b.split !== null && b.split !== "exact" && b.split !== "even")
           bad("split", "exact, even or null");
         if (
@@ -188,9 +220,9 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         set("payer_user_id", b.payer_user_id, order.payer_user_id, "payer");
         set("payer_name", name, order.payer_name, "");
       }
-      if (sets.length > 0) {
+      if (sets.length > 0 || Object.keys(changes).length > 0) {
         await c.query(
-          `UPDATE pizza_orders SET ${sets.join(", ")}, revision = revision + 1 WHERE id = $1`,
+          `UPDATE pizza_orders SET ${[...sets, "revision = revision + 1"].join(", ")} WHERE id = $1`,
           [order.id, ...values],
         );
       }

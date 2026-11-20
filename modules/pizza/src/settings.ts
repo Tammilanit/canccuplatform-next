@@ -33,6 +33,10 @@ export interface PizzaSettings {
   done_after_arrival_minutes: number;
   /** At the event day's turn (06:00): never called in → cancelled, called in → done (`timer`). */
   close_forgotten: boolean;
+  /** M3: receipts and menus may be read from photos, once an admin has set the provider's key. */
+  ai_reader: boolean;
+  /** The reads the event may make in one event day: the cost's bound. */
+  ai_reader_daily_reads: number;
 }
 
 export const DEFAULT_SETTINGS: PizzaSettings = {
@@ -51,7 +55,10 @@ export const DEFAULT_SETTINGS: PizzaSettings = {
   arrival_check_no_estimate_minutes: 90,
   done_after_arrival_minutes: 120,
   close_forgotten: true,
+  ai_reader: false,
+  ai_reader_daily_reads: 100,
 };
+export const READS_BOUNDS = [1, 1000] as const;
 
 /** Each time's bounds, as admin's declaration (modules/admin/declarations/pizza.yaml) has them. */
 export const TIME_BOUNDS = {
@@ -103,6 +110,12 @@ export function settingsReader(client: SettingsClient): (tenant: string) => Prom
         settle_to_payer: client.get("settle_to_payer", d.settle_to_payer) === true,
         auto_close: client.get("auto_close", d.auto_close) !== false,
         close_forgotten: client.get("close_forgotten", d.close_forgotten) !== false,
+        ai_reader: client.get("ai_reader", d.ai_reader) === true,
+        ai_reader_daily_reads: int(
+          client.get("ai_reader_daily_reads"),
+          d.ai_reader_daily_reads,
+          ...READS_BOUNDS,
+        ),
         ...times((k) => client.get(k)),
       };
     });

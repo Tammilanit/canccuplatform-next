@@ -12,6 +12,8 @@ import { moneyRoutes } from "./money-routes.js";
 import { orderRoutes } from "./order-routes.js";
 import { pageRoutes } from "./pages/index.js";
 import { photoBodies } from "./photos.js";
+import { readerKeyRoutes } from "./reader-key.js";
+import { readerRoutes } from "./reader-routes.js";
 import { receiptRoutes } from "./receipts.js";
 import { recordRoutes } from "./record-routes.js";
 
@@ -59,6 +61,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     itemRoutes(event, deps);
     moneyRoutes(event, deps);
     receiptRoutes(event, deps);
+    readerRoutes(event, deps);
+    readerKeyRoutes(event, deps);
     menuRoutes(event, deps);
     recordRoutes(event, deps);
     liveRoutes(event, deps);
