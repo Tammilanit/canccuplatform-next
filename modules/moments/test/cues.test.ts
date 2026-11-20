@@ -3,12 +3,13 @@ import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
-import { emergencyRequest } from "../src/content.js";
+import { emergencyRequest, spotlightRequest } from "../src/content.js";
 import { handlePlatformEvent } from "../src/consumer.js";
 import { isolated } from "../src/db.js";
+import { applyClaims } from "../src/placements.js";
 import type { MomentRequest } from "../src/engine.js";
 import { tickTenant, upkeep } from "../src/tick.js";
-import { DATABASE_URL, T0, freshDatabase, world } from "./helpers.js";
+import { DATABASE_URL, T0, claims, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 
 const live = DATABASE_URL ? describe : describe.skip;
@@ -202,6 +203,33 @@ live("cues", () => {
     expect(sounds().map((e) => (e.data.sound as Record<string, unknown>).cue)).toEqual([
       "emergency.start",
     ]);
+  });
+
+  it("Screen not answering still starts and places a crew spotlight; only its cue is silent (#660)", async () => {
+    w.zoneStatus.set("main", null);
+    const actor = { user_id: "u_crew", name: "Demo Crew" };
+    const r = await w.tx("demo", async (c) =>
+      w.engine.request(
+        c,
+        await spotlightRequest(c, { show: "standings", zones: ["main"] }, actor, "demo.test", T0),
+        T0,
+      ),
+    );
+    expect(r.status).toBe("started");
+    const started = w
+      .events("demo")
+      .filter((e) => e.type === "moments.override.started")
+      .map((e) => (e.data.override as { id: string }).id);
+    expect(started).toHaveLength(1);
+    await w.tx("demo", (c) => applyClaims(c, claims("main", [[started[0] ?? "", "hero"]]), T0));
+    const { rows } = await pool.query(`SELECT moment_id, zone_key, state FROM moment_placements`);
+    expect(rows).toEqual([
+      { moment_id: r.status === "started" ? r.moment.id : "", zone_key: "main", state: "placed" },
+    ]);
+    expect((await log()).map((x) => [x.cue, x.outcome, x.reason])).toEqual([
+      ["announce.attention", "suppressed", "quiet"],
+    ]);
+    expect(sounds()).toEqual([]);
   });
 
   it("Screen not answering holds a story video's sound as a quiet zone does (#660)", async () => {
