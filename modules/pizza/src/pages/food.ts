@@ -95,7 +95,8 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     const orders = a.status === 403 ? null : ((must(a).orders ?? []) as OrderView[]);
     return page(request, reply, c, {
       title: c.t("hold.food"),
-      live: STREAM,
+      // A refused read means the stream refuses too: no live page that can never be live.
+      ...(orders === null ? {} : { live: STREAM }),
       body: foodView(c, orders, {
         ordering: s.ordering_open,
         note: s.ordering_note,

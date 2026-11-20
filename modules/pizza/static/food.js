@@ -54,16 +54,28 @@
       }
     };
     var seen = false;
-    var source = new EventSource(main.getAttribute("data-live"));
-    source.addEventListener("ready", function () {
-      offline(false);
-      if (seen) soon();
-      seen = true;
-    });
-    source.addEventListener("change", soon);
-    source.addEventListener("error", function () {
-      offline(true);
-    });
+    var wait = 3000;
+    var connect = function () {
+      var source = new EventSource(main.getAttribute("data-live"));
+      source.addEventListener("ready", function () {
+        offline(false);
+        wait = 3000;
+        // Also after a first failure: the page may have missed changes before it ever connected.
+        if (seen) soon();
+        seen = true;
+      });
+      source.addEventListener("change", soon);
+      source.addEventListener("error", function () {
+        offline(true);
+        seen = true;
+        // A non-200 answer (a restart behind the proxy, a 502) closes an EventSource for good:
+        // the browser only retries a clean drop, so open a new one, backing off.
+        if (source.readyState !== EventSource.CLOSED) return;
+        setTimeout(connect, wait);
+        wait = Math.min(wait * 2, 30000);
+      });
+    };
+    connect();
     document.addEventListener("focusout", function () {
       if (pending) soon();
     });

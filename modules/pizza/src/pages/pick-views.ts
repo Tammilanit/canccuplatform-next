@@ -201,6 +201,12 @@ export function pickView(
   const again = q.tab === "menu" && edit === null ? lastTime(c, o, q.last) : "";
   return html`${flash(q.error)}${nav}${again}
     <form id="pizza-filter" method="get" action="${orderHref(o)}/add"></form>
+    ${
+      edit === null
+        ? ""
+        : html`<input type="hidden" name="edit" value="${edit.id}" form="pizza-filter" />
+            <input type="hidden" name="tab" value="${q.tab}" form="pizza-filter" />`
+    }
     <form method="post" action="${orderHref(o)}/add" class="pizza-form">
       ${formKey()}
       <input type="hidden" name="kind" value="${kindOf[q.tab]}" />

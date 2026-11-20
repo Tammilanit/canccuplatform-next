@@ -136,6 +136,23 @@ describe.skipIf(browser === undefined)(
       await context.close();
     });
 
+    it("opens the stream again after a 502, which EventSource never retries itself", async () => {
+      if (browser === undefined) return;
+      const context = await signedIn(browser, s, "anni");
+      const page = await context.newPage();
+      let refused = 0;
+      await page.route("**/api/pizza/stream*", async (route) => {
+        if (refused++ === 0) await route.fulfill({ status: 502, body: "bad gateway" });
+        else await route.continue();
+      });
+      await page.goto(`${s.origin}/pizza/orders/${id}`);
+      await page.getByText("Reconnecting…").waitFor();
+      await w.call("pena", "POST", `/api/pizza/orders/${id}/close`, {});
+      await page.getByText("Closed: Pena is calling").waitFor({ timeout: 15_000 });
+      expect(await page.getByText("Reconnecting…").count()).toBe(0);
+      await context.close();
+    });
+
     it("starts an order on the desk and offers the holder's view", async () => {
       if (browser === undefined) return;
       const context = await signedIn(browser, s, "mikko", 1280);

@@ -103,6 +103,8 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(r.statusCode).toBe(200);
     expect(r.body).toContain("Order with your Discord account");
     expect(r.body).not.toContain("Open orders");
+    // The stream refuses this guest too: no live page that shows "Reconnecting…" for ever.
+    expect(r.body).not.toContain("data-live");
   });
 
   it("asks someone signed in but not in the event to join it", async () => {

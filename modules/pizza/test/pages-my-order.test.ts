@@ -180,6 +180,15 @@ describe.skipIf(!DATABASE_URL)("your pizzas", () => {
     expect(await mine()).toEqual([]);
   });
 
+  it("keep the edit when the menu is filtered", async () => {
+    const [p] = await mine();
+    const r = await view(w, "anni", `/orders/${id}/add?edit=${p?.id}&q=marg`);
+    expect(r.body).toContain(`name="edit" value="${p?.id}" form="pizza-filter"`);
+    expect(r.body).toContain('name="tab" value="menu" form="pizza-filter"');
+    expect(r.body).toContain(`<input type="hidden" name="edit" value="${p?.id}" />`);
+    expect(r.body).toContain("Save");
+  });
+
   it("lock once the order is closed, and say whom to ask", async () => {
     await step("close");
     const r = await view(w, "anni", `/orders/${id}`);
