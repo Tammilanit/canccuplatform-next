@@ -18,6 +18,7 @@ const WORDS: Readonly<Record<keyof typeof DOMAIN_TYPES, string>> = {
   "pizza.order.placed": "a pizza order is placed",
   "pizza.order.arrived": "the pizzas arrive",
   "pizza.order.closed": "a pizza order closes",
+  "pizza.order.done": "everyone got their pizza",
   "games.surge.started": "a game surges",
   "screen.photo.added": "a photo is added",
 };
