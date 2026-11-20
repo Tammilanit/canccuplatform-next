@@ -313,7 +313,7 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
   const sets: string[] = [];
   const values: unknown[] = [];
   const changes: Changes = {};
-  const guards: string[] = [];
+  let pinRevision = false;
   const set = (col: keyof OrderRow, v: unknown) => {
     values.push(v);
     sets.push(`${col} = $${values.length + 1}`);
@@ -336,8 +336,9 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
     }
     set("pizzeria_id", pz.id);
     set("pizzeria_name", pz.name);
-    // The add locks the row but the count above did not, so the UPDATE re-checks the order is still empty.
-    guards.push(`NOT EXISTS (SELECT 1 FROM pizza_items WHERE order_id = $1)`);
+    // A pizza's add bumps the revision under the row lock. A subquery on pizza_items would keep this
+    // statement's old snapshot when the UPDATE waits on that lock, so the revision proves no add slipped in.
+    pinRevision = true;
   }
   for (const col of ["estimate_at", "placed_at"] as const) {
     if (b[col] === undefined) continue;
@@ -351,13 +352,13 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
     () =>
       c.query(
         `UPDATE pizza_orders SET ${sets.join(", ")}, revision = revision + 1
-         WHERE id = $1 AND state = $${values.length + 2}${guards.map((g) => ` AND ${g}`).join("")} RETURNING id`,
-        [o.id, ...values, o.state],
+         WHERE id = $1 AND state = $${values.length + 2}${pinRevision ? ` AND revision = $${values.length + 3}` : ""} RETURNING id`,
+        pinRevision ? [o.id, ...values, o.state, o.revision] : [o.id, ...values, o.state],
       ),
     uniqueConflict,
   );
   if (m.rows.length === 0) {
-    if (guards.length > 0 && (await itemsOf(c, [o.id])).length > 0) {
+    if (pinRevision && (await itemsOf(c, [o.id])).length > 0) {
       throw new Conflict("has_pizzas", "The pizzeria cannot change once there are pizzas.");
     }
     throw new Conflict("conflict", "The order changed meanwhile: read it again.");
