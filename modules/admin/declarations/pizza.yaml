@@ -24,6 +24,66 @@ settings:
     type: boolean
     label: An order may be settled with whoever paid it
     default: false
+  - key: last_call_minutes
+    type: integer
+    min: 1
+    max: 60
+    label: Last call before the close (minutes)
+    short: Last call
+    default: 10
+  - key: auto_close
+    type: boolean
+    label: An open order closes at its close time
+    short: Close at the time
+    default: true
+  - key: remind_holder_minutes
+    type: integer
+    min: 5
+    max: 240
+    label: Remind the holder of a stalled order after (minutes)
+    short: Remind the holder
+    default: 30
+  - key: remind_crew_minutes
+    type: integer
+    min: 10
+    max: 480
+    label: Then remind the crew too, after (minutes)
+    short: Then the crew too
+    default: 60
+  - key: release_after_minutes
+    type: integer
+    min: 30
+    max: 720
+    label: Release a holder who never calls it in, after (minutes)
+    short: Release a stalled holder
+    default: 120
+  - key: arrival_check_minutes
+    type: integer
+    min: 5
+    max: 240
+    label: Ask "has it arrived?" this long past the estimate (minutes)
+    short: Arrived? past the estimate
+    default: 30
+  - key: arrival_check_no_estimate_minutes
+    type: integer
+    min: 15
+    max: 480
+    label: Without an estimate, ask after the call-in (minutes)
+    short: Arrived? without an estimate
+    default: 90
+  - key: done_after_arrival_minutes
+    type: integer
+    min: 15
+    max: 720
+    label: An arrived order is done after (minutes)
+    short: Done after arrival
+    default: 120
+  - key: close_forgotten
+    type: boolean
+    label: Close forgotten orders when the event day turns at 06:00
+    short: Close forgotten orders
+    hint: Never called in is cancelled; called in but not done is done, flagged in the record.
+    default: true
 groups:
   - id: ordering
     label: Ordering
@@ -33,3 +93,18 @@ groups:
     label: Settling up
     description: Who people pay for their food after the event.
     keys: [settle_to_payer]
+  - id: times
+    label: Times and forgotten orders
+    description: When the app reminds the holder and the crew, and what it closes by itself.
+    keys:
+      [
+        last_call_minutes,
+        auto_close,
+        remind_holder_minutes,
+        remind_crew_minutes,
+        release_after_minutes,
+        arrival_check_minutes,
+        arrival_check_no_estimate_minutes,
+        done_after_arrival_minutes,
+        close_forgotten,
+      ]

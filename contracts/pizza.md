@@ -16,7 +16,7 @@ D9 and U15. Members only order: a guest, or a signed-in user who is not a member
 |---|---|
 | Guest, or signed in but not a member | State, pizzeria, times, counts, `pickup`; no names and no pizzas. Only when the event's info-page mode lets a guest in (`public`; `venue_only` from the venue); otherwise 403 `info_pages_closed` ([tenants.md](tenants.md#info-page-mode)) |
 | Member | Also the holder's name, the note, their own pizzas in full (`mine`) with their amount (`my_amount_cents`), and everyone's pizzas without names or notes (`lines`: "2 × #12 Kebab") |
-| The order's holder, the crew (`pizza.order.manage`) | Everything: each pizza with its person, note, comment, price and hand-out tick; the pizzeria's phone; the payer, the total, the split and settle to |
+| The order's holder, the crew (`pizza.order.manage`) | Everything: each pizza with its person, note, comment, price and hand-out tick; the pizzeria's phone; when the nudge went (`nudged_at`); the payer, the total, the split and settle to |
 
 The holder is event-wide `public` in events, as the catalog's audience says (L8); the screens decide whether to show it.
 
@@ -68,6 +68,7 @@ Every step is one conditional update of the order in a transaction, with its his
 | Call in | `place` | `open`, `closed` → `placed` | Holder, crew | `pizza.order.closed` (when it was open), `pizza.order.placed` |
 | It's here | `arrive` | `placed` → `arrived` | Holder, crew | `pizza.order.arrived` |
 | Everyone got theirs | `hand-out` | `arrived` → `done` (`handed_out`), every pizza ticked | Holder, crew | `pizza.order.done` |
+| Nudge | `nudge` | while `arrived`, once per order; sets `nudged_at` | Holder, crew | `pizza.reminder.triggered` (`not_collected`) to each person not collected yet |
 | Done | `done` | `arrived` → `done` (`holder`) | Holder, crew | `pizza.order.done` |
 | Undo | `undo` | `arrived` → `placed`; `placed` → `closed` (clears the call-in, its estimate and payer; keeps the total) | Holder, crew | `pizza.order.reverted` |
 | Cancel | `cancel` | `open`, `closed` → `cancelled`; the crew also from `placed` and `arrived` | Holder, crew; any member for a stale order (E10) | `pizza.order.cancelled` |
@@ -77,8 +78,23 @@ Every step is one conditional update of the order in a transaction, with its his
 - **Edit** (`PATCH /api/pizza/orders/{order_id}`; holder, crew): `closes_at` and `pizzeria_id` while not called in (the pizzeria only while the order has no pizzas: 409 `has_pizzas`, E6), `note`, and `estimate_at`, `placed_at` and `pickup` once called in. Emits `pizza.order.changed`.
 - **Refusals by state** (409): `placed` (already called in), `not_placed`, `not_arrived`, `closed` (no more pizzas; with `open_orders`, the event's other open orders, E3), `cancelled` (never reopens), `done`. A caller who may not: 403 `not_holder` (an order step), `not_owner` (someone else's pizza), `money_locked` (the holder after the event day turned), `missing_right`.
 - **No delete** (D17): cancel is the end of an order; personal data goes by retention.
-- **The module's own steps**, actor null, for the scheduler of #118: auto-close at the close time (an empty order is cancelled instead, E9), auto-release (`timeout`; the record flags the order), done by the timer (`timer`, straight from `placed` without "it's here"), and cancelling a forgotten order never called in. Archiving the event cancels its open and closed orders (E11).
+- **The module's own steps**, actor null, taken by [the scheduler](#the-scheduler): auto-close at the close time (an empty order is cancelled instead, E9), auto-release (`timeout`; the record flags the order), done by the timer (`timer`, straight from `placed` without "it's here"), and cancelling a forgotten order never called in. Archiving the event cancels its open and closed orders (E11).
 - **Summary** `GET …/summary` (holder, crew): the legacy summary for the call, grouped lines and "copy as text", never comments. **History** `GET …/history` (holder, crew): the order's own log (D16).
+
+### The scheduler
+The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-pizza.md#forgotten-orders)), inside every pizza container. Every 30 s it writes each live order's due steps as rows in Postgres from the order and the event's [settings](#settings) (a changed setting moves a step not taken yet), and takes the due ones, each with `FOR UPDATE SKIP LOCKED`, in the transaction that changes the order, stores its events in the outbox and marks the row sent. So a restart loses nothing, two replicas never take one step twice, and each step happens at most once for its anchor: a reopen with a new close time, or a later claim, arms it again. Times are the settings', shown here with their defaults.
+
+| The order is | The scheduler |
+|---|---|
+| open | `pizza.order.closing` 10 min before `closes_at` (`last_call_minutes`; not for an order closed earlier); at `closes_at` it closes, or is cancelled when empty (E9), while `auto_close` is on. With it off: the holder is reminded 30 min past the close time (`remind_holder_minutes`), the holder and the crew at 60 (`remind_crew_minutes`) |
+| closed, not called in | The holder at +30, the holder and the crew at +60, counted from the close or a later claim; the holder released at +120 (`release_after_minutes`; `reason` `timeout`) and the crew told (`released`) |
+| called in, not arrived | "Has it arrived?" to the holder 30 min past `estimate_at` (`arrival_check_minutes`), or 90 min after the call-in without one (`arrival_check_no_estimate_minutes`); to the crew as much later as the crew's reminder comes after the holder's |
+| arrived | `done` (`timer`) 120 min after arrival (`done_after_arrival_minutes`, O7) |
+| not done when its event day turns at 06:00 | With `close_forgotten` on: never called in is cancelled (actor null); called in goes straight to `done` with `timer`, so no "it's here" is sent |
+
+- **Reminders** are one `pizza.reminder.triggered` per person who hears it, with their `user_id` and `role` (D12). A reminder to the holder goes to the crew while nobody holds the order. A reminder more than 30 min late is skipped, and of two reminders of one kind due at once only the later is sent (the legacy rule), so an outage never sends stale ones. An archived event's orders are left alone.
+- **The crew** is the members who hold `pizza.order.manage`. No module answers who holds a right, so pizza counts as crew each member whose session showed that right when they last used pizza (`pizza_crew`), and forgets them when a session shows it no longer, when they leave the event or are forgotten.
+- **Health** (O8): `/health` has the check `scheduler`: `ok` with `lag N s` (how late the oldest due step was when the last tick found it), `degraded` past 120 s or when no tick ran for 90 s. It never makes the module `down`.
 
 ### Reading
 - `GET /api/pizza/orders`: the orders not over yet and today's; `?day=YYYY-MM-DD` for one event day. `GET /api/pizza/orders/{order_id}`. Each as the caller may see it.
@@ -185,6 +201,17 @@ Saved through admin's settings API with `admin.settings.write` ([admin.md](admin
 | `max_open_orders` | integer 1–20 | 3 | Orders open at once in the event (O5) |
 | `max_items_per_person` | integer 1–20 | 5 | One person's pizzas in one order (U18) |
 | `settle_to_payer` | boolean | `false` | An order may settle to its payer instead of the organiser (M1) |
+| `last_call_minutes` | integer 1–60 | 10 | The last call, before the close time |
+| `auto_close` | boolean | `true` | An open order closes at its close time (U3) |
+| `remind_holder_minutes` | integer 5–240 | 30 | A stalled order reminds its holder after this |
+| `remind_crew_minutes` | integer 10–480 | 60 | Then the holder and the crew |
+| `release_after_minutes` | integer 30–720 | 120 | A closed order's holder who never calls it in is released |
+| `arrival_check_minutes` | integer 5–240 | 30 | "Has it arrived?" this long past the estimate |
+| `arrival_check_no_estimate_minutes` | integer 15–480 | 90 | The same after a call-in without an estimate |
+| `done_after_arrival_minutes` | integer 15–720 | 120 | An arrived order is done (`timer`) after this (O7) |
+| `close_forgotten` | boolean | `true` | At the event day's turn, cancel what was never called in and make done what was |
+
+The scheduler's times are described in [The scheduler](#the-scheduler).
 
 ## Data and privacy
 - **Data class `personal`** ([tenants.md](tenants.md#privacy-and-retention), O6): orders' holders, openers and payers, pizzas with their person, notes, comments and ticks, each person's amount, the history's actors. No `presence` data.
@@ -215,9 +242,10 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 | `pizza.item.added`, `pizza.item.removed` | As the catalog; a removal also by the crew, or when the person left or deleted their data (then `user_id` and `person` are null) | personal (`user_id`) | as the catalog |
 | `pizza.item.changed` (new) | Someone else changed a person's pizza (U14) | personal (`user_id`) | as `pizza.item.added` |
 | `pizza.amount.changed` (new) | A money change once the order was closed changed these people's amounts (U14); no amounts | personal (`user_ids`) | `order_id`, `user_ids`, `actor_user_id` |
-| `pizza.order.closing`, `pizza.reminder.triggered` | As the catalog; the scheduler of #118 emits them | as the catalog | as the catalog |
+| `pizza.order.closing` | As the catalog: the last call, `last_call_minutes` (10 by default) before the close time; [the scheduler](#the-scheduler) | event-wide, `public` | `order`, `closes_at` |
+| `pizza.reminder.triggered` | A person needs to act (D12): a stalled order's holder or the crew ([the scheduler](#the-scheduler)), or someone whose pizza waits (the nudge); one per person | personal (`user_id`); `order` event-wide, `public` | `order`, `kind` (`open_past_target`, `closed_not_placed`, and added: `not_arrived`, `released`, `not_collected`), `minutes` (past the close time, the close, the estimate or call-in, or the arrival), and added: `user_id` (who hears it), `role` (`holder`, `crew`, `member`) |
 
 **Consumes:** `tenants.status.changed` (archived: E11), `tenants.retention.reached`, `tenants.member.left`, `tenants.tenant.cloned` on the event's stream; `tenants.user.deleted`, `tenants.tenant.deleted` on the platform stream; `admin.settings.changed`.
 
 ## Not in this contract
-The scheduler, reminders and the holder's and crew's pages (#118); the attendee's pages and their live stream (#119); receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the screens' food box and Notify's food triggers (their own issue); the bot (step 6). Moving any money.
+The attendee's pages and their live stream (#119); receipts, the AI reader, paid ticks and the money pages (the money issue; they use the rights above); the screens' food box and Notify's food triggers (their own issue); the bot (step 6). Moving any money.

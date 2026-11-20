@@ -27,6 +27,8 @@ import { MANAGE, MENU_WRITE, OPEN, RECORD_READ } from "../src/policy.js";
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 const TABLES = [
+  "pizza_due",
+  "pizza_crew",
   "pizza_pizzerias",
   "pizza_menu_entries",
   "pizza_orders",
@@ -86,6 +88,7 @@ const RIGHTS: Record<string, string[]> = {
   menus: [MENU_WRITE],
   treasurer: [RECORD_READ],
   admin: [MANAGE, OPEN, MENU_WRITE, RECORD_READ],
+  organiser: [MANAGE, OPEN, MENU_WRITE, RECORD_READ, "admin.settings.read", "admin.settings.write"],
 };
 export const nameOf = (who: string) => who.charAt(0).toUpperCase() + who.slice(1);
 
@@ -115,6 +118,44 @@ function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Re
   );
 }
 
+/** Admin's settings API for the Food settings page: one event's pizza settings, versioned. */
+export interface AdminSettings {
+  values: Record<string, unknown>;
+  version: number;
+  writes: { host: string; values: Record<string, unknown> }[];
+  /** Admin's status for a read instead of the settings, e.g. 404 or 503. */
+  readStatus?: number;
+}
+
+function fakeAdminSettings(store: AdminSettings): AppDeps["admin"] {
+  return {
+    request: (method, path, o = {}) => {
+      const id = (o.headers?.cookie ?? "").replace("canccu_session=", "");
+      const rights = RIGHTS[id] ?? [];
+      const status = (code: number, body: unknown) => Promise.resolve({ status: code, body });
+      if (path !== "/api/admin/settings/pizza") return status(404, {});
+      if (!rights.includes(method === "GET" ? "admin.settings.read" : "admin.settings.write"))
+        return status(403, { error: { code: "missing_right", message: "needs a right" } });
+      if (method === "GET" && store.readStatus !== undefined)
+        return status(store.readStatus, { error: { code: "not_found", message: "no" } });
+      if (method === "PUT") {
+        const b = o.json as { settings_version: number; values: Record<string, unknown> };
+        if (b.settings_version !== store.version)
+          return status(409, { error: { code: "version_conflict", message: "stale" } });
+        store.values = b.values;
+        store.version += 1;
+        store.writes.push({ host: o.headers?.host ?? "", values: b.values });
+      }
+      return status(200, {
+        module: "pizza",
+        values: store.values,
+        settings_version: store.version,
+        groups: [],
+      });
+    },
+  };
+}
+
 export const T0 = new Date("2026-10-29T16:00:00Z"); // 18:00 in Helsinki, event day 2026-10-29
 
 export const json = (r: LightMyRequestResponse): Record<string, unknown> =>
@@ -137,6 +178,8 @@ export interface World {
   store: MemoryStreamStore;
   audit: AuditEntry[];
   settings: Map<string, PizzaSettings>;
+  languages: Map<string, string>;
+  adminSettings: AdminSettings;
   now: Date;
   setNow(iso: string): void;
   advance(minutes: number): void;
@@ -161,9 +204,13 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
   const outbox = new Outbox(new Bus(store, "pizza"), db);
   const audit: AuditEntry[] = [];
   const settings = new Map<string, PizzaSettings>();
+  const languages = new Map<string, string>();
+  const adminSettings: AdminSettings = { values: {}, version: 1, writes: [] };
   const w = { now: T0 } as World;
   const deps: AppDeps = {
     db,
+    admin: fakeAdminSettings(adminSettings),
+    language: (tenant) => Promise.resolve(languages.get(tenant) ?? "en"),
     outbox,
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
@@ -189,6 +236,8 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
     store,
     audit,
     settings,
+    languages,
+    adminSettings,
     deps,
     setNow: (iso: string) => {
       w.now = new Date(iso);
