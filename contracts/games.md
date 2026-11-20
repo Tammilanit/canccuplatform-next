@@ -1,6 +1,6 @@
 # Games contract
 
-The games people play at an event: the game catalogue, how a Discord activity is matched to a game, and surges (many people starting one game at once). The `games` module owns it. Rosters, rounds and Play sessions join this contract when their step writes them (the Games track, [roadmap](../docs/roadmap.md#games)); this part is what the screen, the bot and Notify need first. The mini tourney's seasons, brackets and team builder are not part of it: they are the separate `finals` module's ([finals.md](finals.md), [0025](../docs/decisions/0025-finals-and-games-modules.md)).
+The games people play at an event: the game catalogue, how a Discord activity is matched to a game, and surges (many people starting one game at once). The `games` module owns it. This part is what the screen, the bot and Notify need first. The catalogue gains each game's competition rules (team size, teams per match, a default format) as data, which Tournament reads, when its step writes them (the Games track, [roadmap](../docs/roadmap.md#games)). Competitions are not part of it: rosters, rounds and Play sessions belong to Tournament, and the mini tourney's seasons, brackets and team builder to the Finals app, an external app each event connects ([finals.md](finals.md), [0030](../docs/decisions/0030-finals-integrated-one-tourney-core.md), points 4 and 5).
 
 **Machine-readable API: [games.openapi.yaml](games.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
@@ -88,4 +88,4 @@ Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catal
 `game` is the whole game as `GET /api/games/catalogue/{game_id}` returns it. A `games.game.added` by an attendee names them in `actor_user_id` like every other change event; the audience of the event is `public` because the game is, and consumers never show `actor_user_id` to people.
 
 ## Not in this contract
-Rosters, rounds and Play sessions (their step adds them here), LFG (in the backlog; the `game` topic in Notify already lists `games.lfg.opened` for when it exists), and how the bot reads presence (the bot contract).
+Each game's competition rules (their step adds them here), rosters, rounds and Play sessions (Tournament's, [0030](../docs/decisions/0030-finals-integrated-one-tourney-core.md)), LFG (in the backlog; the `game` topic in Notify already lists `games.lfg.opened` for when it exists), and how the bot reads presence (the bot contract).
