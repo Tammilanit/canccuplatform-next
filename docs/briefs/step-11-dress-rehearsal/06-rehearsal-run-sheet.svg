@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 06: The rehearsal run sheet: every scenario, what should happen, and the evidence (product owner, lead)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">06 · The rehearsal run sheet: every scenario, what should happen, and the evidence (product owner, lead)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: the product owner works down the run sheet during the evening; each scenario has its steps, what should happen and a result with evidence; a fail becomes an issue, then a fix or a written acceptance. A</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">document, generic in this repo and filled in the private event repo, not a page.</text>
+<rect x="32.0" y="160.0" width="1856.0" height="890.0" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="64.0" y="206.0" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1200">Dress rehearsal run sheet · Demo Event rehearsal · v1.0.0</text>
+<text x="64.0" y="236.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1200">34 scenarios in 8 areas · each: steps, should, result, evidence · fail → issue labelled rehearsal</text>
+<text x="60.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="54">ID</text>
+<text x="130.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="114">AREA</text>
+<text x="260.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="404">SCENARIO</text>
+<text x="680.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="544">SHOULD</text>
+<text x="1240.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="144">RESULT</text>
+<text x="1400.0" y="280.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" data-maxw="424">EVIDENCE</text>
+<line x1="48.0" y1="292.0" x2="1828.0" y2="292.0" stroke="#d1d5db" stroke-width="1"/>
+<text x="60.0" y="320.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S1</text>
+<text x="130.0" y="320.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Join</text>
+<text x="260.0" y="320.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Join at the home venue, no code</text>
+<text x="680.0" y="320.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Hub opens signed in; member count +1</text>
+<rect x="1240.0" y="303.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="317.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="320.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">screenshot hub-joined.png</text>
+<line x1="48.0" y1="336.0" x2="1828.0" y2="336.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="364.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S2</text>
+<text x="130.0" y="364.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Join</text>
+<text x="260.0" y="364.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Join from mobile data with the event's link</text>
+<text x="680.0" y="364.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Joins with the link; venue check passes</text>
+<rect x="1240.0" y="347.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="361.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="364.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">screenshot</text>
+<line x1="48.0" y1="380.0" x2="1828.0" y2="380.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="408.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S5</text>
+<text x="130.0" y="408.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Screens</text>
+<text x="260.0" y="408.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Pair the TV and a second screen</text>
+<text x="680.0" y="408.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Both online in Screen studio within 1 min</text>
+<rect x="1240.0" y="391.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="405.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="408.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">Devices page</text>
+<line x1="48.0" y1="424.0" x2="1828.0" y2="424.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="452.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S8</text>
+<text x="130.0" y="452.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Moments</text>
+<text x="260.0" y="452.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Doors story at go-live; urgent announcement</text>
+<text x="680.0" y="452.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Plays once on each zone; push arrives</text>
+<rect x="1240.0" y="435.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="449.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="452.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">clip doors.webm</text>
+<line x1="48.0" y1="468.0" x2="1828.0" y2="468.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="496.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S11</text>
+<text x="130.0" y="496.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Run of show</text>
+<text x="260.0" y="496.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Delay the next item 15 min, quietly</text>
+<text x="680.0" y="496.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Screens and hub move it; no push</text>
+<rect x="1240.0" y="479.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="493.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="496.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">screenshot</text>
+<line x1="48.0" y1="512.0" x2="1828.0" y2="512.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="540.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S14</text>
+<text x="130.0" y="540.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Food</text>
+<text x="260.0" y="540.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Open, join, close, call in, arrive, hand out</text>
+<text x="680.0" y="540.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Each step on the TV's food box; pushes</text>
+<rect x="1240.0" y="523.0" width="50.5" height="23.0" rx="11.5" fill="#172554"/>
+<text x="1265.3" y="537.0" font-size="12" fill="#93c5fd" font-weight="700" text-anchor="middle" data-maxw="41">fixed</text>
+<text x="1400.0" y="540.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">issue · fixed in v1.0.1</text>
+<line x1="48.0" y1="556.0" x2="1828.0" y2="556.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="584.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S18</text>
+<text x="130.0" y="584.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Tournament</text>
+<text x="260.0" y="584.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Session with check-in; call a match; report</text>
+<text x="680.0" y="584.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Called on phones; result on screen</text>
+<rect x="1240.0" y="567.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="581.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="584.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">screenshot</text>
+<line x1="48.0" y1="600.0" x2="1828.0" y2="600.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="628.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S21</text>
+<text x="130.0" y="628.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Discord</text>
+<text x="260.0" y="628.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Announce reaches the test server</text>
+<text x="680.0" y="628.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">One post, right channel, right words</text>
+<rect x="1240.0" y="611.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="625.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="628.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">message link</text>
+<line x1="48.0" y1="644.0" x2="1828.0" y2="644.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="672.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S24</text>
+<text x="130.0" y="672.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Failure</text>
+<text x="260.0" y="672.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Unplug the home router for 10 min</text>
+<text x="680.0" y="672.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Screens keep the last state; back by themselves</text>
+<rect x="1240.0" y="655.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="669.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="672.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">timings 0:00 → 0:41</text>
+<line x1="48.0" y1="688.0" x2="1828.0" y2="688.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="716.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S27</text>
+<text x="130.0" y="716.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Failure</text>
+<text x="260.0" y="716.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Fallback laptop restore from cold</text>
+<text x="680.0" y="716.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Up within 30 min; secrets decrypt</text>
+<rect x="1240.0" y="699.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="713.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="716.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">22 min · log</text>
+<line x1="48.0" y1="732.0" x2="1828.0" y2="732.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="760.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S29</text>
+<text x="130.0" y="760.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Photos</text>
+<text x="260.0" y="760.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Photo wall on an old PC as Lobby</text>
+<text x="680.0" y="760.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Smooth at 1080p</text>
+<rect x="1240.0" y="743.0" width="74.4" height="23.0" rx="11.5" fill="#451a03"/>
+<text x="1277.2" y="757.0" font-size="12" fill="#fcd34d" font-weight="700" text-anchor="middle" data-maxw="64">accepted</text>
+<text x="1400.0" y="760.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">PO: Lobby only</text>
+<line x1="48.0" y1="776.0" x2="1828.0" y2="776.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="804.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S31</text>
+<text x="130.0" y="804.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Privacy</text>
+<text x="260.0" y="804.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">Export my data; delete it; rejoin</text>
+<text x="680.0" y="804.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">Export lists every module; delete holds</text>
+<rect x="1240.0" y="787.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="801.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="804.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">export.zip (scrubbed)</text>
+<line x1="48.0" y1="820.0" x2="1828.0" y2="820.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60.0" y="848.0" font-size="14" fill="#111827" font-weight="600" text-anchor="start" data-maxw="52">S34</text>
+<text x="130.0" y="848.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="112">Soak</text>
+<text x="260.0" y="848.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="402">12 h unattended</text>
+<text x="680.0" y="848.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="542">No restart; memory flat; screens alive</text>
+<rect x="1240.0" y="831.0" width="49.7" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1264.9" y="845.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="40">pass</text>
+<text x="1400.0" y="848.0" font-size="14" fill="#111827" font-weight="400" text-anchor="start" data-maxw="422">soak report</text>
+<line x1="48.0" y1="864.0" x2="1828.0" y2="864.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64.0" y="898.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-maxw="800">Rules of the sheet</text>
+<circle cx="70.0" cy="921.0" r="3" fill="#3b82f6"/>
+<text x="84.0" y="926.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1700">Each scenario is written so anyone could run it again: steps, the expected result, where the evidence goes.</text>
+<circle cx="70.0" cy="948.0" r="3" fill="#3b82f6"/>
+<text x="84.0" y="953.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1700">No silent success: a fail is fixed (and re-run on the patch release) or accepted in writing with a name and a reason (E11, U5).</text>
+<circle cx="70.0" cy="975.0" r="3" fill="#3b82f6"/>
+<text x="84.0" y="980.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1700">Evidence with real names stays in the private event repo; this repo keeps only the generic sheet and a scrubbed summary (D11).</text>
+</svg>

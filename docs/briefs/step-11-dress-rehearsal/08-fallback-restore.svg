@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 08: The restore drill: the fallback laptop from cold, timed (superadmin, venue crew)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="900.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">08 · The restore drill: the fallback laptop from cold, timed (superadmin, venue crew)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: the VM is treated as lost; the superadmin brings the platform up on the fallback laptop from the latest off-VM backup, the screens and phones find it, and the clock says whether it fits the 30-minute target. Step 10</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">builds the restore; step 11 rehearses it.</text>
+<rect x="32.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="50.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:00</text>
+<text x="122.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Call it</text>
+<text x="50.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">A rollback trigger fires: the stack is not</text>
+<text x="50.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">healthy 30 min after a restart.</text>
+<line x1="328.0" y1="260.0" x2="344.0" y2="260.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="344.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="362.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:02</text>
+<text x="434.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Laptop on</text>
+<text x="362.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">The fallback laptop: the event repo, the</text>
+<text x="362.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">images downloaded in advance,</text>
+<text x="362.0" y="272.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">deploy/.env and the secrets key kept</text>
+<text x="362.0" y="291.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">apart.</text>
+<line x1="640.0" y1="260.0" x2="656.0" y2="260.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="656.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="674.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:04</text>
+<text x="746.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Restore</text>
+<text x="674.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">The latest base backup and the WAL</text>
+<text x="674.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">archive from the backup host; the files</text>
+<text x="674.0" y="272.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">volume.</text>
+<line x1="952.0" y1="260.0" x2="968.0" y2="260.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="968.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="986.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:15</text>
+<text x="1058.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Start</text>
+<text x="986.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">The stack at the pinned release v1.0.0;</text>
+<text x="986.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">secrets decrypt; check-boot ok.</text>
+<line x1="1264.0" y1="260.0" x2="1280.0" y2="260.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1280.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1298.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:18</text>
+<text x="1370.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Point the name</text>
+<text x="1298.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">The event's hostname now leads to the</text>
+<text x="1298.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">laptop (how: step 10's design).</text>
+<line x1="1576.0" y1="260.0" x2="1592.0" y2="260.0" stroke="#4b5563" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1592.0" y="166.0" width="296.0" height="170.0" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+<text x="1610.0" y="200.0" font-size="22" fill="#f59e0b" font-weight="700" text-anchor="start" data-maxw="80">0:22</text>
+<text x="1682.0" y="200.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="196">Screens back</text>
+<text x="1610.0" y="234.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">Kiosks reload and draw from the</text>
+<text x="1610.0" y="253.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="260">laptop; phones carry on.</text>
+<text x="32.0" y="390.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1100">The superadmin's terminal on the laptop</text>
+<rect x="32.0" y="406.0" width="1100.0" height="420.0" rx="10" fill="#0b1120" stroke="#334155" stroke-width="1"/>
+<text x="52.0" y="442.0" font-size="15" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="1060">$ sudo setup/restore --from latest --check</text>
+<text x="52.0" y="476.0" font-size="15" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="1060">backup  base Fri 03:10 + WAL to 19:41 (2 min before the trigger)</text>
+<text x="52.0" y="510.0" font-size="15" fill="#86efac" font-weight="400" text-anchor="start" data-maxw="1060">secrets key found (kept apart from the dump)  ok</text>
+<text x="52.0" y="544.0" font-size="15" fill="#86efac" font-weight="400" text-anchor="start" data-maxw="1060">images  v1.0.0 for 14 modules, already on this laptop  ok</text>
+<text x="52.0" y="578.0" font-size="15" fill="#86efac" font-weight="400" text-anchor="start" data-maxw="1060">files   restored 2.1 GB to the files volume  ok</text>
+<text x="52.0" y="612.0" font-size="15" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="1060">$ sudo setup/install --boot</text>
+<text x="52.0" y="646.0" font-size="15" fill="#86efac" font-weight="400" text-anchor="start" data-maxw="1060">stack   up at v1.0.0; health ok for 14 modules</text>
+<text x="52.0" y="680.0" font-size="15" fill="#86efac" font-weight="400" text-anchor="start" data-maxw="1060">check-boot  ok</text>
+<text x="52.0" y="714.0" font-size="15" fill="#fde047" font-weight="400" text-anchor="start" data-maxw="1060">next    point the event's hostname at this laptop (runbook step 5)</text>
+<text x="52.0" y="748.0" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="1060">elapsed 15 min 40 s</text>
+<text x="1170.0" y="390.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="718">The drill's record</text>
+<rect x="1170.0" y="406.0" width="718.0" height="420.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1192.0" y="442.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Trigger</text>
+<text x="1350.0" y="442.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">rehearsal drill, 21:00</text>
+<text x="1192.0" y="482.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Backup age</text>
+<text x="1350.0" y="482.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">2 minutes of WAL</text>
+<text x="1192.0" y="522.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Data lost</text>
+<text x="1350.0" y="522.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">none found in the checks</text>
+<text x="1192.0" y="562.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Secrets</text>
+<text x="1350.0" y="562.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">decrypted after the restore</text>
+<text x="1192.0" y="602.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Screens back</text>
+<text x="1350.0" y="602.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">22 min after the call</text>
+<text x="1192.0" y="642.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Target</text>
+<text x="1350.0" y="642.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">30 min (E2)</text>
+<text x="1192.0" y="682.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="150">Result</text>
+<text x="1350.0" y="682.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="520">pass; the gate "Restore drill within 30 days" turns green</text>
+<text x="1192.0" y="728.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="670">The command names are placeholders for what step 10 builds; the drill only times them.</text>
+<text x="32.0" y="860.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Open for step 10, not decided here: how screens and phones reach the laptop when the VM is gone (the hostname moved to the venue's address, or a name only the venue LAN knows), and where its certificates come from. Step 11 asks only that the drill runs end to</text>
+<text x="32.0" y="880.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">end and fits the target (E2, O8).</text>
+</svg>

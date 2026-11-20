@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 03: Releases and pins: what the stack runs, and what each event tested (superadmin, organiser)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">03 · Releases and pins: what the stack runs, and what each event tested (superadmin, organiser)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: the superadmin picks the release the stack runs from its channel, sees which events pin it and whether a deploy is held; the organiser sees the version their event runs on in the Event profile.</text>
+<rect x="32.0" y="124.0" width="1340.0" height="924.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="124.0" width="1340.0" height="56.0" rx="12" fill="#1e293b"/>
+<rect x="32.0" y="168.0" width="1340.0" height="12.0" rx="0" fill="#1e293b"/>
+<line x1="32.0" y1="180.0" x2="1372.0" y2="180.0" stroke="#334155" stroke-width="1"/>
+<rect x="48.0" y="138.0" width="28.0" height="28.0" rx="7" fill="#3b82f6"/>
+<text x="62.0" y="157.0" font-size="12" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="26">PL</text>
+<text x="86.0" y="158.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="260">Platform</text>
+<text x="1354.0" y="158.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="end" data-maxw="360">Tailscale · Superadmin</text>
+<rect x="32.0" y="180.0" width="236.0" height="868.0" rx="0" fill="#111a2e"/>
+<line x1="268.0" y1="180.0" x2="268.0" y2="1048.0" stroke="#334155" stroke-width="1"/>
+<text x="52.0" y="216.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">PLATFORM</text>
+<text x="54.0" y="249.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Events</text>
+<rect x="209.2" y="235.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="247.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<rect x="42.0" y="264.0" width="216.0" height="32.0" rx="6" fill="#1e3a8a"/>
+<text x="54.0" y="285.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="146">Releases</text>
+<rect x="209.2" y="271.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="283.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="54.0" y="321.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Stack health</text>
+<rect x="209.2" y="307.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="319.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="54.0" y="357.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Audit log</text>
+<rect x="209.2" y="343.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="355.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="300.0" y="230.0" font-size="26" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="300">Releases</text>
+<rect x="300.0" y="256.0" width="1040.0" height="92.0" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+<text x="320.0" y="290.0" font-size="20" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="420">This stack runs v1.0.0</text>
+<text x="320.0" y="320.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="560">Pinned by Superadmin on Mon 10:12 · deploys held: 1 event is live</text>
+<rect x="1172.4" y="280.0" width="147.6" height="34.0" rx="8" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="1246.2" y="302.0" font-size="14" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="136">Change release…</text>
+<text x="300.0" y="382.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="200">CHANNELS</text>
+<text x="312.0" y="408.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="124">CHANNEL</text>
+<text x="452.0" y="408.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="124">RELEASE</text>
+<text x="592.0" y="408.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="504">EVIDENCE</text>
+<text x="1112.0" y="408.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="210"></text>
+<line x1="300.0" y1="418.0" x2="1326.0" y2="418.0" stroke="#334155" stroke-width="1"/>
+<rect x="312.0" y="430.0" width="57.4" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="340.7" y="444.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="47">stable</text>
+<text x="452.0" y="447.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="122">v1.0.0</text>
+<text x="592.0" y="447.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="502">CI, demo stack, upgrade from v0.10.6, weekly run, rehearsal</text>
+<text x="1112.0" y="447.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">Runs here</text>
+<line x1="300.0" y1="466.0" x2="1326.0" y2="466.0" stroke="#334155" stroke-width="1"/>
+<rect x="312.0" y="478.0" width="78.2" height="23.0" rx="11.5" fill="#172554"/>
+<text x="351.1" y="492.0" font-size="12" fill="#93c5fd" font-weight="700" text-anchor="middle" data-maxw="68">candidate</text>
+<text x="452.0" y="495.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="122">v1.0.1</text>
+<text x="592.0" y="495.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="502">CI, demo stack, upgrade, weekly run; failed scenarios re-run</text>
+<text x="1112.0" y="495.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">Stage it…</text>
+<line x1="300.0" y1="514.0" x2="1326.0" y2="514.0" stroke="#334155" stroke-width="1"/>
+<rect x="312.0" y="526.0" width="49.7" height="23.0" rx="11.5" fill="#1e293b"/>
+<text x="336.9" y="540.0" font-size="12" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="40">edge</text>
+<text x="452.0" y="543.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="122">v0.12.3</text>
+<text x="592.0" y="543.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="502">CI and demo stack on main; nothing else yet</text>
+<text x="1112.0" y="543.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="208">—</text>
+<line x1="300.0" y1="562.0" x2="1326.0" y2="562.0" stroke="#334155" stroke-width="1"/>
+<text x="300.0" y="596.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="300">EVENTS ON THIS STACK</text>
+<text x="312.0" y="622.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="234">EVENT</text>
+<text x="562.0" y="622.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="104">STATUS</text>
+<text x="682.0" y="622.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="104">PINS</text>
+<text x="802.0" y="622.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="204">SINCE</text>
+<text x="1022.0" y="622.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="300"></text>
+<line x1="300.0" y1="632.0" x2="1326.0" y2="632.0" stroke="#334155" stroke-width="1"/>
+<text x="312.0" y="661.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="232">Demo Event</text>
+<rect x="562.0" y="644.0" width="43.6" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="583.8" y="658.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="34">live</text>
+<text x="682.0" y="661.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="102">v1.0.0</text>
+<text x="802.0" y="661.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="202">go live Fri 17:40</text>
+<text x="1022.0" y="661.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="298">matches the stack</text>
+<line x1="300.0" y1="680.0" x2="1326.0" y2="680.0" stroke="#334155" stroke-width="1"/>
+<text x="312.0" y="709.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="232">Demo Event rehearsal</text>
+<rect x="562.0" y="692.0" width="50.5" height="23.0" rx="11.5" fill="#1e293b"/>
+<text x="587.3" y="706.0" font-size="12" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="41">draft</text>
+<text x="682.0" y="709.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="102">v1.0.0</text>
+<text x="802.0" y="709.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="202">cloned Tue 17:05</text>
+<text x="1022.0" y="709.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="298">delete after the report</text>
+<line x1="300.0" y1="728.0" x2="1326.0" y2="728.0" stroke="#334155" stroke-width="1"/>
+<text x="312.0" y="757.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="232">Demo Autumn Event</text>
+<rect x="562.0" y="740.0" width="50.5" height="23.0" rx="11.5" fill="#1e293b"/>
+<text x="587.3" y="754.0" font-size="12" fill="#cbd5e1" font-weight="700" text-anchor="middle" data-maxw="41">draft</text>
+<text x="682.0" y="757.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="102">v1.0.0</text>
+<text x="802.0" y="757.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="202">cloned Sun 12:00</text>
+<text x="1022.0" y="757.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="298">can pin again before going live</text>
+<line x1="300.0" y1="776.0" x2="1326.0" y2="776.0" stroke="#334155" stroke-width="1"/>
+<rect x="300.0" y="806.0" width="1040.0" height="150.0" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+<text x="320.0" y="840.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="300">Hotfix lane</text>
+<rect x="450.0" y="822.0" width="106.3" height="24.0" rx="12.0" fill="#451a03"/>
+<text x="503.1" y="837.0" font-size="13" fill="#fcd34d" font-weight="700" text-anchor="middle" data-maxw="96">v1.0.1 ready</text>
+<text x="320.0" y="870.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">A patch of v1.0.0 from the release branch: fixes 1 issue found at the rehearsal. Staged on the staging stack with a</text>
+<text x="320.0" y="890.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">copy of the demo tenant: health ok, the screens' pinned bundle unchanged.</text>
+<rect x="1153.5" y="836.0" width="166.5" height="34.0" rx="8" fill="#3b82f6"/>
+<text x="1236.7" y="858.0" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-maxw="155">Apply to this stack…</text>
+<text x="1320.0" y="896.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="end" data-maxw="240">Needs a reason; audited</text>
+<text x="1404.0" y="140.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="484">The organiser's view: Event profile → Platform</text>
+<rect x="1404.0" y="156.0" width="484.0" height="360.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="1424.0" y="196.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="444">Platform version</text>
+<text x="1424.0" y="236.0" font-size="30" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="200">v1.0.0</text>
+<rect x="1544.0" y="214.0" width="60.4" height="24.0" rx="12.0" fill="#14532d"/>
+<text x="1574.2" y="229.0" font-size="13" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="50">tested</text>
+<text x="1424.0" y="270.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">Your event runs on v1.0.0, the release your dress rehearsal</text>
+<text x="1424.0" y="290.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">passed. The platform will not update during your event; the next</text>
+<text x="1424.0" y="310.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">update waits until it is archived.</text>
+<line x1="1424.0" y1="336.0" x2="1868.0" y2="336.0" stroke="#334155" stroke-width="1"/>
+<text x="1424.0" y="362.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="444">The event repo says: platform.version v1.0.0</text>
+<text x="1424.0" y="392.0" font-size="14" fill="#3b82f6" font-weight="600" text-anchor="start" data-maxw="444">What changed since your last event ›</text>
+<text x="1404.0" y="564.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="484">When the pins do not match</text>
+<rect x="1404.0" y="580.0" width="484.0" height="200.0" rx="12" fill="#0f172a" stroke="#eab308" stroke-width="1"/>
+<text x="1424.0" y="618.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="444">Go live is held</text>
+<text x="1424.0" y="646.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">Demo Autumn Event pins v1.0.0 but the stack runs v1.0.1. Rehearse</text>
+<text x="1424.0" y="666.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">the changed scenarios on v1.0.1 and pin it, or ask the superadmin</text>
+<text x="1424.0" y="686.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">to return the stack to v1.0.0.</text>
+<text x="1404.0" y="814.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">One stack runs one version (0013); an event "pins" by recording the</text>
+<text x="1404.0" y="834.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">release it tested, and going live checks that the stack runs it (D1).</text>
+<text x="1404.0" y="854.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">Channels come from step 10; the numbering is D3, the hotfix lane D4.</text>
+</svg>

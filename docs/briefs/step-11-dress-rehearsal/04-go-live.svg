@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 960" width="1920" height="960" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 04: Going live: one deliberate step, and what it changes (organiser, superadmin)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="960.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">04 · Going live: one deliberate step, and what it changes (organiser, superadmin)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: on the evening the doors open, the organiser goes live from the board; joining opens, the stack holds its deploys, and a deploy that comes anyway is refused with a reason the superadmin can act on.</text>
+<rect x="32.0" y="124.0" width="1100.0" height="760.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="124.0" width="1100.0" height="56.0" rx="12" fill="#1e293b"/>
+<rect x="32.0" y="168.0" width="1100.0" height="12.0" rx="0" fill="#1e293b"/>
+<line x1="32.0" y1="180.0" x2="1132.0" y2="180.0" stroke="#334155" stroke-width="1"/>
+<rect x="48.0" y="138.0" width="28.0" height="28.0" rx="7" fill="#3b82f6"/>
+<text x="62.0" y="157.0" font-size="12" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="26">DE</text>
+<text x="86.0" y="158.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="260">Demo Event</text>
+<text x="1114.0" y="158.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="end" data-maxw="360">Health ok · Organiser</text>
+<rect x="32.0" y="180.0" width="236.0" height="704.0" rx="0" fill="#111a2e"/>
+<line x1="268.0" y1="180.0" x2="268.0" y2="884.0" stroke="#334155" stroke-width="1"/>
+<text x="52.0" y="216.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">RUN THE EVENT</text>
+<text x="54.0" y="249.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Run of show</text>
+<text x="54.0" y="285.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Notifications</text>
+<text x="54.0" y="321.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Announcements</text>
+<text x="52.0" y="362.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">SCREENS AND LOOK</text>
+<text x="54.0" y="395.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Screen studio</text>
+<text x="54.0" y="431.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Theme studio</text>
+<text x="52.0" y="472.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">ADMIN</text>
+<text x="54.0" y="505.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Settings</text>
+<text x="54.0" y="541.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Health</text>
+<text x="54.0" y="577.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Event profile</text>
+<text x="54.0" y="613.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">People</text>
+<rect x="42.0" y="628.0" width="216.0" height="32.0" rx="6" fill="#1e3a8a"/>
+<text x="54.0" y="649.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="146">Go live</text>
+<rect x="209.2" y="635.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="647.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<rect x="32.0" y="124.0" width="1100.0" height="760.0" rx="12" fill="#020617" fill-opacity="0.72"/>
+<rect x="232.0" y="234.0" width="700.0" height="520.0" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="260.0" y="280.0" font-size="22" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="644">Go live with Demo Event?</text>
+<circle cx="268.0" cy="313.0" r="3" fill="#3b82f6"/>
+<text x="282.0" y="318.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="610">Joining opens: at the venue, or with the event's link and QR.</text>
+<circle cx="268.0" cy="340.0" r="3" fill="#3b82f6"/>
+<text x="282.0" y="345.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="610">The hub, screens and Discord start counting this as the real event.</text>
+<circle cx="268.0" cy="367.0" r="3" fill="#3b82f6"/>
+<text x="282.0" y="372.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="610">Deploys hold for the whole stack until you archive the event; only a hotfix gets through.</text>
+<circle cx="268.0" cy="394.0" r="3" fill="#3b82f6"/>
+<text x="282.0" y="399.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="610">Screens keep the v1.0.0 bundle they were tested with.</text>
+<circle cx="268.0" cy="421.0" r="3" fill="#3b82f6"/>
+<text x="282.0" y="426.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="610">It cannot be undone: an event never goes back to draft.</text>
+<rect x="260.0" y="459.0" width="644.0" height="96.0" rx="10" fill="#422006" stroke="#f59e0b" stroke-width="1"/>
+<text x="278.0" y="489.0" font-size="15" fill="#fde047" font-weight="700" text-anchor="start" data-maxw="600">1 gate accepted instead of fixed</text>
+<text x="278.0" y="515.0" font-size="14" fill="#fde68a" font-weight="400" text-anchor="start" data-maxw="600">Photo wall is slow on an old projector PC: accepted by Product Owner, Tue 21:40.</text>
+<text x="260.0" y="583.0" font-size="14" fill="#94a3b8" font-weight="600" text-anchor="start" data-maxw="644">Type the event's name to go live</text>
+<rect x="260.0" y="595.0" width="644.0" height="42.0" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
+<text x="276.0" y="622.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="300">Demo Event</text>
+<rect x="824.7" y="690.0" width="79.3" height="34.0" rx="8" fill="#3b82f6"/>
+<text x="864.3" y="712.0" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-maxw="67">Go live</text>
+<rect x="713.6" y="690.0" width="78.4" height="34.0" rx="8" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="752.8" y="712.0" font-size="14" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="66">Cancel</text>
+<text x="1170.0" y="140.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="718">After: the shell says it, and Health shows the hold</text>
+<rect x="1170.0" y="154.0" width="718.0" height="330.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<rect x="1170.0" y="154.0" width="718.0" height="56.0" rx="12" fill="#1e293b"/>
+<rect x="1170.0" y="198.0" width="718.0" height="12.0" rx="0" fill="#1e293b"/>
+<line x1="1170.0" y1="210.0" x2="1888.0" y2="210.0" stroke="#334155" stroke-width="1"/>
+<rect x="1186.0" y="168.0" width="28.0" height="28.0" rx="7" fill="#3b82f6"/>
+<text x="1200.0" y="187.0" font-size="12" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="26">DE</text>
+<text x="1224.0" y="188.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="260">Demo Event</text>
+<rect x="1337.0" y="169.0" width="47.9" height="23.0" rx="11.5" fill="#14532d"/>
+<text x="1360.9" y="183.0" font-size="12" fill="#86efac" font-weight="700" text-anchor="middle" data-maxw="38">Live</text>
+<text x="1870.0" y="188.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="end" data-maxw="360">Health ok · Organiser</text>
+<rect x="1170.0" y="210.0" width="236.0" height="274.0" rx="0" fill="#111a2e"/>
+<line x1="1406.0" y1="210.0" x2="1406.0" y2="484.0" stroke="#334155" stroke-width="1"/>
+<text x="1190.0" y="246.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">ADMIN</text>
+<rect x="1180.0" y="258.0" width="216.0" height="32.0" rx="6" fill="#1e3a8a"/>
+<text x="1192.0" y="279.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="146">Health</text>
+<text x="1192.0" y="315.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Go live</text>
+<rect x="1347.2" y="301.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="1368.6" y="313.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="1438.0" y="264.0" font-size="22" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="300">Health</text>
+<circle cx="1450.0" cy="296.0" r="12" fill="none" stroke="#22c55e" stroke-width="2"/>
+<text x="1450.0" y="301.0" font-size="13" fill="#22c55e" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="1472.0" y="294.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="388">All 14 modules healthy</text>
+<text x="1472.0" y="314.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="388">Runs v1.0.0, the pinned release</text>
+<circle cx="1450.0" cy="352.0" r="12" fill="none" stroke="#eab308" stroke-width="2"/>
+<text x="1450.0" y="357.0" font-size="13" fill="#eab308" font-weight="800" text-anchor="middle" data-maxw="20">!</text>
+<text x="1472.0" y="350.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="388">Deploys held</text>
+<text x="1472.0" y="370.0" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="388">Demo Event is live since Fri 17:40; hotfixes only</text>
+<text x="1170.0" y="534.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="718">A deploy that comes anyway (superadmin)</text>
+<rect x="1170.0" y="550.0" width="718.0" height="190.0" rx="10" fill="#0b1120" stroke="#334155" stroke-width="1"/>
+<text x="1190.0" y="582.0" font-size="15" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="678">$ sudo setup/deploy</text>
+<text x="1190.0" y="610.0" font-size="15" fill="#fde047" font-weight="400" text-anchor="start" data-maxw="678">held: Demo Event is live (since Fri 17:40)</text>
+<text x="1190.0" y="638.0" font-size="15" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="678">this stack takes only a hotfix of v1.0.0 now:</text>
+<text x="1190.0" y="666.0" font-size="15" fill="#93c5fd" font-weight="400" text-anchor="start" data-maxw="678">  setup/deploy --hotfix v1.0.1 --reason "&lt;why&gt;"</text>
+<text x="1190.0" y="694.0" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="678">exit 0 · nothing changed</text>
+<text x="1170.0" y="774.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="718">The deploy hold is 0013 item 22 made real. Whether a held deploy exits 0 (a timer keeps trying) or</text>
+<text x="1170.0" y="794.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="718">opens an issue is O6; who may apply a hotfix is D4.</text>
+<text x="32.0" y="924.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1100">Why typing the name: going live is the one step in the kit that cannot be undone, and it changes the whole stack (L3, U5).</text>
+</svg>

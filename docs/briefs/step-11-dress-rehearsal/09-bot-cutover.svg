@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 09: Cutting the legacy bot over: stop it, import what it held, hand its token to the event (organiser, superadmin)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1000.0" rx="0" fill="#e5e7eb"/>
+<text x="32.0" y="50.0" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-maxw="1856">09 · Cutting the legacy bot over: stop it, import what it held, hand its token to the event (organiser, superadmin)</text>
+<text x="32.0" y="84.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">Use case: a quiet day before the event, an event admin cuts the event's Discord bot over from the legacy bot: the legacy process is stopped first, the import runs as a dry run and then for real, the token is entered once, and</text>
+<text x="32.0" y="110.0" font-size="18" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="1856">the bot is back online in the platform; rolling back is one button.</text>
+<rect x="32.0" y="150.0" width="1340.0" height="818.0" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<rect x="32.0" y="150.0" width="1340.0" height="56.0" rx="12" fill="#1e293b"/>
+<rect x="32.0" y="194.0" width="1340.0" height="12.0" rx="0" fill="#1e293b"/>
+<line x1="32.0" y1="206.0" x2="1372.0" y2="206.0" stroke="#334155" stroke-width="1"/>
+<rect x="48.0" y="164.0" width="28.0" height="28.0" rx="7" fill="#3b82f6"/>
+<text x="62.0" y="183.0" font-size="12" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="26">DE</text>
+<text x="86.0" y="184.0" font-size="17" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="260">Demo Event</text>
+<text x="1354.0" y="184.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="end" data-maxw="360">Health ok · Organiser</text>
+<rect x="32.0" y="206.0" width="236.0" height="762.0" rx="0" fill="#111a2e"/>
+<line x1="268.0" y1="206.0" x2="268.0" y2="968.0" stroke="#334155" stroke-width="1"/>
+<text x="52.0" y="242.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">RUN THE EVENT</text>
+<text x="54.0" y="275.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Run of show</text>
+<text x="54.0" y="311.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Notifications</text>
+<text x="54.0" y="347.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Announcements</text>
+<text x="52.0" y="388.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">SCREENS AND LOOK</text>
+<text x="54.0" y="421.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Screen studio</text>
+<text x="54.0" y="457.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Theme studio</text>
+<text x="52.0" y="498.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="206">ADMIN</text>
+<rect x="42.0" y="510.0" width="216.0" height="32.0" rx="6" fill="#1e3a8a"/>
+<text x="54.0" y="531.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="146">Settings</text>
+<text x="54.0" y="567.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Health</text>
+<text x="54.0" y="603.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Event profile</text>
+<text x="54.0" y="639.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">People</text>
+<text x="54.0" y="675.0" font-size="14" fill="#cbd5e1" font-weight="400" text-anchor="start" data-maxw="146">Go live</text>
+<rect x="209.2" y="661.0" width="42.8" height="21.0" rx="10.5" fill="#3b0764"/>
+<text x="230.6" y="673.0" font-size="10" fill="#e9d5ff" font-weight="700" text-anchor="middle" data-maxw="33">new</text>
+<text x="300.0" y="256.0" font-size="26" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="300">Discord</text>
+<text x="300.0" y="286.0" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="600">Settings → Discord · cut over from the legacy bot</text>
+<circle cx="314.0" cy="328.0" r="14" fill="#22c55e"/>
+<text x="314.0" y="333.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="336.0" y="333.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="170">Stop the legacy bot</text>
+<line x1="467.5" y1="328.0" x2="500.0" y2="328.0" stroke="#334155" stroke-width="2"/>
+<circle cx="528.0" cy="328.0" r="14" fill="#22c55e"/>
+<text x="528.0" y="333.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="20">✓</text>
+<text x="550.0" y="333.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="170">Dry run</text>
+<line x1="611.0" y1="328.0" x2="714.0" y2="328.0" stroke="#334155" stroke-width="2"/>
+<circle cx="742.0" cy="328.0" r="14" fill="#3b82f6"/>
+<text x="742.0" y="333.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle" data-maxw="20">3</text>
+<text x="764.0" y="333.0" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start" data-maxw="170">Import</text>
+<line x1="817.1" y1="328.0" x2="928.0" y2="328.0" stroke="#334155" stroke-width="2"/>
+<circle cx="956.0" cy="328.0" r="14" fill="#334155"/>
+<text x="956.0" y="333.0" font-size="13" fill="#f8fafc" font-weight="800" text-anchor="middle" data-maxw="20">4</text>
+<text x="978.0" y="333.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="170">Token</text>
+<line x1="1027.2" y1="328.0" x2="1142.0" y2="328.0" stroke="#334155" stroke-width="2"/>
+<circle cx="1170.0" cy="328.0" r="14" fill="#334155"/>
+<text x="1170.0" y="333.0" font-size="13" fill="#f8fafc" font-weight="800" text-anchor="middle" data-maxw="20">5</text>
+<text x="1192.0" y="333.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="170">Online</text>
+<rect x="300.0" y="366.0" width="1040.0" height="420.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="320.0" y="402.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="600">3 · Import: the dry run's report</text>
+<text x="320.0" y="430.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="1000">Read from the legacy bot's copy taken at 10:02, after it stopped. Nothing is deleted on the legacy side.</text>
+<text x="332.0" y="468.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="284">WHAT</text>
+<text x="632.0" y="468.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="84">ROWS</text>
+<text x="732.0" y="468.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="84">SKIPPED</text>
+<text x="832.0" y="468.0" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="start" data-maxw="484">WHY SKIPPED</text>
+<line x1="320.0" y1="478.0" x2="1320.0" y2="478.0" stroke="#334155" stroke-width="1"/>
+<text x="332.0" y="505.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="282">Bot settings</text>
+<text x="632.0" y="505.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">12</text>
+<text x="732.0" y="505.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">2</text>
+<text x="832.0" y="505.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="482">channel ids not in this event's server</text>
+<line x1="320.0" y1="522.0" x2="1320.0" y2="522.0" stroke="#334155" stroke-width="1"/>
+<text x="332.0" y="549.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="282">Announced seasons (state file)</text>
+<text x="632.0" y="549.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">3</text>
+<text x="732.0" y="549.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">0</text>
+<line x1="320.0" y1="566.0" x2="1320.0" y2="566.0" stroke="#334155" stroke-width="1"/>
+<text x="332.0" y="593.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="282">Pinned messages (state file)</text>
+<text x="632.0" y="593.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">5</text>
+<text x="732.0" y="593.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">0</text>
+<line x1="320.0" y1="610.0" x2="1320.0" y2="610.0" stroke="#334155" stroke-width="1"/>
+<text x="332.0" y="637.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="282">Token</text>
+<text x="632.0" y="637.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">1</text>
+<text x="732.0" y="637.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="82">0</text>
+<text x="832.0" y="637.0" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="482">entered in the next step, never read from a file</text>
+<line x1="320.0" y1="654.0" x2="1320.0" y2="654.0" stroke="#334155" stroke-width="1"/>
+<text x="320.0" y="706.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">A second run changes nothing: the import is one-way and idempotent (#125).</text>
+<rect x="1183.4" y="686.0" width="136.6" height="34.0" rx="8" fill="#3b82f6"/>
+<text x="1251.7" y="708.0" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-maxw="125">Import for real</text>
+<rect x="1084.1" y="686.0" width="65.9" height="34.0" rx="8" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="1117.1" y="708.0" font-size="14" fill="#f8fafc" font-weight="700" text-anchor="middle" data-maxw="54">Back</text>
+<rect x="300.0" y="812.0" width="1040.0" height="150.0" rx="12" fill="#1e293b" stroke="#ef4444" stroke-width="1"/>
+<text x="320.0" y="848.0" font-size="18" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="600">If it goes wrong: roll back</text>
+<text x="320.0" y="876.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">Disconnects the event's bot here, and tells you to start the legacy bot again. The legacy container was only</text>
+<text x="320.0" y="896.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">stopped, never removed; it is kept until 30 days after the event (O4). The trigger: the bot is not online 15 minutes</text>
+<text x="320.0" y="916.0" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="740">after the cutover (E3, E6).</text>
+<rect x="1216.4" y="866.0" width="103.6" height="34.0" rx="8" fill="#7f1d1d" stroke="#ef4444" stroke-width="1"/>
+<text x="1268.2" y="888.0" font-size="14" fill="#fecaca" font-weight="700" text-anchor="middle" data-maxw="92">Roll back…</text>
+<text x="1404.0" y="166.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="484">Step 4 · the token, entered once</text>
+<rect x="1404.0" y="182.0" width="484.0" height="300.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+<text x="1424.0" y="218.0" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start" data-maxw="444">Bot token</text>
+<rect x="1424.0" y="232.0" width="444.0" height="42.0" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
+<text x="1440.0" y="259.0" font-size="15" fill="#f8fafc" font-weight="400" text-anchor="start" data-maxw="404">•••••••••••••••••••••••••</text>
+<text x="1424.0" y="304.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">Recommended: reset the token in the Discord developer portal first, so</text>
+<text x="1424.0" y="323.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">the legacy process can never connect with the old one (E7). Stored as</text>
+<text x="1424.0" y="342.0" font-size="13.5" fill="#94a3b8" font-weight="400" text-anchor="start" data-maxw="444">the event's secret; audited; never shown again.</text>
+<rect x="1424.0" y="367.0" width="152.1" height="34.0" rx="8" fill="#3b82f6"/>
+<text x="1500.1" y="389.0" font-size="14" fill="#0f172a" font-weight="700" text-anchor="middle" data-maxw="140">Save and connect</text>
+<text x="1404.0" y="530.0" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-maxw="484">What the server sees (attendees)</text>
+<rect x="1404.0" y="546.0" width="484.0" height="250.0" rx="10" fill="#313338"/>
+<circle cx="1440.0" cy="586.0" r="18" fill="#5865f2"/>
+<text x="1470.0" y="582.0" font-size="15" fill="#f2f3f5" font-weight="700" text-anchor="start" data-maxw="200">Demo Event bot</text>
+<text x="1594.3" y="582.0" font-size="12" fill="#b5bac1" font-weight="400" text-anchor="start" data-maxw="160">BOT · today 10:20</text>
+<text x="1470.0" y="608.0" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-maxw="394">The event's bot now runs on the new platform. Commands</text>
+<text x="1470.0" y="628.0" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-maxw="394">work as before; pizza and tournament links open the event</text>
+<text x="1470.0" y="648.0" font-size="14" fill="#dbdee1" font-weight="400" text-anchor="start" data-maxw="394">hub. Sign in once with Discord.</text>
+<rect x="1470.0" y="710.0" width="150.0" height="34.0" rx="4" fill="#4e5058"/>
+<text x="1545.0" y="732.0" font-size="14" fill="#f2f3f5" font-weight="600" text-anchor="middle" data-maxw="140">Open the hub</text>
+<text x="1404.0" y="830.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">What the import takes is D6 (only what the legacy bot itself held: its</text>
+<text x="1404.0" y="850.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">settings and two small state files; the signup site's data stays behind).</text>
+<text x="1404.0" y="870.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-maxw="484">Where the token lives is D7; when the cutover happens, O2.</text>
+</svg>
