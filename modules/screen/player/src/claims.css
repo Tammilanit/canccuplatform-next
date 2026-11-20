@@ -44,25 +44,49 @@
     display: none;
   }
 
-  .canccu-region[data-role="ticker"] > .canccu-widget--announcement,
-  .canccu-region[data-role="ticker"] > .canccu-widget--announcement > .canccu-widget__level {
+  /* In the ticker the card falls back to one line (#668, A8): its label, its title, then its
+     ticker line; the body does not fit the ticker's height, and the line carries it. The level
+     box is a block everywhere else, so the row needs its own `display: flex`. */
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement {
     flex-direction: row;
     align-items: center;
     gap: calc(2.4 * var(--canccu-u));
   }
 
-  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__title,
-  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__body {
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement > .canccu-widget__level {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: calc(2.4 * var(--canccu-u));
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__title {
+    flex: 0 1 auto;
+    min-width: 0;
     font-size: calc(3.4 * var(--canccu-u));
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__body {
+    display: none;
   }
 
   .canccu-region[data-role="ticker"] .canccu-widget--announcement .canccu-widget__ticker-line {
     display: block;
+    flex: 0 1 auto;
+    min-width: 0;
     padding-inline-start: calc(2.4 * var(--canccu-u));
     border-inline-start: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
     font-size: calc(3.4 * var(--canccu-u));
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* A ticker line Moments claims (an announcement's) wears the accent on its label, so it stands
