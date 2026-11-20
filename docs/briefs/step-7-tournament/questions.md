@@ -116,7 +116,7 @@ Every account is a Discord account (0027), but a walk-in friend may have none.
 - **A.** One page per event: the final's top three with photos, then each session's winner, kept after the event.
 - **B.** A hall of fame across the series.
 - **Recommendation: A** now; B is a roadmap note for the series (step 8's clone and series).
-- **Changed for 0030:** Mini tournaments have champions too, and a Finals champion lives in the Finals app. **Recommendation now: A**, with a second part under the official champions: the event's mini tournament champions, by game, smaller. The Finals app keeps its own champions page; the hub links to it from the Finals tile, and this page never lists it (0030 point 6).
+- **Changed for 0030:** Mini tournaments have champions too, and a Finals champion lives in the Finals app. **Recommendation now: A**, with a second part under the official champions: the event's mini tournament champions, by game, smaller. The Finals app keeps its own champions page; the hub links to it from the Finals tile, and this page never lists it (no data is synced: 0030's Consequences).
 
 ### U17. Walk-ins
 The legacy added "present, not registered" players from the roster at scoring.
@@ -458,12 +458,14 @@ Step 9 is to wire tournament events into Screen.
 **New for 0030.** Mini tournaments for any catalogue game, run by the players like the Finals app: sign-up, a balanced draw, lobby codes and a match card, self-reported placements, a crew queue for disputes ([0030](../../decisions/0030-finals-integrated-one-tourney-core.md) point 4; the [Finals app's features](../../legacy-inventory/thefinals_mini_tourney.md#features) as the model). They are new pages in the platform's design; the Finals app itself is not redrawn. Mockups [16](16-mini-player.svg) and [17](17-mini-crew.svg); where they meet Finals, [18](18-finals-and-tournament.svg).
 
 ### M1. Who starts a mini tournament
+**New for 0030.**
 - **A.** Any signed-in member of the event, from a game's page or the Tournament page; a per-event setting can restrict it to the crew.
 - **B.** The crew only.
 - **C.** Any member, held until the crew approves it.
 - **Recommendation: A.** "Run by the players" is the point (the Finals app's public start); the starter becomes its host, with no crew right. The setting covers events that want control, and the crew can cancel any one (M15).
 
 ### M2. Which games
+**New for 0030.**
 Each game's rules come from the catalogue: team size, teams per match, a default format. The Games track builds them; it is a parallel track and may land after step 7.
 - **A.** A member can start one only for a game whose rules are set and pass the core's `check_rules`; the crew can start one for any game and set the rules in the form, for that tournament only; when the catalogue is not live, the crew's form is the only way.
 - **B.** Any game, with the rules typed by whoever starts it.
@@ -471,12 +473,14 @@ Each game's rules come from the catalogue: team size, teams per match, a default
 - **Recommendation: A.** Players see only games that can really run; the crew is never blocked by the parallel track, and its rules are kept with that one tournament (D19), never written back to the catalogue.
 
 ### M3. Sign-up and the draw
+**New for 0030.**
 - **A.** Solo sign-up, with balanced teams drawn at the start by the core's team builder from the players' ratings (M4); a game with team size 1 has no draw.
 - **B.** Teams sign up as teams (a name, its players by invite, as U3).
 - **C.** Both, chosen by the starter: solo with a balanced draw by default, teams when friends want to play together.
 - **Recommendation: C**, solo by default. Solo sign-up with a balanced draw is how the Finals app is run most; team sign-up reuses U3's invites. Players left over when the count does not fill the last team are listed as "left out", first in line for the next one (the Finals app's rule).
 
 ### M4. Ratings
+**New for 0030.**
 The balanced draw needs a rating per player and game; the Finals app keeps a 0–100 roster across seasons.
 - **A.** Per game per event, starting at 50 each event.
 - **B.** Per game across the event series (#150), updated by the core's bands and scoring table when a mini tournament finishes, clamped 0–100.
@@ -484,53 +488,62 @@ The balanced draw needs a rating per player and game; the Finals app keeps a 0�
 - **Recommendation: B.** Balance improves with history, and the series is the group that plays together; a player sees their own rating and its change after each tournament, others see only the change marks (the Finals app's setting, on by default). Ratings are personal data (D16, O6). Mini tournaments never touch season points (M10).
 
 ### M5. The format: placements only or a bracket
+**New for 0030.**
 - **A.** The game's default format, which the starter may change to any format the core can run for the count: single elimination, groups then knock-out, heats, open heats, or a preset's formats for a game that fits it (THE FINALS' seven for a game with teams of three and 2–4 teams per match).
 - **B.** Always the game's default.
 - **C.** Placements only: one match, no bracket.
 - **Recommendation: A**, with the choice shown as cards with a small drawing of each format, not a list of names; the format is built when sign-up closes, for the count that signed up, and frozen (D18). Placements only is one of the choices.
 
 ### M6. When it starts
+**New for 0030.**
 - **A.** The starter sets a start time and a minimum; at the time it starts with the largest count the format allows; the starter or the crew can start it early once the minimum is in.
 - **B.** It starts when full.
 - **C.** A vote to start early and availability voting, as the Finals app.
-- **Recommendation: A.** At a LAN party the players are in the hall; the Finals app's votes serve its off-LAN seasons, which it keeps. A mini tournament that has not reached its minimum at the time stays open for 30 minutes and is then cancelled with a push.
+- **Recommendation: A.** At a LAN party the players are in the hall; the Finals app's votes serve its off-LAN seasons, which it keeps. A mini tournament that has not reached its minimum at the time stays open for 30 minutes and is then cancelled with a push (the only automatic cancel before it starts; once running, only the event's end cancels it, M15).
 
 ### M7. The match card and the lobby code
+**New for 0030.**
 - **A.** Each player's current match has a card: the teams with their players, the lobby code (set by any player of the match or the crew, 4–8 characters, kept for the next game of a series), the voice room when the bot makes one, and "Report placements"; it is the For you card while the match is open.
 - **B.** The lobby code from the crew only.
 - **Recommendation: A**, as the Finals app's lobby id ([mockup 16](16-mini-player.svg)). A code is not a secret: it is shown to the players of that match only.
 
 ### M8. Self-reported placements
+**New for 0030.**
 - **A.** Any player of a team in the match reports the order of the teams; two matching reports from different teams decide it; differing reports go to the crew queue; a team can re-report until it is decided (the Finals app's rule).
 - **B.** One report decides; the other teams can dispute within five minutes.
 - **C.** The crew enters every result.
 - **Recommendation: A**, plus a timer: a match with one report and no second after 10 minutes reaches the crew queue as "one report, waiting" for a one-tap confirm. Two-team games need the other team's report, so nobody crowns themselves. The crew can always decide (M9).
 
 ### M9. The crew queue
+**New for 0030.**
 - **A.** A queue on the Tournament page and the crew phone: differing reports side by side, single reports waiting, problem notes from a match card; the crew picks a report, or sets the order by dragging the teams, with a note the teams see.
 - **B.** The starter settles disputes.
 - **C.** The starter first, then the crew.
 - **Recommendation: A.** The starter is a player and may be in the disputed match. Every decision is kept in the tournament's history with who decided it, as D7 does for corrections ([mockup 17](17-mini-crew.svg)).
 
 ### M10. Mini tournaments and the season
+**New for 0030.**
 - **A.** Mini tournaments never add season points; their champions are their own.
 - **B.** An organiser may make one count as a session.
 - **C.** Bonus points for mini tournament champions.
 - **Recommendation: A.** The season stays the official tournament's, and its rules stay visible (L8). A game the organiser wants in the season runs as an official session with a bracket from the core (P4). The Finals app adds no points either (0030 point 6).
 
 ### M11. Mini tournaments on the screen
-- **A.** A running mini tournament feeds Screen's `bracket` widget and gets a small winner card for its champion (in the platform's screen theme), both ranked below the official session: its bracket takes the Pulse hero only when no session runs, and its champion is a `tournament` class moment that a rule fires only when no session is live; no match is called to the floor.
+**New for 0030.**
+- **A.** A running mini tournament feeds Screen's `bracket` widget and gets a small winner card for its champion (in the platform's screen theme), both ranked below the official session: its bracket takes the Pulse hero only when no session runs, and its champion is a moment from a rule that sets its own rank under 55, below the cup's Champion (`finals` class, 55) and below a live official session, so the order is: official session, the cup's Champion, a Finals card (M12), a mini tournament's champion; the rule fires only when no session is live; no match is called to the floor.
 - **B.** Mini tournaments are on the phones only.
 - **C.** Mini tournaments get the same moments as a session.
-- **Recommendation: A.** The screen shows that the hall is playing, without a call to the floor for a match the players run themselves. **Contract:** a Moments rule on `tournament.mini.finished` (additive, D17).
+- **Recommendation: A.** The screen shows that the hall is playing, without a call to the floor for a match the players run themselves. **Contract:** a Moments rule on `tournament.mini.finished` with a rule-level rank of 52, below `finals` and above `hot_game` (50) (additive, D17); the rank is the rule's own, so the ten classes and their order stay as they are.
 
 ### M12. Where Finals and Tournament meet
+**New for 0030.**
 0030 keeps them apart: the Finals app has its own data, look and champions, and adds no points.
-- **A.** **The screen:** never in one widget; a Finals card (the app's bracket or champion, in its own graphics and theming) is its own claim, ranked below a live official session and above a mini tournament. **Moments:** a Finals champion is a moment of its own, started through the external-app hooks of the Apps track (#193), never by a `tournament.*` event; the official final's Champion stays Tournament's (`finals_result`). **The hub:** one Play list with the official tournament, the open mini tournaments and a Finals tile that opens the app with the platform's sign-in link. **Champions:** separate pages.
+- **A.** **The screen:** never in one widget; a THE FINALS card (the app's bracket or champion, in its own graphics and theming) is its own claim, ranked below a live official session and the cup's Champion (55) and above a mini tournament and its champion (rule rank 52, M11). **Moments:** a Finals champion is a moment of its own, started through the external-app hooks of the Apps track (#193), never by a `tournament.*` event; the official final's Champion stays Tournament's (`finals_result`). **The hub:** one Play list with the official tournament, the open mini tournaments and a THE FINALS tile that opens the app with the platform's sign-in link. **Champions:** separate pages.
 - **B.** The Finals app's results are shown as a mini tournament of the platform.
 - **Recommendation: A** ([mockup 18](18-finals-and-tournament.svg)). B would need a data sync, which 0030 rules out. Moments' `finals` class today means the official tournament's final, not the Finals app; how a Finals app moment is classed is the Finals track's question, and the brief notes the clash as a roadmap note.
 
 ### M13. Rosters and rounds for casual play
+**New for 0030.**
 Moved from Games by 0030 (the product owner's decision of 2026-11-07). A casual round is people playing a game together with no bracket or champion, wanting only teams and a rotation.
 - **A.** A mini tournament with the format "open heats" and no ratings change: a roster of who is in, balanced or random teams per round, the next round drawn from who is waiting (the core's `open_heat`), no reports needed, no champion.
 - **B.** A separate "casual session" entity.
@@ -538,11 +551,13 @@ Moved from Games by 0030 (the product owner's decision of 2026-11-07). A casual 
 - **Recommendation: A**, as one of the format cards (M5), named "Casual rounds". It is the same sign-up and draw, so it costs a format, not a feature.
 
 ### M14. Rights for mini tournaments
+**New for 0030.**
 - **A.** Membership to start, sign up, report and set a lobby code; the starter (host) may edit the start time, start early, cancel before the start and remove a player before the draw; `tournament.minis.manage` for the crew queue, editing any result, cancelling and setting rules for one tournament (D12).
 - **B.** One right for everything.
 - **Recommendation: A.** Player-run means players need no rights; the crew's right goes in the `tournament_crew` preset. The rights are in the high-risk package with D12's.
 
 ### M15. A mini tournament nobody finishes
-- **A.** A match with no report for 60 minutes, and a mini tournament whose host leaves, go to the crew queue; the crew decides or cancels; a cancelled one is kept as cancelled, with no rating effect (the Finals app's rule); at the event's end any running one is cancelled.
+**New for 0030.**
+- **A.** A match with no report for 60 minutes, and a mini tournament whose host leaves, go to the crew queue; the crew decides or cancels; a cancelled one is kept as cancelled, with no rating effect (the Finals app's rule); at the event's end any running one is cancelled. Cancel before it starts: one below its minimum is cancelled 30 minutes after its start time (M6).
 - **B.** Cancelled automatically after a timer.
-- **Recommendation: A**, with the event's end as the only automatic cancel.
+- **Recommendation: A**, with the event's end as the only automatic cancel of a running mini tournament; the one earlier automatic cancel is M6's, for one that never reaches its minimum and so never starts.

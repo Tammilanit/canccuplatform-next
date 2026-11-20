@@ -52,7 +52,7 @@
 <text x="1840.0" y="658.0" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="end">9</text>
 <rect x="40.0" y="800.0" width="1180.0" height="240.0" rx="6" fill="#14110d" stroke="#ff6a2b" stroke-width="4"/>
 <rect x="40.0" y="800.0" width="18.0" height="240.0" rx="0" fill="#ff6a2b"/>
-<text x="88.0" y="856.0" font-size="36" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="4" data-box="88.0 1200.0">FINALS</text>
+<text x="88.0" y="856.0" font-size="36" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="4" data-box="88.0 1200.0">THE FINALS</text>
 <text x="88.0" y="904.0" font-size="30" fill="#fff4ea" font-weight="700" text-anchor="start" data-box="88.0 1200.0">Semifinal live</text>
 <text x="88.0" y="976.0" font-size="34" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="88.0 1200.0">Team Kappa · Team Lambda · Team Sigma</text>
 <rect x="1260.0" y="800.0" width="620.0" height="240.0" rx="20" fill="#161a2e"/>
@@ -91,7 +91,7 @@
 <text x="564.0" y="540.0" font-size="30" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="564.0 864.0">Team 4</text>
 <rect x="1260.0" y="150.0" width="620.0" height="620.0" rx="6" fill="#14110d" stroke="#ff6a2b" stroke-width="4"/>
 <rect x="1260.0" y="150.0" width="18.0" height="620.0" rx="0" fill="#ff6a2b"/>
-<text x="1308.0" y="214.0" font-size="44" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="4" data-box="1308.0 1860.0">FINALS</text>
+<text x="1308.0" y="214.0" font-size="44" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="4" data-box="1308.0 1860.0">THE FINALS</text>
 <text x="1308.0" y="274.0" font-size="36" fill="#fff4ea" font-weight="700" text-anchor="start" data-box="1308.0 1860.0">Semifinal live</text>
 <text x="1308.0" y="340.0" font-size="32" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="1308.0 1860.0">Team Kappa</text>
 <text x="1308.0" y="392.0" font-size="32" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="1308.0 1860.0">Team Lambda</text>
@@ -125,7 +125,7 @@
 <text x="26.0" y="532.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ALSO TONIGHT</text>
 <rect x="26.0" y="544.0" width="338.0" height="110.0" rx="6" fill="#14110d" stroke="#ff6a2b" stroke-width="2"/>
 <rect x="26.0" y="544.0" width="10.0" height="110.0" rx="0" fill="#ff6a2b"/>
-<text x="56.0" y="584.0" font-size="20" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="3" data-box="56.0 344.0">FINALS</text>
+<text x="56.0" y="584.0" font-size="20" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="3" data-box="56.0 344.0">THE FINALS</text>
 <text x="56.0" y="612.0" font-size="14" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="56.0 344.0">Season 4 · semifinal live</text>
 <text x="56.0" y="638.0" font-size="13" fill="#c9b8a8" font-weight="400" text-anchor="start" data-box="56.0 330.0">Opens its own app, signed in</text>
 <text x="195.0" y="700.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="middle">Champions ›</text>
@@ -223,7 +223,7 @@
 <text x="1180.0" y="930.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="end">7</text>
 <rect x="1260.0" y="150.0" width="620.0" height="890.0" rx="6" fill="#14110d" stroke="#ff6a2b" stroke-width="5"/>
 <rect x="1260.0" y="150.0" width="24.0" height="890.0" rx="0" fill="#ff6a2b"/>
-<text x="1320.0" y="240.0" font-size="54" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="5" data-box="1320.0 1860.0">FINALS</text>
+<text x="1320.0" y="240.0" font-size="54" fill="#ff6a2b" font-weight="900" text-anchor="start" letter-spacing="5" data-box="1320.0 1860.0">THE FINALS</text>
 <text x="1320.0" y="330.0" font-size="40" fill="#fff4ea" font-weight="700" text-anchor="start" data-box="1320.0 1860.0">Champion</text>
 <text x="1320.0" y="430.0" font-size="70" fill="#fff4ea" font-weight="900" text-anchor="start" data-box="1310.0 1860.0">Team Kappa</text>
 <text x="1320.0" y="530.0" font-size="38" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="1320.0 1860.0">Player Eight</text>
@@ -231,7 +231,7 @@
 <text x="1320.0" y="658.0" font-size="38" fill="#fff4ea" font-weight="500" text-anchor="start" data-box="1320.0 1860.0">Player Ten</text>
 <text x="1320.0" y="900.0" font-size="40" fill="#ff6a2b" font-weight="700" text-anchor="start" data-box="1320.0 1860.0">Season 4</text>
 </g></g>
-<text x="1288.0" y="1064.0" font-size="15" fill="#374151" font-weight="600" text-anchor="start" data-box="1288.0 1878.0">Finals: the app&#x27;s own card, through its connection</text>
+<text x="1288.0" y="1064.0" font-size="15" fill="#374151" font-weight="600" text-anchor="start" data-box="1288.0 1878.0">THE FINALS: the app&#x27;s own card, through its connection</text>
 <circle cx="45.0" cy="1111.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="1116.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
 <text x="66.0" y="1116.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 952.0">The cup&#x27;s session leads the Pulse while it runs; a Finals card never shares a widget with the cup (L3, M12).</text>

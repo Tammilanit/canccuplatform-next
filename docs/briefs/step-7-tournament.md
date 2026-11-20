@@ -116,10 +116,10 @@ So the recommendation is now **C with mini tournaments: the cup, live, and the p
 
 ### Games, Finals and Tournament since 0030
 - **Games' role.** The catalogue carries each game's competition rules as data: team size, teams per match `{min, max}`, a default format (a core template); Games checks them with the core's `check_rules` so the catalogue never offers a format that cannot run. Tournament reads them when a session or a mini tournament is created and keeps a copy with it ([D19](step-7-tournament/questions.md#d19-reading-a-games-competition-rules)), so a rules change never alters a running competition. The rules ship in the Games track's contract with its own code (0029); until they do, or for a game without them, the crew sets them for one tournament ([M2](step-7-tournament/questions.md#m2-which-games)). "Rosters and rounds for casual play" move here from the Games track and become one format of a mini tournament, "Casual rounds" ([M13](step-7-tournament/questions.md#m13-rosters-and-rounds-for-casual-play)).
-- **Finals stays apart.** The Finals app keeps its own data, look and champions; no Finals result adds Tournament points, and no data is synced (0030 point 6). Where they meet ([M12](step-7-tournament/questions.md#m12-where-finals-and-tournament-meet), [mockup 18](step-7-tournament/18-finals-and-tournament.svg)):
-  - **On the screen:** never in one widget. A live cup session leads the Pulse; a Finals card, in the app's own graphics and theming, is its own claim below it and above a mini tournament; a mini tournament's bracket takes the hero only when no session runs.
+- **Finals stays apart.** The Finals app keeps its own data, look and champions; no Finals result adds Tournament points, and no data is synced (0030's Consequences). Where they meet ([M12](step-7-tournament/questions.md#m12-where-finals-and-tournament-meet), [mockup 18](step-7-tournament/18-finals-and-tournament.svg)):
+  - **On the screen:** never in one widget. A live cup session leads the Pulse; a THE FINALS card, in the app's own graphics and theming, is its own claim below it and above a mini tournament; a mini tournament's bracket takes the hero only when no session runs.
   - **In Moments:** the cup final's Champion stays Tournament's (`finals_result`, the `finals` class, built); a Finals champion is a moment of its own through the app's connection (the Apps track's hooks, #193), never from a `tournament.*` event. The built `finals` class means the cup's final, not the Finals app: a name clash noted below.
-  - **In the hub:** one Play list with the cup, the open mini tournaments and a Finals tile that opens the app with the platform's sign-in link (the Finals track's); separate champions pages.
+  - **In the hub:** one Play list with the cup, the open mini tournaments and a THE FINALS tile that opens the app with the platform's sign-in link (the Finals track's); separate champions pages.
 
 ## Recommended direction: the cup, live
 **C.** The legacy tournament worked at real events because of its season: any game, coarse placements, a final that everyone can reach. What hurt was never that shape but the night around it: nobody knew where to be, the bot's DMs were the only voice, the crew scored in a giant form with the first team pre-picked as the winner, corrections overwrote the past, and a down bot left registration open. C keeps the season and fixes exactly the night.
@@ -225,7 +225,7 @@ The queue of differing reports, lone reports and problem notes; what runs and wh
 ![Mini tournaments for the crew](step-7-tournament/17-mini-crew.svg)
 
 ### Where Finals and Tournament meet (attendees, crew) · 0030
-The Pulse with a cup session and a Finals card; the Pulse with a mini tournament's bracket when no session runs; three champions with three owners; the hub's Play list with the Finals tile ([M11](step-7-tournament/questions.md#m11-mini-tournaments-on-the-screen), [M12](step-7-tournament/questions.md#m12-where-finals-and-tournament-meet)).
+The Pulse with a cup session and a THE FINALS card; the Pulse with a mini tournament's bracket when no session runs; three champions with three owners; the hub's Play list with the Finals tile ([M11](step-7-tournament/questions.md#m11-mini-tournaments-on-the-screen), [M12](step-7-tournament/questions.md#m12-where-finals-and-tournament-meet)).
 
 ![Where Finals and Tournament meet](step-7-tournament/18-finals-and-tournament.svg)
 
