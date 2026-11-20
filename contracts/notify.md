@@ -39,8 +39,9 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; a delay only when `data.announce` is `true` (a quiet shift is never announced, [agenda.md](agenda.md#notification-channels)); dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
 | | | | `agenda.item.announced` | `data.item.visibility` | kind not `quiet_hours`; one notification per announcement (dedupe by the event's `id`); title the item's, body the organiser's `data.message` (empty when none was given) | no |
 | `announcements` | moments | event: event (on, off) | `moments.announcement.sent` | `public` | only when `data.channels.push` is `true` (the composer's "Push to phones", [moments.md](moments.md#announcements-115)) | `data.urgent` |
-| `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closed` (provisional) | event: `public` | — | no |
-| | | | `pizza.order.arrived` (provisional) | personal: `data.user_ids` (each person with a pizza in the order) | — | no |
+| `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closing` (the last call), `pizza.order.closed` | event: `public` | — | no |
+| | | | `pizza.order.arrived`, `pizza.order.cancelled` | personal: `data.user_ids` (each person with a pizza in the order) | `arrived`: one text with the pickup place, one without | no |
+| | | | `pizza.reminder.triggered` (a stalled order's holder and the crew; the hand-out nudge, D12) | personal: `data.user_id` (the one person it is for) | one trigger per `data.kind` | no |
 | `tournament` | tournament | event: event (off, off); personal: user (on, off) | `tournament.registration.opened` (provisional) | event: `public` | — | no |
 | | | | `tournament.match.called` (provisional) | personal: `data.user_ids` (each player of the match) | — | yes |
 | | | | `tournament.checkin.opened` (provisional) | personal: `data.user_ids` (each registered player) | — | no |
@@ -100,6 +101,58 @@ The `announcements` registration in full, as the moments module sends it (D20; t
    "urgent": {"field": "data.urgent"},
    "title": "{data.title}", "body": "{data.body}",
    "url": "/notify/", "expires_at": "data.expires_at"}]}
+```
+
+The `food` registration in full, as the pizza module sends it (step 5, D12; [pizza.md](pizza.md#events-version-1)). Its pages are pizza's: the attendee's order (`/pizza/orders/…`) and, for a reminder to the holder or the crew, the holder's page (`/pizza/hold/…`), which the crew may open too:
+
+```json
+{"key": "food", "owner": "pizza", "title": "Food",
+ "description": "Group food orders: when one opens and closes, and the news of your own",
+ "parts": {"event": {"scope": "event", "channels": ["push", "discord_dm"],
+                     "defaults": {"push": false, "discord_dm": false}},
+           "personal": {"scope": "user", "channels": ["push", "discord_dm"],
+                        "defaults": {"push": true, "discord_dm": false}}},
+ "triggers": [
+  {"event": "pizza.order.opened", "part": "event", "audience": {"value": "public"},
+   "title": "Pizza order open: {data.order.pizzeria.name}", "body": "Order {data.order.seq} closes at {data.order.closes_at|time}",
+   "url": "/pizza/orders/{data.order.id}", "expires_at": "data.order.closes_at"},
+  {"event": "pizza.order.closing", "part": "event", "audience": {"value": "public"},
+   "title": "Order {data.order.seq} is closing at {data.closes_at|time}", "body": "Last call: add your pizza now",
+   "url": "/pizza/orders/{data.order.id}/add", "expires_at": "data.closes_at"},
+  {"event": "pizza.order.closed", "part": "event", "audience": {"value": "public"},
+   "title": "Order {data.order.seq} closed", "body": "{data.order.pizzeria.name}: {data.order.pizza_count} pizzas",
+   "url": "/pizza/orders/{data.order.id}", "expires_after_minutes": 60},
+  {"event": "pizza.order.arrived", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.order.pickup", "op": "exists"}],
+   "title": "Pizza is here: order {data.order.seq}", "body": "Collect at {data.order.pickup}",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.order.arrived", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.order.pickup", "op": "eq", "value": null}],
+   "title": "Pizza is here: order {data.order.seq}", "body": "{data.order.pizzeria.name}: come and get it",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.order.cancelled", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "title": "Order {data.order.seq} was cancelled", "body": "{data.order.pizzeria.name}: your pizza was not ordered",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "open_past_target"}],
+   "title": "Order {data.order.seq} is past its close time", "body": "Close it and call it in, or move the time",
+   "url": "/pizza/hold/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "closed_not_placed"}],
+   "title": "Order {data.order.seq} is not called in yet", "body": "Closed {data.minutes} min ago: call {data.order.pizzeria.name}",
+   "url": "/pizza/hold/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "not_arrived"}],
+   "title": "Has order {data.order.seq} arrived?", "body": "Mark it here when it comes",
+   "url": "/pizza/hold/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "released"}],
+   "title": "Nobody holds order {data.order.seq}", "body": "Take it over and call it in",
+   "url": "/pizza/hold/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "not_collected"}],
+   "title": "Your pizza is waiting", "body": "Order {data.order.seq} is here: come and get it",
+   "url": "/pizza/orders/{data.order.id}"}]}
 ```
 
 **Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules), whether or not the change was announced (`data.announce`).

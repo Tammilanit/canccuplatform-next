@@ -18,7 +18,7 @@ The pizza module serves [contracts/pizza.md](../../contracts/pizza.md): the even
 
 ## Environment
 
-`CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`, `CANCCU_IP_MODE=demo` (only with version `dev`).
+`CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_NOTIFY_URL` (default `http://notify:8080`, where the `food` topic is registered), `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`, `CANCCU_IP_MODE=demo` (only with version `dev`).
 
 Through Caddy: `/api/pizza/health`, the contract's `/api/pizza/…` paths, and the pages under `/pizza/`.
 

@@ -29,6 +29,7 @@ import { dropOldKeys } from "./idempotency.js";
 import { everySessionIsMember, tenantsPeople } from "./people.js";
 import { Scheduler, TICK_MS } from "./scheduler.js";
 import { settingsReader } from "./settings.js";
+import { registerTopic } from "./topic.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the pizza migrations; each module has its own. */
@@ -153,6 +154,9 @@ async function main(): Promise<void> {
   new Bus(liveStore, config.module, log).subscribeTenants([config.module], (event) => {
     live.handle(event);
   });
+
+  // Without it Notify knows no `food` topic, and no phone hears of an order.
+  void registerTopic(process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080", service, { log });
 
   const app = buildApp(deps);
   await app.listen({ host: "0.0.0.0", port: PORT });
