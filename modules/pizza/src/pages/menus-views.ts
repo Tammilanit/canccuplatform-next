@@ -6,7 +6,7 @@ import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { euros } from "../csv.js";
 import type { MenuFile } from "../menu-csv.js";
-import { flash } from "./holder-views.js";
+import { flash } from "./order-view.js";
 import { PREFIX, formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 
@@ -38,7 +38,7 @@ function summary(c: PageCtx, p: PizzeriaView): string {
   const priced = items.length > 0 && items.every((i) => i.price_cents !== null);
   return [
     p.service === "takeaway" ? c.t("menus.takeaway") : c.t("menus.delivers"),
-    c.t("menus.items", { n: items.length }),
+    items.length === 1 ? c.t("menus.items_one") : c.t("menus.items", { n: items.length }),
     priced ? c.t("menus.prices") : c.t("menus.no_prices"),
   ].join(" · ");
 }
@@ -68,13 +68,13 @@ export function pizzeriasView(c: PageCtx, list: PizzeriaView[], error?: string):
         (p) =>
           html`<li>
             <a class="canccu-list__row" href="${P}/${p.id}">
-              <span class="canccu-list__main">
-                <span class="canccu-list__title">${p.name}</span>
-                <span class="canccu-list__meta">${summary(c, p)}</span>
-                <span class="canccu-list__meta"
-                  >${p.website === null ? c.t("menus.no_web") : `${host(p.website)} ↗`}</span
-                >
-              </span>
+              <div class="canccu-list__main">
+                <p class="canccu-list__title">${p.name}</p>
+                <p class="canccu-list__meta">${summary(c, p)}</p>
+                <p class="canccu-list__meta">
+                  ${p.website === null ? c.t("menus.no_web") : `${host(p.website)} ↗`}
+                </p>
+              </div>
             </a>
           </li>`,
       )}
@@ -170,10 +170,10 @@ export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string): Html 
         (
           i,
         ) => html`<li${attrs({ class: i.hidden === true ? "canccu-list__row pizza-hidden" : "canccu-list__row" })}>
-          <span class="canccu-list__main">
-            <span class="canccu-list__title">${i.number ?? ""} ${i.name}</span>
-            <span class="canccu-list__meta">${i.hidden === true ? c.t("menus.hidden") : (i.description ?? "")}</span>
-          </span>
+          <div class="canccu-list__main">
+            <p class="canccu-list__title">${i.number ?? ""} ${i.name}</p>
+            <p class="canccu-list__meta">${i.hidden === true ? c.t("menus.hidden") : (i.description ?? "")}</p>
+          </div>
           <span class="canccu-list__end canccu-num">${i.hidden === true ? "" : price(i.price_cents)}</span>
         </li>`,
       )}
@@ -319,12 +319,12 @@ export function previewView(
           : changes.map(
               (ch) =>
                 html`<li class="canccu-list__row">
-                  <span class="canccu-list__main">
-                    <span class="canccu-list__title">${ch.title}</span>
-                    <span class="canccu-list__meta pizza-change pizza-change--${ch.kind}"
-                      >${file.pizzerias.length > 1 ? `${ch.pizzeria} · ` : ""}${ch.what}</span
-                    >
-                  </span>
+                  <div class="canccu-list__main">
+                    <p class="canccu-list__title">${ch.title}</p>
+                    <p class="canccu-list__meta pizza-change pizza-change--${ch.kind}">
+                      ${file.pizzerias.length > 1 ? `${ch.pizzeria} · ` : ""}${ch.what}
+                    </p>
+                  </div>
                 </li>`,
             )
       }

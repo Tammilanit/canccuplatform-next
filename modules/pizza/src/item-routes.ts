@@ -152,7 +152,7 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
       const { order } = await orderFor(
         c,
         request.params.id,
-        "order.nudge",
+        "order.hand_out",
         w.caller,
         w.ctx,
         w.now,

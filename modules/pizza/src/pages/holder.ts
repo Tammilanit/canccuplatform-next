@@ -8,17 +8,9 @@ import { timeLabel } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import type { Summary } from "../summary.js";
 import { nextLocalTime } from "../time.js";
-import {
-  calledInView,
-  callView,
-  cancelView,
-  checklistView,
-  handOutView,
-  hereView,
-  notHeldView,
-  overView,
-} from "./holder-views.js";
-import type { OrderView } from "./holder-views.js";
+import { cancelView, handOutView, overView } from "./handout-views.js";
+import { calledInView, callView, checklistView, hereView, notHeldView } from "./holder-views.js";
+import type { OrderView } from "./order-view.js";
 import { back, formText, hubPage, must, pageCtx, viaApi } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 

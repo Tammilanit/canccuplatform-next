@@ -11,7 +11,7 @@ import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import { DEFAULT_SETTINGS, TIME_BOUNDS } from "../settings.js";
 import type { TimeKey } from "../settings.js";
-import { flash } from "./holder-views.js";
+import { flash } from "./order-view.js";
 import { PREFIX, SETTINGS_WRITE, formKey, organiserPage, pageCtx } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import type { MessageKey } from "./messages.js";

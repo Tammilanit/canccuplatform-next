@@ -6,15 +6,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import {
   DATABASE_URL,
-  form,
   freshDatabase,
   itemId,
   json,
   open,
   seedPizzerias,
-  view,
   world,
 } from "./helpers.js";
+import { form, view } from "./forms.js";
 import type { World } from "./helpers.js";
 
 let pool: pg.Pool;
@@ -128,11 +127,11 @@ describe.skipIf(!DATABASE_URL)("the holder's pages", () => {
 
   it("cancels with the holder's words, and undoes a call-in", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`);
-    let r = await form(w, "pena", `/hold/${id}/step/undo`);
+    const r = await form(w, "pena", `/hold/${id}/step/undo`);
     expect(location(r)).toBe(`/pizza/hold/${id}`);
     expect((await order()).state).toBe("closed");
     expect((await view(w, "pena", `/hold/${id}/cancel`)).body).toContain("The 2 people in it");
-    r = await form(w, "pena", `/hold/${id}/step/cancel`, { reason: "The pizzeria is closed" });
+    await form(w, "pena", `/hold/${id}/step/cancel`, { reason: "The pizzeria is closed" });
     const o = await order();
     expect(o.state).toBe("cancelled");
     expect(o.cancel_reason).toBe("The pizzeria is closed");

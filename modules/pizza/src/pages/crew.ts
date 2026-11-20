@@ -9,9 +9,9 @@ import type { AppDeps } from "../http.js";
 import { tenantOf, today } from "../http.js";
 import { MANAGE, MENU_WRITE } from "../policy.js";
 import { DAY } from "../time.js";
-import { orderView, ordersView } from "./crew-views.js";
+import { CREW_STEP_NAMES, orderView, ordersView } from "./crew-views.js";
 import type { HistoryEntry } from "./crew-views.js";
-import type { OrderView } from "./holder-views.js";
+import type { OrderView } from "./order-view.js";
 import {
   PREFIX,
   SETTINGS_WRITE,
@@ -24,16 +24,7 @@ import {
 } from "./kit.js";
 
 type Q = { day?: string; error?: string };
-const CREW_STEPS = new Set([
-  "take-over",
-  "release",
-  "close",
-  "reopen",
-  "arrive",
-  "done",
-  "undo",
-  "cancel",
-]);
+const CREW_STEPS = new Set(CREW_STEP_NAMES);
 
 const missing = () =>
   new KitError("needs right pizza.order.manage", { status: 403, code: "missing_right" });

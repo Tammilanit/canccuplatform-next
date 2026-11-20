@@ -6,8 +6,8 @@
 import { attrs, html, timeLabel } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { PizzaSettings } from "../settings.js";
-import type { OrderView } from "./holder-views.js";
-import { counts, flash, peopleOf } from "./holder-views.js";
+import type { OrderView } from "./order-view.js";
+import { counts, flash, peopleOf } from "./order-view.js";
 import { PREFIX, formKey } from "./kit.js";
 import { isKey } from "./messages.js";
 import type { MessageKey } from "./messages.js";
@@ -215,6 +215,9 @@ const STEP_INS: {
   { step: "undo", when: ["placed", "arrived"] },
   { step: "cancel", when: ["open", "closed", "placed", "arrived"], danger: true },
 ];
+
+/** The steps the crew may take from its page. */
+export const CREW_STEP_NAMES = STEP_INS.map((s) => s.step);
 
 /** Mockup 10, below the table: one order, what the crew may do to it, its people and its history. */
 export function orderView(c: PageCtx, o: OrderView, history: HistoryEntry[], error?: string): Html {

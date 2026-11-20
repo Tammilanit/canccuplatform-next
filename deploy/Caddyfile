@@ -125,13 +125,30 @@
 		reverse_proxy notify:8080
 	}
 
-	# The pizza contract's paths are /api/pizza/...; its pages come with #118 and #119.
+	# The pizza contract's paths are /api/pizza/...; its pages are under /pizza/.
 	handle /api/pizza/health {
 		rewrite * /health
 		reverse_proxy pizza:8080
 	}
 
 	handle /api/pizza/* {
+		reverse_proxy pizza:8080
+	}
+
+	# As for moments: the strip below would pass these on as pizza's internal paths or as a
+	# second way into what /api/pizza/ above already serves.
+	@pizza-hidden path /pizza/internal/* /pizza/api/* /pizza/health
+	handle @pizza-hidden {
+		respond "not found" 404
+	}
+
+	handle /pizza {
+		redir * /pizza/{?query} 308
+	}
+
+	# The Food pages: the holder's (/pizza/hold/) and the crew's (/pizza/crew/); the module's own
+	# paths start at /.
+	handle_path /pizza/* {
 		reverse_proxy pizza:8080
 	}
 

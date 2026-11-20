@@ -26,3 +26,20 @@ done
 echo "-- the internal paths of the module are not routed"
 code=$(curl -sS -o /dev/null -w '%{http_code}' "$base/internal/pizza/orders"); echo "$code"
 [ "$code" = 404 ]
+echo "-- /pizza without the slash goes to the pages"
+curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/pizza" | tee "$t/r.txt"
+grep -qxF "308 $base/pizza/" "$t/r.txt"
+echo "-- the pages' prefix is no second way into the API or the internal paths"
+for p in /pizza/api/pizza/orders /pizza/internal/pizza/orders /pizza/health; do
+  code=$(curl -sS -o /dev/null -w '%{http_code}' "$base$p"); echo "$p $code"
+  [ "$code" = 404 ]
+done
+echo "-- a signed-out page sends the browser to sign in, and back to that page"
+curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/pizza/crew" | tee "$t/r.txt"
+grep -qxF "303 $base/admin/sign-in?next=%2Fpizza%2Fcrew" "$t/r.txt"
+echo "-- the pages' stylesheets are served"
+code=$(curl -sS -o /dev/null -w '%{http_code}' "$base/pizza/static/pizza.css"); echo "$code"
+[ "$code" = 200 ]
+echo "-- the scheduler reports its lag in health"
+curl -fsS "$base/api/pizza/health" | tee "$t/r.json"; echo
+jq -e '.checks.scheduler.status | IN("ok", "degraded")' "$t/r.json"

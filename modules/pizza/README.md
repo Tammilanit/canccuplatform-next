@@ -1,6 +1,6 @@
 # pizza
 
-The pizza module serves [contracts/pizza.md](../../contracts/pizza.md): the event's group food orders, their lifecycle and rights, pizzerias and menus, money on the order, the menu CSV and the export for the payment system (#117, the [step 5 plan](../../docs/briefs/step-5-pizza.md#plan)). The scheduler and the pages come with #118 and #119.
+The pizza module serves [contracts/pizza.md](../../contracts/pizza.md): the event's group food orders, their lifecycle and rights, pizzerias and menus, money on the order, the menu CSV and the export for the payment system (#117, the [step 5 plan](../../docs/briefs/step-5-pizza.md#plan)). The scheduler and the holder's and crew's pages are #118's; the attendee's pages come with #119.
 
 ## How it works
 
@@ -13,12 +13,14 @@ The pizza module serves [contracts/pizza.md](../../contracts/pizza.md): the even
 - **Money** (`money.ts`, `money-routes.ts`): each person's amount by the largest remainder; changes once an order is closed are audited and tell the people whose amount moved.
 - **The record and the export** (`record.ts`, `export-csv.ts`, `record-routes.ts`); **privacy** (`privacy.ts`, `consumer.ts`): the export and delete, the 12-month anonymisation, deleted users and events, a member who left, clone.
 - **Audit** (`audit.ts`): entries go to the tenants module in the request that made the change, before it commits.
+- **The scheduler** (`scheduler.ts`, `due.ts`): every container ticks every 30 s (and once at start) through the events pizza serves. A tick writes each live order's due steps into `pizza_due` from the order and the event's settings, then takes the due ones one at a time `FOR UPDATE SKIP LOCKED`, checks each again against the order, takes it (the lifecycle's `scheduled()` or a reminder) and marks the row sent in the same transaction, which stores the events in the outbox. Reminders go to one person each (`pizza.reminder.triggered` with `user_id`); "the crew" is `pizza_crew`, the members whose session showed `pizza.order.manage` when they last used pizza (`http.ts`, `whoIs`). `/health` has the check `scheduler` with its lag.
+- **The pages** (`pages/`, `static/`): the holder's (`/pizza/hold/{order}`: checklist, call mode, called in, it's here, hand-out) in the hub's look with the event's theme, and the crew's (`/pizza/crew`: the day's orders and one order to step in on; `/pizza/crew/pizzerias`: pizzerias, menus and the menu CSV's preview; `/pizza/crew/settings`: Food settings, saved through admin's settings API as the person). Every page reads and writes through the API itself (`kit.ts`, `viaApi`), so its rights, idempotency and audit are the API's. English and Finnish (`messages.ts`, `messages-fi.ts`) by admin's `language`; `static/pizza.js` adds what is nicer with a script (tick-as-you-read, copy, the 10 s undo of "Everyone got theirs"), and every page works without it.
 
 ## Environment
 
 `CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`, `CANCCU_IP_MODE=demo` (only with version `dev`).
 
-Through Caddy: `/api/pizza/health` and the contract's `/api/pizza/…` paths.
+Through Caddy: `/api/pizza/health`, the contract's `/api/pizza/…` paths, and the pages under `/pizza/`.
 
 ## Check
 
@@ -26,4 +28,4 @@ Through Caddy: `/api/pizza/health` and the contract's `/api/pizza/…` paths.
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-The tests need a real Postgres, because RLS cannot be faked; without `CANCCU_DATABASE_URL` they are skipped. They drop and recreate the module's tables, so they refuse a database whose name does not end in `_test` ([docs/ci.md](../../docs/ci.md#modules)). The ported legacy tests are the spec: `orders.test.ts` and `cancel.test.ts` (`pizza-orders`), `items.test.ts` (`pizza-routes`), `system.test.ts` (`pizza-db`), `validate.test.ts`, `summary.test.ts` (`pizza-summary`, `pizza-menu-filter`) and `record.test.ts` (`pizza-report`). `ci/stack-smoke.sh` checks the module on the running stack.
+The tests need a real Postgres, because RLS cannot be faked; without `CANCCU_DATABASE_URL` they are skipped. They drop and recreate the module's tables, so they refuse a database whose name does not end in `_test` ([docs/ci.md](../../docs/ci.md#modules)). The ported legacy tests are the spec: `orders.test.ts` and `cancel.test.ts` (`pizza-orders`), `items.test.ts` (`pizza-routes`), `system.test.ts` (`pizza-db`), `validate.test.ts`, `summary.test.ts` (`pizza-summary`, `pizza-menu-filter`) and `record.test.ts` (`pizza-report`). `test/*.browser.test.ts` drive the holder's and the crew's flows in Chromium (skipped where none starts, required in CI). `ci/stack-smoke.sh` checks the module on the running stack; `scripts/demo-screenshots-pizza.mjs` takes the pages' CI screenshots.

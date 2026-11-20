@@ -162,11 +162,14 @@ async function main(): Promise<void> {
       log.warn({ err }, "pizza upkeep failed");
     });
   }, UPKEEP_MS);
-  const tick = setInterval(() => {
+  const runTick = () => {
     scheduler.tick().catch((err: unknown) => {
       log.warn({ err }, "the pizza scheduler failed");
     });
-  }, TICK_MS);
+  };
+  // At once, so a restart catches up on what fell due while it was down.
+  runTick();
+  const tick = setInterval(runTick, TICK_MS);
   for (const t of [resend, hourly, tick]) t.unref();
 
   const stop = async (): Promise<void> => {

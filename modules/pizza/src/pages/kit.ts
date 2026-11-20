@@ -153,7 +153,10 @@ export async function organiserPage(
     nonce,
     surface: "admin",
     cssHref: `${PREFIX}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${PREFIX}static/pizza.css" />`,
+    head: html`<link rel="stylesheet" href="${PREFIX}static/pizza.css" /><link
+        rel="stylesheet"
+        href="${PREFIX}static/crew.css"
+      />`,
     event: await eventOf(request, deps),
     session: { userName: c.session.userName, rights: c.session.rights },
     current: "food",
@@ -207,6 +210,7 @@ export function pageErrors(scope: FastifyInstance, deps: AppDeps): void {
 const TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "pizza.css": "text/css; charset=utf-8",
+  "crew.css": "text/css; charset=utf-8",
   "pizza.js": "text/javascript; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();
