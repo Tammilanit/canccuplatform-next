@@ -10,6 +10,7 @@ import { flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 import { orderHref, orderName, wayIn } from "./food-views.js";
 import type { FoodCtx } from "./food-views.js";
+import { euro } from "./money-format.js";
 
 const holderName = (c: FoodCtx, o: OrderView) => o.holder?.name ?? c.t("food.the_holder");
 
@@ -165,6 +166,45 @@ function nobodyCard(c: FoodCtx, o: OrderView): Html {
   </section>`;
 }
 
+/** A value with its Copy button (static/pizza.js); without a script the text is selectable. */
+const copyable = (c: FoodCtx, label: string, value: string) =>
+  html`<p class="pizza-copyable">
+    <span>${label}</span
+    ><button type="button" class="canccu-button canccu-button--secondary canccu-button--sm" data-copy="${value}" hidden>
+      ${c.t("mine.copy")}
+    </button>
+  </p>`;
+
+/**
+ * The person's own amount once the order has one, and whom they pay (U12 A, M1): the organiser
+ * after the event, or the payer, with the payer's "Pay me with" details. No money moves here.
+ */
+function myMoney(c: FoodCtx, o: OrderView): Slot {
+  const amount = o.my_amount_cents;
+  if (amount === null || amount === undefined) return "";
+  const sum = euro(c, amount);
+  const p = o.pay_to;
+  const payer = o.settle_to === "payer" && p !== null && p !== undefined && o.my_paid !== null;
+  return html`<section class="pizza-card">
+    <p class="pizza-section">${c.t("mine.share")}</p>
+    <p class="pizza-card__title canccu-num">${sum}</p>
+    ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+    ${
+      !payer
+        ? o.settle_to === "payer"
+          ? ""
+          : html`<p>${c.t("mine.pay_organiser")}</p>`
+        : html`<p class="pizza-card__title">${c.t("mine.pay_to", { name: p.name ?? "—", amount: sum })}</p>
+            ${p.mobilepay === null ? "" : copyable(c, c.t("money.mobilepay", { number: p.mobilepay }), p.mobilepay)}
+            ${p.iban === null ? "" : copyable(c, c.t("money.bank", { iban: p.iban }), p.iban)}
+            <p class="pizza-muted">${c.t("mine.no_app_money", { name: p.name ?? "—" })}</p>
+            ${o.my_paid === true
+              ? html`<p class="pizza-badge pizza-badge--ok">${c.t("mine.marked", { name: p.name ?? "—" })}</p>`
+              : ""}`
+    }
+  </section>`;
+}
+
 export function myOrderView(
   c: FoodCtx,
   o: OrderView,
@@ -213,7 +253,7 @@ export function myOrderView(
       : "";
   const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
   return html`${flash(q.error)}${opened}${added}${header}${hereCard(c, o)}
-  ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${add}
+  ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${myMoney(c, o)} ${add}
   ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
   ${steps(c, o)} ${wayIn(c, orderHref(o))}`;
 }

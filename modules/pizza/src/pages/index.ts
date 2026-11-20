@@ -9,14 +9,18 @@ import { foodPages } from "./food.js";
 import { holderPages } from "./holder.js";
 import { pageErrors, staticRoutes } from "./kit.js";
 import { menuPages } from "./menu-pages.js";
+import { moneyPages } from "./money.js";
 import { settingsPage } from "./settings-page.js";
+import { photoForms } from "./uploads.js";
 
 export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
   void app.register((pages, _opts, done) => {
     pageErrors(pages, deps);
+    photoForms(pages);
     staticRoutes(pages);
     foodPages(pages, deps);
     holderPages(pages, deps);
+    moneyPages(pages, deps);
     crewPages(pages, deps);
     menuPages(pages, deps);
     settingsPage(pages, deps);

@@ -63,6 +63,12 @@ export interface OrderView {
   /** A member's own pizzas (contracts/pizza.md, Who sees what). */
   mine?: MineView[];
   payer?: { user_id: string; name: string | null } | null;
+  /** The caller's own money (contracts/pizza.md, Who sees what), for the people in the order. */
+  my_amount_cents?: number | null;
+  my_amount_estimated?: boolean;
+  settle_to?: "organiser" | "payer";
+  my_paid?: boolean | null;
+  pay_to?: { user_id: string; name: string | null; mobilepay: string | null; iban: string | null } | null;
 }
 
 export const base = (o: OrderView) => `${PREFIX}hold/${o.id}`;

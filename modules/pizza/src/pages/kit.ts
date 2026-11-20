@@ -112,6 +112,7 @@ export function hubPage(
         <link rel="stylesheet" href="/theming/current/tokens.css" />
         <link rel="stylesheet" href="${PREFIX}static/pizza.css" />
         <link rel="stylesheet" href="${PREFIX}static/food.css" />
+        <link rel="stylesheet" href="${PREFIX}static/money.css" />
       </head>
       <body class="canccu-page canccu-surface canccu-surface--hub pizza-hub">
         <header class="pizza-hub__head">
@@ -123,6 +124,7 @@ export function hubPage(
         </main>
         <script src="${PREFIX}static/pizza.js" defer></script>
         <script src="${PREFIX}static/food.js" defer></script>
+        <script src="${PREFIX}static/money.js" defer></script>
       </body>
     </html> `;
   return send(request, reply, doc, { status: o.status ?? 200, page: "surface", nonce });
@@ -167,7 +169,7 @@ export async function organiserPage(
     head: html`<link rel="stylesheet" href="${PREFIX}static/pizza.css" /><link
         rel="stylesheet"
         href="${PREFIX}static/crew.css"
-      />`,
+      /><link rel="stylesheet" href="${PREFIX}static/money.css" />`,
     event: await eventOf(request, deps),
     session: { userName: c.session.userName, rights: c.session.rights },
     current: "food",
@@ -225,6 +227,8 @@ const TYPES: Record<string, string> = {
   "food.css": "text/css; charset=utf-8",
   "pizza.js": "text/javascript; charset=utf-8",
   "food.js": "text/javascript; charset=utf-8",
+  "money.css": "text/css; charset=utf-8",
+  "money.js": "text/javascript; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();
 
@@ -259,13 +263,21 @@ export interface ApiAnswer {
   text: string;
 }
 
+/** A photo a page sends on: a receipt or a menu page, as the browser gave it. */
+export interface Photo {
+  bytes: Buffer;
+  type: string;
+}
+const isPhoto = (v: unknown): v is Photo =>
+  typeof v === "object" && v !== null && Buffer.isBuffer((v as Photo).bytes);
+
 /** A page's action, sent on to the API as the same person on the same event. */
 export async function viaApi(
   app: FastifyInstance,
   request: FastifyRequest,
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   url: string,
-  payload?: Record<string, unknown> | string,
+  payload?: Record<string, unknown> | string | Photo,
   /** One form that takes several API steps gives each its own key: the form's and a suffix. */
   part?: number,
 ): Promise<ApiAnswer> {
@@ -275,19 +287,24 @@ export async function viaApi(
       ? `${form.idempotency_key}${part === undefined ? "" : `-${part}`}`
       : undefined;
   const csv = typeof payload === "string";
+  const photo = isPhoto(payload) ? payload : null;
   const res = await app.inject({
     method,
     url,
     headers: {
       host: request.headers.host ?? "",
       cookie: request.headers.cookie ?? "",
-      ...(payload === undefined ? {} : { "content-type": csv ? "text/csv" : "application/json" }),
+      ...(payload === undefined
+        ? {}
+        : { "content-type": photo !== null ? photo.type : csv ? "text/csv" : "application/json" }),
       ...(request.headers["x-forwarded-for"] === undefined
         ? {}
         : { "x-forwarded-for": request.headers["x-forwarded-for"] }),
       ...(key === undefined || method === "GET" ? {} : { "idempotency-key": key }),
     },
-    ...(payload === undefined ? {} : { payload: csv ? payload : JSON.stringify(payload) }),
+    ...(payload === undefined
+      ? {}
+      : { payload: photo !== null ? photo.bytes : csv ? payload : JSON.stringify(payload) }),
   });
   let body: Record<string, unknown> = {};
   if (res.headers["content-type"]?.toString().startsWith("application/json") === true)

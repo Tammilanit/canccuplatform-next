@@ -1,17 +1,73 @@
-/** The hand-out (mockup 09 without money, the money issue's), cancelling, and an order that is over. */
+/** The hand-out (mockup 09, with each person's amount and Paid), cancelling, and an order that is over. */
 import { html } from "@canccu/ui";
-import type { Html } from "@canccu/ui";
+import type { Html, Slot } from "@canccu/ui";
 import { formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
+import { euro } from "./money-format.js";
+import type { MoneyPerson, MoneyView } from "./money-format.js";
+import { paidTick } from "./money-views.js";
 import { base, flash, peopleOf, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 
-/** Mockup 09 B: the hand-out, "Everyone got theirs" with its undo, single ticks and the nudge. */
-export function handOutView(c: PageCtx, o: OrderView, me: string, error?: string): Html {
+/** Mockup 09 C: the order's money once everyone got theirs. */
+function moneyAfter(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
+  if (m.total_cents === null) return "";
+  const amount = euro(c, m.total_cents);
+  const paid = m.people.filter((p) => p.paid === true).map((p) => p.name ?? "—");
+  const open = m.people.filter((p) => p.paid === false);
+  return html`<section class="pizza-card">
+    <p class="pizza-section">${c.t("hand.money")}</p>
+    <p class="pizza-card__title">
+      ${m.payer?.user_id === me
+        ? c.t("hand.you_paid_total", { pizzeria: o.pizzeria.name, amount })
+        : c.t("money.paid_by", { amount, name: m.payer?.name ?? "—" })}
+    </p>
+    ${paid.length === 0 ? "" : html`<p>${c.t("hand.paid_you_names", { names: paid.join(", ") })}</p>`}
+    ${open.length === 0
+      ? ""
+      : html`<p class="pizza-section">${c.t("hand.still_owes")}</p>
+          <ul class="pizza-people">
+            ${open.map(
+              (p) => html`<li class="pizza-person">
+                <span class="pizza-person__text"><span class="pizza-person__name">${p.name ?? "—"}</span></span
+                ><span class="pizza-amount canccu-num">${euro(c, p.amount_cents ?? 0)}</span>
+              </li>`,
+            )}
+          </ul>`}
+    <a class="canccu-button canccu-button--secondary pizza-wide" href="${base(o)}/money"
+      >${c.t("hand.order_money")}</a
+    >
+  </section>`;
+}
+
+/**
+ * Mockup 09 A and B: the hand-out, "Everyone got theirs" with its undo, single ticks and the nudge;
+ * each person's amount once the order has one, and the Paid column when it settles to the payer.
+ */
+export function handOutView(
+  c: PageCtx,
+  o: OrderView,
+  me: string,
+  error?: string,
+  m?: MoneyView,
+): Html {
   const people = peopleOf(o, me);
   const got = people.filter((p) => p.got).length;
   const waiting = people.length - got;
   const done = o.state === "done";
+  const money = new Map<string, MoneyPerson>((m?.people ?? []).map((p) => [p.user_id ?? "", p]));
+  const toPayer = m?.settle_to === "payer";
+  const paidCount = (m?.people ?? []).filter((p) => p.paid === true).length;
+  const what = (p: (typeof people)[number]) => {
+    const mp = money.get(p.user_id);
+    const tail =
+      m?.payer?.user_id === p.user_id
+        ? c.t(p.user_id === me ? "hand.you_paid" : "record.paid_pizzeria")
+        : mp?.amount_cents == null
+          ? null
+          : euro(c, mp.amount_cents);
+    return [...p.labels, ...(tail === null ? [] : [tail])].join(" · ");
+  };
   return html`${flash(error)}
     <section class="pizza-card pizza-card--here">
       <p class="pizza-card__title">
@@ -19,6 +75,13 @@ export function handOutView(c: PageCtx, o: OrderView, me: string, error?: string
       </p>
       <p class="pizza-card__meta">${c.t("hand.told")}</p>
     </section>
+    ${m === undefined || toPayer
+      ? ""
+      : html`<section class="pizza-card">
+          <p class="pizza-card__title">${c.t("hand.organiser")}</p>
+          <p class="pizza-card__meta">${c.t("hand.organiser_text")}</p>
+        </section>`}
+    ${done && m !== undefined && toPayer ? moneyAfter(c, o, m, me) : ""}
     ${
       done
         ? html`<section class="pizza-card">
@@ -40,9 +103,15 @@ export function handOutView(c: PageCtx, o: OrderView, me: string, error?: string
             <p class="pizza-muted pizza-centered">${c.t("hand.everyone_hint")}</p>
           </form>`
     }
-    <p class="pizza-progress-label">${c.t("hand.collected", { got, all: people.length })}</p>
+    <p class="pizza-progress-label">
+      ${toPayer
+        ? c.t("hand.collected_paid", { got, all: people.length, paid: paidCount })
+        : c.t("hand.collected", { got, all: people.length })}
+    </p>
     <progress class="pizza-progress" max="${Math.max(people.length, 1)}" value="${got}"></progress>
-    <p class="pizza-cols"><span>${c.t("hand.got_it")}</span></p>
+    <p class="pizza-cols">
+      <span>${c.t("hand.got_it")}</span>${toPayer ? html`<span>${c.t("hand.paid_you")}</span>` : ""}
+    </p>
     <ul class="pizza-people">
       ${people.map(
         (p) =>
@@ -50,7 +119,7 @@ export function handOutView(c: PageCtx, o: OrderView, me: string, error?: string
             <span class="pizza-person__text"
               ><span class="pizza-person__name"
                 >${p.you ? c.t("hand.you", { name: p.name }) : p.name}</span
-              ><span class="pizza-person__what">${p.labels.join(" · ")}</span></span
+              ><span class="pizza-person__what">${what(p)}</span></span
             >
             ${
               done
@@ -72,6 +141,11 @@ export function handOutView(c: PageCtx, o: OrderView, me: string, error?: string
                     ></button>
                   </form>`
             }
+            ${!toPayer
+              ? ""
+              : money.get(p.user_id)?.paid == null
+                ? html`<span class="pizza-tick pizza-tick--none" aria-hidden="true">—</span>`
+                : paidTick(c, o, money.get(p.user_id) as MoneyPerson, "hand-out")}
           </li>`,
       )}
     </ul>

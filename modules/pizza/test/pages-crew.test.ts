@@ -232,10 +232,12 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
       close_forgotten: "on",
     });
     expect(location(r)).toBe("/pizza/crew/settings");
+    // The AI reader's keys are on the page only once an admin has set the provider's key.
+    const { ai_reader: _r, ai_reader_daily_reads: _n, ...pageDefaults } = DEFAULT_SETTINGS;
     expect(w.adminSettings.writes.at(-1)).toEqual({
       host: "demo.test",
       values: {
-        ...DEFAULT_SETTINGS,
+        ...pageDefaults,
         settle_to_payer: true,
         ordering_open: false,
         ordering_note: "Breakfast orders open at 09:00",

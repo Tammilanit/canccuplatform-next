@@ -111,6 +111,8 @@ export function orderView(
     cancel_reason: o.cancel_reason,
     mine: mine.map((i) => itemView(i, caller, false)),
     my_amount_cents: myAmount,
+    /** From the menu's prices while the order has no total: the receipt confirms it. */
+    my_amount_estimated: myAmount !== null && o.total_cents === null,
   };
   // Each person in the order: whom they pay and their own mark, never anyone else's (U12 A).
   if (mine.length > 0 || seen === "manager") {
