@@ -1,9 +1,9 @@
 // Run the event → Announcements shots of scripts/demo-screenshots.mjs (group `moments`; step 4
 // mockups 05 and 06, #115), on the screens' fixture: the composer with a template's preview drawn
 // in the real player, on a desk and a phone; then on the main hall an info card in the rail with its
-// ticker line, the same card edited ("Updated"), an urgent one and a full-screen one. The entrance's
-// rail is hidden for the run, so there the card degrades to the ticker and shows both lines (L4);
-// it is shown again afterwards. Last, a withdrawn one opened from its Edit link: read-only (#603).
+// ticker line, the same card edited ("Updated"), an urgent one with its ticker line and a
+// full-screen one. The entrance's rail is hidden for the run, so there the card degrades to the
+// ticker and shows both lines (L4); it is shown again afterwards. Last, a withdrawn one opened from its Edit link: read-only (#603).
 // Every announcement sent here is withdrawn and every screen revoked.
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { saveZone } from "../modules/screen/test/stack/fixture.mjs";
@@ -54,15 +54,18 @@ export const ANNOUNCE_PAGES = [
 export const UPDATED_PAGES = [
   screen("announce-screen-updated", "main", "Updated"),
 ];
+/** The urgent announcement's body: the ticker may break the joined line, so the shot waits for this part. */
+const URGENT_LINE = "Players to the stage now";
 export const URGENT_PAGES = [
   screen("announce-screen-urgent", "main", "Semis in 15 min"),
   screen("announce-screen-urgent-4k", "main", "Semis in 15 min", SCREEN_4K),
-  // In portrait with its ticker line (#638, V5): the frame and the ticker's label in the warning colour.
+  // In portrait with its ticker line (#638, V5; #646): the frame, and the line under its "Urgent"
+  // label in the warning colour, so the shot waits for the line, not the card.
   [
     "announce-screen-urgent-portrait",
     "/screen/zones/main?orientation=portrait",
     { width: 1080, height: 1920 },
-    { fullPage: false, ready: shows("Semis in 15 min") },
+    { fullPage: false, ready: shows(URGENT_LINE) },
   ],
 ];
 export const FULL_PAGES = [
@@ -83,7 +86,7 @@ export function announceListed(at) {
   return [
     [ANNOUNCE_PAGES, "an info announcement with its ticker line"],
     [UPDATED_PAGES, "the same, edited"],
-    [URGENT_PAGES, "an urgent announcement"],
+    [URGENT_PAGES, "an urgent announcement with its ticker line"],
     [FULL_PAGES, "a full-screen announcement"],
     [WITHDRAWN_PAGES, "the last one withdrawn, opened read-only"],
   ].flatMap(([pages, how]) =>
@@ -158,6 +161,7 @@ export async function announceShots({ demo, shot, fail }) {
           title: "Semis in 15 min",
           body: "Players to the stage now",
           level: "urgent",
+          channels: { screen: true, ticker: true },
         },
       ],
       [

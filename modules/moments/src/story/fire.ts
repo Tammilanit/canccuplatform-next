@@ -149,15 +149,22 @@ async function notFired(ctx: Ctx, s: Story, o: Occurrence, why: string): Promise
 }
 
 /** The next public item on the zone after `t`, for `until_event: next_item_starts` (fix 10). */
-async function nextItem(c: SqlClient, zone: string | null, t: number): Promise<Facts | null> {
-  const items = ((await runOfShow(c)) ?? []) as (RunItem & { zone?: string | null })[];
-  const next = items
+export function nextItemOf(
+  items: (RunItem & { zone?: string | null })[],
+  zone: string | null,
+  t: number,
+): RunItem | undefined {
+  return items
     .filter(
       (i) => (i.visibility ?? "public") === "public" && (i.status ?? "scheduled") === "scheduled",
     )
     .filter((i) => zone === null || i.zone == null || i.zone === zone)
     .filter((i) => Date.parse(i.starts_at) > t)
     .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))[0];
+}
+
+async function nextItem(c: SqlClient, zone: string | null, t: number): Promise<Facts | null> {
+  const next = nextItemOf((await runOfShow(c)) ?? [], zone, t);
   return next === undefined
     ? null
     : { "next.title": next.title, "@next.starts_at": next.starts_at };
