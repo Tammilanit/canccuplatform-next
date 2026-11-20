@@ -8,7 +8,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { checkStory } from "../src/story/check.js";
-import { DOMAIN_TYPES, EMPTY_CONDITIONS, TRANSITIONS } from "../src/story/model.js";
+import {
+  DOMAIN_TYPES,
+  EMPTY_CONDITIONS,
+  KNOWN_PLACEHOLDERS,
+  TRANSITIONS,
+} from "../src/story/model.js";
+import { SAMPLE } from "../src/story/fill.js";
 import type { Story, StoryStep } from "../src/story/model.js";
 import { PRESETS, presetOf } from "../src/story/presets.js";
 import {
@@ -309,5 +315,14 @@ describe("contracts/moments/storyboard.schema.json", () => {
     const domain = schema.$defs.Trigger.oneOf.find((t) => t.properties.kind.const === "domain");
     expect(domain?.properties.type?.enum).toEqual(Object.keys(DOMAIN_TYPES));
     expect(schema.$defs.Step.properties.transition.enum).toEqual([...TRANSITIONS]);
+  });
+
+  // #668 (R21): a test-fire fills what its trigger lacks with sample text; a new placeholder
+  // without one would show empty on a test again. A run always fills the event's name and the clock.
+  it("has sample text for every placeholder a run may lack", () => {
+    const always = ["event.name", "now.time", "now.day"];
+    const missing = [...KNOWN_PLACEHOLDERS].filter((p) => !always.includes(p) && !SAMPLE[p]);
+    expect(missing).toEqual([]);
+    expect(Object.keys(SAMPLE).filter((p) => !KNOWN_PLACEHOLDERS.has(p))).toEqual([]);
   });
 });

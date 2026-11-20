@@ -11,6 +11,7 @@ import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
 import { canSee, listAnnouncements, readAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, RunItem } from "./store.js";
+import { filled } from "./service.js";
 import { isBuiltin, loadTemplates } from "./templates.js";
 import { closedView, editView, listView } from "./list-views.js";
 import type { Listed } from "./list-views.js";
@@ -117,9 +118,14 @@ function inputOf(s: ComposerState, timeZone: string): Record<string, unknown> {
   };
 }
 
-function listed(a: AnnouncementRow, items: RunItem[], timeZone: string): Listed {
+function listed(a: AnnouncementRow, items: RunItem[], timeZone: string, now: Date): Listed {
   const t = (d: Date | null) => (d === null ? "" : clock(d.toISOString(), timeZone));
   const item = items.find((i) => i.id === a.item_id);
+  // A scheduled one is listed as it would go out now (O17); an item the viewer may not see
+  // leaves its template, which names no more than the viewer typed or may read.
+  const title =
+    a.title ??
+    (a.item_id !== null && item === undefined ? a.title_text : filled(a, item ?? null, now).title);
   const when =
     a.status === "live"
       ? `until ${t(a.expires_at)}`
@@ -128,7 +134,7 @@ function listed(a: AnnouncementRow, items: RunItem[], timeZone: string): Listed 
           ? `with ${item?.title ?? "its item"} · ${t(a.fire_at)}`
           : `at ${t(a.fire_at)}`
         : `${a.end_reason ?? a.status} ${t(a.ended_at)}${a.why === null ? "" : ` · ${a.why}`}`;
-  return { id: a.id, status: a.status, title: a.title ?? a.title_text, level: a.level, when };
+  return { id: a.id, status: a.status, title, level: a.level, when };
 }
 
 export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
@@ -190,7 +196,9 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
           <div class="moments-side">
             ${preview}
             ${listView({
-              listed: data.announcements.map((a) => listed(a, data.items, ctx.time_zone)),
+              listed: data.announcements.map((a) =>
+                listed(a, data.items, ctx.time_zone, deps.now()),
+              ),
               canWrite: !archived,
               templates: data.templates,
               canDeleteTemplates: has(request, SETTINGS) && !archived,

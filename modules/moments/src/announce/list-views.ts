@@ -155,11 +155,17 @@ export function closedView(o: {
   body: string;
   why: string | null;
 }): Html {
+  // The why is stored as a sentence ("Withdrawn by the crew."); it stands for the status.
+  const why =
+    o.why === null
+      ? o.status === "withdrawn"
+        ? "This one was withdrawn."
+        : "This one has ended."
+      : /[.!?]$/.test(o.why)
+        ? o.why
+        : `${o.why}.`;
   return html`<h2 class="canccu-card__title">Announcement</h2>
-    <p class="canccu-small canccu-muted">
-      This one is ${o.status}${o.why === null ? "" : html` · ${o.why}`}: it can no longer be
-      changed.
-    </p>
+    <p class="canccu-small canccu-muted">${why} It can no longer be changed.</p>
     <p><strong>${o.title}</strong></p>
     ${o.body === "" ? "" : html`<p>${o.body}</p>`}
     <div class="canccu-cluster">

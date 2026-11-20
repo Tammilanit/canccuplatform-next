@@ -66,6 +66,13 @@ export const STORY_PAGES = [
     DESK,
     { ready: previewed },
   ],
+  // Its step's "Fills with" in the test-fire's sample text (#668, R21).
+  [
+    "stories-builder-match-called-phone",
+    "/moments/storyboards?edit=match_called&step=0",
+    PHONE,
+    { touch: true, ready: tab("Round") },
+  ],
   [
     "stories-builder-phone",
     "/moments/storyboards?edit=starting_soon",
@@ -105,7 +112,8 @@ const PRESET_SHOTS = [
     drawn(".canccu-widget--countdown.canccu-is-claim"),
     "tournament",
   ],
-  ["match_called", shows("Match called")],
+  // A test-fire fills the match it lacks with sample text, never "Match called:" alone (#668, R21).
+  ["match_called", shows("Semi-final 1")],
   ["champion", shows("Our champion")],
   // The card, not "Tonight on stage" on the Pulse (the book's R21).
   ["midnight", drawn(".canccu-region--_full > .canccu-widget--title_card")],

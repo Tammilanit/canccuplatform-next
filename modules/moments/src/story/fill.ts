@@ -91,8 +91,46 @@ export function domainSource(type: string, d: Data): string | null {
   return typeof id === "string" ? `${kind ?? ""}:${id}` : null;
 }
 
+/**
+ * Sample values for a test-fire and the builder's preview (#668, R21): a test of "Match called:
+ * {match.label}" has no match, and an empty value on screen tests nothing. Every placeholder but
+ * the ones a run always fills (the event's name, the clock) has one; test/story-model.test.ts
+ * holds that. Made-up and event-neutral.
+ */
+export const SAMPLE: Readonly<Facts> = {
+  "event.ends_at": "02:00",
+  "item.title": "Demo Game Cup final",
+  "item.starts_at": "21:00",
+  "item.starts_in": "15 minutes",
+  "item.ends_at": "22:00",
+  "item.location": "Stage",
+  "item.kind": "tournament",
+  "item.game": "Demo Game",
+  "next.title": "Prize ceremony",
+  "next.starts_at": "22:30",
+  "session.name": "Demo Game Cup",
+  "session.game": "Demo Game",
+  "checkin.closes_at": "20:45",
+  "match.label": "Semi-final 1",
+  "match.teams": "Team Red vs Team Blue",
+  "winner.name": "Team Red",
+  "winner.names": "Alex, Sam",
+  "winner.points": "120",
+  "order.seq": "3",
+  "order.target_at": "19:30",
+  "order.pizza_count": "12",
+  "order.closes_at": "19:00",
+  "round.number": "2",
+  "game.name": "Demo Game",
+  "game.players": "24",
+  "scene.name": "Evening",
+  "milestone.value": "100",
+};
+
 export interface FillContext {
   facts: Facts;
+  /** What a placeholder with no value and no fallback shows: `SAMPLE` in a test, else nothing. */
+  sample?: Readonly<Facts>;
   now: number;
   /** The trigger time T: a countdown with an empty `target_at` counts to it. */
   t: number;
@@ -142,7 +180,12 @@ export function fillText(text: string, ctx: FillContext): string {
     const bar = inner.indexOf("|");
     const name = bar < 0 ? inner : inner.slice(0, bar);
     const v = value(name, ctx).trim();
-    return v !== "" ? v : bar < 0 ? "" : inner.slice(bar + 1);
+    if (v !== "") return v;
+    return bar >= 0
+      ? inner.slice(bar + 1)
+      : ctx.sample === undefined
+        ? ""
+        : (own(ctx.sample, name) ?? "");
   });
 }
 
