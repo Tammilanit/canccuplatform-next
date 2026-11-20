@@ -1,0 +1,35 @@
+settings:
+  - key: ordering_open
+    type: boolean
+    label: People can order food
+    default: true
+  - key: open_by
+    type: string
+    choices: [anyone, crew]
+    label: Who may start an order
+    default: anyone
+  - key: max_open_orders
+    type: integer
+    min: 1
+    max: 20
+    label: Orders open at once
+    default: 3
+  - key: max_items_per_person
+    type: integer
+    min: 1
+    max: 20
+    label: Pizzas per person in one order
+    default: 5
+  - key: settle_to_payer
+    type: boolean
+    label: An order may be settled with whoever paid it
+    default: false
+groups:
+  - id: ordering
+    label: Ordering
+    description: Who orders food, and how much at once.
+    keys: [ordering_open, open_by, max_open_orders, max_items_per_person]
+  - id: settling
+    label: Settling up
+    description: Who people pay for their food after the event.
+    keys: [settle_to_payer]

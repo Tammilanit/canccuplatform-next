@@ -134,6 +134,20 @@
           }
         }
       }
+    },
+    "pizza": {
+      "description": "The event's pizzerias and their menus (contracts/profile.md, The pizza section).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pizzerias": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/pizzeria"
+          }
+        }
+      }
     }
   },
   "$defs": {
@@ -374,6 +388,132 @@
                 "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$"
               }
             }
+          }
+        }
+      }
+    },
+    "pizza_menu_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "price": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99999,
+          "description": "In euro cents."
+        }
+      }
+    },
+    "pizza_menu_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "name"
+      ],
+      "properties": {
+        "number": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "price": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99999,
+          "description": "In euro cents."
+        }
+      }
+    },
+    "pizzeria": {
+      "description": "A pizzeria and its menu, the fields of the menu CSV (contracts/pizza.md, Pizzerias and menus).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "phone": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 40
+        },
+        "website": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^https?://",
+          "maxLength": 300
+        },
+        "service": {
+          "enum": [
+            "delivery",
+            "takeaway"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/pizza_menu_item"
+          }
+        },
+        "base": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/pizza_menu_entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toppings": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/pizza_menu_entry"
           }
         }
       }

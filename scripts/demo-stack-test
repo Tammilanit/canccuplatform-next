@@ -281,7 +281,7 @@ fi
 # shellcheck disable=SC2329
 all_healthy() {
   local m
-  for m in hello admin tenants screen theming agenda notify moments; do
+  for m in hello admin tenants screen theming agenda notify moments pizza; do
     call GET "/api/$m/health"
     body_is 200 ".status == \"ok\" and .module == \"$m\"" || { echo "$m" >> "$TMP/body"; return 1; }
   done

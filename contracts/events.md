@@ -169,7 +169,7 @@ At least one of `user_id` and `discord_user_id` is set. The phone hub's people f
 - **Who plays what is never on the bus.** An event-wide event reaches every consumer of the event's stream, also logs and the screens of other zones, so presence goes on the bus as counts only (`bot.activities.counted`, `bot.presence.counted`, `games.surge.started`). The names behind them (who plays which game, who is in which voice channel) are served by the bot's read API to callers allowed to see them ([bot.md](bot.md#who-plays-what)). The one exception is `bot.voice_roster.captured`, a system event that answers the tournament's own scoring request.
 
 ### Pizza
-Emitter: `pizza` (roadmap step 5). The legacy group order, ported as it is ([0022](../docs/decisions/0022-product-vision.md)): one open order at a time per event; people add their pizzas; a holder claims the order, closes it and phones it in. New is `arrived`: the holder marks the pizzas arrived, which feeds the personal part of Notify's `food` topic. Menus, prices, bills and phone numbers never travel in events: they stay in the pizza API and the event's own data.
+Emitter: `pizza` (roadmap step 5). **Adopted by [pizza.md](pizza.md#events-version-1)**, which adds the fields and events marked below; payloads and rules are there. The legacy group order, kept and fixed at its edges ([the step 5 plan](../docs/briefs/step-5-pizza.md#plan)): one open order at a time per pizzeria, several pizzerias at once (D1); people add their pizzas; a holder claims the order, closes it and phones it in. New is `arrived`: the holder marks the pizzas arrived, which feeds the personal part of Notify's `food` topic; and `done`, when everyone has theirs. Menus, prices, totals, amounts and phone numbers never travel in events: they stay in the pizza API and the event's own data.
 
 An **Order**:
 
@@ -177,12 +177,14 @@ An **Order**:
 |---|---|---|
 | `id` | string | The order |
 | `seq` | integer | Its number of the day, for people ("order 2") |
-| `state` | string | `open` (pizzas can be added), `closed` (no more pizzas; the holder calls), `placed` (phoned in), `arrived`, `cancelled` |
+| `state` | string | `open` (pizzas can be added), `closed` (no more pizzas; the holder calls), `placed` (phoned in), `arrived`, `done` (added: everyone got theirs, D3), `cancelled` |
 | `pizzeria` | object | `id` (string), `name` (string): the pizzeria the order goes to |
-| `target_at` | string, time | When the holder means to call |
+| `target_at` | string, time | When the holder means to call: the close time, as `closes_at` |
+| `closes_at` | string, time | Added: the close time, a promise (U3) |
+| `estimate_at`, `pickup` | string or null | Added: the pizzeria's estimate at call-in (U8); where to collect it |
 | `holder` | Person or null | Who holds the order |
 | `pizza_count`, `people_count` | integer | Pizzas in the order, and people with at least one |
-| `opened_at`, `closed_at`, `placed_at`, `arrived_at` | string, time, or null | When it reached each state |
+| `opened_at`, `closed_at`, `placed_at`, `arrived_at`, `done_at` | string, time, or null | When it reached each state (`done_at` added) |
 | `revision` | integer | Grows with every change, including each pizza added or removed; a consumer keeps the highest it has seen |
 
 | Type | Meaning | Audience | Consumers | `data` |
@@ -199,6 +201,10 @@ An **Order**:
 | `pizza.order.cancelled` | The order was cancelled, also a stale one from an earlier day | event-wide, `public` (`order`); personal (`user_ids`, `people`): everyone with a pizza in it | screen, bot | `order` (Order), `reason` (string: `cancelled`, `stale`), `user_ids` (list of string), `people` (list of Person): everyone with a pizza in it, `actor_user_id` |
 | `pizza.item.added` | A person added a pizza to the open order | personal (`user_id`) | screen (counts) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
 | `pizza.item.removed` | A pizza was taken out of the order, by its owner or the holder | personal (`user_id`) | screen (counts) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
+| `pizza.order.done` | Added (D3): everyone got theirs, the holder's Done, or the timer | event-wide, `public` | screen, moments | `order` (Order), `reason` (string: `handed_out`, `holder`, `timer`), `actor_user_id` |
+| `pizza.order.changed` | Added: the close time, note, pizzeria, estimate, call-in time or pickup was edited | event-wide, `public` | screen | `order` (Order), `changed` (list of field names), `actor_user_id` |
+| `pizza.item.changed` | Added: someone else changed a person's pizza (U14) | personal (`user_id`) | notify | as `pizza.item.added` |
+| `pizza.amount.changed` | Added: a money change after the order closed changed these people's amounts (U14); no amounts | personal (`user_ids`) | notify | `order_id` (string), `user_ids` (list of string), `actor_user_id` |
 | `pizza.reminder.triggered` | An order is overdue: open past `target_at`, or closed but not placed, for `minutes` | event-wide, `public`, like every order event that names the holder | bot (posts in the event's channel, mentioning the holder) | `order` (Order), `kind` (string: `open_past_target`, `closed_not_placed`), `minutes` (integer) |
 
 ```json

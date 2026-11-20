@@ -5,7 +5,7 @@ import type { ErrorBody, SqlClient } from "@canccu/kit";
 import { body, guestRead, notFound, ok, tenantOf, whoIs, write } from "./http.js";
 import type { AppDeps, WriteCtx } from "./http.js";
 import { newId } from "./ids.js";
-import { guarded } from "./lifecycle.js";
+import { guarded } from "./conflicts.js";
 import { parseMenuCsv, writeMenuCsv } from "./menu-csv.js";
 import type { Issue, MenuFile } from "./menu-csv.js";
 import { applyMenu, menuInputOf, planMenu } from "./menus.js";

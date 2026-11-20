@@ -28,6 +28,9 @@ notify notify_topic_type_history every registration change, append-only; module 
 notify notify_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 notify notify_delivery_tenants the events with deliveries waiting, a plain tenant reference, so the sender finds them without a tenant set
 notify notify_agenda_tenants the events whose quiet hours notify mirrors, a plain tenant reference, so start-up reads each agenda again without a tenant set
+pizza pizza_migrations which migration files ran (created by runMigrations before the files); no event data
+pizza pizza_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
+pizza pizza_tenants every event pizza served, a plain tenant reference, so a deleted user is forgotten in each of them
 moments moments_migrations which migration files ran (created by runMigrations before the files); no event data
 moments moments_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 moments moments_tenants every event moments served and when it was archived, a plain tenant reference, so the tick, the venue-wide emergency and retention find them without a tenant set

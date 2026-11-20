@@ -7,7 +7,7 @@ import type { FastifyInstance } from "fastify";
 import type { SqlClient } from "@canccu/kit";
 import { body, notFound, ok, tenantOf, whoIs, write } from "./http.js";
 import type { AppDeps, WriteCtx } from "./http.js";
-import { Conflict, cannot } from "./lifecycle.js";
+import { Conflict, cannot } from "./conflicts.js";
 import { CALLED_IN } from "./model.js";
 import { amounts } from "./money.js";
 import type { Amounts } from "./money.js";

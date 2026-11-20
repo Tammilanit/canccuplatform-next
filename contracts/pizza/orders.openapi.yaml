@@ -1,0 +1,765 @@
+# Part of pizza.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/api/pizza/orders:
+  get:
+    tags: [orders]
+    operationId: listOrders
+    summary: The event's orders
+    description: |
+      The orders not over yet and today's, or one event day's with `day`, each as the caller may see it
+      (contracts/pizza.md, Who sees what). Guests only where the info-page mode lets them in.
+    parameters:
+      - name: day
+        in: query
+        description: One event day.
+        schema:
+          $ref: "../pizza.openapi.yaml#/components/schemas/Day"
+    responses:
+      "200":
+        description: The orders.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/OrderList"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [orders]
+    operationId: openOrder
+    summary: Open an order
+    description: |
+      A member; only `pizza.order.open` when the event's `open_by` is `crew`. The opener holds it. One open
+      order per pizzeria, `max_open_orders` per event, one held per person. Emits `pizza.order.opened`.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/OrderNew"
+    responses:
+      "201":
+        description: The new order.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  get:
+    tags: [orders]
+    operationId: getOrder
+    summary: Read an order
+    description: As the caller may see it.
+    responses:
+      "200":
+        description: The order.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [orders]
+    operationId: editOrder
+    summary: Edit an order
+    description: |
+      Holder or crew (audited). The close time and the pizzeria while not called in (the pizzeria only while
+      it has no pizzas: 409 `has_pizzas`), the note, and the estimate, call-in time and pickup once called in.
+      Emits `pizza.order.changed`.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/OrderEdit"
+    responses:
+      "200":
+        description: The order.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/summary:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  get:
+    tags: [orders]
+    operationId: orderSummary
+    summary: The summary for the call
+    description: Holder or crew. Grouped lines and "copy as text"; never comments.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The summary.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Summary"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+/api/pizza/orders/{order_id}/history:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  get:
+    tags: [orders]
+    operationId: orderHistory
+    summary: The order's history
+    description: Holder or crew (D16).
+    security:
+      - session: []
+    responses:
+      "200":
+        description: Its steps, oldest first.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/History"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+/api/pizza/orders/{order_id}/items:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [items]
+    operationId: addItem
+    summary: Add a pizza
+    description: |
+      A member, while the order is open; at most `max_items_per_person` each (409 `item_limit`); 409 `closed`
+      with `open_orders` once it closed (E3). Emits `pizza.item.added`.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/ItemNew"
+    responses:
+      "201":
+        description: The pizza as ordered.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Item"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+      "415":
+        $ref: "../pizza.openapi.yaml#/components/responses/UnsupportedMediaType"
+/api/pizza/items/{item_id}:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/ItemId"
+  put:
+    tags: [items]
+    operationId: editItem
+    summary: Change a pizza
+    description: |
+      The owner while the order is open; the holder and the crew until done, audited, which tells the owner
+      (`pizza.item.changed`, U14).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/ItemNew"
+    responses:
+      "200":
+        description: The pizza.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Item"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [items]
+    operationId: removeItem
+    summary: Remove a pizza
+    description: As changing it. Emits `pizza.item.removed`.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/items/{item_id}/hand-out:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/ItemId"
+  post:
+    tags: [items]
+    operationId: handOutItem
+    summary: Tick a pizza handed out
+    description: |
+      Once arrived: the holder, the crew, or the owner for their own (U9). The last tick makes the order done
+      (`handed_out`).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              handed_out:
+                type: boolean
+                default: true
+    responses:
+      "200":
+        description: The order.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/money:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  get:
+    tags: [money]
+    operationId: orderMoney
+    summary: An order's money
+    description: The holder, the crew or `pizza.record.read`; each person's amount (contracts/pizza.md, Money).
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The money.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Money"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [money]
+    operationId: editMoney
+    summary: Change an order's money
+    description: |
+      The holder until the order's event day turns at 06:00 (then 403 `money_locked`), the crew at any time.
+      Once closed, audited, and `pizza.amount.changed` tells those whose amount changed.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/MoneyEdit"
+    responses:
+      "200":
+        description: The money.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Money"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/items/{item_id}/price:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/ItemId"
+  put:
+    tags: [money]
+    operationId: setItemPrice
+    summary: Set a pizza's price
+    description: As changing the order's money.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [price_cents]
+            properties:
+              price_cents:
+                type: [integer, "null"]
+                minimum: 0
+                maximum: 99999
+    responses:
+      "200":
+        description: The order's money.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Money"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/claim:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: claimOrder
+    summary: Claim an order nobody holds
+    description: "A member. 409 `claimed` with `holder` and `since` when someone holds it. Emits `pizza.order.claimed`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/take-over:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: takeOverOrder
+    summary: Take an order over
+    description: "Right `pizza.order.manage`; audited (D16). Emits `pizza.order.claimed` with `previous_holder`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/release:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: releaseOrder
+    summary: Release an order
+    description: "The holder (`released`) or the crew (`forced`, audited). Emits `pizza.order.released`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/close:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: closeOrder
+    summary: Close an order
+    description: "Holder or crew: no more pizzas. Emits `pizza.order.closed`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/reopen:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: reopenOrder
+    summary: Reopen a closed order
+    description: "Holder or crew. 409 `placed` once called in. Emits `pizza.order.reopened`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/place:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: placeOrder
+    summary: Call an order in
+    description: "Holder or crew; `estimate_minutes` or `estimate_at`, `at`, `payer_user_id` (the holder by default). Emits `pizza.order.closed` when it was open, then `pizza.order.placed`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/arrive:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: arriveOrder
+    summary: Mark it arrived
+    description: "Holder or crew; `pickup`. Emits `pizza.order.arrived` to everyone in it. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/hand-out:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: handOutOrder
+    summary: Everyone got theirs
+    description: "Holder or crew, once arrived: ticks every pizza and makes the order done (`handed_out`). Emits `pizza.order.done`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/done:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: doneOrder
+    summary: Done
+    description: "Holder or crew, once arrived. Emits `pizza.order.done` (`holder`). A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/undo:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: undoOrder
+    summary: Undo a step
+    description: "Holder or crew: arrived back to placed, or placed back to closed. Emits `pizza.order.reverted`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/orders/{order_id}/cancel:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  post:
+    tags: [orders]
+    operationId: cancelOrder
+    summary: Cancel an order
+    description: "Holder or crew before call-in, the crew after; any member for a stale order (E10); `reason`. Emits `pizza.order.cancelled`. A step already taken answers the order without a second event."
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../pizza.openapi.yaml#/components/schemas/StepBody"
+    responses:
+      "200":
+        description: The order as the caller sees it.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Order"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"

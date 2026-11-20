@@ -1,0 +1,894 @@
+openapi: 3.1.0
+info:
+  title: Pizza API
+  version: 1.0.0
+  summary: The event's group food orders, their pizzerias and menus, money and the two CSV formats.
+  description: |
+    Machine-readable part of the pizza contract. Prose, the lifecycle's rules, money, the menu CSV,
+    the export CSV, privacy and events: contracts/pizza.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant.
+    Paths are in parts: pizza/orders.openapi.yaml and pizza/menus.openapi.yaml.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: orders
+    description: Group orders and their lifecycle.
+  - name: items
+    description: The pizzas in an order.
+  - name: money
+    description: What each order cost and each person's amount; never on the bus.
+  - name: menus
+    description: Pizzerias, menus and the menu CSV.
+  - name: record
+    description: The daily record and the export for the payment system.
+  - name: me
+    description: The caller's own orders, and the privacy export and delete.
+security:
+  - {}
+  - session: []
+paths:
+  /api/pizza/orders:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders"
+  /api/pizza/orders/{order_id}:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}"
+  /api/pizza/orders/{order_id}/claim:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1claim"
+  /api/pizza/orders/{order_id}/take-over:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1take-over"
+  /api/pizza/orders/{order_id}/release:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1release"
+  /api/pizza/orders/{order_id}/close:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1close"
+  /api/pizza/orders/{order_id}/reopen:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1reopen"
+  /api/pizza/orders/{order_id}/place:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1place"
+  /api/pizza/orders/{order_id}/arrive:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1arrive"
+  /api/pizza/orders/{order_id}/hand-out:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1hand-out"
+  /api/pizza/orders/{order_id}/done:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1done"
+  /api/pizza/orders/{order_id}/undo:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1undo"
+  /api/pizza/orders/{order_id}/cancel:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1cancel"
+  /api/pizza/orders/{order_id}/summary:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1summary"
+  /api/pizza/orders/{order_id}/history:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1history"
+  /api/pizza/orders/{order_id}/items:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1items"
+  /api/pizza/items/{item_id}:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1items~1{item_id}"
+  /api/pizza/items/{item_id}/hand-out:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1items~1{item_id}~1hand-out"
+  /api/pizza/orders/{order_id}/money:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1money"
+  /api/pizza/items/{item_id}/price:
+    $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1items~1{item_id}~1price"
+  /api/pizza/pizzerias:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1pizzerias"
+  /api/pizza/pizzerias/{pizzeria_id}:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1pizzerias~1{pizzeria_id}"
+  /api/pizza/pizzerias/{pizzeria_id}/menu:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1pizzerias~1{pizzeria_id}~1menu"
+  /api/pizza/menu/import/preview:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1menu~1import~1preview"
+  /api/pizza/menu/import:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1menu~1import"
+  /api/pizza/menu.csv:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1menu.csv"
+  /api/pizza/record:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1record"
+  /api/pizza/export:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1export"
+  /api/pizza/export.csv:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1export.csv"
+  /api/pizza/me/orders:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me~1orders"
+  /api/pizza/me/export:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me~1export"
+  /api/pizza/me:
+    $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1me"
+  /api/pizza/health:
+    get:
+      tags: [orders]
+      operationId: health
+      summary: Health
+      description: The shared health shape (contracts/admin.md); Caddy maps it to the module's `/health`.
+      security:
+        - {}
+      responses:
+        "200":
+          description: "`ok` or `degraded`."
+          content:
+            application/json:
+              schema:
+                type: object
+        "503":
+          description: "`down`."
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.
+  parameters:
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      description: Order id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      description: Pizza (row) id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    PizzeriaId:
+      name: pizzeria_id
+      in: path
+      required: true
+      description: Pizzeria id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    Day:
+      name: day
+      in: query
+      description: One event day, which turns at 06:00 in the event's time zone; without it, the whole event.
+      schema:
+        $ref: "#/components/schemas/Day"
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: The same key from the same person within 24 hours answers as the first time and does nothing again (E2).
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9_-]{8,64}$"
+  responses:
+    BadRequest:
+      description: |
+        `invalid_request`: a field is missing or invalid, named in the error's `field`; or
+        `menu_csv_invalid`: the menu CSV has errors, listed in the error's `errors` (`row`, `column`,
+        `message`), and nothing was imported.
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`; `not_a_member` (signed in, not a member of the event); `not_holder` (only the
+        order's holder or the crew); `not_owner` (someone else's pizza); `closed` (the owner's change
+        after the order closed); `money_locked` (the holder after the event day turned);
+        `ordering_closed`; `info_pages_closed` (a guest where the info-page mode keeps them out);
+        `admin_access_restricted` (a right used away from the venue and Tailscale).
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such order, pizza or pizzeria at this event."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    Conflict:
+      description: |
+        `another_open` (with `open`: the order open at that pizzeria), `too_many_open`, `already_holding`,
+        `claimed` (with `holder` and `since`), `item_limit`, `closed` (with `open_orders`, the event's
+        other open orders), `placed`, `not_placed`, `not_arrived`, `cancelled`, `done`, `has_pizzas`,
+        `prices_missing`, `settle_to_payer_off`, `pizzeria_exists`, `conflict` (it changed meanwhile),
+        or `event_archived`.
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    UnsupportedMediaType:
+      description: "`unsupported_media_type`: the body is not of a type this path takes (JSON, or `text/csv` for the menu import)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+  schemas:
+    Id:
+      type: string
+      description: A random id, never a number to count through.
+      pattern: "^[a-z]{2,4}_[A-Za-z0-9_-]{8,40}$"
+    Day:
+      type: string
+      description: An event day, `YYYY-MM-DD`.
+      pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    NullableTime:
+      type: [string, "null"]
+      format: date-time
+    UserRef:
+      type: object
+      required: [user_id, name]
+      properties:
+        user_id:
+          type: string
+        name:
+          type: [string, "null"]
+    OrderState:
+      type: string
+      enum: [open, closed, placed, arrived, done, cancelled]
+    Order:
+      type: object
+      description: |
+        An order as the caller may see it (contracts/pizza.md, Who sees what). Every caller gets the base
+        fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents` and
+        `lines`; the holder and the crew `items` instead of `lines`, the pizzeria's `phone` and `website`,
+        `claimed_at`, `payer`, `total_cents`, `split` and `settle_to`.
+      required: [id, seq, day, state, pizzeria, closes_at, target_at, pizza_count, people_count, revision, stale]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        seq:
+          type: integer
+          minimum: 1
+        day:
+          $ref: "#/components/schemas/Day"
+        state:
+          $ref: "#/components/schemas/OrderState"
+        pizzeria:
+          type: object
+          required: [id, name, service]
+          properties:
+            id:
+              $ref: "#/components/schemas/Id"
+            name:
+              type: string
+            service:
+              $ref: "#/components/schemas/Service"
+            phone:
+              type: [string, "null"]
+            website:
+              type: [string, "null"]
+        closes_at:
+          type: string
+          format: date-time
+        target_at:
+          type: string
+          format: date-time
+          description: The same time as `closes_at`, under the legacy's name.
+        estimate_at:
+          $ref: "#/components/schemas/NullableTime"
+        pickup:
+          type: [string, "null"]
+        opened_at:
+          type: string
+          format: date-time
+        closed_at:
+          $ref: "#/components/schemas/NullableTime"
+        placed_at:
+          $ref: "#/components/schemas/NullableTime"
+        arrived_at:
+          $ref: "#/components/schemas/NullableTime"
+        done_at:
+          $ref: "#/components/schemas/NullableTime"
+        done_reason:
+          type: [string, "null"]
+          enum: [handed_out, holder, timer, null]
+        cancelled_at:
+          $ref: "#/components/schemas/NullableTime"
+        pizza_count:
+          type: integer
+        people_count:
+          type: integer
+        revision:
+          type: integer
+        stale:
+          type: boolean
+          description: Open or closed from an earlier event day; any member may cancel it (E10).
+        holder:
+          oneOf:
+            - $ref: "#/components/schemas/UserRef"
+            - type: "null"
+        you_hold:
+          type: boolean
+        note:
+          type: [string, "null"]
+        cancel_reason:
+          type: [string, "null"]
+        mine:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+        my_amount_cents:
+          type: [integer, "null"]
+        lines:
+          type: array
+          description: Everyone's pizzas without names or notes.
+          items:
+            type: object
+            required: [count, label]
+            properties:
+              count:
+                type: integer
+              label:
+                type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+        claimed_at:
+          $ref: "#/components/schemas/NullableTime"
+        payer:
+          oneOf:
+            - $ref: "#/components/schemas/UserRef"
+            - type: "null"
+        total_cents:
+          type: [integer, "null"]
+        split:
+          type: [string, "null"]
+          enum: [exact, even, null]
+        settle_to:
+          $ref: "#/components/schemas/SettleTo"
+    OrderList:
+      type: object
+      required: [day, orders]
+      properties:
+        day:
+          $ref: "#/components/schemas/Day"
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+    OrderNew:
+      type: object
+      required: [pizzeria_id, closes_at]
+      properties:
+        pizzeria_id:
+          $ref: "#/components/schemas/Id"
+        closes_at:
+          type: string
+          format: date-time
+          description: In the future.
+        note:
+          type: [string, "null"]
+          maxLength: 200
+    OrderEdit:
+      type: object
+      description: Only the fields given change; see contracts/pizza.md for when each may.
+      properties:
+        closes_at:
+          type: string
+          format: date-time
+        note:
+          type: [string, "null"]
+          maxLength: 200
+        pizzeria_id:
+          $ref: "#/components/schemas/Id"
+        estimate_at:
+          $ref: "#/components/schemas/NullableTime"
+        placed_at:
+          type: string
+          format: date-time
+        pickup:
+          type: [string, "null"]
+          maxLength: 80
+    StepBody:
+      type: object
+      description: |
+        The step's fields, all optional. `place`: `estimate_minutes` (0–240) or `estimate_at`, `at` (when
+        it was called in), `payer_user_id`. `arrive`: `pickup`. `cancel`, `release`, `take-over`: `reason`.
+      properties:
+        estimate_minutes:
+          type: integer
+          minimum: 0
+          maximum: 240
+        estimate_at:
+          type: string
+          format: date-time
+        at:
+          type: string
+          format: date-time
+        payer_user_id:
+          type: string
+        pickup:
+          type: [string, "null"]
+          maxLength: 80
+        reason:
+          type: [string, "null"]
+          maxLength: 200
+    Item:
+      type: object
+      description: A pizza as ordered (D15). `user_id` and `name` for the holder and the crew only.
+      required: [id, kind, label, price_cents, handed_out, mine]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        user_id:
+          type: [string, "null"]
+        name:
+          type: [string, "null"]
+        kind:
+          type: string
+          enum: [menu, custom, text]
+        number:
+          type: [string, "null"]
+        label:
+          type: string
+        description:
+          type: [string, "null"]
+        toppings:
+          type: [array, "null"]
+          items:
+            type: string
+        text:
+          type: [string, "null"]
+        note:
+          type: [string, "null"]
+        comment:
+          type: [string, "null"]
+        price_cents:
+          type: [integer, "null"]
+        handed_out:
+          type: boolean
+        mine:
+          type: boolean
+    ItemNew:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [menu, custom, text]
+        menu_item_id:
+          $ref: "#/components/schemas/Id"
+        toppings:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            type: string
+        text:
+          type: string
+          minLength: 1
+          maxLength: 80
+        note:
+          type: [string, "null"]
+          maxLength: 120
+        comment:
+          type: [string, "null"]
+          maxLength: 120
+    Summary:
+      type: object
+      required: [header, pizza_count, lines, who, text]
+      properties:
+        header:
+          type: string
+        pizza_count:
+          type: integer
+        lines:
+          type: array
+          items:
+            type: object
+            required: [count, label, note]
+            properties:
+              count:
+                type: integer
+              label:
+                type: string
+              note:
+                type: [string, "null"]
+        who:
+          type: array
+          items:
+            type: object
+            required: [name, count]
+            properties:
+              name:
+                type: string
+              count:
+                type: integer
+        text:
+          type: string
+    History:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            required: [at, actor, kind, detail]
+            properties:
+              at:
+                type: string
+                format: date-time
+              actor:
+                oneOf:
+                  - $ref: "#/components/schemas/UserRef"
+                  - type: "null"
+              kind:
+                type: string
+              detail:
+                type: object
+    PersonAmount:
+      type: object
+      required: [user_id, name, units, amount_cents]
+      properties:
+        user_id:
+          type: [string, "null"]
+        name:
+          type: [string, "null"]
+        units:
+          type: integer
+        amount_cents:
+          type: [integer, "null"]
+    Money:
+      type: object
+      required: [order_id, payer, total_cents, split, split_effective, exact_possible, estimated, settle_to, people]
+      properties:
+        order_id:
+          $ref: "#/components/schemas/Id"
+        payer:
+          oneOf:
+            - $ref: "#/components/schemas/UserRef"
+            - type: "null"
+        total_cents:
+          type: [integer, "null"]
+        split:
+          type: [string, "null"]
+          enum: [exact, even, null]
+        split_effective:
+          type: string
+          enum: [exact, even]
+        exact_possible:
+          type: boolean
+        estimated:
+          type: boolean
+          description: No total yet; the amounts are the menu's prices.
+        extras_cents:
+          type: [integer, "null"]
+        settle_to:
+          $ref: "#/components/schemas/SettleTo"
+        total_effective_cents:
+          type: [integer, "null"]
+        people:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonAmount"
+        prices:
+          type: array
+          items:
+            type: object
+            required: [item_id, label, price_cents]
+            properties:
+              item_id:
+                $ref: "#/components/schemas/Id"
+              user_id:
+                type: [string, "null"]
+              label:
+                type: string
+              price_cents:
+                type: [integer, "null"]
+    MoneyEdit:
+      type: object
+      properties:
+        total_cents:
+          type: [integer, "null"]
+          minimum: 0
+          maximum: 500000
+        split:
+          type: [string, "null"]
+          enum: [exact, even, null]
+        settle_to:
+          $ref: "#/components/schemas/SettleTo"
+        payer_user_id:
+          type: string
+    Service:
+      type: string
+      enum: [delivery, takeaway]
+    SettleTo:
+      type: string
+      enum: [organiser, payer]
+    MenuLine:
+      type: object
+      required: [id, name, description, price_cents]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        number:
+          type: string
+        name:
+          type: string
+        description:
+          type: [string, "null"]
+        price_cents:
+          type: [integer, "null"]
+        hidden:
+          type: boolean
+    Pizzeria:
+      type: object
+      required: [id, name, website, service]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        website:
+          type: [string, "null"]
+        service:
+          $ref: "#/components/schemas/Service"
+        phone:
+          type: [string, "null"]
+          description: For the crew and the menu writers.
+        hidden:
+          type: boolean
+        menu:
+          type: object
+          required: [items, base, toppings]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/MenuLine"
+            base:
+              oneOf:
+                - $ref: "#/components/schemas/MenuLine"
+                - type: "null"
+            toppings:
+              type: array
+              items:
+                $ref: "#/components/schemas/MenuLine"
+    PizzeriaSave:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        phone:
+          type: [string, "null"]
+          maxLength: 40
+        website:
+          type: [string, "null"]
+          format: uri
+        service:
+          $ref: "#/components/schemas/Service"
+        hidden:
+          type: boolean
+          description: "`PATCH` only: hides the pizzeria; it is never deleted."
+    MenuInput:
+      type: object
+      description: A whole menu; the profile's `pizza` section has the same fields.
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [number, name]
+            properties:
+              number:
+                type: string
+                maxLength: 8
+              name:
+                type: string
+                maxLength: 80
+              description:
+                type: [string, "null"]
+                maxLength: 300
+              price:
+                type: [integer, "null"]
+                minimum: 0
+                maximum: 99999
+                description: In cents.
+        base:
+          oneOf:
+            - $ref: "#/components/schemas/MenuEntryInput"
+            - type: "null"
+        toppings:
+          type: array
+          items:
+            $ref: "#/components/schemas/MenuEntryInput"
+    MenuEntryInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        description:
+          type: [string, "null"]
+          maxLength: 300
+        price:
+          type: [integer, "null"]
+          minimum: 0
+          maximum: 99999
+    Issue:
+      type: object
+      required: [row, column, message]
+      properties:
+        row:
+          type: [integer, "null"]
+          description: The CSV row; the header is row 1. Null for the whole file.
+        column:
+          type: [string, "null"]
+        message:
+          type: string
+    Counts:
+      type: object
+      required: [added, updated, hidden]
+      properties:
+        added:
+          type: integer
+        updated:
+          type: integer
+        hidden:
+          type: integer
+    ImportPreview:
+      type: object
+      required: [errors, warnings, pizzerias]
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        pizzerias:
+          type: array
+          items:
+            type: object
+            required: [name, status, items, base, toppings]
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+                enum: [new, matched]
+              items:
+                $ref: "#/components/schemas/Counts"
+              base:
+                type: [string, "null"]
+              toppings:
+                type: integer
+    ImportResult:
+      type: object
+      required: [pizzerias, pizzerias_added, items, warnings]
+      properties:
+        pizzerias:
+          type: integer
+        pizzerias_added:
+          type: integer
+        items:
+          $ref: "#/components/schemas/Counts"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+    Record:
+      type: object
+      description: The daily record (mockup 12).
+      required: [days, flags]
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            required: [day, label, order_count, total_cents, incomplete, orders]
+            properties:
+              day:
+                $ref: "#/components/schemas/Day"
+              label:
+                type: string
+              order_count:
+                type: integer
+              total_cents:
+                type: integer
+              incomplete:
+                type: boolean
+              orders:
+                type: array
+                items:
+                  type: object
+                  description: The order's own fields as stored, with `split_effective` and `people`.
+                  required: [id, day, seq, state, pizzeria, people]
+                  properties:
+                    id:
+                      $ref: "#/components/schemas/Id"
+                    day:
+                      $ref: "#/components/schemas/Day"
+                    seq:
+                      type: integer
+                    state:
+                      $ref: "#/components/schemas/OrderState"
+                    pizzeria:
+                      type: string
+                    total_cents:
+                      type: [integer, "null"]
+                    payer_name:
+                      type: [string, "null"]
+                    split_effective:
+                      type: string
+                      enum: [exact, even]
+                    people:
+                      type: array
+                      items:
+                        allOf:
+                          - $ref: "#/components/schemas/PersonAmount"
+                          - type: object
+                            properties:
+                              comments:
+                                type: array
+                                items:
+                                  type: string
+        flags:
+          type: array
+          items:
+            type: object
+            required: [order_id, text]
+            properties:
+              order_id:
+                $ref: "#/components/schemas/Id"
+              text:
+                type: string
+    Export:
+      type: object
+      required: [file_name, csv, left_out]
+      properties:
+        file_name:
+          type: string
+        csv:
+          type: string
+          description: The export CSV (contracts/pizza.md, The export CSV).
+        left_out:
+          type: array
+          items:
+            type: object
+            required: [order_id, pizzeria, reason]
+            properties:
+              order_id:
+                type: string
+                description: The export's `order_id`, `<day>-<seq>`.
+              pizzeria:
+                type: string
+              reason:
+                type: string
+                enum: [no_total]
+    MyExport:
+      type: object
+      description: Everything the module holds on the caller at this event (contracts/README.md, Privacy).
+      required: [items, amounts, orders, history]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        amounts:
+          type: array
+          items:
+            type: object
+            required: [order_id, amount_cents]
+            properties:
+              order_id:
+                $ref: "#/components/schemas/Id"
+              amount_cents:
+                type: [integer, "null"]
+        orders:
+          type: array
+          items:
+            type: object
+        history:
+          type: array
+          items:
+            type: object

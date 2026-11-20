@@ -125,6 +125,16 @@
 		reverse_proxy notify:8080
 	}
 
+	# The pizza contract's paths are /api/pizza/...; its pages come with #118 and #119.
+	handle /api/pizza/health {
+		rewrite * /health
+		reverse_proxy pizza:8080
+	}
+
+	handle /api/pizza/* {
+		reverse_proxy pizza:8080
+	}
+
 	# The moments contract's paths are /api/moments/... too; /internal/moments/ is never routed.
 	handle /api/moments/health {
 		rewrite * /health

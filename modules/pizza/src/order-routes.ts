@@ -6,6 +6,7 @@ import { emitOrder } from "./events.js";
 import { body, guestRead, ok, tenantOf, today, whoIs, write } from "./http.js";
 import type { AppDeps, WriteCtx } from "./http.js";
 import { openOrder } from "./items.js";
+import { Conflict, cannot, guarded, uniqueConflict } from "./conflicts.js";
 import * as life from "./lifecycle.js";
 import type { Moved } from "./lifecycle.js";
 import { CALLED_IN, UNPLACED } from "./model.js";
@@ -308,7 +309,7 @@ const asJson = (v: unknown) => (v instanceof Date ? v.toISOString() : v);
 
 /** PATCH: the close time while not called in, the note, the pizzeria while empty, and call-in details. */
 async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promise<Changes> {
-  if (o.state === "cancelled" || o.state === "done") throw life.cannot("edit", o);
+  if (o.state === "cancelled" || o.state === "done") throw cannot("edit", o);
   const sets: string[] = [];
   const values: unknown[] = [];
   const changes: Changes = {};
@@ -318,31 +319,31 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
     if (col !== "pizzeria_name") changes[col] = { old: asJson(o[col]), new: asJson(v) };
   };
   if (b.closes_at !== undefined) {
-    if (!UNPLACED.includes(o.state)) throw life.cannot("edit", o);
+    if (!UNPLACED.includes(o.state)) throw cannot("edit", o);
     const t = parseTime(b.closes_at, "closes_at");
     if (t.getTime() <= w.now.getTime()) bad("closes_at", "must be in the future");
     set("closes_at", t);
   }
   if (b.note !== undefined) set("note", optionalText(b.note, "note", LIMITS.orderNote));
   if (b.pizzeria_id !== undefined && b.pizzeria_id !== o.pizzeria_id) {
-    if (!UNPLACED.includes(o.state)) throw life.cannot("edit", o);
+    if (!UNPLACED.includes(o.state)) throw cannot("edit", o);
     const pz = typeof b.pizzeria_id === "string" ? await getPizzeria(c, b.pizzeria_id) : null;
     if (pz === null || pz.hidden_at !== null) return bad("pizzeria_id", "unknown pizzeria");
     // E6: a menu differs per pizzeria, so the pizzeria is fixed once there are pizzas.
     if ((await itemsOf(c, [o.id])).length > 0) {
-      throw new life.Conflict("has_pizzas", "The pizzeria cannot change once there are pizzas.");
+      throw new Conflict("has_pizzas", "The pizzeria cannot change once there are pizzas.");
     }
     set("pizzeria_id", pz.id);
     set("pizzeria_name", pz.name);
   }
   for (const col of ["estimate_at", "placed_at"] as const) {
     if (b[col] === undefined) continue;
-    if (!CALLED_IN.includes(o.state)) throw life.cannot("arrive", o);
+    if (!CALLED_IN.includes(o.state)) throw cannot("arrive", o);
     set(col, b[col] === null && col === "estimate_at" ? null : parseTime(b[col], col));
   }
   if (b.pickup !== undefined) set("pickup", optionalText(b.pickup, "pickup", LIMITS.pickup));
   if (sets.length === 0) return changes;
-  const m = await life.guarded(
+  const m = await guarded(
     c,
     () =>
       c.query(
@@ -350,10 +351,10 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
          WHERE id = $1 AND state = $${values.length + 2} RETURNING id`,
         [o.id, ...values, o.state],
       ),
-    life.uniqueConflict,
+    uniqueConflict,
   );
   if (m.rows.length === 0)
-    throw new life.Conflict("conflict", "The order changed meanwhile: read it again.");
+    throw new Conflict("conflict", "The order changed meanwhile: read it again.");
   const fields = Object.keys(changes);
   await logStep(c, o.id, w.now, { user_id: w.session.userId, name: w.session.userName }, "edited", {
     fields,
