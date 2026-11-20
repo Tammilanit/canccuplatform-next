@@ -208,6 +208,11 @@ ${s.body}</textarea>
 }
 
 /** Each channel as it will go out, and the card in the real player (moments.js draws it). */
+/** A title over its body, as two lines: joined on one, they read as one sentence (O13). */
+const titled = (title: string, body: string): Html =>
+  html`<p><strong>${title}</strong></p>
+    ${body === "" ? "" : html`<p>${body}</p>`}`;
+
 export function previewView(p: Preview, s: ComposerState, zone: string | undefined): Html {
   const card = {
     title: p.title,
@@ -247,7 +252,7 @@ export function previewView(p: Preview, s: ComposerState, zone: string | undefin
       p.regions.length > 0
         ? row(
             "Screen card",
-            html`<p><strong>${p.title}</strong> ${p.body}</p>
+            html`${titled(p.title, p.body)}
               <p class="canccu-small canccu-muted">${p.regions.join(" → ")}</p>`,
           )
         : ""
@@ -267,7 +272,7 @@ export function previewView(p: Preview, s: ComposerState, zone: string | undefin
         ? ""
         : row(
             "Push",
-            html`<p><strong>${p.push.title}</strong> ${p.push.body}</p>
+            html`${titled(p.push.title, p.push.body)}
               <p class="canccu-small canccu-muted">
                 ${p.push.urgent ? "Urgent: delivered in quiet hours, over the cap." : "Held in quiet hours and over the cap."}
               </p>`,

@@ -103,6 +103,10 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     const preview = await w.call("crew", "POST", "/announce", { ...FIELDS, do: "preview" }, form);
     expect(preview.statusCode).toBe(200);
     expect(preview.body).toContain("Food is here · Pick up at the café.");
+    // The screen card's title and body read as two lines, never "Food is here Pick up…" (O13).
+    expect(preview.body).toMatch(
+      /<strong[^>]*>Food is here<\/strong>\s*<\/p>\s*<p[^>]*>Pick up at the café\.<\/p>/,
+    );
     expect(preview.body).toContain("data-announce-preview");
     expect(preview.body).toContain('value="send"');
     expect(await list()).toEqual([]);
@@ -145,7 +149,11 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     );
     expect(r.statusCode).toBe(303);
     expect((await list())[0]?.status).toBe("scheduled");
-    expect((await w.call("crew", "GET", "/announce")).body).toContain("scheduled");
+    const page = (await w.call("crew", "GET", "/announce")).body;
+    expect(page).toContain("scheduled");
+    // The list shows the text as it would go out now, never its template (O17, C7).
+    expect(page).toContain("<strong>Demo Game Cup, semis starts in");
+    expect(page).not.toContain("<strong>{item.title}");
   });
 
   it("edits in place and withdraws in one tap", async () => {
@@ -193,6 +201,9 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     expect(page.statusCode).toBe(200);
     expect(page.body).toContain("Food is here");
     expect(page.body).toContain("withdrawn");
+    // The why is a sentence of its own, never "Withdrawn by the crew.: it can…" (O18).
+    expect(page.body).toMatch(/Withdrawn by the crew\.\s+It can no longer be changed\./);
+    expect(page.body).not.toContain(".:");
     expect(page.body).not.toContain(`action="/moments/announce/${id}/edit"`);
     expect(page.body).not.toContain("Edit announcement");
   });
