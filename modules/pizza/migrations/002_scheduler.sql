@@ -2,7 +2,8 @@
 
 -- One row per due step of an order (O2): written by the tick from the order and the event's
 -- settings, taken FOR UPDATE SKIP LOCKED, and marked sent in the transaction that took the step
--- and stored its events in the outbox. A sent row stays, so a step runs at most once per order.
+-- and stored its events in the outbox. `step` is the step and its anchor (`close@<closes_at>`), and a
+-- sent row stays as the record: a step runs once per anchor, and a new close time or claim arms it again.
 CREATE TABLE pizza_due (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   order_id text NOT NULL,

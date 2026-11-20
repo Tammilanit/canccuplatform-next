@@ -21,6 +21,11 @@ export interface Remind {
 }
 
 export interface Due {
+  /**
+   * The row's key: the step's name and its anchor, `close@<closes_at>`. A sent row stays as the
+   * record, so an unchanged anchor runs once, while a reopen with a new close time or a later
+   * claim gives the step a new anchor and arms it again.
+   */
   step: string;
   due_at: Date;
   /** What the step does; `remind` sends to people, the rest change the order. */
@@ -30,8 +35,9 @@ export interface Due {
 
 const MIN = 60_000;
 const after = (from: Date, minutes: number) => new Date(from.getTime() + minutes * MIN);
+const key = (name: string, anchor: Date) => `${name}@${anchor.toISOString()}`;
 
-/** Every step the order has in its state, past ones included; sent ones are never sent again. */
+/** Every step the order has in its state, past ones included; a sent key is never sent again. */
 export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[] {
   const out: Due[] = [];
   const reminders = (
@@ -43,13 +49,13 @@ export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[]
     crewOnly = false,
   ) => {
     out.push({
-      step: `${family}_holder`,
+      step: key(`${family}_holder`, anchor),
       due_at: after(anchor, holderAt),
       does: "remind",
       remind: { kind, minutes: holderAt, to: "holder", family },
     });
     out.push({
-      step: `${family}_crew`,
+      step: key(`${family}_crew`, anchor),
       due_at: after(anchor, crewAt),
       does: "remind",
       remind: { kind, minutes: crewAt, to: crewOnly ? "crew_only" : "crew", family },
@@ -57,11 +63,12 @@ export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[]
   };
   if (o.state === "open") {
     out.push({
-      step: "closing",
+      step: key("closing", o.closes_at),
       due_at: after(o.closes_at, -s.last_call_minutes),
       does: "last_call",
     });
-    if (s.auto_close) out.push({ step: "close", due_at: o.closes_at, does: "close" });
+    if (s.auto_close)
+      out.push({ step: key("close", o.closes_at), due_at: o.closes_at, does: "close" });
     else
       reminders(
         "open",
@@ -75,7 +82,11 @@ export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[]
     const since = new Date(Math.max(o.closed_at?.getTime() ?? 0, o.claimed_at?.getTime() ?? 0));
     reminders("closed", "closed_not_placed", since, s.remind_holder_minutes, s.remind_crew_minutes);
     if (o.holder_user_id !== null)
-      out.push({ step: "release", due_at: after(since, s.release_after_minutes), does: "release" });
+      out.push({
+        step: key("release", since),
+        due_at: after(since, s.release_after_minutes),
+        does: "release",
+      });
   } else if (o.state === "placed" && o.placed_at !== null) {
     const [anchor, wait] =
       o.estimate_at !== null
@@ -85,13 +96,15 @@ export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[]
     reminders("arrival", "not_arrived", anchor, wait, wait + gap, true);
   } else if (o.state === "arrived" && o.arrived_at !== null) {
     out.push({
-      step: "done",
+      step: key("done", o.arrived_at),
       due_at: after(o.arrived_at, s.done_after_arrival_minutes),
       does: "done",
     });
   }
-  if (s.close_forgotten && ["open", "closed", "placed", "arrived"].includes(o.state))
-    out.push({ step: "forgotten", due_at: dayTurn(o.day, timeZone), does: "forgotten" });
+  if (s.close_forgotten && ["open", "closed", "placed", "arrived"].includes(o.state)) {
+    const turn = dayTurn(o.day, timeZone);
+    out.push({ step: key("forgotten", turn), due_at: turn, does: "forgotten" });
+  }
   return out;
 }
 

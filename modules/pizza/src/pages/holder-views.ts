@@ -132,6 +132,7 @@ function editForm(c: PageCtx, o: OrderView): Html {
     <summary>${c.t("edit.title")}</summary>
     <form method="post" action="${base(o)}/edit" class="pizza-form">
       ${formKey()}
+      <input type="hidden" name="closes_was" value="${time(c, o.closes_at)}" />
       <label class="canccu-field"
         ><span class="canccu-field__label">${c.t("edit.closes")}</span
         ><input

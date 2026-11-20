@@ -229,11 +229,16 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
     return back(reply, `hold/${id}/hand-out`);
   });
 
-  /** Edit: the close time (today's, in the event's zone, or tomorrow's when it has passed) and the note. */
+  /**
+   * Edit: the close time (today's, in the event's zone, or tomorrow's when it has passed) and the
+   * note. An unchanged time is not sent: it may have passed, and would then turn into tomorrow's.
+   */
   app.post<{ Params: Params }>("/hold/:id/edit", async (request, reply) => {
     const { id } = request.params;
     const c = await pageCtx(deps, request);
-    const closes = nextLocalTime(formText(request, "closes"), c.zone, deps.now());
+    const submitted = formText(request, "closes");
+    const changed = submitted !== formText(request, "closes_was");
+    const closes = changed ? nextLocalTime(submitted, c.zone, deps.now()) : null;
     const a = await viaApi(app, request, "PATCH", `/api/pizza/orders/${id}`, {
       ...(closes === null ? {} : { closes_at: closes }),
       note: formText(request, "note"),

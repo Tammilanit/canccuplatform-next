@@ -112,7 +112,8 @@ export class Scheduler {
   }
 
   /**
-   * Writes the due steps of every live order, and drops the unsent ones its state no longer has.
+   * Writes the due steps of every live order, and drops the unsent ones its state or anchors no
+   * longer have. Sent rows stay: they are the record of what ran.
    * One container plans an event at a time; another finds the lock taken and leaves it to it.
    */
   private async plan(c: SqlClient, settings: PizzaSettings, zone: string): Promise<void> {

@@ -156,6 +156,27 @@ describe.skipIf(!DATABASE_URL)("the holder's pages", () => {
     expect(o.note).toBe("Order by 19:30");
   });
 
+  it("keeps a passed close time when only the note is edited", async () => {
+    await form(w, "pena", `/hold/${id}/step/close`);
+    const before = (await order()).closes_at;
+    // Past the close time (19:00 in Helsinki), which would now read as tomorrow's 19:00.
+    w.setNow("2026-10-29T17:10:00.000Z");
+    const page = await view(w, "pena", `/hold/${id}`);
+    const value = (name: string) =>
+      new RegExp(`name="${name}"\\s+value="([^"]*)"`).exec(page.body)?.[1] ?? "";
+    expect(value("closes")).toBe("19:00");
+    expect(value("closes_was")).toBe("19:00");
+    const r = await form(w, "pena", `/hold/${id}/edit`, {
+      closes: value("closes"),
+      closes_was: value("closes_was"),
+      note: "Pickup at the door",
+    });
+    expect(location(r)).toBe(`/pizza/hold/${id}`);
+    const o = await order();
+    expect(o.note).toBe("Pickup at the door");
+    expect(o.closes_at).toBe(before);
+  });
+
   it("speaks Finnish when the event does", async () => {
     w.languages.set("demo", "fi");
     const r = await view(w, "pena", `/hold/${id}`);

@@ -147,6 +147,57 @@ db("the scheduler", () => {
     expect(json(await w.call("crew", "GET", `/api/pizza/orders/${id}`)).holder).toBeNull();
   });
 
+  it("gives the last call and closes again when a closed order is reopened with a new time", async () => {
+    const id = await anOrder();
+    await at(50);
+    await at(60);
+    expect(await state(id)).toBe("closed");
+    w.setNow(new Date(T0.getTime() + 61 * 60_000).toISOString());
+    expect((await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`)).statusCode).toBe(200);
+    const closesAt = new Date(T0.getTime() + 80 * 60_000).toISOString();
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { closes_at: closesAt });
+    await at(69);
+    expect(sent("pizza.order.closing")).toHaveLength(1);
+    await at(70);
+    expect(sent("pizza.order.closing").map((e) => e.data.closes_at)).toEqual([
+      new Date(T0.getTime() + 3600_000).toISOString(),
+      closesAt,
+    ]);
+    expect(await state(id)).toBe("open");
+    await at(80);
+    expect(await state(id)).toBe("closed");
+    expect(sent("pizza.order.closed")).toHaveLength(2);
+    // The first close's rows stay as the record, sent once each.
+    const { rows } = await pool.query(
+      `SELECT count(*)::int AS n FROM pizza_due WHERE order_id = $1 AND step LIKE 'close@%' AND sent_at IS NOT NULL`,
+      [id],
+    );
+    expect(rows[0]).toEqual({ n: 2 });
+  });
+
+  it("reminds and releases again after a later claim, counted from the claim", async () => {
+    const id = await anOrder();
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/close`);
+    for (const m of [30, 60, 120]) await at(m);
+    expect(sent("pizza.order.released")).toHaveLength(1);
+    expect(reminders()).toHaveLength(4);
+    w.setNow(new Date(T0.getTime() + 125 * 60_000).toISOString());
+    expect((await w.call("pena", "POST", `/api/pizza/orders/${id}/claim`)).statusCode).toBe(200);
+    await at(154);
+    expect(reminders()).toHaveLength(4);
+    await at(155);
+    await at(185);
+    await at(245);
+    expect(reminders().slice(4)).toEqual([
+      { kind: "closed_not_placed", minutes: 30, user_id: "u_pena", role: "holder" },
+      { kind: "closed_not_placed", minutes: 60, user_id: "u_pena", role: "holder" },
+      { kind: "closed_not_placed", minutes: 60, user_id: "u_crew", role: "crew" },
+      { kind: "released", minutes: 120, user_id: "u_crew", role: "crew" },
+    ]);
+    expect(sent("pizza.order.released")).toHaveLength(2);
+    expect(json(await w.call("crew", "GET", `/api/pizza/orders/${id}`)).holder).toBeNull();
+  });
+
   it("tells the crew when nobody holds a stalled order", async () => {
     const id = await anOrder();
     await w.call("pena", "POST", `/api/pizza/orders/${id}/close`);
@@ -253,7 +304,7 @@ db("the scheduler", () => {
       `SELECT step, sent_at IS NOT NULL AS sent FROM pizza_due WHERE order_id = $1 ORDER BY step`,
       [id],
     );
-    expect(rows).toContainEqual({ step: "closed_holder", sent: true });
+    expect(rows).toContainEqual({ step: "closed_holder@2026-10-29T16:00:00.000Z", sent: true });
   });
 
   it("reports its lag in /health", async () => {

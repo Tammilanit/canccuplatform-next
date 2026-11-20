@@ -82,7 +82,7 @@ Every step is one conditional update of the order in a transaction, with its his
 - **Summary** `GET …/summary` (holder, crew): the legacy summary for the call, grouped lines and "copy as text", never comments. **History** `GET …/history` (holder, crew): the order's own log (D16).
 
 ### The scheduler
-The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-pizza.md#forgotten-orders)), inside every pizza container. Every 30 s it writes each live order's due steps as rows in Postgres from the order and the event's [settings](#settings) (a changed setting moves a step not taken yet), and takes the due ones, each with `FOR UPDATE SKIP LOCKED`, in the transaction that changes the order, stores its events in the outbox and marks the row sent. So a restart loses nothing, two replicas never take one step twice, and each step happens at most once per order. Times are the settings', shown here with their defaults.
+The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-pizza.md#forgotten-orders)), inside every pizza container. Every 30 s it writes each live order's due steps as rows in Postgres from the order and the event's [settings](#settings) (a changed setting moves a step not taken yet), and takes the due ones, each with `FOR UPDATE SKIP LOCKED`, in the transaction that changes the order, stores its events in the outbox and marks the row sent. So a restart loses nothing, two replicas never take one step twice, and each step happens at most once for its anchor: a reopen with a new close time, or a later claim, arms it again. Times are the settings', shown here with their defaults.
 
 | The order is | The scheduler |
 |---|---|
