@@ -1,8 +1,12 @@
 # Finals contract (provisional: the provider stub)
 
-**Provisional.** This file holds only the **finals provider interface**: what a finals provider offers the bot's `/finals` commands (season status, individual sign-up by Discord user, cancel, and a page link). The Finals track writes the full `finals` contract when it starts: the module's own API for the hub and admin, its events (`finals.<noun>.<past-tense verb>`), its rights (`finals.<right>`) and the screen's finals cards ([0025](../docs/decisions/0025-finals-and-games-modules.md), [roadmap](../docs/roadmap.md#finals)). Until then, nothing here is final.
+**Provisional.** This file holds only the **finals provider interface**: what a finals provider offers the bot's `/finals` commands (season status, individual sign-up by Discord user, cancel, and a page link). The Finals track writes the full contract when it starts, with the external-app interface of the Apps track (#193) ([roadmap](../docs/roadmap.md#finals)). Until then, nothing here is final.
 
-One contract, several providers: the standalone off-LAN tourney app and the platform's `finals` module. The consumer is the bot's `/finals` commands, which switch between providers with one base-URL setting. This stub copies the shapes of the off-LAN app's provider contract exactly; a change on either side is passed to the other before it ships.
+**Superseded in part by [0030](../docs/decisions/0030-finals-integrated-one-tourney-core.md).** There is no platform `finals` module (the one [0025](../docs/decisions/0025-finals-and-games-modules.md) planned): the Finals app is an external app that each event connects with its address and its secret (this contract's bearer secret, held encrypted and write-only), and the platform is a caller of this contract, never a provider. The passages below marked *superseded by 0030* describe that module as a provider; they no longer hold and stay only until the Finals track's contract work rewrites this file. The shapes are unchanged.
+
+**Callers of `POST {base}/links`.** Besides the bot's `/finals`, the platform's hub becomes a second caller: an attendee signed in to the platform opens Finals from the hub, and the platform asks the event's connected app for that person's link and sends them there (0030, point 2). The wording that names only the bot as the caller, where the secret is held, and which `role_ids` the platform sends are open points the Finals track's contract work settles (0030, Known limits).
+
+One contract, several providers: the standalone off-LAN tourney app and the platform's `finals` module (*superseded by 0030*: the one provider is the Finals app, wherever an event hosts it). The consumer is the bot's `/finals` commands, which switch between providers with one base-URL setting. This stub copies the shapes of the off-LAN app's provider contract exactly; a change on either side is passed to the other before it ships.
 
 JSON over HTTPS. Conventions as in [README.md](README.md#conventions), with the provider rules below.
 
@@ -12,15 +16,15 @@ JSON over HTTPS. Conventions as in [README.md](README.md#conventions), with the 
 | Provider | `{base}` | Auth |
 |---|---|---|
 | The standalone off-LAN app | `https://<off-LAN host>/api/provider` | bearer |
-| The platform's `finals` module | `https://<event host>/api/finals` | the bot module's (see Auth) |
+| The platform's `finals` module (*superseded by 0030*) | `https://<event host>/api/finals` | the bot module's (see Auth) |
 
 - Never under `/api/bot/`: that prefix belongs to the platform's bot module.
 - **The event comes from the hostname**, never from a field in the request ([tenants.md](tenants.md)). On the platform each event's bot configuration names its own event host as `{base}`.
 
 ## Auth
 - **The off-LAN app:** every request carries `Authorization: Bearer <secret>`. Missing or wrong → `401` with code `unauthorized`. The secret lives on the bot's host and the provider's host, never in a repo.
-- **The platform:** no bearer secret. The bot module calls the `finals` module itself; the entries and links paths act for a Discord user, so the module answers them only for the platform's bot module and gives any other caller (a browser, a session, the public) `401` `unauthorized`. How the bot proves it is the bot is the kit's service-to-service auth, named in the Finals track's full contract. `GET {base}/status` is readable by whoever the event's info-page mode lets in ([tenants.md](tenants.md#info-page-mode)).
-- **Rights on the platform come only from sign-in.** `role_ids` in `POST {base}/links` is ignored: admin rights in `finals` come only from the signed-in user's platform rights (`GET /api/admin/session`, [admin.md](admin.md#session-and-rights)), never from Discord role ids a caller sends.
+- **The platform** (*superseded by 0030*: there is no `finals` module to call)**:** no bearer secret. The bot module calls the `finals` module itself; the entries and links paths act for a Discord user, so the module answers them only for the platform's bot module and gives any other caller (a browser, a session, the public) `401` `unauthorized`. How the bot proves it is the bot is the kit's service-to-service auth, named in the Finals track's full contract. `GET {base}/status` is readable by whoever the event's info-page mode lets in ([tenants.md](tenants.md#info-page-mode)).
+- **Rights on the platform come only from sign-in** (*superseded by 0030*, with the module)**.** `role_ids` in `POST {base}/links` is ignored: admin rights in `finals` come only from the signed-in user's platform rights (`GET /api/admin/session`, [admin.md](admin.md#session-and-rights)), never from Discord role ids a caller sends.
 
 ## Conventions
 - JSON in and out, field names in `snake_case`.
@@ -40,7 +44,7 @@ JSON over HTTPS. Conventions as in [README.md](README.md#conventions), with the 
 | `name_taken` | 409 | Another entry in the season already uses that name, including names taken by page sign-ups. The bot asks for `/finals register name:<nick>`. |
 | `not_registered` | 404 | The Discord user has no entry in the season. |
 | `rate_limited` | 429 | Too many requests. Consumers may retry later. |
-| `unauthorized` | 401 | The caller is not allowed: bearer missing or wrong (the off-LAN app), or not the bot module (the platform). |
+| `unauthorized` | 401 | The caller is not allowed: bearer missing or wrong (the off-LAN app), or not the bot module (the platform; *superseded by 0030*). |
 | `invalid_request` | 400 | The body misses a required field or a field fails validation (e.g. the name breaks the nick rules). |
 
 `message` is for logs and may change; consumers branch on `code`.
@@ -93,7 +97,7 @@ Signs a Discord user up as an individual.
 
 Response `{"id": "<entry id>", "created": true}`: `201` when a new entry was made, `200` with `"created": false` when this user already had one (idempotent per user: the name in the request is ignored then). One entry per (season, `discord_user_id`), also across page sign-ups. The provider keeps any edit token server-side; it never appears in a response.
 
-On the platform the entry belongs to the user with that Discord id; the link between a user and their Discord id is kept only in the tenants module ([events.md](events.md), [tenants.md](tenants.md#users-roles-and-membership)). How a Discord user who never signed in is held is the Finals track's.
+(*Superseded by 0030*, with the module.) On the platform the entry belongs to the user with that Discord id; the link between a user and their Discord id is kept only in the tenants module ([events.md](events.md), [tenants.md](tenants.md#users-roles-and-membership)). How a Discord user who never signed in is held is the Finals track's.
 
 Errors: `no_season`, `registration_closed`, `name_taken`, `invalid_request`.
 
@@ -124,7 +128,7 @@ A page link for the caller. The bot shows it ephemerally (only the caller sees i
 |---|---|---|
 | `discord_user_id` | string | Discord snowflake. |
 | `discord_username` | string | Discord username, for display. |
-| `role_ids` | array of strings, optional | The caller's role ids in the server. The off-LAN app grants admin when one is in its own allowlist. **Ignored by the platform**, where admin rights come only from the user's own sign-in (see Auth). |
+| `role_ids` | array of strings, optional | The caller's role ids in the server. The off-LAN app grants admin when one is in its own allowlist. **Ignored by the platform**, where admin rights come only from the user's own sign-in (see Auth; *superseded by 0030*). |
 
 Response `200`:
 
@@ -134,8 +138,8 @@ Response `200`:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `url` | string | Open as is. On the off-LAN app a short-lived link token sits in the fragment; the token format is the provider's own and not part of this contract. **On the platform it is a plain hub URL** on the event's host (`https://<event host>/finals/`), with no token: the player signs in with Discord there, and the event comes from the hostname. |
-| `expires_at` | string | When the link stops working (about 15 min on the off-LAN app); reusable until then. The platform sends the same 15 minutes so the bot's text reads the same, though its plain URL keeps working. |
+| `url` | string | Open as is. On the off-LAN app a short-lived link token sits in the fragment; the token format is the provider's own and not part of this contract. **On the platform** (*superseded by 0030*) **it is a plain hub URL** on the event's host (`https://<event host>/finals/`), with no token: the player signs in with Discord there, and the event comes from the hostname. |
+| `expires_at` | string | When the link stops working (about 15 min on the off-LAN app); reusable until then. The platform sends the same 15 minutes so the bot's text reads the same, though its plain URL keeps working (*superseded by 0030*). |
 
 Errors: `invalid_request`.
 
