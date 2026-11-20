@@ -20,8 +20,9 @@ export const list = (gh, path, key = "") =>
 // API is fuzzy and lags, and a title may be edited by hand.
 export const markerOf = (kind, key) => `<!-- canccu-${kind}: ${key} -->`;
 
-export function openIssueWith(gh, repo, label, marker) {
-  return list(gh, `repos/${repo}/issues?labels=${encodeURIComponent(label)}&state=open&per_page=100`).find(
+// `state` is open, closed or all.
+export function issueWith(gh, repo, label, marker, state = "open") {
+  return list(gh, `repos/${repo}/issues?labels=${encodeURIComponent(label)}&state=${state}&per_page=100`).find(
     (issue) => !issue.pull_request && (issue.body ?? "").includes(marker),
   );
 }
