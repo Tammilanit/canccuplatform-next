@@ -4,7 +4,7 @@
  * hidden, queued, or back after a higher moment ended). Events come at least once and to every
  * container, so a report that changes nothing writes nothing.
  */
-import type { SqlClient } from "@canccu/kit";
+import type { Event, SqlClient } from "@canccu/kit";
 import { titleOf, writeHistory } from "./store.js";
 import type { MomentRow } from "./store.js";
 
@@ -42,11 +42,20 @@ interface Stored {
 
 type Ours = MomentRow & { override_id: string };
 
+/** A stream entry id (`<ms>-<seq>`) as its two numbers, or null; Postgres bigints hold them. */
+function entryOf(id: string | undefined): [string, string] | null {
+  const m = /^(\d{1,18})-(\d{1,18})$/.exec(id ?? "");
+  return m === null ? null : [m[1] as string, m[2] as string];
+}
+
 /**
- * Whether the report of event `eventId` is newer than the last applied on its zone, which it then
+ * Whether the report in event `e` is newer than the last applied on its zone, which it then
  * becomes (under the mark's row lock, so the live and the replay subscriptions apply it once).
- * Event ids are UUIDv7, ordered by time. The replay (`replayed`) applies only on a zone the live
- * subscription has marked (the mark outlives a replayed zone removal), so a first boot never replays the stream's whole past into the history.
+ * Reports are ordered by their entry in Screen's stream: ids come from several replicas' clocks
+ * (#657). A mark from before the entries (null) is compared by event id, once. An event that was
+ * not read from a stream has no place in its order, and applies nothing. The replay (`replayed`)
+ * applies only on a zone the live subscription has marked (the mark outlives a replayed zone
+ * removal), so a first boot never replays the stream's whole past into the history.
  * A report applies only on a zone Moments knows from Screen's zone events: Screen can report a
  * zone after removing it (a placement settling as it goes, or the replay behind the live
  * subscription), and a report that added its zone kept a removed zone on On air for good (#642).
@@ -54,20 +63,28 @@ type Ours = MomentRow & { override_id: string };
 export async function newerClaims(
   c: SqlClient,
   zone: string,
-  eventId: string,
+  e: Pick<Event, "id" | "entry_id">,
   replayed: boolean,
 ): Promise<boolean> {
+  const entry = entryOf(e.entry_id);
+  if (entry === null) return false;
   const known = await c.query(`SELECT 1 FROM moments_zones WHERE zone_key = $1`, [zone]);
   if (known.rows.length === 0) return false;
+  const older = (mark: string) =>
+    `CASE WHEN ${mark}.claims_entry_ms IS NULL THEN ${mark}.claims_event_id < $2
+       ELSE (${mark}.claims_entry_ms, ${mark}.claims_entry_seq) < ($3::bigint, $4::bigint) END`;
   const { rows } = await c.query(
     replayed
-      ? `UPDATE moments_claims_marks SET claims_event_id = $2
-         WHERE zone_key = $1 AND claims_event_id < $2 RETURNING zone_key`
-      : `INSERT INTO moments_claims_marks (zone_key, claims_event_id) VALUES ($1, $2)
-         ON CONFLICT (tenant_id, zone_key) DO UPDATE SET claims_event_id = EXCLUDED.claims_event_id
-         WHERE moments_claims_marks.claims_event_id < EXCLUDED.claims_event_id
+      ? `UPDATE moments_claims_marks m SET claims_event_id = $2, claims_entry_ms = $3,
+           claims_entry_seq = $4
+         WHERE zone_key = $1 AND ${older("m")} RETURNING zone_key`
+      : `INSERT INTO moments_claims_marks (zone_key, claims_event_id, claims_entry_ms, claims_entry_seq)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (tenant_id, zone_key) DO UPDATE SET claims_event_id = EXCLUDED.claims_event_id,
+           claims_entry_ms = EXCLUDED.claims_entry_ms, claims_entry_seq = EXCLUDED.claims_entry_seq
+         WHERE ${older("moments_claims_marks")}
          RETURNING zone_key`,
-    [zone, eventId],
+    [zone, e.id, ...entry],
   );
   return rows.length > 0;
 }

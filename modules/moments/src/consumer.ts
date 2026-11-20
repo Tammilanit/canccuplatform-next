@@ -74,7 +74,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     let scenes = false;
     if (e.type === "screen.claims.changed") {
       const report = claimsReportOf(e.data);
-      if (report !== null && (await newerClaims(c, report.zone_key, e.id, false)))
+      if (report !== null && (await newerClaims(c, report.zone_key, e, false)))
         await applyClaims(c, report, now);
     } else if (e.type === "screen.zone.saved" && typeof e.data.zone_key === "string") {
       await addZone(c, e.data.zone_key);
@@ -84,13 +84,15 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     } else if (e.type === "screen.photo.added" && typeof e.data.photo_id === "string") {
       // An archived event is read-only (E10): no sound, no story run.
       if (await isArchived(c, e.tenant as string)) return;
-      // A new photo's sound is a Moments cue (contracts/screen.md, A new photo); Screen draws its pop.
+      // A new photo's sound is a Moments cue (contracts/screen.md, A new photo); Screen draws its
+      // pop. One container decides it, else each would log it (#657).
       const id = e.data.photo_id;
-      await deps.engine.fireCue(
-        c,
-        { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
-        now,
-      );
+      if (await deps.engine.sound?.claim(e.id))
+        await deps.engine.fireCue(
+          c,
+          { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
+          now,
+        );
       await storyEvent({ c, engine: deps.engine, now }, e);
     } else if (e.source !== "screen") {
       // An archived event is read-only (E10): no rule starts or renews a moment on it.
@@ -130,7 +132,7 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
     const report = claimsReportOf(e.data);
     if (report === null) return;
     await deps.db.tenant(async (c) => {
-      if (await newerClaims(c, zone, e.id, true)) await applyClaims(c, report, deps.now());
+      if (await newerClaims(c, zone, e, true)) await applyClaims(c, report, deps.now());
     });
     await deps.flush();
   } else if (e.type === "screen.zone.saved") {

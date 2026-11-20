@@ -174,7 +174,7 @@ export function cueEditor(o: {
         If a moment is missed (a screen was off), it may still sound this long after.
       </p>
     </div>
-    ${c?.catch_up_before_start == null ? "" : html`<input type="hidden" name="catch_up_before_start" value="${c.catch_up_before_start.join(",")}" />`}
+    ${c?.catch_up_before_start == null ? "" : windowRow(c.catch_up_before_start)}
     <div class="moments-fieldrow">
       <label class="moments-label" for="once_per_source">Once per source</label>
       ${toggle({ id: "once_per_source", name: "once_per_source", on: c?.once_per_source ?? false, label: "Once per source", enabled: true })}
@@ -206,3 +206,23 @@ export function cueEditor(o: {
 /** The editor's page title: the cue's plain name. */
 export const editorTitle = (name: string | null): string =>
   name === null ? "New cue" : cueTitle(name);
+
+/**
+ * A window before the start (the legacy tournament cues): kept as it is, and where it measures
+ * from said in words (#657). Stories pass no start (their steps have their own times).
+ */
+function windowRow([from, to]: [number, number]) {
+  return html`<input
+      type="hidden"
+      name="catch_up_before_start"
+      value="${`${String(from)},${String(to)}`}"
+    />
+    <div class="moments-fieldrow">
+      <span class="moments-label">Window</span>
+      <p class="canccu-small canccu-muted">
+        Sounds only from ${String(from)} to ${String(to)} min before the start of its run-of-show
+        item. A moment with no item, such as a rule's, counts from its own start, so the cue stays
+        silent there; a storyboard step plays it at the step's own time.
+      </p>
+    </div>`;
+}

@@ -8,6 +8,32 @@ export const MIGRATIONS_DIR = new URL("../migrations/", import.meta.url).pathnam
 
 export type Db = OutboxDb;
 
+interface Committed {
+  run: () => Promise<void>;
+  dropped: (() => void) | undefined;
+}
+
+/**
+ * Work outside Postgres that may happen only once its transaction commits, by transaction (each
+ * run's client is a new wrapper): a rollback, or a savepoint's, never did it (#657).
+ */
+const committed = new WeakMap<SqlClient, Committed[]>();
+
+/**
+ * Runs `run` after `c`'s transaction commits, before the transaction's caller goes on; `run`
+ * handles its own faults, since the commit has happened. `dropped` runs when a savepoint
+ * (`isolated`) rolls it back.
+ */
+export function afterCommit(c: SqlClient, run: () => Promise<void>, dropped?: () => void): void {
+  const list = committed.get(c) ?? [];
+  list.push({ run, dropped });
+  committed.set(c, list);
+}
+
+async function runCommitted(c: SqlClient): Promise<void> {
+  for (const x of committed.get(c) ?? []) await x.run();
+}
+
 export function poolDb(pool: pg.Pool): Db {
   const run = async <T>(
     fn: (client: SqlClient) => Promise<T>,
@@ -19,7 +45,7 @@ export function poolDb(pool: pg.Pool): Db {
     );
     try {
       if (tenant !== null) {
-        return await tenantTransaction(
+        const out = await tenantTransaction(
           client,
           async (c) => {
             // The login role owns nothing and RLS binds only the app role: switch first.
@@ -28,17 +54,21 @@ export function poolDb(pool: pg.Pool): Db {
           },
           { tenant },
         );
+        await runCommitted(client);
+        return out;
       }
       await client.query("BEGIN");
+      let out: T;
       try {
         await client.query(`SET LOCAL ROLE ${APP_ROLE}`);
-        const out = await fn(client);
+        out = await fn(client);
         await client.query("COMMIT");
-        return out;
       } catch (err) {
         await client.query("ROLLBACK");
         throw err;
       }
+      await runCommitted(client);
+      return out;
     } finally {
       client.release();
     }
@@ -59,10 +89,12 @@ export async function isolated(
   failed: (err: unknown) => void,
 ): Promise<void> {
   await c.query(`SAVEPOINT isolated`, []);
+  const before = committed.get(c)?.length ?? 0;
   try {
     await fn();
   } catch (err) {
     await c.query(`ROLLBACK TO SAVEPOINT isolated`, []);
+    for (const x of committed.get(c)?.splice(before) ?? []) x.dropped?.();
     failed(err);
   }
   await c.query(`RELEASE SAVEPOINT isolated`, []);

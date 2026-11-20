@@ -134,7 +134,7 @@ On the server, once per zone, the same for every screen of the zone; each zone's
 1. `master_off`, `muted` (the timed mute).
 2. The zone's energy (Screen's `GET /internal/screen/zones/{zone_key}/sound`): `party` and `lively` play every category, `calm` urgent, attention and result (`calm`), a quiet scene (its `quiet`, or quiet hours while the zone has no scene) urgent only (`quiet`).
 3. `category_off`, `cue_off`, `no_sound`, `cooldown` (the cue's on the zone); while an emergency runs on the zone only urgent (`emergency`).
-4. `dedupe` (the same appearance again), `once_per_source` (7 days), `outside_window` (a cue with a window before the start).
+4. `dedupe` (the same appearance again), `once_per_source` (7 days), `outside_window` (a cue with a window before the start, measured from the start of the moment's source, a run-of-show item's, else from the moment's own start).
 5. `coalesced` (the same cue accepted on the zone in the last 2 s), the flood guard: `flood_source` (the same cue and source within `per_source_seconds`, 10; for a story's sound the source is its run, whatever the cue: at most one sound per 10 s per run, Storyboards) and `flood_minute` (`per_minute`, 3, per zone); `budget` (`hourly_budget`, 20, per zone). Urgent passes all three (`urgent_passes`) and still counts. The minute and hour counts are Valkey counters per zone (D15).
 6. One at a time: ambient never waits (`busy`) and keeps 30 s between ambient sounds (`ambient_gap`); only urgent interrupts a playing sound (`interrupted`); any other waits in the zone's queue, highest category first, at most 4 s from its request (`waited`, else `stale`). While a story's video plays its own sound on the zone, every other non-urgent sound is held (`video`).
 

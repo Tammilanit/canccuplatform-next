@@ -62,7 +62,9 @@ export async function recordFact(c: SqlClient, e: Event): Promise<boolean> {
   if (e.type === "notify.checkin.recorded") {
     const id = d.check_in_id;
     if (d.purpose !== "arrival" || typeof id !== "string") return false;
-    const at = typeof d.checked_in_at === "string" ? d.checked_in_at : e.time;
+    // A time that does not parse takes the event's, as a presence count's does (#657).
+    const own = Date.parse(typeof d.checked_in_at === "string" ? d.checked_in_at : "");
+    const at = new Date(Number.isNaN(own) ? Date.parse(e.time) : own).toISOString();
     await c.query(
       `INSERT INTO moments_checkins (check_in_id, at) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
       [id, at],

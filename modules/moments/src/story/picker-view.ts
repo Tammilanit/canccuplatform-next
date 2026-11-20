@@ -169,7 +169,8 @@ export function pickerView(o: {
       Built-ins are copied into the event on first use; a later platform version never changes them.
       A name opens the builder. Duplicate a built-in to edit a copy, or edit it and reset it to
       default later. Turning on a preset that overlaps a built-in rule turns the rule off for this
-      event, and back.
+      event, and back. Pizza orders ready takes over only the arrived orders: the pizza rule still
+      shows each order placed.
     </p>
     ${group(
       "Your storyboards",

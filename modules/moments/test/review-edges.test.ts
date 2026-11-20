@@ -120,6 +120,44 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
     ]);
   });
 
+  // #657: a check-in's own time that does not parse would fail the event on every delivery.
+  it("takes an arrival check-in whose time does not parse at the event's time", async () => {
+    const checkIn = event("notify.checkin.recorded", {
+      check_in_id: "ci_1",
+      purpose: "arrival",
+      checked_in_at: "soon",
+    });
+    await deliver(checkIn);
+    expect(await rows(`SELECT check_in_id, at FROM moments_checkins`)).toEqual([
+      { check_in_id: "ci_1", at: new Date(checkIn.time) },
+    ]);
+  });
+
+  // #657: every container gets every event; only one decides and logs a new photo's sound.
+  it("logs a new photo's sound once, however many containers get it", async () => {
+    const photo = event("screen.photo.added", { photo_id: "ph_1" });
+    const first = deps();
+    w.restart();
+    await w.tx("demo", () => handleTenantEvent(first, photo));
+    await deliver(photo);
+    expect(await rows(`SELECT zone_key, outcome FROM moments_sound_log`)).toEqual([
+      { zone_key: "main", outcome: "played" },
+    ]);
+  });
+
+  it("logs a new photo's sound on the retry of a run that failed", async () => {
+    const photo = event("screen.photo.added", { photo_id: "ph_1" });
+    const screen = w.screen;
+    const zoneSound = screen.zoneSound.bind(screen);
+    screen.zoneSound = () => Promise.reject(new Error("Screen fell over"));
+    await expect(deliver(photo)).rejects.toThrow("Screen fell over");
+    screen.zoneSound = zoneSound;
+    await deliver(photo);
+    expect(await rows(`SELECT zone_key, outcome FROM moments_sound_log`)).toEqual([
+      { zone_key: "main", outcome: "played" },
+    ]);
+  });
+
   it("forgets a removed zone's newest claims report", async () => {
     const r = await crewMoment();
     if (r.status === "refused") throw new Error("refused");

@@ -7,8 +7,6 @@
  */
 import type { SqlClient } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
-import { soundKeys } from "./counters.js";
-import type { Counters } from "./counters.js";
 import { VIDEO_CUE } from "./decide.js";
 import type { ScreenClient } from "./screen.js";
 import { loadSettings, lockZone, saveZone, writeLog } from "./store.js";
@@ -47,7 +45,7 @@ const holdId = (source: string) => `video_${source}`;
 /** The video's moment started: each zone's log, and its count and hold where it sounds. */
 export async function startVideo(
   c: SqlClient,
-  counters: Counters,
+  count: (zone: string, at: number) => void,
   plan: VideoPlan,
   untilMs: number,
   source: string,
@@ -60,9 +58,7 @@ export async function startVideo(
       await writeLog(c, { ...log, outcome: "suppressed", reason: off });
       continue;
     }
-    // Uncounted while Valkey does not answer: the video plays on (#592).
-    await counters.incr(soundKeys.minute(zone, at), soundKeys.ttl.minute).catch(() => 0);
-    await counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour).catch(() => 0);
+    count(zone, at);
     const state = await lockZone(c, zone);
     await saveZone(c, zone, {
       ...state,

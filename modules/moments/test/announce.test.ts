@@ -9,6 +9,8 @@ import type { Event } from "@canccu/kit";
 import { compose, editAnnouncement, withdrawAnnouncement } from "../src/announce/service.js";
 import type { Draft } from "../src/announce/service.js";
 import { lockAnnouncement } from "../src/announce/store.js";
+import { loadCue, saveCue } from "../src/cues/store.js";
+import type { CueView } from "../src/cues/store.js";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone, lockMoment } from "../src/store.js";
 import { tickTenant } from "../src/tick.js";
@@ -61,7 +63,7 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     await pool.query(
       `TRUNCATE moments, moment_overrides, moment_placements, moments_zones, moments_history,
         moments_outbox, moments_announcements, moments_sources, moments_sound_zones,
-        moments_sound_log, moments_tenants`,
+        moments_sound_log, moments_tenants, moments_cues`,
     );
     w = world(pool);
     await w.tx("demo", async (c) => {
@@ -258,6 +260,26 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     expect(sent.title).toBe("Demo Game Cup, semis starts in 15 minutes");
     expect(sent.body).toBe("Stage");
   });
+
+  // #657: a cue's window before the start measures from the announcement's item, not its send.
+  it.each([
+    [[20, 10], "played", "free"],
+    [[10, 5], "suppressed", "outside_window"],
+  ] as const)(
+    "with an item: its cue's window %j measures from the item's start",
+    async (window, outcome, reason) => {
+      await w.tx("demo", async (c) => {
+        const cue = (await loadCue(c, "announce.attention")) as CueView;
+        await saveCue(c, { ...cue, catch_up_before_start: [...window] }, 0);
+        await storeAgenda(c, { agenda_version: 1, items: [ITEM] });
+      });
+      await send({ item_id: ITEM.id, zones: ["main"], when: { mode: "item", minutes_before: 15 } });
+      // 19:00 start, sent at 18:45: T−15.
+      await tick(w.at(45 * 60));
+      const { rows } = await pool.query(`SELECT cue, outcome, reason FROM moments_sound_log`);
+      expect(rows).toEqual([{ cue: "announce.attention", outcome, reason }]);
+    },
+  );
 
   it("a cancelled item withdraws a scheduled one and says why; nothing goes out", async () => {
     await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 1, items: [ITEM] }));

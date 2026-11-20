@@ -1,9 +1,12 @@
 /** Cues on a real Postgres: a moment's picture and sound, the log, the budget and the queue. */
 import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { emergencyRequest } from "../src/content.js";
 import { handlePlatformEvent } from "../src/consumer.js";
+import { isolated } from "../src/db.js";
+import type { MomentRequest } from "../src/engine.js";
 import { tickTenant, upkeep } from "../src/tick.js";
 import { DATABASE_URL, T0, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
@@ -40,24 +43,26 @@ live("cues", () => {
       )
     ).rows as { zone_key: string; cue: string; outcome: string; reason: string; detail: string }[];
 
+  const pizzaRequest = (n: number, cue = "pizza.placed"): MomentRequest => ({
+    class: "announcement",
+    template: "pizza_placed",
+    content: { seq: n },
+    origin: "rule",
+    rule_id: "pizza",
+    why: "rule: pizza.order.placed",
+    zones: ["main"],
+    source: { module: "pizza", event_id: null, ref: `o${String(n)}` },
+    dedupe_key: `pizza:o${String(n)}`,
+    cue,
+  });
   const pizza = (n: number, at: Date) =>
+    w.tx("demo", (c) => w.engine.request(c, pizzaRequest(n), at));
+  const counts = () => withTenant("demo", () => w.cues.counts("main", T0.getTime()));
+  const limits = (settings: object) =>
     w.tx("demo", (c) =>
-      w.engine.request(
-        c,
-        {
-          class: "announcement",
-          template: "pizza_placed",
-          content: { seq: n },
-          origin: "rule",
-          rule_id: "pizza",
-          why: "rule: pizza.order.placed",
-          zones: ["main"],
-          source: { module: "pizza", event_id: null, ref: `o${String(n)}` },
-          dedupe_key: `pizza:o${String(n)}`,
-          cue: "pizza.placed",
-        },
-        at,
-      ),
+      c.query(`INSERT INTO moments_sound_settings (settings, revision) VALUES ($1, 1)`, [
+        JSON.stringify(settings),
+      ]),
     );
 
   it("a moment's cue sounds on each of its zones together, and its box gets an effect", async () => {
@@ -135,11 +140,7 @@ live("cues", () => {
   }, 30_000);
 
   it("the hourly budget holds across the minutes, and urgent passes it", async () => {
-    await w.tx("demo", (c) =>
-      c.query(`INSERT INTO moments_sound_settings (settings, revision) VALUES ($1, 1)`, [
-        JSON.stringify({ hourly_budget: 2 }),
-      ]),
-    );
+    await limits({ hourly_budget: 2 });
     for (let n = 0; n < 4; n++) await pizza(n, new Date(T0.getTime() + n * 61_000));
     const reasons = (await log()).map((r) => r.reason);
     expect(reasons).toEqual(["free", "free", "budget", "budget"]);
@@ -242,6 +243,58 @@ live("cues", () => {
       `SELECT 1 FROM moments_sound_sources WHERE cue = 'pizza.placed'`,
     );
     expect(rows).toEqual([]);
+  });
+
+  // #657: a moment that rolls back never sounded, so it uses up no flood or budget count.
+  it("counts a sound only once its moment commits", async () => {
+    const rolledBack = w.tx("demo", async (c) => {
+      await w.engine.request(c, pizzaRequest(1), T0);
+      throw new Error("rolled back");
+    });
+    await expect(rolledBack).rejects.toThrow("rolled back");
+    expect(await counts()).toEqual([0, 0]);
+    // A story step's fault rolls back its savepoint only: its sound counts nothing either.
+    await w.tx("demo", (c) =>
+      isolated(
+        c,
+        async () => {
+          await w.cues.fire(c, { cue: "pizza.placed", zones: ["main"], key: "s", source: "s" }, T0);
+          throw new Error("step failed");
+        },
+        () => undefined,
+      ),
+    );
+    expect(await counts()).toEqual([0, 0]);
+    await pizza(2, T0);
+    expect(await counts()).toEqual([1, 1]);
+  });
+
+  it("counts the sounds of one transaction for its later decisions", async () => {
+    await limits({ per_minute: 1 });
+    await w.tx("demo", async (c) => {
+      await w.engine.request(c, pizzaRequest(1), T0);
+      await w.engine.request(c, pizzaRequest(2, "tournament.post"), T0);
+    });
+    expect((await log()).map((r) => [r.cue, r.outcome, r.reason])).toEqual([
+      ["pizza.placed", "played", "free"],
+      ["tournament.post", "suppressed", "flood_minute"],
+    ]);
+    expect(await counts()).toEqual([1, 1]);
+  });
+
+  // #657: a moment with no source start of its own (a rule's) measures a cue's window before the
+  // start from its own start, which it has reached: such a cue never sounds there.
+  it("measures a cue's window from the moment's own start when its source has none", async () => {
+    await w.tx("demo", (c) => w.engine.request(c, pizzaRequest(1, "tournament.pre"), T0));
+    expect(await log()).toEqual([
+      {
+        zone_key: "main",
+        cue: "tournament.pre",
+        outcome: "suppressed",
+        reason: "outside_window",
+        detail: "T−14 to T−2 min",
+      },
+    ]);
   });
 
   it("a sound check plays on the chosen zones, past every gate but the master", async () => {

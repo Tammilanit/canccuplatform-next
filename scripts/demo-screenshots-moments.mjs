@@ -134,6 +134,14 @@ export const MOMENTS_PAGES = [
     PHONE,
     { touch: true },
   ],
+  // A cue with a window before the start says where it measures from (#657).
+  ["moments-cue-edit-window", "/moments/cues/edit/tournament.pre", DESK],
+  [
+    "moments-cue-edit-window-phone",
+    "/moments/cues/edit/tournament.pre",
+    PHONE,
+    { touch: true },
+  ],
   ["moments-scenes", "/moments/scenes", DESK],
   ["moments-scenes-phone", "/moments/scenes", PHONE, { touch: true }],
   ["moments-scenes-edit", "/moments/scenes?edit=peak", DESK],

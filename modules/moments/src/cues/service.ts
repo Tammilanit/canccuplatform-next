@@ -2,15 +2,17 @@
  * Cues (contracts/moments.md, Cues and sound): a cue's picture for a moment's box, and its sound
  * decided once per zone (decide.ts) and sent to the zone's screens as `moments.sound.played` with
  * `play_at` (D14). Each zone's decision runs under its row lock in the caller's transaction, so the
- * sound and its log line commit with what caused them; the minute and hour counts are Valkey's (D15).
+ * sound and its log line commit with what caused them; the minute and hour counts are Valkey's (D15),
+ * added once the transaction commits.
  */
 import type { Outbox, SqlClient } from "@canccu/kit";
-import { requireTenant } from "@canccu/kit";
+import { randomUUID } from "node:crypto";
+import { requireTenant, tenantKey } from "@canccu/kit";
 import { FADE_SECONDS } from "./catalog.js";
 import type { Effect } from "./catalog.js";
 import { LEAD_MS, decide, pickNotLast, pump } from "./decide.js";
 import type { Done, Play } from "./decide.js";
-import { soundKeys } from "./counters.js";
+import { TransactionCounts, soundKeys } from "./counters.js";
 import type { Counters } from "./counters.js";
 import { moveVideo, planVideo, startVideo } from "./video.js";
 import type { VideoPlan } from "./video.js";
@@ -64,13 +66,19 @@ export interface CuesDeps {
 }
 
 export const SOUND_CHECK = "sound_check";
+/** Longer than a bus's retries of one event, and than containers lag one another. */
+const CLAIM_MS = 10 * 60_000;
 const CHECK_SOUND = "pack.chime-bright";
 
 export class Cues {
   private readonly random: () => number;
+  /** This container, as the owner of its claims. */
+  private readonly owner = randomUUID();
+  private readonly sounds: TransactionCounts;
 
   constructor(private readonly deps: CuesDeps) {
     this.random = deps.random ?? Math.random;
+    this.sounds = new TransactionCounts(deps.counters);
   }
 
   /** The zone's sounds this minute and this hour, as the decisions count them. */
@@ -80,6 +88,16 @@ export class Cues {
       soundKeys.hour(zone, at),
     ]);
     return [minute ?? 0, hour ?? 0];
+  }
+
+  /**
+   * Whether this container decides the sound of event `id`, which every container gets (a new
+   * photo), so the desk's log has one line per zone (#657): the first to claim it, also on its
+   * retries. While Valkey does not answer, every container does.
+   */
+  async claim(id: string): Promise<boolean> {
+    const key = tenantKey("moments", "claim", id);
+    return this.deps.counters.claim(key, this.owner, CLAIM_MS).catch(() => true);
   }
 
   /** The effect a moment's box makes, never the cue's last one (L7); null for a sound-only cue. */
@@ -94,9 +112,25 @@ export class Cues {
     return { name: effect as Effect, hold_seconds: cue.hold_seconds, fade_seconds: FADE_SECONDS };
   }
 
-  /** A moment's start sounds its cue once on its zones; its source is what it is about. */
-  async started(c: SqlClient, m: MomentRow, cue: string, now: Date): Promise<void> {
-    const t = { cue, zones: m.zones, key: `moment:${m.id}`, source: m.source.ref ?? m.id };
+  /**
+   * A moment's start sounds its cue once on its zones; its source is what it is about. A cue's
+   * window before the start measures from the source's start (a run-of-show item's), else from
+   * the moment's own (#657).
+   */
+  async started(
+    c: SqlClient,
+    m: MomentRow,
+    cue: string,
+    now: Date,
+    sourceStart: Date | null = null,
+  ): Promise<void> {
+    const t = {
+      cue,
+      zones: m.zones,
+      key: `moment:${m.id}`,
+      source: m.source.ref ?? m.id,
+      starts_at: (sourceStart ?? m.starts_at).toISOString(),
+    };
     await this.fire(c, t, now);
   }
 
@@ -137,11 +171,7 @@ export class Cues {
       }
       const emergency = await emergencyOn(c, zone);
       let state = await this.pumped(c, zone, at, settings, emergency, library);
-      // While Valkey does not answer, the flood and budget gates count nothing: the sound, and
-      // the moment it belongs to, go on (#592).
-      const [minute, hour] = await this.deps.counters
-        .get([soundKeys.minute(zone, at), soundKeys.hour(zone, at)])
-        .catch(() => [0, 0]);
+      const [minute, hour] = await this.sounds.get(c, zone, at);
       const once =
         cue.once_per_source &&
         t.source !== null &&
@@ -157,18 +187,13 @@ export class Cues {
         source: t.source,
         starts_at: t.starts_at ?? null,
         flood: t.flood ?? null,
-        counts: { minute: minute ?? 0, hour: hour ?? 0, once_played: once },
+        counts: { minute, hour, once_played: once },
         length,
         random: this.random,
       });
       state = d.zone;
       await saveZone(c, zone, state);
-      if (d.count) {
-        await this.deps.counters
-          .incr(soundKeys.minute(zone, at), soundKeys.ttl.minute)
-          .catch(() => 0);
-        await this.deps.counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour).catch(() => 0);
-      }
+      if (d.count) this.sounds.add(c, zone, at);
       if (d.once && t.source !== null) await rememberOnce(c, zone, cue.name, t.source, now);
       const missed = d.play === undefined ? null : missedOn(status, d.play);
       await writeLog(c, {
@@ -192,7 +217,10 @@ export class Cues {
 
   /** The video's moment started: counted and held where it sounds (cues/video.ts). */
   videoStarted(c: SqlClient, plan: VideoPlan, untilMs: number, source: string, now: Date) {
-    return startVideo(c, this.deps.counters, plan, untilMs, source, now);
+    const count = (zone: string, at: number) => {
+      this.sounds.add(c, zone, at);
+    };
+    return startVideo(c, count, plan, untilMs, source, now);
   }
 
   /** A paused video resumed: its hold moves to its new end (cues/video.ts). */

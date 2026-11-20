@@ -156,6 +156,7 @@ export async function send(
         regions: chainOf(a.level, a.full_screen),
         content: cardContent(a, text, now),
         cue: CUE[a.level],
+        ...(item === null ? {} : { source_starts_at: new Date(item.starts_at) }),
       },
       new Date(now.getTime() + 1),
     );

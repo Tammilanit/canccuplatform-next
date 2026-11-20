@@ -7,7 +7,8 @@
     summary: The event's stories, settings, the presets and the live and recent runs
     description: |
       Right `moments.read`. The 24 presets are copied on first use (SD8, O7); `presets` lists every preset's key in the catalogue's order. Each story adds `free_variables`
-      (the ones a take asks for) and `rule_off` (the built-in rule it turns off while on, SD6, or null).
+      (the ones a take asks for) and `rule_off` (the built-in rule it takes over while on, SD6, or null; Pizza
+      orders ready takes over only its rule's arrived orders, and the `pizza` rule still shows each order placed).
     responses:
       "200":
         $ref: "../moments.openapi.yaml#/components/responses/StoryboardsAnswer"
