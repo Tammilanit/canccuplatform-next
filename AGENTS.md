@@ -25,7 +25,7 @@ We build a commercial-scale, polished and intuitive platform, not a port of the 
 - Take the best of the old code and tests, and adapt it to the new stack (Postgres, the kit, containers) and the contracts. Design anew wherever that is better; never let the old shape limit the new product.
 - For each feature, choose: reuse as is, reuse with changes, rebuild, drop, or add something new. Name the reason.
 - Scrub every event-specific string and all event content to `events/demo/` or the event repo. Never import legacy git history or legacy docs.
-- Code by other authors keeps its licence and attribution. The mini-tourney code (ISC, c22dragoon) may be used, with its author's OK, by the `finals` module and the shared tourney core it builds on, keeping that licence and attribution ([0025](docs/decisions/0025-finals-and-games-modules.md)).
+- Code by other authors keeps its licence and attribution. The mini-tourney code (ISC, c22dragoon) may be used, with its author's OK, by the shared tourney core and the `tournament` module that runs on it, keeping that licence and attribution ([0030](docs/decisions/0030-finals-integrated-one-tourney-core.md)).
 
 ## Contracts
 - An additive contract change (new fields, endpoints, events, settings) goes in the package PR together with the code that uses it ([0029](docs/decisions/0029-additive-contracts-ship-with-consumers.md)), and merges automatically like the rest of that PR (see Merge rules).
