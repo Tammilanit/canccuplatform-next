@@ -13,8 +13,13 @@ on:
     paths:
       - .github/workflows/weekly.yml
       - .github/scripts/regressions.mjs
+      - .github/scripts/gh.mjs
       - .github/scripts/screenshot-compare.mjs
       - .github/scripts/mutation-score.mjs
+      - .github/actions/demo-stack-up/**
+      - scripts/demo-screenshots-pages.mjs
+      - scripts/demo-screenshots-shot.mjs
+      - modules/screen/test/stack/**
       - scripts/a11y-check
       - scripts/a11y-check.mjs
       - packages/kit-py/pyproject.toml
@@ -156,9 +161,11 @@ jobs:
       - name: Platform smoke, with the demo event
         run: scripts/demo-stack-test --only "" http://127.0.0.1
       - name: Every screenshot
-        run: |
-          scripts/demo-screenshots http://127.0.0.1 screenshots
-          if [ -f "$RUNNER_TEMP/tag" ]; then cp "$RUNNER_TEMP/tag" screenshots/base-tag.txt; fi
+        run: scripts/demo-screenshots http://127.0.0.1 screenshots
+      # Even when a shot fails, so screen-diff still names the tag it compared with.
+      - name: The base's tag beside its shots
+        if: always() && matrix.side == 'base'
+        run: if [ -f "$RUNNER_TEMP/tag" ]; then mkdir -p screenshots && cp "$RUNNER_TEMP/tag" screenshots/base-tag.txt; fi
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -395,4 +402,9 @@ jobs:
           WORKFLOW: weekly.yml
           PER: job
           PREFIX: "weekly: "
+          # A part that fails only because one it needs failed (no report, no shots) repeats that
+          # failure: one cause files one issue.
+          IGNORE: >-
+            ${{ (needs.mutation-ts.result != 'success' || needs.mutation-py.result != 'success') && 'mutation-score' || '' }},
+            ${{ needs.screens.result != 'success' && 'screen-diff' || '' }}
         run: node .github/scripts/regressions.mjs

@@ -225,3 +225,15 @@ test("a compare call that fails (history rewritten, rate limit) still files the 
   assert.match(body, /commits unknown/i);
   assert.match(body, /aaaaaaa/, "names the green run it could not compare with");
 });
+
+test("IGNORE as the weekly report builds it, with empty entries and spaces, leaves out the knock-on parts", () => {
+  const gh = fakeGh({
+    "repos/o/r/actions/runs/77/jobs": { jobs: [job(1, "screens (base)"), job(2, "screen-diff"), job(3, "mutation-score")] },
+    "repos/o/r/actions/jobs/1/logs": log("FAIL settings: timeout"),
+    "repos/o/r/actions/jobs/3/logs": log("::error::no stryker report"),
+    "repos/o/r/actions/workflows/weekly.yml/runs": { workflow_runs: [] },
+    "repos/o/r/issues": [],
+  });
+  const got = run({ gh, env: { ...env, WORKFLOW: "weekly.yml", PER: "job", PREFIX: "weekly: ", IGNORE: ", screen-diff" } });
+  assert.deepEqual(got.map((r) => r.name), ["weekly: screens (base)", "weekly: mutation-score"]);
+});
