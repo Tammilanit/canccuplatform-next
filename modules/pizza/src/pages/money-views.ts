@@ -263,7 +263,7 @@ function payWith(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
     p.user_id !== me
       ? ""
       : html`<details class="pizza-details">
-          <summary>${c.t("money.save_details")}</summary>
+          <summary>${c.t("money.edit")}</summary>
           <form method="post" action="${base(o)}/money/pay-with" class="pizza-form">
             ${formKey()}
             <label class="canccu-field"
@@ -351,7 +351,7 @@ function owes(c: PageCtx, o: OrderView, m: MoneyView): Slot {
 export function moneyPageView(c: PageCtx, o: OrderView, m: MoneyView, s: MoneyPageOpts): Html {
   return html`${flash(s.error)} ${header(c, o, m, s.me)}
   ${m.total_cents === null ? addReceipt(c, o, m, s.reader) : confirmed(c, o, m)}
-  ${unpriced(c, o, m)} ${split(c, o, m)}
-  ${m.total_effective_cents === null ? "" : people(c, m, s.me)} ${whoIsPaid(c, o, m, s.directly)}
-  ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`;
+  ${unpriced(c, o, m)}
+  ${m.total_cents === null ? "" : html`${split(c, o, m)} ${people(c, m, s.me)}`}
+  ${whoIsPaid(c, o, m, s.directly)} ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`;
 }

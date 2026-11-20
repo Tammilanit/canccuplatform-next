@@ -6,7 +6,7 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
-import { attrs, html } from "@canccu/ui";
+import { attrs, html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import { PROVIDER } from "../reader.js";
@@ -57,12 +57,11 @@ function settling(
         ? html`<section class="canccu-card pizza-form">
             <h2 class="canccu-card__title">${c.t("settings.reader")}</h2>
             ${sw("ai_reader", "settings.ai_reader", "settings.ai_reader_hint")}
-            <div class="canccu-notice canccu-notice--info">
-              <p class="canccu-notice__title">${c.t("settings.reader_outside")}</p>
-              <p>
-                ${c.t("settings.reader_cost", { provider: PROVIDER.name, model: PROVIDER.model })}
-              </p>
-            </div>
+            ${notice({
+              kind: "info",
+              title: c.t("settings.reader_outside"),
+              text: c.t("settings.reader_cost", { provider: PROVIDER.name, model: PROVIDER.model }),
+            })}
             ${count("ai_reader_daily_reads", "settings.ai_reader_daily_reads", "settings.ai_reader_daily_reads_hint")}
           </section>`
         : ""

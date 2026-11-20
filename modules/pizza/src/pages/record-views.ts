@@ -22,6 +22,10 @@ type RecordOrder = RecordDay["orders"][number] & {
 
 export const WHOLE = "all";
 
+/** "1 order", "3 orders"; "1 row", "8 rows". */
+const count = (c: PageCtx, n: number, what: "order" | "row") =>
+  n === 1 ? c.t(`count.${what}`) : c.t(what === "order" ? "count.orders" : "count.rows", { n });
+
 /** The days to pick from, and the whole event (mockup 12 A's chips). */
 export function dayChips(
   c: PageCtx,
@@ -82,8 +86,11 @@ export function recordView(c: PageCtx, r: DailyRecord, picked: string, all: Reco
           <p class="pizza-section">
             ${c.t("record.day_line", {
               day: d.label,
-              orders: d.order_count,
-              pizzas: d.orders.reduce((s, o) => s + pizzasIn(o), 0),
+              orders: count(c, d.order_count, "order"),
+              pizzas: pizzasOf(
+                c,
+                d.orders.reduce((s, o) => s + pizzasIn(o), 0),
+              ),
             })}
           </p>
           <ul class="pizza-people">
@@ -213,7 +220,9 @@ export function exportView(
   const shown = body.slice(0, 4);
   const seqOf = (id: string) => id.split("-").at(-1) ?? id;
   return html`${dayChips(c, days, picked, "crew/export")}
-    <p class="pizza-card__title">${c.t("export.count", { orders, rows: body.length })}</p>
+    <p class="pizza-card__title">
+      ${c.t("export.count", { orders: count(c, orders, "order"), rows: count(c, body.length, "row") })}
+    </p>
     ${e.left_out.map(
       (l) =>
         html`<div class="canccu-notice canccu-notice--degraded">

@@ -6,7 +6,7 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
-import { html } from "@canccu/ui";
+import { html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import { INTEGRATIONS_WRITE } from "../policy.js";
@@ -38,15 +38,16 @@ const date = (c: PageCtx, iso: string | null) =>
 
 function view(c: PageCtx, k: KeyStatus, error?: string): Html {
   return html`${flash(error)}
-    <section class="canccu-card pizza-form">
+    <section class="canccu-card pizza-stack pizza-key">
       <h2 class="canccu-card__title">${c.t("integrations.reader")}</h2>
       <p class="canccu-muted">${PROVIDER.name} · ${PROVIDER.model}</p>
       <p>${c.t("integrations.reader_text")}</p>
       ${
         k.rejected
-          ? html`<div class="canccu-notice canccu-notice--down" role="alert">
-              <p>${c.t("integrations.rejected", { provider: PROVIDER.name })}</p>
-            </div>`
+          ? notice({
+              kind: "down",
+              title: c.t("integrations.rejected", { provider: PROVIDER.name }),
+            })
           : ""
       }
       ${
@@ -63,7 +64,12 @@ function view(c: PageCtx, k: KeyStatus, error?: string): Html {
                     ? c.t("integrations.never_used")
                     : c.t("integrations.last_used", { date: date(c, k.last_used_at) })
                 }
-                · ${c.t("integrations.reads", { n: k.reads_this_month })}
+                ·
+                ${
+                  k.reads_this_month === 1
+                    ? c.t("integrations.read_one")
+                    : c.t("integrations.reads", { n: k.reads_this_month })
+                }
               </p>`
           : html`<p class="pizza-card__title">${c.t("integrations.not_set")}</p>`
       }

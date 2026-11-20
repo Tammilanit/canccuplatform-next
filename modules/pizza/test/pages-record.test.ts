@@ -91,7 +91,7 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
   it("names the orders the export leaves out, previews it, and links the file", async () => {
     const r = await view(w, "treasurer", "/crew/export?day=2026-10-29");
     expect(r.statusCode).toBe(200);
-    expect(r.body).toContain("1 orders · 2 rows");
+    expect(r.body).toContain("1 order · 2 rows");
     expect(r.body).toContain("Order 2 is left out");
     expect(r.body).toContain("It has no total yet.");
     expect(r.body).toContain("Anni");

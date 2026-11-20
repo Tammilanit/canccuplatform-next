@@ -155,7 +155,7 @@ export function handOutView(
               !toPayer
                 ? ""
                 : money.get(p.user_id)?.paid == null
-                  ? html`<span class="pizza-tick pizza-tick--none" aria-hidden="true">—</span>`
+                  ? html`<span class="pizza-tick-none" aria-hidden="true">—</span>`
                   : paidTick(c, o, money.get(p.user_id) as MoneyPerson, "hand-out")
             }
           </li>`,
