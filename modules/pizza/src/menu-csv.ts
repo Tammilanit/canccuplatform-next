@@ -33,7 +33,8 @@ export interface MenuFilePizzeria {
   name: string;
   phone: string | null;
   website: string | null;
-  service: Service;
+  /** null where the file leaves it empty: a new pizzeria then delivers, a stored one keeps its own. */
+  service: Service | null;
   menu: MenuInput;
 }
 
@@ -156,7 +157,7 @@ export function parseMenuCsv(text: string): MenuFile {
       name: pizzeria,
       phone: null,
       website: null,
-      service: "delivery",
+      service: null,
       menu: { items: [], base: null, toppings: [] },
       firstAt: {},
       numbers: new Map(),
@@ -224,7 +225,7 @@ export function writeMenuCsv(pizzerias: MenuFilePizzeria[]): string {
       e: { name: string; description: string | null; price_cents: number | null },
     ) => {
       const head = first
-        ? [p.name, p.phone ?? "", p.website ?? "", p.service]
+        ? [p.name, p.phone ?? "", p.website ?? "", p.service ?? ""]
         : [p.name, "", "", ""];
       first = false;
       lines.push(

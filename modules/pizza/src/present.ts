@@ -30,7 +30,11 @@ export async function present(
   });
 }
 
-/** The order, and how the caller may take `action` on it (or the error to answer). */
+/**
+ * The order, and how the caller may take `action` on it (or the error to answer). A write reads it
+ * `FOR UPDATE` (`lock`): the rights are then checked against the row the step will change, so a
+ * holder taken over meanwhile is refused instead of releasing, closing or calling in the order.
+ */
 export async function orderFor(
   c: SqlClient,
   id: string,
@@ -38,8 +42,9 @@ export async function orderFor(
   caller: Caller | null,
   ctx: TenantContext,
   now: Date,
+  lock = false,
 ): Promise<{ order: OrderRow; as: As }> {
-  const order = await getOrder(c, id);
+  const order = await getOrder(c, id, lock);
   if (order === null) throw notFound();
   return { order, as: authorize(action, caller, facts(ctx, now, order)).as };
 }

@@ -6,6 +6,7 @@ import {
   parseItemBody,
   parseMenuBody,
   parsePrice,
+  parseTime,
   parseTotal,
   snapshotOf,
 } from "../src/validate.js";
@@ -166,5 +167,30 @@ describe("money fields", () => {
     expect(parsePrice(99999, "price")).toBe(99999);
     expect(() => parsePrice(100000, "price")).toThrow(/price/);
     expect(() => parsePrice(-1, "price")).toThrow(InvalidBody);
+  });
+});
+
+describe("parseTime (RFC 3339: a time names its offset)", () => {
+  it("reads Z and ±HH:MM, with or without fractions", () => {
+    expect(parseTime("2026-10-29T16:00:00Z", "at").toISOString()).toBe("2026-10-29T16:00:00.000Z");
+    expect(parseTime("2026-10-29T18:00:00+02:00", "at").toISOString()).toBe(
+      "2026-10-29T16:00:00.000Z",
+    );
+    expect(parseTime("2026-10-29T16:00:00.250Z", "at").toISOString()).toBe(
+      "2026-10-29T16:00:00.250Z",
+    );
+  });
+  it("refuses a time without an offset, which the host's zone would read", () => {
+    for (const v of [
+      "2026-10-29T18:00:00",
+      "2026-10-29T18:00",
+      "2026-10-29T18:00+02:00",
+      "2026-10-29T18:00:00.000",
+      "2026-10-29T18:00:00+0200",
+      "2026-10-29T18:00:00 Z",
+      "2026-10-29",
+    ]) {
+      expect(() => parseTime(v, "at"), v).toThrow(InvalidBody);
+    }
   });
 });

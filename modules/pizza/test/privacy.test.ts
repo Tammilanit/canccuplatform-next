@@ -105,6 +105,32 @@ describe.skipIf(!DATABASE_URL)("the privacy export and delete", () => {
     await w.call("anni", "DELETE", "/api/pizza/me");
     expect(json(await w.call("crew", "GET", `/api/pizza/orders/${second}`)).pizza_count).toBe(0);
   });
+  it("drops other people's stored answers that name the deleted person", async () => {
+    const stored = async () =>
+      (
+        await pool.query(
+          `SELECT user_id || ' ' || key AS k, coalesce(body::text, '') AS b FROM pizza_idempotency`,
+        )
+      ).rows as { k: string; b: string }[];
+    const naming = (b: string) => /u_anni|Anni/.test(b);
+    const before = await stored();
+    // The holder's call-in answered with every pizza and its person: Anni among them.
+    expect(before.some((r) => !r.k.startsWith("u_anni ") && naming(r.b))).toBe(true);
+    const kept = before.filter((r) => !r.k.startsWith("u_anni ") && !naming(r.b)).map((r) => r.k);
+    expect(kept.length).toBeGreaterThan(0);
+    await w.call("anni", "DELETE", "/api/pizza/me");
+    const after = await stored();
+    expect(after.filter((r) => naming(r.b))).toEqual([]);
+    // Answers that name nobody deleted stay, so their retries still answer without acting twice.
+    expect(after.map((r) => r.k)).toEqual(expect.arrayContaining(kept));
+  });
+  it("drops the stored answers that name a deleted user, in every event", async () => {
+    await handlePlatformEvent(w.deps, event("tenants.user.deleted", { user_id: "u_anni" }, null));
+    const { rows } = await pool.query(
+      `SELECT count(*)::int AS n FROM pizza_idempotency WHERE strpos(body::text, 'u_anni') > 0`,
+    );
+    expect((rows[0] as { n: number }).n).toBe(0);
+  });
   it("clears the holder and the payer of a holder who deletes", async () => {
     await w.call("pena", "DELETE", "/api/pizza/me");
     const after = await crewView();

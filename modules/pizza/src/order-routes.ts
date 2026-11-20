@@ -268,6 +268,7 @@ export function orderRoutes(app: FastifyInstance, deps: AppDeps): void {
         w.caller,
         w.ctx,
         w.now,
+        true,
       );
       const changes = await editOrder(c, w, order, body(request));
       if (Object.keys(changes).length > 0 && as === "crew") {
@@ -294,6 +295,7 @@ export function orderRoutes(app: FastifyInstance, deps: AppDeps): void {
           w.caller,
           w.ctx,
           w.now,
+          true,
         );
         const b = body(request);
         const m = await def.run(c, w, order, as, b);

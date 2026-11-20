@@ -209,6 +209,21 @@ describe.skipIf(!DATABASE_URL)("the menu import", () => {
       },
     });
   });
+  it("keeps a stored service the file leaves empty; a new pizzeria without one delivers", async () => {
+    await seedPizzerias(w);
+    const r = await csvCall(
+      "menus",
+      "menu/import",
+      "pizzeria,service,number,name,price\nDemo Grill,,1,Burger,9.00\nDemo New,,1,A,1.00\n",
+    );
+    expect(r.statusCode).toBe(200);
+    const list = json(await w.call("pena", "GET", "/api/pizza/pizzerias")).pizzerias as {
+      name: string;
+      service: string;
+    }[];
+    expect(list.find((p) => p.name === "Demo Grill")?.service).toBe("takeaway");
+    expect(list.find((p) => p.name === "Demo New")?.service).toBe("delivery");
+  });
   it("stops the whole import on an error, naming its row and column", async () => {
     const r = await csvCall(
       "menus",
