@@ -112,7 +112,7 @@
 <rect x="310" y="765" width="40" height="22" rx="11" fill="#2a2f4d"/>
 <circle cx="321" cy="776" r="8" fill="#a9b1d6"/>
 <text x="386" y="782" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="384 546">Finals</text>
-<text x="556" y="782" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/finals …</text>
+<text x="556" y="782" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="552 1076" font-family="ui-monospace, monospace">/finals · Register and Withdraw buttons</text>
 <text x="1096" y="782" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1092 1226">Everyone</text>
 </g>
 </g>
