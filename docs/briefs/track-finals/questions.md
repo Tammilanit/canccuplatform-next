@@ -6,9 +6,9 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 
 **Decide first** (they change the most): P1 (the direction), U1 (what Finals is at an event), D4 (where rankings live), D6 (a Discord sign-up by someone who never signed in), D7 (how the bot reaches this event's Finals), U7 (who enters results), E4 (corrections), P2 (the issue set), P5 (the order against the bot and the hub).
 
-**Already decided, so not asked again:** `finals` is its own module, apart from `games` and the tournament, on a shared tourney core taken as a pinned dependency, with the core's ISC licence and attribution kept ([0025](../../decisions/0025-finals-and-games-modules.md)); the standalone off-LAN app stays independent with no data sync, and the bot's `/finals` talks to either through one provider contract ([contracts/finals.md](../../../contracts/finals.md)); on the platform, admin rights come only from sign-in, never from Discord role ids, and the page link is a plain hub URL with no token (the stub, [0010](../../decisions/0010-scope.md)); a person becomes a member of an event only at the venue, through the event's link or QR, or when an admin adds them, and every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); personal data is anonymised 12 months after archiving (0027); nothing is migrated from the legacy except the bot's own data at cutover ([0004](../../decisions/0004-nothing-migrated.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track, against the step 9 pack's drawings (step 9 pack, D12).
+**Already decided, so not asked again:** `finals` is its own module, apart from `games` and the tournament, on a shared tourney core taken as a pinned dependency, with the core's ISC licence and attribution kept ([0025](../../decisions/0025-finals-and-games-modules.md)); the standalone off-LAN app stays independent with no data sync, and the bot's `/finals` talks to either through one provider contract ([contracts/finals.md](../../../contracts/finals.md)); on the platform, admin rights come only from sign-in, never from Discord role ids, and the page link is a plain hub URL with no token (the stub, [0010](../../decisions/0010-scope.md)); a person becomes a member of an event only at the venue, through the event's link or QR, or when an admin adds them, and every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); personal data is anonymised 12 months after archiving (0027); nothing is migrated from the legacy except the bot's own data at cutover ([0004](../../decisions/0004-nothing-migrated.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track, against the step 9 pack's drawings (step 9 pack, D12). So the off-LAN app's link session, admins by Discord role and read gate stay the off-LAN app's; this bank says where each live feature goes.
 
-A question marked **contract** needs a contract change if the recommendation is taken. The full `finals` contract is new, so most of it is additive by nature; the one change to a published name is flagged where it comes up (D7, L7).
+A question marked **contract** needs a contract change if the recommendation is taken. The full `finals` contract is new, so most of it is additive by nature; the one change to a published row is flagged where it comes up (D7).
 
 ## U · Who uses it and how
 
@@ -21,15 +21,15 @@ The legacy mini tourney runs one team game, teams of three, in seven fixed forma
 
 ### U2. How people join a season
 - **A.** On the hub only.
-- **B.** On the hub, with `/finals register` in Discord, the screen's QR and the crew adding a person; one entry per person across all four.
+- **B.** On the hub, with `/finals` and its Register button in Discord, the screen's QR and the crew adding a person; one entry per person across all four.
 - **Recommendation: B** ([mockup 02](02-flow-join.svg), [mockup 03](03-discord.svg)). The exit criterion asks for the `/finals` sign-up; the QR is how the hall finds it; the crew add covers people at the stage.
 
 ### U3. Solo, teams or both
-The legacy sets a mode per season: `individual` (drawn teams) or `teams`; the team builder makes a third path.
+The legacy sets a mode per season: `individual` (drawn teams) or `teams`; the team builder makes a third path. The off-LAN host now allows solo seasons only (`INDIVIDUAL_ONLY`), and the live `/finals` signs up solo players only.
 - **A.** Keep the two modes and the builder: "solo sign-ups, drawn teams", "teams register", "from the team builder".
 - **B.** One mixed mode: teams register, solo players fill the gaps.
 - **C.** A, and a teams season may also take solo sign-ups to fill short teams.
-- **Recommendation: C.** The modes are proven; filling a short team from the solo list saves a team at the start ([mockup 04](04-teams.svg), step 5). **Contract:** the season's `mode` and an `allow_fill` flag.
+- **Recommendation: C, with solo first in the form.** The modes are proven; solo is what players use today; filling a short team from the solo list saves a team at the start ([mockup 04](04-teams.svg), step 5). A per-season mode replaces the server-wide switch. **Contract:** the season's `mode` and an `allow_fill` flag.
 
 ### U4. How teams form in a teams season
 The legacy's captain typed three nicknames and held the only edit token.
@@ -63,12 +63,12 @@ The legacy: the teams in a match report the order; two matching reports from dif
 ### U9. Notifications
 - **A.** A `finals` topic in Notify: event-wide "Finals are open" and "Champions"; personal "your team", "your match is on", "lobby code set", "your report differs", "you're swapped in".
 - **B.** Only Discord posts, as the legacy.
-- **Recommendation: A**, plus the Discord posts the legacy watcher made (new season, started, champion) ([mockup 03](03-discord.svg)). People choose their channels in the hub. **Contract:** the topic in notify.md's registry.
+- **Recommendation: A**, plus the Discord posts the legacy watcher makes (new season, started, champion), as they are today: no link, ending with "use `/finals`" ([mockup 03](03-discord.svg)). People choose their channels in the hub. **Contract:** the topic in notify.md's registry.
 
 ### U10. Spectators
 - **A.** The bracket, teams, champions and rules are info pages: whoever the event's info-page mode lets in may read them, signed in or not.
 - **B.** Members only.
-- **Recommendation: A** ([mockup 06](06-bracket.svg)). The bracket is the show; the hall's friends follow from home.
+- **Recommendation: A** ([mockup 06](06-bracket.svg)). The bracket is the show; the hall's friends follow from home. The off-LAN app closes every read behind its read gate because it is public on the internet with no other door; on the platform the event's info-page mode is that gate, set per event.
 
 ### U11. The crew
 - **A.** A "Finals crew" role preset with the module's rights; the desk and the crew phone show what the rights allow.
@@ -101,6 +101,18 @@ The legacy listed players left out when a season started early, and had a live s
 - **A.** "My finals": the ranking with its move and why, the seasons played, titles ([mockup 13](13-champions-and-rankings.svg)), and the module's part of the person's export.
 - **B.** Nothing personal; only public champions.
 - **Recommendation: A.** The legacy's ranking changes were the reason people came back.
+
+### U17. The `/finals` command
+The live command (legacy bot against the off-LAN app) is one `/finals` with no subcommands: a private status line, a link button, and while a solo season is open **Register** or **Withdraw registration** (asked again with Yes / No); a taken or unusable nickname opens a name dialog. The stub still names `status`, `register`, `cancel` and `link`.
+- **A.** Keep the live shape: one command, the status line, the two buttons, the name dialog, the link button; add the person's team and next match to the status line once drawn.
+- **B.** Subcommands, as the stub reads.
+- **Recommendation: A** ([mockup 03](03-discord.svg)). Players already use it; buttons need no typing on a phone; the stub's words follow the code (D7). The switch to the new bot (#121) needs the same shape so nothing is lost.
+
+### U18. Availability voting
+The off-LAN app lets solo players tick the days they can play over the next three weeks; the page shows each day's count, the leading days and who voted; the crew can lock it; it closes at the first result. It exists because off-LAN seasons fill over days and are played when enough people can.
+- **A.** Port it as a season option.
+- **B.** Leave it to the off-LAN app: an event's season is played on the night; the season's start time and the vote to start early (U6) answer "when".
+- **Recommendation: B.** No event night needs a three-week calendar; if the Apps track (D15) ever runs seasons between events, it comes with the core's app, not this module.
 
 ## L · Look and feel
 
@@ -171,15 +183,16 @@ The legacy shows each nickname's change (+3, −2) in a finished season, on by d
 ## D · Data and integrations
 
 ### D1. The shared tourney core
-0025: the bracket engine, rankings and the team builder come from one small public library, ISC, used by the off-LAN app and this module, pinned to a release.
-- **A.** The author publishes it (npm preferred, else a tagged git repo); this track pins the first release and fixes go upstream first.
-- **B.** The platform forks it until the author publishes.
-- **Recommendation: A.** A fork is the vendored copy 0025 rules out. The release must carry the fixes of [E9](#e9-the-format-mix-up-and-the-reshuffle), a seeded random source, and the round tables as data.
+0025: the bracket engine, rankings and the team builder come from one small public library, ISC, used by the off-LAN app and this module, pinned to a release. **It exists:** `finals-core` v1.0.1 (12 Nov), pure ESM with typings and tests, released only by a manual workflow as git tags (no npm yet); the off-LAN app pins `github:…/finals-core#v1.0.1`, its CI fails on any other pin, and a daily workflow opens a bump PR for a new tag. Every draw takes an optional random source, and the round tables are exported as data (`ROUNDS_*`, `roundsFor`).
+- **A.** Pin a release tag the same way; fixes go upstream first as a new tag.
+- **B.** The platform forks it.
+- **Recommendation: A.** A fork is the vendored copy 0025 rules out. v1.0.1 lacks the reshuffle's bound and still exports `TEAMS_PER_SEASON` ([E9](#e9-the-format-mix-up-and-the-reshuffle)); those go upstream in a new tag.
 
-### D2. If the core is not released when the track starts
-- **A.** The track's first package pins a git tag of the author's repository (0025's fallback); moving to npm is one bump PR.
+### D2. Git tag or npm
+The core is released as git tags only; npm publishing is "decided later" in its extraction plan.
+- **A.** Pin the git tag now (0025's fallback); moving to npm is one bump PR.
 - **B.** Wait for npm.
-- **Recommendation: A.** 0025 names it; the lockfile records the tag. Agreeing the core's API with its author is the track's first step (P4).
+- **Recommendation: A.** 0025 names it; the lockfile records the tag, and dependency auditing (0015) reads it like any other. Nothing waits.
 
 ### D3. Storage
 - **A.** Per tenant under RLS, the kit's way: seasons, teams, entries, matches, match teams, reports, the roster, drafts and corrections, each operation one transaction with row locks; versioned additive migrations.
@@ -201,14 +214,14 @@ The legacy keeps one global roster keyed by nickname, adjusted by every finished
 The stub: one entry per (season, `discord_user_id`); the link between a user and a Discord id is kept only in tenants; "how a Discord user who never signed in is held is the Finals track's". Today a user row exists only after a sign-in.
 - **A.** The entry holds the Discord id and name until that person signs in; at sign-in (or at the next read) tenants resolves the id to the user and the entry becomes theirs.
 - **B.** The tenants module creates a user for a Discord identity on request (a user who has never signed in), and the entry is that user's.
-- **C.** `/finals register` needs a signed-in member: the bot answers with the hub link.
+- **C.** Register in `/finals` needs a signed-in member: the bot answers with the hub link.
 - **Recommendation: A**, held as personal data under the same retention, with tenants' internal lookup by Discord id (an additive internal path). C fails the exit criterion's spirit; B creates accounts nobody asked for. The membership rule still holds: the entry plays, but the person sees attendee data only after joining (E13). **Contract:** an internal lookup in tenants.md, and the entry's `discord_user_id` in finals.md.
 
 ### D7. How the bot reaches this event's Finals
-The stub puts the platform's base at `https://<event host>/api/finals` and answers the entries and links paths "only for the platform's bot module". The kit's service identity proves "a module of this stack", not which one, and guards internal paths.
-- **A.** On the platform the bot calls `/internal/finals/provider/…` with `tenant_id` and the service header; the shapes stay the provider contract's; `GET status` stays public too.
-- **B.** The public paths, with the service header.
-- **Recommendation: A.** Internal paths are what the kit guards; a public path that acts for a Discord user would be one leaked header away from abuse. This changes the platform row of the stub's base-URL table, which the stub marks provisional; the off-LAN app's row is untouched ([mockup 14](14-lifecycle.svg)). **Contract:** the platform base in finals.md.
+The live provider (the off-LAN app) answers under `/api/provider` with a bearer secret; the live bot keeps one root and always adds `/api/provider` to it, so it could not call the stub's platform base, `https://<event host>/api/finals`. The stub answers the entries and links paths "only for the platform's bot module"; the kit's service identity proves "a module of this stack", not which one, and guards internal paths. The four sides are compared row by row in [the brief](../track-finals.md#the-provider-contract-four-sides).
+- **A.** The bot module holds one full base per provider. Off-LAN: `https://<off-LAN host>/api/provider` with its bearer, as live. Platform: `/internal/finals/provider/…` with `tenant_id` and the service header. The paths after the base and every shape stay the live provider's; `GET status` stays public too.
+- **B.** The platform copies the live app: a public path with a bearer secret per event.
+- **Recommendation: A.** Internal paths are what the kit guards; a public path that acts for a Discord user would be one leaked secret away from abuse, and a secret per event is one more thing to rotate. A full base per provider is the smallest change to the live client (it drops the fixed suffix). This changes the platform row of the stub's base table, which the stub marks provisional; the off-LAN app's row is untouched ([mockup 14](14-lifecycle.svg)). **Contract:** the platform base in finals.md.
 
 ### D8. The full finals contract
 - **A.** `contracts/finals.md` and `finals.openapi.yaml` (shared components): the hub and admin API, the provider part, the events, the rights, the settings, the clone and privacy endpoints.
@@ -240,7 +253,8 @@ step 9's pack draws `bracket` as a session's heats and says "the tree waits for 
 - **Recommendation: A** ([mockup 08](08-new-season.svg)). The legacy's arena list is a constant; a setting is the smallest step, and the catalogue replaces it later (Roadmap note).
 
 ### D14. Two providers, one contract
-- **A.** The provider contract's examples are fixtures; the bot's tests run them against the platform's module, and the off-LAN app runs the same fixtures.
+The off-LAN app's `test/provider.test.js` already pins the live behaviour: the bearer on every route (and a missing secret failing closed), status with no season, in both modes and finished with a champion, idempotent sign-up that never returns a token, the sign-up errors (a teams season, a name taken by a page or a team player), the team read at query time, withdraw only while open, the link's validation and 15 minutes.
+- **A.** The provider contract's examples are fixtures taken from those cases; the bot module's provider tests run them against the platform's module and against the off-LAN app at a pinned commit (`1a4fe2a` or newer); the full contract's "verified against" names that commit.
 - **B.** Test the platform only.
 - **Recommendation: A** (0025's known limit). The fixtures live in `contracts/`; the off-LAN app's author is told of any change before it ships.
 
@@ -290,33 +304,41 @@ The legacy did not revert ranking changes when a season was deleted.
 - **Recommendation: A** ([mockup 15](15-edge-states.svg)).
 
 ### E8. Names
-- **A.** One display name per season, unique case-insensitively across hub and Discord sign-ups, the legacy's limits (team 24, player 18); `name_taken` offers a suggestion.
+- **A.** One display name per season, unique case-insensitively across hub and Discord sign-ups, the legacy's limits (team 24, player 18); `name_taken` offers a suggestion. The module cleans and checks every name itself (the live bot cleans to letters, digits, spaces and `_ - .`), so the hub and the bot share one rule; the hub's field starts with the person's display name, as the off-LAN app now prefills it from Discord.
 - **Recommendation: A** ([mockup 15](15-edge-states.svg)).
 
 ### E9. The format mix-up and the reshuffle
-The legacy's bug 1: a full solo `fourqc` season is saved as `four` (the capacity lookup takes the first match); bug 5: the eight-team round 2 reshuffle has no bound. Step 7's pack moved the "format mix-up" regression test here.
-- **A.** Fixed in the core, with regression tests in the core and in the module.
-- **Recommendation: A.**
+The inventory's bug 1: a full solo `fourqc` season is saved as `four`; its problem 5: the eight-team round 2 reshuffle has no bound. Both are still open at the current heads: the off-LAN app finds the format by team count in five places, and finals-core v1.0.1 lists `four` before `fourqc` in `CAPACITY` (both hold 4) and keeps the unbounded `do … while`. Step 7's pack moved the "format mix-up" regression test here.
+- **A.** The module stores the season's chosen format and never derives it from a team count (an early start picks among the formats the organiser allowed); the reshuffle gets a bound in a new core tag; regression tests in the module and the core.
+- **B.** Fix both in the core only (a helper that maps a count and a preference to a format).
+- **Recommendation: A.** The mix-up is in the consumer's lookup, so only the consumer can guard it; the bound belongs in the core because both consumers run it. The off-LAN app's author hears of both (P4).
 
 ### E10. Debug fill
 - **A.** Fake teams and votes only on the demo event and in tests, behind the superadmin; never a tenant setting.
 - **Recommendation: A.** The demo data lives in `events/demo/` (O7).
 
 ### E11. A cancelled season
-- **A.** Everyone signed up is told (push, Discord) with the crew's reason; rankings are untouched.
-- **Recommendation: A** ([mockup 15](15-edge-states.svg)).
+The off-LAN app now cancels a season while open or running and keeps it in history, without its bracket and without ranking changes.
+- **A.** The same, at any time before Finished: everyone signed up is told (push, Discord) with the crew's reason; the season stays in History; rankings are untouched.
+- **Recommendation: A** ([mockup 15](15-edge-states.svg), [mockup 14](14-lifecycle.svg)).
 
 ### E12. Late arrivals
 - **A.** A started season takes no sign-ups; late players can follow and join the substitutes' list.
 - **Recommendation: A** ([mockup 15](15-edge-states.svg)).
 
 ### E13. Not a member
-- **A.** The hub says to join the event first (at the venue or with its link); `/finals register` holds the entry (D6) and the answer says the same.
+- **A.** The hub says to join the event first (at the venue or with its link); Register in `/finals` holds the entry (D6) and the answer says the same.
 - **Recommendation: A.** Finals never adds people to an event.
 
 ### E14. Clone and archive
 - **A.** The clone copies the roster, rankings and champions, never seasons; an event archived with a season open finishes it as cancelled.
 - **Recommendation: A.**
+
+### E15. Renaming a season and fixing a name afterwards
+The off-LAN app renames a season while it is open or running, and fixes player names in a finished season; because its rankings and titles are keyed by nickname, a name fixed in one season moves no ranking and splits a champion's titles.
+- **A.** The crew renames a season at any time before Finished, and fixes a person's display name in any season; both audited (O6). Rankings and titles belong to the person (D5), so nothing splits.
+- **B.** No edits after the start.
+- **Recommendation: A.** Typos in names on a big screen happen every night; with identity by person the fix is only a label.
 
 ## O · Operations and scale
 
@@ -350,12 +372,19 @@ A season is 9 to 36 players; an event of 2,000 may run a few seasons. The load i
 - **Recommendation: A.** The screenshots and the exit demo need it.
 
 ### O8. Upgrading the core
-- **A.** A bump PR with the core's release notes and the module's tests; bumps land between events, never during one.
-- **Recommendation: A** (0025).
+- **A.** A bump PR with the core's release notes and the module's tests; bumps land between events, never during one; the module's tests fail on a pin that is not a release tag, as the off-LAN app's CI does.
+- **Recommendation: A** (0025). A daily bump workflow like the off-LAN app's is not needed: the core changes rarely and the lead opens the bump.
 
 ### O9. The provider switch
-- **A.** A Discord setting per event: "This event's Finals" (default) or "An outside Finals app", the second set up by the superadmin with the outside base URL and its secret ([mockup 03](03-discord.svg)).
+The live bot holds three values for its one provider: the root, the bearer, and the public origin its guard allows links to.
+- **A.** A Discord setting per event: "This event's Finals" (default) or "An outside Finals app", the second set up by the superadmin with the outside app's full base, its public origin and its secret ([mockup 03](03-discord.svg)).
 - **Recommendation: A.** An organiser picks; the secret stays with the superadmin. **Contract:** the setting in bot.md.
+
+### O10. Discord roles and the Finals crew
+The off-LAN app makes anyone holding a listed Discord role an admin, decided when their link is made; #121 plans rights by role id inside the bot. On the platform, admin rights come only from sign-in (already decided).
+- **A.** No mapping: event admins give people the "Finals crew" role in the admin pages (O5).
+- **B.** The event maps a Discord role to "Finals crew", synced at sign-in.
+- **Recommendation: A.** B is a platform-wide feature (every module's roles), not this track's; if wanted, a `Roadmap note:` for the admin module.
 
 ## P · Plan and scope
 
@@ -370,9 +399,10 @@ A season is 9 to 36 players; an event of 2,000 may run a few seasons. The load i
 - **Recommendation:** as the brief's [Proposed exit criteria](../track-finals.md#proposed-exit-criteria): the roadmap's, made concrete.
 
 ### P4. Aligning with the core's author
-The stub copies the off-LAN app's provider shapes and is "aligned with the off-LAN app's provider contract when its draft exists".
-- **A.** The track's first step agrees with the author: the core's API and first release (D1), and the provider shapes and fixtures (D14).
-- **Recommendation: A.** Both sides change together or not at all.
+The core is released and the provider contract is implemented and live, so the alignment left is smaller: the two core fixes (E9) and the fixtures (D14). The core's repository has a test-gated release workflow, and the off-LAN app's author can push to it.
+- **A.** Before the module's matches package, a core PR with the reshuffle's bound (and dropping `TEAMS_PER_SEASON`) is agreed with the app's author and released as a new tag; the fixtures are agreed the same way.
+- **B.** Pin v1.0.1 and live with the unbounded reshuffle.
+- **Recommendation: A.** Both consumers run the same code; a fix in one place serves both.
 
 ### P5. Order against the bot and the hub
 The bot module (step 6) and the hub's frame (App track) are not built yet; Moments, Screen and Notify are.
@@ -386,4 +416,6 @@ The pack's issue exists (#172); the plan issue ("docs(briefs): Finals track: pla
 
 ### P7. The module label
 #172 carries `module:games`.
-- **Recommendation:** a `module:finals` label for the track's issues.
+- **A.** A `module:finals` label for the track's issues.
+- **B.** Keep `module:games`.
+- **Recommendation: A.** 0025 made `finals` its own module.

@@ -3,63 +3,64 @@
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
 <rect x="0.0" y="0.0" width="1920.0" height="1200.0" rx="0" fill="#f3f4f6"/>
 <text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">03 · Discord: /finals against the platform, and the season's posts (attendee, organiser)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: a player signs up from Discord without opening a page; the finals channel follows the season; the bot asks this event's Finals, not an outside app</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: a player signs up with one command and two buttons, without opening a page; the finals channel follows the season; the bot asks this event's Finals</text>
 <rect x="32.0" y="110.0" width="900.0" height="940.0" rx="14" fill="#1e1f26"/>
 <text x="56.0" y="150.0" font-size="20" fill="#eceff4" font-weight="700" text-anchor="start"># finals</text>
 <text x="150.0" y="150.0" font-size="15" fill="#a3a8b8" font-weight="500" text-anchor="start">the event's finals channel</text>
 <circle cx="70.0" cy="202.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
 <text x="70.0" y="209.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
 <text x="102.0" y="198.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Player</text>
-<text x="102.0" y="224.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals status</text>
-<circle cx="70.0" cy="282.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="289.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
-<text x="102.0" y="278.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
-<rect x="206.1" y="263.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
-<text x="222.7" y="275.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
-<rect x="102.0" y="298.0" width="790.0" height="92.0" rx="6" fill="#2b2d36"/>
-<rect x="102.0" y="298.0" width="4.0" height="92.0" rx="2" fill="#b98cff"/>
-<text x="120.0" y="324.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start" data-box="120.0 878.0">Demo Finals · open</text>
-<text x="120.0" y="350.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="120.0 878.0">15 of 27 players in · teams of three, drawn for you</text>
-<text x="120.0" y="374.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="120.0 878.0">Starts at 21:00 or when full · /finals register to join</text>
-<circle cx="70.0" cy="432.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="439.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
-<text x="102.0" y="428.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Player</text>
-<text x="102.0" y="454.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals register</text>
-<circle cx="70.0" cy="512.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="519.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
-<text x="102.0" y="508.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
-<rect x="206.1" y="493.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
-<text x="222.7" y="505.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
-<text x="102.0" y="534.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">You're in Demo Finals as Demo Player (16 of 27).</text>
-<text x="102.0" y="556.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Your team is drawn at the start; we'll message you here and on your phone.</text>
-<text x="102.0" y="578.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
-<circle cx="70.0" cy="632.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="639.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">P</text>
-<text x="102.0" y="628.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Player Two</text>
-<text x="102.0" y="654.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals register</text>
-<circle cx="70.0" cy="712.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="719.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
-<text x="102.0" y="708.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
-<rect x="206.1" y="693.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
-<text x="222.7" y="705.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
-<text x="102.0" y="734.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">The name Player Two is taken in this season.</text>
-<text x="102.0" y="756.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Try /finals register name: with another name.</text>
-<text x="102.0" y="778.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
-<circle cx="70.0" cy="832.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="839.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
-<text x="102.0" y="828.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Player</text>
-<text x="102.0" y="854.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals link</text>
-<circle cx="70.0" cy="912.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
-<text x="70.0" y="919.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
-<text x="102.0" y="908.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
-<rect x="206.1" y="893.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
-<text x="222.7" y="905.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
-<text x="102.0" y="934.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Open Finals on the event hub: the page signs you in with Discord.</text>
-<rect x="102.0" y="950.0" width="790.0" height="68.0" rx="6" fill="#2b2d36"/>
-<rect x="102.0" y="950.0" width="4.0" height="68.0" rx="2" fill="#3ddcff"/>
-<text x="120.0" y="976.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start" data-box="120.0 878.0">Demo Event · Finals</text>
-<text x="120.0" y="1002.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="120.0 878.0">Your season, your team and your matches</text>
-<text x="102.0" y="1024.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
+<text x="102.0" y="224.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals</text>
+<circle cx="70.0" cy="272.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
+<text x="70.0" y="279.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
+<text x="102.0" y="268.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
+<rect x="206.1" y="253.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
+<text x="222.7" y="265.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
+<text x="102.0" y="294.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0"><tspan font-weight="700" fill="#eceff4">Demo Finals</tspan>: sign-up open · 15 of 27 players</text>
+<rect x="102.0" y="308.0" width="120.0" height="34.0" rx="4" fill="#248046"/>
+<text x="162.0" y="330.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="106.0 218.0">Register</text>
+<rect x="234.0" y="308.0" width="170.0" height="34.0" rx="4" fill="#4e5058"/>
+<text x="319.0" y="330.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="238.0 400.0">Open Finals ↗</text>
+<text x="102.0" y="364.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
+<circle cx="70.0" cy="412.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
+<text x="70.0" y="419.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
+<text x="102.0" y="408.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
+<rect x="206.1" y="393.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
+<text x="222.7" y="405.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
+<text x="102.0" y="434.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">✅ Signed up as <tspan font-weight="700" fill="#eceff4">Demo Player</tspan>.</text>
+<text x="102.0" y="456.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Your team is drawn at the start; we tell you here and on your phone.</text>
+<text x="102.0" y="478.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
+<circle cx="70.0" cy="530.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
+<text x="70.0" y="537.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">P</text>
+<text x="102.0" y="526.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Player Two</text>
+<text x="102.0" y="552.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Register</text>
+<rect x="102.0" y="568.0" width="520.0" height="168.0" rx="8" fill="#313338" stroke="#3a3d4a" stroke-width="1"/>
+<text x="122.0" y="598.0" font-size="18" fill="#eceff4" font-weight="700" text-anchor="start" data-box="122.0 602.0">Finals sign-up</text>
+<text x="122.0" y="626.0" font-size="12" fill="#b5bac1" font-weight="700" text-anchor="start" data-box="122.0 602.0">PLAYER NAME</text>
+<rect x="122.0" y="636.0" width="480.0" height="38.0" rx="4" fill="#1e1f22"/>
+<text x="136.0" y="660.0" font-size="15" fill="#80848e" font-weight="400" text-anchor="start" data-box="136.0 588.0">“Player Two” is taken</text>
+<rect x="482.0" y="688.0" width="120.0" height="34.0" rx="4" fill="#5865f2"/>
+<text x="542.0" y="710.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="486.0 598.0">Submit</text>
+<circle cx="70.0" cy="788.0" r="20.0" fill="#1d2442" stroke="#3a3d4a" stroke-width="1"/>
+<text x="70.0" y="795.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
+<text x="102.0" y="784.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Player</text>
+<text x="102.0" y="810.0" font-size="15" fill="#eceff4" font-weight="400" text-anchor="start" data-box="102.0 898.0">/finals</text>
+<circle cx="70.0" cy="858.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
+<text x="70.0" y="865.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">D</text>
+<text x="102.0" y="854.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
+<rect x="206.1" y="839.0" width="33.2" height="18.0" rx="9.0" fill="#4c3a8f"/>
+<text x="222.7" y="851.6" font-size="10" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="208.1 237.3">APP</text>
+<text x="102.0" y="880.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0"><tspan font-weight="700" fill="#eceff4">Demo Finals</tspan>: sign-up open · 16 of 27 players · you're signed up as <tspan font-weight="700" fill="#eceff4">Demo Player</tspan></text>
+<rect x="102.0" y="894.0" width="220.0" height="34.0" rx="4" fill="#da373c"/>
+<text x="212.0" y="916.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="106.0 318.0">Withdraw registration</text>
+<rect x="334.0" y="894.0" width="170.0" height="34.0" rx="4" fill="#4e5058"/>
+<text x="419.0" y="916.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="338.0 500.0">Open Finals ↗</text>
+<text x="102.0" y="958.0" font-size="15" fill="#a3a8b8" font-weight="400" text-anchor="start" data-box="102.0 898.0">Withdraw from <tspan font-weight="700" fill="#eceff4">Demo Finals</tspan>?</text>
+<rect x="102.0" y="970.0" width="70.0" height="34.0" rx="4" fill="#da373c"/>
+<text x="137.0" y="992.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="106.0 168.0">Yes</text>
+<rect x="184.0" y="970.0" width="70.0" height="34.0" rx="4" fill="#4e5058"/>
+<text x="219.0" y="992.0" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="188.0 250.0">No</text>
+<text x="102.0" y="1030.0" font-size="12" fill="#a3a8b8" font-weight="500" text-anchor="start" font-style="italic">Only you can see this</text>
 <rect x="960.0" y="110.0" width="928.0" height="560.0" rx="14" fill="#1e1f26"/>
 <text x="984.0" y="150.0" font-size="20" fill="#eceff4" font-weight="700" text-anchor="start"># finals</text>
 <text x="1078.0" y="150.0" font-size="15" fill="#a3a8b8" font-weight="500" text-anchor="start">what the bot posts on its own</text>
@@ -72,7 +73,7 @@
 <rect x="1030.0" y="218.0" width="4.0" height="92.0" rx="2" fill="#b98cff"/>
 <text x="1048.0" y="244.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start" data-box="1048.0 1836.0">New season: Demo Finals</text>
 <text x="1048.0" y="270.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Teams of three, drawn for you · 27 places</text>
-<text x="1048.0" y="294.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Join on the hub or with /finals register</text>
+<text x="1048.0" y="294.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Use /finals to sign up or open the Finals page</text>
 <circle cx="998.0" cy="352.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
 <text x="998.0" y="359.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
 <text x="1030.0" y="348.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
@@ -82,7 +83,7 @@
 <rect x="1030.0" y="368.0" width="4.0" height="92.0" rx="2" fill="#3ddcff"/>
 <text x="1048.0" y="394.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start" data-box="1048.0 1836.0">Demo Finals has started</text>
 <text x="1048.0" y="420.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">9 teams drawn · first matches at 21:05</text>
-<text x="1048.0" y="444.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Follow the bracket on the hub</text>
+<text x="1048.0" y="444.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Join your lobbies now · use /finals to open the Finals page</text>
 <circle cx="998.0" cy="502.0" r="20.0" fill="#4c3a8f" stroke="#3a3d4a" stroke-width="1"/>
 <text x="998.0" y="509.6" font-size="20.0" fill="#eceff4" font-weight="700" text-anchor="middle">F</text>
 <text x="1030.0" y="498.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start">Demo Event</text>
@@ -92,7 +93,7 @@
 <rect x="1030.0" y="518.0" width="4.0" height="92.0" rx="2" fill="#ffc94d"/>
 <text x="1048.0" y="544.0" font-size="16" fill="#eceff4" font-weight="700" text-anchor="start" data-box="1048.0 1836.0">🏆 Team Delta are the champions</text>
 <text x="1048.0" y="570.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">Demo Player · Player Two · Player Three</text>
-<text x="1048.0" y="594.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">2 – 1 against Team Alpha in the final</text>
+<text x="1048.0" y="594.0" font-size="14" fill="#a3a8b8" font-weight="500" text-anchor="start" data-box="1048.0 1836.0">2 – 1 in the final · use /finals to open the Finals page</text>
 <g transform="translate(960.0,700.0) scale(1.0)"><g>
 <rect x="0.0" y="0.0" width="928.0" height="310.0" rx="14" fill="#0f172a"/>
 <text x="24.0" y="40.0" font-size="15" fill="#94a3b8" font-weight="500" text-anchor="start">Settings › Discord › Finals</text>
@@ -110,6 +111,6 @@
 </g></g>
 <rect x="32.0" y="1076.0" width="1856.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
 <text x="48.0" y="1104.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
-<text x="48.0" y="1128.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">The commands are the provider contract's: status, register, cancel, link. On the platform, the link is the hub's plain Finals page (no token); rights come from the person's own sign-in, never from Discord roles. Questions: D6 (a Discord sign-up by</text>
-<text x="48.0" y="1148.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">someone who never signed in), D7 (how the bot proves it is the bot), O9 (the provider switch), U9 (which posts and pushes).</text>
+<text x="48.0" y="1128.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">As the live command: one /finals, no subcommands; a status line, Register or Withdraw (with Yes / No) while an individual season is open, and a link button. A taken or unusable nickname opens a name dialog. Posts carry no link</text>
+<text x="48.0" y="1148.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">and point to /finals. On the platform the button opens the hub's plain Finals page; rights come from sign-in, never Discord roles. Questions: U17, D6, D7, O9, U9.</text>
 </svg>
