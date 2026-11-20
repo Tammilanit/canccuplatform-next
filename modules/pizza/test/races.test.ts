@@ -33,7 +33,7 @@ afterAll(async () => {
 beforeEach(async () => {
   if (!DATABASE_URL) return;
   await pool.query(
-    "TRUNCATE pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
+    "TRUNCATE pizza_receipts, pizza_paid, pizza_pay_details, pizza_reader_keys, pizza_reads, pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
   );
   w = await world(pool);
   ({ pz, grill } = await seedPizzerias(w));
@@ -201,7 +201,7 @@ describe.skipIf(!DATABASE_URL)("races", () => {
 
   it("never leaves a pizza from another pizzeria's menu when the pizzeria changes during an add (E6)", async () => {
     for (let round = 0; round < 8; round++) {
-      await pool.query("TRUNCATE pizza_due, pizza_items, pizza_order_log, pizza_orders");
+      await pool.query("TRUNCATE pizza_receipts, pizza_paid, pizza_due, pizza_items, pizza_order_log, pizza_orders");
       const id = json(await open(w, "pena", pz)).id as string;
       await Promise.all([
         w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: grill }),

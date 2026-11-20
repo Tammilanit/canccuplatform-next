@@ -1,4 +1,7 @@
 /** The pizza app on a real Postgres (RLS needs one), with the bus in memory and fakes for the rest. */
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import pg from "pg";
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from "fastify";
 import {
@@ -6,6 +9,7 @@ import {
   Bus,
   Outbox,
   RightsChecker,
+  SecretBox,
   TenantResolver,
   createHealth,
   createLogger,
@@ -15,6 +19,7 @@ import {
 import type { Event, SqlClient, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
+import { FakeReader } from "../src/fake-reader.js";
 import { LiveHub } from "../src/live.js";
 import type { AuditEntry } from "../src/audit.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
@@ -22,7 +27,7 @@ import type { Db } from "../src/db.js";
 import type { AppDeps } from "../src/http.js";
 import { DEFAULT_SETTINGS } from "../src/settings.js";
 import type { PizzaSettings } from "../src/settings.js";
-import { MANAGE, MENU_WRITE, OPEN, RECORD_READ } from "../src/policy.js";
+import { INTEGRATIONS_WRITE, MANAGE, MENU_WRITE, OPEN, RECORD_READ } from "../src/policy.js";
 
 /** Tests run only on a database named `*_test` (the harness refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -39,6 +44,11 @@ const TABLES = [
   "pizza_outbox",
   "pizza_outbox_tenants",
   "pizza_tenants",
+  "pizza_receipts",
+  "pizza_paid",
+  "pizza_pay_details",
+  "pizza_reader_keys",
+  "pizza_reads",
   "pizza_migrations",
 ];
 
@@ -89,8 +99,23 @@ const RIGHTS: Record<string, string[]> = {
   menus: [MENU_WRITE],
   treasurer: [RECORD_READ],
   admin: [MANAGE, OPEN, MENU_WRITE, RECORD_READ],
-  organiser: [MANAGE, OPEN, MENU_WRITE, RECORD_READ, "admin.settings.read", "admin.settings.write"],
+  organiser: [
+    MANAGE,
+    OPEN,
+    MENU_WRITE,
+    RECORD_READ,
+    "admin.settings.read",
+    "admin.settings.write",
+    INTEGRATIONS_WRITE,
+  ],
+  integrator: [INTEGRATIONS_WRITE],
 };
+
+/** Every tenant table pizza has: the tests empty them between cases. */
+export const TRUNCATE = `TRUNCATE ${TABLES.filter((t) => t !== "pizza_migrations").join(", ")}`;
+
+/** A secrets key for the tests only. */
+export const TEST_SECRETS = new SecretBox(new Map([[1, Buffer.alloc(32, 7)]]), 1);
 export const nameOf = (who: string) => who.charAt(0).toUpperCase() + who.slice(1);
 
 function fakeTenants(url: string | URL | Request): Promise<Response> {
@@ -169,7 +194,7 @@ export interface Call {
   key?: string;
   ip?: string;
   contentType?: string;
-  raw?: string;
+  raw?: string | Buffer;
 }
 
 export interface World {
@@ -191,6 +216,10 @@ export interface World {
     body?: unknown,
     o?: Call,
   ): Promise<LightMyRequestResponse>;
+  /** The reader the routes read with; set `fail` or its answers per test. */
+  reader: FakeReader;
+  /** The files volume of this world (a fresh temporary directory). */
+  filesRoot: string;
   /** The pizza events sent to an event's stream so far. */
   events(tenant?: string): Event[];
   tx<T>(tenant: string, fn: (c: SqlClient) => Promise<T>): Promise<T>;
@@ -208,6 +237,8 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
   const languages = new Map<string, string>();
   const adminSettings: AdminSettings = { values: {}, version: 1, writes: [] };
   const w = { now: T0 } as World;
+  const reader = new FakeReader();
+  const filesRoot = mkdtempSync(join(tmpdir(), "pizza-files-"));
   const deps: AppDeps = {
     db,
     admin: fakeAdminSettings(adminSettings),
@@ -227,6 +258,9 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
       Promise.resolve({ discord_user_id: userId === "u_pena" ? "100000000000000001" : null }),
     settings: (tenant) => Promise.resolve(settings.get(tenant) ?? DEFAULT_SETTINGS),
     live: new LiveHub(),
+    filesRoot,
+    secrets: TEST_SECRETS,
+    readerFor: reader.for,
     ...o,
   };
   const app = buildApp(deps);
@@ -241,6 +275,8 @@ export async function world(pool: pg.Pool, o: Partial<AppDeps> = {}): Promise<Wo
     languages,
     adminSettings,
     deps,
+    reader,
+    filesRoot,
     setNow: (iso: string) => {
       w.now = new Date(iso);
     },

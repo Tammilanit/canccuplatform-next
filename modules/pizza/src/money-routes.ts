@@ -16,6 +16,7 @@ import type { As } from "./policy.js";
 import { facts, orderFor } from "./present.js";
 import { getItem, getOrder, itemsOf, logStep } from "./store.js";
 import type { OrderRow } from "./store.js";
+import { receiptView, receiptsOf } from "./receipts.js";
 import { bad, parsePrice, parseTotal } from "./validate.js";
 
 type Params = { id: string };
@@ -36,6 +37,7 @@ async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<string, unkn
     settle_to: o.settle_to,
     total_effective_cents: a.total_cents,
     people: a.people,
+    receipts: (await receiptsOf(c, o.id)).map(receiptView),
     prices: items.map((i) => ({
       item_id: i.id,
       user_id: i.user_id,

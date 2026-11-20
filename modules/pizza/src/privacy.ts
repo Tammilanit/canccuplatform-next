@@ -122,11 +122,21 @@ export async function anonymiseAll(c: SqlClient): Promise<void> {
   );
   await c.query(`DELETE FROM pizza_idempotency`, []);
   await c.query(`DELETE FROM pizza_crew`, []);
+  // A receipt can show card digits (M3): the photos go, their files with them (the caller's part).
+  await c.query(`UPDATE pizza_orders SET total_set_by_name = NULL`, []);
+  await c.query(`DELETE FROM pizza_receipts`, []);
+  await c.query(`DELETE FROM pizza_paid`, []);
+  await c.query(`DELETE FROM pizza_pay_details`, []);
 }
 
 /** A deleted event's rows, all of them. */
 export async function deleteTenantRows(c: SqlClient): Promise<void> {
   for (const table of [
+    "pizza_receipts",
+    "pizza_paid",
+    "pizza_pay_details",
+    "pizza_reader_keys",
+    "pizza_reads",
     "pizza_due",
     "pizza_crew",
     "pizza_order_log",
