@@ -50,6 +50,7 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
         input,
         snapshotOf(input, menu),
         settings.max_items_per_person,
+        order.pizzeria_id,
       );
       return ok(itemView(item, w.caller, false), 201);
     }),
@@ -69,6 +70,7 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
         from,
         input,
         snapshotOf(input, menu),
+        order.pizzeria_id,
       );
       if (as !== "owner") {
         await deps.audit({

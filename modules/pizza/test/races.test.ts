@@ -154,6 +154,27 @@ describe.skipIf(!DATABASE_URL)("races", () => {
     expect(types(w.events().slice(sent)).filter((t) => t === type)).toHaveLength(1);
   });
 
+  it("never leaves a pizza from another pizzeria's menu when the pizzeria changes during an add (E6)", async () => {
+    for (let round = 0; round < 8; round++) {
+      await pool.query("TRUNCATE pizza_items, pizza_orders");
+      const id = json(await open(w, "pena", pz)).id as string;
+      await Promise.all([
+        w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { pizzeria_id: grill }),
+        w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+          kind: "menu",
+          menu_item_id: margherita,
+        }),
+      ]);
+      const { rows } = await pool.query(
+        `SELECT count(*)::int AS n FROM pizza_items i
+           JOIN pizza_orders o ON o.id = i.order_id
+           JOIN pizza_menu_entries m ON m.id = i.menu_item_id
+          WHERE m.pizzeria_id <> o.pizzeria_id`,
+      );
+      expect((rows[0] as { n: number }).n).toBe(0);
+    }
+  });
+
   it("never lets a pizza in after the close wins the race", async () => {
     const id = json(await open(w, "pena", pz)).id as string;
     const rs = await Promise.all([

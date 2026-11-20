@@ -94,6 +94,13 @@ async function lockOrder(
   throw cannot(step, now);
 }
 
+/** The menu snapshot was read before the lock; a pizzeria change in between would price the pizza from the wrong menu. */
+function sameMenu(o: OrderRow, pizzeria: string): void {
+  if (o.pizzeria_id !== pizzeria) {
+    throw new Conflict("conflict", "The order's pizzeria changed meanwhile: read it again.");
+  }
+}
+
 export async function addItem(
   s: Step,
   actor: Actor,
@@ -101,6 +108,7 @@ export async function addItem(
   input: ItemInput,
   snap: Snapshot,
   cap: number,
+  pizzeria: string,
 ): Promise<{ order: OrderRow; item: ItemRow }> {
   let o: OrderRow;
   try {
@@ -115,6 +123,7 @@ export async function addItem(
     }
     throw err;
   }
+  sameMenu(o, pizzeria);
   const { rows } = await s.c.query(
     `SELECT count(*)::int AS n FROM pizza_items WHERE order_id = $1 AND user_id = $2`,
     [orderId, actor.user_id],
@@ -162,8 +171,10 @@ export async function editItem(
   from: readonly OrderState[],
   input: ItemInput,
   snap: Snapshot,
+  pizzeria: string,
 ): Promise<{ order: OrderRow; before: ItemRow; after: ItemRow }> {
   const o = await lockOrder(s.c, item.order_id, from, "edit");
+  sameMenu(o, pizzeria);
   await s.c.query(
     `UPDATE pizza_items SET kind = $2, menu_item_id = $3, number = $4, label = $5, description = $6,
        toppings = $7, text = $8, note = $9, comment = $10, price_cents = $11, updated_at = $12 WHERE id = $1`,

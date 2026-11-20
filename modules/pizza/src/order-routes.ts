@@ -313,6 +313,7 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
   const sets: string[] = [];
   const values: unknown[] = [];
   const changes: Changes = {};
+  const guards: string[] = [];
   const set = (col: keyof OrderRow, v: unknown) => {
     values.push(v);
     sets.push(`${col} = $${values.length + 1}`);
@@ -335,6 +336,8 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
     }
     set("pizzeria_id", pz.id);
     set("pizzeria_name", pz.name);
+    // The add locks the row but the count above did not, so the UPDATE re-checks the order is still empty.
+    guards.push(`NOT EXISTS (SELECT 1 FROM pizza_items WHERE order_id = $1)`);
   }
   for (const col of ["estimate_at", "placed_at"] as const) {
     if (b[col] === undefined) continue;
@@ -348,13 +351,17 @@ async function editOrder(c: SqlClient, w: WriteCtx, o: OrderRow, b: Body): Promi
     () =>
       c.query(
         `UPDATE pizza_orders SET ${sets.join(", ")}, revision = revision + 1
-         WHERE id = $1 AND state = $${values.length + 2} RETURNING id`,
+         WHERE id = $1 AND state = $${values.length + 2}${guards.map((g) => ` AND ${g}`).join("")} RETURNING id`,
         [o.id, ...values, o.state],
       ),
     uniqueConflict,
   );
-  if (m.rows.length === 0)
+  if (m.rows.length === 0) {
+    if (guards.length > 0 && (await itemsOf(c, [o.id])).length > 0) {
+      throw new Conflict("has_pizzas", "The pizzeria cannot change once there are pizzas.");
+    }
     throw new Conflict("conflict", "The order changed meanwhile: read it again.");
+  }
   const fields = Object.keys(changes);
   await logStep(c, o.id, w.now, { user_id: w.session.userId, name: w.session.userName }, "edited", {
     fields,
