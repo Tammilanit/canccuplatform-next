@@ -8,12 +8,16 @@ import type pg from "pg";
 import { applyClaims } from "../src/placements.js";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
+import { DEFAULT_SETTINGS, writeStories } from "../src/story/store.js";
+import type { Story } from "../src/story/model.js";
 import { DATABASE_URL, claims, freshDatabase } from "./helpers.js";
 import { appWorld, idOf } from "./app.js";
 import type { AppWorld } from "./app.js";
-import { ITEM, TABLES } from "./story-kit.js";
+import { ITEM, TABLES, step, story } from "./story-kit.js";
 
 const form = { form: true };
+const doneOf = (r: { headers: Record<string, unknown> }) =>
+  new URL(String(r.headers.location), "http://x").searchParams.get("done");
 
 describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
   let pool: pg.Pool;
@@ -163,5 +167,144 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     expect(decodeURIComponent(String(test.headers.location))).toContain(
       "One test round on Main hall.",
     );
+  });
+
+  it("counts hidden moments apart from the waiting ones in a zone's summary", async () => {
+    const ids = [];
+    for (const title of ["On now", "Under the full screen", "In the queue"])
+      ids.push(
+        idOf(await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title })),
+      );
+    const [on, hidden, queued] = ids as [string, string, string];
+    await w.tx("demo", (c) =>
+      applyClaims(c, claims("main", [[on, "hero"]], [queued], [hidden]), w.now),
+    );
+    const page = (await w.call("crew", "GET", "/on-air")).body;
+    const main = page.slice(page.indexOf(">Main hall</h2>"));
+    expect(main).toMatch(
+      /<p class="canccu-small canccu-muted">\s*1 on air · 1 hidden · 1 waiting\s*<\/p>/,
+    );
+  });
+
+  it("says a story fired on no item is on now, by the take's own clock", async () => {
+    const now = Date.parse("2026-01-01T18:40:00Z");
+    let reads = 0;
+    // Every read of the clock is a second later: the page's own read comes before the take's.
+    Object.defineProperty(w, "now", {
+      get: () => new Date(now + 1000 * reads++),
+      set: () => undefined,
+      configurable: true,
+    });
+    await w.tx("demo", (c) =>
+      writeStories(
+        c,
+        [
+          story({
+            key: "loop",
+            name: "Loop",
+            rounds: { mode: "every", every_minutes: 10, from_minutes: 0 },
+            end: {
+              rounds: null,
+              for_minutes: null,
+              until_clock: null,
+              until_event: null,
+              crew: true,
+            },
+          }),
+        ],
+        DEFAULT_SETTINGS,
+        1,
+      ),
+    );
+    const fired = await w.call(
+      "crew",
+      "POST",
+      "/storyboards/loop/fire",
+      { idempotency_key: "k-fire-now", back: "on-air" },
+      form,
+    );
+    expect(doneOf(fired)).toBe("Loop is on now.");
+  });
+
+  it("names no round at or after the loop's end event in the Fire notice", async () => {
+    w.now = new Date("2026-01-01T18:55:00Z");
+    const loop = story({
+      key: "loop",
+      name: "Loop",
+      triggers: [
+        { kind: "item", kinds: ["tournament"], item_id: null, anchor: "start" },
+        { kind: "take" },
+      ],
+      rounds: { mode: "every", every_minutes: 10, from_minutes: -30 },
+      end: {
+        rounds: null,
+        for_minutes: null,
+        until_clock: null,
+        until_event: { kind: "item_starts" },
+        crew: true,
+      },
+    } as Partial<Story>);
+    await w.tx("demo", (c) => writeStories(c, [loop], DEFAULT_SETTINGS, 1));
+    const fired = await w.call(
+      "crew",
+      "POST",
+      "/storyboards/loop/fire",
+      { idempotency_key: "k-fire-end", item_id: "it_final", back: "on-air" },
+      form,
+    );
+    expect(doneOf(fired)).toBe("Loop has no round left to play.");
+  });
+
+  it("asks a free variable once per story that uses it, and sends it only with that story", async () => {
+    const said = (key: string, name: string) =>
+      story({
+        key,
+        name,
+        round: {
+          steps: [
+            step({
+              message: true,
+              content: { title: "At {place}", subtitle: "", image_url: null },
+            }),
+          ],
+          repeat: null,
+          hold_seconds: null,
+        },
+      });
+    await w.tx("demo", (c) =>
+      writeStories(
+        c,
+        [said("prize", "Prize draw"), said("photo", "Group photo")],
+        DEFAULT_SETTINGS,
+        1,
+      ),
+    );
+    const page = (await w.call("crew", "GET", "/on-air")).body;
+    expect(page.match(/name="var-[a-z_]+-place"/g)).toEqual([
+      'name="var-prize-place"',
+      'name="var-photo-place"',
+    ]);
+    expect(page).toMatch(
+      /<label[^>]*for="fire-prize-place"[^>]*>\s*Prize draw: \{place\}\s*<\/label>/,
+    );
+    expect(page).toMatch(
+      /<label[^>]*for="fire-photo-place"[^>]*>\s*Group photo: \{place\}\s*<\/label>/,
+    );
+    const fired = await w.call(
+      "crew",
+      "POST",
+      "/storyboards/photo/fire",
+      {
+        idempotency_key: "k-fire-vars",
+        "var-prize-place": "the stage",
+        "var-photo-place": "the lobby",
+        back: "on-air",
+      },
+      form,
+    );
+    expect(fired.statusCode).toBe(303);
+    const sent = w.audit.find((e) => e.action === "moments.storyboard.fired");
+    expect(sent?.target).toEqual({ type: "storyboard", id: "photo" });
+    expect(sent?.changes.variables).toEqual({ old: null, new: { place: "the lobby" } });
   });
 });
