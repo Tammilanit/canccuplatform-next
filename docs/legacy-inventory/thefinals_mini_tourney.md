@@ -31,7 +31,7 @@ The 37 commits from `87d7c81004` to `1a4fe2a495` (2026-11-07 to 2026-11-16) turn
 
 ### The shared core: finals-core
 
-A public repo made by a platform maintainer on 2026-11-08 ([0025](../decisions/0025-finals-and-games-modules.md), canccuplatform plan `docs/plans/issue-163.md`), read at `9d65a846a2` (`main`, 2026-11-12, tag `v1.0.1`; `v1.0.0` is `f03e0ac423`). 5 commits, 846 lines of source and tests.
+[finals-core](https://github.com/glyzer/finals-core) is a public repo, made by a platform maintainer on 2026-11-08 ([0025](../decisions/0025-finals-and-games-modules.md), canccuplatform plan `docs/plans/issue-163.md`), read on 2026-11-20 at `9d65a846a2` (`main`, 2026-11-12, tag `v1.0.1`; `v1.0.0` is `f03e0ac423`), in full: 5 commits, 846 lines of source and tests, the workflow, README, `CLAUDE.md` and `LICENSE`.
 
 - **What it exports:** `finals-core/ladder` (`CAPACITY`, the seven `ROUNDS_*` tables, `roundsFor`, `finalRound`, `shuffle`, `drawRound1`, `validateResult`, `nextRound`, `champion`, and the unused `TEAMS_PER_SEASON`), `finals-core/rankings` (`rankingDeltas`, `clamp`), `finals-core/teambuilder` (`buildTeams`), and the root with everything but `shuffle`. ESM with TypeScript declarations (`src/*.d.ts`), Node 22.12 or newer, no runtime dependencies. The logic is the app's three files at `87d7c81004` line for line; only the module format changed, so [Known problems](#known-problems) 1 and 5 travel with it.
 - **Its tests:** `node --test`, 20 tests: the app's 10 ladder tests (imports changed) plus 6 for rankings and 4 for the team builder, which had none of their own before. Run at the refresh: 20 passed.
