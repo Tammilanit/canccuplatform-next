@@ -8,7 +8,7 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 
 **Decide first** (they change the most): D18 (sign-in through the platform), D17 (how the platform gets the app's news), D9 (what the app must expose), D7 (how the bot reaches the app), U17 (the `/finals` command), P2 (the issue set), P5 (the order).
 
-**Already decided, so not asked again:** Finals is integrated as the existing app, unchanged, as an external app at the Apps track's level 3, the pilot of #193; the one deployed instance serves the LAN events too; Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's page link carries no token ([0010](../../decisions/0010-scope.md)); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
+**Already decided, so not asked again:** Finals is integrated as the existing app, unchanged, as an external app at the Apps track's level 3, the pilot of #193; hosting is the host's choice (its own server, or a container beside the platform; we never host it for other events) and the platform connects per event, with the app's address and a write-only bearer secret set by an event admin, no app set meaning Finals is off (#683); Finals and Tournament stay apart (a champion shows on the screen and in Moments, no Tournament points); the general core for Tournament and Games is its own later issue and the app stays on its current core until it chooses to move (0030). There is no `finals` module on the kit, no storage and no pages of our own. The standalone app stays independent with no data sync, and the bot's `/finals` talks to it through the provider contract ([0025](../../decisions/0025-finals-and-games-modules.md), [contracts/finals.md](../../../contracts/finals.md)); the platform's page link carries no token ([0010](../../decisions/0010-scope.md)); every account is a Discord account ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md)); the Finals track registers `/finals` under its own flag on the bot's command framework (step 6 pack, P8); the finals cards are built by this track against the step 9 pack's drawings (step 9 pack, D12).
 
 A question marked **contract** needs a contract change if the recommendation is taken; all of them are additive except the removal of the stub's provisional platform base (D7).
 
@@ -250,7 +250,7 @@ The stub: one entry per (season, `discord_user_id`); the link between a user and
 
 ### D7. How the bot reaches the Finals app
 The live provider (the app) answers under `/api/provider` with a bearer secret; the live bot keeps one root and always adds `/api/provider` to it. The stub also describes a platform provider at `https://<event host>/api/finals`, which this direction no longer builds. The four sides are compared row by row in [the brief](../track-finals.md#the-provider-contract-four-sides).
-- **A.** The bot module holds one full base per provider: the app's `https://<app host>/api/provider` with its bearer and its public origin, set up by the superadmin (O9). The paths after the base and every shape stay the live provider's; `GET status` stays public too. The stub's platform base is removed in the contract issue.
+- **A.** The bot module holds one full base per provider: the app's `https://<app host>/api/provider` with its bearer and its public origin, taken from the event's connection (O4, O9). The paths after the base and every shape stay the live provider's; `GET status` stays public too. The stub's platform base is removed in the contract issue.
 - **B.** Keep one root and the fixed suffix.
 - **Recommendation: A.** It is the smallest change to the live client (it drops the fixed suffix) and the one place that knows the app's address and secret. The stub marks its base provisional, so removing it is not a breaking change to a released contract, but the review should look at it ([mockup 14](14-lifecycle.svg)). **Contract:** finals.md.
 
@@ -416,7 +416,7 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 - **Recommendation: A** ([mockup 11](11-crew-phone.svg)).
 
 ### O4. Settings and their defaults
-- **A.** Per event: show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), the hub tile (on), which app (O9).
+- **A.** Per event: the connection (the app's address, its bearer secret write-only and encrypted, a "test connection" check; none set means Finals is off), show Finals on the screen (on), the open and started card windows (15 and 10 minutes, the legacy's), the hub tile (on), which app (O9).
 - **Recommendation: A.** **Contract:** settings in finals.md.
 
 ### O5. Rights
@@ -430,7 +430,7 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 - **Recommendation: A.** The legacy had no audit.
 
 ### O7. Demo data
-- **A.** `events/demo/` carries a fixed feed of the app's events and reads (a season open, one decided bracket, a champion) so screens, Moments and screenshots work without the live app. The exit's end-to-end run is on the deployed app.
+- **A.** `events/demo/` carries a fixed feed of the app's events and reads (a season open, one decided bracket, a champion) so screens, Moments and screenshots work without the live app. The exit's end-to-end run is on a test instance of the app, which the demo event points at.
 - **Recommendation: A.** The screenshots and CI need data that never changes.
 
 ### O8. Upgrading the core
@@ -440,9 +440,9 @@ An event of 2,000 may watch a season. The load is the spectators' reads and the 
 
 ### O9. The provider switch
 The live bot holds three values for its one provider: the root, the bearer, and the public origin its guard allows links to.
-- **A.** A Discord setting per event: off, or "Finals app", set up by the superadmin with the app's full base, its public origin and its secret ([mockup 03](03-discord.svg)). There is no "this event's Finals" choice.
+- **A.** The Discord side follows the event's connection (O4): no app set means `/finals` is off; otherwise the bot uses the app's address and secret that the event admin set ([mockup 03](03-discord.svg)). There is no separate bot-side secret.
 - **B.** The same without "off".
-- **Recommendation: A.** An organiser turns it on; the secret stays with the superadmin. **Contract:** the setting in bot.md.
+- **Recommendation: A.** One place holds the address and secret; the secret is write-only. **Contract:** the setting in finals.md and bot.md.
 
 ### O10. Discord roles and the Finals crew
 > **Dropped (0030):** The app keeps its admins by Discord role as it is. Kept below as the record of what was weighed.
@@ -460,7 +460,7 @@ The off-LAN app makes anyone holding a listed Discord role an admin, decided whe
 - **Recommendation:** as the brief's [Proposed issue changes](../track-finals.md#proposed-issue-changes): the integration only.
 
 ### P3. The exit criterion
-- **Recommendation:** as the brief's [Proposed exit criteria](../track-finals.md#proposed-exit-criteria): a season runs end to end on the deployed app, with a `/finals` sign-up through the new bot, its bracket on a venue screen and the champion in Moments.
+- **Recommendation:** as the brief's [Proposed exit criteria](../track-finals.md#proposed-exit-criteria): a season runs end to end on the app (the demo event points at a test instance), with a `/finals` sign-up through the new bot, its bracket on a venue screen and the champion in Moments.
 
 ### P4. Aligning with the app's author
 The core is released and the provider contract is implemented and live; what is left is what the app must expose (D9), the fixtures (D14) and, for the author, the two core fixes (the reshuffle's bound and the unused export).

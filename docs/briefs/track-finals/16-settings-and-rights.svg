@@ -3,7 +3,7 @@
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
 <rect x="0.0" y="0.0" width="1920.0" height="1200.0" rx="0" fill="#f3f4f6"/>
 <text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">16 · Finals settings and rights (organiser, event admin)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the event admin sets the finals' rules once per event and gives the crew exactly the rights it needs; the legacy's values are the defaults</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the event admin connects the event to a Finals app and sets the platform's few settings (0030). The left settings and the crew role are the legacy app's own, shown as the record: dropped</text>
 <defs><clipPath id="clip9"><rect x="0" y="0" width="1400" height="900" rx="12"/></clipPath></defs>
 <g transform="translate(32.0,110.0) scale(1.0)"><g clip-path="url(#clip9)">
 <rect x="0.0" y="0.0" width="1400.0" height="900.0" rx="12" fill="#0f172a"/>
@@ -99,26 +99,19 @@
 <text x="855.1" y="670.7" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="middle" data-box="804.5 905.6">Teams only</text>
 <line x1="252.0" y1="712.0" x2="932.0" y2="712.0" stroke="#334155" stroke-width="1"/>
 <rect x="972.0" y="188.0" width="396.0" height="640.0" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
-<text x="992.0" y="224.0" font-size="20" fill="#f8fafc" font-weight="700" text-anchor="start">Finals crew</text>
-<text x="992.0" y="250.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start">A role for the people who run the finals</text>
-<rect x="992.0" y="284.0" width="20.0" height="20.0" rx="4" fill="#3b82f6"/>
-<text x="1002.0" y="299.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle">✓</text>
-<text x="1026.0" y="300.0" font-size="14.0" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1026.0 1348.0">Run seasons: open, start, cancel, swap players</text>
-<rect x="992.0" y="340.0" width="20.0" height="20.0" rx="4" fill="#3b82f6"/>
-<text x="1002.0" y="355.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle">✓</text>
-<text x="1026.0" y="356.0" font-size="15" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1026.0 1348.0">Settle and correct results</text>
-<rect x="992.0" y="396.0" width="20.0" height="20.0" rx="4" fill="#3b82f6"/>
-<text x="1002.0" y="411.0" font-size="13" fill="#0f172a" font-weight="800" text-anchor="middle">✓</text>
-<text x="1026.0" y="412.0" font-size="15" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1026.0 1348.0">Edit the roster and rankings</text>
-<rect x="992.0" y="452.0" width="20.0" height="20.0" rx="4" fill="none" stroke="#334155" stroke-width="1"/>
-<text x="1026.0" y="468.0" font-size="15" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1026.0 1348.0">Change the finals settings</text>
-<text x="992.0" y="538.0" font-size="15" fill="#94a3b8" font-weight="600" text-anchor="start">People with this role</text>
-<circle cx="1012.0" cy="578.0" r="18.0" fill="#273449" stroke="#334155" stroke-width="1"/>
-<text x="1012.0" y="584.8" font-size="18.0" fill="#f8fafc" font-weight="700" text-anchor="middle">P</text>
-<circle cx="1056.0" cy="578.0" r="18.0" fill="#273449" stroke="#334155" stroke-width="1"/>
-<text x="1056.0" y="584.8" font-size="18.0" fill="#f8fafc" font-weight="700" text-anchor="middle">D</text>
-<rect x="1112.0" y="562.0" width="120.0" height="34.0" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
-<text x="1172.0" y="583.7" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="middle" data-box="1118.0 1226.0">Add</text>
+<text x="992.0" y="224.0" font-size="20" fill="#f8fafc" font-weight="700" text-anchor="start" data-box="992.0 1348.0">Finals app connection</text>
+<text x="992.0" y="250.0" font-size="14" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">Per event. No address set: Finals is off here</text>
+<text x="992.0" y="290.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">App address</text>
+<rect x="992.0" y="300.0" width="356.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="1004.0" y="324.0" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">https://finals.example.org</text>
+<text x="992.0" y="366.0" font-size="13" fill="#94a3b8" font-weight="600" text-anchor="start" data-box="992.0 1348.0">Bearer secret (write-only)</text>
+<rect x="992.0" y="376.0" width="356.0" height="38.0" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="1004.0" y="400.0" font-size="14" fill="#f8fafc" font-weight="500" text-anchor="start" data-box="1004.0 1336.0">●●●●●●●●●●●●  Replace…</text>
+<rect x="992.0" y="446.0" width="150.0" height="36.0" rx="10" fill="#3b82f6"/>
+<text x="1067.0" y="469.0" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle" data-box="998.0 1136.0">Test connection</text>
+<text x="1158.0" y="469.0" font-size="13" fill="#86efac" font-weight="600" text-anchor="start" data-box="1158.0 1348.0">✓ Reached, secret accepted</text>
+<text x="992.0" y="520.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The secret is stored encrypted and never shown again.</text>
+<text x="992.0" y="542.0" font-size="13" fill="#94a3b8" font-weight="500" text-anchor="start" data-box="992.0 1348.0">The host runs the app: its own server or beside the platform.</text>
 </g></g>
 <g transform="translate(1480.0,110.0) scale(0.7)"><g>
 <rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
@@ -186,5 +179,5 @@
 <text x="68.0" y="1068.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">Defaults are the legacy's: ranking changes shown, six votes, the two card windows of 15 and 10 minutes; public start becomes 'members may start', off (U12, O4).</text>
 <circle cx="45.0" cy="1106.6" r="13.0" fill="#f59e0b"/>
 <text x="45.0" y="1112.6" font-size="15" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="68.0" y="1111.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">Rights are four, grouped in a 'Finals crew' preset; the event admin holds them all (O5).</text>
+<text x="68.0" y="1111.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="68.0 1888.0">The connection (address, write-only secret, test) is the platform's; the event admin's existing settings right covers it (O5).</text>
 </svg>
