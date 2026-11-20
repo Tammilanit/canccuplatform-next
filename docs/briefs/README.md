@@ -19,6 +19,12 @@ One brief per roadmap step from step 3 on, and one per parallel track ([0023](..
 - **Three directions:** three creative directions, each described for attendees, organisers and venue staff (and the superadmin where the step touches the shared stack), with its idea, its trade-offs and its cost.
 - **Recommended direction:** one of the three (or a mix), argued boldly.
 - **Mockups:** every key screen and flow of the recommended direction, for each user who meets them (organiser, attendee, venue crew, superadmin), as HTML or SVG files in `step-<n>-<name>/` or `track-<name>/`, each listed in the brief with what it shows. Text wireframes may add detail but do not replace them.
+
+  **Mockup rules.** Every pack accepted on 2026-11-20 (steps 6–11) drew the same three faults in its mockups; these rules keep the next ones out:
+  - **No internal words on screens.** Text a user sees never shows question numbers, decision or amendment numbers, file names, event names from the code (`screen_dark`), right names, ids, paths or versions. Notes for the reader go in the caption under the mockup, not inside the screen.
+  - **No typed numbers where a control fits.** Amounts, delays, ranges and counts use a slider, preset chips or a stepper; dates use a date picker; orders of things use drag and drop. A typed field only where the value is free text or exact money.
+  - **Big, full heroes.** A hero or a phone screen never shows a small line in a mostly empty area: the key number or words fill it (as the crew spotlight does), with the context background and widgets around it.
+  - **Drawn in the shipped look and amendment 3's grids** ([design guideline](../design/README.md), [`docs/design/grids/`](../design/grids/README.md)), every organiser page also at phone width.
 - **Port, drop or invent:** what the step takes from the legacy (as is or changed), what it drops, and what is new, each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)).
 - **Question bank:** every open question found, with no limit on the number, grouped by theme:
   - who uses it and how;
