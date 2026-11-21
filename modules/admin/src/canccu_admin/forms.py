@@ -48,7 +48,9 @@ def control_value(s: Setting, value: Any) -> str:
     if s.type == "boolean":
         return "on" if value else ""
     if s.type == "list" and s.choices and isinstance(value, list):
-        value = _in_order(s, [str(v) for v in value])
+        # Chips can only post choices, so a saved non-choice is not part of what the field holds
+        # (else "1 change not saved" would show forever); shown_words still says it.
+        value = [c for c in s.choices if c in [str(v) for v in value]]
     if isinstance(value, list):
         return ", ".join(map(str, value))
     if s.type == "list" and isinstance(value, str):
@@ -85,7 +87,10 @@ def _default(s: Setting) -> str:
     """The default in the form's words; a setting with none, or none to show, says nothing."""
     if s.default is None or s.default == "" or s.default == []:
         return ""
-    return f"Default: {shown_words(s, s.default)}."
+    shown = shown_words(s, s.default)
+    if shown.lower() == "default":
+        return "Starts as the default."
+    return f"Default: {shown}."
 
 
 def _error(s: Setting) -> str:

@@ -131,9 +131,10 @@ def test_a_list_from_choices_is_a_row_of_chips() -> None:
         '<legend class="canccu-field__label">Channels</legend><div class="canccu-chips">'
     ) in html
     assert (
-        '<label class="canccu-chip"><input type=checkbox name=k value=screen checked>Screen</label>'
+        '<label class="canccu-chip">'
+        '<input type=checkbox name="k" value="screen" checked>Screen</label>'
     ) in html
-    assert "<input type=checkbox name=k value=discord_dm>Discord DM</label>" in html
+    assert '<input type=checkbox name="k" value="discord_dm">Discord DM</label>' in html
     assert "Separate them with commas" not in html
     # Posted as one value per ticked chip, saved in the declared order.
     form = FormData([("k", "push"), ("k", "screen")])
@@ -215,7 +216,8 @@ def test_every_field_says_what_it_is_for_with_an_example_and_its_default() -> No
     box = one(type="boolean", label="Bars", help="A thin bar.", default=False)
     assert '<p class="canccu-field__hint">A thin bar. Default: off.</p>' in field_html(box, None)
     pick = one(type="string", label="Look", choices=["default", "high_contrast"], default="default")
-    assert "Default: Default.</p>" in field_html(pick, None)
+    assert "Starts as the default.</p>" in field_html(pick, None)
+    assert "Default: Default." not in field_html(pick, None)
 
 
 # What each part declares
@@ -270,3 +272,17 @@ def test_the_script_drives_picks_steppers_chips_previews_and_zones() -> None:
     )
     assert run.returncode == 0, run.stderr
     assert run.stdout.strip() == "ok"
+
+
+def test_a_trailing_newline_is_not_a_colour_or_a_link() -> None:
+    from canccu_admin.declarations import COLOR_RE, URL_RE
+
+    assert COLOR_RE.fullmatch("#ff8800") and not COLOR_RE.fullmatch("#ff8800\n")
+    assert URL_RE.fullmatch("https://x.org") and not URL_RE.fullmatch("https://x.org\n")
+
+
+def test_chips_quote_a_choice_with_a_space_and_hold_only_choices_as_was() -> None:
+    s = one(type="list", label="Ways", choices=["a b", "c"], default=[])
+    html = field_html(s, ["c", "gone"])
+    assert 'value="a b"' in html
+    assert 'data-canccu-was="c"' in html

@@ -53,7 +53,7 @@ def chips(s: Setting, value: list[Any], words: Any, label: str, marks: str, rest
     and settings.js reads it as the ticked values in the declared order."""
     name = html.escape(s.key)
     items = "".join(
-        f'<label class="canccu-chip"><input type=checkbox name={name} value={html.escape(c)}'
+        f'<label class="canccu-chip"><input type=checkbox name="{name}" value="{html.escape(c)}"'
         f"{' checked' if c in value else ''}>{html.escape(words(c))}</label>"
         for c in s.choices
     )
@@ -113,7 +113,7 @@ def swatch(fid: str, name: str, value: str, marks: str) -> str:
 
 def preview(value: str) -> str:
     """The link a URL field holds, to open beside the form; settings.js follows the typing."""
-    page = value if URL_RE.match(value) else ""
+    page = value if URL_RE.fullmatch(value) else ""
     shown = "" if page else " hidden"
     return (
         f'<a class="canccu-field__preview" data-canccu-preview{shown} href="{html.escape(page)}" '

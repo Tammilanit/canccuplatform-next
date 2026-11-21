@@ -110,16 +110,21 @@ form = {
 };
 
 // This device is in Helsinki; the saved zone is UTC.
+// Like a real <optgroup>: no `options` property, only its option children to query.
 const suggested = {
-  options: [{ value: "UTC" }],
+  items: [{ value: "UTC" }],
+  querySelectorAll(sel) {
+    return sel === "option" ? this.items : [];
+  },
   append(o) {
-    this.options.push(o);
+    this.items.push(o);
   },
 };
 const helsinki = { value: "Europe/Helsinki", textContent: "Helsinki" };
 zoneSelects = [
   {
-    options: [{ value: "UTC" }, helsinki],
+    querySelectorAll: (sel) =>
+      sel === "option" ? [{ value: "UTC" }, helsinki] : [],
     querySelector: (sel) =>
       sel === 'optgroup[label="Suggested"]' ? suggested : null,
   },
@@ -147,13 +152,10 @@ const button = (data) => ({
 
 // This device's zone joins Suggested once, after the saved one.
 assert.deepEqual(
-  suggested.options.map((o) => o.value),
+  suggested.items.map((o) => o.value),
   ["UTC", "Europe/Helsinki"],
 );
-assert.equal(
-  suggested.options[1].textContent,
-  "Europe / Helsinki (this device)",
-);
+assert.equal(suggested.items[1].textContent, "Europe / Helsinki (this device)");
 
 // Nothing differs yet: the bar waits.
 assert.equal(bar.hidden, true);

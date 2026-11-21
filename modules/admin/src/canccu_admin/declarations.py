@@ -74,9 +74,9 @@ TYPES = ("string", "number", "integer", "boolean", "list")
 ITEM_TYPES = ("string", "integer")
 CHOICE_LISTS = ("timezones",)
 FORMATS = ("color", "url")
-COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+COLOR_RE = re.compile(r"#[0-9a-fA-F]{6}")
 # A scheme, then a host: what a browser opens as a page. javascript: and bare names are refused.
-URL_RE = re.compile(r"^https?://[^\s/?#]+[^\s]*$")
+URL_RE = re.compile(r"https?://[^\s/?#]+[^\s]*")
 
 
 class DeclarationError(Exception):
@@ -283,10 +283,10 @@ def _check_item(s: Setting, value: Any, scalar: bool = False) -> str | None:
 def _check_text(s: Setting, value: str) -> str | None:
     if s.choices_from == "timezones" and value not in zone_names():
         return f"{s.key} must be a time zone, such as UTC"
-    if s.format == "color" and not COLOR_RE.match(value):
+    if s.format == "color" and not COLOR_RE.fullmatch(value):
         return f"{s.key} must be a colour such as #ff8800"
     # Empty is no link at all, as an empty asset id is no asset.
-    if s.format == "url" and value and not URL_RE.match(value):
+    if s.format == "url" and value and not URL_RE.fullmatch(value):
         return f"{s.key} must be a link starting https:// or http://"
     return None
 

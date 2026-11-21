@@ -1,11 +1,17 @@
-"""The IANA time zones a setting chooses from (#732), from the pinned tzdata package, so every
-image offers the same list whatever its system zone files hold."""
+"""The IANA time zones a setting chooses from (#732), read from the image's system zone files
+(python:3.12-slim ships /usr/share/zoneinfo), so no extra package is installed."""
 
 from __future__ import annotations
 
 from functools import cache
-from importlib.resources import files
 from zoneinfo import available_timezones
+
+# The Area/City names people pick from; aliases outside these areas ("US/Eastern", "EST", "Etc/")
+# stay valid values but are not offered.
+_AREAS = (
+    "Africa", "America", "Antarctica", "Arctic", "Asia", "Atlantic",
+    "Australia", "Europe", "Indian", "Pacific",
+)  # fmt: skip
 
 
 @cache
@@ -22,14 +28,11 @@ def zone_label(zone: str) -> str:
 
 @cache
 def zone_groups() -> list[tuple[str, list[tuple[str, str]]]]:
-    """(region, [(zone, city)]) in name order: zone.tab's zones, one or more per country, so no
-    alias ("US/Eastern", "EST") or Etc/ offset is offered; UTC last, in a group of its own."""
-    table = (files("tzdata.zoneinfo") / "zone.tab").read_text(encoding="utf-8")
-    zones = sorted(
-        line.split("\t")[2] for line in table.splitlines() if line and not line.startswith("#")
-    )
+    """(region, [(zone, city)]) in name order, Area/City names only; UTC last, in a group of
+    its own."""
     regions: dict[str, list[tuple[str, str]]] = {}
-    for zone in zones:
+    for zone in sorted(available_timezones()):
         region, _, place = zone.partition("/")
-        regions.setdefault(region, []).append((zone, zone_label(place)))
+        if region in _AREAS and place:
+            regions.setdefault(region, []).append((zone, zone_label(place)))
     return [*regions.items(), ("UTC", [("UTC", "UTC")])]

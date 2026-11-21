@@ -15,7 +15,6 @@ dependencies = [
   "jsonschema==4.25.1",
   "python-multipart==0.0.20",
   # The zone list the time zone setting offers, the same in every image (zones.py).
-  "tzdata==2026.6",
 ]
 
 [project.optional-dependencies]

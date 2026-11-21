@@ -202,20 +202,28 @@ addEventListener(
 
 // The organiser is usually where the event is: this device's zone joins Suggested, after the
 // saved one, when the list has it.
-const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
-for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
-  const suggested = select.querySelector('optgroup[label="Suggested"]');
-  const listed = [...select.options].some((o) => o.value === here);
-  if (
-    !suggested ||
-    !listed ||
-    [...suggested.options].some((o) => o.value === here)
-  )
-    continue;
-  const option = document.createElement("option");
-  option.value = here;
-  option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
-  suggested.append(option);
+// A failure here must never leave the form unrefreshed (the save bar would show a false change).
+try {
+  const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
+    const suggested = select.querySelector('optgroup[label="Suggested"]');
+    // An optgroup has no `options`: only the select does.
+    const listed = [...select.querySelectorAll("option")].some(
+      (o) => o.value === here,
+    );
+    if (
+      !suggested ||
+      !listed ||
+      [...suggested.querySelectorAll("option")].some((o) => o.value === here)
+    )
+      continue;
+    const option = document.createElement("option");
+    option.value = here;
+    option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
+    suggested.append(option);
+  }
+} catch {
+  // The suggestion is a nicety; the list works without it.
 }
 
 refresh();
