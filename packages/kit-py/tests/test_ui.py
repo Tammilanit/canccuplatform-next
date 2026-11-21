@@ -273,6 +273,22 @@ def test_a_signed_in_shell_loads_the_offline_fallback() -> None:
     assert "shell.js" not in shell_page("Signed out", "")
 
 
+def test_a_front_page_without_an_event_shows_the_platform_poster() -> None:
+    """#708: no event resolves (a dev server, a platform-level sign-in): never an empty poster."""
+    page = front_page("Sign in", "<h1>Sign in</h1>")
+    assert '<div class="canccu-poster__name"></div>' not in page
+    assert "/theming/logo" not in page  # no event, so theming has no logo to give
+    assert (
+        '<div class="canccu-poster canccu-poster--platform">'
+        '<span class="canccu-poster__mark" aria-hidden="true">C</span>'
+        '<div class="canccu-poster__name">CanccuPlatform</div>'
+        '<p class="canccu-poster__meta">Organisers and crew sign in here</p></div>'
+    ) in page
+    hub = front_page("Check in", "", surface="hub")
+    assert '<div class="canccu-poster__name">CanccuPlatform</div></div>' in hub
+    assert "Organisers and crew" not in hub
+
+
 def test_a_front_page_carries_the_privacy_tag_last() -> None:
     """The safety element must be the page's last child, holding text only (packages/ui)."""
     doc = front_page("Check in", "<h1>Check in</h1>", privacy="/notify/privacy")

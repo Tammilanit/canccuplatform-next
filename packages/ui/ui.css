@@ -435,6 +435,21 @@
     max-width: 16rem;
     margin-bottom: 1rem;
   }
+  /* The platform's mark where no event resolves (#708): theming has no logo to give, so it is
+     drawn at the logo's height, and the poster keeps its height in every state. */
+  .canccu-poster__mark {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 1rem;
+    border-radius: calc(var(--canccu-radius) + 4px);
+    color: var(--canccu-on-primary);
+    background: linear-gradient(135deg, var(--canccu-color-primary), var(--canccu-color-accent));
+    font-family: var(--canccu-font-display);
+    font-size: 2rem;
+    font-weight: 800;
+  }
   .canccu-tabbar {
     display: none;
   }
@@ -630,6 +645,11 @@
     }
     .canccu-poster__logo {
       height: 2.5rem;
+    }
+    .canccu-poster__mark {
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1.375rem;
     }
   }
   @media (max-width: 359.98px) {

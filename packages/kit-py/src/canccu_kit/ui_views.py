@@ -23,6 +23,44 @@ from .ui_base import (
     state_badge,
 )
 
+# The platform's own name, on a front door no event claims; renamed at the switch (AGENTS.md).
+PLATFORM_NAME = "CanccuPlatform"
+
+
+def _event_poster(event: EventInfo, now: datetime | None) -> str:
+    """The event's poster: its logo, name, dates and venue."""
+    name = event.name or ""
+    long = " canccu-poster__name--long" if len(name) > 28 else ""
+    venue = (
+        f'<p class="canccu-poster__venue">{icon("pin")}{esc(event.venue)}</p>'
+        if event.venue
+        else ""
+    )
+    return (
+        f'<div class="canccu-poster">{logo(event, "canccu-poster__logo")}'
+        f'<div class="canccu-poster__name{long}">{esc(name)}</div>'
+        f'<p class="canccu-poster__meta">{esc(date_range(event))}{state_badge(event, now)}</p>'
+        f"{venue}</div>"
+    )
+
+
+def _platform_poster(surface: Literal["admin", "hub"]) -> str:
+    """The platform's poster, where no event resolves (a dev server, a platform-level sign-in): an
+    empty poster would leave half the page blank (#708), and the design keeps the poster column
+    in every state (docs/design/README.md, decision 7). Theming has no logo without an event, so
+    the mark is drawn. The organisers' line is the admin surface's only: the hub's are attendees'.
+    """
+    line = (
+        '<p class="canccu-poster__meta">Organisers and crew sign in here</p>'
+        if surface == "admin"
+        else ""
+    )
+    return (
+        '<div class="canccu-poster canccu-poster--platform">'
+        f'<span class="canccu-poster__mark" aria-hidden="true">{PLATFORM_NAME[0]}</span>'
+        f'<div class="canccu-poster__name">{PLATFORM_NAME}</div>{line}</div>'
+    )
+
 
 def front_page(
     title: str,
@@ -35,26 +73,11 @@ def front_page(
     now: datetime | None = None,
     privacy: str | None = None,
 ) -> str:
-    """A front door (sign-in, check-in): the event's poster beside or above one card (HTML).
-    `privacy` is where the Privacy tag leads: the safety element of pages that take the event's
-    look, which must be the page's last child (packages/ui README, the safety elements)."""
-    name = (event.name if event else None) or ""
-    long = " canccu-poster__name--long" if len(name) > 28 else ""
-    meta = ""
-    if event:
-        meta = (
-            f'<p class="canccu-poster__meta">{esc(date_range(event))}{state_badge(event, now)}</p>'
-        )
-    venue = (
-        f'<p class="canccu-poster__venue">{icon("pin")}{esc(event.venue)}</p>'
-        if event and event.venue
-        else ""
-    )
-    poster = (
-        f'<div class="canccu-poster">{logo(event, "canccu-poster__logo")}'
-        f'<div class="canccu-poster__name{long}">{esc(name)}</div>'
-        f"{meta}{venue}</div>"
-    )
+    """A front door (sign-in, check-in): the event's poster, or the platform's, beside or above
+    one card (HTML). `privacy` is where the Privacy tag leads: the safety element of pages that
+    take the event's look, which must be the page's last child (packages/ui README, the safety
+    elements)."""
+    poster = _event_poster(event, now) if event else _platform_poster(surface)
     centre = " canccu-front__card--center" if centred else ""
     front_card = f'<div class="canccu-front__card{centre}">{card}</div>'
     if privacy:
