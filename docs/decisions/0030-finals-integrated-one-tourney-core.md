@@ -1,6 +1,6 @@
 # 0030. Finals is integrated as it is; one tourney core for Tournament and Games
 
-- **Status:** Accepted (supersedes parts of [0025](0025-finals-and-games-modules.md) and settles the finals item of [0027](0027-product-decisions-2026-11-07-08.md))
+- **Status:** Accepted (supersedes parts of [0025](0025-finals-and-games-modules.md) and settles the finals item of [0027](0027-product-decisions-2026-11-07-08.md)); points 4 and 5 narrowed by [0031](0031-mini-tournaments-after-v1-day-schedules.md): mini tournaments for any game and each game's competition rules (point 5's part that Tournament reads) wait until after version 1, and Tournament's official cup runs on the fully general core
 - **Date:** 2026-11-20
 
 ## Context
