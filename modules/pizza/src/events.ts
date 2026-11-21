@@ -111,6 +111,9 @@ export async function emitItem(
       person: await personOf(e.people, item.user_id, item.name),
       ...countsOf(items),
       actor_user_id: actorUserId,
+      // For Notify, which cannot compare two fields: the owner hears only of someone else's edit.
+      order_seq: o.seq,
+      by_owner: actorUserId !== null && actorUserId === item.user_id,
     },
     { version: 1 },
   );

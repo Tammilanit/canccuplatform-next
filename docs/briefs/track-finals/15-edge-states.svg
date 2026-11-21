@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1040" width="1920" height="1040" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Edge states (player, crew)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1040.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">15 · Edge states (player, crew)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: what a person sees when the usual path breaks; each screen says what happened and what to do</text>
+<g transform="translate(32.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph3"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph3)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#ffc94d" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">Join the event</text>
+<text x="36.0" y="248.6" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">first</text>
+<text x="36.0" y="321.2" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">You're signed in, but not part</text>
+<text x="36.0" y="350.9" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">of Demo Event yet. Join at</text>
+<text x="36.0" y="380.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">the venue or with the event's</text>
+<text x="36.0" y="410.3" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">link, then come back.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Join Demo Event</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="32.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · Not a member</text>
+<text x="32.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 312.0">Membership is the event's rule</text>
+<text x="32.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 312.0">(0027); Finals never adds people to</text>
+<text x="32.0" y="706.5" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 312.0">an event (E13).</text>
+<g transform="translate(344.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph4"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph4)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#ffc94d" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">This name is</text>
+<text x="36.0" y="248.6" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">taken</text>
+<text x="36.0" y="321.2" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">Another player in this season</text>
+<text x="36.0" y="350.9" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">is already called Player Two.</text>
+<text x="36.0" y="380.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">Pick the name you'd like to</text>
+<text x="36.0" y="410.3" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">play under.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Use Player Two B</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="344.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">2 · Name taken</text>
+<text x="344.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="344.0 624.0">From the hub or Discord alike: one</text>
+<text x="344.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="344.0 624.0">name per season, checked across both</text>
+<text x="344.0" y="706.5" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="344.0 624.0">(E8).</text>
+<g transform="translate(656.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph5"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph5)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#ff6b81" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#ff6b81" font-weight="800" text-anchor="start" data-box="36.0 356.0">Season cancelled</text>
+<text x="36.0" y="272.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">The crew cancelled Demo</text>
+<text x="36.0" y="302.3" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">Finals: not enough players</text>
+<text x="36.0" y="332.0" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">tonight. Nothing is lost; your</text>
+<text x="36.0" y="361.7" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">ranking stays.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">See what's on</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="656.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">3 · Cancelled</text>
+<text x="656.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="656.0 936.0">Everyone signed up is told by push</text>
+<text x="656.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="656.0 936.0">and in Discord (E11).</text>
+<g transform="translate(968.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph6"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph6)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#3ee39a" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#3ee39a" font-weight="800" text-anchor="start" data-box="36.0 356.0">You're swapped</text>
+<text x="36.0" y="248.6" font-size="36" fill="#3ee39a" font-weight="800" text-anchor="start" data-box="36.0 356.0">in</text>
+<text x="36.0" y="321.2" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">Player Four had to leave. You</text>
+<text x="36.0" y="350.9" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">play for Team Eta from now</text>
+<text x="36.0" y="380.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">on.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Open my match</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="968.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">4 · A substitute</text>
+<text x="968.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="968.0 1248.0">The crew swapped a substitute in</text>
+<text x="968.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="968.0 1248.0">before the team's first result (E3).</text>
+<g transform="translate(1280.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph7"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph7)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#ffc94d" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">Waiting on the</text>
+<text x="36.0" y="248.6" font-size="36" fill="#ffc94d" font-weight="800" text-anchor="start" data-box="36.0 356.0">crew</text>
+<text x="36.0" y="321.2" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">The reports for group E differ.</text>
+<text x="36.0" y="350.9" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">The semi-final starts once the</text>
+<text x="36.0" y="380.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">crew decides.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">See both reports</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="1280.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">5 · A long dispute</text>
+<text x="1280.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1280.0 1560.0">After the alert delay the crew's</text>
+<text x="1280.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1280.0 1560.0">phones are pinged again (E2).</text>
+<g transform="translate(1592.0,110.0) scale(0.58)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph8"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph8)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Finals</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="420.0" rx="18" fill="#1d2442" stroke="#a9b1d6" stroke-width="2.5"/>
+<text x="36.0" y="200.0" font-size="36" fill="#a9b1d6" font-weight="800" text-anchor="start" data-box="36.0 356.0">Started without</text>
+<text x="36.0" y="248.6" font-size="36" fill="#a9b1d6" font-weight="800" text-anchor="start" data-box="36.0 356.0">you</text>
+<text x="36.0" y="321.2" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">Demo Finals started at</text>
+<text x="36.0" y="350.9" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">21:00. You can follow it, and</text>
+<text x="36.0" y="380.6" font-size="22" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36.0 356.0">you're on the substitutes' list.</text>
+<rect x="36.0" y="476.0" width="318.0" height="54.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="508.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Follow the bracket</text>
+<rect x="16.0" y="572.0" width="358.0" height="150.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="610.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Demo Finals</text>
+<text x="36.0" y="640.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams of three · 27 places</text>
+<text x="36.0" y="690.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">Bracket ›</text>
+</g></g>
+</g></g>
+<text x="1592.0" y="640.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">6 · Too late</text>
+<text x="1592.0" y="666.0" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1592.0 1872.0">Late arrivals cannot join a started</text>
+<text x="1592.0" y="686.2" font-size="15" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1592.0 1872.0">season; they can substitute (E12).</text>
+<rect x="32.0" y="820.0" width="1856.0" height="98.5" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="848.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">And in Discord</text>
+<text x="48.0" y="872.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">Discord's side of the same states: /finals answers privately with the same words (not a member: the hub's join page; name taken: name: option; started: the bracket link). When /finals cannot reach this event's Finals, the bot says so and points to the</text>
+<text x="48.0" y="892.2" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">hub, which works without the bot (E7).</text>
+</svg>

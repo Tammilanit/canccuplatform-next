@@ -12,6 +12,8 @@ export const MANAGE = "pizza.order.manage";
 export const MENU_WRITE = "pizza.menu.write";
 export const RECORD_READ = "pizza.record.read";
 export const RIGHTS = [OPEN, MANAGE, MENU_WRITE, RECORD_READ] as const;
+/** Admin's right over the event's integrations: here, the AI reader's provider key (#644). */
+export const INTEGRATIONS_WRITE = "admin.integrations.write";
 
 export const ACTIONS = [
   // A member's own (#119)
@@ -51,6 +53,8 @@ export const ACTIONS = [
   "menu.read_photo",
   "record.read",
   "record.export",
+  // Admin → Integrations
+  "reader.key",
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -114,6 +118,7 @@ const BY_RIGHT: Partial<Record<Action, string>> = {
   "menu.read_photo": MENU_WRITE,
   "record.read": RECORD_READ,
   "record.export": RECORD_READ,
+  "reader.key": INTEGRATIONS_WRITE,
 };
 
 /** How the caller may do `action`, or the error to answer. */

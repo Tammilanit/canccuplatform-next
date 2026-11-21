@@ -118,6 +118,26 @@ export interface AppWorld extends World {
   ): Promise<LightMyRequestResponse>;
 }
 
+type PublicEvent = Awaited<ReturnType<TenantResolver["event"]>>;
+
+/**
+ * The kit's resolver on the fake tenants. Its event() sends with node:http to keep the Host
+ * header, past the `fetch` it is given, so it would look up the real host `tenants`: on CI one
+ * lost DNS answer then cost the test the resolver's 5 s retry, at random (#698).
+ */
+function fakeResolver(): TenantResolver {
+  const tenants = new TenantResolver({
+    tenantsUrl: "http://tenants",
+    fetch: fakeTenants,
+    platformHosts: [SUPERADMIN_HOST],
+  });
+  tenants.event = async (host) => {
+    const r = await fakeTenants(`http://tenants/api/tenants/current?host=${host ?? ""}`);
+    return r.ok ? ((await r.json()) as PublicEvent) : null;
+  };
+  return tenants;
+}
+
 let keys = 0;
 export async function appWorld(
   pool: pg.Pool,
@@ -132,11 +152,7 @@ export async function appWorld(
     screen: w.screen,
     outbox: w.outbox,
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
-    tenants: new TenantResolver({
-      tenantsUrl: "http://tenants",
-      fetch: fakeTenants,
-      platformHosts: [SUPERADMIN_HOST],
-    }),
+    tenants: fakeResolver(),
     audit: (e) => {
       audit.push(e);
       return Promise.resolve();

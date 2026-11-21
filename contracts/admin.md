@@ -44,7 +44,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 - **Rights** are strings `<module>.<right>`, e.g. `admin.settings.write`, `tournament.matches.edit`. Each module's contract lists its rights.
 - **Rights check:** a module calls `GET /api/admin/session` with the user's cookie and allows the request when the right is in `rights`; otherwise it answers 401 (no session) or 403 `missing_right`. The kit wraps this call. A module may cache the answer for at most 30 seconds and drops it on `admin.rights.changed` for that user.
 
-Admin's own rights: `admin.settings.read`, `admin.settings.write`, `admin.profile.read`, `admin.profile.write`, `admin.rights.write`.
+Admin's own rights: `admin.settings.read`, `admin.settings.write`, `admin.profile.read`, `admin.profile.write`, `admin.rights.write`, and `admin.integrations.write` (the event's integrations; today the Food AI reader's provider key, which pizza keeps: [pizza.md](pizza.md#the-ai-reader)).
 
 ### Granting rights
 A session's `rights` are those of the user's role in the event (an event admin holds every right) plus the rights granted to the user one by one, without the role ([tenants.md](tenants.md#users-roles-and-membership)).

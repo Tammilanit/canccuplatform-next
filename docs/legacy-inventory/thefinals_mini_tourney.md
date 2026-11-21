@@ -2,7 +2,7 @@
 
 The mini-tourney repo, read in full so the product owner can confirm what exists before the tenancy foundation ([#47](../roadmap.md#2b-tenancy-foundation)) and the contracts ([#36](../roadmap.md#2c-event-catalog-and-screen-contract)) are designed. Roadmap step 2a, issue #73. Other legacy repos are out of scope here; each has its own inventory (#68 canccuplatform, #69 canccubot, #70 canccumanager, #71 canccusignage, #72 the signup site, #74 canccudocs, #75 canccustream), and the summary (#76) joins them.
 
-Nothing here is copied from the legacy repo: it is described. Short identifiers (route paths, table and column names, env var names, setting keys) are kept so the port can find them. Event-specific values are named by kind and counted only (see [Event-specific content](#event-specific-content)). This inventory describes the code; porting it waits for its author's OK (AGENTS.md, Porting).
+Nothing here is copied from the legacy repo: it is described. Short identifiers (route paths, table and column names, env var names, setting keys) are kept so the port can find them. Event-specific values are named by kind and counted only (see [Event-specific content](#event-specific-content)). This inventory describes the code; porting it waits for its author's OK (AGENTS.md, Building on the legacy).
 
 ## In short
 
@@ -378,7 +378,7 @@ From the code, the README and the commit history. The history has 37 commits wit
 
 ## Port recommendation
 
-Target module `games` ([Games](../roadmap.md#games) track, epic #66) unless said otherwise. At the refresh: [0025](../decisions/0025-finals-and-games-modules.md) moved all of this to the `finals` module and the Finals track, with the pure core taken as a pinned dependency; read `games` below as `finals`. Everything waited for the author's OK, given on 2026-11-07; licence and attribution are kept ([Porting plan](../roadmap.md#porting-plan): bracket engine, rankings and team builder ported; service layer on Postgres transactions; storage, API, auth and frontend rewritten; shared admin password dropped).
+Target module `games` ([Games](../roadmap.md#games) track, epic #66) unless said otherwise. At the refresh: [0030](../decisions/0030-finals-integrated-one-tourney-core.md) supersedes this target and the `finals` module of [0025](../decisions/0025-finals-and-games-modules.md): the app is integrated as it is ([Finals](../roadmap.md#finals) track), and its core, finals-core, becomes the shared tourney core that the `tournament` module runs on. Everything waited for the author's OK, given on 2026-11-07; licence and attribution are kept ([Porting plan](../roadmap.md#porting-plan): bracket engine, rankings and team builder ported; service layer on Postgres transactions; storage, API, auth and frontend rewritten; shared admin password dropped).
 
 | Feature | Verdict | Reason | Target module | Roadmap step |
 |---|---|---|---|---|

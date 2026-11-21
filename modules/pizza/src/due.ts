@@ -6,6 +6,7 @@
 import type { OrderRow } from "./store.js";
 import type { PizzaSettings } from "./settings.js";
 import { dayTurn } from "./time.js";
+import { CALLED_IN } from "./model.js";
 
 export type ReminderKind = "open_past_target" | "closed_not_placed" | "not_arrived" | "released";
 export type Role = "holder" | "crew";
@@ -29,11 +30,18 @@ export interface Due {
   step: string;
   due_at: Date;
   /** What the step does; `remind` sends to people, the rest change the order. */
-  does: "last_call" | "close" | "remind" | "release" | "done" | "forgotten";
+  does: "last_call" | "close" | "remind" | "release" | "done" | "forgotten" | "share" | "unpaid";
   remind?: Remind;
 }
 
 const MIN = 60_000;
+/**
+ * "Your share is ready" waits this long after the last money change, so the holder sets the total,
+ * the split and who is paid before anyone is told, and people hear once, not at every tap (#703).
+ */
+export const SHARE_SETTLE_MINUTES = 5;
+/** The payment reminder: at noon after the order's event day, and never sooner after the share. */
+const UNPAID_AFTER_MINUTES = 360;
 const after = (from: Date, minutes: number) => new Date(from.getTime() + minutes * MIN);
 const key = (name: string, anchor: Date) => `${name}@${anchor.toISOString()}`;
 
@@ -101,11 +109,31 @@ export function dueSteps(o: OrderRow, s: PizzaSettings, timeZone: string): Due[]
       does: "done",
     });
   }
+  out.push(...moneySteps(o, timeZone));
   if (s.close_forgotten && ["open", "closed", "placed", "arrived"].includes(o.state)) {
     const turn = dayTurn(o.day, timeZone);
     out.push({ step: key("forgotten", turn), due_at: turn, does: "forgotten" });
   }
   return out;
+}
+
+/**
+ * The shares' notice once the total is in, then, while the order settles to its payer, the one
+ * payment reminder. Fixed keys: each happens once per order, whatever changes after.
+ */
+function moneySteps(o: OrderRow, timeZone: string): Due[] {
+  if (!CALLED_IN.includes(o.state) || o.total_cents === null) return [];
+  if (o.shares_sent_at === null) {
+    // An order whose money was last changed before these notices existed is not announced late.
+    if (o.money_changed_at === null) return [];
+    const due_at = after(o.money_changed_at, SHARE_SETTLE_MINUTES);
+    return [{ step: "share", due_at, does: "share" }];
+  }
+  if (o.settle_to !== "payer") return [];
+  // 06:00 plus six hours is noon on the local clock, a clock change aside.
+  const noon = after(dayTurn(o.day, timeZone), UNPAID_AFTER_MINUTES);
+  const soonest = after(o.shares_sent_at, UNPAID_AFTER_MINUTES);
+  return [{ step: "unpaid", due_at: noon > soonest ? noon : soonest, does: "unpaid" }];
 }
 
 /** A reminder more than this late is no news any more: an outage never sends stale ones. */

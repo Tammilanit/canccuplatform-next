@@ -163,6 +163,8 @@ services:
   pizza:
     environment:
       CANCCU_ADMIN_URL: http://session-stub:8080
+      # The AI reader's fake: CI reads receipts and menus without calling the provider (#644).
+      CANCCU_PIZZA_READER: fake
     depends_on:
       session-stub:
         condition: service_healthy
@@ -184,7 +186,7 @@ configs:
       	}
       	handle @demo {
       		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	@no_role {
       		path /api/admin/session

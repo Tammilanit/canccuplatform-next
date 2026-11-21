@@ -89,6 +89,18 @@ settings:
     short: Close forgotten orders
     hint: Never called in is cancelled; called in but not done is done, flagged in the record.
     default: true
+  - key: ai_reader
+    type: boolean
+    label: Read receipts and menus from photos (an outside service; a person confirms)
+    short: AI reader
+    default: false
+  - key: ai_reader_daily_reads
+    type: integer
+    min: 1
+    max: 1000
+    label: Reads a day, at most, for the event
+    short: Reads a day
+    default: 100
 groups:
   - id: ordering
     label: Ordering
@@ -98,6 +110,10 @@ groups:
     label: Settling up
     description: Who people pay for their food after the event.
     keys: [settle_to_payer]
+  - id: reader
+    label: AI reader
+    description: Reading receipts and menus from photos; works only once Integrations has a key.
+    keys: [ai_reader, ai_reader_daily_reads]
   - id: times
     label: Times and forgotten orders
     description: When the app reminds the holder and the crew, and what it closes by itself.

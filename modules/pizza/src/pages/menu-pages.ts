@@ -8,6 +8,7 @@ import { KitError } from "@canccu/kit";
 import type { AppDeps } from "../http.js";
 import { parseMenuCsv } from "../menu-csv.js";
 import { MENU_WRITE } from "../policy.js";
+import { readerAvailable } from "../reader-key.js";
 import { PREFIX, back, formText, must, organiserPage, pageCtx, viaApi } from "./kit.js";
 import { changesOf, importView, pizzeriaView, pizzeriasView, previewView } from "./menus-views.js";
 import type { PizzeriaView } from "./menus-views.js";
@@ -121,7 +122,7 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
       return organiserPage(request, reply, deps, c, {
         title: p.name,
         crumb: { href: P, label: c.t("tab.pizzerias") },
-        body: pizzeriaView(c, p, request.query.error),
+        body: pizzeriaView(c, p, request.query.error, await readerAvailable(deps, c.tenant)),
       });
     },
   );

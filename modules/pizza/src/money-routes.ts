@@ -16,48 +16,34 @@ import type { As } from "./policy.js";
 import { facts, orderFor } from "./present.js";
 import { getItem, getOrder, itemsOf, logStep } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { bad, parsePrice, parseTotal } from "./validate.js";
+import { moneyView } from "./money-view.js";
+import { amountChanged, payToChanged } from "./notices.js";
+import { getReceipt } from "./receipts.js";
+import { InvalidBody, bad, parsePrice, parseTotal } from "./validate.js";
 
 type Params = { id: string };
 type Changes = Record<string, { old: unknown; new: unknown }>;
 
-async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<string, unknown>> {
-  const items = await itemsOf(c, [o.id]);
-  const a = amounts(o, items);
-  return {
-    order_id: o.id,
-    payer: o.payer_user_id === null ? null : { user_id: o.payer_user_id, name: o.payer_name },
-    total_cents: o.total_cents,
-    split: o.split,
-    split_effective: a.split,
-    exact_possible: a.exact_possible,
-    estimated: a.estimated,
-    extras_cents: a.extras_cents,
-    settle_to: o.settle_to,
-    total_effective_cents: a.total_cents,
-    people: a.people,
-    prices: items.map((i) => ({
-      item_id: i.id,
-      user_id: i.user_id,
-      label: i.label,
-      price_cents: i.price_cents,
-    })),
-  };
-}
-
 const amountsOf = async (c: SqlClient, o: OrderRow): Promise<Amounts> =>
   amounts(o, await itemsOf(c, [o.id]));
 
-/** After the change: audit it once the order is closed, and tell those whose amount moved (U14). */
+/**
+ * After the change: audit it once the order is closed, and tell those whose amount moved (U14);
+ * once their shares went out, also whose amount or whom they pay changed (#703).
+ */
 async function afterChange(
   c: SqlClient,
   deps: AppDeps,
   w: WriteCtx,
-  before: { order: OrderRow; amounts: Amounts },
+  before: { order: OrderRow; amounts: Amounts; as: As },
   changes: Changes,
 ): Promise<OrderRow> {
+  if (Object.keys(changes).length === 0) return (await getOrder(c, before.order.id)) as OrderRow;
+  await c.query(`UPDATE pizza_orders SET money_changed_at = $2 WHERE id = $1`, [
+    before.order.id,
+    w.now,
+  ]);
   const order = (await getOrder(c, before.order.id)) as OrderRow;
-  if (Object.keys(changes).length === 0) return order;
   await logStep(
     c,
     order.id,
@@ -66,6 +52,8 @@ async function afterChange(
     "money_changed",
     {
       fields: Object.keys(changes),
+      // The record flags the crew's money edits after call-in, not the holder entering the total.
+      crew: before.as === "crew",
     },
   );
   if (order.state === "open") return order;
@@ -95,6 +83,9 @@ async function afterChange(
       { version: 1 },
     );
   }
+  await amountChanged(c, deps, order, told, w.caller.user_id);
+  if ("settle_to" in changes || "payer" in changes)
+    await payToChanged(c, deps, order, w.caller.user_id);
   return order;
 }
 
@@ -125,13 +116,13 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.patch<{ Params: Params }>("/api/pizza/orders/:id/money", (request, reply) =>
     write(deps, request, reply, async (c, w) => {
       const b = body(request);
-      const { order } = await forMoney(
+      const { order, as } = await forMoney(
         c,
         w,
         request.params.id,
         b.payer_user_id === undefined ? "money.edit" : "money.payer",
       );
-      const before = { order, amounts: await amountsOf(c, order) };
+      const before = { order, as, amounts: await amountsOf(c, order) };
       const items = await itemsOf(c, [order.id]);
       const changes: Changes = {};
       const sets: string[] = [];
@@ -145,13 +136,43 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (b.total_cents !== undefined) {
         // The total is what the pizzeria was paid: known once the order is called in.
         if (!CALLED_IN.includes(order.state)) throw cannot("total", order);
-        set(
-          "total_cents",
-          b.total_cents === null ? null : parseTotal(b.total_cents),
-          order.total_cents,
-        );
+        const total = b.total_cents === null ? null : parseTotal(b.total_cents);
+        // Confirming a read names its receipt; a total typed in names none (mockups 18 E, 19).
+        let receipt: string | null = null;
+        if (b.receipt_id !== undefined && b.receipt_id !== null) {
+          const r = typeof b.receipt_id === "string" ? await getReceipt(c, b.receipt_id) : null;
+          if (r === null || r.order_id !== order.id)
+            bad("receipt_id", "must be a receipt of this order");
+          receipt = b.receipt_id as string;
+        }
+        set("total_cents", total, order.total_cents);
+        set("total_receipt_id", receipt, order.total_receipt_id, "");
+        if (total !== order.total_cents || receipt !== order.total_receipt_id) {
+          set("total_set_at", w.now, order.total_set_at, "");
+          set("total_set_by_name", w.session.userName, order.total_set_by_name, "");
+          set("total_set_by_user_id", w.session.userId, order.total_set_by_user_id, "");
+        }
+      }
+      if (b.prices !== undefined) {
+        if (!Array.isArray(b.prices)) bad("prices", "a list of { item_id, price_cents }");
+        for (const p of b.prices as unknown[]) {
+          const e = (p ?? {}) as Record<string, unknown>;
+          const item = items.find((i) => i.id === e.item_id);
+          if (item === undefined)
+            throw new InvalidBody("prices", "every item_id must be a pizza of this order");
+          const price = parsePrice(e.price_cents, "price_cents");
+          if (price === item.price_cents) continue;
+          await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [
+            item.id,
+            price,
+            w.now,
+          ]);
+          changes[`price:${item.id}`] = { old: item.price_cents, new: price };
+          item.price_cents = price;
+        }
       }
       if (b.split !== undefined) {
+        // After `prices`: a confirmed read may be what makes exact possible.
         if (b.split !== null && b.split !== "exact" && b.split !== "even")
           bad("split", "exact, even or null");
         if (
@@ -186,9 +207,9 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         set("payer_user_id", b.payer_user_id, order.payer_user_id, "payer");
         set("payer_name", name, order.payer_name, "");
       }
-      if (sets.length > 0) {
+      if (sets.length > 0 || Object.keys(changes).length > 0) {
         await c.query(
-          `UPDATE pizza_orders SET ${sets.join(", ")}, revision = revision + 1 WHERE id = $1`,
+          `UPDATE pizza_orders SET ${[...sets, "revision = revision + 1"].join(", ")} WHERE id = $1`,
           [order.id, ...values],
         );
       }
@@ -200,8 +221,8 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
     write(deps, request, reply, async (c, w) => {
       const item = await getItem(c, request.params.id);
       if (item === null) throw notFound("pizza");
-      const { order } = await forMoney(c, w, item.order_id, "money.edit");
-      const before = { order, amounts: await amountsOf(c, order) };
+      const { order, as } = await forMoney(c, w, item.order_id, "money.edit");
+      const before = { order, as, amounts: await amountsOf(c, order) };
       const price = parsePrice(body(request).price_cents, "price_cents");
       const changes: Changes = {};
       if (price !== item.price_cents) {

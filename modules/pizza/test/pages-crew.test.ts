@@ -33,7 +33,7 @@ afterAll(async () => {
 beforeEach(async () => {
   if (!DATABASE_URL) return;
   await pool.query(
-    "TRUNCATE pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
+    "TRUNCATE pizza_receipts, pizza_paid, pizza_pay_details, pizza_reader_keys, pizza_reads, pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
   );
   w = await world(pool);
   ({ pz } = await seedPizzerias(w));
@@ -232,10 +232,14 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
       close_forgotten: "on",
     });
     expect(location(r)).toBe("/pizza/crew/settings");
+    // The AI reader's keys are on the page only once an admin has set the provider's key.
+    const pageDefaults: Partial<typeof DEFAULT_SETTINGS> = { ...DEFAULT_SETTINGS };
+    delete pageDefaults.ai_reader;
+    delete pageDefaults.ai_reader_daily_reads;
     expect(w.adminSettings.writes.at(-1)).toEqual({
       host: "demo.test",
       values: {
-        ...DEFAULT_SETTINGS,
+        ...pageDefaults,
         settle_to_payer: true,
         ordering_open: false,
         ordering_note: "Breakfast orders open at 09:00",

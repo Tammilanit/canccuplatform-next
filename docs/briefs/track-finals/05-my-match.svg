@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 960" width="1920" height="960" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Flow: my match, the lobby code and reporting the result (player)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="960.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">05 · Flow: my match, the lobby code and reporting the result (player)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: Team Delta plays group E; a teammate sets the lobby code, the others join it, and two teams report the same order</text>
+<g transform="translate(32.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph11"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph11)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ Finals</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">My match</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="440.0" rx="14" fill="#161a2e" stroke="#3ddcff" stroke-width="2.5"/>
+<rect x="36.0" y="152.0" width="150.0" height="24.0" rx="12.0" fill="#3ddcff"/>
+<text x="111.0" y="168.7" font-size="13" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="38.0 184.0">Your match is now</text>
+<text x="36.0" y="214.0" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Group E · Arena North</text>
+<text x="195.0" y="320.0" font-size="96" fill="#3ddcff" font-weight="800" text-anchor="middle">K7Q2</text>
+<text x="195.0" y="360.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="middle">lobby code · set by Player Two</text>
+<text x="36.0" y="410.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="36.0 200.0">Team Delta · you</text>
+<text x="206.0" y="410.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="206.0 370.0">Team Gamma</text>
+<text x="36.0" y="440.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="36.0 200.0">Team Beta</text>
+<text x="206.0" y="440.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="206.0 370.0">Team Epsilon</text>
+<rect x="36.0" y="490.0" width="318.0" height="50.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="520.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Report the result</text>
+</g></g>
+</g></g>
+<text x="32.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">1 · Your match is now</text>
+<text x="32.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 362.0">The lobby code fills the card: it is what</text>
+<text x="32.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 362.0">players need at the PC. A push says it is</text>
+<text x="32.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="32.0 362.0">set (U8, U9).</text>
+<line x1="306.0" y1="300.0" x2="400.0" y2="300.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<g transform="translate(412.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph12"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph12)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ My match</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Lobby code</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="300.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="180.0" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Made the lobby? Share its code</text>
+<rect x="36.0" y="206.0" width="70.0" height="84.0" rx="12" fill="#1d2442" stroke="#3ddcff" stroke-width="2"/>
+<text x="71.0" y="266.0" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="middle">K</text>
+<rect x="118.0" y="206.0" width="70.0" height="84.0" rx="12" fill="#1d2442" stroke="#3ddcff" stroke-width="2"/>
+<text x="153.0" y="266.0" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="middle">7</text>
+<rect x="200.0" y="206.0" width="70.0" height="84.0" rx="12" fill="#1d2442" stroke="#3ddcff" stroke-width="2"/>
+<text x="235.0" y="266.0" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="middle">Q</text>
+<rect x="282.0" y="206.0" width="70.0" height="84.0" rx="12" fill="#1d2442" stroke="#3ddcff" stroke-width="2"/>
+<text x="317.0" y="266.0" font-size="44" fill="#f3f5ff" font-weight="800" text-anchor="middle">2</text>
+<rect x="36.0" y="320.0" width="318.0" height="48.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="349.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Share with the match</text>
+<text x="36.0" y="406.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">Four letters or digits. The other teams in this</text>
+<text x="36.0" y="424.9" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">match get it at once.</text>
+<rect x="16.0" y="464.0" width="358.0" height="250.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="500.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">In this match</text>
+<text x="36.0" y="540.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Delta · you</text>
+<text x="354.0" y="540.0" font-size="14" fill="#3ee39a" font-weight="600" text-anchor="end">has the code</text>
+<text x="36.0" y="580.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Gamma</text>
+<text x="354.0" y="580.0" font-size="14" fill="#3ee39a" font-weight="600" text-anchor="end">has the code</text>
+<text x="36.0" y="620.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Beta</text>
+<text x="354.0" y="620.0" font-size="14" fill="#3ee39a" font-weight="600" text-anchor="end">has the code</text>
+<text x="36.0" y="660.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Epsilon</text>
+<text x="354.0" y="660.0" font-size="14" fill="#ffc94d" font-weight="600" text-anchor="end">not opened yet</text>
+</g></g>
+</g></g>
+<text x="412.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">2 · Set the code</text>
+<text x="412.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">Any player in the match sets it; a series'</text>
+<text x="412.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="412.0 742.0">later games keep it, as in the legacy.</text>
+<line x1="686.0" y1="300.0" x2="780.0" y2="300.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="733.0" y="290.0" font-size="14" fill="#4b5563" font-weight="400" text-anchor="middle">after the game</text>
+<g transform="translate(792.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph13"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph13)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ My match</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">Report</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<text x="36.0" y="170.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="36.0 370.0">Drag the teams into the order they finished</text>
+<rect x="16.0" y="190.0" width="358.0" height="64.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
+<text x="44.0" y="230.0" font-size="24" fill="#3ddcff" font-weight="800" text-anchor="middle">1</text>
+<text x="76.0" y="230.0" font-size="19" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Delta</text>
+<text x="346.0" y="230.0" font-size="26" fill="#a9b1d6" font-weight="700" text-anchor="end">≡</text>
+<rect x="16.0" y="266.0" width="358.0" height="64.0" rx="12" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="44.0" y="306.0" font-size="24" fill="#3ddcff" font-weight="800" text-anchor="middle">2</text>
+<text x="76.0" y="306.0" font-size="19" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Gamma</text>
+<text x="346.0" y="306.0" font-size="26" fill="#a9b1d6" font-weight="700" text-anchor="end">≡</text>
+<rect x="16.0" y="342.0" width="358.0" height="64.0" rx="12" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="44.0" y="382.0" font-size="24" fill="#a9b1d6" font-weight="800" text-anchor="middle">3</text>
+<text x="76.0" y="382.0" font-size="19" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Beta</text>
+<text x="346.0" y="382.0" font-size="26" fill="#a9b1d6" font-weight="700" text-anchor="end">≡</text>
+<rect x="16.0" y="418.0" width="358.0" height="64.0" rx="12" fill="#161a2e" stroke="#2c3560" stroke-width="1"/>
+<text x="44.0" y="458.0" font-size="24" fill="#a9b1d6" font-weight="800" text-anchor="middle">4</text>
+<text x="76.0" y="458.0" font-size="19" fill="#f3f5ff" font-weight="600" text-anchor="start">Team Epsilon</text>
+<text x="346.0" y="458.0" font-size="26" fill="#a9b1d6" font-weight="700" text-anchor="end">≡</text>
+<text x="36.0" y="520.0" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start">Top two go on to the semi-final</text>
+<rect x="16.0" y="548.0" width="358.0" height="50.0" rx="10" fill="#3ddcff"/>
+<text x="195.0" y="578.4" font-size="15" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="22.0 368.0">Send our report</text>
+</g></g>
+</g></g>
+<text x="792.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">3 · Report by dragging</text>
+<text x="792.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">Nothing is pre-filled: the team drags the</text>
+<text x="792.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">order it saw. One report per team; it can</text>
+<text x="792.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="792.0 1122.0">change until the match is decided.</text>
+<line x1="1066.0" y1="300.0" x2="1160.0" y2="300.0" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<g transform="translate(1172.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph14"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph14)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ Finals</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">My match</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="230.0" rx="14" fill="#161a2e" stroke="#3ee39a" stroke-width="2"/>
+<text x="36.0" y="190.0" font-size="26" fill="#3ee39a" font-weight="800" text-anchor="start">✓  Decided</text>
+<text x="36.0" y="226.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">Two teams sent the same order</text>
+<text x="36.0" y="270.0" font-size="19" fill="#3ddcff" font-weight="700" text-anchor="start">1  Team Delta · you</text>
+<text x="36.0" y="302.0" font-size="19" fill="#f3f5ff" font-weight="600" text-anchor="start">2  Team Gamma</text>
+<text x="36.0" y="334.0" font-size="15" fill="#a9b1d6" font-weight="500" text-anchor="start">3  Team Beta    4  Team Epsilon</text>
+<rect x="16.0" y="384.0" width="358.0" height="170.0" rx="14" fill="#161a2e" stroke="#3ddcff" stroke-width="1.5"/>
+<text x="36.0" y="420.0" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">Next: the semi-final</text>
+<text x="36.0" y="450.0" font-size="16" fill="#a9b1d6" font-weight="500" text-anchor="start">Arena South · about 21:40</text>
+<text x="36.0" y="490.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start">We'll tell you when it's on</text>
+</g></g>
+</g></g>
+<text x="1172.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">4 · Decided</text>
+<text x="1172.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">Two matching reports from different</text>
+<text x="1172.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">teams decide, as in the legacy; the next</text>
+<text x="1172.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1172.0 1502.0">round is built at once.</text>
+<g transform="translate(1552.0,110.0) scale(0.66)"><g>
+<rect x="-10.0" y="-10.0" width="410.0" height="864.0" rx="48" fill="#05060c"/>
+<g>
+<defs><clipPath id="ph15"><rect x="0" y="0" width="390" height="844" rx="40"/></clipPath></defs><g clip-path="url(#ph15)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="0" fill="#0b0d1a"/>
+<text x="28.0" y="34.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">20:14</text>
+<rect x="330.0" y="24.0" width="30.0" height="12.0" rx="3" fill="#f3f5ff"/>
+<text x="20.0" y="74.0" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="20.0 200.0">‹ Finals</text>
+<text x="20.0" y="112.0" font-size="26" fill="#f3f5ff" font-weight="800" text-anchor="start" data-box="16.0 300.0">My match</text>
+<text x="370.0" y="112.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="end" data-box="250.0 370.0">Demo Event</text>
+<rect x="0.0" y="770.0" width="390.0" height="74.0" rx="0" fill="#161a2e"/>
+<circle cx="39.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="39.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<circle cx="117.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="117.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<circle cx="195.0" cy="792.0" r="5.0" fill="#3ddcff"/>
+<text x="195.0" y="816.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle">Play</text>
+<circle cx="273.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="273.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<circle cx="351.0" cy="792.0" r="5.0" fill="#a9b1d6"/>
+<text x="351.0" y="816.0" font-size="12" fill="#a9b1d6" font-weight="500" text-anchor="middle">More</text>
+<rect x="16.0" y="134.0" width="358.0" height="300.0" rx="14" fill="#161a2e" stroke="#ffc94d" stroke-width="2"/>
+<text x="36.0" y="190.0" font-size="24" fill="#ffc94d" font-weight="800" text-anchor="start">The reports differ</text>
+<text x="36.0" y="226.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">Team Gamma put you second; you put</text>
+<text x="36.0" y="247.6" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">yourselves first. The crew decides;</text>
+<text x="36.0" y="269.2" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">nothing moves until then.</text>
+<text x="36.0" y="330.0" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start">Your report</text>
+<text x="36.0" y="356.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">Delta · Gamma · Beta · Epsilon</text>
+<rect x="36.0" y="380.0" width="318.0" height="44.0" rx="10" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="195.0" y="407.4" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="42.0 348.0">Change our report</text>
+<rect x="16.0" y="456.0" width="358.0" height="160.0" rx="14" fill="#161a2e" stroke="#2c3560" stroke-width="1.2"/>
+<text x="36.0" y="494.0" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start">Waiting for the crew</text>
+<text x="36.0" y="522.0" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">The crew sees both reports and decides.</text>
+<text x="36.0" y="542.2" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="36.0 356.0">You'll get a message when it's settled.</text>
+</g></g>
+</g></g>
+<text x="1552.0" y="700.0" font-size="19" fill="#111827" font-weight="600" text-anchor="start">5 · Disputed</text>
+<text x="1552.0" y="726.0" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">Differing reports go to the crew's queue;</text>
+<text x="1552.0" y="747.6" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">the teams see that and nothing else (U7,</text>
+<text x="1552.0" y="769.2" font-size="16" fill="#4b5563" font-weight="400" text-anchor="start" data-box="1552.0 1882.0">E2).</text>
+<rect x="32.0" y="840.0" width="1856.0" height="78.2" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="48.0" y="868.0" font-size="16" fill="#713f12" font-weight="700" text-anchor="start" data-box="48.0 1872.0">Notes</text>
+<text x="48.0" y="892.0" font-size="15" fill="#713f12" font-weight="400" text-anchor="start" data-box="48.0 1872.0">Lobby codes stay on the phones of the players in the match: on the venue screen they would let anyone into a private lobby (U8). Reporting keeps the legacy's rule; a season made by the team builder can be set to 'crew enters every result' (U7).</text>
+</svg>

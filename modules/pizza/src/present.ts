@@ -5,6 +5,8 @@ import { authorize } from "./policy.js";
 import type { Action, As, Caller, Facts } from "./policy.js";
 import { getOrder, getPizzeria, itemsOf } from "./store.js";
 import type { ItemRow, OrderRow } from "./store.js";
+import { payToOf } from "./money-view.js";
+import { paidOf } from "./paid.js";
 import { factsOf, orderView, seenBy } from "./views.js";
 
 export function facts(ctx: TenantContext, now: Date, o: OrderRow, item?: ItemRow): Facts {
@@ -24,9 +26,13 @@ export async function present(
 ): Promise<Record<string, unknown>> {
   const items = await itemsOf(c, [o.id]);
   const pizzeria = await getPizzeria(c, o.pizzeria_id);
-  return orderView(o, items, caller, seenBy(caller, facts(ctx, now, o)), {
+  const seen = seenBy(caller, facts(ctx, now, o));
+  const settling =
+    seen === "guest" ? undefined : { paid: await paidOf(c, o.id), payTo: await payToOf(c, o) };
+  return orderView(o, items, caller, seen, {
     today: today(ctx, now),
     pizzeria,
+    ...(settling === undefined ? {} : { settling }),
   });
 }
 

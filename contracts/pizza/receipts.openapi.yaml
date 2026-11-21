@@ -1,0 +1,377 @@
+/api/pizza/orders/{order_id}/receipts:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+  get:
+    tags: [money]
+    operationId: listReceipts
+    summary: An order's receipts
+    description: The holder, the crew or `pizza.record.read` (a receipt can show card digits).
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The receipts, oldest first, with their last read.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [receipts]
+              properties:
+                receipts:
+                  type: array
+                  items:
+                    $ref: "../pizza.openapi.yaml#/components/schemas/Receipt"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+  post:
+    tags: [money]
+    operationId: addReceipt
+    summary: Add a receipt photo
+    description: |
+      The holder until the order's event day turns, the crew at any time; once the order is called in
+      (409 `not_placed` before), not when cancelled. The body is the photo: JPEG, PNG or WebP, at most
+      10 MB. It is kept upright, at most 2,576 px on its long edge, with its metadata (a location among
+      it) stripped. At most 10 per order (409 `too_many_receipts`).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        image/jpeg:
+          schema:
+            type: string
+            contentMediaType: image/jpeg
+        image/png:
+          schema:
+            type: string
+            contentMediaType: image/png
+        image/webp:
+          schema:
+            type: string
+            contentMediaType: image/webp
+    responses:
+      "201":
+        description: The receipt.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Receipt"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../pizza.openapi.yaml#/components/responses/TooLarge"
+      "415":
+        $ref: "../pizza.openapi.yaml#/components/responses/UnsupportedMediaType"
+/api/pizza/receipts/{receipt_id}/photo:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/ReceiptId"
+  get:
+    tags: [money]
+    operationId: receiptPhoto
+    summary: A receipt's photo
+    description: "The holder, the crew or `pizza.record.read`; sent with `Cache-Control: private, no-store`."
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The photo as kept.
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              contentMediaType: image/jpeg
+          image/png:
+            schema:
+              type: string
+              contentMediaType: image/png
+          image/webp:
+            schema:
+              type: string
+              contentMediaType: image/webp
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+/api/pizza/receipts/{receipt_id}/read:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/ReceiptId"
+  post:
+    tags: [money]
+    operationId: readReceipt
+    summary: Read a receipt with the AI reader
+    description: |
+      Who may add a receipt. Sends the photo, and fixed instructions only, to the provider, and keeps
+      the answer on the receipt as a suggestion matched to the order's pizzas; the order's money does
+      not change (confirm with `PATCH …/money` and `receipt_id`). Each call is a read against the
+      event's daily reads, also when it fails; no `Idempotency-Key`. 409 `reader_off` while the event's
+      `ai_reader` is off, no key is set or the provider refused it; 429 `reader_limit` past the day's
+      reads; 502 `reader_failed` (the provider failed or took over 20 s) or `reader_key_rejected`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The receipt with its read.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Receipt"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+      "429":
+        $ref: "../pizza.openapi.yaml#/components/responses/ReaderLimit"
+      "502":
+        $ref: "../pizza.openapi.yaml#/components/responses/ReaderFailed"
+/api/pizza/menu/read:
+  post:
+    tags: [menus]
+    operationId: readMenuPhoto
+    summary: Read a menu photo into a menu CSV
+    description: |
+      Right `pizza.menu.write`; the AI reader as for a receipt (`reader_off`, `reader_limit`,
+      `reader_failed`, `reader_key_rejected`). One page per call; the photo is not kept. The answer's
+      `csv` is in the menu CSV's format for the pizzeria named, for the import's preview; nothing changes.
+    security:
+      - session: []
+    parameters:
+      - name: pizzeria_id
+        in: query
+        required: true
+        schema:
+          $ref: "../pizza.openapi.yaml#/components/schemas/Id"
+    requestBody:
+      required: true
+      content:
+        image/jpeg:
+          schema:
+            type: string
+            contentMediaType: image/jpeg
+        image/png:
+          schema:
+            type: string
+            contentMediaType: image/png
+        image/webp:
+          schema:
+            type: string
+            contentMediaType: image/webp
+    responses:
+      "200":
+        description: The menu as read.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/MenuRead"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../pizza.openapi.yaml#/components/responses/TooLarge"
+      "415":
+        $ref: "../pizza.openapi.yaml#/components/responses/UnsupportedMediaType"
+      "429":
+        $ref: "../pizza.openapi.yaml#/components/responses/ReaderLimit"
+      "502":
+        $ref: "../pizza.openapi.yaml#/components/responses/ReaderFailed"
+/api/pizza/reader/key:
+  get:
+    tags: [reader]
+    operationId: readerKey
+    summary: The AI reader's key, as Integrations shows it
+    description: Right `admin.integrations.write`. Never the key itself.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The key's state.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/ReaderKey"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [reader]
+    operationId: setReaderKey
+    summary: Set or replace the AI reader's key
+    description: |
+      Right `admin.integrations.write`. Sealed with the platform's secrets key, bound to the event;
+      replaces any key at once and clears a refusal. Audited (`pizza.reader_key.set` or `.replaced`,
+      with the last four characters only). 503 `secrets_unavailable` when the platform has no secrets key.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [api_key]
+            properties:
+              api_key:
+                type: string
+                writeOnly: true
+                minLength: 8
+                maxLength: 300
+    responses:
+      "200":
+        description: The key's state.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/ReaderKey"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+      "503":
+        $ref: "../pizza.openapi.yaml#/components/responses/SecretsUnavailable"
+  delete:
+    tags: [reader]
+    operationId: revokeReaderKey
+    summary: Revoke the AI reader's key
+    description: Right `admin.integrations.write`. Deleted at once; reads stop. Audited (`pizza.reader_key.revoked`).
+    security:
+      - session: []
+    responses:
+      "204":
+        description: No key is set any longer.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+/api/pizza/orders/{order_id}/paid/{user_id}:
+  parameters:
+    - $ref: "../pizza.openapi.yaml#/components/parameters/OrderId"
+    - name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+  put:
+    tags: [money]
+    operationId: markPaid
+    summary: Mark someone paid (or not)
+    description: |
+      The holder until the order's event day turns, the crew at any time; only while the order settles
+      to its payer (409 `not_settled_to_payer`), for someone in the order other than the payer (400).
+      A memo for the holder, never a payment. The mark itself stays off the bus; a new mark tells
+      that person alone (`pizza.share.paid`, no amount).
+    security:
+      - session: []
+    parameters:
+      - $ref: "../pizza.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [paid]
+            properties:
+              paid:
+                type: boolean
+    responses:
+      "200":
+        description: The money.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/Money"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../pizza.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/me/pay-details:
+  get:
+    tags: [me]
+    operationId: myPayDetails
+    summary: How people pay me
+    description: The caller's own "Pay me with", offered again on each order they pay for.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The details.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/PayDetails"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+  put:
+    tags: [me]
+    operationId: setMyPayDetails
+    summary: Set how people pay me
+    description: |
+      A member; a MobilePay number and a bank account (a valid IBAN), either or both, or null. A change
+      tells the people not yet marked paid in the orders this person pays that how to pay changed
+      (`pizza.share.changed`, `pay_to`), once their shares went out; the details never travel.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              mobilepay:
+                type: [string, "null"]
+                pattern: "^\\+?[0-9][0-9 ]{5,19}$"
+              iban:
+                type: [string, "null"]
+    responses:
+      "200":
+        description: The details as kept (the IBAN in groups of four).
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/PayDetails"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../pizza.openapi.yaml#/components/responses/Conflict"

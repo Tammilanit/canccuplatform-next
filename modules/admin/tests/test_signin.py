@@ -30,6 +30,7 @@ async def test_first_run_code_makes_the_owner(
         "admin.profile.read",
         "admin.profile.write",
         "admin.rights.write",
+        "admin.integrations.write",
     }
     # Used once: no second owner, and no new code while an owner exists.
     world.client.cookies.clear()
