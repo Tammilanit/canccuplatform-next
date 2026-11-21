@@ -11,6 +11,7 @@
 
 # shellcheck disable=SC2329
 stub_upgrade() {
+  # shellcheck disable=SC2034  # $code is the caller's: no HTTP call here, so check names none
   code=
   local project="canccu-stub-upgrade-$$" head="$TMP/stub-head.json" old="$TMP/stub-old.json" want ok
   # The stub alone, no network of the stack's: its fixed subnet would overlap the running one's.
