@@ -25,9 +25,14 @@ The research pack for the product owner's brainstorming session on [step 7, Tour
 >
 > The recommendation is still **C**; the legacy paragraph and the directions change only where they named the waiting list.
 
+> **Lead rounds 3 to 5 (2026-11-21, #682).** The pack was revised three more times, each folded into the flows, the mockups, the question bank, the contract gaps and the proposed issues:
+> - **Round 3:** the season is individual, and a team lives for one session.
+> - **Round 4:** sign-up is one "My sessions" page for any number of sessions, with nudges (a closing chip, ☆ Interested, last call, Ask to join) ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out), mockups [21](step-7-tournament/21-my-sessions.svg) and [22](step-7-tournament/22-signup-nudges.svg)); scoring from a screenshot with three sources for who played ([D21](step-7-tournament/questions.md#d21-scoring-from-a-screenshot-three-sources-and-a-reveal), [23](step-7-tournament/23-scoring-screenshot.svg)); the hall screen around the tournament ([L10](step-7-tournament/questions.md#l10-the-screens-around-the-tournament), [24](step-7-tournament/24-screens-around-tournament.svg)); clips and photos ([D22](step-7-tournament/questions.md#d22-clips-and-photos-from-participants), [25](step-7-tournament/25-clips-and-photos.svg)); PC and phone are equal ([L11](step-7-tournament/questions.md#l11-pc-and-phone-are-equal), [26](step-7-tournament/26-pc-layout.svg)).
+> - **Round 5 (the last):** the mockups say only what people read: no code or event names, delay minutes are quick picks (+5, +10, +15, +30, Other), every time and point on them follows the decisions (the 3 / 2 / 1 / 0 default table, a close 30 minutes before the start, an overlap warning only where two sessions overlap), and contacts are demo names. New widgets are named in the brief, not on the mockups.
+
 **In this pack**
 - This file: goal, what was read, what earlier steps already built, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, the lead's notes, what the built contracts get wrong, proposed issue changes and exit criteria.
-- [step-7-tournament/questions.md](step-7-tournament/questions.md): the question bank, 85 questions asked now in seven themes (76 in six themes before the 0030 revision), each with options and a recommendation, and 17 more kept under Later, not asked now. IDs (U3, D1, …) are used throughout.
+- [step-7-tournament/questions.md](step-7-tournament/questions.md): the question bank, 86 questions asked now in seven themes (76 in six themes before the 0030 revision), each with options and a recommendation, and 17 more kept under Later, not asked now. IDs (U3, D1, …) are used throughout.
 - [step-7-tournament/](step-7-tournament/): 26 SVG mockups (15, with 16–17 kept for later, 18 added for 0030, 19–21 for the lead round and 22–26 for its fourth round), drawn new, with the demo event only. GitHub shows them inline below. Organiser pages are drawn in the dark organiser shell of `packages/ui` with the Demo night tokens (as the step 4 polish and grids sheets); attendee pages in the hub's frame; the venue screen in the screen look. Each sheet states its use case. Every text carries the box it sits in, and a headless Chromium check found no text outside its box at any width drawn (see [Every mockup](#every-mockup)).
 
 ## Goal
@@ -245,10 +250,12 @@ How the crew turns a played session into a result ([D21](step-7-tournament/quest
   | Registration | Voice | Screenshot | The form |
   |---|---|---|---|
   | yes | yes | yes | filled in automatically |
-  | one other source and the screenshot | | | took part, with a warning when one is missing |
-  | no | yes | yes | one tap adds them as registered |
-  | yes | no | no | suggested as a no-show |
+  | yes | no | yes | took part, with a warning that voice is missing |
+  | no | yes | yes | took part, with a warning that they are not registered; one tap adds them as registered |
+  | no | no | yes | listed for the crew to decide; one tap adds them as registered |
   | yes | yes | no | the crew decides |
+  | yes | no | no | suggested as a no-show |
+  | no | yes | no | not listed: voice alone never decides (the crew can add them by hand) |
 
   Voice alone never decides. Nothing is final until the crew saves.
 - **In-game names:** the first time the crew links a screenshot name to a person, the platform remembers it for that game (per person, per game), so the next screenshot matches by itself.
@@ -271,6 +278,31 @@ The screen follows a session from its first card to its recap, then the evening,
 - **The final:** several finalists (a setting, for example 4) and one winner. Finalist intro cards with season points, podiums, MVPs and best result (`finalist_cards`), the final, the final ranking 1–N on screen (`final_ranking`), then the champion moment and the champion photos (`champion_moment`, with Moments' `winner_card`). Places 2–N are celebrated as finalists.
 
 ![The screens around the tournament](step-7-tournament/24-screens-around-tournament.svg)
+
+The widgets behind the twenty views (the mockup shows only what people read; "new" means a widget this step builds):
+
+| View | Widget |
+|---|---|
+| Session · Today / Tonight | `session_cards` (new) |
+| Session · Last call | `last_call` (new) |
+| Session · Teams revealed | `teams_reveal` (new) |
+| Session · Check-in | `checkin_waiting` (new) with `checkin_qr` |
+| Session · Match called | `match_called` (Moments) |
+| Session · Now playing | `session_now` (new) with `bracket` |
+| Session · Result reveal | `result_reveal` (new) |
+| Session · Standings slide | `leaderboard` (live) |
+| Session · Recap | `session_recap` (new) with `photo` |
+| Evening · Race to the final | `final_race` (new) |
+| Evening · Player spotlight | `player_spotlight` (promoted) |
+| Evening · Game-stat highlight | `stat_highlight` (new) |
+| Evening · Rivalry | `rivalry` (new) |
+| Evening · Biggest climber | `climber` (new) |
+| Evening · Next up | `next_up` (new): several sessions, with a `last_call` card |
+| Final · Finalist cards | `finalist_cards` (new) |
+| Final · The final | `bracket` or `now_playing` |
+| Final · Ranking 1–N | `final_ranking` (new) |
+| Final · Champion | `champion_moment` (new) with `winner_card` |
+| Evening · Best moments | `best_moments` (new) with `photo` |
 
 ### Clips and photos from anyone taking part (players, crew) · lead round 4, 12
 Participants upload from the hub, the session page or a PC browser (drag and drop a clip recorded on the gaming PC), tag the session and the people, and the crew approves or rejects in a queue on the desk and the crew phone. Only approved items reach the screen and the recaps; tagged people can ask for removal ([D22](step-7-tournament/questions.md#d22-clips-and-photos-from-participants)).
@@ -318,7 +350,7 @@ The Pulse with a cup session and a THE FINALS card; two champions with two owner
 | [21-my-sessions.svg](step-7-tournament/21-my-sessions.svg) | "My sessions": one page, a tick per session, Full and Closed rows, a team session ticked as solo, "I can't make it", a reopened row (lead round) | player |
 | [22-signup-nudges.svg](step-7-tournament/22-signup-nudges.svg) | "Closes in N min", ☆ Interested and its reminder, an overlap warning, Ask to join and the crew queue, last call on the hall screen, the hub and Discord (lead round 4) | player, crew |
 | [23-scoring-screenshot.svg](step-7-tournament/23-scoring-screenshot.svg) | The score screen and the AI reader, who played from three sources, tap to place, team names, an award preview, save as a reveal (lead round 4) | crew |
-| [24-screens-around-tournament.svg](step-7-tournament/24-screens-around-tournament.svg) | Twenty hall-screen views: a session's life, the evening, the final, each with its widget (lead round 4) | attendees in the hall |
+| [24-screens-around-tournament.svg](step-7-tournament/24-screens-around-tournament.svg) | Twenty hall-screen views: a session's life, the evening, the final; the widgets are named in the table above (lead round 4) | attendees in the hall |
 | [25-clips-and-photos.svg](step-7-tournament/25-clips-and-photos.svg) | Upload from the phone and a PC browser, the crew queue on the desk and the phone, a tagged person's removal request (lead round 4) | players, crew |
 | [26-pc-layout.svg](step-7-tournament/26-pc-layout.svg) | The player pages at 1280 px: Tournament page with the tick list, session, check-in and match, standings and champions; the upload's desktop view is sheet 25, panel 2 (lead round 4) | attendees on a PC |
 
@@ -432,7 +464,7 @@ No name or field is removed or renamed, so none is a breaking change.
 13. The lead and the crew: `tournament.settings.write` and `tournament.crew.manage`, the presets `tournament_lead` and `tournament_crew`, and a crew endpoint ([D12](step-7-tournament/questions.md#d12-rights)).
 14. What the waiting list would have added is never added: no `waiting_count` on the Session and no `tournament.player.waitlisted` or `.promoted`; the catalog has neither, so nothing is removed.
 15. Registration as a toggle: one idempotent `PUT /sessions/{id}/registration/me` (`{registered: bool}`, with the usual idempotency key) joins or leaves a session for the signed-in player, so a tick is one call; a team session joins as a solo player (U6). It reuses the register and give-up rules and emits the same registration events; no new event ([U4](step-7-tournament/questions.md#u4-what-the-player-sees-of-the-timeline)). Additive, shipped with #127's contract and the player's pages.
-16. Sign-up helpers: `PUT`/`DELETE /sessions/{id}/interest/me` (the star) with a scheduler row for the reminder 30 minutes before the close, only for a starred, not-joined session; a "last call" read on the session and an event for it (`tournament.registration.last_call`, consumed by Screen, the hub and the bot's channel post, with Notify's topic gaining the trigger); `POST /sessions/{id}/join-requests` and a crew list and decision (`tournament.registration.requested`, emitted when the crew adds the person through the normal register rule). Additive ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out)).
+16. Sign-up helpers: `PUT`/`DELETE /sessions/{id}/interest/me` (the star) with a scheduler row for the reminder 30 minutes before the close, only for a starred, not-joined session; a "last call" read on the session and an event for it (`tournament.registration.last_call`, consumed by Screen, the hub and the bot's channel post, with Notify's topic gaining the trigger); `POST /sessions/{id}/join-requests` and a crew list and decision (`tournament.join_request.created`, for the crew queue and its push; adding the person goes through the normal register rule and emits the usual registration event). Additive ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out)).
 17. Scoring: `POST /sessions/{id}/score-screens` (a file in the files volume, crew only, right `tournament.results.write`), an optional `POST …/read` that calls the provider set for the event and returns a draft, never a Result; a per-person, per-game in-game name (`PUT /players/{id}/game-names/{game}`); `game_stats` and the `sources` (registration, voice, screenshot) on a Result's participant; a preview of the standings change (`POST /sessions/{id}/results/preview`); the team name per session on a team. Additive ([D21](step-7-tournament/questions.md#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)).
 18. Clips and photos: `POST /moments` (a file, the session, tagged people, a consent tick), a crew queue (`GET /moments?state=pending`, `PUT /moments/{id}/state`) and a removal request by a tagged person. The module may hold these or ask Moments to; the pack proposes the tournament keeps its own queue for step 7 and hands approved items to Moments through an event (`tournament.moment.approved`). Additive ([D22](step-7-tournament/questions.md#d22-clips-and-photos-from-participants)).
 19. The finals' size: `final_size` in the tournament's settings (the number of finalists, default 4), replacing "the top N" wherever the contract assumes a single winner and a podium. Additive ([L10](step-7-tournament/questions.md#l10-the-screens-around-the-tournament)).

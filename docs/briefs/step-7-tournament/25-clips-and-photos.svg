@@ -86,7 +86,7 @@
 <text x="1726.0" y="441.5" font-size="13" fill="#04121a" font-weight="700" text-anchor="middle" data-box="1686 1766">Approve</text>
 <rect x="1774" y="420" width="88" height="34" rx="8" fill="#22263f"/>
 <text x="1818.0" y="441.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="1774 1862">Reject</text>
-<text x="1228" y="520" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1220 1878">Approved: it goes to the session recap and the screen’s `best_moments`.</text>
+<text x="1228" y="520" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1220 1878">Approved: it goes to the session recap and the best-moments view on the hall screen.</text>
 <text x="1228" y="542" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1220 1878">Rejected: the sender gets a short reason. Nothing is shown before.</text>
 <rect x="420" y="600" width="770" height="400" rx="10" fill="#0b0d1a" stroke="#3c446c" stroke-width="1"/>
 <text x="444" y="636" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="434 1180">4 · A tagged person asks for removal</text>

@@ -2,131 +2,111 @@
 <title>Step 7 mockup 24: The hall screen around the tournament: a session, the evening, the final</title>
 <rect x="0" y="0" width="1920" height="1080" fill="#f3f4f6"/>
 <text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">24 · The hall screen around the tournament: a session, the evening, the final</text>
-<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: the screen tells the story all evening. Twenty views, each one widget or preset, named under it; new ones are marked. Game art is the background where a game is on. Demo names only.</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: the screen tells the story all evening. Twenty views; the widgets behind them are named in the brief. Game art is the background where a game is on. Demo names only.</text>
 <text x="32.0" y="122" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 400.0">Session · Today / Tonight</text>
 <rect x="32.0" y="130" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="50.0" y="164" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="42.0 360.0">TONIGHT</text>
 <text x="50.0" y="228" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 280.0">Demo Arena 5v5</text>
 <text x="50.0" y="260" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="44.0 280.0">19:30 · 14 signed up</text>
 <rect x="296.0" y="240" width="56" height="56" rx="4" fill="#fff"/>
-<text x="32.0" y="338" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="32.0 404.0">`session_cards` (new)</text>
 <text x="411.5" y="122" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="411.5 779.5">Session · Last call</text>
 <rect x="411.5" y="130" width="338" height="190" rx="8" fill="#2a2010" stroke="#3c446c" stroke-width="1"/>
 <text x="429.5" y="164" font-size="14" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="421.5 739.5">LAST CALL</text>
 <text x="429.5" y="228" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="423.5 737.5">Demo Racer · 19:42</text>
 <text x="429.5" y="260" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="423.5 737.5">closes 21:00</text>
-<text x="411.5" y="338" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="411.5 783.5">`last_call` (new)</text>
 <text x="791.0" y="122" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="791.0 1159.0">Session · Teams revealed</text>
 <rect x="791.0" y="130" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="809.0" y="164" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="801.0 1119.0">TEAMS</text>
 <text x="809.0" y="228" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="803.0 1117.0">Nightfall · Ember</text>
 <text x="809.0" y="260" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="803.0 1117.0">Tidal · Granite · Willow</text>
-<text x="791.0" y="338" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="791.0 1163.0">`teams_reveal` (new)</text>
 <text x="1170.5" y="122" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1170.5 1538.5">Session · Check-in</text>
 <rect x="1170.5" y="130" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="1188.5" y="164" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1180.5 1498.5">CHECK-IN</text>
 <text x="1188.5" y="228" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1182.5 1418.5">Waiting for 3</text>
 <text x="1188.5" y="260" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1182.5 1418.5">Pike · Rook · Echo</text>
 <rect x="1434.5" y="240" width="56" height="56" rx="4" fill="#fff"/>
-<text x="1170.5" y="338" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1170.5 1542.5">`checkin_waiting` (new) + `checkin_qr`</text>
 <text x="1550.0" y="122" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1550.0 1918.0">Session · Match called</text>
 <rect x="1550.0" y="130" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="1568.0" y="164" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1560.0 1878.0">MATCH CALLED</text>
 <text x="1568.0" y="228" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1562.0 1876.0">Nightfall vs Ember</text>
 <text x="1568.0" y="260" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1562.0 1876.0">Stage 2 · voice room B</text>
-<text x="1550.0" y="338" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1550.0 1922.0">`match_called` (Moments)</text>
 <text x="32.0" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 400.0">Session · Now playing</text>
 <rect x="32.0" y="366" width="338" height="190" rx="8" fill="#1a1030" stroke="#3c446c" stroke-width="1"/>
 <text x="50.0" y="400" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="42.0 360.0">NOW PLAYING</text>
 <text x="50.0" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 358.0">Demo Arena · Stage 1</text>
 <text x="50.0" y="496" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="44.0 358.0">Round 2 of 3 · 08:14</text>
 <text x="352.0" y="542" font-size="11" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="232.0 360.0">game art</text>
-<text x="32.0" y="574" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="32.0 404.0">`session_now` (new) + `bracket`</text>
 <text x="411.5" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="411.5 779.5">Session · Result reveal</text>
 <rect x="411.5" y="366" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="429.5" y="400" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="421.5 739.5">WINNERS</text>
 <text x="429.5" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="423.5 737.5">1st Nightfall</text>
 <text x="429.5" y="496" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="423.5 737.5">MVP: Nova +2</text>
-<text x="411.5" y="574" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="411.5 783.5">`result_reveal` (new)</text>
 <text x="791.0" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="791.0 1159.0">Session · Standings slide</text>
 <rect x="791.0" y="366" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="809.0" y="400" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="801.0 1119.0">STANDINGS</text>
 <text x="809.0" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="803.0 1117.0">Nova ▲2 · 1st</text>
 <text x="809.0" y="496" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="803.0 1117.0">Juno ▲1 · 4th</text>
-<text x="791.0" y="574" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="791.0 1163.0">`leaderboard` (live)</text>
 <text x="1170.5" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1170.5 1538.5">Session · Recap</text>
 <rect x="1170.5" y="366" width="338" height="190" rx="8" fill="#1a1030" stroke="#3c446c" stroke-width="1"/>
 <text x="1188.5" y="400" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1180.5 1498.5">RECAP</text>
 <text x="1188.5" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1182.5 1496.5">Approved clips</text>
 <text x="1188.5" y="496" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1182.5 1496.5">and photos</text>
 <text x="1490.5" y="542" font-size="11" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1370.5 1498.5">game art</text>
-<text x="1170.5" y="574" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1170.5 1542.5">`session_recap` (new) + `photo`</text>
 <text x="1550.0" y="358" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1550.0 1918.0">Evening · Race to the final</text>
 <rect x="1550.0" y="366" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="1568.0" y="400" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1560.0 1878.0">RACE TO THE FINAL</text>
 <text x="1568.0" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1562.0 1876.0">Cut line: top 4</text>
 <text x="1568.0" y="496" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1562.0 1876.0">Nova needs 2 points</text>
-<text x="1550.0" y="574" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1550.0 1922.0">`final_race` (new)</text>
 <text x="32.0" y="594" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 400.0">Evening · Player spotlight</text>
 <rect x="32.0" y="602" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="50.0" y="636" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="42.0 360.0">SPOTLIGHT</text>
 <text x="50.0" y="700" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 358.0">Kestrel</text>
 <text x="50.0" y="732" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="44.0 358.0">3 podiums in a row</text>
-<text x="32.0" y="810" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="32.0 404.0">`player_spotlight` (promoted)</text>
 <text x="411.5" y="594" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="411.5 779.5">Evening · Game-stat highlight</text>
 <rect x="411.5" y="602" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="429.5" y="636" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="421.5 739.5">HIGHEST SCORE</text>
 <text x="429.5" y="700" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="423.5 737.5">Nova · 24 kills</text>
 <text x="429.5" y="732" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="423.5 737.5">Demo Arena</text>
-<text x="411.5" y="810" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="411.5 783.5">`stat_highlight` (new)</text>
 <text x="791.0" y="594" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="791.0 1159.0">Evening · Rivalry</text>
 <rect x="791.0" y="602" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="809.0" y="636" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="801.0 1119.0">RIVALS</text>
 <text x="809.0" y="700" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="803.0 1117.0">Kestrel vs Juno</text>
 <text x="809.0" y="732" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="803.0 1117.0">2–2 tonight</text>
-<text x="791.0" y="810" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="791.0 1163.0">`rivalry` (new)</text>
 <text x="1170.5" y="594" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1170.5 1538.5">Evening · Biggest climber</text>
 <rect x="1170.5" y="602" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="1188.5" y="636" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1180.5 1498.5">BIGGEST CLIMBER</text>
 <text x="1188.5" y="700" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1182.5 1496.5">Juno ▲5</text>
 <text x="1188.5" y="732" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1182.5 1496.5">from 9th to 4th</text>
-<text x="1170.5" y="810" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1170.5 1542.5">`climber` (new)</text>
 <text x="1550.0" y="594" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1550.0 1918.0">Evening · Next up</text>
 <rect x="1550.0" y="602" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="1568.0" y="636" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1560.0 1878.0">NEXT UP</text>
 <text x="1568.0" y="700" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1562.0 1876.0">21:45 Party · 22:00 Kart</text>
 <text x="1568.0" y="732" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1562.0 1876.0">22:00 delayed 10 min</text>
-<text x="1550.0" y="810" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1550.0 1922.0">`next_up` (new): several sessions</text>
 <text x="32.0" y="830" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 400.0">Final · Finalist cards</text>
 <rect x="32.0" y="838" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="50.0" y="872" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="42.0 360.0">FINALIST</text>
 <text x="50.0" y="936" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 358.0">Nova · 34 points</text>
 <text x="50.0" y="968" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="44.0 358.0">5 podiums · 2 MVPs</text>
-<text x="32.0" y="1046" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="32.0 404.0">`finalist_cards` (new)</text>
 <text x="411.5" y="830" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="411.5 779.5">Final · The final</text>
 <rect x="411.5" y="838" width="338" height="190" rx="8" fill="#1a1030" stroke="#3c446c" stroke-width="1"/>
 <text x="429.5" y="872" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="421.5 739.5">THE FINAL</text>
 <text x="429.5" y="936" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="423.5 737.5">4 finalists · Demo Game</text>
 <text x="429.5" y="968" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="423.5 737.5">Round 1 · 12:00</text>
 <text x="731.5" y="1014" font-size="11" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="611.5 739.5">game art</text>
-<text x="411.5" y="1046" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="411.5 783.5">`bracket` or `now_playing`</text>
 <text x="791.0" y="830" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="791.0 1159.0">Final · Ranking 1–N</text>
 <rect x="791.0" y="838" width="338" height="190" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
 <text x="809.0" y="872" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="801.0 1119.0">FINAL RANKING</text>
 <text x="809.0" y="936" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="803.0 1117.0">1 Nova · 2 Kestrel</text>
 <text x="809.0" y="968" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="803.0 1117.0">3 Juno · 4 Pike</text>
-<text x="791.0" y="1046" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="791.0 1163.0">`final_ranking` (new)</text>
 <text x="1170.5" y="830" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1170.5 1538.5">Final · Champion</text>
 <rect x="1170.5" y="838" width="338" height="190" rx="8" fill="#2a2208" stroke="#3c446c" stroke-width="1"/>
 <text x="1188.5" y="872" font-size="14" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="1180.5 1498.5">CHAMPION</text>
 <text x="1188.5" y="936" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1182.5 1496.5">Nova</text>
 <text x="1188.5" y="968" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1182.5 1496.5">finalists 2–4 cheered</text>
-<text x="1170.5" y="1046" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1170.5 1542.5">`champion_moment` (new) + `winner_card`</text>
 <text x="1550.0" y="830" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1550.0 1918.0">Evening · Best moments</text>
 <rect x="1550.0" y="838" width="338" height="190" rx="8" fill="#1a1030" stroke="#3c446c" stroke-width="1"/>
 <text x="1568.0" y="872" font-size="14" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1560.0 1878.0">BEST MOMENTS</text>
 <text x="1568.0" y="936" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1562.0 1876.0">Approved clips</text>
 <text x="1568.0" y="968" font-size="14" fill="#a9b1d6" font-weight="500" text-anchor="start" data-box="1562.0 1876.0">and photos, by the crew</text>
 <text x="1870.0" y="1014" font-size="11" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1750.0 1878.0">game art</text>
-<text x="1550.0" y="1046" font-size="12" fill="#374151" font-weight="400" text-anchor="start" data-box="1550.0 1922.0">`best_moments` (new) + `photo`</text>
 </svg>

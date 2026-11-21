@@ -12,20 +12,28 @@
 <rect x="52.0" y="232.0" width="190.0" height="34.0" rx="8" fill="#3ddcff"/>
 <text x="147.0" y="253.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="56.0 238.0">Reopen registration</text>
 <rect x="254.0" y="232.0" width="170.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="339.0" y="253.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="258.0 420.0">Delay by N minutes</text>
+<text x="339.0" y="253.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="258.0 420.0">Delay this session</text>
 <rect x="52.0" y="290.0" width="560.0" height="340.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="1.5"/>
 <text x="72.0" y="324.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="72.0 592.0">Reopen registration</text>
 <text x="72.0" y="352.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72.0 592.0">It closes by itself through the scheduler at the time you pick.</text>
 <rect x="72.0" y="372.0" width="250.0" height="38.0" rx="10" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
 <text x="86.0" y="396.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="82.0 316.0">◉  Until a time</text>
 <rect x="338.0" y="372.0" width="224.0" height="38.0" rx="10" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="352.0" y="396.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348.0 556.0">○  For N minutes</text>
+<text x="352.0" y="396.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348.0 556.0">○  For a few minutes</text>
 <text x="72.0" y="440.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="72.0 322.0">Until</text>
 <rect x="72.0" y="448.0" width="250.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="84.0" y="471.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="80.0 314.0">19:20</text>
-<text x="338.0" y="440.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="338.0 562.0">Or for (minutes)</text>
-<rect x="338.0" y="448.0" width="224.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="350.0" y="471.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="346.0 554.0">20</text>
+<text x="338.0" y="440.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="338.0 562.0">Or for a few minutes</text>
+<rect x="338" y="448" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="357.0" y="471" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="338 376">+5</text>
+<rect x="382" y="448" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="401.0" y="471" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="382 420">+10</text>
+<rect x="426" y="448" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="445.0" y="471" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="426 464">+15</text>
+<rect x="470" y="448" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="489.0" y="471" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="470 508">+30</text>
+<rect x="514" y="448" width="52" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="540.0" y="471" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="514 566">Other</text>
 <text x="72.0" y="512.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="72.0 592.0">Registrants and followers of the tournament get a push:</text>
 <text x="72.0" y="534.0" font-size="13" fill="#ffc94d" font-weight="400" text-anchor="start" data-box="72.0 592.0">“Registration for Demo Arena 5v5 is open again until 19:20.”</text>
 <text x="72.0" y="558.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="72.0 592.0">The screen and the hub show it. History records who and until when.</text>
@@ -42,7 +50,7 @@
 <rect x="684.0" y="232.0" width="110.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="739.0" y="253.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="688.0 790.0">Close now</text>
 <rect x="806.0" y="232.0" width="170.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="891.0" y="253.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="810.0 972.0">Delay by N minutes</text>
+<text x="891.0" y="253.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="810.0 972.0">Delay this session</text>
 <text x="684.0" y="300.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="684.0 1244.0">On the venue screen and in the hub</text>
 <rect x="684.0" y="316.0" width="560.0" height="84.0" rx="12" fill="#1d2442" stroke="#ffc94d" stroke-width="1.5"/>
 <text x="702.0" y="346.0" font-size="15" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="702.0 1226.0">Registration open again · Demo Arena 5v5</text>
@@ -70,38 +78,46 @@
 <text x="36.0" y="208.0" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="36.0 358.0">Tap to register.</text>
 <text x="26.0" y="262.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start">Delayed sessions</text>
 <rect x="26.0" y="278.0" width="338.0" height="120.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<text x="44.0" y="310.0" font-size="15" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="44.0 346.0">Demo Arena 5v5 · moved to 19:50</text>
-<text x="44.0" y="336.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">Delayed 20 minutes. Registration closes</text>
-<text x="44.0" y="358.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">19:20. Your place and check-in are kept.</text>
+<text x="44.0" y="310.0" font-size="15" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="44.0 346.0">Demo Arena 5v5 · moved to 19:45</text>
+<text x="44.0" y="336.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">Delayed 15 minutes. Registration closes</text>
+<text x="44.0" y="358.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">19:15. Your place and check-in are kept.</text>
 </g>
-<text x="32.0" y="688.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1264.0">4 · Delay by N minutes: one session, or it and every later session that day</text>
+<text x="32.0" y="688.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1264.0">4 · Delay a session: this one, or it and every later session that day</text>
 <rect x="32.0" y="700.0" width="1232.0" height="300.0" rx="12" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
 <text x="52.0" y="736.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="52.0 432.0">Delay Demo Arena 5v5</text>
-<text x="52.0" y="760.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="52.0 252.0">Minutes</text>
-<rect x="52.0" y="768.0" width="200.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="64.0" y="791.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="60.0 244.0">20</text>
+<text x="52.0" y="760.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="52.0 252.0">Delay by (minutes)</text>
+<rect x="52" y="768" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="71.0" y="791" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="52 90">+5</text>
+<rect x="96" y="768" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="115.0" y="791" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="96 134">+10</text>
+<rect x="140" y="768" width="38" height="36" rx="8" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="159.0" y="791" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="140 178">+15</text>
+<rect x="184" y="768" width="38" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="203.0" y="791" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="184 222">+30</text>
+<rect x="228" y="768" width="52" height="36" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="254.0" y="791" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="228 280">Other</text>
 <rect x="272.0" y="768.0" width="260.0" height="38.0" rx="10" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
 <text x="286.0" y="792.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="282.0 526.0">◉  This session only</text>
 <rect x="548.0" y="768.0" width="330.0" height="38.0" rx="10" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="562.0" y="792.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="558.0 872.0">○  It and every later session today</text>
-<text x="52.0" y="850.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="52.0 432.0">Start 19:30 → 19:50</text>
-<text x="292.0" y="850.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="292.0 1244.0">Registration closes 19:00 → 19:20 (the offset to the start stays: computePostpone)</text>
+<text x="52.0" y="850.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="52.0 432.0">Start 19:30 → 19:45</text>
+<text x="292.0" y="850.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="292.0 1244.0">Registration closes 19:00 → 19:15 (the gap before the start stays the same)</text>
 <text x="52.0" y="878.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="52.0 1244.0">The agenda item moves with it (one run of show). Places and check-ins are kept; registrants get a push.</text>
-<text x="52.0" y="906.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="52.0 1244.0">The same action follows agenda.item.delayed when someone delays the item in the run of show.</text>
+<text x="52.0" y="906.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="52.0 1244.0">The same happens when someone delays this session in the run of show.</text>
 <rect x="52.0" y="936.0" width="160.0" height="34.0" rx="8" fill="#3ddcff"/>
-<text x="132.0" y="957.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="56.0 208.0">Delay 20 minutes</text>
+<text x="132.0" y="957.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="56.0 208.0">Delay 15 minutes</text>
 <rect x="224.0" y="936.0" width="90.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="269.0" y="957.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="228.0 310.0">Cancel</text>
 <circle cx="1309" cy="795" r="13" fill="#f59e0b"/>
 <text x="1309.0" y="800.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="1330.0" y="800.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Reopen: until a time or N minutes; it closes by itself (U19).</text>
+<text x="1330.0" y="800.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Reopen: until a time or for a few minutes; it closes by itself (U19).</text>
 <circle cx="1309" cy="835" r="13" fill="#f59e0b"/>
 <text x="1309.0" y="840.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
 <text x="1330.0" y="840.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Close now is always there; a reopen is in the History.</text>
 <circle cx="1309" cy="875" r="13" fill="#f59e0b"/>
 <text x="1309.0" y="880.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
-<text x="1330.0" y="880.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Delay by hand keeps the close&#x27;s offset; places stay (E2).</text>
+<text x="1330.0" y="880.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Delaying by hand keeps the gap before the start; places stay (E2).</text>
 <circle cx="1309" cy="915" r="13" fill="#f59e0b"/>
 <text x="1309.0" y="920.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1330.0" y="920.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Both need the crew right desk.run, not the lead.</text>
+<text x="1330.0" y="920.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">Both need the crew’s desk right, not the lead’s.</text>
 </svg>

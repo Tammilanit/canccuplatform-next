@@ -34,15 +34,15 @@
 <text x="660" y="350" font-size="13" fill="#ffcf6e" font-weight="600" text-anchor="end" data-box="540 720">★ Interested</text>
 <rect x="740" y="320" width="34" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <rect x="40" y="394" width="760" height="92" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="58" y="430" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="16 1264">21:45</text>
+<text x="58" y="430" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="16 1264">22:00</text>
 <text x="140" y="430" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="130 500">Demo Party</text>
 <text x="140" y="456" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="130 500">Solo · closes 21:30</text>
 <text x="660" y="454" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="end" data-box="540 720">☆ Interested</text>
 <rect x="740" y="424" width="34" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <rect x="40" y="498" width="760" height="92" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="58" y="534" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="16 1264">22:00</text>
+<text x="58" y="534" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="16 1264">22:30</text>
 <text x="140" y="534" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="130 500">Demo Kart cup</text>
-<text x="140" y="560" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="130 500">Solo · closes 21:40</text>
+<text x="140" y="560" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="130 500">Solo · closes 22:00</text>
 <text x="660" y="558" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="end" data-box="540 720">☆ Interested</text>
 <rect x="740" y="528" width="34" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <rect x="840" y="100" width="400" height="230" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
@@ -93,8 +93,8 @@
 <text x="140" y="496" font-size="15" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="130 780">Results</text>
 <rect x="840" y="150" width="400" height="200" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="860" y="184" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="850 1230">Rules</text>
-<text x="860" y="214" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="850 1230">Placements: 1st 10 · 2nd 7 · 3rd 5.</text>
-<text x="860" y="238" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="850 1230">Contact: Rook (tournament lead).</text>
+<text x="860" y="214" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="850 1230">Points: 1st 3 · 2nd 2 · took part 1 · no-show 0.</text>
+<text x="860" y="238" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="850 1230">Contact: Demo Lead, tournament lead</text>
 </g>
 <text x="32" y="592" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 928">3 · Check-in and your match</text>
 <g transform="translate(32,600) scale(0.7)">
