@@ -96,14 +96,14 @@ describe("TenantResolver.event with an injected fetch", () => {
     const calls: { url: string; headers: Record<string, string> }[] = [];
     const fetch = (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
       const headers = (init?.headers ?? {}) as Record<string, string>;
-      calls.push({ url: String(input), headers });
+      calls.push({ url: input instanceof Request ? input.url : input.toString(), headers });
       const member = headers.cookie === "canccu_session=member";
       const name = draftEvent && !member ? {} : { name: "Fake Event" };
       return Promise.resolve(
         Response.json({ id: "demo", status: draftEvent ? "draft" : "live", ...name }),
       );
     };
-    return { calls, fetch: fetch as typeof globalThis.fetch };
+    return { calls, fetch };
   }
 
   it("asks the injected fetch with the request's host, never the network", async () => {

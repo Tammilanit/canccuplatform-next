@@ -85,7 +85,7 @@ export interface PublicEvent {
   venue?: { id: string; name: string } | null;
 }
 
-/** GET `url` with this Host header, as JSON; fetch() would drop the header. */
+/** GET `url` with this Host header, as JSON; the global fetch() would drop the header. */
 function getJson(url: string, host: string, cookie?: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const send = url.startsWith("https:") ? httpsRequest : httpRequest;
@@ -109,6 +109,18 @@ function getJson(url: string, host: string, cookie?: string): Promise<unknown> {
     req.on("error", reject);
     req.end();
   });
+}
+
+/** As getJson, through an injected fetch, which is handed the Host header as is. */
+async function fetchJson(
+  send: typeof fetch,
+  url: string,
+  host: string,
+  cookie?: string,
+): Promise<unknown> {
+  const headers = cookie === undefined ? { host } : { host, cookie };
+  const res = await send(url, { headers, signal: AbortSignal.timeout(5000) });
+  return res.status === 200 ? res.json() : null;
 }
 
 export class TenantResolver {
@@ -183,9 +195,12 @@ export class TenantResolver {
   }
 
   private async current(host: string, cookie?: string): Promise<PublicEvent | null> {
-    const body = await getJson(`${this.tenantsUrl}/api/tenants/current`, host, cookie).catch(
-      () => null,
-    );
+    const url = `${this.tenantsUrl}/api/tenants/current`;
+    // An injected fetch is a test app's fake tenants: node:http would reach the real host (#701).
+    const injected = this.options.fetch;
+    const body = await (
+      injected === undefined ? getJson(url, host, cookie) : fetchJson(injected, url, host, cookie)
+    ).catch(() => null);
     return typeof body === "object" && body !== null ? (body as PublicEvent) : null;
   }
 
