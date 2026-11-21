@@ -17,6 +17,7 @@ import { facts, orderFor } from "./present.js";
 import { getItem, getOrder, itemsOf, logStep } from "./store.js";
 import type { OrderRow } from "./store.js";
 import { moneyView } from "./money-view.js";
+import { amountChanged, payToChanged } from "./notices.js";
 import { getReceipt } from "./receipts.js";
 import { InvalidBody, bad, parsePrice, parseTotal } from "./validate.js";
 
@@ -26,7 +27,10 @@ type Changes = Record<string, { old: unknown; new: unknown }>;
 const amountsOf = async (c: SqlClient, o: OrderRow): Promise<Amounts> =>
   amounts(o, await itemsOf(c, [o.id]));
 
-/** After the change: audit it once the order is closed, and tell those whose amount moved (U14). */
+/**
+ * After the change: audit it once the order is closed, and tell those whose amount moved (U14);
+ * once their shares went out, also whose amount or whom they pay changed (#703).
+ */
 async function afterChange(
   c: SqlClient,
   deps: AppDeps,
@@ -34,8 +38,12 @@ async function afterChange(
   before: { order: OrderRow; amounts: Amounts; as: As },
   changes: Changes,
 ): Promise<OrderRow> {
+  if (Object.keys(changes).length === 0) return (await getOrder(c, before.order.id)) as OrderRow;
+  await c.query(`UPDATE pizza_orders SET money_changed_at = $2 WHERE id = $1`, [
+    before.order.id,
+    w.now,
+  ]);
   const order = (await getOrder(c, before.order.id)) as OrderRow;
-  if (Object.keys(changes).length === 0) return order;
   await logStep(
     c,
     order.id,
@@ -75,6 +83,9 @@ async function afterChange(
       { version: 1 },
     );
   }
+  await amountChanged(c, deps, order, told, w.caller.user_id);
+  if ("settle_to" in changes || "payer" in changes)
+    await payToChanged(c, deps, order, w.caller.user_id);
   return order;
 }
 

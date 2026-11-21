@@ -146,6 +146,9 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     page = (await view(w, "pena", `/hold/${id}/money`)).body;
     expect(page).toContain("MobilePay · 040 000 0000");
     expect(page).toContain("Bank · FI21 1234 5600 0007 85");
+    // What is sent is a notice whom to pay; the details and amounts stay on each person's order (#703).
+    expect(page).toMatch(/people in this order see these with their amount on their order\./);
+    expect(page).toContain("Their notice says whom to pay, never these details.");
     expect(page).toContain("Who owes you");
     expect(page).toContain("€30.00 still to collect");
     await form(w, "pena", `/hold/${id}/paid`, { user_id: "u_anni", paid: "yes", back: "money" });

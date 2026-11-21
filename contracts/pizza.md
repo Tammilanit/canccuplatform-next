@@ -91,6 +91,7 @@ The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-
 | closed, not called in | The holder at +30, the holder and the crew at +60, counted from the close or a later claim; the holder released at +120 (`release_after_minutes`; `reason` `timeout`) and the crew told (`released`) |
 | called in, not arrived | "Has it arrived?" to the holder 30 min past `estimate_at` (`arrival_check_minutes`), or 90 min after the call-in without one (`arrival_check_no_estimate_minutes`); to the crew as much later as the crew's reminder comes after the holder's |
 | arrived | `done` (`timer`) 120 min after arrival (`done_after_arrival_minutes`, O7) |
+| called in, with a total | "Your share is ready" 5 min after the last money change, then, while it settles to its payer, the payment reminder ([Notices](#notices)); a done order too |
 | not done when its event day turns at 06:00 | With `close_forgotten` on: never called in is cancelled (actor null); called in goes straight to `done` with `timer`, so no "it's here" is sent |
 
 - **Reminders** are one `pizza.reminder.triggered` per person who hears it, with their `user_id` and `role` (D12). A reminder to the holder goes to the crew while nobody holds the order. A reminder more than 30 min late is skipped, and of two reminders of one kind due at once only the later is sent (the legacy rule), so an outage never sends stale ones. An archived event's orders are left alone.
@@ -120,7 +121,15 @@ In the API only, never on the bus: the plan's [Money](../docs/briefs/step-5-pizz
 - **A change once the order is closed** is audited (`pizza.order.money_changed`, before and after), and the people whose amount it changed get `pizza.amount.changed` (U14).
 - **Confirming a receipt read:** `PATCH …/money` also takes `prices` (`[{item_id, price_cents}]`, pizzas of this order) and `receipt_id` (a receipt of this order, with `total_cents`), so the total and every price change in one write. The money answers who set the total and when (`total_set_by`, `total_set_at`) and the receipt it came from (`total_receipt_id`, null when typed in), its `receipts`, each person's `paid` and `pay_to`.
 - **Paid ticks** (U12 A): `PUT /api/pizza/orders/{order_id}/paid/{user_id}` with `paid` (true or false), who changes the money; only while the order settles to its payer (409 `not_settled_to_payer`), for someone in the order other than the payer. A memo for the holder, never a payment. In the money every person's `paid` (null for the payer, and when it settles to the organiser); each person sees only their own (`my_paid`).
-- **Pay me with** (the PO note of 2026-11-19): `GET` and `PUT /api/pizza/me/pay-details` with `mobilepay` (a phone number) and `iban` (a valid IBAN, kept in groups of four), either or both; the caller's own, kept so they are offered again. When an order settles to its payer, the payer's details reach the people in that order with their amount (`pay_to`) and the crew; never the screens or the bus. Settling stays outside the platform: no payment link, no reminder to pay.
+- **Pay me with** (the PO note of 2026-11-19): `GET` and `PUT /api/pizza/me/pay-details` with `mobilepay` (a phone number) and `iban` (a valid IBAN, kept in groups of four), either or both; the caller's own, kept so they are offered again. When an order settles to its payer, the payer's details reach the people in that order with their amount (`pay_to`) and the crew; never the screens or the bus. Settling stays outside the platform: no payment link, and one reminder only ([Notices](#notices)).
+
+### Notices
+What each person in an order hears about its money (#703), through Notify's `food` topic ([notify.md](notify.md#topics-and-sources)). The events name who hears them and the payer, never an amount, a MobilePay number or an IBAN: each person reads those on their order's page. The payer is never told of a share: they paid the pizzeria.
+
+- **Your share is ready** (`pizza.share.ready`): once the order is called in and its total is in, 5 minutes after the last money change (`PATCH …/money` or a price), so the holder sets the total, the split and who is paid before anyone hears; once per order, by [the scheduler](#the-scheduler), to everyone in it but the payer and anyone already marked paid. Not for a cancelled order.
+- **Your share changed** (`pizza.share.changed`), only after that: `reason` `amount` to those whose amount moved, and `pay_to` to those not marked paid when `settle_to` or the payer changes, or the payer's "Pay me with" changes.
+- **Marked paid** (`pizza.share.paid`): to that person, when the payer ticks them (not when a tick is taken back).
+- **The payment reminder** (`pizza.reminder.triggered`, `not_paid`): while the order settles to its payer, at noon after its event day (06:00 plus 6 hours) but never sooner than 6 hours after the shares went out, once per order: to each person not marked paid (`role` `member`) and to the payer how many they are (`role` `payer`, `count`).
 
 ## Receipts
 Photos of what the pizzeria was paid (M3), kept with the order. A receipt can show card digits, so only the holder, the crew and `pizza.record.read` see one.
@@ -247,7 +256,7 @@ The scheduler's times are described in [The scheduler](#the-scheduler).
 To the tenants audit log ([tenants.md](tenants.md#audit-log)), in the request that made the change: every step taken through `pizza.order.manage` on an order the caller does not hold (`pizza.order.taken_over`, `.released`, `.closed`, `.reopened`, `.placed`, `.arrived`, `.done`, `.reverted`, `.cancelled`, `.changed`, with the state, holder or fields before and after and the `reason` given), changes to someone else's pizza (`pizza.item.changed`, `pizza.item.removed`), money changed once an order is closed (`pizza.order.money_changed`), the AI reader's key (`pizza.reader_key.set`, `.replaced`, `.revoked`, with its last four characters only), and pizzerias and menus (`pizza.pizzeria.added`, `.changed`, `pizza.menu.replaced`, `pizza.menu.imported` with its counts).
 
 ## Events (version 1)
-This contract adopts the catalog's provisional pizza events ([events.md](events.md#pizza)) and adds to them. Envelope and transport: [admin.md](admin.md#events). Menus, prices, totals, amounts and phone numbers never travel in events.
+This contract adopts the catalog's provisional pizza events ([events.md](events.md#pizza)) and adds to them. Envelope and transport: [admin.md](admin.md#events). Menus, prices, totals, amounts, phone numbers and bank accounts never travel in events.
 
 The **Order** in events: `id`, `seq`, `state` (adds `done`, D3), `pizzeria` (`id`, `name`), `target_at`, `holder` (Person or null), `pizza_count`, `people_count`, `opened_at`, `closed_at`, `placed_at`, `arrived_at`, `revision`, and the additive `closes_at` (the close time, which `target_at` equals), `estimate_at` (string or null), `pickup` (string or null) and `done_at` (string or null).
 
@@ -255,7 +264,8 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 
 | Type | When | Audience | `data` |
 |---|---|---|---|
-| `pizza.order.opened`, `.closed`, `.reopened`, `.placed` | As the catalog | event-wide, `public` | `order`, `actor_user_id` |
+| `pizza.order.opened`, `.closed`, `.reopened` | As the catalog | event-wide, `public` | `order`, `actor_user_id` |
+| `pizza.order.placed` | As the catalog | event-wide, `public`; added: personal (`user_ids`) | `order`, `actor_user_id`, and added (#703): `user_ids`, `people` (everyone with a pizza in it, as on `arrived`) |
 | `pizza.order.claimed` | A claim, or a take-over | event-wide, `public` | `order`, `previous_holder` (Person or null), `actor_user_id` |
 | `pizza.order.released` | As the catalog | event-wide, `public` | `order`, `previous_holder` (Person, or null when that person asked to be forgotten), `reason` (`released`, `forced`, `timeout`), `actor_user_id` |
 | `pizza.order.reverted` | As the catalog | event-wide, `public` | `order`, `from_state`, `actor_user_id` |
@@ -263,13 +273,16 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 | `pizza.order.cancelled` | As the catalog; also the scheduler's and the archive's (actor null) | as the catalog | `order`, `reason` (`cancelled`, `stale`), `user_ids`, `people`, `actor_user_id` |
 | `pizza.order.done` (new, D3) | Everyone got theirs, the holder's Done, or the timer | event-wide, `public` | `order`, `reason` (`handed_out`, `holder`, `timer`), `actor_user_id` |
 | `pizza.order.changed` (new) | The close time, note, pizzeria, estimate, call-in time or pickup was edited | event-wide, `public` | `order`, `changed` (field names), `actor_user_id` |
-| `pizza.item.added`, `pizza.item.removed` | As the catalog; a removal also by the crew, or when the person left or deleted their data (then `user_id` and `person` are null) | personal (`user_id`) | as the catalog |
+| `pizza.item.added`, `pizza.item.removed` | As the catalog; a removal also by the crew, or when the person left or deleted their data (then `user_id` and `person` are null) | personal (`user_id`) | as the catalog, and added (#703): `order_seq` (the order's number), `by_owner` (the person did it themselves) |
 | `pizza.item.changed` (new) | Someone else changed a person's pizza (U14) | personal (`user_id`) | as `pizza.item.added` |
+| `pizza.share.ready` (new, #703) | The people in an order can settle their share ([Notices](#notices)); no amounts | personal (`user_ids`); `order` event-wide | `order`, `user_ids` (everyone told), `settle_to` (`payer`, `organiser`), `payer` (Person or null), `actor_user_id` (null) |
+| `pizza.share.changed` (new, #703) | After that: amounts moved, or whom or how they pay changed; no amounts or details | personal (`user_ids`); `order` event-wide | as `pizza.share.ready`, and `reason` (`amount`, `pay_to`); `actor_user_id` |
+| `pizza.share.paid` (new, #703) | The payer marked this person paid | personal (`user_id`); `order` event-wide | `order`, `user_id`, `payer` (Person or null), `actor_user_id` |
 | `pizza.amount.changed` (new) | A money change once the order was closed changed these people's amounts (U14); no amounts | personal (`user_ids`) | `order_id`, `user_ids`, `actor_user_id` |
 | `pizza.order.closing` | As the catalog: the last call, `last_call_minutes` (10 by default) before the close time; [the scheduler](#the-scheduler) | event-wide, `public` | `order`, `closes_at` |
-| `pizza.reminder.triggered` | A person needs to act (D12): a stalled order's holder or the crew ([the scheduler](#the-scheduler)), or someone whose pizza waits (the nudge); one per person | personal (`user_id`); `order` event-wide, `public` | `order`, `kind` (`open_past_target`, `closed_not_placed`, and added: `not_arrived`, `released`, `not_collected`), `minutes` (past the close time, the close, the estimate or call-in, or the arrival), and added: `user_id` (who hears it), `role` (`holder`, `crew`, `member`) |
+| `pizza.reminder.triggered` | A person needs to act (D12): a stalled order's holder or the crew ([the scheduler](#the-scheduler)), someone whose pizza waits (the nudge), or someone not marked paid and their payer ([Notices](#notices)); one per person. `not_collected` and `not_paid` are personal only: never posted in a channel | personal (`user_id`); `order` event-wide, `public` | `order`, `kind` (`open_past_target`, `closed_not_placed`, and added: `not_arrived`, `released`, `not_collected`, `not_paid`), `minutes` (past the close time, the close, the estimate or call-in, the arrival, or since the shares went out), and added: `user_id` (who hears it), `role` (`holder`, `crew`, `member`, `payer`), `count` (`not_paid` only: the people not marked paid) |
 
 **Consumes:** `tenants.status.changed` (archived: E11), `tenants.retention.reached`, `tenants.member.left`, `tenants.tenant.cloned` on the event's stream; `tenants.user.deleted`, `tenants.tenant.deleted` on the platform stream; `admin.settings.changed`.
 
 ## Not in this contract
-The bot (step 6). Moving any money, payment links and reminders to pay; reading anything but receipts and menus. The screens' food box and Notify's `food` topic read these events; their contracts say how ([screen.md](screen.md#widgets), [notify.md](notify.md#topics-and-sources)), and pizza registers the `food` topic at start.
+The bot (step 6). Moving any money, payment links and reminders to pay beyond the one in [Notices](#notices); reading anything but receipts and menus. The screens' food box and Notify's `food` topic read these events; their contracts say how ([screen.md](screen.md#widgets), [notify.md](notify.md#topics-and-sources)), and pizza registers the `food` topic at start.

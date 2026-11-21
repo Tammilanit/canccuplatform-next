@@ -1,11 +1,37 @@
 /**
  * Notify's `food` topic, owned by pizza (contracts/notify.md, Topics and sources; step 5, D12):
  * the event part tells everyone who opted in that an order opens, gets its last call and closes;
- * the personal part tells each person in an order that it is here or was cancelled, and the holder
- * and the crew what a stalled order needs (the scheduler's reminders, the nudge). Notify knows the
- * topic only from this registration, sent at every start by every container (idempotent).
+ * the personal part tells each person in an order that it is called in, here or cancelled, that
+ * someone else changed their pizza, and of their share (#703: ready, changed, marked paid, one
+ * reminder), and the holder and the crew what a stalled order needs (the scheduler's reminders, the
+ * nudge). Notify knows the topic only from this registration, sent at every start by every
+ * container (idempotent).
  */
 import type { Logger, ServiceIdentity } from "@canccu/kit";
+
+type Condition = { field: string; op: string; value?: unknown };
+
+const eq = (field: string, value: unknown): Condition => ({ field, op: "eq", value });
+
+/** A trigger of the personal part, in the contract's key order (the test compares them deeply). */
+function personal(
+  event: string,
+  userField: string,
+  where: Condition[],
+  title: string,
+  body: string,
+  url: string,
+) {
+  return {
+    event,
+    part: "personal",
+    recipients: { user_field: userField },
+    ...(where.length > 0 ? { where } : {}),
+    title,
+    body,
+    url,
+  };
+}
 
 /** Exactly the contract's JSON block (test/topic.test.ts holds the two together). */
 export const FOOD_TOPIC = {
@@ -17,27 +43,19 @@ export const FOOD_TOPIC = {
     event: {
       scope: "event",
       channels: ["push", "discord_dm"],
-      defaults: {
-        push: false,
-        discord_dm: false,
-      },
+      defaults: { push: false, discord_dm: false },
     },
     personal: {
       scope: "user",
       channels: ["push", "discord_dm"],
-      defaults: {
-        push: true,
-        discord_dm: false,
-      },
+      defaults: { push: true, discord_dm: false },
     },
   },
   triggers: [
     {
       event: "pizza.order.opened",
       part: "event",
-      audience: {
-        value: "public",
-      },
+      audience: { value: "public" },
       title: "Pizza order open: {data.order.pizzeria.name}",
       body: "Order {data.order.seq} closes at {data.order.closes_at|time}",
       url: "/pizza/orders/{data.order.id}",
@@ -46,9 +64,7 @@ export const FOOD_TOPIC = {
     {
       event: "pizza.order.closing",
       part: "event",
-      audience: {
-        value: "public",
-      },
+      audience: { value: "public" },
       title: "Order {data.order.seq} is closing at {data.closes_at|time}",
       body: "Last call: add your pizza now",
       url: "/pizza/orders/{data.order.id}/add",
@@ -57,142 +73,172 @@ export const FOOD_TOPIC = {
     {
       event: "pizza.order.closed",
       part: "event",
-      audience: {
-        value: "public",
-      },
+      audience: { value: "public" },
       title: "Order {data.order.seq} closed",
       body: "{data.order.pizzeria.name}: {data.order.pizza_count} pizzas",
       url: "/pizza/orders/{data.order.id}",
       expires_after_minutes: 60,
     },
-    {
-      event: "pizza.order.arrived",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_ids",
-      },
-      where: [
-        {
-          field: "data.order.pickup",
-          op: "exists",
-        },
-      ],
-      title: "Pizza is here: order {data.order.seq}",
-      body: "Collect at {data.order.pickup}",
-      url: "/pizza/orders/{data.order.id}",
-    },
-    {
-      event: "pizza.order.arrived",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_ids",
-      },
-      where: [
-        {
-          field: "data.order.pickup",
-          op: "eq",
-          value: null,
-        },
-      ],
-      title: "Pizza is here: order {data.order.seq}",
-      body: "{data.order.pizzeria.name}: come and get it",
-      url: "/pizza/orders/{data.order.id}",
-    },
-    {
-      event: "pizza.order.cancelled",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_ids",
-      },
-      title: "Order {data.order.seq} was cancelled",
-      body: "{data.order.pizzeria.name}: your pizza was not ordered",
-      url: "/pizza/orders/{data.order.id}",
-    },
-    {
-      event: "pizza.reminder.triggered",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_id",
-      },
-      where: [
-        {
-          field: "data.kind",
-          op: "eq",
-          value: "open_past_target",
-        },
-      ],
-      title: "Order {data.order.seq} is past its close time",
-      body: "Close it and call it in, or move the time",
-      url: "/pizza/hold/{data.order.id}",
-    },
-    {
-      event: "pizza.reminder.triggered",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_id",
-      },
-      where: [
-        {
-          field: "data.kind",
-          op: "eq",
-          value: "closed_not_placed",
-        },
-      ],
-      title: "Order {data.order.seq} is not called in yet",
-      body: "Closed {data.minutes} min ago: call {data.order.pizzeria.name}",
-      url: "/pizza/hold/{data.order.id}",
-    },
-    {
-      event: "pizza.reminder.triggered",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_id",
-      },
-      where: [
-        {
-          field: "data.kind",
-          op: "eq",
-          value: "not_arrived",
-        },
-      ],
-      title: "Has order {data.order.seq} arrived?",
-      body: "Mark it here when it comes",
-      url: "/pizza/hold/{data.order.id}",
-    },
-    {
-      event: "pizza.reminder.triggered",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_id",
-      },
-      where: [
-        {
-          field: "data.kind",
-          op: "eq",
-          value: "released",
-        },
-      ],
-      title: "Nobody holds order {data.order.seq}",
-      body: "Take it over and call it in",
-      url: "/pizza/hold/{data.order.id}",
-    },
-    {
-      event: "pizza.reminder.triggered",
-      part: "personal",
-      recipients: {
-        user_field: "data.user_id",
-      },
-      where: [
-        {
-          field: "data.kind",
-          op: "eq",
-          value: "not_collected",
-        },
-      ],
-      title: "Your pizza is waiting",
-      body: "Order {data.order.seq} is here: come and get it",
-      url: "/pizza/orders/{data.order.id}",
-    },
+    personal(
+      "pizza.order.arrived",
+      "data.user_ids",
+      [{ field: "data.order.pickup", op: "exists" }],
+      "Pizza is here: order {data.order.seq}",
+      "Collect at {data.order.pickup}",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.order.arrived",
+      "data.user_ids",
+      [eq("data.order.pickup", null)],
+      "Pizza is here: order {data.order.seq}",
+      "{data.order.pizzeria.name}: come and get it",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.order.cancelled",
+      "data.user_ids",
+      [],
+      "Order {data.order.seq} was cancelled",
+      "{data.order.pizzeria.name}: your pizza was not ordered",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.order.placed",
+      "data.user_ids",
+      [{ field: "data.order.estimate_at", op: "exists" }],
+      "Order {data.order.seq} is called in",
+      "{data.order.pizzeria.name}: expected at {data.order.estimate_at|time}",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.order.placed",
+      "data.user_ids",
+      [eq("data.order.estimate_at", null)],
+      "Order {data.order.seq} is called in",
+      "{data.order.pizzeria.name}: you will hear when it is here",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.item.changed",
+      "data.user_id",
+      [],
+      "Your pizza in order {data.order_seq} was changed",
+      "The holder or the crew changed it: check it here",
+      "/pizza/orders/{data.order_id}",
+    ),
+    personal(
+      "pizza.item.removed",
+      "data.user_id",
+      [eq("data.by_owner", false)],
+      "Your pizza was taken out of order {data.order_seq}",
+      "The holder or the crew removed it",
+      "/pizza/orders/{data.order_id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "open_past_target")],
+      "Order {data.order.seq} is past its close time",
+      "Close it and call it in, or move the time",
+      "/pizza/hold/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "closed_not_placed")],
+      "Order {data.order.seq} is not called in yet",
+      "Closed {data.minutes} min ago: call {data.order.pizzeria.name}",
+      "/pizza/hold/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "not_arrived")],
+      "Has order {data.order.seq} arrived?",
+      "Mark it here when it comes",
+      "/pizza/hold/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "released")],
+      "Nobody holds order {data.order.seq}",
+      "Take it over and call it in",
+      "/pizza/hold/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "not_collected")],
+      "Your pizza is waiting",
+      "Order {data.order.seq} is here: come and get it",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.ready",
+      "data.user_ids",
+      [eq("data.settle_to", "payer")],
+      "Order {data.order.seq}: pay {data.payer.name} your share",
+      "Your amount and how to pay are on your order",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.ready",
+      "data.user_ids",
+      [eq("data.settle_to", "organiser")],
+      "Order {data.order.seq}: your share is ready",
+      "Paid to the organiser after the event: your amount is on your order",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.changed",
+      "data.user_ids",
+      [eq("data.reason", "amount")],
+      "Order {data.order.seq}: your share changed",
+      "See your new amount on your order",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.changed",
+      "data.user_ids",
+      [eq("data.reason", "pay_to"), eq("data.settle_to", "payer")],
+      "Order {data.order.seq}: pay {data.payer.name}",
+      "How to pay changed: the details are on your order",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.changed",
+      "data.user_ids",
+      [eq("data.reason", "pay_to"), eq("data.settle_to", "organiser")],
+      "Order {data.order.seq}: pay the organiser",
+      "Your share is paid to the organiser after the event",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.share.paid",
+      "data.user_id",
+      [],
+      "Order {data.order.seq}: marked paid",
+      "{data.payer.name} has your payment marked",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "not_paid"), eq("data.role", "member")],
+      "Order {data.order.seq}: not marked paid yet",
+      "Your share and how to pay are on your order",
+      "/pizza/orders/{data.order.id}",
+    ),
+    personal(
+      "pizza.reminder.triggered",
+      "data.user_id",
+      [eq("data.kind", "not_paid"), eq("data.role", "payer")],
+      "Order {data.order.seq}: {data.count} not marked paid",
+      "See who still owes you",
+      "/pizza/hold/{data.order.id}/money",
+    ),
   ],
 };
 

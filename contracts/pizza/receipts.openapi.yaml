@@ -288,7 +288,8 @@
     description: |
       The holder until the order's event day turns, the crew at any time; only while the order settles
       to its payer (409 `not_settled_to_payer`), for someone in the order other than the payer (400).
-      A memo for the holder, never a payment; not on the bus.
+      A memo for the holder, never a payment. The mark itself stays off the bus; a new mark tells
+      that person alone (`pizza.share.paid`, no amount).
     security:
       - session: []
     parameters:
@@ -341,7 +342,10 @@
     tags: [me]
     operationId: setMyPayDetails
     summary: Set how people pay me
-    description: A member; a MobilePay number and a bank account (a valid IBAN), either or both, or null.
+    description: |
+      A member; a MobilePay number and a bank account (a valid IBAN), either or both, or null. A change
+      tells the people not yet marked paid in the orders this person pays that how to pay changed
+      (`pizza.share.changed`, `pay_to`), once their shares went out; the details never travel.
     security:
       - session: []
     requestBody:

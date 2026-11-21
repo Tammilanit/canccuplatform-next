@@ -40,8 +40,10 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | | | | `agenda.item.announced` | `data.item.visibility` | kind not `quiet_hours`; one notification per announcement (dedupe by the event's `id`); title the item's, body the organiser's `data.message` (empty when none was given) | no |
 | `announcements` | moments | event: event (on, off) | `moments.announcement.sent` | `public` | only when `data.channels.push` is `true` (the composer's "Push to phones", [moments.md](moments.md#announcements-115)) | `data.urgent` |
 | `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closing` (the last call), `pizza.order.closed` | event: `public` | — | no |
-| | | | `pizza.order.arrived`, `pizza.order.cancelled` | personal: `data.user_ids` (each person with a pizza in the order) | `arrived`: one text with the pickup place, one without | no |
-| | | | `pizza.reminder.triggered` (a stalled order's holder and the crew; the hand-out nudge, D12) | personal: `data.user_id` (the one person it is for) | one trigger per `data.kind` | no |
+| | | | `pizza.order.placed`, `pizza.order.arrived`, `pizza.order.cancelled` | personal: `data.user_ids` (each person with a pizza in the order) | `placed`: one text with the estimate, one without; `arrived`: one with the pickup place, one without | no |
+| | | | `pizza.item.changed`, `pizza.item.removed` (someone else changed or removed a person's pizza) | personal: `data.user_id` | `removed`: only when `data.by_owner` is `false` | no |
+| | | | `pizza.share.ready`, `pizza.share.changed`, `pizza.share.paid` (a person's share of the order's money, #703; never an amount) | personal: `data.user_ids`, or `data.user_id` for `paid` (never the payer) | by `data.settle_to` and `data.reason` | no |
+| | | | `pizza.reminder.triggered` (a stalled order's holder and the crew; the hand-out nudge, D12; the payment reminder, #703) | personal: `data.user_id` (the one person it is for) | one trigger per `data.kind` (and `data.role` for `not_paid`) | no |
 | `tournament` | tournament | event: event (off, off); personal: user (on, off) | `tournament.registration.opened` (provisional) | event: `public` | — | no |
 | | | | `tournament.match.called` (provisional) | personal: `data.user_ids` (each player of the match) | — | yes |
 | | | | `tournament.checkin.opened` (provisional) | personal: `data.user_ids` (each registered player) | — | no |
@@ -133,6 +135,21 @@ The `food` registration in full, as the pizza module sends it (step 5, D12; [piz
   {"event": "pizza.order.cancelled", "part": "personal", "recipients": {"user_field": "data.user_ids"},
    "title": "Order {data.order.seq} was cancelled", "body": "{data.order.pizzeria.name}: your pizza was not ordered",
    "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.order.placed", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.order.estimate_at", "op": "exists"}],
+   "title": "Order {data.order.seq} is called in", "body": "{data.order.pizzeria.name}: expected at {data.order.estimate_at|time}",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.order.placed", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.order.estimate_at", "op": "eq", "value": null}],
+   "title": "Order {data.order.seq} is called in", "body": "{data.order.pizzeria.name}: you will hear when it is here",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.item.changed", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "title": "Your pizza in order {data.order_seq} was changed", "body": "The holder or the crew changed it: check it here",
+   "url": "/pizza/orders/{data.order_id}"},
+  {"event": "pizza.item.removed", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.by_owner", "op": "eq", "value": false}],
+   "title": "Your pizza was taken out of order {data.order_seq}", "body": "The holder or the crew removed it",
+   "url": "/pizza/orders/{data.order_id}"},
   {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
    "where": [{"field": "data.kind", "op": "eq", "value": "open_past_target"}],
    "title": "Order {data.order.seq} is past its close time", "body": "Close it and call it in, or move the time",
@@ -152,7 +169,38 @@ The `food` registration in full, as the pizza module sends it (step 5, D12; [piz
   {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
    "where": [{"field": "data.kind", "op": "eq", "value": "not_collected"}],
    "title": "Your pizza is waiting", "body": "Order {data.order.seq} is here: come and get it",
-   "url": "/pizza/orders/{data.order.id}"}]}
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.ready", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.settle_to", "op": "eq", "value": "payer"}],
+   "title": "Order {data.order.seq}: pay {data.payer.name} your share", "body": "Your amount and how to pay are on your order",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.ready", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.settle_to", "op": "eq", "value": "organiser"}],
+   "title": "Order {data.order.seq}: your share is ready", "body": "Paid to the organiser after the event: your amount is on your order",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.changed", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.reason", "op": "eq", "value": "amount"}],
+   "title": "Order {data.order.seq}: your share changed", "body": "See your new amount on your order",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.changed", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.reason", "op": "eq", "value": "pay_to"}, {"field": "data.settle_to", "op": "eq", "value": "payer"}],
+   "title": "Order {data.order.seq}: pay {data.payer.name}", "body": "How to pay changed: the details are on your order",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.changed", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.reason", "op": "eq", "value": "pay_to"}, {"field": "data.settle_to", "op": "eq", "value": "organiser"}],
+   "title": "Order {data.order.seq}: pay the organiser", "body": "Your share is paid to the organiser after the event",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.share.paid", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "title": "Order {data.order.seq}: marked paid", "body": "{data.payer.name} has your payment marked",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "not_paid"}, {"field": "data.role", "op": "eq", "value": "member"}],
+   "title": "Order {data.order.seq}: not marked paid yet", "body": "Your share and how to pay are on your order",
+   "url": "/pizza/orders/{data.order.id}"},
+  {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
+   "where": [{"field": "data.kind", "op": "eq", "value": "not_paid"}, {"field": "data.role", "op": "eq", "value": "payer"}],
+   "title": "Order {data.order.seq}: {data.count} not marked paid", "body": "See who still owes you",
+   "url": "/pizza/hold/{data.order.id}/money"}]}
 ```
 
 **Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules), whether or not the change was announced (`data.announce`).

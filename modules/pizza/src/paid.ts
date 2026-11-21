@@ -13,7 +13,8 @@ import type { AppDeps } from "./http.js";
 import { moneyView } from "./money-view.js";
 import { NO_FACTS, authorize } from "./policy.js";
 import { facts } from "./present.js";
-import { getOrder, itemsOf } from "./store.js";
+import { markedPaid, payToChanged } from "./notices.js";
+import { getOrder, itemsOf, ordersWhere } from "./store.js";
 import { InvalidBody } from "./validate.js";
 
 export interface PayDetails {
@@ -94,15 +95,20 @@ export function paidRoutes(app: FastifyInstance, deps: AppDeps): void {
           throw new InvalidBody("user_id", "someone in the order other than its payer");
         const paid = body(request).paid;
         if (typeof paid !== "boolean") throw new InvalidBody("paid", "true or false");
-        await (paid
-          ? c.query(
-              `INSERT INTO pizza_paid (order_id, user_id, at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-              [order.id, user, w.now],
-            )
-          : c.query(`DELETE FROM pizza_paid WHERE order_id = $1 AND user_id = $2`, [
-              order.id,
-              user,
-            ]));
+        if (paid) {
+          const { rows } = await c.query(
+            `INSERT INTO pizza_paid (order_id, user_id, at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
+             RETURNING user_id`,
+            [order.id, user, w.now],
+          );
+          // A tick already there is no news (#703).
+          if (rows.length === 1) await markedPaid(c, deps, order, user, w.caller.user_id);
+        } else {
+          await c.query(`DELETE FROM pizza_paid WHERE order_id = $1 AND user_id = $2`, [
+            order.id,
+            user,
+          ]);
+        }
         return ok(await moneyView(c, order));
       }),
   );
@@ -121,14 +127,26 @@ export function paidRoutes(app: FastifyInstance, deps: AppDeps): void {
     if (ctx.status === "archived") throw eventArchived();
     authorize("order.read", caller, NO_FACTS);
     const d = detailsOf(body(request));
-    return deps.db.tenant(async (c) => {
+    const changed = await deps.db.tenant(async (c) => {
+      const was = await payDetailsOf(c, caller.user_id);
       await c.query(
         `INSERT INTO pizza_pay_details (user_id, mobilepay, iban, updated_at) VALUES ($1, $2, $3, $4)
          ON CONFLICT (tenant_id, user_id) DO UPDATE SET mobilepay = EXCLUDED.mobilepay,
            iban = EXCLUDED.iban, updated_at = EXCLUDED.updated_at`,
         [caller.user_id, d.mobilepay, d.iban, deps.now()],
       );
+      if (was.mobilepay !== d.mobilepay || was.iban !== d.iban) {
+        // Those who still pay this person are told how to pay changed (#703), never the details.
+        const orders = await ordersWhere(
+          c,
+          `payer_user_id = $1 AND settle_to = 'payer' AND shares_sent_at IS NOT NULL AND state <> 'cancelled'`,
+          [caller.user_id],
+        );
+        for (const o of orders) await payToChanged(c, deps, o, caller.user_id);
+      }
       return payDetailsOf(c, caller.user_id);
     });
+    await deps.outbox.flush();
+    return changed;
   });
 }

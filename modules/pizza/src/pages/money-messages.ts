@@ -52,7 +52,8 @@ export const MONEY_EN = {
     "People pay the organiser after the event. Nothing to collect at the door.",
   "money.directly_text": "People pay you. Mark them paid at hand-out.",
   "money.pay_with": "Pay me with",
-  "money.pay_with_hint": "Sent to the {n} people in this order, with their amount.",
+  "money.pay_with_hint":
+    "The {n} people in this order see these with their amount on their order. Their notice says whom to pay, never these details.",
   "money.mobilepay": "MobilePay · {number}",
   "money.bank": "Bank · {iban}",
   "money.mobilepay_label": "MobilePay number",
@@ -198,4 +199,6 @@ export const MONEY_EN = {
   "read.button": "Read a photo",
   "history.money_changed": "Money changed",
   "history.receipt_added": "Receipt added",
+  "history.shares_sent": "Each person told their share",
+  "history.payment_reminded": "Payment reminder sent",
 } as const;

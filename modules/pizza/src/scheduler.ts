@@ -15,6 +15,7 @@ import { emitOrder } from "./events.js";
 import type { Emitter } from "./events.js";
 import type { AppDeps } from "./http.js";
 import { scheduled } from "./lifecycle.js";
+import { remindUnpaid, shareReady } from "./notices.js";
 import type { PizzaSettings } from "./settings.js";
 import { getOrder, logStep, ordersWhere } from "./store.js";
 import type { OrderRow } from "./store.js";
@@ -122,7 +123,14 @@ export class Scheduler {
       [],
     );
     if (!(rows[0] as { mine: boolean }).mine) return;
-    const orders = await ordersWhere(c, `state = ANY($1::text[])`, [LIVE]);
+    // A done order still has its money steps until the payment reminder was taken.
+    const orders = await ordersWhere(
+      c,
+      `state = ANY($1::text[]) OR (state = 'done' AND total_cents IS NOT NULL AND NOT EXISTS (
+         SELECT 1 FROM pizza_due d WHERE d.order_id = pizza_orders.id AND d.step = 'unpaid'
+         AND d.sent_at IS NOT NULL) AND (shares_sent_at IS NULL OR settle_to = 'payer'))`,
+      [LIVE],
+    );
     const ids: string[] = [];
     const steps: string[] = [];
     const times: Date[] = [];
@@ -214,6 +222,10 @@ export class Scheduler {
         );
         return true;
       }
+      case "share":
+        return shareReady(c, e, o, now);
+      case "unpaid":
+        return remindUnpaid(c, e, o, now);
       case "remind":
         if (d.remind === undefined) return false;
         await this.remind(c, o, d.remind, null, now);
