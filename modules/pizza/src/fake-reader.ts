@@ -92,11 +92,14 @@ export class FakeReader {
   menu: MenuReading[] = DEMO_MENU;
   fail: "failed" | "rejected" | null = null;
   readonly sent: Sent[] = [];
+  /** A test holds the provider's answer back until this settles (a slow provider). */
+  hold: Promise<void> | null = null;
 
   /** A `ReaderFor`: each key gets a reader that answers this fake's current script. */
   for = (key: string): Reader => ({
     receipt: async (image, type) => {
       await this.note("receipt", key, image, type);
+      await this.hold;
       return this.receipt;
     },
     menu: async (image, type) => {

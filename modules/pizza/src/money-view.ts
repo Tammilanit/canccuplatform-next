@@ -27,7 +27,10 @@ export async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<strin
     payer: o.payer_user_id === null ? null : { user_id: o.payer_user_id, name: o.payer_name },
     total_cents: o.total_cents,
     total_set_at: o.total_set_at?.toISOString() ?? null,
-    total_set_by: o.total_set_by_name === null ? null : { name: o.total_set_by_name },
+    total_set_by:
+      o.total_set_by_name === null
+        ? null
+        : { user_id: o.total_set_by_user_id, name: o.total_set_by_name },
     total_receipt_id: o.total_receipt_id,
     split: o.split,
     split_effective: a.split,

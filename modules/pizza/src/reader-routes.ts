@@ -60,7 +60,7 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: { id: string } }>("/api/pizza/receipts/:id/read", async (request) => {
     const { ctx, caller } = await signedIn(deps, request);
     const now = deps.now();
-    const { receipt, reader, items } = await deps.db.tenant(async (c) => {
+    const { receipt, reader } = await deps.db.tenant(async (c) => {
       const receipt = await getReceipt(c, request.params.id);
       if (receipt === null) throw notFound("receipt");
       const order = (await getOrder(c, receipt.order_id)) as OrderRow;
@@ -68,19 +68,22 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (order.state === "cancelled" || !CALLED_IN.includes(order.state))
         throw cannot("total", order);
       const reader: Reader = await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, now);
-      return { receipt, reader, items: await itemsOf(c, [order.id]) };
+      return { receipt, reader };
     });
     const photo = await readFile(receiptPath(deps.filesRoot, receipt.file));
     const reading = await counted(deps, request, "receipt", () =>
       reader.receipt(photo, receipt.type),
     );
-    const read = matchReceipt(reading, items, now);
-    const { rows } = await deps.db.tenant((c) =>
-      c.query(`UPDATE pizza_receipts SET read = $2 WHERE id = $1 RETURNING *`, [
+    // The match names each pizza's person, and the provider may take long: match against the
+    // items as they are when the write happens, so a person deleted meanwhile (`anon_…`, no name)
+    // is never stored again.
+    const { rows } = await deps.db.tenant(async (c) => {
+      const read = matchReceipt(reading, await itemsOf(c, [receipt.order_id]), now);
+      return c.query(`UPDATE pizza_receipts SET read = $2 WHERE id = $1 RETURNING *`, [
         receipt.id,
         JSON.stringify(read),
-      ]),
-    );
+      ]);
+    });
     return receiptView(rows[0] as unknown as ReceiptRow);
   });
 
