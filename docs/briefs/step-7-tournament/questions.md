@@ -49,6 +49,7 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 ### U4. What the player sees of the timeline
 - **A.** Each session page shows its timeline (close, voice rooms, the call, results) from the scheduler's own times, and the For you card shows the next step.
 - **B.** Only the start time, as the legacy; the rest by push.
+- **Added (lead round 8, 2026-11-21): one page for many sessions.** The Tournament page's "My sessions" list is the legacy register page's ease back: every session in time order as the day schedule (amendment 4), each row with a tick to join or leave, saved by one tap (no Save button). A row shows the time, the game, solo or team, the close time, "Full" or "Closed" when it cannot be ticked, and when a reopened session closes again ([U19](#u19-reopening-registration-for-a-while)). Ticking a team session signs you up as a solo player ([U6](#u6-solo-players-in-a-team-session)); a small "Create or join a team" link is for groups. The session page and `/tournament register` stay. **API need:** one registration toggle per session, idempotent (`PUT /sessions/{id}/registration/me` with `{registered}`), additive ([mockup 21](21-my-sessions.svg), [flow 02](02-flow-register.svg)).
 - **Recommendation: A.** One set of times for the page, the screen, the bot and the pushes, so they never disagree as the legacy's 30 and 60 minutes did ([mockup 02](02-flow-register.svg)).
 
 ### U5. Capacity
@@ -69,6 +70,7 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **A.** "I can't make it" until the close frees the place at once; after the close it asks the crew (the legacy's wording), and before the start the crew can still free the place or reopen registration ([U19](#u19-reopening-registration-for-a-while)).
 - **B.** Free until the start.
 - **Recommendation: A.** Matches are made at the close; a late drop-out needs a person to decide ([mockup 02](02-flow-register.svg)).
+- **Added (lead round 8):** on "My sessions" ([U4](#u4-what-the-player-sees-of-the-timeline)) unticking works until the close and frees the place at once; after the close the row offers "I can't make it", which asks the crew ([mockup 21](21-my-sessions.svg)).
 - **Changed by the lead round:** there is no list to promote from; a freed place is simply open again while registration is open, and the crew may reopen it ([U19](#u19-reopening-registration-for-a-while)).
 
 ### U8. Who enters results

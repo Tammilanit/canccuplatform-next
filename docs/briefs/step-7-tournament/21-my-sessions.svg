@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 21: Sign up for any number of sessions on one page (player)</title>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start">21 · My sessions: sign up for any number of sessions on one page (player)</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start">Use case: the legacy&#x27;s one list with a checkbox each, back in the hub. One tap saves that session; there is no Save button. Demo names only.</text>
+<text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start">1 · My sessions, day schedule, one tick each</text>
+<text x="432" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start">2 · A team session: ticked as a solo player</text>
+<text x="832" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start">3 · After the close: I can&#x27;t make it</text>
+<text x="1232" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start">4 · Reopened: the row says when</text>
+<g transform="translate(32,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ More</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Tournament</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26" y="128" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">My sessions</text>
+<text x="26" y="150" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tap a row to join or leave. It saves at once.</text>
+<rect x="26" y="168" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="192" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">14:00</text>
+<text x="86" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Racer time trial</text>
+<rect x="322" y="176" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="86" y="212" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Solo · closes 13:30</text>
+<text x="86" y="232" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start">Closed</text>
+<rect x="26" y="256" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="280" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">19:30</text>
+<text x="86" y="280" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Arena 5v5</text>
+<rect x="322" y="264" width="30" height="30" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="337" y="286" font-size="18" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="86" y="300" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Teams of 5 · closes 19:00</text>
+<text x="86" y="320" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start">You are in</text>
+<rect x="26" y="344" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="368" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">22:00</text>
+<text x="86" y="368" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Party</text>
+<rect x="322" y="352" width="30" height="30" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="337" y="374" font-size="18" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="86" y="388" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Solo · closes 21:30</text>
+<text x="86" y="408" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start">You are in</text>
+<rect x="26" y="432" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="456" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">23:30</text>
+<text x="86" y="456" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Racer finals</text>
+<rect x="322" y="440" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="86" y="476" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Solo · 8 places · closes 23:00</text>
+<text x="86" y="496" font-size="12" fill="#ffb4a8" font-weight="600" text-anchor="start">Full</text>
+<text x="195" y="742" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle">Standings · Champions · Rules</text>
+</g>
+<g transform="translate(432,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ More</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Tournament</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26" y="128" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">My sessions</text>
+<text x="26" y="150" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tap a row to join or leave. It saves at once.</text>
+<rect x="26" y="168" width="338" height="96" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="192" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">19:30</text>
+<text x="86" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Arena 5v5</text>
+<rect x="322" y="176" width="30" height="30" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="337" y="198" font-size="18" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="86" y="212" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Teams of 5 · closes 19:00</text>
+<text x="86" y="232" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start">You are in</text>
+<text x="86" y="250" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start">You play solo; the crew places you in a team</text>
+<text x="38" y="298" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Come as a group?</text>
+<text x="38" y="320" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Create or join a team</text>
+<text x="195" y="742" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle">Standings · Champions · Rules</text>
+</g>
+<g transform="translate(832,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ More</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Tournament</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26" y="128" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">My sessions</text>
+<text x="26" y="150" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tap a row to join or leave. It saves at once.</text>
+<rect x="26" y="168" width="338" height="96" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="192" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">19:30</text>
+<text x="86" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Arena 5v5</text>
+<rect x="322" y="176" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="86" y="212" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Teams of 5 · closed 19:00</text>
+<text x="86" y="232" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start">Closed</text>
+<text x="86" y="250" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start">I can&#x27;t make it (asks the crew)</text>
+<rect x="26" y="274" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="298" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">22:00</text>
+<text x="86" y="298" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Party</text>
+<rect x="322" y="282" width="30" height="30" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="337" y="304" font-size="18" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="86" y="318" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Solo · closes 21:30</text>
+<text x="86" y="338" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start">You are in</text>
+<text x="195" y="742" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle">Standings · Champions · Rules</text>
+</g>
+<g transform="translate(1232,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ More</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Tournament</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26" y="128" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start">My sessions</text>
+<text x="26" y="150" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Tap a row to join or leave. It saves at once.</text>
+<rect x="26" y="168" width="338" height="96" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="192" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">19:30</text>
+<text x="86" y="192" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Arena 5v5</text>
+<rect x="322" y="176" width="30" height="30" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="86" y="212" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Teams of 5 · reopened until 19:20</text>
+<text x="86" y="232" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start">Open · 9 left</text>
+<text x="86" y="250" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start">Open again until 19:20 · closes by itself</text>
+<text x="195" y="742" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="middle">Standings · Champions · Rules</text>
+</g>
+</svg>
