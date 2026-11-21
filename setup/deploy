@@ -179,21 +179,29 @@ switch() {
   say "health check failed: $u"; return 1
 }
 
-# dev_seed: the demo event on this host's own names (CANCCU_DEV_HOSTNAMES, the first primary) and
-# with the demo profile (issue #709, docs/operations/dev-server.md). Runs once per commit and list
-# of names, after a healthy deploy; the commands themselves change nothing that is in place. A
-# failure leaves the deploy as it is and is tried again on the next run.
+# dev_seed: the demo event on this host's own names (CANCCU_DEV_HOSTNAMES, the first primary),
+# with the demo profile (issue #709) and its demo content (#715): a run of show for today and
+# tomorrow, the profile's menus and a demo food order, and a Moments story for the run of show's
+# raffle (agenda first: Moments looks the raffle up). Runs once per commit, list of names and hour,
+# after a healthy deploy: the hour moves the run of show to a new day and opens a fresh demo order
+# once the last one is over. The commands themselves change nothing that is in place or made by
+# hand (docs/operations/dev-server.md). A failure leaves the deploy as it is and is tried again on
+# the next run.
 dev_seed() {
-  local names key
+  local names key part cmd
   read -ra names <<<"$(envval "$env_file" CANCCU_DEV_HOSTNAMES | tr ',' ' ')"
-  key="$target ${names[*]}"
+  key="$target ${names[*]} $(date -u +%FT%H)"
   [ "$(cat "$state/dev-seed" 2>/dev/null)" = "$key" ] && return 0
   if [ "${#names[@]}" -gt 0 ] && ! docker compose -f deploy/compose.yml exec -T tenants python -m canccu_tenants dev-hostnames "${names[@]}"; then
     echo "warning: the dev seed could not give the demo event its hostnames; trying again on the next run" >&2; return 0
   fi
-  if ! docker compose -f deploy/compose.yml exec -T admin python -m canccu_admin dev-seed; then
-    echo "warning: the dev seed could not load the demo profile; trying again on the next run" >&2; return 0
-  fi
+  for part in "admin python -m canccu_admin dev-seed" "agenda python -m canccu_agenda dev-seed" \
+    "pizza node dist/dev-seed-cli.js" "moments node dist/dev-seed-cli.js"; do
+    read -ra cmd <<<"$part"
+    if ! docker compose -f deploy/compose.yml exec -T "${cmd[@]}"; then
+      echo "warning: the dev seed could not seed ${cmd[0]}'s demo content; trying again on the next run" >&2; return 0
+    fi
+  done
   echo "$key" > "$state/dev-seed" || echo "warning: cannot write $state/dev-seed" >&2
 }
 

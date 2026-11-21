@@ -71,13 +71,17 @@ esac
 STUB
 # shellcheck disable=SC2016  # $* and $STUB belong to the stub script
 printf '#!/bin/sh\necho "firewall $*" >> "$STUB/log"; exit "$(cat "$STUB/fw_rc")"\n' > "$stubs/firewall"
+# The hour the dev seed's key names comes from the file `hour`, so a test never meets a real hour's
+# turn; every other date is the real one.
+# shellcheck disable=SC2016  # $* and $STUB belong to the stub script
+printf '#!/bin/sh\nif [ "$*" = "-u +%%FT%%H" ]; then cat "$STUB/hour"; else exec %s "$@"; fi\n' "$(command -v date)" > "$stubs/bin/date"
 chmod +x "$stubs/bin/"* "$stubs/firewall"
 old=1111111111111111111111111111111111111111; new=2222222222222222222222222222222222222222
 # fresh [ENV]: reset the stub state: the checkout is at $old, the registry has images built from $new
 fresh() {
   st=$(mktemp -d "$scratch/st.XXXXXX"); mkdir "$st/state" "$st/vol"
   echo main > "$st/branch"; echo "$old" > "$st/head"; echo "$new" > "$st/target"; echo "$new" > "$st/rev"
-  echo 0 > "$st/up_rc"; echo 0 > "$st/fw_rc"; : > "$st/log"
+  echo 0 > "$st/up_rc"; echo 0 > "$st/fw_rc"; echo 2026-11-21T10 > "$st/hour"; : > "$st/log"
   for m in hello admin; do echo "sha256:old$m" > "$st/live_$m"; echo "sha256:new$m" > "$st/remote_$m"; done
   # shellcheck disable=SC2034  # read by logged and notlogged in setup/test.sh
   stub=$st; denv=$(envfile "CANCCU_VERSION=dev\nCANCCU_DEPLOY_GITHUB_TOKEN=test-token\n${1:-}")
@@ -263,8 +267,17 @@ names='compose -f deploy/compose.yml exec -T tenants python -m canccu_tenants de
 fresh 'CANCCU_DEV_HOSTNAMES="devbox.lan, devbox.tail0.example.test"\n'; dep "deploy with dev hostnames" 0
 logged "deploy gives the demo event the dev hostnames, in order" "$names devbox.lan devbox.tail0.example.test$"
 logged "deploy loads the demo profile into the demo event" "$seeds"
+# Then the demo content (#715), agenda before Moments, which looks up the run of show's raffle.
+order=$(grep -Eo 'exec -T (admin|agenda|pizza|moments) ' "$st/log" | awk '{print $3}' | paste -sd' ')
+if [ "$order" = "admin agenda pizza moments" ]; then pass "deploy seeds the run of show, the food and Moments after the demo profile, in order"
+else bad "deploy seeds the run of show, the food and Moments after the demo profile, in order" "$(cat "$st/log")"; fi
+logged "deploy seeds the run of show" 'exec -T agenda python -m canccu_agenda dev-seed$'
+logged "deploy seeds the food" 'exec -T pizza node dist/dev-seed-cli.js$'
+logged "deploy seeds Moments" 'exec -T moments node dist/dev-seed-cli.js$'
 : > "$st/log"; echo "sha256:newhello" > "$st/live_hello"; echo "sha256:newadmin" > "$st/live_admin"; dep "the next run, with nothing new" 0
 notlogged "an up-to-date run seeds nothing again" "dev-hostnames|dev-seed"
+echo 2026-11-21T11 > "$st/hour"; dep "the next run, an hour later" 0
+logged "deploy seeds again each hour, so the run of show and the demo order stay current" "$seeds"
 denv=$(envfile 'CANCCU_VERSION=dev\nCANCCU_DEV_HOSTNAMES=devbox.lan\n'); dep "a run after the dev hostnames changed" 0
 logged "deploy seeds again when the dev hostnames change" "$names devbox.lan$"
 fresh; dep "deploy without dev hostnames" 0
