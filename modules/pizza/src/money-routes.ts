@@ -139,6 +139,7 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         if (total !== order.total_cents || receipt !== order.total_receipt_id) {
           set("total_set_at", w.now, order.total_set_at, "");
           set("total_set_by_name", w.session.userName, order.total_set_by_name, "");
+          set("total_set_by_user_id", w.session.userId, order.total_set_by_user_id, "");
         }
       }
       if (b.prices !== undefined) {

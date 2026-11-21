@@ -327,3 +327,43 @@ describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
     expect(errorOf(res).code).toBe("missing_right");
   });
 });
+
+describe.skipIf(!DATABASE_URL)("the privacy delete and a confirmed read", () => {
+  it("leaves no user id or name in the money view, the receipts or the key status", async () => {
+    await setKey();
+    const receipt = await addReceipt();
+    expect((await read(receipt)).statusCode).toBe(200);
+    // Anni's pizza is in the stored read; Pena, the holder, confirms the total.
+    expect(
+      (
+        await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, {
+          total_cents: 3200,
+          receipt_id: receipt,
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect((await money()).body).toContain("Anni");
+    const found = await pool.query<{ user_id: string }>(
+      "SELECT user_id FROM pizza_items WHERE id = $1",
+      [items.anni],
+    );
+    const anniId = found.rows[0]?.user_id ?? "";
+    expect(anniId).not.toBe("");
+    await w.call("anni", "DELETE", "/api/pizza/me");
+    await w.call("pena", "DELETE", "/api/pizza/me");
+    await w.call("integrator", "DELETE", "/api/pizza/me");
+    const shown = [
+      (await w.call("organiser", "GET", `/api/pizza/orders/${id}/money`)).body,
+      (await w.call("organiser", "GET", `/api/pizza/orders/${id}/receipts`)).body,
+      (await keyStatus()).body,
+    ].join("\n");
+    expect(shown).not.toContain(anniId);
+    expect(shown).not.toContain("Anni");
+    expect(shown).not.toContain("Integrator");
+    expect(shown).not.toContain("Pena");
+    const stored = await pool.query(
+      "SELECT read::text AS r, total_set_by_name AS n FROM pizza_receipts, pizza_orders WHERE pizza_orders.id = pizza_receipts.order_id",
+    );
+    expect(JSON.stringify(stored.rows)).not.toContain(anniId);
+  });
+});

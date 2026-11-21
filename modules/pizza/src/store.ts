@@ -43,6 +43,7 @@ export interface OrderRow {
   settle_to: SettleTo;
   total_set_at: Date | null;
   total_set_by_name: string | null;
+  total_set_by_user_id: string | null;
   total_receipt_id: string | null;
   revision: number;
 }
@@ -79,7 +80,7 @@ export interface PizzeriaRow {
 export const ORDER_COLUMNS = `id, to_char(day, 'YYYY-MM-DD') AS day, seq, pizzeria_id, pizzeria_name, state,
   closes_at, note, opened_at, opened_by_user_id, holder_user_id, holder_name, claimed_at, closed_at,
   placed_at, estimate_at, arrived_at, pickup, done_at, done_reason, cancelled_at, cancel_reason,
-  cancelled_by_user_id, auto_released, nudged_at, payer_user_id, payer_name, total_cents, split, settle_to, total_set_at, total_set_by_name,
+  cancelled_by_user_id, auto_released, nudged_at, payer_user_id, payer_name, total_cents, split, settle_to, total_set_at, total_set_by_name, total_set_by_user_id,
   total_receipt_id, revision`;
 
 const ITEM_COLUMNS = `id, order_id, user_id, name, kind, menu_item_id, number, label, description,

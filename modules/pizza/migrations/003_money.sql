@@ -3,6 +3,7 @@
 -- Who set the order's total and when, and the receipt whose read it confirmed (NULL: typed in).
 ALTER TABLE pizza_orders ADD COLUMN total_set_at timestamptz;
 ALTER TABLE pizza_orders ADD COLUMN total_set_by_name text;
+ALTER TABLE pizza_orders ADD COLUMN total_set_by_user_id text;
 ALTER TABLE pizza_orders ADD COLUMN total_receipt_id text;
 
 -- Receipt photos, kept in the files volume (`/files/<tenant>/pizza/receipts/<id>.<ext>`) with their
