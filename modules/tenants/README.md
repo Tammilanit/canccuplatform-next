@@ -17,9 +17,10 @@ The tenants module serves [contracts/tenants.md](../../contracts/tenants.md) on 
 ## Shell commands
 ```sh
 docker compose -f deploy/compose.yml exec tenants python -m canccu_tenants seed-demo
+docker compose -f deploy/compose.yml exec tenants python -m canccu_tenants dev-hostnames <host> [<host> …]
 docker compose -f deploy/compose.yml exec tenants python -m canccu_tenants superadmin add --discord-id <id> --name <name>
 ```
-The demo seed creates the venue `demo-venue` and the live tenant `demo`; it changes nothing when `demo` exists. A new superadmin has `mfa_enabled` false until sign-in reports Discord two-factor (#52), so the superadmin paths stay closed until then.
+The demo seed creates the venue `demo-venue` and the live tenant `demo`; it changes nothing when `demo` exists. `dev-hostnames` (#709, only while `CANCCU_VERSION` is `dev`, otherwise it refuses and changes nothing) makes each name an `active` hostname of `demo`, the first one primary, audited as `system` and announced with `tenants.hostname.changed` like the superadmin's hostname writes; it never removes a name, and a name of another event, a platform hostname or one that is not fully qualified refuses the whole run. `setup/deploy` runs it on a dev server with `CANCCU_DEV_HOSTNAMES` ([docs/operations/dev-server.md](../../docs/operations/dev-server.md)). A new superadmin has `mfa_enabled` false until sign-in reports Discord two-factor (#52), so the superadmin paths stay closed until then.
 
 ## Check
 ```sh

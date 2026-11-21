@@ -5,6 +5,10 @@ WORKDIR /repo
 COPY packages/kit-py/ packages/kit-py/
 COPY contracts/profile.schema.json contracts/profile.schema.json
 COPY packages/ui/ui.css packages/ui/ui.css
+# The demo event's profile and assets, which `python -m canccu_admin dev-seed` loads on a dev
+# server (issue #709); the image of a commit then always seeds that commit's demo profile.
+COPY events/demo/profile.yaml events/demo/profile.yaml
+COPY events/demo/assets/ events/demo/assets/
 COPY modules/admin/ modules/admin/
 # pip resolves the relative kit path against the wrong directory in a build; make it absolute.
 RUN sed -i 's#file:../../packages/kit-py#file:///repo/packages/kit-py#' modules/admin/pyproject.toml \

@@ -3,6 +3,8 @@
 !packages/kit-py
 !contracts/profile.schema.json
 !packages/ui/ui.css
+!events/demo/profile.yaml
+!events/demo/assets
 !modules/admin
 **/.venv
 **/__pycache__
