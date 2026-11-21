@@ -122,13 +122,14 @@ class SettingsApi(Probe):
 class SettingsPage(Probe):
     async def seed(self, tenant: str, marker: str) -> None:
         async with self.env.client(HOSTS[tenant]) as c:
-            form = {"settings_version": "0", "timezone": marker, "language": "en"}
-            r = await c.post("/settings/admin", data=form)
+            # A free-text setting carries the marker: the time zone must be a zone (#732).
+            form = {"settings_version": "0", "ordering_note": marker}
+            r = await c.post("/settings/pizza", data=form)
             assert r.status_code == 303, r.text
 
     async def read(self, tenant: str) -> object:
         async with self.env.client(HOSTS[tenant]) as c:
-            return (await c.get("/settings/admin")).text
+            return (await c.get("/settings/pizza")).text
 
 
 class ProfileApi(Probe):

@@ -5,11 +5,14 @@ settings:
     min: 1
     max: 1440
     label: Reminder lead times (minutes)
+    help: "How long before an item starts people are reminded, for items and kinds that set no times of their own."
+    example: "30, 10"
     default: [30, 10]
   - key: notify_channels
     type: list
     choices: [screen, discord_channel, discord_dm, push]
     label: Notification channels
+    help: "Where reminders and changes are announced, for items and kinds that choose none. None ticked: nowhere."
     default: [screen, discord_channel, push]
 groups:
   - id: reminders

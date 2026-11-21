@@ -95,7 +95,10 @@ def test_zones_come_grouped_by_region_with_city_names() -> None:
 def test_on_or_off_is_a_switch() -> None:
     box = one(type="boolean", label="Show progress bars", default=True)
     html = field_html(box, None)
-    assert '<input class="canccu-switch" type=checkbox role=switch id=canccu-field-k name=k checked' in html
+    assert (
+        '<input class="canccu-switch" type=checkbox role=switch id=canccu-field-k name=k checked'
+        in html
+    )
 
 
 def test_a_time_zone_is_a_dropdown_by_region_with_the_events_zone_first() -> None:
@@ -123,12 +126,14 @@ def test_a_list_from_choices_is_a_row_of_chips() -> None:
         type="list", label="Channels", choices=["screen", "discord_dm", "push"], default=["screen"]
     )
     html = field_html(channels, ["push", "screen"])
-    assert '<fieldset class="canccu-chips canccu-field__chips" data-canccu-was="screen, push"' in html
-    assert '<legend class="canccu-field__label">Channels</legend>' in html
+    assert (
+        '<fieldset class="canccu-field" data-canccu-was="screen, push" data-canccu-chips>'
+        '<legend class="canccu-field__label">Channels</legend><div class="canccu-chips">'
+    ) in html
     assert (
         '<label class="canccu-chip"><input type=checkbox name=k value=screen checked>Screen</label>'
     ) in html
-    assert '<input type=checkbox name=k value=discord_dm>Discord dm</label>' in html
+    assert "<input type=checkbox name=k value=discord_dm>Discord dm</label>" in html
     assert "Separate them with commas" not in html
     # Posted as one value per ticked chip, saved in the declared order.
     form = FormData([("k", "push"), ("k", "screen")])
@@ -175,7 +180,9 @@ def test_a_duration_has_quick_picks_in_its_range() -> None:
 def test_a_colour_is_a_swatch() -> None:
     accent = one(type="string", label="Accent", format="color", default="#ff8800")
     html = field_html(accent, "#00aa33")
-    assert '<input class="canccu-swatch" type=color id=canccu-field-k name=k value="#00aa33"' in html
+    assert (
+        '<input class="canccu-swatch" type=color id=canccu-field-k name=k value="#00aa33"' in html
+    )
     assert "Default: #ff8800." in html
 
 
@@ -236,7 +243,7 @@ async def test_the_screen_form_draws_its_controls(
 ) -> None:
     browser = await screen_form(world, caplog)
     text = (await browser.get("/admin/settings/screen")).text
-    assert "role=switch" in field_of(text, "progress_bars")
+    assert "role=switch id=canccu-field-progress_bars name=progress_bars checked" in text
     assert "data-canccu-pick=" in field_of(text, "offline_after_seconds")
     # A stepper's buttons go with the form's script; a save still posts only the values.
     r = await browser.post(

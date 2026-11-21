@@ -170,7 +170,10 @@ assert.equal(fields[2].preview.href, "https://example.org/info");
 assert.equal(fields[2].preview.textContent, "Open https://example.org/info");
 
 // Undo puts every control back, the chips included.
-const undo = { closest: (sel) => (sel.endsWith("[data-canccu-undo]") ? undo : form) };
+const undo = {
+  closest: (sel) =>
+    sel.endsWith("[data-canccu-undo]") ? undo : sel.startsWith("form") ? form : null,
+};
 click(undo);
 assert.equal(offline.value, "45");
 assert.deepEqual(
