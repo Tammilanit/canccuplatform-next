@@ -125,4 +125,11 @@ Run of show (`agenda`, `agenda-wide`, `agenda-earlier`, `agenda-phone`, `agenda-
 
 One `blocked` issue per module, titled `polish(<module>): views follow the 2026-11 rules`, with the module's label and its rows above:
 
-ISSUES_PLACEHOLDER
+| Module | Issue | Rows with a fix | Pages needing a 1280 px shot |
+|---|---|---|---|
+| Admin | #723 | 10 | 1 |
+| Notify | #724 | 5 | 2 |
+| Theming | #725 | 8 | 1 |
+| Agenda | #726 | 2 | 2 |
+| Screen | #727 | 16 | 1 |
+| Moments | #728 | 17 | 0 |
