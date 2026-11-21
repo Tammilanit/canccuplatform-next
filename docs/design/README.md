@@ -12,7 +12,7 @@ The sheets carry no version or review tags.
 
 ## Amendments accepted by the PO, binding for the build
 
-These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19, 4 and 5 on 2026-11-21. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
+These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19 (its opening part, "Choose the form first", on 2026-11-21), 4 and 5 on 2026-11-21. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
 
 ### 1 · Energy levels: clearly different look, same pace
 
@@ -36,6 +36,15 @@ A test or CI clip shows the three levels side by side.
 - During a showcase the 2 × 2 hero takes four cells. The two remaining cells show at most two widgets; the others pause.
 
 ### 3 · Grids scale with their content (2026-11-19)
+
+**Choose the form first (2026-11-21).** The PO, reviewing the step 7 mockups: "I don't like the card based view here, maybe our 'use cards' rule is too strict. Common sense is expected from you / workers." The rest of this amendment says how a grid scales, not when to use one: pick the form that fits what the page shows before drawing a card.
+1. **Card grid** only for a collection of like items people browse: sounds, devices, zones, clips, pizza orders.
+2. **Table** for things compared column by column: people, results, settings. On a phone each row may become a card, as today.
+3. **Ranked list** where order is the point: standings, champions after the winner, scenes.
+4. **Day schedule** for anything with a time (amendment 4).
+5. **Hero** for the one thing that matters most on a page: the champion, the match now, a sign-in.
+6. **Few boxes:** no box around a single item or a single line, no box inside a box, and text never framed twice.
+7. **Common sense wins:** when another form reads better, use it and say why in the PR. Reviews and the lead's UX check judge by readability, not by the rule's letter.
 
 The PO at the step 4 gate: "Any page that has a grid should scale." A page of like items fills the width it has, from a 390 px phone to a 2560 px desk, and stays balanced with one item, two or forty. The sheets are in [`grids/`](grids/README.md) (01 the rule; 02–05 On air, the sound library, Devices and the storyboard catalogue, each with few and many items at 1280 px and 1920 px; the phone frames show the many state only, and sheet 05 shows one state per width); the audit of every grid today is [`grids/audit.md`](grids/audit.md). Numbers are at a 16 px rem.
 
@@ -67,7 +76,7 @@ The count tiles over a list (`.canccu-stats`, admin's Health) share the selector
 | Small | 10 rem, 160 px | 2 | 5 × 176 | 9 × 162 | 11 × 160 | Option checkboxes (a scene's zones), filters, colours and swatches, content library items |
 | Tile | 7 rem, 112 px | 3 | 7 × 128 | 13 × 114 | 16 × 112 | Thumbnails: the spotlight's photos, the layout gallery |
 
-Not every list is a grid. **Scenes** stay a ranked list in one column: the first scene whose conditions hold wins (Q18), so rank reads top to bottom. **Cues** and **people** stay tables: they are compared column by column (level, cooldown; role, last seen), and a table already uses the width; on a phone each row is a card, as today. **Playlists** are picked beside the content library, a master–detail page.
+Not every list is a grid (see "Choose the form first" above). Its forms on the pages the sheets show: **scenes** are a ranked list in one column, because the first scene whose conditions hold wins (Q18); **cues** (level, cooldown) and **people** (role, last seen) are tables, which already use the width; **playlists** are picked beside the content library, a master–detail page.
 
 **Spacing.** The gap between cards is `--canccu-gap` (1 rem), half that between tiles. The page keeps the shell's padding: 2.5 rem at the sides from 1100 px (beside the 16 rem menu), 1 rem below. Between a page's parts (bands, groups, the grid) the main column's 1.5 rem.
 
