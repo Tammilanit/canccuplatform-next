@@ -173,11 +173,10 @@ async def test_screens_over_tailscale_pass_the_venue_check_of_the_demo_event(env
     # Added, never replaced: the local stack's loopback still counts.
     assert await demo_addresses(env) == seed.DEMO_ADDRESSES + TAILSCALE
     # Every module drops its cached TenantContext on it, so screens pass at once.
-    assert ("tenants:_platform", "tenants.venue.changed") in env.events()
+    assert env.events() == [("events:tenants", "tenants.venue.changed")]
     async with env.db.pool.acquire() as conn:
         entry = await conn.fetchrow(
-            "SELECT tenant_id, action, target, changes FROM platform_audit"
-            " WHERE action = 'tenants.venue.changed'"
+            "SELECT target, changes FROM platform_audit WHERE action = 'tenants.venue.changed'"
         )
     assert entry is not None
     assert json.loads(entry["target"]) == {"type": "venue", "id": seed.DEMO_VENUE}
@@ -229,3 +228,46 @@ async def test_the_demo_venue_shared_with_another_event_is_left_alone(env: Env) 
 async def test_the_venue_seed_without_the_demo_event_refuses(env: Env) -> None:
     with pytest.raises(dev_seed.Refused, match="no demo event"):
         await run_venue(env)
+
+
+@pytest.mark.parametrize(
+    ("venue", "said"),
+    [
+        (["100.64.0.0/10"], "the demo venue's addresses: added 100.64.0.0/10"),
+        ([], "the demo venue's addresses are in place"),
+        (dev_seed.LeftAlone("another event uses the demo venue"), "left alone: another event"),
+    ],
+)
+async def test_the_dev_hostnames_command_seeds_the_venue_too(
+    monkeypatch: pytest.MonkeyPatch, venue: list[str] | Exception, said: str
+) -> None:
+    """The deploy runs one tenants command (setup/deploy, dev_seed); a venue left alone is no
+    failure, so the deploy still loads the demo profile after it."""
+    from canccu_tenants import __main__ as shell
+
+    seen: dict[str, object] = {}
+
+    async def hostnames(*args: object, **kwargs: object) -> list[str]:
+        return []
+
+    async def dev_venue(db: object, bus: object, version: str, tailscale: list[str]) -> list[str]:
+        seen.update(version=version, tailscale=tailscale)
+        if isinstance(venue, Exception):
+            raise venue
+        return venue
+
+    for name, value in {
+        "CANCCU_MODULE": "tenants",
+        "CANCCU_VERSION": "dev",
+        "CANCCU_VALKEY_URL": "redis://127.0.0.1:1",
+        "CANCCU_ADMIN_URL": "http://admin:8080",
+        "CANCCU_DATABASE_URL": "postgres://app@db/canccu",
+        "CANCCU_TAILSCALE_CIDRS": "100.64.0.0/10, fd7a:115c:a1e0::/48",
+    }.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setattr(dev_seed, "dev_hostnames", hostnames)
+    monkeypatch.setattr(dev_seed, "dev_venue", dev_venue)
+    out = await shell.dev_hostnames(None, [FULL])  # type: ignore[arg-type]
+    assert "hostnames are in place" in out
+    assert said in out
+    assert seen == {"version": "dev", "tailscale": ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]}
