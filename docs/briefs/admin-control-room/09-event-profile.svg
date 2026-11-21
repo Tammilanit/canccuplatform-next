@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1230" width="2240" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 09: Event profile: save, load, export, start from the demo</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="1280" height="1000" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1812" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1230" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">09 · Event profile: save, load, export, start from the demo</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">The event as set up, in one file. Loading says what it replaces, part by part, before it does; people, orders and photos are never touched.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: an organiser starts a new event from the demo or from last time’s profile, and keeps a copy before a big change (1280 px and 390 px)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1000" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="34" height="28" rx="6" fill="#3b82f6"/>
+<text x="69" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 86">DE</text>
+<text x="98" y="183" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="98 232">Demo Event</text>
+<line x1="198" y1="168" x2="198" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="210" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="210 392">Sat 21 Nov · day 2 of 3</text>
+<rect x="376" y="167" width="55.76" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="387" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="395" y="182" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="376 432">Live</text>
+<text x="1258" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1172 1260">18:12</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1262 1296">UTC</text>
+<rect x="32" y="207" width="256" height="943" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1150" stroke="#343c66" stroke-width="1"/>
+<rect x="58" y="223" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="234" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Control center</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Crew desk</text>
+<text x="56" y="318" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="329" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="340" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="367" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="378" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<rect x="58" y="405" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Tournament</text>
+<rect x="58" y="443" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="454" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Moments</text>
+<rect x="58" y="481" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="492" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<text x="56" y="538" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="549" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="560" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="587" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="598" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="644" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENT</text>
+<rect x="58" y="655" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="666" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Modules</text>
+<rect x="58" y="731" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="742" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event basics</text>
+<rect x="44" y="760" width="232" height="32" rx="7" fill="#1d3b72"/>
+<rect x="44" y="760" width="3" height="32" rx="0" fill="#3b82f6"/>
+<rect x="58" y="769" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="780" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="807" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="818" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="58" y="845" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="856" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Integrations</text>
+<line x1="32" y1="1060" x2="288" y2="1060" stroke="#343c66" stroke-width="1"/>
+<circle cx="66" cy="1088" r="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="66" y="1092" font-size="11" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="54 78">M</text>
+<text x="88" y="1092" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="88 282">Mira · organiser</text>
+<text x="88" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="88 152">Profile</text>
+<text x="162" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="162 282">Sign out</text>
+<text x="328" y="250" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 728">Event profile</text>
+<text x="328" y="278" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Everything this event is set up with: the run of show, menus, screens, the look, the switches and every part’s settings.</text>
+<rect x="328" y="306" width="304" height="190" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="340" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="348 622">Save this event</text>
+<text x="348" y="364" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 622">Keep a copy before a big change.</text>
+<rect x="348" y="390" width="97.44" height="38" rx="8" fill="#3b82f6"/>
+<text x="396.72" y="414.04" font-size="14" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="348 445.44">Save now</text>
+<text x="348" y="468" font-size="12.5" fill="#616788" font-weight="400" text-anchor="start" data-box="348 622">Last saved Sat 17:40 by Mira</text>
+<rect x="648" y="306" width="304" height="190" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="668" y="340" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="668 942">Load a profile</text>
+<text x="668" y="364" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="668 942">Replace this setup with one from a file.</text>
+<rect x="668" y="390" width="140.84" height="38" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="738.42" y="414.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="668 808.84">Choose a file</text>
+<text x="668" y="468" font-size="12.5" fill="#616788" font-weight="400" text-anchor="start" data-box="668 942">Or drop a profile file here</text>
+<rect x="968" y="306" width="304" height="190" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="988" y="340" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="988 1262">Start from the demo</text>
+<text x="988" y="364" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="988 1262">A full example event to try things on.</text>
+<rect x="988" y="390" width="132.16" height="38" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1054.08" y="414.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="988 1120.16">Use the demo</text>
+<text x="988" y="468" font-size="12.5" fill="#616788" font-weight="400" text-anchor="start" data-box="988 1262">Shows what it replaces first</text>
+<text x="328" y="528" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 628">Download</text>
+<rect x="328" y="542" width="944" height="64" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="570" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 928">This event as a profile file</text>
+<text x="348" y="590" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 928">With its logo, sounds and pictures · about 4 MB</text>
+<rect x="1132" y="556" width="120" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1192" y="576.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1132 1252">Download</text>
+<text x="328" y="642" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 628">History</text>
+<rect x="328" y="656" width="944" height="196" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="681" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="348 478" letter-spacing="1.2">WHEN</text>
+<text x="488" y="681" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="488 618" letter-spacing="1.2">WHAT</text>
+<text x="628" y="681" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="628 758" letter-spacing="1.2">WHO</text>
+<text x="768" y="681" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="768 898" letter-spacing="1.2">NOTE</text>
+<line x1="328" y1="696" x2="1272" y2="696" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="728" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 748">Sat 17:40</text>
+<text x="488" y="728" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="488 888">Saved</text>
+<text x="628" y="728" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="628 1028">Mira</text>
+<text x="768" y="728" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="768 1168">Before the evening</text>
+<line x1="328" y1="748" x2="1272" y2="748" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="780" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 748">Fri 15:12</text>
+<text x="488" y="780" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="488 888">Loaded</text>
+<text x="628" y="780" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="628 1028">Mira</text>
+<text x="768" y="780" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="768 1168">From last event’s profile</text>
+<line x1="328" y1="800" x2="1272" y2="800" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="832" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="348 748">Fri 15:05</text>
+<text x="488" y="832" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="488 888">Started</text>
+<text x="628" y="832" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="628 1028">Mira</text>
+<text x="768" y="832" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="768 1168">From the demo event</text>
+</g>
+<text x="672" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · 1280 px: three actions as equal panels, the download, and what happened to the setup</text>
+<rect x="1364" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1392 1462">18:12</text>
+<rect x="1702" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1512" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1372" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1372" y1="258" x2="1762" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1403" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1388 1418">DE</text>
+<text x="1428" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1428 1672">Event profile</text>
+<rect x="1722" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<text x="1388" y="288" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">Event profile</text>
+<rect x="1388" y="308" width="358" height="128" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="338" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1404 1738">Save this event</text>
+<text x="1404" y="360" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1738">Keep a copy before a big change.</text>
+<rect x="1404" y="378" width="94.96" height="36" rx="8" fill="#3b82f6"/>
+<text x="1451.48" y="400.86" font-size="13.5" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1404 1498.96">Save now</text>
+<rect x="1388" y="448" width="358" height="128" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="1404" y="478" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1404 1738">Load a profile</text>
+<text x="1404" y="500" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1738">Replace this setup with one from a file.</text>
+<rect x="1404" y="518" width="136.81" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1472.4" y="540.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1404 1540.81">Choose a file</text>
+<rect x="1388" y="588" width="358" height="128" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="618" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1404 1738">Start from the demo</text>
+<text x="1404" y="640" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1738">A full example event to try things on.</text>
+<rect x="1404" y="658" width="128.44" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1468.22" y="680.86" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1404 1532.44">Use the demo</text>
+<rect x="1388" y="728" width="358" height="70" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="758" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1738">Download this event</text>
+<text x="1404" y="780" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1738">About 4 MB</text>
+<rect x="1372" y="930" width="390" height="74" rx="0" fill="#121528"/>
+<line x1="1372" y1="930" x2="1762" y2="930" stroke="#343c66" stroke-width="1"/>
+<rect x="1403" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1411" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1372 1450">Home</text>
+<rect x="1481" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1489" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1450 1528">Desk</text>
+<circle cx="1567" cy="958" r="20" fill="#3b82f6"/>
+<text x="1567" y="965" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1547 1587">+</text>
+<rect x="1637" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1645" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1606 1684">Show</text>
+<rect x="1715" y="944" width="16" height="16" rx="4" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="1723" y="980" font-size="11.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1684 1762">Menu</text>
+</g>
+<text x="1567" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1364 1770">B · 390 px: the same actions, stacked</text>
+<rect x="1804" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c3)">
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1846" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 1902">18:12</text>
+<rect x="2142" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1952" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1812" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1812" y1="258" x2="2202" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1828" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1843" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1828 1858">DE</text>
+<text x="1868" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1868 2112">Event profile</text>
+<rect x="2162" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#000000" opacity="0.55"/>
+<rect x="1812" y="404" width="390" height="610" rx="22" fill="#121528" stroke="#343c66" stroke-width="1"/>
+<rect x="1987" y="414" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1828" y="454" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 2186">Load “last event”?</text>
+<text x="1828" y="478" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2186">It replaces these parts of the setup:</text>
+<rect x="1828" y="496" width="358" height="260" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1842" y="518" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1842 2178">Run of show</text>
+<text x="1842" y="537" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1842 2178">9 items become 12</text>
+<line x1="1840" y1="548" x2="2174" y2="548" stroke="#343c66" stroke-width="1"/>
+<text x="1842" y="570" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1842 2178">Food</text>
+<text x="1842" y="589" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1842 2178">2 pizzerias, menus and settings</text>
+<line x1="1840" y1="600" x2="2174" y2="600" stroke="#343c66" stroke-width="1"/>
+<text x="1842" y="622" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1842 2178">Screens</text>
+<text x="1842" y="641" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1842 2178">4 zones, layouts and settings</text>
+<line x1="1840" y1="652" x2="2174" y2="652" stroke="#343c66" stroke-width="1"/>
+<text x="1842" y="674" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1842 2178">Modules</text>
+<text x="1842" y="693" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1842 2178">Cast on, Finals off</text>
+<line x1="1840" y1="704" x2="2174" y2="704" stroke="#343c66" stroke-width="1"/>
+<text x="1842" y="726" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1842 2178">Look</text>
+<text x="1842" y="745" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1842 2178">Theme and logo</text>
+<rect x="1828" y="770" width="358" height="62" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1842" y="795" font-size="14" fill="#7cecba" font-weight="700" text-anchor="start" data-box="1842 2178">Never touched:</text>
+<text x="1842" y="816" font-size="13" fill="#7cecba" font-weight="400" text-anchor="start" data-box="1842 2178">people, orders, photos and the record</text>
+<text x="1828" y="856" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2186">Saved first: a copy of today’s setup</text>
+<rect x="1828" y="872" width="358" height="46" rx="8" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<text x="2007" y="900.4" font-size="15" fill="#ffd36d" font-weight="600" text-anchor="middle" data-box="1828 2186">Load and replace</text>
+<rect x="1828" y="928" width="358" height="44" rx="8" fill="#3b82f6"/>
+<text x="2007" y="955.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1828 2186">Cancel</text>
+</g>
+<text x="2007" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1804 2208">C · loading names what it replaces first</text>
+<text x="1364" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Notes: a profile carries the module switches (D8).</text>
+<text x="1364" y="1134" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Loading saves a copy of the current setup first, so a wrong load is undone by loading it back (U8).</text>
+</svg>

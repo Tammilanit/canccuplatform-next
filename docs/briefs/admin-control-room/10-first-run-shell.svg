@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1520" width="2240" height="1520" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 10: First run, sign-in and the shell</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="1280" height="560" rx="10"/></clipPath><clipPath id="c2"><rect x="1380" y="150" width="390" height="560" rx="34"/></clipPath><clipPath id="c3"><rect x="1830" y="336" width="256" height="360" rx="8"/></clipPath><clipPath id="c4"><rect x="40" y="800" width="390" height="620" rx="34"/></clipPath><clipPath id="c5"><rect x="480" y="800" width="390" height="620" rx="34"/></clipPath><clipPath id="c6"><rect x="920" y="800" width="390" height="620" rx="34"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1520" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">10 · First run, sign-in and the shell</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">The first run in three steps ends on the control center; sign-in shows the event’s poster, or the platform’s when no event is known; the shell’s header and menu hold still.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: the person who installed the platform makes the event; organisers and crew sign in from any device (1280 px and 390 px)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="560" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="640" height="560" rx="0" fill="#101634"/>
+<circle cx="552" cy="270" r="220" fill="#1d3b72"/>
+<circle cx="152" cy="620" r="160" fill="#2a1f55"/>
+<rect x="112" y="300" width="96" height="96" rx="20" fill="#3b82f6"/>
+<text x="160" y="362" font-size="36" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="112 208">DE</text>
+<text x="112" y="468" font-size="54" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="112 652">Demo Event</text>
+<text x="112" y="512" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="112 652">Fri 20 – Sun 22 Nov · Demo Hall</text>
+<rect x="832" y="280" width="320" height="300" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="860" y="330" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="860 1132">Sign in</text>
+<text x="860" y="360" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="860 1142">Organisers and crew sign in here.</text>
+<rect x="860" y="390" width="264" height="46" rx="8" fill="#3b82f6"/>
+<text x="992" y="418.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="860 1124">Sign in with Discord</text>
+<text x="860" y="480" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="860 1132">Here for the event?</text>
+<text x="860" y="502" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="860 1132">Open the hub instead →</text>
+<text x="860" y="550" font-size="12" fill="#616788" font-weight="400" text-anchor="start" data-box="860 1142">Admin opens at the venue or on the crew network.</text>
+</g>
+<text x="672" y="740" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · 1280 px: sign-in with the event’s poster</text>
+<rect x="1372" y="142" width="406" height="576" rx="40" fill="#1b1d27"/>
+<g clip-path="url(#c2)">
+<rect x="1380" y="150" width="390" height="560" rx="0" fill="#0b0d1a"/>
+<rect x="1380" y="150" width="390" height="250" rx="0" fill="#101634"/>
+<rect x="1412" y="210" width="64" height="64" rx="14" fill="#7c3aed"/>
+<text x="1444" y="252" font-size="30" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1412 1476">c</text>
+<text x="1412" y="320" font-size="36" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1412 1740">Canccu</text>
+<text x="1412" y="354" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1740">The platform for this install</text>
+<text x="1412" y="446" font-size="24" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1412 1740">Sign in</text>
+<text x="1412" y="474" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1740">Organisers and crew sign in here.</text>
+<rect x="1412" y="500" width="326" height="46" rx="8" fill="#3b82f6"/>
+<text x="1575" y="528.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1412 1738">Sign in with Discord</text>
+<text x="1412" y="586" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1412 1740">No event is open at this address yet.</text>
+</g>
+<text x="1575" y="740" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1778">B · 390 px: no event resolves, so the platform’s poster</text>
+<text x="1830" y="164" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1830 2208">C · The header holds one line</text>
+<rect x="1830" y="180" width="378" height="56" rx="8" fill="#121528"/>
+<line x1="1830" y1="208" x2="2208" y2="208" stroke="#f87171" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="1846" y="194" width="34" height="28" rx="6" fill="#3b82f6"/>
+<text x="1863" y="213" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1846 1880">DE</text>
+<text x="1892" y="213" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1892 2030">Demo Event</text>
+<rect x="1996" y="197" width="55.76" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="2007" cy="208" r="3.5" fill="#3ee39a"/>
+<text x="2015" y="212" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1996 2060">Live</text>
+<text x="1830" y="260" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1830 2208">Badge, name and state on one</text>
+<text x="1830" y="278" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1830 2208">centre line, at every width.</text>
+<text x="1830" y="320" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="1830 2208">The menu stays put</text>
+<g clip-path="url(#c3)">
+<rect x="1830" y="336" width="256" height="360" rx="0" fill="#0e1122"/>
+<text x="1854" y="366" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1830 2086" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="1856" y="381" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="392" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Screen studio</text>
+<rect x="1856" y="415" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="426" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Theme studio</text>
+<text x="1854" y="466" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1830 2086" letter-spacing="1.2">EVENT</text>
+<rect x="1856" y="481" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="492" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">People</text>
+<rect x="1856" y="515" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="526" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Modules</text>
+<rect x="1856" y="549" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="560" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Event basics</text>
+<rect x="1856" y="583" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="594" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Event profile</text>
+<rect x="1856" y="617" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="628" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Health</text>
+<rect x="1856" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1885" y="662" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1830 2086">Integrations</text>
+<rect x="1830" y="606" width="256" height="90" rx="0" fill="#0e1122"/>
+<line x1="1830" y1="606" x2="2086" y2="606" stroke="#343c66" stroke-width="1"/>
+<circle cx="1864" cy="634" r="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1864" y="638" font-size="11" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="1852 1876">M</text>
+<text x="1886" y="638" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1886 2080">Mira · organiser</text>
+<text x="1886" y="666" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1886 1950">Profile</text>
+<text x="1960" y="666" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1960 2080">Sign out</text>
+</g>
+<text x="1830" y="722" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1830 2208">Scrolled to the page’s foot:</text>
+<text x="1830" y="740" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1830 2208">Profile and Sign out stay.</text>
+<rect x="32" y="792" width="406" height="636" rx="40" fill="#1b1d27"/>
+<g clip-path="url(#c4)">
+<rect x="40" y="800" width="390" height="620" rx="0" fill="#0b0d1a"/>
+<text x="56" y="848" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="56 414">Make this event</text>
+<circle cx="115.667" cy="884" r="13" fill="#3b82f6"/>
+<text x="115.667" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="102.667 128.667">1</text>
+<text x="115.667" y="918" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="56 175.333">Code</text>
+<line x1="131.667" y1="884" x2="219" y2="884" stroke="#343c66" stroke-width="2"/>
+<circle cx="235" cy="884" r="13" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="235" y="889" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="middle" data-box="222 248">2</text>
+<text x="235" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="175.333 294.667">Sign in</text>
+<line x1="251" y1="884" x2="338.333" y2="884" stroke="#343c66" stroke-width="2"/>
+<circle cx="354.333" cy="884" r="13" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="354.333" y="889" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="middle" data-box="341.333 367.333">3</text>
+<text x="354.333" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="294.667 414">Basics</text>
+<text x="56" y="964" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 414">Enter the first-run code</text>
+<text x="56" y="990" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 414">Whoever installed the platform has it.</text>
+<rect x="56" y="1014" width="112" height="52" rx="9" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="112" y="1048" font-size="20" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="56 168">K7Q2</text>
+<rect x="178" y="1014" width="112" height="52" rx="9" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="234" y="1048" font-size="20" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="178 290">M9XD</text>
+<rect x="300" y="1014" width="112" height="52" rx="9" fill="#0b0d1a" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="356" y="1048" font-size="20" fill="#616788" font-weight="600" text-anchor="middle" data-box="300 412">··</text>
+<text x="56" y="1098" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 414">Three groups of four, letters and digits.</text>
+<text x="56" y="1118" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 414">It changes on every restart until used.</text>
+<rect x="56" y="1320" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="235" y="1348.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="56 414">Next</text>
+</g>
+<rect x="472" y="792" width="406" height="636" rx="40" fill="#1b1d27"/>
+<g clip-path="url(#c5)">
+<rect x="480" y="800" width="390" height="620" rx="0" fill="#0b0d1a"/>
+<text x="496" y="848" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="496 854">Make this event</text>
+<circle cx="555.667" cy="884" r="13" fill="#3b82f6"/>
+<text x="555.667" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="542.667 568.667">✓</text>
+<text x="555.667" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="496 615.333">Code</text>
+<line x1="571.667" y1="884" x2="659" y2="884" stroke="#3b82f6" stroke-width="2"/>
+<circle cx="675" cy="884" r="13" fill="#3b82f6"/>
+<text x="675" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="662 688">2</text>
+<text x="675" y="918" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="615.333 734.667">Sign in</text>
+<line x1="691" y1="884" x2="778.333" y2="884" stroke="#343c66" stroke-width="2"/>
+<circle cx="794.333" cy="884" r="13" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="794.333" y="889" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="middle" data-box="781.333 807.333">3</text>
+<text x="794.333" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="734.667 854">Basics</text>
+<text x="496" y="964" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="496 854">Sign in: you become the owner</text>
+<text x="496" y="990" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="496 854">Owners give organiser and crew roles.</text>
+<rect x="496" y="1014" width="358" height="96" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="512" y="1048" font-size="15" fill="#7cecba" font-weight="700" text-anchor="start" data-box="496 854">Code accepted</text>
+<text x="512" y="1072" font-size="13" fill="#7cecba" font-weight="400" text-anchor="start" data-box="496 854">Sign in now; the account you use</text>
+<text x="512" y="1092" font-size="13" fill="#7cecba" font-weight="400" text-anchor="start" data-box="496 854">becomes this event’s owner.</text>
+<rect x="496" y="1134" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="675" y="1162.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="496 854">Sign in with Discord</text>
+</g>
+<rect x="912" y="792" width="406" height="636" rx="40" fill="#1b1d27"/>
+<g clip-path="url(#c6)">
+<rect x="920" y="800" width="390" height="620" rx="0" fill="#0b0d1a"/>
+<text x="936" y="848" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="936 1294">Make this event</text>
+<circle cx="995.667" cy="884" r="13" fill="#3b82f6"/>
+<text x="995.667" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="982.667 1008.67">✓</text>
+<text x="995.667" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="936 1055.33">Code</text>
+<line x1="1011.67" y1="884" x2="1099" y2="884" stroke="#3b82f6" stroke-width="2"/>
+<circle cx="1115" cy="884" r="13" fill="#3b82f6"/>
+<text x="1115" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1102 1128">✓</text>
+<text x="1115" y="918" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1055.33 1174.67">Sign in</text>
+<line x1="1131" y1="884" x2="1218.33" y2="884" stroke="#3b82f6" stroke-width="2"/>
+<circle cx="1234.33" cy="884" r="13" fill="#3b82f6"/>
+<text x="1234.33" y="889" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1221.33 1247.33">3</text>
+<text x="1234.33" y="918" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1174.67 1294">Basics</text>
+<text x="936" y="964" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="936 1294">The event’s basics</text>
+<text x="936" y="990" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="936 1294">Everything else can wait.</text>
+<text x="936" y="1030" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="936 1294">Name</text>
+<rect x="936" y="1040" width="358" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="948" y="1063" font-size="14" fill="#616788" font-weight="400" text-anchor="start" data-box="936 1290">e.g. Demo Event</text>
+<text x="936" y="1104" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="936 1294">Dates</text>
+<rect x="936" y="1114" width="358" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="948" y="1137" font-size="14" fill="#616788" font-weight="400" text-anchor="start" data-box="936 1266">Pick the first and last day</text>
+<path d="M1272,1129.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<text x="936" y="1178" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="936 1294">Time zone</text>
+<rect x="936" y="1188" width="358" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="948" y="1211" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="936 1266">UTC · from this device</text>
+<path d="M1272,1203.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="936" y="1320" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="1115" y="1348.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="936 1294">Open the control center</text>
+</g>
+<text x="672" y="1470" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">D · first run at 390 px: code, sign in, basics; the same steps centred on a desk</text>
+<text x="1380" y="840" font-size="16" fill="#111827" font-weight="700" text-anchor="start" data-box="1380 2208">Notes</text>
+<text x="1380" y="872" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">The first run asks only what the event cannot open without;</text>
+<text x="1380" y="896" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">venue, look and access wait on Event basics (E6).</text>
+<text x="1380" y="934" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">After the last step the owner lands on the control center,</text>
+<text x="1380" y="958" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">with an empty run of show and “Set up the run of show”.</text>
+<text x="1380" y="996" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">The menu puts the two homes first, then the parts that are on,</text>
+<text x="1380" y="1020" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">then the event’s own pages (L7). Parts switched off leave it.</text>
+<text x="1380" y="1058" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">With no event at this address, sign-in shows the platform’s</text>
+<text x="1380" y="1082" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1380 2208">poster instead of an empty one.</text>
+</svg>

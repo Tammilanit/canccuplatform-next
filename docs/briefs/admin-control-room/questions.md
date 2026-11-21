@@ -70,7 +70,7 @@ Words used here: a **part** is one module as people meet it (Food is the pizza m
 - **Recommendation: A.** Small events have few crew who do several jobs.
 
 ### U8. The event profile
-- **A.** As built (Save, Load, export), plus a "what it replaces" step before a load and "Start from the demo event".
+- **A.** As built (Save, Load, export), plus a "what it replaces" step before a load, a copy of the current setup saved automatically before it, and "Start from the demo event".
 - **B.** As built.
 - **C.** Merge it into Event basics.
 - **Recommendation: A**, on its own page: loading a profile is rare and replaces much, so it keeps its own page and its confirm step.
