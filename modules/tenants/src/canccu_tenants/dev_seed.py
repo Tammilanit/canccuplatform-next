@@ -3,28 +3,41 @@
 `CANCCU_DEV_HOSTNAMES` in deploy/.env. Pages resolve the event from `Host`, so without them the
 dev server answers every page with 404.
 
-It only adds and never removes: a name dropped from the env file stays until the demo event is
+The same command gives the demo venue the platform's Tailscale prefixes (issue #733): the dev
+server is reached over Tailscale, not a venue network, and a screen plays only from its event's
+venue addresses (contracts/tenants.md, Venue IP check).
+
+Both only add and never remove: a name dropped from the env file stays until the demo event is
 reset (docs/operations/dev-server.md), so it never undoes a change made by hand."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from canccu_kit import DEMO_TENANT, Bus
+from canccu_kit import DEMO_TENANT, Bus, KitError
 from canccu_kit.resolve import normalize_host
 
 from . import audit, core, model
 from .db import Db
 from .hostnames import kind_of
+from .seed import DEMO_VENUE
 
 
 class Refused(Exception):
     """Nothing was changed; the message says why."""
 
 
-def _check(hosts: list[str], version: str, reserved: frozenset[str]) -> None:
+class LeftAlone(Exception):
+    """Nothing was changed on purpose; the message says why. Not a failure: the deploy goes on."""
+
+
+def _dev_mode(version: str) -> None:
     if version != "dev":
         raise Refused(f"CANCCU_VERSION is {version}, not dev: nothing changed")
+
+
+def _check(hosts: list[str], version: str, reserved: frozenset[str]) -> None:
+    _dev_mode(version)
     if not hosts:
         raise Refused("no hostnames given: nothing changed")
     for host in hosts:
@@ -102,6 +115,60 @@ async def dev_hostnames(
             changed.append(host)
     await outbox.publish(bus)
     return changed
+
+
+async def dev_venue(db: Db, bus: Bus, version: str, tailscale: list[str]) -> list[str]:
+    """Adds the Tailscale prefixes to the demo venue's addresses. Returns those it added; an
+    empty list when all were there already."""
+    _dev_mode(version)
+    async with db.platform() as conn:
+        # The superadmin's venue writes lock the venue row too (venues.py).
+        venue_id = await conn.fetchval(
+            "SELECT venue_id FROM tenants WHERE id = $1 FOR UPDATE", DEMO_TENANT
+        )
+        if venue_id is None and not await conn.fetchval(
+            "SELECT 1 FROM tenants WHERE id = $1", DEMO_TENANT
+        ):
+            raise Refused("no demo event (the tenants module seeds it at start): nothing changed")
+        # A seed never widens where a real venue's screens play: only the seed's own venue,
+        # and only while no other event uses it.
+        if venue_id != DEMO_VENUE:
+            raise LeftAlone(f"the demo event's venue is not the demo venue ({DEMO_VENUE})")
+        row = await conn.fetchrow("SELECT * FROM venues WHERE id = $1 FOR UPDATE", DEMO_VENUE)
+        if await conn.fetchval(
+            "SELECT 1 FROM tenants WHERE venue_id = $1 AND id <> $2", DEMO_VENUE, DEMO_TENANT
+        ):
+            raise LeftAlone(f"another event uses the demo venue ({DEMO_VENUE})")
+        have = list(row["addresses"])
+        try:
+            added = [a for a in model.check_addresses(tailscale) if a not in have]
+            addresses = model.check_addresses(have + added)
+        except KitError as exc:
+            raise Refused(f"CANCCU_TAILSCALE_CIDRS: {exc}: nothing changed") from exc
+        if not added:
+            return []
+        await conn.execute(
+            "UPDATE venues SET addresses = $2, revision = revision + 1 WHERE id = $1",
+            DEMO_VENUE,
+            addresses,
+        )
+        # Addresses are audited with values, as the superadmin's venue writes are (venues.py).
+        await audit.append(
+            conn,
+            None,
+            audit.SYSTEM,
+            "tenants.venue.changed",
+            {"type": "venue", "id": DEMO_VENUE},
+            {"fields": ["addresses"], "addresses": addresses, "seed": "dev"},
+        )
+    # A platform event: every module drops its cached TenantContext, so screens pass at once.
+    await bus.publish(
+        "tenants.venue.changed",
+        {"venue_id": DEMO_VENUE, "changed": ["addresses"], "deleted": False},
+        version=1,
+        platform=True,
+    )
+    return added
 
 
 async def _changed(

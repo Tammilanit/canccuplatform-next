@@ -7,6 +7,7 @@ The dev server is the VM that runs main in dev mode, so the product owner can wa
 - **How often it updates:** auto-deploy ([setup/README.md](../../setup/README.md#auto-deploy)) checks every 2 minutes. A merge to main reaches it a few minutes after its Images run has pushed the `dev` images: it checks health, and on a failure it goes back to the previous version and opens an issue. `/api/hello/health` shows the last deploy (`deploy` check).
 - **After each deploy** (#709, #715), and again each hour, it seeds the demo event, once per commit, list of names and hour:
   - `python -m canccu_tenants dev-hostnames` makes the names in `CANCCU_DEV_HOSTNAMES` hostnames of the demo event, the first one primary. Pages find their event by the `Host` they are called on ([contracts/tenants.md](../../contracts/tenants.md)), so without these names every event page answers `not_found`. Names are only added: one taken out of the list stays until the demo event is reset.
+  - The same command gives the demo venue (`demo-venue`) the platform's Tailscale prefixes (`CANCCU_TAILSCALE_CIDRS`, by default `100.64.0.0/10` and `fd7a:115c:a1e0::/48`) as addresses, beside the loopback and documentation prefixes it has (#733). A screen plays only from its event's venue addresses ([contracts/tenants.md](../../contracts/tenants.md), Venue IP check), and the dev server is reached over Tailscale, not a venue network. It only adds; it leaves the venue alone, and says so in the deploy log, when someone gave the demo event another venue or another event uses `demo-venue`, so it never widens where a real venue's screens play.
   - `python -m canccu_admin dev-seed` loads `events/demo`'s profile and assets (the same import as the demo stack's `PUT /api/admin/profile`): its settings, look, logo and sounds. It loads into an empty event, and again when `events/demo` changes on main, but never over a profile someone loaded or uploaded or a setting someone changed since: then it says so in the deploy log and leaves the event alone.
   - Then the demo content (below): `python -m canccu_agenda dev-seed` (the run of show), `node dist/dev-seed-cli.js` in pizza (menus and the demo order) and in moments (the demo story), in that order, as each module's own shell command ([agenda](../../modules/agenda/README.md#shell-commands), [pizza](../../modules/pizza/README.md#shell-commands), [moments](../../modules/moments/README.md#shell-commands)).
   - All refuse to run unless `CANCCU_VERSION` is `dev`. Each changes nothing that is in place, and never a part someone changed by hand: then it says so in the deploy log (`journalctl -u canccu-deploy`) and leaves that part alone. A seed that fails leaves the deploy in place, logs a warning and is tried again on the next run.
@@ -20,7 +21,7 @@ What the seed puts in the demo event, so its pages have something to show and to
 ## Its URLs
 `<dev host>` is the primary name from `CANCCU_DEV_HOSTNAMES`, the host of `CANCCU_PUBLIC_URL`. Plain http over the private network:
 - `http://<dev host>/admin/`: the organiser's home; `/admin/sign-in` to sign in, `/admin/profile` for the event profile.
-- `http://<dev host>/screen/zones/main`: the main zone as a screen draws it (signed in); `/screen/` is the kiosk page a real screen pairs from, and `/admin/screen/` the Screen studio.
+- `http://<dev host>/screen/zones/main`: the main zone as a screen draws it (signed in, see [Screens over Tailscale](#screens-over-tailscale)); `/screen/` is the kiosk page a real screen pairs from, and `/admin/screen/` the Screen studio.
 - `http://<dev host>/agenda/`: the run of show.
 - `http://<dev host>/pizza/`: Food for attendees, `/pizza/crew` for the crew.
 - `http://<dev host>/moments/on-air`: Moments.
@@ -38,6 +39,10 @@ Once, on the dev server, after [Set up auto-deploy](../../setup/README.md#auto-d
    - Organiser pages answer only from the venue or Tailscale while the event's admin access is restricted (the default, [contracts/tenants.md](../../contracts/tenants.md), Admin access), so open them over Tailscale.
 3. After changing `deploy/.env`, restart the stack so the modules read it: `docker compose -f deploy/compose.yml up -d --wait --no-build`.
 
+## Screens over Tailscale
+- **The main zone in a browser:** sign in on `<dev host>`, then open `http://<dev host>/screen/zones/main` (`?orientation=portrait` for a portrait screen). The real player draws the zone live, as the zone's screens show it, with every widget, takeover and theme change, but without sound. It is a person's view, not a device: it needs the sign-in and the right `screen.devices.read` (the owner has it) and, like every organiser page, the venue or Tailscale, but never the venue IP check, which is only for paired devices ([contracts/screen.md](../../contracts/screen.md), A zone for a session). This is the screen view for demos.
+- **A paired screen:** `/screen/` is the kiosk page. With the demo venue's Tailscale prefixes it passes the venue check over Tailscale, so it shows a pairing code instead of "Not at the venue". It cannot finish pairing on the dev server, though: the pairing and device cookies are `Secure` ([contracts/screen.md](../../contracts/screen.md), Pairing), and a browser keeps them only over https, while the dev server is plain http. The code shows, Studio claims it, but the kiosk never collects its device. Pair a browser only once the dev server is served over https.
+
 ## Reset the demo event
 - **The demo content again** (as above, over any change made by hand), one part or all of them:
   - The profile (settings, look, logo and sounds): `docker compose -f deploy/compose.yml exec admin python -m canccu_admin dev-seed --force`.
@@ -45,11 +50,11 @@ Once, on the dev server, after [Set up auto-deploy](../../setup/README.md#auto-d
   - The food: `docker compose -f deploy/compose.yml exec pizza node dist/dev-seed-cli.js --force`. It cancels every order under way, applies the profile's menus and opens a fresh demo order; pizzerias the profile does not name stay.
   - Moments: `docker compose -f deploy/compose.yml exec moments node dist/dev-seed-cli.js --force`, after the run of show. It puts the storyboard presets back with Prize draw on.
   The other data (sign-ins, screens, moments already shown) stays.
-- **Everything from empty:** this deletes all data of the dev server, sign-ins, the owner and paired screens included. `docker compose -f deploy/compose.yml down -v && docker compose -f deploy/compose.yml up -d --wait --no-build` (the tenants module makes the demo event as it starts), then `sudo rm /var/lib/canccu-deploy/dev-seed && sudo systemctl start canccu-deploy`, whose run gives the event its names, the demo profile and the demo content. Sign in again with a new first-run code.
+- **Everything from empty:** this deletes all data of the dev server, sign-ins, the owner and paired screens included. `docker compose -f deploy/compose.yml down -v && docker compose -f deploy/compose.yml up -d --wait --no-build` (the tenants module makes the demo event as it starts), then `sudo rm /var/lib/canccu-deploy/dev-seed && sudo systemctl start canccu-deploy`, whose run gives the event its names, the demo venue its Tailscale prefixes, and the event the demo profile and the demo content. Sign in again with a new first-run code.
 
 ## A demo run
 The lead drives a flow, the product owner watches.
 1. Before: the change is merged and deployed (`/api/hello/health` names its commit), and the product owner is signed in on `<dev host>`.
-2. The product owner opens what the flow shows: the pages it changes, and a screen view (`/screen/zones/main`, or a paired screen) in a second window.
+2. The product owner opens what the flow shows: the pages it changes, and a screen view (`/screen/zones/main`, [Screens over Tailscale](#screens-over-tailscale)) in a second window.
 3. The lead does the flow step by step on their own session (for example opens an order, delays a run-of-show item, takes a moment on air) and says what each step should show; the product owner watches it land on the pages and the screen.
 4. Afterwards, reset what the run left behind if the next demo needs a clean event (above). Findings become issues, not edits on the VM: code reaches it only through a merge to main.
