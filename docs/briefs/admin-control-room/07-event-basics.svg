@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1230" width="2240" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 07: Event basics</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="1280" height="1000" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1812" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1230" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">07 · Event basics</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">Admin keeps only what the whole event shares. Each section saves on its own, because each belongs to a different part of the platform.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: an organiser sets the event’s name, dates, time zone, venue, look and who gets in, choosing from lists instead of typing (1280 px and 390 px)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1000" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="34" height="28" rx="6" fill="#3b82f6"/>
+<text x="69" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 86">DE</text>
+<text x="98" y="183" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="98 232">Demo Event</text>
+<line x1="198" y1="168" x2="198" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="210" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="210 392">Sat 21 Nov · day 2 of 3</text>
+<rect x="376" y="167" width="55.76" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="387" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="395" y="182" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="376 432">Live</text>
+<text x="1258" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1172 1260">18:12</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1262 1296">UTC</text>
+<rect x="32" y="207" width="256" height="943" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1150" stroke="#343c66" stroke-width="1"/>
+<rect x="58" y="223" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="234" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Control center</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Crew desk</text>
+<text x="56" y="318" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="329" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="340" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="367" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="378" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<rect x="58" y="405" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Tournament</text>
+<rect x="58" y="443" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="454" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Moments</text>
+<rect x="58" y="481" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="492" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<text x="56" y="538" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="549" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="560" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="587" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="598" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="644" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENT</text>
+<rect x="58" y="655" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="666" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Modules</text>
+<rect x="44" y="722" width="232" height="32" rx="7" fill="#1d3b72"/>
+<rect x="44" y="722" width="3" height="32" rx="0" fill="#3b82f6"/>
+<rect x="58" y="731" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="742" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 288">Event basics</text>
+<rect x="58" y="769" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="780" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="807" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="818" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="58" y="845" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="856" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Integrations</text>
+<line x1="32" y1="1060" x2="288" y2="1060" stroke="#343c66" stroke-width="1"/>
+<circle cx="66" cy="1088" r="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="66" y="1092" font-size="11" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="54 78">M</text>
+<text x="88" y="1092" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="88 282">Mira · organiser</text>
+<text x="88" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="88 152">Profile</text>
+<text x="162" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="162 282">Sign out</text>
+<text x="328" y="250" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 728">Event basics</text>
+<text x="328" y="278" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">What the whole event shares. Each part’s own settings are in that part.</text>
+<rect x="328" y="302" width="464" height="226" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="334" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="348 672">The event</text>
+<rect x="708" y="316" width="64" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="740" y="336.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="708 772">Save</text>
+<text x="348" y="374" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 772">Name</text>
+<text x="348" y="393" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 772">On the hub, the screens and every page.</text>
+<rect x="348" y="402" width="424" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="360" y="425" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="348 768">Demo Event</text>
+<text x="348" y="466" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 812">Dates</text>
+<rect x="348" y="476" width="424" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="360" y="499" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="348 744">Fri 20 Nov 16:00 – Sun 22 Nov 18:00</text>
+<path d="M750,491.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="328" y="544" width="464" height="196" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="576" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="348 672">Time and language</text>
+<rect x="708" y="558" width="64" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="740" y="578.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="708 772">Save</text>
+<text x="348" y="616" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 772">Time zone</text>
+<text x="348" y="635" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 772">Times on every page and screen follow it.</text>
+<rect x="348" y="644" width="424" height="36" rx="7" fill="#0b0d1a" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="360" y="667" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="360 742">UTC · the event’s zone</text>
+<path d="M750,665 l5,-6 l5,6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<text x="348" y="706" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 812">Language</text>
+<rect x="448" y="688" width="324" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="460" y="711" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="448 744">English</text>
+<path d="M750,703.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="328" y="756" width="464" height="128" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="788" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="348 672">Venue</text>
+<text x="348" y="824" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="348 628">Demo Hall</text>
+<text x="348" y="846" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="348 772">Addresses and venue info come from the venue.</text>
+<rect x="632" y="808" width="140" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="702" y="828.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="632 772">Change venue</text>
+<rect x="808" y="302" width="464" height="226" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="828" y="334" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="828 1152">Look</text>
+<rect x="828" y="362" width="112" height="112" rx="10" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<rect x="854" y="388" width="60" height="60" rx="12" fill="#3b82f6"/>
+<text x="884" y="426" font-size="22" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="854 914">DE</text>
+<text x="958" y="380" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="958 1252">Logo and theme</text>
+<text x="958" y="400" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="958 1252">Theme: Level up</text>
+<rect x="958" y="414" width="26" height="26" rx="6" fill="#3b82f6"/>
+<rect x="992" y="414" width="26" height="26" rx="6" fill="#a78bfa"/>
+<rect x="1026" y="414" width="26" height="26" rx="6" fill="#3ee39a"/>
+<rect x="1060" y="414" width="26" height="26" rx="6" fill="#f59e0b"/>
+<text x="958" y="470" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="958 1252">Open Theme studio →</text>
+<rect x="808" y="544" width="464" height="340" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="828" y="576" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="828 1152">Access</text>
+<rect x="1188" y="558" width="64" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1220" y="578.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1188 1252">Save</text>
+<text x="828" y="616" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="828 1252">Who can read the info pages?</text>
+<text x="828" y="635" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="828 1252">The run of show, announcements, venue info.</text>
+<rect x="828" y="648" width="86.32" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="871.16" y="664.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 914.32">Everyone</text>
+<rect x="922.32" y="648" width="116.48" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="980.56" y="664.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="922.32 1038.8">At the venue</text>
+<rect x="1046.8" y="648" width="93.86" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1093.73" y="664.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1046.8 1140.66">Signed in</text>
+<text x="828" y="702" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="828 1252">How do people join?</text>
+<text x="828" y="721" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="828 1252">Members see the Wi-Fi password and their own pages.</text>
+<rect x="828" y="734" width="244.66" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="950.33" y="750.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 1072.66">At the venue or with the link</text>
+<rect x="1080.66" y="734" width="71.24" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1116.28" y="750.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1080.66 1151.9">Closed</text>
+<text x="828" y="788" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="828 1252">Where can admin be opened?</text>
+<text x="828" y="807" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="828 1252">Signing in is always needed.</text>
+<rect x="828" y="820" width="184.34" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="920.17" y="836.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 1012.34">Venue or crew network</text>
+<rect x="1020.34" y="820" width="86.32" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1063.5" y="836.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1020.34 1106.66">Anywhere</text>
+<rect x="348" y="684" width="424" height="300" rx="9" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<rect x="358" y="694" width="404" height="34" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="370" y="716" font-size="14" fill="#616788" font-weight="400" text-anchor="start" data-box="358 758">Search a city or zone</text>
+<text x="362" y="750" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="348 772" letter-spacing="1.2">SUGGESTED</text>
+<rect x="354" y="757" width="412" height="28" rx="6" fill="#1d3b72"/>
+<text x="362" y="776" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 702">UTC · the event’s zone</text>
+<text x="758" y="776" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="692 772">UTC+0</text>
+<text x="362" y="806" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 702">Europe/London</text>
+<text x="758" y="806" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="692 772">UTC+0</text>
+<text x="362" y="836" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="348 772" letter-spacing="1.2">EUROPE</text>
+<text x="362" y="862" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 702">Berlin</text>
+<text x="758" y="862" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="692 772">UTC+1</text>
+<text x="362" y="892" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 702">Stockholm</text>
+<text x="758" y="892" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="692 772">UTC+1</text>
+<text x="362" y="922" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 702">Helsinki</text>
+<text x="758" y="922" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="692 772">UTC+2</text>
+<text x="362" y="952" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="348 772" letter-spacing="1.2">AMERICA</text>
+</g>
+<text x="672" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · 1280 px: two columns of sections; the time zone is a searchable list grouped by region, the likely zones first</text>
+<rect x="1364" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1392 1462">18:12</text>
+<rect x="1702" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1512" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1372" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1372" y1="258" x2="1762" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1403" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1388 1418">DE</text>
+<text x="1428" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1428 1672">Event basics</text>
+<rect x="1722" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<text x="1388" y="288" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">Event basics</text>
+<rect x="1388" y="308" width="358" height="210" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="338" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">The event</text>
+<text x="1404" y="370" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Name</text>
+<text x="1404" y="389" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1730">On the hub, the screens and every page.</text>
+<rect x="1404" y="396" width="326" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="1416" y="419" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1404 1726">Demo Event</text>
+<text x="1404" y="458" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">Dates</text>
+<rect x="1404" y="468" width="326" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="1416" y="491" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1404 1702">Fri 20 – Sun 22 Nov</text>
+<path d="M1708,483.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="1388" y="534" width="358" height="200" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="564" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">Time and language</text>
+<text x="1404" y="596" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Time zone</text>
+<text x="1404" y="615" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1730">Times on every page and screen follow it.</text>
+<rect x="1404" y="622" width="326" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="1416" y="645" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1404 1702">UTC · the event’s zone</text>
+<path d="M1708,637.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<text x="1404" y="684" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1388 1746">Language</text>
+<rect x="1404" y="692" width="326" height="34" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="1416" y="714" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1404 1702">English</text>
+<path d="M1708,706.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="1388" y="750" width="358" height="120" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1404" y="780" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">Access</text>
+<text x="1404" y="810" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Who can read the info pages?</text>
+<rect x="1404" y="826" width="84" height="27.5" rx="13.75" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="1446" y="842" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1404 1488">Everyone</text>
+<rect x="1494" y="826" width="113" height="27.5" rx="13.75" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1550.5" y="842" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1494 1607">At the venue</text>
+<rect x="1613" y="826" width="91.25" height="27.5" rx="13.75" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1658.62" y="842" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1613 1704.25">Signed in</text>
+<rect x="1372" y="930" width="390" height="74" rx="0" fill="#121528"/>
+<line x1="1372" y1="930" x2="1762" y2="930" stroke="#343c66" stroke-width="1"/>
+<rect x="1403" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1411" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1372 1450">Home</text>
+<rect x="1481" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1489" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1450 1528">Desk</text>
+<circle cx="1567" cy="958" r="20" fill="#3b82f6"/>
+<text x="1567" y="965" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1547 1587">+</text>
+<rect x="1637" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1645" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1606 1684">Show</text>
+<rect x="1715" y="944" width="16" height="16" rx="4" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="1723" y="980" font-size="11.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1684 1762">Menu</text>
+</g>
+<text x="1567" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1364 1770">B · 390 px: the same sections, one column</text>
+<rect x="1804" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c3)">
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1846" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 1902">18:12</text>
+<rect x="2142" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1952" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1812" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1812" y1="258" x2="2202" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1828" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1843" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1828 1858">DE</text>
+<text x="1868" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1868 2112">Event basics</text>
+<rect x="2162" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#000000" opacity="0.55"/>
+<rect x="1812" y="444" width="390" height="570" rx="22" fill="#121528" stroke="#343c66" stroke-width="1"/>
+<rect x="1987" y="454" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1828" y="494" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 2186">The event’s dates</text>
+<text x="2007" y="532" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1828 2186">November 2026</text>
+<text x="1838" y="532" font-size="20" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1828 1858">‹</text>
+<text x="2176" y="532" font-size="20" fill="#a9b1d6" font-weight="600" text-anchor="end" data-box="2156 2186">›</text>
+<text x="1853.57" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1828 1879.14">Mo</text>
+<text x="1904.71" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1879.14 1930.29">Tu</text>
+<text x="1955.86" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1930.29 1981.43">We</text>
+<text x="2007" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1981.43 2032.57">Th</text>
+<text x="2058.14" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="2032.57 2083.71">Fr</text>
+<text x="2109.29" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="2083.71 2134.86">Sa</text>
+<text x="2160.43" y="562" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="2134.86 2186">Su</text>
+<text x="2160.43" y="598" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2134.86 2186">1</text>
+<text x="1853.57" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1828 1879.14">2</text>
+<text x="1904.71" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1879.14 1930.29">3</text>
+<text x="1955.86" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1930.29 1981.43">4</text>
+<text x="2007" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1981.43 2032.57">5</text>
+<text x="2058.14" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2032.57 2083.71">6</text>
+<text x="2109.29" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2083.71 2134.86">7</text>
+<text x="2160.43" y="638" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2134.86 2186">8</text>
+<text x="1853.57" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1828 1879.14">9</text>
+<text x="1904.71" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1879.14 1930.29">10</text>
+<text x="1955.86" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1930.29 1981.43">11</text>
+<text x="2007" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1981.43 2032.57">12</text>
+<text x="2058.14" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2032.57 2083.71">13</text>
+<text x="2109.29" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2083.71 2134.86">14</text>
+<text x="2160.43" y="678" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2134.86 2186">15</text>
+<text x="1853.57" y="718" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1828 1879.14">16</text>
+<text x="1904.71" y="718" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1879.14 1930.29">17</text>
+<text x="1955.86" y="718" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1930.29 1981.43">18</text>
+<text x="2007" y="718" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1981.43 2032.57">19</text>
+<rect x="2058.14" y="696" width="25.5714" height="34" rx="0" fill="#1d3b72"/>
+<circle cx="2058.14" cy="713" r="17" fill="#3b82f6"/>
+<text x="2058.14" y="718" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2032.57 2083.71">20</text>
+<rect x="2083.71" y="696" width="51.1429" height="34" rx="0" fill="#1d3b72"/>
+<text x="2109.29" y="718" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2083.71 2134.86">21</text>
+<rect x="2134.86" y="696" width="25.5714" height="34" rx="0" fill="#1d3b72"/>
+<circle cx="2160.43" cy="713" r="17" fill="#3b82f6"/>
+<text x="2160.43" y="718" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2134.86 2186">22</text>
+<text x="1853.57" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1828 1879.14">23</text>
+<text x="1904.71" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1879.14 1930.29">24</text>
+<text x="1955.86" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1930.29 1981.43">25</text>
+<text x="2007" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1981.43 2032.57">26</text>
+<text x="2058.14" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2032.57 2083.71">27</text>
+<text x="2109.29" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2083.71 2134.86">28</text>
+<text x="2160.43" y="758" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="2134.86 2186">29</text>
+<text x="1853.57" y="798" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="1828 1879.14">30</text>
+<text x="1828" y="836" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 1988">Starts</text>
+<text x="2013" y="836" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2007 2186">Ends</text>
+<rect x="1828" y="846" width="173" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="1840" y="869" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1828 1973">Fri 20 · 16:00</text>
+<path d="M1979.0,861.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="2013" y="846" width="173" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<text x="2025" y="869" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="2013 2158">Sun 22 · 18:00</text>
+<path d="M2164.0,861.0 l5,6 l5,-6" stroke="#a9b1d6" fill="none" stroke-width="1.5"/>
+<rect x="1828" y="900" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="2007" y="928.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1828 2186">Use these dates</text>
+</g>
+<text x="2007" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1804 2208">C · dates are a range picker, times from a list</text>
+<text x="1364" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Notes: each section saves through its owner: dates and access the event’s, time and language admin’s (D4).</text>
+<text x="1364" y="1134" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Access asks three questions in plain words instead of naming modes (L5). The venue is picked from the venues.</text>
+</svg>
