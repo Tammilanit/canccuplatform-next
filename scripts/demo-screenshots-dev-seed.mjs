@@ -31,11 +31,18 @@ const port = base.port ? `:${base.port}` : "";
 const at = (path) => `http://${DEMO_HOST}${port}${path}`;
 
 const seen = (text) => (page) =>
-  page.getByText(text).first().waitFor({ timeout: 30_000 });
-// The screen draws once its zone's state is built: the rail's run of show is the seed's.
+  page
+    .getByText(text)
+    .filter({ visible: true })
+    .first()
+    .waitFor({ timeout: 30_000 });
+// The screen draws once its zone's state is built: its hero or rail names one of the seed's items.
+const SEEDED =
+  /Doors open|Tournament: |Pizza order|Dinner|Raffle|Breakfast|Closing ceremony/;
 const drawn = async (page) => {
   await page
-    .locator(".canccu-widget--agenda_now")
+    .getByText(SEEDED)
+    .filter({ visible: true })
     .first()
     .waitFor({ timeout: 60_000 });
   await page.waitForTimeout(1500);
