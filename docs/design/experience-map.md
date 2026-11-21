@@ -71,18 +71,27 @@ Issue numbers are the ones named in the round 6 brief. "Additive" means a contra
 | Concept | Owner | Contract touch points |
 |---|---|---|
 | The event span for graphs and the scenes timeline | The event's dates in the profile | `tenants.md` event dates; read by Screen and Moments |
-| Event-wide defaults | Admin module settings keep only defaults; per-widget settings live in Screen studio | `admin.md` settings; `screen.md` zone and widget props |
+| Event-wide defaults | Each module's Settings tab keeps its defaults (Screen studio → Settings for the screens); per-widget settings live in Screen studio; admin keeps only the event basics ([admin control room](../briefs/admin-control-room.md)) | `admin.md` settings; `screen.md` zone and widget props |
 
 ## Where each setting lives
 
+A module's settings live with the module, as a Settings tab on its own page; admin keeps only what the whole event shares, on Event basics ([admin control room](../briefs/admin-control-room.md#where-settings-live-everyone-who-changes-settings), sheet 05). Only the page moves: the values stay in admin's store and API (`GET`/`PUT /api/admin/settings/{module}`), drawn by the kit's settings form from the module's declarations. The plan of that pack may still change this table.
+
 | Setting | Lives in |
 |---|---|
+| The event's name, dates, time zone, language, venue, look and access | Admin → Event basics |
+| Which parts the event uses (each module on or off) | Admin → Modules |
+| Ordering, order limits, reminders, auto-close, the daily record | Food → Settings |
+| Event-wide screen defaults (heartbeat, offline timing, gaps between breaks, progress bars, the ticker, burn-in drift, energy level, following the day, stage art, food holder names) | Screen studio → Settings |
 | Which layout a zone uses; a box's widget, size, visibility | Screen studio → Zones and layouts |
 | Seconds per photo; graph window, type and metric; the turn indicator | The widget's settings in Screen studio |
 | Scenes, their triggers and actions | Screen studio → Scenes (data owned by Moments) |
 | Effect pools and sounds per event kind | Screen studio → Cues (data owned by Moments) |
 | How strong and fast each motion level is; the motion pack (Standard, Broadcast, Arcade) | Theme studio → Advanced |
-| Event-wide defaults (default seconds per slide, offline timing) | Admin → Settings → Screens |
+| Reminder lead times and channels of run-of-show items | Run of show → Settings |
+| Topics offered, push limits, check-in code rotation | Notifications → Settings |
+| Surges and games members add | Games → Settings |
+| The Food AI reader's provider key (a secret) | Admin → Integrations |
 
 ## Open points for the leads
 
