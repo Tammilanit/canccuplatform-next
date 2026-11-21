@@ -38,14 +38,14 @@ const LOGO =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><rect width="80" height="80" rx="23" fill="#3b82f6"/><text x="40" y="41" font-size="30" text-anchor="middle" dominant-baseline="central">DE</text></svg>',
   );
 
-async function render(width: number, height: number, rows = 120): Promise<Page> {
+async function render(width: number, height: number, rows = 120, event = EVENT): Promise<Page> {
   if (browser === undefined) throw new Error("the suite runs only with a browser");
   const body = html`${Array.from({ length: rows }, (_, i) => html`<p>Row ${String(i + 1)}</p>`)}`;
   const doc = String(
     shellPage({
       title: "Long page",
       body,
-      event: EVENT,
+      event,
       now: NOW,
       logoUrl: LOGO,
       session: { userName: "Demo Organiser", rights: RIGHTS },
@@ -108,6 +108,7 @@ async function menuAt(page: Page, y: number) {
     return {
       scrolled: window.scrollY,
       header: box(".canccu-header").bottom,
+      banner: box(".canccu-banner").bottom,
       menu: box(".canccu-menu"),
       foot: box(".canccu-menu__foot"),
       overflows: menu ? menu.scrollHeight > menu.clientHeight : false,
@@ -164,6 +165,16 @@ describe.skipIf(browser === undefined)(
         expect(at.overflows).toBe(true);
         expect(at.menu.bottom).toBeCloseTo(420, 0);
         expect(at.foot.bottom).toBeCloseTo(420, 0);
+      }
+      await page.close();
+    });
+
+    it("starts the menu under an archived event's banner, its foot still at the window's foot", async () => {
+      const page = await render(1280, 800, 120, { ...EVENT, status: "archived" });
+      for (const y of [0, Number.MAX_SAFE_INTEGER]) {
+        const at = await menuAt(page, y);
+        expect(at.menu.top).toBeCloseTo(y === 0 ? at.banner : 0, 0);
+        expect(at.foot.bottom).toBeCloseTo(800, 0);
       }
       await page.close();
     });

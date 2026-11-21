@@ -165,6 +165,29 @@
   .canccu-header .canccu-badge {
     flex: none;
   }
+  /* The capitals of the name, the dates and the badge, not their lines, sit on the logo's centre
+     line: a font's ascent and descent differ (system-ui on each system), so a centred line box
+     draws its letters high or low (#731). Trimmed to the capitals, each box is centred as the
+     logo is; the padding keeps the title's clip clear of ascenders, accents and descenders. The
+     trim needs a block container, so the badge is an inline block here, its dot on the capitals'
+     middle. */
+  .canccu-header__title {
+    padding-block: 0.3em;
+    text-box: trim-both cap alphabetic;
+  }
+  .canccu-header__meta {
+    text-box: trim-both cap alphabetic;
+  }
+  .canccu-header .canccu-badge {
+    display: inline-block;
+    padding-block: calc(0.125rem + 0.35em);
+    text-box: trim-both cap alphabetic;
+  }
+  .canccu-header .canccu-badge::before {
+    display: inline-block;
+    margin-right: 0.375rem;
+    vertical-align: calc((1cap - 0.4375rem) / 2);
+  }
   .canccu-header__end {
     flex: none;
     margin-left: auto;
@@ -198,6 +221,8 @@
      side, the content from one left edge. Under 1100 px the menu becomes a sheet behind More in a
      bottom bar; it is one `popover` element, so it needs no script. */
   .canccu-shell {
+    /* What sits above the menu at the page's top: the header, and an archived event's banner. */
+    --canccu-shell-top: 3.5rem;
     min-height: 100vh;
     display: grid;
     /* canccu-grid: fixed shell — the organiser shell: menu and content */
@@ -453,19 +478,58 @@
   .canccu-tabbar {
     display: none;
   }
+  @keyframes canccu-menu-fill {
+    to {
+      height: 100dvh;
+    }
+  }
   @media (min-width: 1100px) {
-    /* At the side the popover is always shown: these undo the browser's popover styles. */
+    /* At the side the popover is always shown: these undo the browser's popover styles. `top`
+       comes after `inset`, which would set it back to auto: the menu then scrolled away (#731).
+       The menu fills the window below the header and scrolls on its own when taller. */
     .canccu-menu {
       position: sticky;
-      top: 0;
       inset: auto;
+      top: 0;
       align-self: start;
       width: auto;
-      height: auto;
-      min-height: calc(100vh - 3.5rem);
-      max-height: 100vh;
+      height: calc(100dvh - var(--canccu-shell-top));
       margin: 0;
       overflow: auto;
+      overscroll-behavior: contain;
+    }
+    /* As the header scrolls away the menu grows to the window's height, so its foot stays at the
+       window's foot. Without scroll-driven animations it keeps its first height: the foot still
+       shows, the header's height above the window's foot. */
+    @supports (animation-timeline: scroll()) {
+      .canccu-menu {
+        animation: canccu-menu-fill linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0 var(--canccu-shell-top);
+      }
+    }
+    /* Profile and Sign out stay at the menu's foot while its groups scroll. The foot lies over
+       the menu's bottom padding, so nothing shows below it; a sticky box keeps inside its
+       container's padding, hence the negative `bottom`. */
+    .canccu-menu__foot {
+      position: sticky;
+      bottom: -1rem;
+      margin-bottom: -1rem;
+      padding-bottom: 1rem;
+      background: inherit;
+    }
+    /* The banner keeps one line, so the menu knows how far down it starts. */
+    .canccu-shell:has(> .canccu-banner) {
+      --canccu-shell-top: 6rem;
+    }
+    .canccu-shell > .canccu-banner {
+      height: 2.5rem;
+      white-space: nowrap;
+    }
+    .canccu-shell > .canccu-banner > span:last-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .canccu-shell--bare {
       /* canccu-grid: fixed shell — the bare shell at 1100 px and wider: one column, no menu */
