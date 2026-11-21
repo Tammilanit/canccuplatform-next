@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
+from canccu_kit.access import VenueIpRefused, check_screen_access
 from conftest import Env, make_tenant
 
 from canccu_tenants import dev_seed, seed
@@ -134,3 +136,96 @@ async def test_shell_commands_migrate_as_the_migration_role(
         "url": "postgres://app@db/canccu",
         "migrate_url": "postgres://migrator@db/canccu",
     }
+
+
+# The demo venue (issue #733): the dev server is reached over Tailscale, not a venue network.
+TAILSCALE = ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]
+TAILNET_PC = "100.101.102.103"
+
+
+async def run_venue(env: Env, version: str = "dev") -> list[str]:
+    return await dev_seed.dev_venue(env.deps.db, env.deps.bus, version, TAILSCALE)
+
+
+async def demo_addresses(env: Env) -> list[str]:
+    async with env.db.platform() as conn:
+        return list(
+            await conn.fetchval("SELECT addresses FROM venues WHERE id = $1", seed.DEMO_VENUE)
+        )
+
+
+async def a_screen_over_tailscale_passes(env: Env) -> bool:
+    async with env.module("screen") as c:
+        r = await c.get("/internal/tenants/tenants/demo")
+    assert r.status_code == 200, r.text
+    try:
+        check_screen_access(r.json(), device_token_valid=True, client_ip=TAILNET_PC)
+    except VenueIpRefused:
+        return False
+    return True
+
+
+async def test_screens_over_tailscale_pass_the_venue_check_of_the_demo_event(env: Env) -> None:
+    await demo(env)
+    assert not await a_screen_over_tailscale_passes(env)
+    assert await run_venue(env) == TAILSCALE
+    assert await a_screen_over_tailscale_passes(env)
+    # Added, never replaced: the local stack's loopback still counts.
+    assert await demo_addresses(env) == seed.DEMO_ADDRESSES + TAILSCALE
+    # Every module drops its cached TenantContext on it, so screens pass at once.
+    assert ("tenants:_platform", "tenants.venue.changed") in env.events()
+    async with env.db.pool.acquire() as conn:
+        entry = await conn.fetchrow(
+            "SELECT tenant_id, action, target, changes FROM platform_audit"
+            " WHERE action = 'tenants.venue.changed'"
+        )
+    assert entry is not None
+    assert json.loads(entry["target"]) == {"type": "venue", "id": seed.DEMO_VENUE}
+    assert json.loads(entry["changes"])["addresses"] == seed.DEMO_ADDRESSES + TAILSCALE
+
+
+async def test_seeding_the_venue_twice_changes_nothing(env: Env) -> None:
+    await demo(env)
+    await run_venue(env)
+    addresses, audits, events = await demo_addresses(env), await audit_count(env), len(env.events())
+    assert await run_venue(env) == []
+    assert await demo_addresses(env) == addresses
+    assert await audit_count(env) == audits
+    assert len(env.events()) == events
+
+
+async def test_the_venue_is_not_seeded_outside_dev_mode(env: Env) -> None:
+    await demo(env)
+    with pytest.raises(dev_seed.Refused, match="not dev"):
+        await run_venue(env, version="v0.5.1")
+    assert await demo_addresses(env) == seed.DEMO_ADDRESSES
+    assert env.events() == []
+
+
+async def test_a_venue_the_superadmin_gave_the_demo_event_is_left_alone(env: Env) -> None:
+    """Its addresses decide where a real venue's screens play: never widened by a seed."""
+    await demo(env)
+    await make_tenant(env.db, "other", SHORT)
+    async with env.db.platform() as conn:
+        await conn.execute("UPDATE tenants SET venue_id = 'v-other' WHERE id = 'demo'")
+    with pytest.raises(dev_seed.LeftAlone, match="not the demo venue"):
+        await run_venue(env)
+    async with env.db.platform() as conn:
+        addresses = await conn.fetchval("SELECT addresses FROM venues WHERE id = 'v-other'")
+    assert list(addresses) == ["127.0.0.0/8"]
+    assert env.events() == []
+
+
+async def test_the_demo_venue_shared_with_another_event_is_left_alone(env: Env) -> None:
+    await demo(env)
+    await make_tenant(env.db, "other", SHORT)
+    async with env.db.platform() as conn:
+        await conn.execute("UPDATE tenants SET venue_id = $1 WHERE id = 'other'", seed.DEMO_VENUE)
+    with pytest.raises(dev_seed.LeftAlone, match="another event"):
+        await run_venue(env)
+    assert await demo_addresses(env) == seed.DEMO_ADDRESSES
+
+
+async def test_the_venue_seed_without_the_demo_event_refuses(env: Env) -> None:
+    with pytest.raises(dev_seed.Refused, match="no demo event"):
+        await run_venue(env)
