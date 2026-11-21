@@ -37,6 +37,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0029](0029-additive-contracts-ship-with-consumers.md) | Additive contract changes ship with the code that uses them; contract-first only for breaking changes (amends 0008 and 0024) | 2026-11-14 |
 | [0030](0030-finals-integrated-one-tourney-core.md) | Finals is integrated as it is; one tourney core for Tournament and Games (supersedes parts of 0025; points 4 and 5 narrowed by 0031) | 2026-11-20 |
 | [0031](0031-mini-tournaments-after-v1-day-schedules.md) | Mini tournaments for any game wait until after version 1; things planned in time are shown as a day schedule (narrows 0030 point 4 and the competition-rules part of point 5) | 2026-11-21 |
+| [0032](0032-hub-equal-on-pc-and-phone.md) | The hub and every attendee page are equal on PC and phone; alerts by app push or browser notification | 2026-11-21 |
 
 ## How the records are applied
 - **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a breaking contract change still goes apart from its consumers and merges first (an additive one ships with them since [0029](0029-additive-contracts-ship-with-consumers.md)); the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.

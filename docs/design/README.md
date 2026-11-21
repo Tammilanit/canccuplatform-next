@@ -12,7 +12,7 @@ The sheets carry no version or review tags.
 
 ## Amendments accepted by the PO, binding for the build
 
-These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19, 4 on 2026-11-21. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
+These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19, 4 and 5 on 2026-11-21. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
 
 ### 1 · Energy levels: clearly different look, same pace
 
@@ -105,6 +105,18 @@ The PO: "I don't like the grid based view in some of the mockups. In some a day 
 - **Phone:** the same list, one day at a time.
 - **Grids stay for collections:** amendment 3's auto-fill grid stays for like items with no time order: the sound library, devices, storyboards, photos. Pizza orders, which amendment 3's table lists as cards, are shown by call time as a day schedule wherever they are planned in time.
 - **Built pages** that show timed items as a card grid change in their own issues, not with this amendment. **Research packs** follow it in their next revision; where a sheet or a pack's mockup draws timed items as a grid, this amendment wins.
+
+### 5 · Equal on PC and phone (2026-11-21)
+
+The PO: "we might want to have the hub equally both -- PC and phone. They should complement each other and those who are 'phone-native' will want to run it all via phone, and those who rather do it via PC web browser can do it. Alerts can go via phone app or via www page notifications" ([0032](../decisions/0032-hub-equal-on-pc-and-phone.md)). At a LAN most attendees sit at their own PC, and a page drawn phone-first leaves a narrow column on it (#704). **The hub and every attendee page are equal on PC and phone.**
+
+- **Everything works fully in both:** everything an attendee can do works in full in a PC web browser and on a phone, and none of it needs the installed app or a phone. For example: signing up, the tick list, session and match pages, standings, pizza, money, uploading clips and photos.
+- **A layout for each width:** each page is laid out for both widths. On a desktop that is a desktop layout (columns, side panels, tables where they help), never a phone column stretched or centred on a wide screen. It builds on amendment 3's widths: the 64 rem default and the 120 rem `wide` page, bands for side panels, and one column under about 37 rem.
+- **Alerts reach either device:** the same notices reach people as push to the installed phone app or as browser notifications on the PC, both Web Push subscriptions in Notify. Discord DMs and channel posts stay the other paths, as Notify already offers. People choose their channels, and no notice depends on a phone.
+- **PC actions are first class:** for example, dragging a clip file recorded on the gaming PC onto the upload.
+- **The crew's tools work on both:** the desk on a laptop or PC, the crew phone on the floor.
+- **Screenshots at both widths:** every screenshot book and gate book shows attendee pages at phone width (390 px) and desktop width (1280 px or wider).
+- **Built pages** that are only phone-first get their desktop layouts in their own step's polish, not with this amendment; #704 covers the pizza record. **Packs and plans** that say phone-first or mobile-first (step 5's #119, step 7's player pages, the App track's hub frame) read as "for PC and phone, both in full"; where a sheet or a pack's mockup draws an attendee page in a phone frame only, this amendment wins and the page also needs its desktop layout.
 
 ## Changes since v7
 

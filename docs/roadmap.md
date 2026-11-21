@@ -42,6 +42,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
+- 2026-11-21: the hub and every attendee page are equal on PC and phone: the App track's goal and its Play item name the PC beside the phone, and alerts reach either device by app push or browser notification ([0032](decisions/0032-hub-equal-on-pc-and-phone.md), #707).
 - 2026-11-21: mini tournaments for any game wait until after version 1: step 7 keeps the official tournament on the fully general core, its exit loses the mini tournament, the Games track loses each game's competition rules, and both move to Not scheduled yet; THE FINALS mini tourney is still integrated from day 1 (the Finals track is unchanged) ([0031](decisions/0031-mini-tournaments-after-v1-day-schedules.md), #695).
 - 2026-11-20: Finals is integrated as it is: the Finals track becomes the integration of the one deployed app as an external app (sign-in, `/finals`, screen cards that keep the mini tourney's own graphics and theming, Moments, a hub link), the Apps track's pilot, hosted wherever the event's host chooses and connected per event; the generalised tourney core runs every competition in Tournament, so step 7 gains mini tournaments for any game; the Games track drops rosters and rounds and gains each game's competition rules ([0030](decisions/0030-finals-integrated-one-tourney-core.md), #680).
 - 2026-11-14: the checkpoint's step summary lists the step's PRs that changed `contracts/`, most of them package PRs now ([0029](decisions/0029-additive-contracts-ship-with-consumers.md), #502).
@@ -214,12 +215,12 @@ Games, Cast and App are new builds with their own contracts, and Finals integrat
 - **Issues:** epic #67.
 
 ### App
-- **Goal:** attendees follow the event on their phone, and organisers reach admin safely from anywhere ([0022](decisions/0022-product-vision.md)).
+- **Goal:** attendees follow the event on their phone or PC, equally ([0032](decisions/0032-hub-equal-on-pc-and-phone.md)), and organisers reach admin safely from anywhere ([0022](decisions/0022-product-vision.md)).
 - **In it**, in this order; the track is planned separately:
   1. the hub shell: a PWA only (no store app), reached from the Pulse screen's QR handoff;
   2. notifications on the `notify` module built in step 3: event-wide notifications for guests, without signing in;
   3. the signed-in hub: every account is a Discord account, and a person becomes an attendee only at the venue or through the event's own link or QR code ([contracts/tenants.md](../contracts/tenants.md#joining-the-event)); event admin reachable from the internet with sign-in, behind a "venue or Tailscale only" switch that is on by default; the superadmin over Tailscale only;
-  4. Play: the player's side of the event on the phone;
+  4. Play: the player's side of the event on the phone and the PC;
   5. the privacy center, before the dress rehearsal (step 11): each module's export and delete ([contracts/README.md](../contracts/README.md#privacy-export-and-delete)); raw presence data is deleted 30 days after an event is archived, and its other personal data is anonymised 12 months after;
   6. memories, opt-in.
 - **Rules:** no CDN proxy at the start; the hub opens to the public only after a go-public checklist.
