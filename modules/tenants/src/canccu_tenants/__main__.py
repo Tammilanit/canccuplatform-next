@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 
 from canccu_kit import Bus, ValkeyStreamStore, load_config
 
@@ -28,7 +29,10 @@ async def dev_hostnames(db: Db, hosts: list[str]) -> str:
 
 async def run(args: argparse.Namespace) -> str:
     e = env()
-    db = await Db.connect(e.database_url)
+    # As the service does (main.py): the stack's login role is plain and may not migrate.
+    db = await Db.connect(
+        e.database_url, migrate_url=os.environ.get("CANCCU_MIGRATE_DATABASE_URL") or None
+    )
     try:
         if args.command == "seed-demo":
             created = await seed.seed_demo(

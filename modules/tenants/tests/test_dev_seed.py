@@ -107,3 +107,30 @@ async def test_a_bad_or_reserved_name_is_refused(env: Env, bad: str) -> None:
 async def test_without_the_demo_event_it_refuses(env: Env) -> None:
     with pytest.raises(dev_seed.Refused, match="no demo event"):
         await run(env, FULL)
+
+
+async def test_shell_commands_migrate_as_the_migration_role(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """On the stack the login role is plain and may not migrate, so a shell command that
+    migrates as it fails before doing anything (found running dev-hostnames in a container)."""
+    import argparse
+
+    from canccu_tenants import __main__ as shell
+    from canccu_tenants.db import Db
+
+    seen: dict[str, object] = {}
+
+    async def connect(url: str, *, migrate_url: str | None = None) -> None:
+        seen.update(url=url, migrate_url=migrate_url)
+        raise RuntimeError("stop here")
+
+    monkeypatch.setenv("CANCCU_DATABASE_URL", "postgres://app@db/canccu")
+    monkeypatch.setenv("CANCCU_MIGRATE_DATABASE_URL", "postgres://migrator@db/canccu")
+    monkeypatch.setattr(Db, "connect", connect)
+    with pytest.raises(RuntimeError, match="stop here"):
+        await shell.run(argparse.Namespace(command="dev-hostnames", hosts=[FULL]))
+    assert seen == {
+        "url": "postgres://app@db/canccu",
+        "migrate_url": "postgres://migrator@db/canccu",
+    }
