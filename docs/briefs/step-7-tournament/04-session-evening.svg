@@ -141,11 +141,11 @@
 <text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
 <rect x="26.0" y="112.0" width="338.0" height="196.0" rx="16" fill="#1d2442" stroke="#ff6b81" stroke-width="1.5"/>
 <text x="44.0" y="148.0" font-size="17" fill="#ff6b81" font-weight="700" text-anchor="start" data-box="44.0 346.0">Check-in closed at 19:25</text>
-<text x="44.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">You were not checked in, so your</text>
-<text x="44.0" y="202.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">place went to Player Eleven from</text>
-<text x="44.0" y="226.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">the waiting list. Here after all?</text>
-<text x="44.0" y="250.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">Ask at the stage: the crew can</text>
-<text x="44.0" y="274.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">put you back.</text>
+<text x="44.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">You were not checked in, so you</text>
+<text x="44.0" y="202.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">are marked as a no-show (0</text>
+<text x="44.0" y="226.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">points). Here after all?</text>
+<text x="44.0" y="250.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">Ask at the stage: the crew</text>
+<text x="44.0" y="274.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">can mark you present.</text>
 </g>
 <circle cx="45.0" cy="785.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>

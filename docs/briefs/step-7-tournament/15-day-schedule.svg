@@ -95,7 +95,7 @@
 <rect x="921.1" y="480.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="987.8" y="495.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="925.1 1050.5">Check-in · 31/40</text>
 <text x="412.0" y="494.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 909.1">Demo Arena 5v5</text>
-<text x="412.0" y="514.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1046.5">Stage · teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="412.0" y="514.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1046.5">Stage · teams of 5 · 8 of 8 · Full</text>
 <text x="412.0" y="532.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="412.0 1046.5">Check-in closes 19:25 · matches: 4 quarters, 2 semis</text>
 <text x="296.0" y="572.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">22:00</text>
 <text x="296.0" y="591.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 23:30</text>
@@ -202,7 +202,7 @@
 <rect x="937.1" y="480.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="1003.8" y="495.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="941.1 1066.5">Check-in · 31/40</text>
 <text x="412.0" y="494.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 925.1">Demo Arena 5v5</text>
-<text x="412.0" y="514.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1062.5">Stage · teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="412.0" y="514.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412.0 1062.5">Stage · teams of 5 · 8 of 8 · Full</text>
 <text x="412.0" y="532.0" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="412.0 1062.5">Check-in closes 19:25 · matches: 4 quarters, 2 semis</text>
 <text x="296.0" y="572.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">22:00</text>
 <text x="296.0" y="591.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 23:30</text>
@@ -221,7 +221,7 @@
 <rect x="1726.6" y="388.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="1793.3" y="403.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="1730.6 1856.0">Check-in · 31/40</text>
 <text x="1310.0" y="442.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Sat 19:30 – 21:30 · Stage</text>
-<text x="1310.0" y="466.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="1310.0" y="466.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Teams of 5 · 8 of 8 · Full</text>
 <text x="1310.0" y="490.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Check-in closes 19:25</text>
 <text x="1310.0" y="514.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Matches: 4 quarters, 2 semis, a final</text>
 <text x="1310.0" y="538.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Voice: one room per match</text>
@@ -394,7 +394,7 @@
 <rect x="921.1" y="767.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="987.8" y="782.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="925.1 1050.5">Check-in · 31/40</text>
 <text x="412.0" y="784.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 612.0">Demo Arena 5v5</text>
-<text x="628.0" y="784.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="628.0 1046.5">Teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="628.0" y="784.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="628.0 1046.5">Teams of 5 · 8 of 8 · Full</text>
 <text x="296.0" y="830.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">21:00</text>
 <text x="296.0" y="849.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 21:45</text>
 <circle cx="376.0" cy="826.0" r="5" fill="#3ddcff"/>
@@ -608,7 +608,7 @@
 <rect x="937.1" y="767.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="1003.8" y="782.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="941.1 1066.5">Check-in · 31/40</text>
 <text x="412.0" y="784.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="412.0 612.0">Demo Arena 5v5</text>
-<text x="628.0" y="784.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="628.0 1062.5">Teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="628.0" y="784.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="628.0 1062.5">Teams of 5 · 8 of 8 · Full</text>
 <text x="296.0" y="830.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">21:00</text>
 <text x="296.0" y="849.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 364.0">to 21:45</text>
 <circle cx="376.0" cy="826.0" r="5" fill="#3ddcff"/>
@@ -662,7 +662,7 @@
 <rect x="1726.6" y="388.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="1793.3" y="403.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="1730.6 1856.0">Check-in · 31/40</text>
 <text x="1310.0" y="442.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Sat 19:30 – 21:30 · Stage</text>
-<text x="1310.0" y="466.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="1310.0" y="466.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Teams of 5 · 8 of 8 · Full</text>
 <text x="1310.0" y="490.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Check-in closes 19:25</text>
 <text x="1310.0" y="514.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Matches: 4 quarters, 2 semis, a final</text>
 <text x="1310.0" y="538.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1310.0 1860.0">Voice: one room per match</text>
@@ -752,7 +752,7 @@
 <rect x="86.0" y="908.0" width="288.0" height="86.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
 <text x="360.0" y="934.0" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
 <text x="102.0" y="934.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="102.0 334.0">Demo Arena 5v5</text>
-<text x="102.0" y="954.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="102.0 358.0">Teams of 5 · 8 of 8 · waiting list: 2 teams</text>
+<text x="102.0" y="954.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="102.0 358.0">Teams of 5 · 8 of 8 · Full</text>
 <rect x="102.0" y="962.0" width="133.4" height="22.0" rx="11" fill="#3a3320"/>
 <text x="168.7" y="977.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="106.0 231.4">Check-in · 31/40</text>
 <text x="16.0" y="1028.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="16.0 58.0">21:00</text>

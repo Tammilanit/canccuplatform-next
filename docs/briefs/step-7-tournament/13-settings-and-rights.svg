@@ -60,7 +60,7 @@
 <text x="296.0" y="215.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296.0 936.0">Tournament name</text>
 <rect x="296.0" y="223.0" width="640.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="308.0" y="246.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="304.0 928.0">Demo Game Cup</text>
-<text x="296.0" y="289.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start">Points per placement</text>
+<text x="296.0" y="289.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start">Points per placement (edit under Scoring and awards)</text>
 <rect x="296.0" y="303.0" width="148.0" height="52.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="308.0" y="325.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">Winner</text>
 <text x="308.0" y="346.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">3</text>
@@ -73,7 +73,7 @@
 <rect x="776.0" y="303.0" width="148.0" height="52.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="788.0" y="325.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">No-show</text>
 <text x="788.0" y="346.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start">0</text>
-<text x="296.0" y="373.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="296.0 936.0">Bonus points allowed: yes, crew may add (legacy rule)</text>
+<text x="296.0" y="373.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="296.0 936.0">Awards: MVP 2 · Best play 1 · Sportsmanship 1 (edit under Scoring and awards)</text>
 <text x="296.0" y="407.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296.0 606.0">Registration closes</text>
 <rect x="296.0" y="415.0" width="310.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="308.0" y="438.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="304.0 598.0">30 min before</text>
@@ -85,7 +85,7 @@
 <text x="308.0" y="512.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="304.0 598.0">Off · window 15 → 5 min</text>
 <text x="626.0" y="481.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="626.0 936.0">No-shows</text>
 <rect x="626.0" y="489.0" width="310.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="638.0" y="512.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="634.0 928.0">Waiting list moves up</text>
+<text x="638.0" y="512.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="634.0 928.0">Marked no-show, 0 points</text>
 <text x="296.0" y="555.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="296.0 606.0">Voice roster: qualifies after</text>
 <rect x="296.0" y="563.0" width="310.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="308.0" y="586.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="304.0 598.0">10 min</text>
@@ -107,45 +107,55 @@
 <rect x="296.0" y="787.0" width="56.5" height="36.0" rx="8" fill="#3ddcff"/>
 <text x="324.2" y="809.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300.0 348.5">Save</text>
 </g></g>
-<text x="1000.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000.0 1880.0">Rights (contract) and the crew preset</text>
+<text x="1000.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000.0 1880.0">Rights (contract), the lead and the crew</text>
 <rect x="1000.0" y="140.0" width="888.0" height="860.0" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <text x="1024.0" y="186.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">RIGHT</text>
 <text x="1330.0" y="186.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">LETS SOMEONE</text>
 <text x="1760.0" y="186.0" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">PRESET</text>
 <line x1="1024.0" y1="198.0" x2="1864.0" y2="198.0" stroke="#e5e7eb" stroke-width="1"/>
 <text x="1024.0" y="230.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.sessions.write</text>
-<text x="1330.0" y="230.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Add, edit, cancel sessions; settings</text>
-<text x="1760.0" y="230.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">organiser</text>
+<text x="1330.0" y="230.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Add, edit and cancel sessions</text>
+<text x="1760.0" y="230.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">lead</text>
 <line x1="1024.0" y1="250.0" x2="1864.0" y2="250.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="282.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.desk.run</text>
-<text x="1330.0" y="282.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Open and close check-in, call and start matches</text>
-<text x="1760.0" y="282.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
+<text x="1024.0" y="282.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.settings.write</text>
+<text x="1330.0" y="282.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Settings, scoring system, award types</text>
+<text x="1760.0" y="282.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">lead</text>
 <line x1="1024.0" y1="302.0" x2="1864.0" y2="302.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="334.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.players.manage</text>
-<text x="1330.0" y="334.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Mark present, move, place on teams, undo no-shows</text>
-<text x="1760.0" y="334.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
+<text x="1024.0" y="334.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.crew.manage</text>
+<text x="1330.0" y="334.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Who is in the crew; change the lead</text>
+<text x="1760.0" y="334.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">lead</text>
 <line x1="1024.0" y1="354.0" x2="1864.0" y2="354.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="386.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.results.write</text>
-<text x="1330.0" y="386.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Enter and correct results (with a reason)</text>
-<text x="1760.0" y="386.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
+<text x="1024.0" y="386.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.final.manage</text>
+<text x="1330.0" y="386.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Confirm finalists, crown, photos</text>
+<text x="1760.0" y="386.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">lead</text>
 <line x1="1024.0" y1="406.0" x2="1864.0" y2="406.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="438.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.final.manage</text>
-<text x="1330.0" y="438.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Confirm finalists, crown, photos</text>
-<text x="1760.0" y="438.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">organiser</text>
+<text x="1024.0" y="438.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.desk.run</text>
+<text x="1330.0" y="438.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Check-in, call matches, reopen or delay</text>
+<text x="1760.0" y="438.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
 <line x1="1024.0" y1="458.0" x2="1864.0" y2="458.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="490.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">notify.checkin.display</text>
-<text x="1330.0" y="490.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Show the stage QR (Notify, built)</text>
+<text x="1024.0" y="490.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.players.manage</text>
+<text x="1330.0" y="490.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Mark present, move, place on teams, undo</text>
 <text x="1760.0" y="490.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
 <line x1="1024.0" y1="510.0" x2="1864.0" y2="510.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="542.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">moments spotlight</text>
-<text x="1330.0" y="542.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Show standings or the bracket now (built)</text>
+<text x="1024.0" y="542.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">tournament.results.write</text>
+<text x="1330.0" y="542.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Enter and correct results; give awards</text>
 <text x="1760.0" y="542.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
 <line x1="1024.0" y1="562.0" x2="1864.0" y2="562.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="1024.0" y="602.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">Players need no right: registering, teams, check-in and their own</text>
-<text x="1024.0" y="628.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">matches follow from membership and from being on the session.</text>
-<text x="1024.0" y="680.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">tournament_crew (a preset, like screen_crew and moments_crew):</text>
-<text x="1024.0" y="706.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">desk.run, players.manage, results.write, notify.checkin.display,</text>
-<text x="1024.0" y="732.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">the moments spotlight. The event admin role holds every right.</text>
-<text x="1024.0" y="784.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">Rights are proposed for #127 (high risk: sign-in, rights and personal</text>
-<text x="1024.0" y="810.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">data), so the other packages stay normal (P2).</text>
+<text x="1024.0" y="594.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">notify.checkin.display</text>
+<text x="1330.0" y="594.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Show the stage QR (Notify, built)</text>
+<text x="1760.0" y="594.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
+<line x1="1024.0" y1="614.0" x2="1864.0" y2="614.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1024.0" y="646.0" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1024.0 1320.0">moments spotlight</text>
+<text x="1330.0" y="646.0" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1750.0">Show standings or the bracket (built)</text>
+<text x="1760.0" y="646.0" font-size="13.5" fill="#2563eb" font-weight="600" text-anchor="start" data-box="1760.0 1864.0">crew</text>
+<line x1="1024.0" y1="666.0" x2="1864.0" y2="666.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1024.0" y="712.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">Players need no right: registering, teams, check-in and their own</text>
+<text x="1024.0" y="738.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">matches follow from membership and from being on the session.</text>
+<text x="1024.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">tournament_lead (the main responsible person, set per tournament by</text>
+<text x="1024.0" y="816.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">the organiser): every right above. Named as the contact on the rules</text>
+<text x="1024.0" y="842.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">page and the hub. tournament_crew (the helpers the lead or organiser</text>
+<text x="1024.0" y="868.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">adds): the five crew rows; no settings, scoring, final or crew changes.</text>
+<text x="1024.0" y="894.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">The lead is not a platform role: the event admin role still holds every</text>
+<text x="1024.0" y="920.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">right. Rights are for #127 (high risk: rights, sessions, personal data),</text>
+<text x="1024.0" y="946.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1024.0 1864.0">with the crew list on the settings page (D12, mockup 19).</text>
 </svg>

@@ -123,7 +123,7 @@
 <rect x="26.0" y="338.0" width="338.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
 <text x="38.0" y="361.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="34.0 356.0">K7Q2-ALP</text>
 <text x="26.0" y="430.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">One team per session; joining</text>
-<text x="26.0" y="454.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">leaves your waiting-list place.</text>
+<text x="26.0" y="454.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">leaves your earlier team.</text>
 </g>
 <g transform="translate(992.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>

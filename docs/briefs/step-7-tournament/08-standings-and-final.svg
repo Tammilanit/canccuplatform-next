@@ -72,7 +72,7 @@
 <line x1="296.0" y1="283.0" x2="1240.0" y2="283.0" stroke="#343c66" stroke-width="1"/>
 <text x="296.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">1</text>
 <text x="346.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Five</text>
-<text x="626.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">14</text>
+<text x="626.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">14 (12+2)</text>
 <text x="726.0" y="309.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
 <text x="826.0" y="309.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">3</text>
 <text x="1156.0" y="309.0" font-size="14" fill="#3ee39a" font-weight="400" text-anchor="start">▲1</text>
@@ -123,6 +123,7 @@
 <text x="826.0" y="589.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">1</text>
 <text x="1156.0" y="589.0" font-size="14" fill="#ff6b81" font-weight="400" text-anchor="start">▼3</text>
 <line x1="296.0" y1="603.0" x2="1240.0" y2="603.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="620.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">Points = placing + awards: 14 (12+2) is 12 from placing and 2 from an MVP award. Open a row for the breakdown.</text>
 <rect x="296.0" y="627.0" width="944.0" height="92.0" rx="12" fill="#161a2e" stroke="#ffc94d" stroke-width="1"/>
 <text x="312.0" y="657.0" font-size="15" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="312.0 1224.0">Places 10 and 11 are tied on every rule</text>
 <text x="312.0" y="681.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="312.0 1040.0">The rules say a tie-break game decides; record its winner here.</text>

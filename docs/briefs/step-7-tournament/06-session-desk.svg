@@ -97,6 +97,10 @@
 <text x="817.3" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="774.0 860.6">Announce…</text>
 <rect x="874.6" y="323.0" width="94.6" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="921.9" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="878.6 965.2">End early</text>
+<rect x="979.2" y="323.0" width="162.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1060.2" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="983.2 1137.2">Reopen registration</text>
+<rect x="1151.2" y="323.0" width="142.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1222.2" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1155.2 1289.2">Delay by N min</text>
 <rect x="296.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="316.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">40</text>
 <text x="376.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="376.0 668.0">registered · 8 teams</text>
@@ -105,10 +109,10 @@
 <text x="776.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="776.0 1068.0">checked in</text>
 <rect x="1096.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="1116.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">2</text>
-<text x="1176.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1176.0 1468.0">no-shows, replaced</text>
+<text x="1176.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1176.0 1468.0">no-shows</text>
 <rect x="1496.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1516.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">2</text>
-<text x="1576.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1576.0 1868.0">teams waiting</text>
+<text x="1516.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">0</text>
+<text x="1576.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1576.0 1868.0">places left (full)</text>
 <text x="296.0" y="487.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">MATCHES · IN TIME ORDER · QUARTER-FINALS DONE · SEMI-FINALS NOW</text>
 <line x1="376.0" y1="520.0" x2="376.0" y2="725.0" stroke="#343c66" stroke-width="1"/>
 <text x="296.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">19:35</text>
@@ -176,9 +180,9 @@
 <text x="296.0" y="766.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 486.0">Team Epsilon</text>
 <text x="496.0" y="766.0" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="496.0 706.0">Player Eleven</text>
 <rect x="716.0" y="750.0" width="120.5" height="22.0" rx="11.0" fill="#1c2a44"/>
-<text x="776.2" y="764.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="720.0 832.5">Moved up 19:25</text>
+<text x="776.2" y="764.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="720.0 832.5">In 19:25</text>
 <text x="896.0" y="766.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">Alpha room</text>
-<text x="1096.0" y="766.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">From the waiting list</text>
+<text x="1096.0" y="766.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Marked present by the crew</text>
 <rect x="1824.7" y="745.0" width="55.3" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="1852.4" y="764.3" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1828.7 1876.0">Undo</text>
 <line x1="296.0" y1="781.0" x2="1880.0" y2="781.0" stroke="#262c4a" stroke-width="1"/>

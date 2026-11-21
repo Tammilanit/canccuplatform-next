@@ -8,9 +8,12 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 > - **Changed (the core):** U1, U6, L2, L3, L5, D2, D3, D13, E13, P1, P2, P3, P4.
 > - **Back to the accepted answer:** U8, U16, U18, D12, D15, D16, O6, P5.
 > - **New:** D18, P9, F1 (F1 was M12).
+> - **Changed by the lead round of 2026-11-21 (the second: the product owner reviewed the plan against that day's tournament and made six decisions):** U5 (no waiting list), U7, U10, E7, D11 (the waiting list goes), E2 (a manual delay), D2 (the scoring system is editable), D12 (a lead and a crew), P3. **New:** U19 (reopen registration for a while), D20 (named awards).
 > - **Later:** D17, D19, O11 and M1–M11, M13–M15.
 
 **Decide first** (they change the most): P1 (the direction), U1 (the competitive shape), U2 (solo, teams or both), P4 (brackets in step 7), U8 (who enters results), U9 and U10 (check-in and no-shows), P2 (the issue set), P5 (the screen and hub feed in step 7). Since 0030 also: F1 (where Finals and Tournament meet).
+
+**Decided in the lead round of 2026-11-21 (the second):** no waiting list: places per session stay optional and off by default, and a full session shows "Full" (U5); the crew can reopen a closed session's registration for a while (U19); the crew can delay sessions by hand (E2); the tournament has a lead and helpers (D12); named awards such as MVP add points (D20); the lead edits the scoring system (D2). Each is folded into its question below as the answer, not asked again.
 
 **Already decided, so not asked again:** check-in is optional, off by default, set per tournament and switchable per session, and matches inside a session are optional ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md), the catalog); the tournament builds on the signup site's code, not the tourney core, and the mini tourney is the Finals track's ([0025](../../decisions/0025-finals-and-games-modules.md); **superseded by 0030**, see below); registration lives in the module ([0005](../../decisions/0005-signup-site-stays-outside.md)); no tournament history is migrated ([0004](../../decisions/0004-nothing-migrated.md)); sign-in instead of tokens in URLs ([0010](../../decisions/0010-scope.md)); every account is a Discord account and attendees join by venue, link or QR (0027); one standings table across all competitions is backlog ([0022](../../decisions/0022-product-vision.md)); sessions appear in the run of show through the agenda's mirror, and the module follows `agenda.item.delayed` ([agenda.md](../../../contracts/agenda.md#tournament-sessions)).
 
@@ -48,11 +51,12 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **B.** Only the start time, as the legacy; the rest by push.
 - **Recommendation: A.** One set of times for the page, the screen, the bot and the pushes, so they never disagree as the legacy's 30 and 60 minutes did ([mockup 02](02-flow-register.svg)).
 
-### U5. Capacity and the waiting list
-- **A.** Places per session (players or teams), optional; a full session offers a waiting list that moves up by itself when a place frees before the close, with a push.
-- **B.** A waiting list the crew moves by hand.
-- **C.** No capacity, as the legacy.
-- **Recommendation: A.** #127 asks for limits and a waiting list; moving up by itself saves the crew the busiest minutes. After the close the list moves only when no-shows are replaced (U10). **Contract:** `places`, `waiting_count` on the Session; `tournament.player.waitlisted` and `tournament.player.promoted` (personal).
+### U5. Capacity
+**Decided (lead round, 2026-11-21): places optional, no waiting list.** The legacy had no capacity and no waiting list, and the product owner keeps the list out.
+- **A.** Places per session (players or teams), optional and off by default, as today; a full session just shows "Full".
+- **B.** No capacity, as the legacy.
+- **Recommendation: A**, the decided answer. A freed place (a player gives up, U7) is open for the next to register while registration is open; once it is closed the crew may reopen it for a while ([U19](#u19-reopening-registration-for-a-while)). **Contract:** `places` on the Session; no `waiting_count`, and no `tournament.player.waitlisted` or `.promoted` events. ([Mockup 02](02-flow-register.svg).)
+- **Changed by the lead round:** the earlier option "a waiting list that moves up by itself, with a push" is dropped everywhere: the `waiting_count` field, the two events, the "moved up" push and replacing no-shows from a list at the close of check-in (U10, U7, E6, E7).
 
 ### U6. Solo players in a team session
 - **A.** They register alone; at the close the crew places them on short teams, by hand or by "fill from the standings" (balanced by points).
@@ -62,9 +66,10 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **Changed for 0030:** B no longer means a random draw: the core's team builder makes balanced teams (the most even sums). **Recommendation now: A**, and the crew's "fill" button calls the builder. Its input is one number per player: the player's season points so far, which the builder sums like a rating (it needs no rating scale). At the first session everyone has 0, so the fill is then a seeded shuffle, not a balance. The builder needs a player count that is a multiple of the team size, so the button fills the teams that complete and leaves the rest to the crew (E7). The seed is stored, so a fill is repeatable. Random teams still never form by themselves in an official session.
 
 ### U7. Giving up a place
-- **A.** "I can't make it" until the close frees the place at once; after the close it asks the crew (the legacy's wording), and before the start the crew can still promote from the list.
+- **A.** "I can't make it" until the close frees the place at once; after the close it asks the crew (the legacy's wording), and before the start the crew can still free the place or reopen registration ([U19](#u19-reopening-registration-for-a-while)).
 - **B.** Free until the start.
 - **Recommendation: A.** Matches are made at the close; a late drop-out needs a person to decide ([mockup 02](02-flow-register.svg)).
+- **Changed by the lead round:** there is no list to promote from; a freed place is simply open again while registration is open, and the crew may reopen it ([U19](#u19-reopening-registration-for-a-while)).
 
 ### U8. Who enters results
 #129 asks for "results agreed by both sides where the format has two sides".
@@ -82,10 +87,10 @@ Check-in is off by default (0027). When on:
 
 ### U10. No-shows
 With check-in on, at its close:
-- **A.** Players not checked in are moved out; the waiting list moves up into their places (team: a substitute first, then the list); each gets a push (and a DM in step 6); the crew can undo until the session ends.
+- **A.** Players not checked in are marked no-show (0 points); each gets a push (and a DM in step 6); the crew can undo until the session ends. Nobody is replaced from a list; the crew may reopen registration ([U19](#u19-reopening-registration-for-a-while)) to fill places, and a team gets a substitute from its own roster first.
 - **B.** The crew decides one by one.
 - **C.** Only flagged; nothing moves.
-- **Recommendation: A**, as #129 says. With check-in off nobody is a no-show; the legacy's 0-point "no-show" row stays for registrants who never played (from the roster). A team below its size after replacements goes to the crew (E7).
+- **Recommendation: A**, as #129 says. With check-in off nobody is a no-show; the legacy's 0-point "no-show" row stays for registrants who never played (from the roster). A team below its size after a no-show goes to the crew (E7). **Changed by the lead round:** the waiting list no longer moves up at the close of check-in.
 
 ### U11. The final
 The legacy flagged one session as the final; finalists were picked outside the system and validated against the leaderboard.
@@ -134,6 +139,12 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **B.** The bot keeps its own registration flow.
 - **Recommendation: A**, as the catalog says ("bot admin commands that change tournament data are API calls made with the person's rights").
 - **Back to its accepted answer** (A): the 0030 change added mini tournaments to `/tournament`, which wait; `/finals` stays the Finals app's command, through its provider contract.
+
+### U19. Reopening registration for a while
+**New for the lead round (2026-11-21).** The legacy had a reopen on its admin page; its logic is ported.
+- **A.** A crew action on a closed session: "Reopen registration" until a time or for N minutes, and "Close now". It closes by itself through the scheduler; registrants and the tournament's followers get a push ("Registration for {session} is open again until {time}"); the screen and the hub show it; the session's history records who reopened it and until when.
+- **B.** The organiser edits the close time of the session by hand.
+- **Recommendation: A** (decided; [mockup 20](20-reopen-and-delay.svg)). It replaces the waiting list as the way to fill a late place (U5, U10, E7). The legacy's reopen logic is ported, and the close is a due row in the scheduler like the others (O1). Right: `tournament.desk.run`. **Contract (additive):** `registration_reopened_until` (string or null) on the Session; a new event `tournament.registration.reopened` (event-wide, `public`, for followers and the screen, and personal to the session's registered players; `data`: `session`, `until`, `actor_user_id`), declared as a trigger of Notify's `tournament` topic ([D11](#d11-pushes-and-dms)); the automatic close emits the catalog's existing `tournament.registration.closed`; `POST /api/tournament/sessions/{id}/registration/reopen` (`until` or `minutes`) and `/close`. The alternative, a `reopened_until` field on `tournament.registration.opened`, would reuse Notify's declared trigger but blurs a first opening with a reopening, so the pack recommends the new event.
 
 ## L · Look and feel
 
@@ -193,10 +204,11 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **Recommendation: A.** The catalog already has `tournament_id` and matches; TB4 asked for a season id from the start. **Contract:** the Tournament (`id`, `name`) (P8).
 
 ### D2. Formats and points
-- **A.** Three shapes: solo, teams, final. Points per placement are an event setting (3, 2, 1, 0 by default) with an optional bonus; a session may override.
+- **A.** Three shapes: solo, teams, final. Points per placement are an editable table in the tournament's settings (3, 2, 1, 0 by default: 1st, 2nd, took part, no-show); more places can be added (3rd, 4th …); a session may override the table.
 - **B.** Points by rank for solo games (for example 10, 8, 6 …).
-- **Recommendation: A**, with B as a later option. Coarse placements are why any game fits; a per-rank table invites arguments about game modes.
-- **Changed for 0030:** Points are now the core's scoring tables (`points` with `{ranks, rest, no_show}`), so B is a table in data, not code. **Recommendation now: A**, unchanged in substance: the season's default table is 3, 2, 1, 0, a session may override it, and a per-rank table stays a later option the core already supports.
+- **Recommendation: A, editable, with B available** (decided in the lead round, 2026-11-21). Coarse placements are why any game fits, and the core supports a per-rank table as data, so B is a choice of the table's shape, not code. **Who:** the tournament lead edits the table in settings (right `tournament.settings.write`, [D12](#d12-rights)). **Changing it after results exist** recalculates the standings, asks for a reason (shown on the rules page and kept in the History) and shows which standings change before saving. The rules page always shows the table in force ([mockup 19](19-crew-scoring-awards.svg)).
+- **Changed for 0030:** Points are the core's scoring tables (`points` with `{ranks, rest, no_show}`), so B is a table in data, not code. The season's default table is 3, 2, 1, 0 and a session may override it.
+- **Changed by the lead round:** the table is editable by the lead, with a reason and a recalculation; the plain "bonus" is replaced by named awards ([D20](#d20-awards)).
 
 ### D3. Standings and tie-breaks
 The legacy sorted by points only.
@@ -243,15 +255,15 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **Recommendation: A**, as step 5 settled for pizza. **Contract:** both endpoints and the stream.
 
 ### D11. Pushes and DMs
-- **A.** Notify's tournament topic as declared (registration opened; check-in opened; match called, urgent), plus "you moved up", "you're out (no-show)" and "session moved or cancelled" in the personal part; the bot's DMs (step 6) follow the same events.
+- **A.** Notify's tournament topic as declared (registration opened; check-in opened; match called, urgent), plus "registration open again" (a reopening, to registrants and the tournament's followers), "you're out (no-show)" and "session moved or cancelled" in the personal part; the bot's DMs (step 6) follow the same events.
 - **B.** Only what Notify declares today.
 - **Recommendation: A.** Each added push answers a question the player would otherwise ask the crew. **Contract:** triggers added to the topic (notify.md, additive).
 
 ### D12. Rights
-- **A.** `tournament.sessions.write`, `tournament.desk.run`, `tournament.players.manage`, `tournament.results.write`, `tournament.final.manage`; a `tournament_crew` preset; settings through `admin.settings.write`.
+- **A.** A tournament lead and a crew of helpers. Rights: `tournament.sessions.write`, `tournament.settings.write` (settings, the scoring system and the award types), `tournament.crew.manage` (who is in the crew, and the lead), `tournament.final.manage`, `tournament.desk.run` (check-in, call and start matches, reopen or delay a session), `tournament.players.manage` and `tournament.results.write` (results, corrections and awards). Presets `tournament_lead` (all of them) and `tournament_crew` (`desk.run`, `players.manage`, `results.write`, `notify.checkin.display`, the moments spotlight).
 - **B.** One `tournament.manage` right.
-- **Recommendation: A** ([mockup 13](13-settings-and-rights.svg)). The stage crew can run the desk without editing sessions; defined and tested in #127 (high), so the other packages stay normal.
-- **Back to its accepted answer** (A): the 0030 change added `tournament.minis.manage`, which waits with the mini tournaments.
+- **Recommendation: A** ([mockup 13](13-settings-and-rights.svg), [mockup 19](19-crew-scoring-awards.svg)), decided in the lead round (2026-11-21). The **tournament lead** is the main responsible person, set per tournament by the organiser, named on the rules page and in the hub as the contact; they hold every tournament right. **Tournament crew** are helpers added by the lead or the organiser: they run the desk and the crew phone, check in, enter results and awards, and reopen or delay sessions; they do not change settings, the scoring system, the final or the crew. The settings page has a crew list (add or remove a helper, change the lead; `GET` and `PUT /api/tournament/crew`, additive). The event admin role still holds every right. Defined and tested in #127 (high), so the other packages stay normal.
+- **Changed by the lead round:** the earlier answer had one `tournament_crew` preset and settings through `admin.settings.write`; the lead is new, and the settings and crew rights are the lead's. The `tournament.minis.manage` of the 0030 revision still waits with the mini tournaments.
 
 ### D13. Seeding
 - **A.** From the event series' earlier results (#150's series) when the session has rounds, else from this event's standings, else random; the crew may reorder.
@@ -282,6 +294,12 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **B.** Store only the template and the entrant count, and rebuild the format with the core at each step.
 - **Recommendation: A**, as the core plan has it. A core bump is a normal platform PR whose module tests run against it; THE FINALS preset's equivalence tests stay in the core's repo.
 
+### D20. Awards
+**New for the lead round (2026-11-21).** The legacy's plain "bonus" (a non-negative number added to a result) becomes named awards.
+- **A.** The tournament lead keeps a list of award types in settings (default: MVP; examples: best play, sportsmanship), each with default points. The crew gives an award to a participant in a session, with editable points and an optional note; a participant may get several. Award points add to the session's points (the legacy's base plus a non-negative bonus, ported); the standings show the breakdown (placing + awards), and the player's page and the champions page show the award names.
+- **B.** Keep one bonus number per result.
+- **Recommendation: A** ([mockup 19](19-crew-scoring-awards.svg), [07](07-results-and-corrections.svg), [08](08-standings-and-final.svg), [14](14-follow-and-champions.svg)). Giving, changing or taking back an award is a **result change**: one transaction under the row lock, a History line, and the correction rules of [D7](#d7-corrections-and-the-history) (a reason to change one; after the final is crowned it needs `tournament.final.manage`, E5). The award types and their default points are the lead's (`tournament.settings.write`); giving one needs `tournament.results.write`. **Contract (additive):** `awards` (type, points, note) and `points_placing` on the Result (`points` stays the total, so no consumer changes) and `award_types` in the tournament's settings; `tournament-scores-bonus` stays as the points rule's test, now over awards.
+
 ## E · Edge cases and failure
 
 ### E1. Races
@@ -291,7 +309,8 @@ Two players take the last place; two players join a team with one place left; th
 ### E2. A session moves
 - **A.** On `agenda.item.delayed` the module moves the start and keeps the close's offset (the legacy's `computePostpone`), only while the times still match the item's; registrants get a push; places are kept.
 - **B.** The organiser moves sessions by hand.
-- **Recommendation: A**, as agenda.md says ([mockup 12](12-edge-states.svg)). A move after check-in opened reopens nothing; the crew decides.
+- **C.** A plus the manual delay: a crew action "Delay by N minutes" for one session, or for it and every later session that day, with the same effect.
+- **Recommendation: C** (decided in the lead round, 2026-11-21: "A plus the manual delay", [mockup 20](20-reopen-and-delay.svg)). The close keeps its offset (`computePostpone`) either way; registrants get a push; the agenda item moves too, so the run of show stays one (the module asks the agenda to delay the item, and recognises the `agenda.item.delayed` that follows as its own change, already applied); places and check-ins are kept; History records it. The right is `tournament.desk.run`, so a helper can do it. **Contract (additive):** `POST /api/tournament/sessions/{id}/delay` (`minutes`, `scope`: `session` or `session_and_later`); it emits the catalog's `tournament.session.changed` (`changed` names the start and the close). A move after check-in opened reopens nothing; the crew decides.
 
 ### E3. The bot is down
 - **A.** Every step has a manual path: no voice rooms means results by hand; the desk shows the bot's health and a "ask the bot again".
@@ -312,7 +331,7 @@ Two players take the last place; two players join a team with one place left; th
 - **Recommendation: A.** A LAN party's timing is soft; a timer the crew forgets is worse than a decision.
 
 ### E7. A team short at the close
-- **A.** It goes to the crew: fill from solo players (U6), play short, or move to the waiting list.
+- **A.** It goes to the crew: fill from solo players (U6), play short, or remove the team (registration may be reopened, U19, to bring a replacement).
 - **B.** Dropped automatically.
 - **Recommendation: A** ([mockup 03](03-teams.svg)).
 
@@ -405,7 +424,7 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 
 ### P3. The exit criterion
 - **A.** "A test tournament runs end to end" as it stands.
-- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a waiting list, check-in, a called match on a phone and a screen, results, a correction, the standings live, a crowned final.
+- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a full session reopened for a while, check-in, a called match on a phone and a screen, results with an award, a correction, the standings live, a crowned final.
 - **Recommendation: B.** It is testable in CI's demo stack.
 - **Changed for 0030:** **Recommendation now: B**, plus one session played as a bracket from the core, so the exit shows the engine the cup runs on.
 

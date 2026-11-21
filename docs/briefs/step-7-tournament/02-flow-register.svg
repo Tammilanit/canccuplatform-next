@@ -3,12 +3,12 @@
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
 <rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#f3f4f6"/>
 <text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">02 · From the screen to a place in the session (player)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: an attendee sees the check-in QR or the schedule, opens the tournament in the hub and registers, solo or on a waiting list</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: an attendee sees the check-in QR or the schedule, opens the tournament in the hub and registers; a full session says Full, and the crew may reopen it</text>
 <text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 312.0">1 · The Tournament page</text>
 <text x="352.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="352.0 632.0">2 · A session</text>
 <text x="672.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="672.0 952.0">3 · Registered</text>
-<text x="992.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="992.0 1272.0">4 · Full: waiting list</text>
-<text x="1312.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1592.0">5 · Moved up</text>
+<text x="992.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="992.0 1272.0">4 · Full</text>
+<text x="1312.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1592.0">5 · Reopened</text>
 <text x="1632.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1632.0 1912.0">6 · Can&#x27;t make it</text>
 <g transform="translate(32.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
@@ -144,21 +144,12 @@
 <text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
 <rect x="26.0" y="112.0" width="338.0" height="96.0" rx="16" fill="#1d2442" stroke="#ffc94d" stroke-width="1.5"/>
 <text x="44.0" y="146.0" font-size="17" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="44.0 346.0">Full · 8 of 8 teams</text>
-<text x="44.0" y="176.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">2 teams on the waiting list</text>
-<text x="26.0" y="246.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start">Join the waiting list as</text>
-<rect x="26.0" y="264.0" width="338.0" height="64.0" rx="16" fill="#1d2442" stroke="#3ddcff" stroke-width="1.5"/>
-<circle cx="50.0" cy="296.0" r="8" fill="#3ddcff" stroke="#a9b1d6" stroke-width="1.5"/>
-<text x="70.0" y="292.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="70.0 346.0">A new team</text>
-<text x="70.0" y="314.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="70.0 346.0">you lead it, invite four</text>
-<rect x="26.0" y="340.0" width="338.0" height="64.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
-<circle cx="50.0" cy="372.0" r="8" fill="none" stroke="#a9b1d6" stroke-width="1.5"/>
-<text x="70.0" y="368.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="70.0 346.0">Alone</text>
-<text x="70.0" y="390.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="70.0 346.0">the crew may fill a team</text>
-<text x="26.0" y="450.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">If a team drops out before 19:15,</text>
-<text x="26.0" y="474.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">the first team on the list moves up</text>
-<text x="26.0" y="498.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">and you get a push.</text>
-<rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#3ddcff"/>
-<text x="195.0" y="705.0" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Join the waiting list</text>
+<text x="44.0" y="176.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Full. A reopening sends you a push.</text>
+<text x="26.0" y="262.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">There is no waiting list. Registration</text>
+<text x="26.0" y="286.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">for a full session stays shut unless the</text>
+<text x="26.0" y="310.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">crew reopens it for a while.</text>
+<rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#343c66"/>
+<text x="195.0" y="705.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Full</text>
 </g>
 <g transform="translate(1312.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
@@ -174,14 +165,14 @@
 <rect x="20.0" y="120.0" width="350.0" height="86.0" rx="18" fill="#e5e7eb" opacity="0.97"/>
 <text x="36.0" y="144.0" font-size="12" fill="#374151" font-weight="600" text-anchor="start" data-box="36.0 310.0">DEMO EVENT · TOURNAMENT</text>
 <text x="356.0" y="144.0" font-size="12" fill="#6b7280" font-weight="400" text-anchor="end">now</text>
-<text x="36.0" y="168.0" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start" data-box="36.0 358.0">You&#x27;re in: Demo Arena 5v5</text>
-<text x="36.0" y="190.0" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="36.0 358.0">Team Epsilon moved up from the waiting list</text>
+<text x="36.0" y="168.0" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start" data-box="36.0 358.0">Demo Arena 5v5 is open again</text>
+<text x="36.0" y="190.0" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="36.0 358.0">Registration is open again until 19:20</text>
 <text x="26.0" y="260.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">In the hub</text>
 <rect x="26.0" y="276.0" width="338.0" height="130.0" rx="16" fill="#1d2442" stroke="#3ee39a" stroke-width="1.5"/>
-<text x="44.0" y="310.0" font-size="15" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="44.0 346.0">Moved up from the waiting list</text>
-<text x="44.0" y="338.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 346.0">Team Epsilon · 19:30</text>
-<text x="44.0" y="364.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Check-in opens 19:15. Can&#x27;t come?</text>
-<text x="44.0" y="386.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Tell us, so the next team gets it.</text>
+<text x="44.0" y="310.0" font-size="15" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="44.0 346.0">Registration open again</text>
+<text x="44.0" y="338.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 346.0">Demo Arena 5v5 · until 19:20</text>
+<text x="44.0" y="364.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Closes by itself at 19:20. Register</text>
+<text x="44.0" y="386.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">now, a team or alone, while it is open.</text>
 </g>
 <g transform="translate(1632.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
@@ -218,7 +209,7 @@
 <text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The timeline is the scheduler&#x27;s, so the player sees the same times the screen and the bot use (U4).</text>
 <circle cx="985.0" cy="819.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Full sessions offer a waiting list; teams join it as a team or one by one (U5, U6).</text>
+<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">A full session says Full; there is no waiting list. The crew can reopen registration for a while and followers get a push (U5, U7).</text>
 <circle cx="45.0" cy="853.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
 <text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Moving up is a push in the tournament topic and a For you card (D11).</text>

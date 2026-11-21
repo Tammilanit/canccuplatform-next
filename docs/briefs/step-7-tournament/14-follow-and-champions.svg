@@ -130,6 +130,9 @@
 <text x="44.0" y="522.0" font-size="14" fill="#a9b1d6" font-weight="700" text-anchor="start">3rd</text>
 <text x="96.0" y="522.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="96.0 346.0">Demo Player</text>
 <text x="26.0" y="580.0" font-size="14" fill="#3ddcff" font-weight="600" text-anchor="start">Session winners ›</text>
+<text x="26.0" y="624.0" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" letter-spacing="1">AWARDS</text>
+<text x="26.0" y="650.0" font-size="14" fill="#b98cff" font-weight="600" text-anchor="start" data-box="26.0 364.0">MVP · Player Six, Demo Arena 5v5</text>
+<text x="26.0" y="674.0" font-size="14" fill="#b98cff" font-weight="600" text-anchor="start" data-box="26.0 364.0">Best play · Demo Player, Demo Racer</text>
 </g>
 <g transform="translate(992.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
@@ -146,14 +149,15 @@
 <text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
 <text x="26.0" y="136.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Several sessions in different games</text>
 <text x="26.0" y="164.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">make one tournament. Each session</text>
-<text x="26.0" y="192.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">gives points: winner 3, runner-up 2,</text>
-<text x="26.0" y="220.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">played 1, no-show 0.</text>
+<text x="26.0" y="192.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">gives points by placing (the table in force:</text>
+<text x="26.0" y="220.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">3, 2, 1, 0). Awards add: MVP +2, best play +1.</text>
 <text x="26.0" y="276.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">The top 10 play the final on Sunday.</text>
 <text x="26.0" y="304.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Ties: more wins, then more</text>
 <text x="26.0" y="332.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">sessions, then a tie-break game.</text>
 <text x="26.0" y="388.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">Written by the organiser; the points</text>
 <text x="26.0" y="416.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">come from the settings, so the page</text>
 <text x="26.0" y="444.0" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">never disagrees with the scores.</text>
+<text x="26.0" y="500.0" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="26.0 364.0">Contact: Demo Lead, tournament lead</text>
 </g>
 <g transform="translate(1312.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
@@ -170,9 +174,9 @@
 <text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
 <rect x="26.0" y="112.0" width="338.0" height="160.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
 <text x="44.0" y="146.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start">Thanks for playing</text>
-<text x="44.0" y="176.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">You: 3rd in the final, 13 points,</text>
-<text x="44.0" y="200.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">5 sessions, 2 wins.</text>
-<text x="44.0" y="236.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Seeds the next event&#x27;s final.</text>
+<text x="44.0" y="176.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">You: 3rd in the final, 13 points</text>
+<text x="44.0" y="200.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="44.0 346.0">(11 placing + 2 MVP award),</text>
+<text x="44.0" y="236.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">5 sessions, 2 wins. Seeds the next event.</text>
 <text x="26.0" y="310.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">Results stay with the event; names</text>
 <text x="26.0" y="332.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26.0 364.0">are anonymised after 12 months.</text>
 </g>
