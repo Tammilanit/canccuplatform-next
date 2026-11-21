@@ -44,6 +44,15 @@ Added by the lead after the session, under `## Plan`, without rewriting the rese
 - mockups the session changed or added, as new files in the same folder (for example `plan-<screen>.html`), listed here; the pack's own files stay as they are;
 - the step's final issue set, in its order: each issue linked, marked kept, merged into another, dropped or new, with its rewritten goal and criteria where they change. The lead applies it to the tracker after the merge.
 
+## The pack page
+The product owner reads a pack as one page: `scripts/pack-page` builds it from the brief with no AI tokens, so the lead only writes the verdict ([#718](https://github.com/Tammilanit/canccuplatform-next/issues/718)).
+1. Check out the pack PR's head and write a short UX verdict in a Markdown file outside the repo (a few lines: ready for the session or not, and why).
+2. Build: `scripts/pack-page docs/briefs/<name>.md --verdict verdict.md --out <name>.html`. The page has the brief's title, the verdict, a contents list, every section of the brief, and then every sheet of `<name>/`, in the order of the brief's **Every mockup** table (sheets it does not list follow by file name), each with its row as the caption. A sheet the text shows inline becomes a link to its figure, so each sheet is in the page once. The page is one file with no outside requests, reads at 390 px and 1280 px, and follows the reader's light or dark setting.
+3. Check: `scripts/pack-page --check <head sha> <name>.html` compares every sheet in the page with the file at that commit and exits 1 on any difference, so the page provably shows the PR's head. Run it again on a page built earlier before publishing it after a push.
+4. Publish the file yourself; the script never uploads anything.
+
+Each sheet is embedded as a base64 data URI of its file's exact bytes, not as inline `<svg>`: inline, the sheets' `<style>` blocks and shared ids (`id="ah"` in most sheets) would restyle and redraw each other. Links to other files (`questions.md`, decisions) stay relative, as in the brief.
+
 ## Rules
 - Nothing event-specific, as everywhere in this repo: use the demo event (`events/demo/`) in text and mockups.
 - Mockups are drawn new: legacy screenshots are never used as mockups. HTML mockups are self-contained (no external scripts, fonts, styles or images) and open straight from the file; so they cannot be split, `scripts/file-size-exemptions.txt` exempts them from the file-size warning. The no-event-names check reads HTML and SVG text but not raster images, so the reviewer inspects every image in a mockup for real event names, venues, hostnames, IPs, Discord ids and personal names.

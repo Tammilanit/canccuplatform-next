@@ -89,7 +89,7 @@ test("every sheet is embedded byte for byte, in Every mockup's order, with its c
 test("a sheet the brief's text shows becomes a link to its figure, so each sheet is embedded once", () => {
   const html = buildPage({ md: brief() });
   assert.equal(embedded(html).filter((s) => s.src.endsWith("02-flow.svg")).length, 1);
-  assert.match(html, /<a href="#sheet-02-flow">[^<]*The first view/);
+  assert.match(html, /<a class="sheet-link" href="#sheet-02-flow">[^<]*The first view/);
   assert.match(html, /<a href="#sheet-01-directions">01-directions\.svg<\/a>/, "Every mockup's links point at the figures");
 });
 
@@ -99,11 +99,15 @@ test("the page is self-contained and works at phone and desktop width in light a
   assert.match(html, /@media \(prefers-color-scheme: light\)/);
   assert.match(html, /--canccu-page-background:/);
   assert.match(html, /max-width: 100%/);
-  assert.doesNotMatch(html, /<script|<link |src="(?!data:)/, "no scripts and nothing fetched");
+  assert.doesNotMatch(html, /<script|<link |(?<![-\w])src="(?!data:)/, "no scripts and nothing fetched");
 });
 
-test("a book embeds its PNGs from the artifact folder, falling back to the book's own folder, and its SVGs", () => {
+test("a book embeds its PNGs from the artifact folder, falling back to the book's own folder, and its SVGs", (t) => {
   const artifact = join(repo, "artifact");
+  t.after(() => {
+    rmSync(join(repo, "docs/reports/demo-book"), { recursive: true, force: true });
+    rmSync(artifact, { recursive: true, force: true });
+  });
   mkdirSync(artifact, { recursive: true });
   mkdirSync(join(repo, "docs/reports/demo-book"), { recursive: true });
   writeFileSync(join(artifact, "b01-front.png"), png(1));
@@ -116,8 +120,6 @@ test("a book embeds its PNGs from the artifact folder, falling back to the book'
   assert.ok(shots[2].bytes.equals(png(2)));
   assert.ok(shots[1].bytes.equals(sheet("01-directions.svg")));
   assert.match(html, /<td><img [^>]*alt="Front page"/, "images stay where the book puts them");
-  rmSync(join(repo, "docs/reports/demo-book"), { recursive: true });
-  rmSync(artifact, { recursive: true });
 });
 
 test("a missing image stops the build with its name", () => {
@@ -149,7 +151,9 @@ test("--check fails on a sheet changed at the ref, a sheet missing there, or a p
 });
 
 test("the CLI writes the page, and --check exits 0 on a match, 1 on a difference, 2 on bad usage", () => {
-  const out = join(repo, "page.html");
+  // Outside the repo: the commits below add every file in it.
+  const outDir = mkdtempSync(join(tmpdir(), "pack-page-out-"));
+  const out = join(outDir, "page.html");
   const run = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { cwd: repo, encoding: "utf8" });
   assert.equal(run(brief(), "--out", out).status, 0);
   assert.equal(run("--check", "HEAD", out).status, 0);
@@ -161,14 +165,14 @@ test("the CLI writes the page, and --check exits 0 on a match, 1 on a difference
   assert.equal(run("--check", "HEAD").status, 2);
   assert.equal(run().status, 2);
   git("reset", "-q", "--hard", "HEAD~1");
-  rmSync(out);
+  rmSync(outDir, { recursive: true });
 });
 
 test("Markdown: nested lists, ordered lists, tables with escaped pipes, quotes, code and emphasis", () => {
   const { html } = renderMarkdown(readFileSync(brief(), "utf8"));
   assert.match(html, /<ul>\s*<li>The hero fills the screen:\s*<ul>\s*<li>the clock;<\/li>/);
   assert.match(html, /<ol>\s*<li>The organiser opens Studio\.<\/li>/);
-  assert.match(html, /<td><code>picks \| the<\/code> layout\?<\/td>/);
+  assert.match(html, /<td>Who <code>picks \| the<\/code> layout\?<\/td>/);
   assert.match(html, /<blockquote>\s*<p><strong>Source update\.<\/strong>/);
   assert.match(html, /<strong>now<\/strong>, with <code>screen\.changed<\/code> as the <em>only<\/em> event/);
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
