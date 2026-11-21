@@ -38,13 +38,13 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **A.** Solo only, as the legacy; teams form in voice.
 - **B.** Teams only for team games, solo for the rest, chosen per session.
 - **C.** B, plus solo players may register for a team session and be placed on a team (U6).
-- **Recommendation: C.** A called match needs its teams before the voice room exists, and the screen needs their names; solo sign-ups keep the legacy's "just show up" for people without a group ([mockup 03](03-teams.svg)). **Contract:** teams and registrations in `contracts/tournament.md` (new).
+- **Recommendation: C.** A called match needs its teams before the voice room exists, and the screen needs their names; solo sign-ups keep the legacy's "just show up" for people without a group ([mockup 03](03-teams.svg)). **Contract:** teams and registrations in `contracts/tournament.md` (new). **The season is individual:** a team exists for one session only; every member gets the team's placement points plus their own awards, and no team carries points to the next session.
 
 ### U3. How teams form
 - **A.** A leader creates the team and shares a link or a short code; others join until the close (esports platforms).
 - **B.** The leader types the members' names.
 - **C.** The crew builds every team.
-- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session.
+- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session. A team ends with its session; the season never sees team names.
 
 ### U4. What the player sees of the timeline
 - **A.** Each session page shows its timeline (close, voice rooms, the call, results) from the scheduler's own times, and the For you card shows the next step.
@@ -215,6 +215,7 @@ The legacy sorted by points only.
 - **A.** Points, then more first places, then more sessions played, then a tie-break game the crew records.
 - **B.** Points, then the earlier registration.
 - **Recommendation: A.** The rules page already asked for tie-break games; this makes the last step a record, not a guess. **Contract:** `tie_break` on a standings row.
+- **The season is individual:** the standings, the final cut and the champions are per person, as the legacy's `collapseLeaderboardRows` ("one person once"); a team's placement points go to each member, and no team standing exists.
 - **Changed for 0030:** The standings and their tie-break chain are the core's `standings` (chain `points`, `firsts`, `played`, `tie_break`), whose ranks are also the final's cut. **Recommendation now: A**, computed by the core; the module keeps the crew's recorded tie-break order.
 
 ### D4. The voice handshake
