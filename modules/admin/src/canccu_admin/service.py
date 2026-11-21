@@ -53,6 +53,15 @@ def _replace_dir(target: Path, staging: Path) -> None:
         shutil.move(str(child), target / child.name)
 
 
+def _copy_parts(source: Path, parts: tuple[str, ...], target: Path) -> None:
+    for part in parts:
+        src = source / part
+        if src.is_dir():
+            shutil.copytree(src, target / part)
+        elif src.is_file():
+            shutil.copy(src, target / part)
+
+
 class Service:
     def __init__(
         self,
@@ -200,11 +209,22 @@ class Service:
         with tempfile.TemporaryDirectory() as tmp:
             staging = Path(tmp)
             await asyncio.to_thread(prof.unpack_zip, data, staging)
-            loaded = await asyncio.to_thread(prof.read_profile_dir, staging, self.validator)
-            if loaded.warnings:
-                raise prof.ProfileInvalid(loaded.warnings[0])
-            await self._apply(loaded.document, actor)
-            await asyncio.to_thread(_replace_dir, self.event_dir, staging)
+            return await self._import_staged(staging, actor)
+
+    async def import_dir(self, source: Path, parts: tuple[str, ...], actor: str) -> dict[str, Any]:
+        """Apply the profile in `source` as an import does: only `parts` of it (the profile and
+        its assets) replace the event folder, so `source` itself is never moved or changed."""
+        with tempfile.TemporaryDirectory() as tmp:
+            staging = Path(tmp)
+            await asyncio.to_thread(_copy_parts, source, parts, staging)
+            return await self._import_staged(staging, actor)
+
+    async def _import_staged(self, staging: Path, actor: str) -> dict[str, Any]:
+        loaded = await asyncio.to_thread(prof.read_profile_dir, staging, self.validator)
+        if loaded.warnings:
+            raise prof.ProfileInvalid(loaded.warnings[0])
+        await self._apply(loaded.document, actor)
+        await asyncio.to_thread(_replace_dir, self.event_dir, staging)
         # Only now: theming re-reads the logo on this event, so the new files must be in place.
         await self._publish_profile("admin.profile.loaded", loaded.document, actor)
         return _summary(loaded.document, loaded.upgraded_from)
