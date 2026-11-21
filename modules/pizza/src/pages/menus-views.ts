@@ -1,6 +1,6 @@
 /**
  * Pizzerias and menus (mockup 11 A–C): the event's pizzerias, one pizzeria with its menu, and the
- * menu CSV's preview before anything changes. Reading a menu photo (11 D) is the money issue's.
+ * menu CSV's preview before anything changes; reading a menu photo (11 D) is in menu-read.ts.
  */
 import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
@@ -96,7 +96,7 @@ export function pizzeriasView(c: PageCtx, list: PizzeriaView[], error?: string):
 }
 
 /** Mockup 11 B: one pizzeria, its details and its menu. */
-export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string): Html {
+export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string, reader = false): Html {
   const menu = p.menu ?? { items: [], base: null, toppings: [] };
   const radio = (v: "delivery" | "takeaway", label: string) =>
     html`<label class="pizza-choice"
@@ -164,6 +164,15 @@ export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string): Html 
         href="${P}/menu.csv?pizzeria_id=${p.id}"
         >${c.t("menus.download")}</a
       >
+      ${
+        reader
+          ? html`<a
+              class="canccu-button canccu-button--secondary canccu-button--sm"
+              href="${P}/${p.id}/read"
+              >${c.t("read.button")}</a
+            >`
+          : ""
+      }
     </div>
     <ul class="canccu-card canccu-card--flush canccu-list">
       ${menu.items.map(

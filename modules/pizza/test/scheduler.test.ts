@@ -37,7 +37,7 @@ db("the scheduler", () => {
   });
   beforeEach(async () => {
     await pool.query(
-      `TRUNCATE pizza_due, pizza_crew, pizza_order_log, pizza_items, pizza_orders, pizza_menu_entries,
+      `TRUNCATE pizza_receipts, pizza_paid, pizza_due, pizza_crew, pizza_order_log, pizza_items, pizza_orders, pizza_menu_entries,
          pizza_pizzerias, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants`,
     );
     w = await world(pool);

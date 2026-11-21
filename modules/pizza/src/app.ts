@@ -10,7 +10,12 @@ import { MAX_BYTES } from "./menu-csv.js";
 import { menuRoutes } from "./menu-routes.js";
 import { moneyRoutes } from "./money-routes.js";
 import { orderRoutes } from "./order-routes.js";
+import { paidRoutes } from "./paid.js";
 import { pageRoutes } from "./pages/index.js";
+import { photoBodies } from "./photos.js";
+import { readerKeyRoutes } from "./reader-key.js";
+import { readerRoutes } from "./reader-routes.js";
+import { receiptRoutes } from "./receipts.js";
 import { recordRoutes } from "./record-routes.js";
 
 export function buildApp(deps: AppDeps): FastifyInstance {
@@ -42,6 +47,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       done(null, form);
     },
   );
+  photoBodies(app);
   void app.register((event, _opts, done) => {
     installTenancy(event, deps.tenants);
     const noted = new Set<string>();
@@ -55,6 +61,10 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     orderRoutes(event, deps);
     itemRoutes(event, deps);
     moneyRoutes(event, deps);
+    receiptRoutes(event, deps);
+    paidRoutes(event, deps);
+    readerRoutes(event, deps);
+    readerKeyRoutes(event, deps);
     menuRoutes(event, deps);
     recordRoutes(event, deps);
     liveRoutes(event, deps);

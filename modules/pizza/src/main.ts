@@ -3,6 +3,9 @@ import pg from "pg";
 import {
   AdminClient,
   Bus,
+  ConfigError,
+  FILES_ROOT,
+  SecretBox,
   Outbox,
   RightsChecker,
   ServiceIdentity,
@@ -19,7 +22,9 @@ import {
   valkeyCheck,
   withTenant,
 } from "@canccu/kit";
+import { anthropicReader } from "./anthropic-reader.js";
 import { buildApp } from "./app.js";
+import { FakeReader } from "./fake-reader.js";
 import { tenantsAudit } from "./audit.js";
 import { handlePlatformEvent, handleTenantEvent } from "./consumer.js";
 import { hostFetch } from "./host-fetch.js";
@@ -36,6 +41,22 @@ const PORT = 8080;
 const MIGRATION_LOCK = 0x7122a;
 const OUTBOX_RETRY_MS = 2000;
 const UPKEEP_MS = 3_600_000;
+
+/** The bytes of deploy/compose.yml's stand-in key: anything sealed with it is readable by all. */
+const PLACEHOLDER_KEY = Buffer.from("canccu-local-only-secrets-key-32");
+
+/**
+ * The secrets key that seals the AI reader's provider key, or null without one (no key can then be
+ * set, and the reader stays off). The Compose stand-in runs only in a dev version.
+ */
+function secretsFromEnv(version: string): SecretBox | null {
+  if (!process.env.CANCCU_SECRETS_KEY?.trim()) return null;
+  const box = SecretBox.fromEnv();
+  const raw = process.env.CANCCU_SECRETS_KEY.split(":")[1] ?? "";
+  if (Buffer.from(raw, "base64").equals(PLACEHOLDER_KEY) && version !== "dev")
+    throw new ConfigError("CANCCU_SECRETS_KEY is the local-only placeholder outside a dev version");
+  return box;
+}
 
 function env(name: string): string {
   const value = process.env[name];
@@ -120,6 +141,13 @@ async function main(): Promise<void> {
   const deps = {
     ...base,
     live,
+    filesRoot: FILES_ROOT,
+    secrets: secretsFromEnv(config.version),
+    // CI's stack reads with the fake reader: no run ever calls the provider (the plan).
+    readerFor:
+      process.env.CANCCU_PIZZA_READER === "fake" && config.version === "dev"
+        ? new FakeReader().for
+        : anthropicReader,
     // The Food settings page calls admin's settings API as the person, on the event's Host.
     admin: new AdminClient(config.adminUrl, { fetch: hostFetch }),
     language: (tenant: string) =>

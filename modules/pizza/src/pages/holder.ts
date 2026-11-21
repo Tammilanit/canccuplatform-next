@@ -4,12 +4,13 @@
  * form is the API's own step.
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { timeLabel } from "@canccu/ui";
+import { html, timeLabel } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import type { Summary } from "../summary.js";
 import { nextLocalTime } from "../time.js";
 import { cancelView, handOutView, overView } from "./handout-views.js";
 import { calledInView, callView, checklistView, hereView, notHeldView } from "./holder-views.js";
+import type { MoneyView } from "./money-format.js";
 import type { OrderView } from "./order-view.js";
 import { back, formText, hubPage, must, pageCtx, viaApi } from "./kit.js";
 import type { PageCtx } from "./kit.js";
@@ -38,8 +39,17 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
       o.you_hold === true
         ? c.t("hold.your_order", { seq: o.seq })
         : c.t("hold.order", { seq: o.seq });
+    // The money step stays open after done (mockup 18): the holder's until the day turns.
+    const money =
+      mine(o, c) && ["placed", "arrived", "done"].includes(o.state)
+        ? html`<a
+            class="canccu-button canccu-button--secondary pizza-wide"
+            href="/pizza/hold/${o.id}/money"
+            >${c.t("hand.order_money")}</a
+          >`
+        : "";
     if (o.state === "done" || o.state === "cancelled")
-      return hubPage(request, reply, c, { title, body: overView(c, o) });
+      return hubPage(request, reply, c, { title, body: html`${overView(c, o)}${money}` });
     if (!mine(o, c))
       return hubPage(request, reply, c, {
         title,
@@ -52,7 +62,7 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
     );
     return hubPage(request, reply, c, {
       title,
-      body: checklistView(c, o, { lastCall, autoClose: s.auto_close, ...opt(request.query.error) }),
+      body: html`${checklistView(c, o, { lastCall, autoClose: s.auto_close, ...opt(request.query.error) })}${money}`,
     });
   });
 
@@ -129,7 +139,16 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
       request,
       reply,
       (c) => c.t("hand.title"),
-      (c, o) => handOutView(c, o, c.session.userId, request.query.error),
+      async (c, o) => {
+        const m = await viaApi(app, request, "GET", `/api/pizza/orders/${o.id}/money`);
+        return handOutView(
+          c,
+          o,
+          c.session.userId,
+          request.query.error,
+          m.status < 400 ? (m.body as unknown as MoneyView) : undefined,
+        );
+      },
       ["arrived", "done"],
     ),
   );

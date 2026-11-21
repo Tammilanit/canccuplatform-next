@@ -82,6 +82,35 @@ export async function forgetUser(
      WHERE $1 IN (holder_user_id, payer_user_id, opened_by_user_id, cancelled_by_user_id)`,
     [userId],
   );
+  await c.query(`DELETE FROM pizza_pay_details WHERE user_id = $1`, [userId]);
+  await c.query(`DELETE FROM pizza_paid WHERE user_id = $1`, [userId]);
+  await c.query(
+    `UPDATE pizza_orders SET total_set_by_user_id = NULL, total_set_by_name = NULL
+     WHERE total_set_by_user_id = $1`,
+    [userId],
+  );
+  await c.query(
+    `UPDATE pizza_reader_keys SET set_by_user_id = NULL, set_by_name = NULL WHERE set_by_user_id = $1`,
+    [userId],
+  );
+  // A stored read names each pizza's person (the match is made when it is read): take them out.
+  const reads = await c.query(
+    `SELECT id, read FROM pizza_receipts WHERE read IS NOT NULL AND strpos(read::text, $1) > 0`,
+    [userId],
+  );
+  for (const r of reads.rows as { id: string; read: { pizzas?: Record<string, unknown>[] } }[]) {
+    const pizzas = (r.read.pizzas ?? []).map((p) =>
+      p.user_id === userId ? { ...p, user_id: null, name: null } : p,
+    );
+    await c.query(`UPDATE pizza_receipts SET read = $2 WHERE id = $1`, [
+      r.id,
+      JSON.stringify({ ...r.read, pizzas }),
+    ]);
+  }
+  await c.query(
+    `UPDATE pizza_receipts SET added_by_user_id = NULL, added_by_name = NULL WHERE added_by_user_id = $1`,
+    [userId],
+  );
   await c.query(
     `UPDATE pizza_order_log SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
     [userId],
@@ -122,11 +151,25 @@ export async function anonymiseAll(c: SqlClient): Promise<void> {
   );
   await c.query(`DELETE FROM pizza_idempotency`, []);
   await c.query(`DELETE FROM pizza_crew`, []);
+  // A receipt can show card digits (M3): the photos go, their files with them (the caller's part).
+  await c.query(
+    `UPDATE pizza_orders SET total_set_by_name = NULL, total_set_by_user_id = NULL`,
+    [],
+  );
+  await c.query(`DELETE FROM pizza_receipts`, []);
+  await c.query(`DELETE FROM pizza_paid`, []);
+  await c.query(`DELETE FROM pizza_pay_details`, []);
+  await c.query(`UPDATE pizza_reader_keys SET set_by_user_id = NULL, set_by_name = NULL`, []);
 }
 
 /** A deleted event's rows, all of them. */
 export async function deleteTenantRows(c: SqlClient): Promise<void> {
   for (const table of [
+    "pizza_receipts",
+    "pizza_paid",
+    "pizza_pay_details",
+    "pizza_reader_keys",
+    "pizza_reads",
     "pizza_due",
     "pizza_crew",
     "pizza_order_log",

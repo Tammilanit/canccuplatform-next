@@ -7,7 +7,7 @@ import { KitError } from "@canccu/kit";
 import { html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import { tenantOf, today } from "../http.js";
-import { MANAGE, MENU_WRITE } from "../policy.js";
+import { MANAGE, MENU_WRITE, RECORD_READ } from "../policy.js";
 import { DAY } from "../time.js";
 import { CREW_STEP_NAMES, orderView, ordersView } from "./crew-views.js";
 import type { HistoryEntry } from "./crew-views.js";
@@ -41,6 +41,7 @@ export function crewPages(app: FastifyInstance, deps: AppDeps): void {
     // Food in the menu opens what the person may do: the orders, else the menus, else settings.
     if (!c.session.rights.has(MANAGE)) {
       if (c.session.rights.has(MENU_WRITE)) return reply.redirect(`${PREFIX}crew/pizzerias`, 303);
+      if (c.session.rights.has(RECORD_READ)) return reply.redirect(`${PREFIX}crew/record`, 303);
       if (c.session.rights.has(SETTINGS_WRITE))
         return reply.redirect(`${PREFIX}crew/settings`, 303);
       throw missing();

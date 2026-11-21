@@ -10,9 +10,10 @@ import type { AppDeps } from "./http.js";
 import { cancel } from "./lifecycle.js";
 import { UNPLACED } from "./model.js";
 import { anonymiseAll, deleteTenantRows, forgetUser, leave } from "./privacy.js";
+import { deleteReceiptFiles } from "./receipts.js";
 import { menuEntries, ordersWhere } from "./store.js";
 
-type Deps = Pick<AppDeps, "db" | "outbox" | "people" | "now">;
+type Deps = Pick<AppDeps, "db" | "outbox" | "people" | "now" | "filesRoot">;
 
 const TENANT_ID = /^[a-z][a-z0-9-]{2,31}$/;
 
@@ -31,6 +32,7 @@ export async function handleTenantEvent(deps: Deps, e: Event): Promise<void> {
   } else if (e.type === "tenants.retention.reached" && e.data.data_class === "personal") {
     // `presence` is not a class pizza holds; a class it does not know is ignored.
     await deps.db.tenant((c) => anonymiseAll(c));
+    await deleteReceiptFiles(deps.filesRoot);
   } else if (e.type === "tenants.member.left" && userId !== null) {
     await deps.db.tenant((c) => leave(c, deps, userId, now));
   } else if (e.type === "tenants.tenant.cloned") {
@@ -65,6 +67,7 @@ export async function handlePlatformEvent(deps: Deps, e: Event): Promise<void> {
       await c.query(`DELETE FROM pizza_tenants WHERE tenant_id = $1`, [tenant]);
       await c.query(`DELETE FROM pizza_outbox_tenants WHERE tenant_id = $1`, [tenant]);
     });
+    await withTenant(tenant, () => deleteReceiptFiles(deps.filesRoot));
   }
 }
 
