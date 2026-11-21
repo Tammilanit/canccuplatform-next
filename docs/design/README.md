@@ -12,7 +12,7 @@ The sheets carry no version or review tags.
 
 ## Amendments accepted by the PO, binding for the build
 
-These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
+These amendments came after the sheets were drawn: 1 and 2 on 2026-11-12, 3 on 2026-11-19, 4 on 2026-11-21. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
 
 ### 1 · Energy levels: clearly different look, same pace
 
@@ -95,6 +95,16 @@ Only a master–detail page keeps a column beside its list, because that column 
 **Fixed columns stay where the layout means it:** a form's label and field (`.canccu-form__row`, the builder's two-column fields), a table and its rows, a master–detail editor (the builder, the zone editor, the schedule, the announcement composer and its preview), a row's own parts (a time and a label, a player's controls), a control with a fixed count (the 7 days, the 4 motion levels, the delay chips) and the screens' own layouts (the player's regions, the layout map). Each is marked in its CSS with its kind and reason; the guard below lets the marked ones through.
 
 **The guard.** A test in `packages/ui` (it runs on every pull request in `lint-types-test (ui)`, so no workflow change) reads every tracked CSS file under `modules/` and `packages/ui/`, and the `grid-template-columns` written from TypeScript and JavaScript, and fails on a column list that is neither `ui.css`'s own `.canccu-grid` nor marked. A justified exception carries the marker on its line or the line above: `/* canccu-grid: fixed <kind> — <reason> */`, the kind one of `form`, `table`, `row`, `master-detail`, `control`, `screen`, `shell`. The full rules and its self-test are in [`grids/README.md`](grids/README.md#the-guard).
+
+### 4 · Things planned in time are a day schedule (2026-11-21)
+
+The PO: "I don't like the grid based view in some of the mockups. In some a day based schedule (like the schedule view in basic run of the show) is better", made a rule for every page and screen ([0031](../decisions/0031-mini-tournaments-after-v1-day-schedules.md)). A grid of cards hides what comes first and what overlaps; a day schedule shows both.
+
+- **What it covers:** anything planned in time: tournament sessions, a session's matches by time, rounds, screen windows, pizza orders by call time, the agenda.
+- **How it looks:** one day at a time, with the times down the side and the items in time order, like the agenda's run of the show (sheet 5, [`modules/agenda/src/canccu_agenda/day_view.py`](../../modules/agenda/src/canccu_agenda/day_view.py)). Days switch with a day picker.
+- **Phone:** the same list, one day at a time.
+- **Grids stay for collections:** amendment 3's auto-fill grid stays for like items with no time order: the sound library, devices, storyboards, photos. Pizza orders, which amendment 3's table lists as cards, are shown by call time as a day schedule wherever they are planned in time.
+- **Built pages** that show timed items as a card grid change in their own issues, not with this amendment. **Research packs** follow it in their next revision; where a sheet or a pack's mockup draws timed items as a grid, this amendment wins.
 
 ## Changes since v7
 
