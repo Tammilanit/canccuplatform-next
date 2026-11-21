@@ -342,7 +342,7 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 **New for the lead round 4.** Making the crew's work as easy and fun as possible.
 - **A.**
   - **Screenshots, crew only.** The crew adds the game's score screen. An optional AI reader (the same provider setting, consent notice and "a person confirms" pattern as pizza's receipt reader, #644) reads placements, names and per-player game stats. The crew checks before anything counts, and typing by hand always works.
-  - **Who played comes from three sources together:** registration, voice presence and the screenshot, side by side per person. All three agree: filled in. The screenshot plus one other source: took part, with a warning when one is missing. In the screenshot but not registered: took part with a warning, and one tap adds them as registered (with voice or without). Registered only: suggested as a no-show. Registered and in voice, but not in the screenshot: the crew decides. Voice alone never decides: a person in voice who is neither registered nor on the screenshot is not listed (the crew can add them by hand), as the brief's table says. Nothing is final until the crew saves.
+  - **Who played comes from three sources together:** registration, voice presence and the screenshot, side by side per person. All three agree: filled in. The screenshot plus one other source: took part, with a warning when one is missing. In the screenshot and in voice but not registered: took part with a warning, and one tap adds them as registered. In the screenshot only (not registered, not in voice): listed for the crew to decide, and one tap adds them as registered. Registered only: suggested as a no-show. Registered and in voice, but not in the screenshot: the crew decides. Voice alone never decides: a person in voice who is neither registered nor on the screenshot is not listed (the crew can add them by hand), as the brief's table says. Nothing is final until the crew saves.
   - **In-game names:** the first time the crew links a screenshot name to a person, the platform remembers it for that game (per person, per game).
   - **Tap to place:** tap a team or player for 1st, the next for 2nd; everyone else is "took part".
   - **Awards on the player row (⭐), with a live preview** ("Nova 3rd → 1st ▲2") and **save as a reveal** on the hall screen ([L10](#l10-the-screens-around-the-tournament)).
@@ -503,7 +503,7 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 
 ### P3. The exit criterion
 - **A.** "A test tournament runs end to end" as it stands.
-- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a full session reopened for a while, check-in, a called match on a phone and a screen, results with an award, a correction, the standings live, a crowned final.
+- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a closed session with a place left reopened for a few minutes, check-in, a called match on a phone and a screen, results with an award, a correction, the standings live, a crowned final.
 - **Recommendation: B.** It is testable in CI's demo stack.
 - **Changed for 0030:** **Recommendation now: B**, plus one session played as a bracket from the core, so the exit shows the engine the cup runs on.
 

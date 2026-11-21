@@ -527,7 +527,7 @@ The step's issues are input ([P2](step-7-tournament/questions.md#p2-the-issue-se
 
 **Order sketch since 0030:** the core's 2.0.0 tagged first ([P9](step-7-tournament/questions.md#p9-the-core-before-the-first-build-package)) → #127 (high, alone) → #128 and the hub pages in parallel → #129 → the screens and Notify.
 
-**Proposed exit criteria** ([P3](step-7-tournament/questions.md#p3-the-exit-criterion)): on the demo event, a Demo Game Cup runs end to end with a fake bot: sessions scheduled, players and a team registered, a full session reopened for a while, check-in by the QR, a match called on a phone and on a screen, results from the roster with an award, a correction with its trail, the standings live on the screen, a final crowned with its winner card; every write race-tested.
+**Proposed exit criteria** ([P3](step-7-tournament/questions.md#p3-the-exit-criterion)): on the demo event, a Demo Game Cup runs end to end with a fake bot: sessions scheduled, players and a team registered, a closed session with a place left reopened for a few minutes, check-in by the QR, a match called on a phone and on a screen, results from the roster with an award, a correction with its trail, the standings live on the screen, a final crowned with its winner card; every write race-tested.
 
 **Proposed exit criteria since 0030** ([P3](step-7-tournament/questions.md#p3-the-exit-criterion), changed): the run above, with one session played as a bracket from the core. The exit has no mini tournament line: decision 0031 moved it to after version 1.
 
