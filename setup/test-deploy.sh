@@ -31,6 +31,7 @@ case "$1" in
     esac ;;
   compose) for a; do last=$a; done
     case "$*" in *" exec -T caddy cat "*) if [ -e "$S/caddy_stale" ]; then echo stale; else cat deploy/Caddyfile; fi ;;
+      *" exec -T "*" dev-"*) [ ! -e "$S/seed_fail" ] || { echo "refused: seed stub" >&2; exit 1; } ;;
       *" logs "*) cat "$S/logs_$last" 2>/dev/null ;; *" up "*) if [ -e "$S/up_kill" ]; then rm "$S/up_kill"; kill -TERM "$PPID"; fi; exit "$(cat "$S/up_rc")" ;; *" ps "*) echo "c_$last" ;; esac ;;
   inspect) case "$3" in
       *NetworkMode*) if [ -e "$S/sockonly_${4#c_}" ]; then echo none; else echo canccuplatform_default; fi ;;
@@ -255,3 +256,25 @@ if docker compose -f deploy/compose.yml config 2>/dev/null | grep -q 'name: canc
   && docker compose -f deploy/compose.yml config --format json 2>/dev/null | jq -e '.services.hello.volumes[] | select(.source == "deploy-status" and .target == "/run/canccu-deploy" and .read_only)' >/dev/null && grep -q 'CANCCU_DEPLOY_STATUS_FILE: /run/canccu-deploy/status.json' deploy/compose.yml
 then pass "the stack mounts the volume deploy writes the status to into hello, read-only"
 else bad "the stack mounts the volume deploy writes the status to into hello, read-only"; fi
+
+# The dev server's demo event (#709): its hostnames and the demo profile, after a healthy deploy.
+seeds='compose -f deploy/compose.yml exec -T admin python -m canccu_admin dev-seed$'
+names='compose -f deploy/compose.yml exec -T tenants python -m canccu_tenants dev-hostnames'
+fresh 'CANCCU_DEV_HOSTNAMES="devbox.lan, devbox.tail0.example.test"\n'; dep "deploy with dev hostnames" 0
+logged "deploy gives the demo event the dev hostnames, in order" "$names devbox.lan devbox.tail0.example.test$"
+logged "deploy loads the demo profile into the demo event" "$seeds"
+: > "$st/log"; echo "sha256:newhello" > "$st/live_hello"; echo "sha256:newadmin" > "$st/live_admin"; dep "the next run, with nothing new" 0
+notlogged "an up-to-date run seeds nothing again" "dev-hostnames|dev-seed"
+denv=$(envfile 'CANCCU_VERSION=dev\nCANCCU_DEV_HOSTNAMES=devbox.lan\n'); dep "a run after the dev hostnames changed" 0
+logged "deploy seeds again when the dev hostnames change" "$names devbox.lan$"
+fresh; dep "deploy without dev hostnames" 0
+notlogged "deploy names no hostnames when none are set" "dev-hostnames"
+logged "deploy still loads the demo profile (IP mode serves it)" "$seeds"
+fresh 'CANCCU_DEV_HOSTNAMES=devbox.lan\n'; touch "$st/seed_fail"; dep "a deploy whose seed fails stays deployed" 0
+has "deploy warns that the seed failed" "warning: .*dev seed"
+: > "$st/log"; rm "$st/seed_fail"; echo "sha256:newhello" > "$st/live_hello"; echo "sha256:newadmin" > "$st/live_admin"; dep "the next run after a failed seed" 0
+logged "a failed seed is retried on the next run" "$seeds"
+fresh 'CANCCU_DEV_HOSTNAMES=devbox.lan\n'; touch "$st/bad_sha256:newhello"; dep "a failed deploy" 1
+notlogged "a failed deploy seeds nothing" "dev-hostnames|dev-seed"
+fresh 'CANCCU_VERSION=v0.1.0\nCANCCU_DEV_HOSTNAMES=devbox.lan\n'; dep "deploy outside dev mode" 0
+notlogged "nothing is seeded outside dev mode" "dev-hostnames|dev-seed"
