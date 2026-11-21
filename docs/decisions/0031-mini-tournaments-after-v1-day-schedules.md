@@ -13,7 +13,7 @@ On 2026-11-21 the product owner decided both points below. In their words: "we p
 ## Decision
 1. **Mini tournaments for any game wait until after version 1.**
    - **THE FINALS mini tourney is integrated from day 1**, as 0030 says. The Finals track does not change.
-   - **finals-core 2.0.0 is still built as the fully general engine in step 7** (team size, teams per match, formats and scoring tables as parameters, THE FINALS as one preset), so mini tournaments are cheap to add later. Tournament's official cup runs on it.
+   - **the tourney core 2.0.0 (today's finals-core) is still built as the fully general engine in step 7** (team size, teams per match, formats and scoring tables as parameters, THE FINALS as one preset), so mini tournaments are cheap to add later. Tournament's official cup runs on it.
    - **Mini tournaments for catalogue games move to "Not scheduled yet"** in the roadmap. Step 7's exit loses "a mini tournament for a catalogue game runs on the core".
    - **Each game's competition rules wait with them**, because only mini tournaments read those rules: the Games track drops them for now. They come back earlier only if step 7's research pack shows the official cup needs them.
 2. **Things planned in time are shown as a day schedule, not a card grid.** This is amendment 4 of [the design guideline](../design/README.md#4--things-planned-in-time-are-a-day-schedule-2026-11-21), binding for every page and screen.
@@ -23,7 +23,7 @@ On 2026-11-21 the product owner decided both points below. In their words: "we p
    - Amendment 3's auto-fill grid stays for collections of like items with no time order: the sound library, devices, storyboards, photos.
 
 ## Consequences
-- **0030** keeps its body ([decisions README](README.md)); its Status line names point 4's narrowing and links here. Its other points stand: Finals is integrated as it is, one tourney core, Tournament holds the official tournament, Games holds the games, and Finals and Tournament stay apart.
+- **0030** keeps its body ([decisions README](README.md)); its Status line names the narrowing of points 4 and 5 and links here. Its other points stand: Finals is integrated as it is, one tourney core, Tournament holds the official tournament, Games holds the games, and Finals and Tournament stay apart.
 - **The roadmap:** step 7 keeps the official tournament and the core, and its exit is a test tournament run end to end; the Games track loses each game's competition rules; "Not scheduled yet" gains mini tournaments for catalogue games and their competition rules ([roadmap](../roadmap.md)).
 - **The design guideline** gains amendment 4 ([docs/design/README.md](../design/README.md)).
 - **Built pages** that show timed items as a card grid are not changed by this record; the PR that adds it lists them as a follow-up.
