@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" width="400" height="200">
+  <style>.t { font: 16px sans-serif; fill: #f8fafc; }</style>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+  <rect width="400" height="200" fill="#0f172a"/>
+  <text class="t" x="20" y="40">A · B · C</text>
+  <line x1="20" y1="100" x2="380" y2="100" stroke="#3b82f6" marker-end="url(#ah)"/>
+</svg>
