@@ -89,3 +89,60 @@ describe("TenantResolver.event", () => {
     ).toBeNull();
   });
 });
+
+describe("TenantResolver.event with an injected fetch", () => {
+  // A test app's fake tenants must answer: node:http would reach the real host, as CI did (#701).
+  function fakeFetch(draftEvent: boolean) {
+    const calls: { url: string; headers: Record<string, string> }[] = [];
+    const fetch = (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const headers = (init?.headers ?? {}) as Record<string, string>;
+      calls.push({ url: String(input), headers });
+      const member = headers.cookie === "canccu_session=member";
+      const name = draftEvent && !member ? {} : { name: "Fake Event" };
+      return Promise.resolve(
+        Response.json({ id: "demo", status: draftEvent ? "draft" : "live", ...name }),
+      );
+    };
+    return { calls, fetch: fetch as typeof globalThis.fetch };
+  }
+
+  it("asks the injected fetch with the request's host, never the network", async () => {
+    asked.length = 0;
+    status = 200;
+    const fake = fakeFetch(false);
+    const r = new TenantResolver({ tenantsUrl: url, fetch: fake.fetch });
+    expect(await r.event("Demo.Localhost:8080")).toMatchObject({ name: "Fake Event" });
+    expect(fake.calls).toEqual([
+      { url: `${url}/api/tenants/current`, headers: { host: "demo.localhost" } },
+    ]);
+    expect(asked).toEqual([]);
+  });
+
+  it("sends the viewer's cookie for a draft event through the injected fetch", async () => {
+    asked.length = 0;
+    const fake = fakeFetch(true);
+    const r = new TenantResolver({ tenantsUrl: url, fetch: fake.fetch });
+    expect(await r.event("demo.localhost", "canccu_session=member")).toMatchObject({
+      name: "Fake Event",
+    });
+    expect(fake.calls.map((c) => c.headers)).toEqual([
+      { host: "demo.localhost" },
+      { host: "demo.localhost", cookie: "canccu_session=member" },
+    ]);
+    expect(asked).toEqual([]);
+  });
+
+  it("answers null when the injected fetch fails or answers an error", async () => {
+    const down = new TenantResolver({
+      tenantsUrl: url,
+      fetch: () => Promise.reject(new Error("down")),
+    });
+    expect(await down.event("demo.localhost")).toBeNull();
+    const missing = new TenantResolver({
+      tenantsUrl: url,
+      fetch: () => Promise.resolve(new Response("{}", { status: 404 })),
+    });
+    expect(await missing.event("demo.localhost")).toBeNull();
+    expect(asked).toEqual([]);
+  });
+});
