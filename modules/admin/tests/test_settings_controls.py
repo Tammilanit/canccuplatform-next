@@ -133,7 +133,7 @@ def test_a_list_from_choices_is_a_row_of_chips() -> None:
     assert (
         '<label class="canccu-chip"><input type=checkbox name=k value=screen checked>Screen</label>'
     ) in html
-    assert "<input type=checkbox name=k value=discord_dm>Discord dm</label>" in html
+    assert "<input type=checkbox name=k value=discord_dm>Discord DM</label>" in html
     assert "Separate them with commas" not in html
     # Posted as one value per ticked chip, saved in the declared order.
     form = FormData([("k", "push"), ("k", "screen")])

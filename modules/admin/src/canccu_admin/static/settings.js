@@ -62,7 +62,9 @@ function refresh() {
 // Opens only a web address, as the server's preview does (controls.preview).
 const WEB = /^https?:\/\/[^\s/?#]+\S*$/;
 function preview(el) {
-  const link = el.closest(".canccu-field")?.querySelector("[data-canccu-preview]");
+  const link = el
+    .closest(".canccu-field")
+    ?.querySelector("[data-canccu-preview]");
   if (!link) return;
   const page = WEB.test(el.value) ? el.value : "";
   link.hidden = !page;
@@ -75,28 +77,15 @@ function undo(form) {
     if (el.type === "checkbox") el.checked = el.dataset.canccuWas === "on";
     else if (el.tagName === "FIELDSET") {
       const was = el.dataset.canccuWas.split(", ");
-      for (const chip of el.querySelectorAll("input")) chip.checked = was.includes(chip.value);
+      for (const chip of el.querySelectorAll("input"))
+        chip.checked = was.includes(chip.value);
     } else el.value = el.dataset.canccuWas;
     if (el.type === "url") preview(el);
   }
   form.querySelector("[data-canccu-failed]")?.remove();
   form.querySelector("[data-canccu-unanswered]").hidden = true;
   form.querySelector("[data-canccu-save]").textContent = "Save";
-  // The organiser is usually where the event is: this device's zone joins Suggested, after the
-// saved one, when the list has it.
-const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
-for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
-  const suggested = select.querySelector('optgroup[label="Suggested"]');
-  const listed = [...select.options].some((o) => o.value === here);
-  if (!suggested || !listed || [...suggested.options].some((o) => o.value === here))
-    continue;
-  const option = document.createElement("option");
-  option.value = here;
-  option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
-  suggested.append(option);
-}
-
-refresh();
+  refresh();
 }
 
 // Caddy answers 502 for a part that is down: to the organiser, that is no answer. Any redirect
@@ -151,21 +140,7 @@ async function post(form) {
 async function save(form) {
   if (saving) return;
   saving = true;
-  // The organiser is usually where the event is: this device's zone joins Suggested, after the
-// saved one, when the list has it.
-const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
-for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
-  const suggested = select.querySelector('optgroup[label="Suggested"]');
-  const listed = [...select.options].some((o) => o.value === here);
-  if (!suggested || !listed || [...suggested.options].some((o) => o.value === here))
-    continue;
-  const option = document.createElement("option");
-  option.value = here;
-  option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
-  suggested.append(option);
-}
-
-refresh();
+  refresh();
   let leaving = false;
   try {
     leaving = await post(form);
@@ -173,21 +148,7 @@ refresh();
     // Saved: Save stays off while the page goes to "Saved".
     if (!leaving) {
       saving = false;
-      // The organiser is usually where the event is: this device's zone joins Suggested, after the
-// saved one, when the list has it.
-const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
-for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
-  const suggested = select.querySelector('optgroup[label="Suggested"]');
-  const listed = [...select.options].some((o) => o.value === here);
-  if (!suggested || !listed || [...suggested.options].some((o) => o.value === here))
-    continue;
-  const option = document.createElement("option");
-  option.value = here;
-  option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
-  suggested.append(option);
-}
-
-refresh();
+      refresh();
       document
         .querySelector(`${FORM} .canccu-notice`)
         ?.scrollIntoView({ block: "nearest" });
@@ -197,21 +158,7 @@ refresh();
 
 document.addEventListener("input", (event) => {
   if (event.target?.type === "url") preview(event.target);
-  // The organiser is usually where the event is: this device's zone joins Suggested, after the
-// saved one, when the list has it.
-const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
-for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
-  const suggested = select.querySelector('optgroup[label="Suggested"]');
-  const listed = [...select.options].some((o) => o.value === here);
-  if (!suggested || !listed || [...suggested.options].some((o) => o.value === here))
-    continue;
-  const option = document.createElement("option");
-  option.value = here;
-  option.textContent = `${here.replaceAll("_", " ").replaceAll("/", " / ")} (this device)`;
-  suggested.append(option);
-}
-
-refresh();
+  refresh();
 });
 document.addEventListener("change", refresh);
 // A quick pick or a stepper's button: the number changes as if typed, so the bar counts it.
@@ -259,7 +206,11 @@ const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
 for (const select of document.querySelectorAll("select[data-canccu-zones]")) {
   const suggested = select.querySelector('optgroup[label="Suggested"]');
   const listed = [...select.options].some((o) => o.value === here);
-  if (!suggested || !listed || [...suggested.options].some((o) => o.value === here))
+  if (
+    !suggested ||
+    !listed ||
+    [...suggested.options].some((o) => o.value === here)
+  )
     continue;
   const option = document.createElement("option");
   option.value = here;

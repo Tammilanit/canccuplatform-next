@@ -12,7 +12,8 @@ const selected = {};
 let form = null;
 let zoneSelects = [];
 page.getElementById = (id) => byId[id] ?? null;
-page.querySelector = (sel) => selected[sel] ?? (sel.startsWith("form") ? form : null);
+page.querySelector = (sel) =>
+  selected[sel] ?? (sel.startsWith("form") ? form : null);
 page.querySelectorAll = (sel) =>
   sel === "select[data-canccu-zones]" ? zoneSelects : [];
 page.createElement = (tag) => ({ tag, value: "", textContent: "" });
@@ -30,7 +31,9 @@ function field(control) {
     hint,
     preview,
     querySelector: (sel) =>
-      ({ "[data-canccu-was-hint]": hint, "[data-canccu-preview]": preview })[sel] ?? null,
+      ({ "[data-canccu-was-hint]": hint, "[data-canccu-preview]": preview })[
+        sel
+      ] ?? null,
   };
   control.closest = (sel) => (sel === ".canccu-field" ? box : null);
   return box;
@@ -63,7 +66,11 @@ function number(id, value) {
 }
 
 const chip = (value, checked) => ({ value, checked, type: "checkbox" });
-const chips = [chip("screen", true), chip("discord_dm", false), chip("push", true)];
+const chips = [
+  chip("screen", true),
+  chip("discord_dm", false),
+  chip("push", true),
+];
 const fieldset = {
   tagName: "FIELDSET",
   dataset: { canccuWas: "screen, push" },
@@ -91,7 +98,8 @@ const bar = { hidden: true };
 const save = { disabled: false, textContent: "Save" };
 const unanswered = { hidden: true };
 form = {
-  querySelectorAll: (sel) => (sel === "[data-canccu-was]" ? [offline, fieldset, link] : []),
+  querySelectorAll: (sel) =>
+    sel === "[data-canccu-was]" ? [offline, fieldset, link] : [],
   querySelector: (sel) =>
     ({
       "[data-canccu-count]": count,
@@ -102,15 +110,23 @@ form = {
 };
 
 // This device is in Helsinki; the saved zone is UTC.
-const suggested = { options: [{ value: "UTC" }], append(o) { this.options.push(o); } };
+const suggested = {
+  options: [{ value: "UTC" }],
+  append(o) {
+    this.options.push(o);
+  },
+};
 const helsinki = { value: "Europe/Helsinki", textContent: "Helsinki" };
 zoneSelects = [
   {
     options: [{ value: "UTC" }, helsinki],
-    querySelector: (sel) => (sel === 'optgroup[label="Suggested"]' ? suggested : null),
+    querySelector: (sel) =>
+      sel === 'optgroup[label="Suggested"]' ? suggested : null,
   },
 ];
-Intl.DateTimeFormat = () => ({ resolvedOptions: () => ({ timeZone: "Europe/Helsinki" }) });
+Intl.DateTimeFormat = () => ({
+  resolvedOptions: () => ({ timeZone: "Europe/Helsinki" }),
+});
 
 await import(pathToFileURL(settingsJs).href);
 
@@ -134,7 +150,10 @@ assert.deepEqual(
   suggested.options.map((o) => o.value),
   ["UTC", "Europe/Helsinki"],
 );
-assert.equal(suggested.options[1].textContent, "Europe / Helsinki (this device)");
+assert.equal(
+  suggested.options[1].textContent,
+  "Europe / Helsinki (this device)",
+);
 
 // Nothing differs yet: the bar waits.
 assert.equal(bar.hidden, true);
@@ -172,7 +191,11 @@ assert.equal(fields[2].preview.textContent, "Open https://example.org/info");
 // Undo puts every control back, the chips included.
 const undo = {
   closest: (sel) =>
-    sel.endsWith("[data-canccu-undo]") ? undo : sel.startsWith("form") ? form : null,
+    sel.endsWith("[data-canccu-undo]")
+      ? undo
+      : sel.startsWith("form")
+        ? form
+        : null,
 };
 click(undo);
 assert.equal(offline.value, "45");

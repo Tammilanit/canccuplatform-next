@@ -14,12 +14,13 @@ from .zones import zone_label
 _UNIT = re.compile(r"^(.*\S)\s*\(([^()]+)\)$")
 
 
-_LANGUAGES = {"en": "English", "fi": "Finnish"}
+# Choices whose words are not the key's words: languages by name, a DM in capitals.
+_WORDS = {"en": "English", "fi": "Finnish", "discord_dm": "Discord DM"}
 
 
 def _words(value: str) -> str:
     """A choice's value as words: `high_contrast` reads "High contrast", `en` "English"."""
-    return _LANGUAGES.get(value) or value.replace("_", " ").capitalize()
+    return _WORDS.get(value) or value.replace("_", " ").capitalize()
 
 
 _SAME = object()

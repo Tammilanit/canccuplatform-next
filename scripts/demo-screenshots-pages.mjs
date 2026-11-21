@@ -25,10 +25,14 @@ export const PAGES = [
   ["settings-wide", "/admin/settings", WIDE],
   // Every part's Settings form at both widths (#732): each kind of control is in one of them.
   // Screen's desktop form is SETTINGS_STATES' first shot.
-  ...["admin", "agenda", "games", "notify", "pizza", "screen"].flatMap((part) => [
-    ...(part === "screen" ? [] : [[`settings-${part}`, `/admin/settings/${part}`, DESK]]),
-    [`settings-${part}-phone`, `/admin/settings/${part}`, PHONE],
-  ]),
+  ...["admin", "agenda", "games", "notify", "pizza", "screen"].flatMap(
+    (part) => [
+      ...(part === "screen"
+        ? []
+        : [[`settings-${part}`, `/admin/settings/${part}`, DESK]]),
+      [`settings-${part}-phone`, `/admin/settings/${part}`, PHONE],
+    ],
+  ),
   ["studio-advanced", "/theming/studio/advanced", DESK],
   ["studio-history", "/theming/studio/history", DESK],
   ["hub-preview-phone", "/theming/studio/preview/hub", PHONE],
