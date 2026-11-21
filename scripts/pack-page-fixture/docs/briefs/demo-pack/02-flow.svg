@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" width="400" height="200">
+  <style>.t { font: 20px serif; fill: #f59e0b; }</style>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"><circle cx="5" cy="5" r="5" fill="#22c55e"/></marker></defs>
+  <rect width="400" height="200" fill="#1e293b"/>
+  <!-- the hero, then the ticker -->
+  <text class="t" x="20" y="40">Main hall · 19:52</text>
+  <line x1="20" y1="150" x2="380" y2="150" stroke="#22c55e" marker-end="url(#ah)"/>
+</svg>

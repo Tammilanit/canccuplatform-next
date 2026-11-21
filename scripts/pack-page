@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Builds a research pack's or screenshot book's page with no AI tokens, or checks a built page's
+# sheets against a git ref (#718; docs/briefs/README.md#the-pack-page, docs/reports/README.md).
+# Usage: pack-page <brief-or-book.md> --out PAGE.html [--verdict FILE.md] [--images DIR]
+#        pack-page --check REF PAGE.html
+# Exit 0 done or matching, 1 a missing image or a difference, 2 usage. Needs node 22.
+command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
+exec node "$(dirname "$0")/pack-page.mjs" "$@"
