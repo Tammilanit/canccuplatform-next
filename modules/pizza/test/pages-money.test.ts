@@ -245,6 +245,27 @@ describe.skipIf(!DATABASE_URL)(
       expect(page).toContain("Seen by you, the crew and the organiser only");
     });
 
+    it("shows a refused Confirm on the check page, with the read still there", async () => {
+      await turnOnReader();
+      const r = await upload(w, "pena", `/hold/${id}/money/scan`, [
+        { name: "receipt.png", type: "image/png", bytes: await png() },
+      ]);
+      const receipt = new URL(location(r), "http://x").searchParams.get("receipt") ?? "";
+      const done = await form(w, "pena", `/hold/${id}/money/check`, {
+        receipt_id: "pr_not_this_orders",
+        total: "39.00",
+      });
+      expect(location(done)).toMatch(
+        new RegExp(`^/pizza/hold/${id}/money/check\\?receipt=pr_not_this_orders&error=`),
+      );
+      // The error shows on the check page of the real receipt, whose read is not lost.
+      const page = (
+        await view(w, "pena", `/hold/${id}/money/check?receipt=${receipt}&error=Nope%20not%20that`)
+      ).body;
+      expect(page).toContain("Nope not that");
+      expect(page).toContain("Check the read");
+    });
+
     it("keeps the photo and asks for the total when the reader is off", async () => {
       const r = await upload(w, "pena", `/hold/${id}/money/scan`, [
         { name: "receipt.png", type: "image/png", bytes: await png() },

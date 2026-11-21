@@ -87,9 +87,11 @@ export async function deleteReceiptFiles(root: string): Promise<void> {
 }
 
 export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
-  app.post<{ Params: { id: string } }>("/api/pizza/orders/:id/receipts", (request, reply) =>
-    write(deps, request, reply, async (c, w) => {
-      const { photo, type } = photoOf(request.body, request.headers["content-type"]);
+  app.post<{ Params: { id: string } }>("/api/pizza/orders/:id/receipts", async (request, reply) => {
+    // Re-encoded before the order's lock is taken: it is the slow part, and holds nobody up.
+    const { photo, type } = photoOf(request.body, request.headers["content-type"]);
+    const clean = await cleanPhoto(photo, type);
+    return write(deps, request, reply, async (c, w) => {
       const order = await getOrder(c, request.params.id, true);
       if (order === null) throw notFound();
       authorize("receipt.add", w.caller, facts(w.ctx, w.now, order));
@@ -98,7 +100,6 @@ export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
       if ((await receiptsOf(c, order.id)).length >= MAX_RECEIPTS) {
         throw new Conflict("too_many_receipts", `An order keeps at most ${MAX_RECEIPTS} receipts.`);
       }
-      const clean = await cleanPhoto(photo, type);
       const id = newId("pr");
       const file = `${id}.${(PHOTO_TYPES[type] as { ext: string }).ext}`;
       const path = receiptPath(deps.filesRoot, file);
@@ -121,8 +122,8 @@ export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
         "receipt_added",
       );
       return ok(receiptView(rows[0] as unknown as ReceiptRow), 201);
-    }),
-  );
+    });
+  });
 
   app.get<{ Params: { id: string } }>("/api/pizza/orders/:id/receipts", async (request) => {
     const ctx = tenantOf(request);

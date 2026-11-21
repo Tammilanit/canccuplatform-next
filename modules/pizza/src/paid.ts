@@ -7,7 +7,7 @@
 import type { FastifyInstance } from "fastify";
 import { NotSignedIn } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
-import { Conflict } from "./conflicts.js";
+import { Conflict, cannot } from "./conflicts.js";
 import { body, eventArchived, notFound, ok, tenantOf, whoIs, write } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { moneyView } from "./money-view.js";
@@ -81,6 +81,7 @@ export function paidRoutes(app: FastifyInstance, deps: AppDeps): void {
         const order = await getOrder(c, request.params.id, true);
         if (order === null) throw notFound();
         authorize("paid.tick", w.caller, facts(w.ctx, w.now, order));
+        if (order.state === "cancelled") throw cannot("money", order);
         if (order.settle_to !== "payer") {
           throw new Conflict(
             "not_settled_to_payer",

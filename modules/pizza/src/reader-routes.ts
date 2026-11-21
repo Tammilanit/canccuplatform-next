@@ -14,12 +14,14 @@ import { csvLine, euros } from "./csv.js";
 import { eventArchived, notFound, tenantOf, whoIs } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { CALLED_IN } from "./model.js";
-import { cleanPhoto, photoOf } from "./photos.js";
+import { cleanPhoto, forProvider, photoOf } from "./photos.js";
 import { NO_FACTS, authorize } from "./policy.js";
 import { facts } from "./present.js";
 import { matchReceipt } from "./receipt-match.js";
 import { noteRead, takeReader } from "./reader-key.js";
+import type { Taken } from "./reader-key.js";
 import type { Reader } from "./reader.js";
+
 import { ReaderKeyRejected } from "./reader.js";
 import { getReceipt, receiptPath, receiptView } from "./receipts.js";
 import type { ReceiptRow } from "./receipts.js";
@@ -32,19 +34,17 @@ import { readFile } from "node:fs/promises";
 /** The provider call, counted however it ends. */
 async function counted<T>(
   deps: AppDeps,
-  request: FastifyRequest,
-  kind: "receipt" | "menu",
-  call: () => Promise<T>,
+  taken: Taken,
+  call: (reader: Reader) => Promise<T>,
 ): Promise<T> {
-  const ctx = tenantOf(request);
   let outcome: "ok" | "failed" | "rejected" = "ok";
   try {
-    return await call();
+    return await call(taken.reader);
   } catch (err) {
     outcome = err instanceof ReaderKeyRejected ? "rejected" : "failed";
     throw err;
   } finally {
-    await deps.db.tenant((c) => noteRead(c, kind, outcome, ctx.time_zone, deps.now()));
+    await deps.db.tenant((c) => noteRead(c, taken, outcome, deps.now()));
   }
 }
 
@@ -60,20 +60,21 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: { id: string } }>("/api/pizza/receipts/:id/read", async (request) => {
     const { ctx, caller } = await signedIn(deps, request);
     const now = deps.now();
-    const { receipt, reader } = await deps.db.tenant(async (c) => {
+    const { receipt, taken } = await deps.db.tenant(async (c) => {
       const receipt = await getReceipt(c, request.params.id);
       if (receipt === null) throw notFound("receipt");
       const order = (await getOrder(c, receipt.order_id)) as OrderRow;
       authorize("receipt.add", caller, facts(ctx, now, order));
       if (order.state === "cancelled" || !CALLED_IN.includes(order.state))
         throw cannot("total", order);
-      const reader: Reader = await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, now);
-      return { receipt, reader };
+      return {
+        receipt,
+        taken: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, now, "receipt"),
+      };
     });
-    const photo = await readFile(receiptPath(deps.filesRoot, receipt.file));
-    const reading = await counted(deps, request, "receipt", () =>
-      reader.receipt(photo, receipt.type),
-    );
+    const stored = await readFile(receiptPath(deps.filesRoot, receipt.file));
+    const { image, type } = await forProvider(stored, receipt.type);
+    const reading = await counted(deps, taken, (reader) => reader.receipt(image, type));
     // The match names each pizza's person, and the provider may take long: match against the
     // items as they are when the write happens, so a person deleted meanwhile (`anon_…`, no name)
     // is never stored again.
@@ -93,16 +94,16 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
     const { photo, type } = photoOf(request.body, request.headers["content-type"]);
     const id = request.query.pizzeria_id;
     if (typeof id !== "string") throw new InvalidBody("pizzeria_id", "the pizzeria the menu is of");
-    const { pizzeria, reader } = await deps.db.tenant(async (c) => {
+    const { pizzeria, taken } = await deps.db.tenant(async (c) => {
       const pizzeria = await getPizzeria(c, id);
       if (pizzeria === null) throw notFound("pizzeria");
       return {
         pizzeria,
-        reader: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now()),
+        taken: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now(), "menu"),
       };
     });
-    const clean = await cleanPhoto(photo, type);
-    const rows = await counted(deps, request, "menu", () => reader.menu(clean, type));
+    const sent = await forProvider(await cleanPhoto(photo, type), type);
+    const rows = await counted(deps, taken, (reader) => reader.menu(sent.image, sent.type));
     const csv = [
       csvLine(["pizzeria", "kind", "number", "name", "description", "price"]),
       ...rows.map((r) =>

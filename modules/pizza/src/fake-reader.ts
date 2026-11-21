@@ -99,7 +99,6 @@ export class FakeReader {
   for = (key: string): Reader => ({
     receipt: async (image, type) => {
       await this.note("receipt", key, image, type);
-      await this.hold;
       return this.receipt;
     },
     menu: async (image, type) => {
@@ -118,6 +117,7 @@ export class FakeReader {
       height: m.height,
       exif: m.exif !== undefined,
     });
+    await this.hold;
     if (this.fail === "failed") throw new ReaderFailed();
     if (this.fail === "rejected") throw new ReaderKeyRejected();
   }

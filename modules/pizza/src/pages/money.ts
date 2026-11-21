@@ -120,7 +120,7 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       l.c,
       l.o,
       l.c.t("check.title"),
-      checkView(l.c, l.o, r.id, r.read),
+      checkView(l.c, l.o, r.id, r.read, request.query.error),
       `/pizza/hold/${l.o.id}/money/scan`,
     );
   });
@@ -270,6 +270,11 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       );
     }
     const a = await moneyWrite(request, { total_cents: total, receipt_id: receipt, prices });
-    return done(reply, id, a);
+    return done(
+      reply,
+      id,
+      a,
+      `hold/${id}/money/check?receipt=${encodeURIComponent(receipt ?? "")}`,
+    );
   });
 }

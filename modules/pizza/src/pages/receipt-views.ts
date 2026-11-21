@@ -103,7 +103,13 @@ export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?:
 }
 
 /** Mockup 18 C: the read to check; Confirm sends the total and every price in one write. */
-export function checkView(c: PageCtx, o: OrderView, receiptId: string, r: ReceiptMatch): Html {
+export function checkView(
+  c: PageCtx,
+  o: OrderView,
+  receiptId: string,
+  r: ReceiptMatch,
+  error?: string,
+): Html {
   const extras = r.lines.filter((l) => l.kind === "extra");
   const sum =
     r.pizzas.reduce((s, p) => s + (p.suggested_cents ?? p.price_cents ?? 0), 0) + r.extras_cents;
@@ -114,74 +120,77 @@ export function checkView(c: PageCtx, o: OrderView, receiptId: string, r: Receip
       ? c.t("check.menu_said", { price: euro(c, p.price_cents) })
       : c.t("check.as_menu", { price: euro(c, p.price_cents) });
   };
-  return html`<form method="post" action="${base(o)}/money/check" class="pizza-form">
-    ${formKey()}<input type="hidden" name="receipt_id" value="${receiptId}" />
-    <section class="pizza-card">
-      <label class="canccu-field"
-        ><span class="pizza-section">${c.t("check.total")}</span>
-        <span class="pizza-card__title"
-          >${r.total_cents === null ? "—" : euro(c, r.total_cents)}</span
+  return html`${flash(error)}
+    <form method="post" action="${base(o)}/money/check" class="pizza-form">
+      ${formKey()}<input type="hidden" name="receipt_id" value="${receiptId}" />
+      <section class="pizza-card">
+        <label class="canccu-field"
+          ><span class="pizza-section">${c.t("check.total")}</span>
+          <span class="pizza-card__title"
+            >${r.total_cents === null ? "—" : euro(c, r.total_cents)}</span
+          >
+          ${amountField("total", r.total_cents, c.t("check.total"))}</label
         >
-        ${amountField("total", r.total_cents, c.t("check.total"))}</label
-      >
-    </section>
-    <p class="pizza-section">${c.t("check.each")}</p>
-    <ul class="pizza-people">
-      ${r.pizzas.map(
-        (p) =>
-          html`<li class="pizza-person${p.differs || p.line === null ? " pizza-person--warn" : ""}">
-            <span class="pizza-person__text"
-              ><span class="pizza-person__name">${p.label}</span
-              ><span class="pizza-person__what">${why(p)}</span></span
+      </section>
+      <p class="pizza-section">${c.t("check.each")}</p>
+      <ul class="pizza-people">
+        ${r.pizzas.map(
+          (p) =>
+            html`<li
+              class="pizza-person${p.differs || p.line === null ? " pizza-person--warn" : ""}"
             >
-            ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
-          </li>`,
-      )}
-    </ul>
-    ${
-      extras.length === 0
-        ? ""
-        : html`<p class="pizza-section">${c.t("check.extras")}</p>
-            <ul class="pizza-people">
-              ${extras.map(
-                (l) =>
-                  html`<li class="pizza-person">
+              <span class="pizza-person__text"
+                ><span class="pizza-person__name">${p.label}</span
+                ><span class="pizza-person__what">${why(p)}</span></span
+              >
+              ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
+            </li>`,
+        )}
+      </ul>
+      ${
+        extras.length === 0
+          ? ""
+          : html`<p class="pizza-section">${c.t("check.extras")}</p>
+              <ul class="pizza-people">
+                ${extras.map(
+                  (l) =>
+                    html`<li class="pizza-person">
+                      <span class="pizza-person__text"
+                        ><span class="pizza-person__name">${l.name}</span></span
+                      ><span class="pizza-amount canccu-num">${euro(c, l.amount_cents)}</span>
+                    </li>`,
+                )}
+              </ul>`
+      }
+      ${
+        r.unmatched_lines.length === 0
+          ? ""
+          : html`<ul class="pizza-people">
+              ${r.unmatched_lines.map(
+                (i) =>
+                  html`<li class="pizza-person pizza-person--warn">
                     <span class="pizza-person__text"
-                      ><span class="pizza-person__name">${l.name}</span></span
-                    ><span class="pizza-amount canccu-num">${euro(c, l.amount_cents)}</span>
+                      ><span class="pizza-person__name">${r.lines[i]?.text ?? ""}</span
+                      ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
+                    >
                   </li>`,
               )}
             </ul>`
-    }
-    ${
-      r.unmatched_lines.length === 0
-        ? ""
-        : html`<ul class="pizza-people">
-            ${r.unmatched_lines.map(
-              (i) =>
-                html`<li class="pizza-person pizza-person--warn">
-                  <span class="pizza-person__text"
-                    ><span class="pizza-person__name">${r.lines[i]?.text ?? ""}</span
-                    ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
-                  >
-                </li>`,
-            )}
-          </ul>`
-    }
-    <p class="pizza-centered ${r.adds_up ? "pizza-ok" : "pizza-warn"}">
-      ${
-        r.adds_up
-          ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
-          : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })
       }
-    </p>
-    <div class="pizza-row">
-      <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan"
-        >${c.t("check.retake")}</a
-      >
-      <button class="canccu-button canccu-button--primary" type="submit">
-        ${c.t("check.confirm")}
-      </button>
-    </div>
-  </form>`;
+      <p class="pizza-centered ${r.adds_up ? "pizza-ok" : "pizza-warn"}">
+        ${
+          r.adds_up
+            ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
+            : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })
+        }
+      </p>
+      <div class="pizza-row">
+        <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan"
+          >${c.t("check.retake")}</a
+        >
+        <button class="canccu-button canccu-button--primary" type="submit">
+          ${c.t("check.confirm")}
+        </button>
+      </div>
+    </form>`;
 }

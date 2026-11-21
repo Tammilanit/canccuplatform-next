@@ -66,45 +66,72 @@ export async function readerAvailable(deps: AppDeps, tenant: string): Promise<bo
   return key !== null && key.rejected_at === null;
 }
 
-/** The event's reader for one read, or why there is none; the read counts once it is tried. */
+/** One reserved read: its row, and the sealed key it will be tried with. */
+export interface Taken {
+  reader: Reader;
+  readId: string;
+  sealed: string;
+}
+
+/**
+ * The event's reader for one read, or why there is none. The read is reserved here, under a lock
+ * on the event's reads and committed with the caller's transaction, so concurrent scans cannot
+ * together pass the daily cap; `noteRead` records how the call ended. A reservation that is never
+ * noted (the process died mid-call) stays counted as failed: the provider may have charged for it.
+ */
 export async function takeReader(
   c: SqlClient,
   deps: AppDeps,
   tenant: string,
   zone: string,
   now: Date,
-): Promise<Reader> {
+  kind: "receipt" | "menu",
+): Promise<Taken> {
   const settings = await deps.settings(tenant);
   const key = await keyRow(c);
   if (!settings.ai_reader || key === null || key.rejected_at !== null || deps.secrets === null)
     throw readerOff();
-  if ((await readsSince(c, "day", eventDay(now, zone))) >= settings.ai_reader_daily_reads) {
+  await c.query(
+    `SELECT pg_advisory_xact_lock(hashtext(current_setting('canccu.tenant') || ':pizza-reads'))`,
+    [],
+  );
+  const day = eventDay(now, zone);
+  if ((await readsSince(c, "day", day)) >= settings.ai_reader_daily_reads) {
     throw new KitError("Today's reads are used up: type the numbers instead.", {
       status: 429,
       code: "reader_limit",
     });
   }
-  return deps.readerFor(deps.secrets.openText(key.sealed, aad(tenant)));
+  const { rows } = await c.query(
+    `INSERT INTO pizza_reads (at, day, kind, outcome) VALUES ($1, $2, $3, 'failed') RETURNING id::text AS id`,
+    [now, day, kind],
+  );
+  return {
+    reader: deps.readerFor(deps.secrets.openText(key.sealed, aad(tenant))),
+    readId: (rows[0] as { id: string }).id,
+    sealed: key.sealed,
+  };
 }
 
-/** One call to the provider, in its own transaction so a failed read still counts. */
+/**
+ * How a reserved read ended. A refused key stops the reader only if it is still the key this read
+ * used: a key an admin set meanwhile is not marked for the old key's refusal.
+ */
 export async function noteRead(
   c: SqlClient,
-  kind: "receipt" | "menu",
+  taken: Taken,
   outcome: "ok" | "failed" | "rejected",
-  zone: string,
   now: Date,
 ): Promise<void> {
-  await c.query(`INSERT INTO pizza_reads (at, day, kind, outcome) VALUES ($1, $2, $3, $4)`, [
-    now,
-    eventDay(now, zone),
-    kind,
+  await c.query(`UPDATE pizza_reads SET outcome = $2 WHERE id = $1::bigint`, [
+    taken.readId,
     outcome,
   ]);
   await c.query(
     `UPDATE pizza_reader_keys SET last_used_at = $1,
-       rejected_at = CASE WHEN $2 THEN $1 ELSE rejected_at END`,
-    [now, outcome === "rejected"],
+       rejected_at = CASE WHEN $2 THEN $1 ELSE rejected_at END
+     WHERE sealed = $3`,
+    [now, outcome === "rejected", taken.sealed],
   );
 }
 

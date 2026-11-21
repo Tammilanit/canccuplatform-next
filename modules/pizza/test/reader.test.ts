@@ -220,6 +220,12 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
     expect(w.reader.sent[0]).toMatchObject({ height: 2576, width: 1932, exif: false });
   });
 
+  it("sends a JPEG rendition of a PNG photo, never the lossless PNG", async () => {
+    await setKey();
+    await read(await addReceipt());
+    expect(w.reader.sent[0]?.type).toBe("image/jpeg");
+  });
+
   it("counts once the holder confirms: the total, the prices and the receipt it came from", async () => {
     await setKey();
     const receipt = await addReceipt();
@@ -267,6 +273,43 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
     // The holder's money closed with the event day; the crew reads now.
     expect((await read(receipt, "crew")).statusCode).toBe(200);
     expect(json(await keyStatus())).toMatchObject({ reads_this_month: 3 });
+  });
+
+  it("never goes over the daily cap when scans run at once", async () => {
+    await setKey();
+    w.settings.set("demo", { ...DEFAULT_SETTINGS, ai_reader: true, ai_reader_daily_reads: 2 });
+    const receipt = await addReceipt();
+    let release!: () => void;
+    w.reader.hold = new Promise<void>((r) => (release = r));
+    const reads = Array.from({ length: 6 }, () => read(receipt));
+    // The provider holds its answers, so the reads that passed the cap are all in flight.
+    for (let i = 0; i < 300 && w.reader.sent.length < 2; i++)
+      await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 100));
+    release();
+    const codes = (await Promise.all(reads)).map((r) => r.statusCode).sort();
+    expect(codes).toEqual([200, 200, 429, 429, 429, 429]);
+    expect(w.reader.sent).toHaveLength(2);
+    const stored = await pool.query<{ n: number }>("SELECT count(*)::int AS n FROM pizza_reads");
+    expect(stored.rows[0]?.n).toBe(2);
+  });
+
+  it("marks a key refused only if it is the key the read used, not one set meanwhile", async () => {
+    await setKey();
+    const receipt = await addReceipt();
+    let release!: () => void;
+    w.reader.hold = new Promise<void>((r) => (release = r));
+    w.reader.fail = "rejected";
+    const reading = read(receipt);
+    for (let i = 0; i < 200 && w.reader.sent.length === 0; i++)
+      await new Promise((r) => setTimeout(r, 10));
+    await setKey("integrator", "sk-ant-demo-1111111111111111ab02");
+    release();
+    expect(errorOf(await reading).code).toBe("reader_key_rejected");
+    expect(json(await keyStatus())).toMatchObject({ set: true, rejected: false, last4: "ab02" });
+    w.reader.fail = null;
+    w.reader.hold = null;
+    expect((await read(receipt)).statusCode).toBe(200);
   });
 
   it("says when the provider fails, and stops on a refused key instead of trying again", async () => {

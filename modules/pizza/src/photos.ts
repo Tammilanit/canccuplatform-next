@@ -98,3 +98,30 @@ export async function cleanPhoto(input: Buffer, type: string): Promise<Buffer> {
   if (want.format === "png") return pipeline.png().toBuffer();
   return pipeline.webp({ quality: 85 }).toBuffer();
 }
+
+/** The provider's per-image limit is 5 MB of base64; this keeps the bytes under it with room. */
+export const PROVIDER_MAX_BYTES = 3 * 1024 * 1024;
+
+/**
+ * What the reader is sent: a JPEG or WebP, never the lossless PNG a screenshot may be (a PNG of a
+ * receipt can pass the limit). A JPEG or WebP already within the limit goes as it is; otherwise
+ * it is re-encoded as JPEG, lowering the quality and then the size until it fits.
+ */
+export async function forProvider(
+  clean: Buffer,
+  type: string,
+): Promise<{ image: Buffer; type: string }> {
+  if (type !== "image/png" && clean.length <= PROVIDER_MAX_BYTES) return { image: clean, type };
+  let edge = LONG_EDGE;
+  for (;;) {
+    for (const quality of [85, 70, 55, 40]) {
+      const image = await sharp(clean)
+        .flatten({ background: "#ffffff" })
+        .resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality })
+        .toBuffer();
+      if (image.length <= PROVIDER_MAX_BYTES || edge <= 600) return { image, type: "image/jpeg" };
+    }
+    edge = Math.round(edge * 0.7);
+  }
+}

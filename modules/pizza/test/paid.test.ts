@@ -73,6 +73,16 @@ describe.skipIf(!DATABASE_URL)("Paid ticks", () => {
     expect(paidOf(json(await money()))).toMatchObject({ Anni: false });
   });
 
+  it("are refused on a cancelled order", async () => {
+    await toPayer();
+    // A placed order cannot be cancelled through the API, so the state is set directly: the
+    // route must refuse by the state it finds, as the other money writes do.
+    await pool.query("UPDATE pizza_orders SET state = 'cancelled' WHERE id = $1", [id]);
+    const res = await tick("pena", "u_anni");
+    expect(res.statusCode).toBe(409);
+    expect(errorOf(res).code).toBe("cancelled");
+  });
+
   it("are for someone in the order other than the payer", async () => {
     await toPayer();
     expect(errorOf(await tick("pena", "u_tero")).code).toBe("invalid_request");

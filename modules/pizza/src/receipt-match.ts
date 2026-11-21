@@ -42,6 +42,12 @@ export interface ReceiptMatch {
   adds_up: boolean;
 }
 
+/** The `nth` (from 0) unit's share of a line's amount: the first `amount mod quantity` get a cent more. */
+function unitCents(amount: number, quantity: number, nth: number): number {
+  const base = Math.floor(amount / quantity);
+  return base + (nth < amount - base * quantity ? 1 : 0);
+}
+
 const fold = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 /** "#12 Kebab" → "kebab"; "Other: garlic bread" → "garlic bread". */
 const nameOf = (label: string) => fold(label.replace(/^#\S+\s+/, "").replace(/^other:\s*/i, ""));
@@ -62,8 +68,11 @@ export function matchReceipt(reading: ReceiptReading, items: MatchItem[], at: Da
     if (line < 0) line = find((l) => fold(l.name) === nameOf(item.label));
     const hit = line < 0 ? undefined : reading.lines[line];
     if (hit !== undefined) used[line] = (used[line] ?? 0) + 1;
+    // A line's amount rarely divides evenly (2 × 25.01 is 50.02): the remainder cents go to the
+    // line's first pizzas, one each, so the pizzas add up to the line.
+    const nth = hit === undefined ? 0 : (used[line] ?? 1) - 1;
     const suggested =
-      hit === undefined ? null : Math.round(hit.amount_cents / Math.max(1, hit.quantity));
+      hit === undefined ? null : unitCents(hit.amount_cents, Math.max(1, hit.quantity), nth);
     return {
       item_id: item.id,
       user_id: item.user_id,
