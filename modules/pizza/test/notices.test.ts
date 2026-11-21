@@ -79,7 +79,7 @@ const payDetails = (who: string, body: unknown) =>
 /** Money, phone numbers and accounts never travel on the bus (contracts/pizza.md, Events). */
 function noMoneyOnTheBus(): void {
   const bus = JSON.stringify(w.events());
-  expect(bus).not.toMatch(/cents|amount|mobilepay|iban|FI21|040 000/i);
+  expect(bus).not.toMatch(/_cents|"(amount|mobilepay|iban|pay_to)[a-z_]*":|FI21|040 000|040 111/i);
 }
 
 /** Called in at T0, total in, settling to the payer, Pena's details given. */
@@ -229,9 +229,9 @@ describe.skipIf(!DATABASE_URL)("the payment reminder", () => {
     await tick("u_anni");
     await atIso("2026-10-30T04:00:00.000Z");
     await atIso("2026-10-30T09:59:00.000Z");
-    expect(
-      sent("pizza.reminder.triggered").filter((e) => e.data.kind === "not_paid"),
-    ).toHaveLength(0);
+    expect(sent("pizza.reminder.triggered").filter((e) => e.data.kind === "not_paid")).toHaveLength(
+      0,
+    );
     await atIso(NOON);
     await atIso("2026-10-30T12:00:00.000Z");
     await atIso("2026-10-31T12:00:00.000Z");

@@ -109,3 +109,74 @@ def test_each_reminder_goes_to_its_one_person_in_its_own_words() -> None:
         {"order": order(), "kind": "closed_not_placed", "minutes": 30, "user_id": "u_pena"},
     )
     assert late.body == "Closed 30 min ago: call Demo Pizzeria"
+
+
+def test_calling_it_in_tells_each_person_when_it_is_expected() -> None:
+    people = {"user_ids": ["u_anni", "u_mikko"], "people": []}
+    [c] = made(
+        "pizza.order.placed",
+        {"order": order(state="placed", estimate_at="2026-11-21T17:30:00Z"), **people},
+    )
+    assert (c.part, c.user_ids, c.title) == (
+        "personal",
+        ("u_anni", "u_mikko"),
+        "Order 3 is called in",
+    )
+    assert c.body == "Demo Pizzeria: expected at 19:30"
+    unknown = order(state="placed", estimate_at=None)
+    [plain] = made("pizza.order.placed", {"order": unknown, **people})
+    assert plain.body == "Demo Pizzeria: you will hear when it is here"
+
+
+def test_a_pizza_changed_or_removed_by_someone_else_tells_its_owner_only() -> None:
+    item = {"order_id": "po_1", "order_seq": 3, "user_id": "u_anni"}
+    [changed] = made("pizza.item.changed", {**item, "by_owner": False})
+    assert (changed.user_ids, changed.title) == (("u_anni",), "Your pizza in order 3 was changed")
+    [removed] = made("pizza.item.removed", {**item, "by_owner": False})
+    assert (removed.title, removed.url) == (
+        "Your pizza was taken out of order 3",
+        "/pizza/orders/po_1",
+    )
+    assert made("pizza.item.removed", {**item, "by_owner": True}) == []
+    assert made("pizza.item.added", {**item, "by_owner": True}) == []
+
+
+def share(**extra: Any) -> dict[str, Any]:
+    payer = {"user_id": "u_pena", "discord_user_id": None, "name": "Pena"}
+    return {"order": order(state="done"), "user_ids": ["u_anni"], "payer": payer, **extra}
+
+
+def test_a_share_says_whom_to_pay_and_never_an_amount() -> None:
+    [to_payer] = made("pizza.share.ready", share(settle_to="payer"))
+    assert (to_payer.user_ids, to_payer.title, to_payer.url) == (
+        ("u_anni",),
+        "Order 3: pay Pena your share",
+        "/pizza/orders/po_1",
+    )
+    [to_organiser] = made("pizza.share.ready", share(settle_to="organiser"))
+    assert to_organiser.title == "Order 3: your share is ready"
+    assert to_organiser.body.startswith("Paid to the organiser after the event")
+    [amount] = made("pizza.share.changed", share(settle_to="payer", reason="amount"))
+    assert amount.title == "Order 3: your share changed"
+    [pay_to] = made("pizza.share.changed", share(settle_to="payer", reason="pay_to"))
+    assert (pay_to.title, pay_to.body) == (
+        "Order 3: pay Pena",
+        "How to pay changed: the details are on your order",
+    )
+    [organiser] = made("pizza.share.changed", share(settle_to="organiser", reason="pay_to"))
+    assert organiser.title == "Order 3: pay the organiser"
+    paid = {"order": order(state="done"), "user_id": "u_anni", "payer": share()["payer"]}
+    [marked] = made("pizza.share.paid", paid)
+    assert (marked.user_ids, marked.body) == (("u_anni",), "Pena has your payment marked")
+
+
+def test_the_payment_reminder_has_words_for_the_person_and_for_the_payer() -> None:
+    data = {"order": order(state="done"), "kind": "not_paid", "minutes": 600, "count": 2}
+    [member] = made("pizza.reminder.triggered", {**data, "user_id": "u_anni", "role": "member"})
+    assert (member.user_ids, member.title, member.url) == (
+        ("u_anni",),
+        "Order 3: not marked paid yet",
+        "/pizza/orders/po_1",
+    )
+    [payer] = made("pizza.reminder.triggered", {**data, "user_id": "u_pena", "role": "payer"})
+    assert (payer.title, payer.url) == ("Order 3: 2 not marked paid", "/pizza/hold/po_1/money")

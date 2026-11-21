@@ -138,7 +138,8 @@ export async function place(
       estimate_at: input.estimate_at,
       payer_user_id: input.payer.user_id,
     });
-    await emitOrder(s.c, s.e, "pizza.order.placed", m.row, { actor_user_id: actorId(s) });
+    // The people in it are told it is called in (#703), as they are told it arrived.
+    await emitOrder(s.c, s.e, "pizza.order.placed", m.row, { actor_user_id: actorId(s) }, true);
   }
   return m;
 }

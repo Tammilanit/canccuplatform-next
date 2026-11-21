@@ -50,7 +50,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
     "Kaikki maksavat järjestäjälle tapahtuman jälkeen. Ovella ei kerätä mitään.",
   "money.directly_text": "Kaikki maksavat sinulle. Merkitse maksaneet jaossa.",
   "money.pay_with": "Maksa minulle",
-  "money.pay_with_hint": "Lähetetään tilauksen {n} henkilölle heidän summansa kanssa.",
+  "money.pay_with_hint":
+    "Tilauksen {n} henkilöä näkevät nämä summansa kanssa tilauksessaan. Ilmoitus kertoo, kenelle maksetaan, ei koskaan näitä tietoja.",
   "money.mobilepay": "MobilePay · {number}",
   "money.bank": "Tili · {iban}",
   "money.mobilepay_label": "MobilePay-numero",
@@ -197,4 +198,6 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "read.button": "Lue kuva",
   "history.money_changed": "Rahat muutettu",
   "history.receipt_added": "Kuitti lisätty",
+  "history.shares_sent": "Jokaiselle kerrottu osuutensa",
+  "history.payment_reminded": "Maksumuistutus lähetetty",
 };
