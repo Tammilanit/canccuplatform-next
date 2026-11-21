@@ -57,6 +57,7 @@ if [ "$dry" = 1 ]; then
   command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
   echo "(chromium in $IMAGE, in Caddy's network namespace)"
   node scripts/demo-screenshots.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT" || exit 1
+  node scripts/demo-screenshots-dev-seed.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT" || exit 1
   echo "then, after scripts/demo-screenshots-front.sql seeds people and three more events:"
   exec node scripts/demo-screenshots-front.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT"
 fi
@@ -114,6 +115,23 @@ takes() {
 }
 shoot demo-screenshots.mjs
 status=$?
+# The dev server's demo content (#715) on its own shard: the modules' seed commands as
+# setup/deploy runs them, each twice, the second time changing nothing; then its pass.
+if takes demo-screenshots-dev-seed.mjs '\.png '; then
+  seeded=1
+  for part in "admin python -m canccu_admin dev-seed" "agenda python -m canccu_agenda dev-seed" \
+    "pizza node dist/dev-seed-cli.js" "moments node dist/dev-seed-cli.js"; do
+    read -ra cmd <<< "$part"
+    if ! "${COMPOSE[@]}" exec -T "${cmd[@]}"; then
+      echo "error: ${cmd[0]}'s dev seed failed" >&2; seeded=0; break
+    fi
+    again=$("${COMPOSE[@]}" exec -T "${cmd[@]}" 2>&1)
+    if ! grep -q "nothing changed" <<< "$again"; then
+      echo "error: ${cmd[0]}'s dev seed changed something on its second run: $again" >&2; seeded=0; break
+    fi
+  done
+  if [ "$seeded" = 1 ]; then shoot demo-screenshots-dev-seed.mjs || status=1; else status=1; fi
+fi
 if ! takes demo-screenshots-front.mjs '\.png '; then exit "$status"; fi
 # The second pass needs people, a session without a role and events before, after and away from
 # their venue, which no API of the CI stack makes; the first pass shows People with nobody else.

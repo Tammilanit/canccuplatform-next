@@ -14,6 +14,8 @@ export const GROUPS = [
   "screen-studio",
   "moments",
   "pizza",
+  // Not a surface: the dev server's demo content, seeded as setup/deploy does and then shot (#715).
+  "dev-seed",
 ];
 
 /** The groups a `--groups a,b` option names; a typo fails the run rather than skip its shots. */
@@ -59,6 +61,8 @@ export const SHARDS = [
   // Food on a stack of its own: its open orders would start Moments' pizza stories on the screens
   // of the pages shard's shots.
   { shard: "food", groups: ["pizza"] },
+  // The dev seed's run of show, order and story would change every other shard's pages.
+  { shard: "dev-seed", groups: ["dev-seed"] },
 ];
 
 // What a changed path needs, first match wins (a `*` also matches `/`): `docs` (no stack),
@@ -80,6 +84,11 @@ const MAP = [
   [".github/actions/demo-stack-up/*", "full"],
   ["scripts/demo-*", "full"],
   ["scripts/screen-soak", "full"],
+  // The modules' dev seeds (#715): their own surfaces and the shard that runs them.
+  ["modules/admin/src/canccu_admin/dev_seed.py", ["admin", "dev-seed"]],
+  ["modules/agenda/src/canccu_agenda/dev_seed.py", ["agenda", "dev-seed"]],
+  ["modules/pizza/src/dev-seed*", ["pizza", "dev-seed"]],
+  ["modules/moments/src/dev-seed*", ["moments", "dev-seed"]],
   ["modules/admin/*", ["admin"]],
   // People and the sign-in page's events come from tenants.
   ["modules/tenants/*", ["admin"]],

@@ -120,7 +120,10 @@ export function selftest({ plan, format, changedPaths }) {
       const render = pr("modules/screen-render/a.ts");
       assert.equal(render.api, "screen");
       assert.equal(render.soak, false);
-      assert.equal(pr("modules/tenants/a.py", "modules/admin/b.ts").api, "admin");
+      assert.equal(
+        pr("modules/tenants/a.py", "modules/admin/b.ts").api,
+        "admin",
+      );
     },
   );
   check("contract files an image reads at runtime are their module's", () => {
@@ -160,7 +163,10 @@ export function selftest({ plan, format, changedPaths }) {
       "modules/screen-render/x",
     ]) {
       const { api } = pr(path);
-      assert.ok(stackTest(STACK_TEST, "--only", api).length > smoke, `${path}: ${api}`);
+      assert.ok(
+        stackTest(STACK_TEST, "--only", api).length > smoke,
+        `${path}: ${api}`,
+      );
     }
   });
   check("demo-stack-test refuses tags out of step with its tests", () => {
@@ -173,8 +179,9 @@ export function selftest({ plan, format, changedPaths }) {
       const short = source.replace(/^(TAGS=\(\n\s*)platform /m, "$1");
       assert.notEqual(short, source);
       writeFileSync(copy, short, { mode: 0o755 });
-      assert.throws(() => stackTest(copy), (err) =>
-        err.status === 2 && /tags/.test(String(err.stderr)),
+      assert.throws(
+        () => stackTest(copy),
+        (err) => err.status === 2 && /tags/.test(String(err.stderr)),
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -262,7 +269,11 @@ export function selftest({ plan, format, changedPaths }) {
       .split("\n")
       .filter((l) => /^ {2}\S+\.png /.test(l))
       .map((l) => l.trim().split(/\s+/)[0]);
-  for (const script of ["demo-screenshots.mjs", "demo-screenshots-front.mjs"]) {
+  for (const script of [
+    "demo-screenshots.mjs",
+    "demo-screenshots-front.mjs",
+    "demo-screenshots-dev-seed.mjs",
+  ]) {
     check(
       `the shards of ${script} take every shot of the full run, each once`,
       () => {
@@ -281,6 +292,28 @@ export function selftest({ plan, format, changedPaths }) {
       ),
     );
   }
+  check(
+    "only the dev-seed shard runs the dev seed's pass, and a seed change runs it",
+    () => {
+      assert.ok(
+        shots("demo-screenshots-dev-seed.mjs", "--groups", "dev-seed").length >
+          0,
+      );
+      assert.deepEqual(
+        shots("demo-screenshots-dev-seed.mjs", "--groups", "agenda,pizza"),
+        [],
+      );
+      assert.deepEqual(
+        shots("demo-screenshots.mjs", "--groups", "dev-seed"),
+        [],
+      );
+      assert.deepEqual(needsOf("modules/pizza/src/dev-seed.ts"), [
+        "pizza",
+        "dev-seed",
+      ]);
+      assert.deepEqual(needsOf("modules/pizza/src/menus.ts"), ["pizza"]);
+    },
+  );
   check("one group takes only its own shots", () => {
     const agenda = shots("demo-screenshots.mjs", "--groups", "agenda");
     assert.ok(

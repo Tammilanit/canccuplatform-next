@@ -62,6 +62,8 @@ async def test_seeds_a_run_of_show_on_today_and_tomorrow(env: Env) -> None:
     by_title = {r["title"]: r for r in rows}
     # A tournament session, a pizza order time and a raffle, as the issue asks.
     assert by_title["Raffle"]["kind"] == "activity"
+    # A raffle each day, so Moments finds one ahead even after today's.
+    assert {local_day(r) for r in rows if r["title"] == "Raffle"} == days
     assert by_title["Pizza order"]["kind"] == "meal"
     assert {r["kind"] for r in rows} >= {"tournament", "meal", "doors"}
     for day in days:
@@ -119,8 +121,8 @@ async def test_never_over_a_seeded_item_changed_by_hand(env: Env) -> None:
         await items.edit(env.deps, organiser(), raffle["id"], edit)
     env.clock[0] = NOW + timedelta(days=1)
     assert await seed(env) == dev_seed.HAND_MADE
-    titles = {r["title"] for r in await demo_rows(env)}
-    assert "Big raffle" in titles and "Raffle" not in titles
+    titles = [r["title"] for r in await demo_rows(env)]
+    assert "Big raffle" in titles and titles.count("Raffle") == 1
 
 
 async def test_force_resets_to_the_demo_run_of_show(env: Env) -> None:

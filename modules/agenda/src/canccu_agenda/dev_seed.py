@@ -25,7 +25,8 @@ from .deps import Deps
 SEED = store.Actor(None, "Demo seed")
 
 # (day: 0 today, 1 tomorrow; local start; minutes, None for a moment in time; kind; title;
-# location). Moments' seed finds the raffle by its title (modules/moments/src/dev-seed.ts).
+# location). Moments' seed finds the next raffle by its title (modules/moments/src/dev-seed.ts):
+# one each day, so there is one ahead after today's too.
 DEMO_RUN: tuple[tuple[int, str, int | None, str, str, str], ...] = (
     (0, "16:00", None, "doors", "Doors open", "Main entrance"),
     (0, "17:00", 120, "tournament", "Tournament: group stage", "Main hall"),
@@ -34,6 +35,7 @@ DEMO_RUN: tuple[tuple[int, str, int | None, str, str, str], ...] = (
     (0, "21:00", 30, "activity", "Raffle", "Main stage"),
     (1, "10:00", 60, "meal", "Breakfast", "Food table"),
     (1, "12:00", 180, "tournament", "Tournament: finals", "Main stage"),
+    (1, "15:15", 30, "activity", "Raffle", "Main stage"),
     (1, "16:00", 30, "ceremony", "Closing ceremony", "Main stage"),
 )
 
