@@ -24,6 +24,7 @@ One brief per roadmap step from step 3 on, and one per parallel track ([0023](..
   - **No internal words on screens.** Text a user sees never shows question numbers, decision or amendment numbers, file names, event names from the code (`screen_dark`), right names, ids, paths or versions. Notes for the reader go in the caption under the mockup, not inside the screen.
   - **No typed numbers where a control fits.** Amounts, delays, ranges and counts use a slider, preset chips or a stepper; dates use a date picker; orders of things use drag and drop. A typed field only where the value is free text or exact money.
   - **Big, full heroes.** A hero or a phone screen never shows a small line in a mostly empty area: the key number or words fill it (as the crew spotlight does), with the context background and widgets around it.
+  - **The form first.** Each view picks its form (card grid, table, ranked list, day schedule, hero, few boxes) by amendment 3's "Choose the form first" ([design guideline](../design/README.md#3--grids-scale-with-their-content-2026-11-19)) before it draws a card.
   - **Drawn in the shipped look and amendment 3's grids** ([design guideline](../design/README.md), [`docs/design/grids/`](../design/grids/README.md)), every organiser page also at phone width.
 - **Port, drop or invent:** what the step takes from the legacy (as is or changed), what it drops, and what is new, each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)).
 - **Question bank:** every open question found, with no limit on the number, grouped by theme:
