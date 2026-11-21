@@ -7,6 +7,7 @@ import asyncio
 import os
 
 from canccu_kit import Bus, ValkeyStreamStore, load_config
+from canccu_kit.access import tailscale_cidrs
 
 from . import dev_seed, seed
 from .core import Files
@@ -22,9 +23,19 @@ async def dev_hostnames(db: Db, hosts: list[str]) -> str:
     changed = await dev_seed.dev_hostnames(
         db, bus, hosts, config.version, platform_domain=e.platform_domain, reserved=reserved
     )
-    if not changed:
-        return "the demo event's dev hostnames are in place; nothing changed"
-    return "the demo event's dev hostnames: changed " + ", ".join(changed)
+    said = (
+        "the demo event's dev hostnames: changed " + ", ".join(changed)
+        if changed
+        else "the demo event's dev hostnames are in place; nothing changed"
+    )
+    # In the same command, so the deploy's dev seed needs no step of its own (issue #733).
+    try:
+        added = await dev_seed.dev_venue(db, bus, config.version, tailscale_cidrs())
+    except dev_seed.LeftAlone as exc:
+        return f"{said}\nthe demo venue's addresses: left alone: {exc}"
+    if not added:
+        return f"{said}\nthe demo venue's addresses are in place; nothing changed"
+    return f"{said}\nthe demo venue's addresses: added " + ", ".join(added)
 
 
 async def run(args: argparse.Namespace) -> str:
@@ -56,7 +67,8 @@ def main() -> None:
     sub.add_parser("seed-demo", help="create the demo venue and the live demo tenant")
     dev = sub.add_parser(
         "dev-hostnames",
-        help="dev mode only: the demo event answers on these hostnames, the first primary",
+        help="dev mode only: the demo event answers on these hostnames, the first primary, and"
+        " its venue takes the Tailscale prefixes",
     )
     dev.add_argument("hosts", nargs="+", metavar="HOST")
     superadmin = sub.add_parser("superadmin", help="superadmins")
