@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 25: Clips and photos from anyone taking part, approved by the crew</title>
+<rect x="0" y="0" width="1920" height="1080" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">25 · Clips and photos from anyone taking part, approved by the crew</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: players share a clip from the gaming PC or a photo from the phone; the crew approves; only approved items reach the screen and the recap. Demo names only.</text>
+<text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 420">1 · From the hub (phone)</text>
+<text x="420" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="420 1190">2 · From a PC browser (drag and drop)</text>
+<text x="1210" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1210 1888">3 · The crew queue on the desk</text>
+<g transform="translate(32,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="26 364">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="26 364">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 364">‹ Back</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="100 290">Share a moment</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="12 84">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="86 158">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="160 232">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="234 306">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="308 380">More</text>
+<text x="26" y="128" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26 364">Add a clip or photo</text>
+<rect x="26" y="144" width="338" height="110" rx="10" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="195" y="194" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="30 360">Choose a file or take a photo</text>
+<text x="195" y="216" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="30 360">Video up to 200 MB · photo up to 15 MB</text>
+<text x="26" y="288" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26 364">Session</text>
+<rect x="26" y="298" width="338" height="38" rx="8" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="322" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="26 364">Demo Arena 5v5 · 19:30</text>
+<text x="26" y="364" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26 364">Who is in it (tag people)</text>
+<rect x="26" y="374" width="338" height="38" rx="8" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="398" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="26 364">Nova · Kestrel</text>
+<rect x="26" y="430" width="24" height="24" rx="6" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="38" y="448" font-size="14" fill="#7cecba" font-weight="700" text-anchor="middle" data-box="26 50">✓</text>
+<text x="60" y="448" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="56 364">Everyone tagged is OK with it</text>
+<text x="26" y="482" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 364">The crew checks it first. Only then it shows.</text>
+<rect x="26" y="500" width="338" height="40" rx="8" fill="#3ddcff"/>
+<text x="195.0" y="524.5" font-size="14" fill="#04121a" font-weight="700" text-anchor="middle" data-box="26 364">Send to the crew</text>
+</g>
+<rect x="420" y="140" width="770" height="430" rx="10" fill="#0b0d1a" stroke="#3c446c" stroke-width="1"/>
+<rect x="420" y="140" width="770" height="34" rx="10" fill="#161a2e"/>
+<text x="436" y="162" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="430 1180">● ● ●   demo.example/tournament/moments</text>
+<text x="444" y="206" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="430 1180">Share a moment</text>
+<rect x="444" y="222" width="450" height="200" rx="12" fill="#22263f" stroke="#3ddcff" stroke-width="2"/>
+<text x="669" y="310" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="450 890">Drop the clip here</text>
+<text x="669" y="338" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="450 890">Record on the gaming PC, then drag the file in</text>
+<text x="669" y="362" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="450 890">mp4, webm, mov up to 200 MB</text>
+<text x="920" y="238" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="430 1180">Session</text>
+<rect x="920" y="246" width="246" height="36" rx="8" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="932" y="270" font-size="13" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="928 1160">Demo Arena 5v5 · 19:30</text>
+<text x="920" y="308" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="430 1180">Tag people</text>
+<rect x="920" y="316" width="246" height="36" rx="8" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="932" y="340" font-size="13" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="430 1180">Nova · Kestrel</text>
+<text x="920" y="384" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="920 1170">☑ Everyone tagged is OK with it</text>
+<rect x="920" y="402" width="246" height="36" rx="8" fill="#3ddcff"/>
+<text x="1043.0" y="424.5" font-size="14" fill="#04121a" font-weight="700" text-anchor="middle" data-box="920 1166">Send to the crew</text>
+<text x="444" y="460" font-size="13" fill="#7cecba" font-weight="600" text-anchor="start" data-box="430 1180">Uploaded: nova-clutch.mp4 (42 MB)</text>
+<rect x="444" y="472" width="450" height="10" rx="5" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="444" y="472" width="450" height="10" rx="5" fill="#7cecba"/>
+<text x="444" y="512" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="430 1180">Wrong type or too big? The page says which, before anything uploads.</text>
+<rect x="1210" y="140" width="678" height="430" rx="10" fill="#111827" stroke="#374151" stroke-width="1"/>
+<text x="1228" y="174" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1220 1878">To approve · 3</text>
+<rect x="1224" y="196" width="650" height="88" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1236" y="208" width="100" height="64" rx="6" fill="#1f2937"/>
+<text x="1286" y="246" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1236 1336">Clip</text>
+<text x="1352" y="228" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1348 1660">nova-clutch.mp4</text>
+<text x="1352" y="250" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1348 1680">Demo Arena 5v5 · Nova, Kestrel · 42 MB</text>
+<rect x="1686" y="220" width="80" height="34" rx="8" fill="#3ddcff"/>
+<text x="1726.0" y="241.5" font-size="13" fill="#04121a" font-weight="700" text-anchor="middle" data-box="1686 1766">Approve</text>
+<rect x="1774" y="220" width="88" height="34" rx="8" fill="#22263f"/>
+<text x="1818.0" y="241.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="1774 1862">Reject</text>
+<rect x="1224" y="296" width="650" height="88" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1236" y="308" width="100" height="64" rx="6" fill="#1f2937"/>
+<text x="1286" y="346" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1236 1336">Photo</text>
+<text x="1352" y="328" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1348 1660">team-photo.jpg</text>
+<text x="1352" y="350" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1348 1680">Demo Arena 5v5 · Nightfall · 3 MB</text>
+<rect x="1686" y="320" width="80" height="34" rx="8" fill="#3ddcff"/>
+<text x="1726.0" y="341.5" font-size="13" fill="#04121a" font-weight="700" text-anchor="middle" data-box="1686 1766">Approve</text>
+<rect x="1774" y="320" width="88" height="34" rx="8" fill="#22263f"/>
+<text x="1818.0" y="341.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="1774 1862">Reject</text>
+<rect x="1224" y="396" width="650" height="88" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1236" y="408" width="100" height="64" rx="6" fill="#1f2937"/>
+<text x="1286" y="446" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1236 1336">Clip</text>
+<text x="1352" y="428" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1348 1660">lap-record.mp4</text>
+<text x="1352" y="450" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1348 1680">Demo Racer · Juno · 88 MB</text>
+<rect x="1686" y="420" width="80" height="34" rx="8" fill="#3ddcff"/>
+<text x="1726.0" y="441.5" font-size="13" fill="#04121a" font-weight="700" text-anchor="middle" data-box="1686 1766">Approve</text>
+<rect x="1774" y="420" width="88" height="34" rx="8" fill="#22263f"/>
+<text x="1818.0" y="441.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="1774 1862">Reject</text>
+<text x="1228" y="520" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1220 1878">Approved: it goes to the session recap and the screen’s `best_moments`.</text>
+<text x="1228" y="542" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1220 1878">Rejected: the sender gets a short reason. Nothing is shown before.</text>
+<rect x="420" y="600" width="770" height="400" rx="10" fill="#0b0d1a" stroke="#3c446c" stroke-width="1"/>
+<text x="444" y="636" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="434 1180">4 · A tagged person asks for removal</text>
+<rect x="444" y="656" width="720" height="120" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="458" y="670" width="140" height="90" rx="6" fill="#1f2937"/>
+<text x="528" y="720" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="458 598">Clip</text>
+<text x="614" y="694" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="610 1150">nova-clutch.mp4 · Demo Arena 5v5</text>
+<text x="614" y="716" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="610 1150">Shared by Nova · you are tagged</text>
+<rect x="614" y="730" width="190" height="32" rx="8" fill="#22263f"/>
+<text x="709.0" y="750.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="614 804">Ask to remove it</text>
+<rect x="444" y="796" width="720" height="70" rx="10" fill="#22263f" stroke="#7cecba" stroke-width="1"/>
+<text x="458" y="824" font-size="14" fill="#7cecba" font-weight="700" text-anchor="start" data-box="434 1180">Request sent to the crew</text>
+<text x="458" y="846" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="458 1150">The crew takes it off the screen and the recap, and deletes it if you asked.</text>
+<text x="444" y="900" font-size="13" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="434 1180">Files sit in the tenant’s files volume, with a size and a type limit.</text>
+<text x="444" y="922" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="434 1180">Retention follows D16 and O6: kept as personal data, deleted with the player’s data.</text>
+<text x="444" y="944" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="434 1180">Crew uploads skip the queue; a participant’s upload never does.</text>
+<g transform="translate(1350,600) scale(0.5)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="26 364">19:24</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="26 364">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 364">‹ Desk</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="100 290">Crew · Queue</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="12 84">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="86 158">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="160 232">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="234 306">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="308 380">More</text>
+<text x="26" y="128" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26 364">To approve · 3</text>
+<rect x="26" y="146" width="338" height="130" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="38" y="158" width="110" height="70" rx="6" fill="#1f2937"/>
+<text x="160" y="176" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="156 360">nova-clutch.mp4</text>
+<text x="160" y="196" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 364">Nova · Kestrel</text>
+<rect x="38" y="236" width="150" height="30" rx="8" fill="#3ddcff"/>
+<text x="113.0" y="255.5" font-size="13" fill="#04121a" font-weight="700" text-anchor="middle" data-box="38 188">Approve</text>
+<rect x="198" y="236" width="150" height="30" rx="8" fill="#22263f"/>
+<text x="273.0" y="255.5" font-size="13" fill="#ff8f8f" font-weight="700" text-anchor="middle" data-box="198 348">Reject</text>
+</g>
+<text x="1210" y="1030" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1210 1888">The same queue on the crew phone.</text>
+</svg>

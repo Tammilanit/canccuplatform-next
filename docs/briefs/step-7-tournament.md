@@ -27,8 +27,8 @@ The research pack for the product owner's brainstorming session on [step 7, Tour
 
 **In this pack**
 - This file: goal, what was read, what earlier steps already built, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, the lead's notes, what the built contracts get wrong, proposed issue changes and exit criteria.
-- [step-7-tournament/questions.md](step-7-tournament/questions.md): the question bank, 81 questions asked now in seven themes (76 in six themes before the 0030 revision), each with options and a recommendation, and 17 more kept under Later, not asked now. IDs (U3, D1, …) are used throughout.
-- [step-7-tournament/](step-7-tournament/): 21 SVG mockups (15, with 16–17 kept for later, 18 added for 0030 and 19–21 for the lead round), drawn new, with the demo event only. GitHub shows them inline below. Organiser pages are drawn in the dark organiser shell of `packages/ui` with the Demo night tokens (as the step 4 polish and grids sheets); attendee pages in the hub's frame; the venue screen in the screen look. Each sheet states its use case. Every text carries the box it sits in, and a headless Chromium check found no text outside its box at any width drawn (see [Every mockup](#every-mockup)).
+- [step-7-tournament/questions.md](step-7-tournament/questions.md): the question bank, 85 questions asked now in seven themes (76 in six themes before the 0030 revision), each with options and a recommendation, and 17 more kept under Later, not asked now. IDs (U3, D1, …) are used throughout.
+- [step-7-tournament/](step-7-tournament/): 26 SVG mockups (15, with 16–17 kept for later, 18 added for 0030, 19–21 for the lead round and 22–26 for its fourth round), drawn new, with the demo event only. GitHub shows them inline below. Organiser pages are drawn in the dark organiser shell of `packages/ui` with the Demo night tokens (as the step 4 polish and grids sheets); attendee pages in the hub's frame; the venue screen in the screen look. Each sheet states its use case. Every text carries the box it sits in, and a headless Chromium check found no text outside its box at any width drawn (see [Every mockup](#every-mockup)).
 
 ## Goal
 Players register, play and follow a tournament on the platform ([roadmap](../roadmap.md#7-tournament)). The roadmap's "In it": the tournament system ported and polished ([0022](../decisions/0022-product-vision.md)): check-in, no-shows, result corrections with an audit trail, seeding; scoring, leaderboard and final, built on the signup site's code; registration inside the module; the bot's voice-channel handshake through events; concurrency with row locks (`SELECT … FOR UPDATE`). The mini tourney is not part of it: it is the `finals` module of the Finals track ([0025](../decisions/0025-finals-and-games-modules.md)). Exit: a test tournament runs end to end.
@@ -148,6 +148,8 @@ C also costs less than it looks, because the platform has done the far end alrea
 8. **Private by default.** Who plays is public inside the event; check-ins and voice rosters are presence data, the opt-out is respected, and names on the screen follow a setting (D5, L7).
 9. **One engine (0030).** The cup's rounds, brackets, points, standings and balanced fills come from the one core, its formats frozen per competition (D18); the module builds the night around it.
 10. **Planned in time, a day schedule (decision 0031).** Things with a time (sessions, matches, the run of a day) are one day at a time, times down the side, in time order, like the agenda's run of show (`modules/agenda/src/canccu_agenda/day_view.py`), with a day picker; at phone width it is the same list. A card grid stays only for like items with no time order (photo slots).
+11. **Nobody misses out (lead round 4).** Signing up for several sessions a day is one page and one tap each; the platform nudges (a closing chip, a star, a last call) and the crew can add a latecomer ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out)).
+12. **PC and phone are equal (amendment 5, #707).** Every attendee page works fully in a PC browser, with a desktop layout at 1280 px and wider, and on a phone; alerts go through app push or browser notifications, plus Discord ([L11](step-7-tournament/questions.md#l11-pc-and-phone-are-equal)).
 
 ## Key flows
 Each flow names its users and its mockup. The mockups use the demo event's names only (Demo Event, Demo Game Cup, Demo Arena, Demo Party, Demo Racer, Team Alpha …, Demo Player, Player Two …).
@@ -160,6 +162,15 @@ The Tournament page in the hub with the For you card; a session; registered with
 **Many sessions, one page (lead round, 8).** The hub's Tournament page has a **"My sessions"** list: every session of the tournament in time order, as the day schedule (decision 0031, amendment 4), each row with a tick to join or leave ([U4](step-7-tournament/questions.md#u4-what-the-player-sees-of-the-timeline), [U7](step-7-tournament/questions.md#u7-giving-up-a-place)). One tap saves that session; the page has no Save button. A row shows the time, the game, solo or team, the close time, and "Full" or "Closed" when it cannot be ticked; a reopened session says when it closes again. Ticking a team session signs you up as a solo player to be placed in a team ([U6](step-7-tournament/questions.md#u6-solo-players-in-a-team-session)); the row's small "Create or join a team" link is for a group. Unticking works until the close; after it, "I can't make it" asks the crew. The session page and Discord's `/tournament register` stay as other ways in.
 
 ![My sessions](step-7-tournament/21-my-sessions.svg)
+
+**Sign-up: easy, and nobody misses out (lead round 4, 9).** Several sessions a day is the normal case, so the tick list, the hub and the screen work by day ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out)).
+- **"Closes in N min"** chip on rows near the close.
+- **☆ Interested:** a star per session. A starred session you have not joined sends you one reminder 30 minutes before its close; nothing is sent for unstarred sessions.
+- **Last call:** on the hall screen, the hub and as a Discord channel post ("Last call: {game} closes {time}").
+- **Ask to join** on a closed session: the request lands in the crew's queue and the crew adds the person with one tap. It is in addition to reopening registration ([U19](step-7-tournament/questions.md#u19-reopening-registration-for-a-while)).
+- An **overlap warning** when two ticked sessions overlap ([E10](step-7-tournament/questions.md#e10-overlapping-sessions)): a warning, never a block.
+
+![Sign-up nudges](step-7-tournament/22-signup-nudges.svg)
 
 ### Teams (team leader, player)
 Name a team, invite by link or code, join, the full team, short at the close, a solo player placed by the crew ([U3](step-7-tournament/questions.md#u3-how-teams-form), [U6](step-7-tournament/questions.md#u6-solo-players-in-a-team-session)).
@@ -226,10 +237,50 @@ The crew list (the lead and helpers), the points table with its change-and-recal
 
 ![The crew, the scoring system and awards](step-7-tournament/19-crew-scoring-awards.svg)
 
+### Scoring: as easy and fun as possible (crew) · lead round 4, 10
+How the crew turns a played session into a result ([D21](step-7-tournament/questions.md#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)).
+- **Screenshots, crew only.** The crew adds the game's score screen. An optional AI reader (the same provider setting, consent notice and "a person confirms" pattern as pizza's receipt reader, #644) reads placements, names and per-player game stats. The crew checks before anything counts, and typing by hand always works.
+- **Who played comes from three sources together:** registration, voice presence and the screenshot, side by side per person.
+
+  | Registration | Voice | Screenshot | The form |
+  |---|---|---|---|
+  | yes | yes | yes | filled in automatically |
+  | one other source and the screenshot | | | took part, with a warning when one is missing |
+  | no | yes | yes | one tap adds them as registered |
+  | yes | no | no | suggested as a no-show |
+  | yes | yes | no | the crew decides |
+
+  Voice alone never decides. Nothing is final until the crew saves.
+- **In-game names:** the first time the crew links a screenshot name to a person, the platform remembers it for that game (per person, per game), so the next screenshot matches by itself.
+- **Tap to place:** tap a team or player for 1st, the next for 2nd, and so on; everyone else is "took part".
+- **Awards with a live preview:** before saving, what each award does to the standings ("Nova 3rd → 1st ▲2").
+- **Save is a reveal:** saving shows the result on the hall screen (see the next flow).
+- **The crew names the teams for each session**, for example to fit the game, when teams are formed or revealed. Team names appear on the match, the screen reveal and the results, never in the season standings.
+
+![Scoring at the desk](step-7-tournament/23-scoring-screenshot.svg)
+
 ### Reopen registration and delay a session (crew)
 A closed session reopened until a time or for N minutes, the push, "Close now", the History, and a delay of one session or of it and every later one that day ([U19](step-7-tournament/questions.md#u19-reopening-registration-for-a-while), [E2](step-7-tournament/questions.md#e2-a-session-moves)).
 
 ![Reopen registration and delay a session](step-7-tournament/20-reopen-and-delay.svg)
+
+### The screens live around the tournament (attendees in the hall) · lead round 4, 11
+The screen follows a session from its first card to its recap, then the evening, then the final ([L10](step-7-tournament/questions.md#l10-the-screens-around-the-tournament)). It reuses what Moments and Screen already have (presets, video cues, story pages, [widgets.md](../design/widgets.md), the pulse effects, game art as the background); each new widget or preset is named under its view on the sheet.
+- **A session's life:** "Today" or "Tonight" cards with the game art, the live sign-up count and a QR (`session_cards`); last call with a countdown (`last_call`); the teams revealed (`teams_reveal`); check-in "Waiting for 3: names" (`checkin_waiting`, with the built `checkin_qr`); match called (Moments' `match_called`); now playing (`session_now`: game art background, stage, round timer, with `bracket` between rounds); the result reveal (`result_reveal`: winners, then awards "MVP: Nova +2", then the standings sliding ▲▼ on `leaderboard`); a session recap of approved clips and photos (`session_recap`).
+- **All evening:** the race to the final with the cut line and "Nova needs 2 points to make the final" (`final_race`); player spotlights such as "3 podiums in a row", "first win ever", "most MVPs tonight" (`player_spotlight`, promoted from widgets.md's proposals for later); game-stat highlights from the screenshots such as "Highest score of the night" and "Most eliminations" (`stat_highlight`); rivalries such as "Kestrel vs Juno: 2–2 tonight" (`rivalry`); the biggest climber (`climber`); best moments (`best_moments`, over `photo`); a "Next up" strip carrying several sessions, delays and last calls (`next_up`). When sessions overlap, the screen alternates between them.
+- **The final:** several finalists (a setting, for example 4) and one winner. Finalist intro cards with season points, podiums, MVPs and best result (`finalist_cards`), the final, the final ranking 1–N on screen (`final_ranking`), then the champion moment and the champion photos (`champion_moment`, with Moments' `winner_card`). Places 2–N are celebrated as finalists.
+
+![The screens around the tournament](step-7-tournament/24-screens-around-tournament.svg)
+
+### Clips and photos from anyone taking part (players, crew) · lead round 4, 12
+Participants upload from the hub, the session page or a PC browser (drag and drop a clip recorded on the gaming PC), tag the session and the people, and the crew approves or rejects in a queue on the desk and the crew phone. Only approved items reach the screen and the recaps; tagged people can ask for removal ([D22](step-7-tournament/questions.md#d22-clips-and-photos-from-participants)).
+
+![Clips and photos](step-7-tournament/25-clips-and-photos.svg)
+
+### PC and phone are equal (attendees) · lead round 4, 13
+Every attendee page works fully in a PC browser and on a phone, with a desktop layout at 1280 px and wider (amendment 5, #707, being written in parallel; this pack links it once it merges). Alerts go through app push or browser notifications, plus Discord ([L11](step-7-tournament/questions.md#l11-pc-and-phone-are-equal)). Sheet 26 draws the Tournament page, a session, check-in and the match, and the standings and champions at 1280 px; the phone views stay as drawn on sheets 02, 04, 14, 21 and 22, so each page now has both.
+
+![The player pages at 1280 px](step-7-tournament/26-pc-layout.svg)
 
 ### The day schedule at any width (organiser)
 The Sessions page as a day schedule with 3 and 12 sessions at 1280, 1920 and 390 px: a longer list, never more columns; at 1920 px the selected session sits beside the list ([L2](step-7-tournament/questions.md#l2-the-organiser-pages)).
@@ -265,8 +316,13 @@ The Pulse with a cup session and a THE FINALS card; two champions with two owner
 | [19-crew-scoring-awards.svg](step-7-tournament/19-crew-scoring-awards.svg) | The crew list with the lead, the editable points table and its change step, award types and giving an award (lead round) | tournament lead, crew |
 | [20-reopen-and-delay.svg](step-7-tournament/20-reopen-and-delay.svg) | Reopen registration, Close now, the push, the History, delay one session or it and later ones (lead round) | crew |
 | [21-my-sessions.svg](step-7-tournament/21-my-sessions.svg) | "My sessions": one page, a tick per session, Full and Closed rows, a team session ticked as solo, "I can't make it", a reopened row (lead round) | player |
+| [22-signup-nudges.svg](step-7-tournament/22-signup-nudges.svg) | "Closes in N min", ☆ Interested and its reminder, an overlap warning, Ask to join and the crew queue, last call on the hall screen, the hub and Discord (lead round 4) | player, crew |
+| [23-scoring-screenshot.svg](step-7-tournament/23-scoring-screenshot.svg) | The score screen and the AI reader, who played from three sources, tap to place, team names, an award preview, save as a reveal (lead round 4) | crew |
+| [24-screens-around-tournament.svg](step-7-tournament/24-screens-around-tournament.svg) | Twenty hall-screen views: a session's life, the evening, the final, each with its widget (lead round 4) | attendees in the hall |
+| [25-clips-and-photos.svg](step-7-tournament/25-clips-and-photos.svg) | Upload from the phone and a PC browser, the crew queue on the desk and the phone, a tagged person's removal request (lead round 4) | players, crew |
+| [26-pc-layout.svg](step-7-tournament/26-pc-layout.svg) | The player pages at 1280 px: Tournament page, session, check-in and match, standings and champions (lead round 4) | attendees on a PC |
 
-The sheets were drawn by a throwaway script kept out of the repo, as in step 5; sheets 02, 05, 06, 14, 15 and 18 were redrawn the same way for the first lead round (2026-11-21), 16–17 are kept as drawn at the 0030 revision, marked later, and for the second lead round the same day sheets 02–09, 13–15 were edited (no waiting list, awards, the lead and the crew, reopen and delay) and 19–20 drawn. On sheet 18 the THE FINALS cards are placeholders that only mark where the app's own card sits: they keep the app's graphics and theming and are not redrawn (0030 point 1). Each text that sits in a box carries `data-box` (its box's left and right edge); rendered in headless Chromium (the playwright image's fonts), no text runs outside its box on the sheets redrawn for the lead round, and none did on the others when they were drawn. **Timed items are a day schedule** (principle 10): the sessions and a session's matches are one day at a time, times down the side, in time order, with a day picker. Card grids ([amendment 3](../design/README.md#3--grids-scale-with-their-content-2026-11-19)) stay only for like items with no time order, such as the final's photo slots; players, the history and the standings stay tables.
+The sheets were drawn by a throwaway script kept out of the repo, as in step 5; sheets 02, 05, 06, 14, 15 and 18 were redrawn the same way for the first lead round (2026-11-21), 16–17 are kept as drawn at the 0030 revision, marked later, and for the second lead round the same day sheets 02–09, 13–15 were edited (no waiting list, awards, the lead and the crew, reopen and delay) and 19–20 drawn; for the fourth lead round the same day sheets 22–26 were drawn the same way (the check that no text runs outside its box was an estimate of text width from the font size, not a render in Chromium, so the sheets still need that render before the plan is accepted). On sheet 18 the THE FINALS cards are placeholders that only mark where the app's own card sits: they keep the app's graphics and theming and are not redrawn (0030 point 1). Each text that sits in a box carries `data-box` (its box's left and right edge); rendered in headless Chromium (the playwright image's fonts), no text runs outside its box on the sheets redrawn for the lead round, and none did on the others when they were drawn. **Timed items are a day schedule** (principle 10): the sessions and a session's matches are one day at a time, times down the side, in time order, with a day picker. Card grids ([amendment 3](../design/README.md#3--grids-scale-with-their-content-2026-11-19)) stay only for like items with no time order, such as the final's photo slots; players, the history and the standings stay tables.
 
 ## Port, drop or invent
 Each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)).
@@ -332,6 +388,11 @@ Each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)).
 | A champions page per event (U10) | #128; the legacy had only a badge |
 | `me/matches` and `me/summary` for the hub (D10) | The lead's step 2 note; For you |
 | Overlap warnings across sessions (E10) | Players play several things a night |
+| Sign-up nudges: a closing chip, ☆ Interested with one reminder, last call, Ask to join (U20) | Nobody misses a session by accident, and a latecomer has a way in |
+| Scoring help: a crew-only score-screen reader, three sources for who played, remembered in-game names, tap to place, an award preview, save as a reveal (D21) | The crew scores fast and the room sees it |
+| The screens around the tournament: a session's life, the evening, the final (L10) | The screen tells the story all evening, from game art to the champion |
+| Clips and photos from participants, approved by the crew (D22) | The night's moments come from the people in it |
+| The Result's `game_stats` and `scores` from the score screen (D21) | Highlights such as "Highest score of the night" need per-player stats |
 
 ### Since 0030: from the core
 The core, not the Finals app, is what this module takes; the app's code stays its own (0030). The Finals app's features as the model for mini tournaments wait with them (Later).
@@ -371,6 +432,10 @@ No name or field is removed or renamed, so none is a breaking change.
 13. The lead and the crew: `tournament.settings.write` and `tournament.crew.manage`, the presets `tournament_lead` and `tournament_crew`, and a crew endpoint ([D12](step-7-tournament/questions.md#d12-rights)).
 14. What the waiting list would have added is never added: no `waiting_count` on the Session and no `tournament.player.waitlisted` or `.promoted`; the catalog has neither, so nothing is removed.
 15. Registration as a toggle: one idempotent `PUT /sessions/{id}/registration/me` (`{registered: bool}`, with the usual idempotency key) joins or leaves a session for the signed-in player, so a tick is one call; a team session joins as a solo player (U6). It reuses the register and give-up rules and emits the same registration events; no new event ([U4](step-7-tournament/questions.md#u4-what-the-player-sees-of-the-timeline)). Additive, shipped with #127's contract and the player's pages.
+16. Sign-up helpers: `PUT`/`DELETE /sessions/{id}/interest/me` (the star) with a scheduler row for the reminder 30 minutes before the close, only for a starred, not-joined session; a "last call" read on the session and an event for it (`tournament.registration.last_call`, consumed by Screen, the hub and the bot's channel post, with Notify's topic gaining the trigger); `POST /sessions/{id}/join-requests` and a crew list and decision (`tournament.registration.requested`, emitted when the crew adds the person through the normal register rule). Additive ([U20](step-7-tournament/questions.md#u20-signing-up-without-missing-out)).
+17. Scoring: `POST /sessions/{id}/score-screens` (a file in the files volume, crew only, right `tournament.results.write`), an optional `POST …/read` that calls the provider set for the event and returns a draft, never a Result; a per-person, per-game in-game name (`PUT /players/{id}/game-names/{game}`); `game_stats` and the `sources` (registration, voice, screenshot) on a Result's participant; a preview of the standings change (`POST /sessions/{id}/results/preview`); the team name per session on a team. Additive ([D21](step-7-tournament/questions.md#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)).
+18. Clips and photos: `POST /moments` (a file, the session, tagged people, a consent tick), a crew queue (`GET /moments?state=pending`, `PUT /moments/{id}/state`) and a removal request by a tagged person. The module may hold these or ask Moments to; the pack proposes the tournament keeps its own queue for step 7 and hands approved items to Moments through an event (`tournament.moment.approved`). Additive ([D22](step-7-tournament/questions.md#d22-clips-and-photos-from-participants)).
+19. The finals' size: `final_size` in the tournament's settings (the number of finalists, default 4), replacing "the top N" wherever the contract assumes a single winner and a podium. Additive ([L10](step-7-tournament/questions.md#l10-the-screens-around-the-tournament)).
 
 ## Proposed issue changes
 The step's issues are input ([P2](step-7-tournament/questions.md#p2-the-issue-set)). Proposed, not applied: the lead applies them after the session.
@@ -390,6 +455,12 @@ The step's issues are input ([P2](step-7-tournament/questions.md#p2-the-issue-se
 - **#127, also:** the module pins the core's 2.0.0 (D18) and stores formats and seeds per competition. Its Out of scope "brackets for any game (the Games track)" goes: brackets come from the core, here.
 - **#128, also:** rounds and "winners advance" through the core's `next`; a session chooses placements only or a bracket from the core (P4); the points and the standings through the core's `points` and `standings` (D2, D3); the crew's balanced fill through `build_teams` (U6).
 - **#129, also:** the "format mix-up" test is the core's ticket C1 (its 1.1.0), as the core plan says (E13).
+- **The lead round 4 of 2026-11-21 (five decisions, 9–13):**
+  - **#127, also:** the sign-up helpers' endpoints, scheduler row and event (gaps 16), and `final_size` (gap 19). Its risk stays high.
+  - **#128, also:** the score-screen file, the optional AI reader behind the event's provider setting and consent notice (a person confirms; a new secret, so a high-risk part that the package plan keeps with the other high-risk work), the three sources, remembered in-game names, `game_stats`, the preview and the save as a reveal event (gap 17); the finals with `final_size` finalists.
+  - **The player's pages issue, also:** "My sessions" with the closing chip, the star, last call, Ask to join and the overlap warning; the clip and photo upload; every page at 1280 px and wider and on a phone (principle 12); browser notifications beside app push.
+  - **The screens and Notify issue, also:** the twenty views of sheet 24 and their widgets, by day; last call on Notify's `tournament` topic; the crew queue for clips and photos on the desk and the crew phone (gap 18).
+  - **No new issue:** the lead may split the screens' widgets by widget kind when the plan is written ([P2](step-7-tournament/questions.md#p2-the-issue-set)); the pack does not.
 - **The day schedule rule (decision 0031)** applies to every issue that draws the Tournament pages: the sessions, a session's matches and the hub's list are a day schedule with a day picker, not a card grid ([mockups 05](step-7-tournament/05-sessions.svg), [06](step-7-tournament/06-session-desk.svg), [15](step-7-tournament/15-day-schedule.svg)); the player's pages issue and the organiser's Sessions pages in #127 carry it.
 - **No issue for mini tournaments.** They wait until after version 1 (decision 0031); the proposal that stood in the first 0030 revision is kept under [Later](#later-mini-tournaments-after-version-1).
 - **Not step 7 issues:** the core's tickets C1–C5 live in the core's repo; the Finals app's connection, hub link, screen cards and Moments are the Finals track's. The Games track's competition rules wait with the mini tournaments.
@@ -412,6 +483,8 @@ The step's issues are input ([P2](step-7-tournament/questions.md#p2-the-issue-se
 - **Since the second lead round (2026-11-21):** #127's "limits and a waiting list" becomes "optional places, no waiting list"; the roadmap's step 7 text and the catalog (`contracts/events.md`, `notify.md`) gain the reopening event, the awards and the lead's rights additively, with #127's contract, and need no change before then. The `tournament_crew` preset of the first draft of D12 is now two presets.
 - **Since 0031 (decision 0031, #695):** mini tournaments for any game wait until after version 1. The roadmap's step 7 "In it" and exit lose the mini tournament line, and the Games track's competition rules and the rosters and rounds for casual play move with them; the lead updates the roadmap with the decision. The core stays fully general in step 7.
 - **Since 0031:** the design rule "things planned in time are a day schedule, not a card grid" is now this pack's principle 10; #695 adds the rule to the design guideline as amendment 4, and amendment 3 (grids that scale) still holds for like items with no time order. Once #695 merges, principle 10 can link amendment 4 as the brief links amendment 3.
+- **Since the fourth lead round (2026-11-21):** the roadmap's step 7 gains sign-up helpers, scoring from a screenshot with an optional AI reader, a screen that follows the evening and the final, and clips and photos from participants. They are larger than the first plan; the lead decides after the plan whether the screens' widgets (sheet 24) stay in step 7 or move to step 9, where Screen's tournament feed was first planned. Amendment 5 (#707, PC and phone equal) applies to every attendee page of the step; sheet 26 is the 1280 px counterpart, and the older phone-only sheets stay as phone views.
+- **Since the fourth lead round:** the score-screen reader repeats pizza's receipt reader (#644) for a second feature; if a third arrives, the reader's provider setting and consent notice belong in the kit. Not asked now.
 
 ## Later: mini tournaments (after version 1)
 The product owner decided on 2026-11-21 (decision 0031, recorded in #695) that mini tournaments for any game wait until after version 1. This section keeps what the 0030 revision found, so it need not be redone then; none of it is part of step 7's plan, issues or exit, and its questions are not asked now ([the Later section of the question bank](step-7-tournament/questions.md#later-mini-tournaments-after-version-1)). THE FINALS mini tourney is not part of it: it is integrated from day 1 as the Finals track's, unchanged. The core is built fully general in step 7, so they run on it later.
