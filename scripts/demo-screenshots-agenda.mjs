@@ -82,7 +82,26 @@ export const DAY_VIEW = [
   // is on now in view once the hero has scrolled away.
   ["agenda-earlier", DESK, { query: "?earlier=1" }],
   ["agenda-strip-phone", PHONE, { ready: scrollPast, fullPage: false }],
+  // The same long page scrolled to its end: the shell's menu stays in view, Profile and Sign out
+  // at the window's foot (#731).
+  [
+    "agenda-earlier-end",
+    DESK,
+    { query: "?earlier=1", ready: menuFootAtEnd, fullPage: false },
+  ],
 ];
+async function menuFootAtEnd(page) {
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(300);
+  const { scrolled, foot, height } = await page.evaluate(() => ({
+    scrolled: window.scrollY,
+    foot: document.querySelector(".canccu-menu__foot")?.getBoundingClientRect(),
+    height: window.innerHeight,
+  }));
+  if (scrolled === 0) throw new Error("the page is too short to scroll");
+  if (!foot || foot.top < 0 || foot.bottom > height + 1)
+    throw new Error("the menu's foot is out of view at the page's end");
+}
 async function scrollPast(page) {
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page
