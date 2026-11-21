@@ -21,6 +21,7 @@ settings:
     rotation_seconds: 15
   pizza:
     ordering_open: false
+    settle_to_payer: true
 # The Default demo theme's Demo night (#432), so the event looks the same before any theme is published.
 theme:
   colors:

@@ -95,7 +95,10 @@ async def test_upload_asks_first_then_loads_the_file(
     )
     assert r.status_code == 303 and "message=Loaded+Demo+Event" in r.headers["location"]
     with tenant_scope("demo"):
-        assert (await world.service.store.get_settings("pizza"))[1] == {"ordering_open": False}
+        assert (await world.service.store.get_settings("pizza"))[1] == {
+            "ordering_open": False,
+            "settle_to_payer": True,
+        }
 
 
 async def test_a_file_that_is_no_profile_is_refused_in_words(
