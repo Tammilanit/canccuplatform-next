@@ -148,6 +148,13 @@ async def add(
 ) -> dict[str, Any]:
     """Adds an item from the fields of a request body; the pages call it with theirs, and an
     `inverse` to offer the undo."""
+    return await add_as(d, store.actor_of(session), data, inverse=inverse)
+
+
+async def add_as(
+    d: Deps, actor: store.Actor, data: dict[str, Any], *, inverse: Inverse | None = None
+) -> dict[str, Any]:
+    """`add` for an actor without a session: the dev server's demo seed (dev_seed.py)."""
     starts = model.parse_time(data.get("starts_at"), "starts_at")
     ends_raw = data.get("ends_at")
     ends = None if ends_raw is None else model.parse_time(ends_raw, "ends_at")
@@ -173,7 +180,7 @@ async def add(
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         await _check_kind(conn, values["kind"])
-        row = await store.insert_item(conn, values, store.actor_of(session))
+        row = await store.insert_item(conn, values, actor)
         if inverse is not None:
             inverse.remove(row)
         version = await store.bump(conn, "agenda_version")
@@ -182,7 +189,7 @@ async def add(
         await d.outbox.add(
             conn,
             "agenda.item.added",
-            {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
+            {"item": item, "agenda_version": version, "actor_user_id": actor.user_id},
             version=1,
         )
     await d.outbox.flush()
