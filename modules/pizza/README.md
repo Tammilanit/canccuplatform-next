@@ -25,9 +25,11 @@ The pizza module serves [contracts/pizza.md](../../contracts/pizza.md): the even
 - **The money pages** (#644, mockups 09, 12, 17 C, 18, 19, 20): the holder's money step (`pages/money.ts`, `money-views.ts`, `receipt-views.ts`: the total on the amount pad, a receipt's photo, the read to check, exact or even, who is paid, "Pay me with", who owes you), amounts and the Paid column on the hand-out, each person's share on My order, the daily record and the export (`pages/record-pages.ts`, `record-views.ts`), Food settings' settling up and AI reader, reading a menu photo (`pages/menu-read.ts`) and Admin → Integrations (`pages/integrations.ts`, `/pizza/integrations`). Forms with photos are multipart (`pages/uploads.ts`) and go on to the API as its image body. `static/money.js` adds the pad's keys, Copy and "Reading the receipt…".
 
 ## Shell commands
+
 ```sh
 docker compose -f deploy/compose.yml exec pizza node dist/dev-seed-cli.js [--force]
 ```
+
 The dev seed (#715, only while `CANCCU_VERSION` is `dev`, otherwise it refuses and changes nothing; `dev-seed.ts`) applies the demo profile's `pizza` section, which the image carries (`/repo/events/demo/profile.yaml`, `CANCCU_DEMO_EVENT_DIR`), as [contracts/profile.md](../../contracts/profile.md#the-pizza-section) says, and opens one demo order at Demo Pizzeria: five placeholder people with a pizza each, settling to the holder, two of them marked paid, open until the event day turns. The menus are applied to an event with no pizzerias, and again after the profile's section changed while the menus are still what the seed left (a hash of both in `<files>/demo/pizza/dev-seed.json`); the demo order opens only while no order is under way. `--force` cancels the orders under way, applies the menus over any change and opens a fresh demo order (a reset). `setup/deploy` runs it on a dev server ([docs/operations/dev-server.md](../../docs/operations/dev-server.md)).
 
 ## Environment
