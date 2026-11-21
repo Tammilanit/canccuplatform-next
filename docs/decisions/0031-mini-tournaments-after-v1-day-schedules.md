@@ -1,6 +1,6 @@
 # 0031. Mini tournaments for any game wait until after version 1; things planned in time are shown as a day schedule
 
-- **Status:** Accepted (narrows point 4 of [0030](0030-finals-integrated-one-tourney-core.md) without superseding it; adds amendment 4 to [the design guideline](../design/README.md#amendments-accepted-by-the-po-binding-for-the-build))
+- **Status:** Accepted (narrows point 4 of [0030](0030-finals-integrated-one-tourney-core.md), and the part of point 5 about each game's competition rules, without superseding it; adds amendment 4 to [the design guideline](../design/README.md#amendments-accepted-by-the-po-binding-for-the-build))
 - **Date:** 2026-11-21
 
 ## Context

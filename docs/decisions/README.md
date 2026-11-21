@@ -35,8 +35,8 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0027](0027-product-decisions-2026-11-07-08.md) | The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming (amends 0022; its finals item settled by 0030) | 2026-11-08 |
 | [0028](0028-pairing-sets-a-new-devices-event.md) | Pairing sets a new device's event; moves stay the superadmin's (amends 0013 item 34) | 2026-11-08 |
 | [0029](0029-additive-contracts-ship-with-consumers.md) | Additive contract changes ship with the code that uses them; contract-first only for breaking changes (amends 0008 and 0024) | 2026-11-14 |
-| [0030](0030-finals-integrated-one-tourney-core.md) | Finals is integrated as it is; one tourney core for Tournament and Games (supersedes parts of 0025; point 4 narrowed by 0031) | 2026-11-20 |
-| [0031](0031-mini-tournaments-after-v1-day-schedules.md) | Mini tournaments for any game wait until after version 1; things planned in time are shown as a day schedule (narrows 0030 point 4) | 2026-11-21 |
+| [0030](0030-finals-integrated-one-tourney-core.md) | Finals is integrated as it is; one tourney core for Tournament and Games (supersedes parts of 0025; points 4 and 5 narrowed by 0031) | 2026-11-20 |
+| [0031](0031-mini-tournaments-after-v1-day-schedules.md) | Mini tournaments for any game wait until after version 1; things planned in time are shown as a day schedule (narrows 0030 point 4 and the competition-rules part of point 5) | 2026-11-21 |
 
 ## How the records are applied
 - **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a breaking contract change still goes apart from its consumers and merges first (an additive one ships with them since [0029](0029-additive-contracts-ship-with-consumers.md)); the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.
