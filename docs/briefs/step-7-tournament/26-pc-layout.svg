@@ -3,7 +3,7 @@
 <defs></defs>
 <rect x="0" y="0" width="1920" height="1160" rx="0" fill="#f3f4f6"/>
 <text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">26 · PC and phone are equal: the player pages at 1280 px and wider</text>
-<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: every attendee page works fully in a PC browser, with a desktop layout at 1280 px and wider, and on a phone (amendment 5, #707). Phone views: sheets 03, 04, 14, 21, 22.</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: every attendee page works fully in a PC browser, with a desktop layout at 1280 px and wider, and on a phone (amendment 5, #707). Phone views: sheets 02, 03, 04, 14, 21, 22.</text>
 <text x="32" y="136" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">1 · The Tournament page: the whole weekend, a section per day</text>
 <text x="968" y="136" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">2 · A session page</text>
 <text x="32" y="676" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">3 · Check-in and your match</text>

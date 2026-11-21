@@ -152,40 +152,40 @@
 <rect x="0" y="0" width="1920" height="1080" rx="0" fill="#000" opacity="0.18"/>
 <text x="1850" y="1056" font-size="22" fill="#dfe3ff" font-weight="400" text-anchor="end" data-box="1330 1850">game art · Demo Arena</text>
 <text x="90" y="140" font-size="90" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="90 1590">RACE TO THE FINAL</text>
-<rect x="330" y="215" width="1140" height="76" rx="38" fill="#ffcf6e"/>
+<rect x="330" y="215" width="900" height="76" rx="38" fill="#ffcf6e"/>
 <circle cx="300" cy="253" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="300" y="268.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">K</text>
-<text x="1260" y="271" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">12</text>
-<text x="380" y="271" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1460">Kestrel</text>
-<rect x="330" y="313" width="1045" height="76" rx="38" fill="#ffcf6e"/>
+<text x="300" y="268.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">F</text>
+<text x="1260" y="271" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">14</text>
+<text x="380" y="271" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1220">Player Five</text>
+<rect x="330" y="313" width="771" height="76" rx="38" fill="#ffcf6e"/>
 <circle cx="300" cy="351" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="300" y="366.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">J</text>
-<text x="1260" y="369" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">11</text>
-<text x="380" y="369" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1365">Juno</text>
-<rect x="330" y="411" width="855" height="76" rx="38" fill="#ffcf6e"/>
+<text x="300" y="366.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">D</text>
+<text x="1260" y="369" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">12</text>
+<text x="380" y="369" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1091">Demo Player</text>
+<rect x="330" y="411" width="707" height="76" rx="38" fill="#ffcf6e"/>
 <circle cx="300" cy="449" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="300" y="464.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">P</text>
-<text x="1260" y="467" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">9</text>
-<text x="380" y="467" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1175">Pike</text>
-<rect x="330" y="509" width="760" height="76" rx="38" fill="#ffcf6e"/>
+<text x="300" y="464.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">T</text>
+<text x="1260" y="467" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">11</text>
+<text x="380" y="467" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1027">Player Two</text>
+<rect x="330" y="509" width="514" height="76" rx="38" fill="#ffcf6e"/>
 <circle cx="300" cy="547" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="300" y="562.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">R</text>
+<text x="300" y="562.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">S</text>
 <text x="1260" y="565" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">8</text>
-<text x="380" y="565" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 1080">Rook</text>
-<rect x="330" y="641" width="665" height="76" rx="38" fill="#8fa0d8"/>
+<text x="380" y="565" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 834">Player Seven</text>
+<rect x="330" y="641" width="450" height="76" rx="38" fill="#8fa0d8"/>
 <circle cx="300" cy="679" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
 <text x="300" y="694.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">N</text>
 <text x="1260" y="697" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">7</text>
-<text x="380" y="697" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 985">Nova</text>
-<rect x="330" y="739" width="570" height="76" rx="38" fill="#8fa0d8"/>
+<text x="380" y="697" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 770">Player Nine</text>
+<rect x="330" y="739" width="386" height="76" rx="38" fill="#8fa0d8"/>
 <circle cx="300" cy="777" r="42" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="300" y="792.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">E</text>
+<text x="300" y="792.12" font-size="42" fill="#fff" font-weight="700" text-anchor="middle" data-box="262.2 337.8">T</text>
 <text x="1260" y="795" font-size="52" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1260 1380">6</text>
-<text x="380" y="795" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 890">Echo</text>
+<text x="380" y="795" font-size="44" fill="#10132a" font-weight="700" text-anchor="start" data-box="380 706">Player Three</text>
 <line x1="60" y1="623" x2="1860" y2="623" stroke="#fff" stroke-width="5" stroke-dasharray="18 12"/>
 <text x="1840" y="613" font-size="34" fill="#fff" font-weight="700" text-anchor="end" data-box="1340 1840">THE CUT · TOP 4</text>
 <rect x="60" y="960" width="1800" height="80" rx="40" fill="#000" opacity="0.55"/>
-<text x="960" y="1015" font-size="54" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110 1810">Nova needs 2 points to take 4th</text>
+<text x="960" y="1015" font-size="54" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110 1810">Player Nine needs 2 points to take 4th</text>
 </g>
 <g transform="translate(32,678) scale(0.3125)" clip-path="url(#c4)">
 <rect x="0" y="0" width="1920" height="1080" rx="0" fill="url(#ga3)"/>
@@ -236,15 +236,15 @@
 <text x="90" y="330" font-size="150" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="90 890">1 of 4</text>
 <text x="90" y="470" font-size="60" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="90 890">Season points 14</text>
 <text x="90" y="550" font-size="48" fill="#dfe3ff" font-weight="400" text-anchor="start" data-box="90 890">Best: 1st · Demo Arena 5v5</text>
-<text x="90" y="760" font-size="50" fill="#dfe3ff" font-weight="400" text-anchor="start" data-box="90 890">Next: Kestrel, Juno, Pike</text>
+<text x="90" y="760" font-size="38" fill="#dfe3ff" font-weight="400" text-anchor="start" data-box="90 890">Next: Demo Player, Player Two, Player Seven</text>
 <g transform="translate(960,110) scale(1.9)">
 <rect x="0" y="0" width="430" height="480" rx="16" fill="#10132a" stroke="#3c446c" stroke-width="1"/>
 <rect x="0" y="0" width="430" height="150" rx="16" fill="#27316e"/>
 <rect x="0" y="120" width="430" height="30" rx="0" fill="#27316e"/>
-<text x="414" y="28" font-size="12" fill="#dfe3ff" font-weight="600" text-anchor="end" data-box="214 414">Player Five</text>
+<text x="414" y="28" font-size="12" fill="#dfe3ff" font-weight="600" text-anchor="end" data-box="214 414">Demo Party</text>
 <circle cx="215" cy="110" r="56" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
-<text x="215" y="130.16" font-size="56" fill="#fff" font-weight="700" text-anchor="middle" data-box="164.6 265.4">N</text>
-<text x="215" y="210" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="15 415">Nova</text>
+<text x="215" y="130.16" font-size="56" fill="#fff" font-weight="700" text-anchor="middle" data-box="164.6 265.4">F</text>
+<text x="215" y="210" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="15 415">Player Five</text>
 <text x="215" y="240" font-size="15" fill="#ffcf6e" font-weight="600" text-anchor="middle" data-box="15 415">“Never lose the lobby”</text>
 <rect x="20" y="266" width="65.2" height="26" rx="13" fill="#2a2350" stroke="#ffcf6e" stroke-width="1"/>
 <text x="52.6" y="284" font-size="12" fill="#ffcf6e" font-weight="600" text-anchor="middle" data-box="24 81.2">MVP ×1</text>

@@ -107,9 +107,11 @@
 <text x="1388" y="762" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1708">It and every later session today</text>
 <rect x="992" y="790" width="870" height="110" rx="10" fill="#121528" stroke="#3c446c" stroke-width="1"/>
 <text x="1012" y="822" font-size="15" fill="#7cecba" font-weight="700" text-anchor="start" data-box="1012 1412">Start 19:30 → 19:45</text>
-<text x="1012" y="850" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1012 1832">Registration closes 19:00 → 19:15 (the gap before the start stays the same)</text>
+<text x="1012" y="850" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1012 1832">Registration is open, so its close moves 19:00 → 19:15 (the gap before the start stays the same)</text>
 <text x="1012" y="878" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1012 1832">The run of show moves with it. Places and check-ins are kept.</text>
 <text x="992" y="930" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">Registrants get a push. The same happens when someone delays the session in the run of show.</text>
+<text x="992" y="954" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">A delay moves the close only while registration is open. A closed or reopened registration keeps its time,</text>
+<text x="992" y="974" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">and a running reopen is never ended early.</text>
 <rect x="992" y="1020" width="200" height="36" rx="8" fill="#3b82f6"/>
 <text x="1092" y="1042.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="998 1186">Delay 15 minutes</text>
 <rect x="1202" y="1020" width="100" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>

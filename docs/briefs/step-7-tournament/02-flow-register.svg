@@ -144,17 +144,17 @@
 <text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
 <rect x="26.0" y="112.0" width="338.0" height="96.0" rx="16" fill="#1d2442" stroke="#ffc94d" stroke-width="1.5"/>
 <text x="44.0" y="146.0" font-size="17" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="44.0 346.0">Full · 8 of 8 teams</text>
-<text x="44.0" y="176.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Full. A reopening sends you a push.</text>
-<text x="26.0" y="262.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">There is no waiting list. Registration</text>
-<text x="26.0" y="286.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">for a full session stays shut unless the</text>
-<text x="26.0" y="310.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">crew reopens it for a while.</text>
+<text x="44.0" y="176.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Full. A freed place opens it again.</text>
+<text x="26.0" y="262.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">There is no waiting list. A full session</text>
+<text x="26.0" y="286.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">stays Full; only a place freed by</text>
+<text x="26.0" y="310.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">someone who gives up opens it.</text>
 <rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#343c66"/>
 <text x="195.0" y="705.0" font-size="15" fill="#a9b1d6" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Full</text>
 </g>
 <g transform="translate(1312.0,140.0) scale(0.72)">
 <rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
 <rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
-<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">18:52</text>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:12</text>
 <text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
 <rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
 <text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
@@ -166,7 +166,7 @@
 <text x="36.0" y="144.0" font-size="12" fill="#374151" font-weight="600" text-anchor="start" data-box="36.0 310.0">DEMO EVENT · TOURNAMENT</text>
 <text x="356.0" y="144.0" font-size="12" fill="#6b7280" font-weight="400" text-anchor="end">now</text>
 <text x="36.0" y="168.0" font-size="14.5" fill="#111827" font-weight="700" text-anchor="start" data-box="36.0 358.0">Demo Arena 5v5 is open again</text>
-<text x="36.0" y="190.0" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="36.0 358.0">Registration is open again until 19:20</text>
+<text x="36.0" y="190.0" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="36.0 358.0">Registration is open again until 19:20 · 1 place left</text>
 <text x="26.0" y="260.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">In the hub</text>
 <rect x="26.0" y="276.0" width="338.0" height="130.0" rx="16" fill="#1d2442" stroke="#3ee39a" stroke-width="1.5"/>
 <text x="44.0" y="310.0" font-size="15" fill="#3ee39a" font-weight="700" text-anchor="start" data-box="44.0 346.0">Registration open again</text>
@@ -209,7 +209,7 @@
 <text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The timeline is the scheduler&#x27;s, so the player sees the same times the screen and the bot use (U4).</text>
 <circle cx="985.0" cy="819.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">A full session says Full; there is no waiting list. The crew can reopen registration for a while and followers get a push (U5, U7).</text>
+<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">A full session stays Full; only a freed place opens it. Panel 5: a reopen, with a place left (U7, U19).</text>
 <circle cx="45.0" cy="853.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
 <text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Moving up is a push in the tournament topic and a For you card (D11).</text>
