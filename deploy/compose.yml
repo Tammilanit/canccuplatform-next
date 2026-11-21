@@ -248,8 +248,15 @@ services:
       CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
       # The demo tenant on the host's IP address; honoured only while CANCCU_VERSION is dev.
       CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
+      # Seals the AI reader's provider key (contracts/pizza.md, The AI reader). The placeholder
+      # runs only while the version is dev; pizza refuses it on a release.
+      CANCCU_SECRETS_KEY: ${CANCCU_SECRETS_KEY:-1:Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI=}
+      CANCCU_SECRETS_KEYS_RETIRED: ${CANCCU_SECRETS_KEYS_RETIRED:-}
+    # Receipt photos, per event (`/files/<tenant>/pizza/receipts/`).
+    volumes:
+      - files:/files
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
     healthcheck:
       <<: *health-timing
       test:

@@ -6,6 +6,7 @@ import type {
   Logger,
   Outbox,
   RightsChecker,
+  SecretBox,
   Session,
   SqlClient,
   TenantContext,
@@ -21,6 +22,7 @@ import type { Answer } from "./idempotency.js";
 import type { Members, People } from "./people.js";
 import { MANAGE } from "./policy.js";
 import type { Caller } from "./policy.js";
+import type { ReaderFor } from "./reader.js";
 import type { PizzaSettings } from "./settings.js";
 import type { Actor } from "./store.js";
 import { dayTurn, eventDay } from "./time.js";
@@ -44,6 +46,12 @@ export interface AppDeps {
   settings: (tenant: string) => Promise<PizzaSettings>;
   /** The pages' live streams open on this container (live.ts). */
   live: LiveHub;
+  /** The shared files volume (`/files`): receipts under `<tenant>/pizza/receipts/`. */
+  filesRoot: string;
+  /** Seals the AI reader's provider key; null without `CANCCU_SECRETS_KEY`, so no key can be set. */
+  secrets: SecretBox | null;
+  /** The AI reader for a provider key (the fake one in CI). */
+  readerFor: ReaderFor;
 }
 
 export const tenantOf = (request: FastifyRequest): TenantContext => {

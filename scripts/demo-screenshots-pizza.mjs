@@ -1,9 +1,11 @@
-// The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 02–11, 16
-// and 17): one order taken by the CI session from open to handed out, with the attendee's Food
+// The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 02–12 and
+// 16–20): one order taken by the CI session from open to handed out, with the attendee's Food
 // page, menu and order page and the holder's page at each step on a phone (the guest's Food page
-// too); the crew's Food page and the order's page; pizzerias, a pizzeria and the menu CSV's
-// preview; Food settings. The group has a shard of its own, so its orders never reach the screens
-// of another group's shots (Moments' pizza stories). The order ends done.
+// too); the crew's Food page and the order's page; the money step (the total, a receipt read by
+// CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria, the menu CSV's
+// preview and reading a menu photo; the daily record, one order's money and the export; Food
+// settings and Integrations. The group has a shard of its own, so its orders never reach the
+// screens of another group's shots (Moments' pizza stories). The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -40,6 +42,12 @@ const CHANGED_MENU = [
 
 const ORDER = "<order>";
 const PIZZERIA = "<pizzeria>";
+const RECEIPT = "<receipt>";
+/** A receipt photo for the fake reader, which answers mockup 18's receipt whatever it is sent. */
+const RECEIPT_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWP48vEVVsQwtCQAPmKzwWePQ/wAAAAASUVORK5CYII=",
+  "base64",
+);
 const GUEST = null;
 const HALL = { width: 1920, height: 1080 };
 /** The main zone's screen, as Studio mirrors it (#643, mockup 14): the food box in its rail. */
@@ -73,6 +81,13 @@ const SHOTS = [
   ["pizza-crew-phone", "/pizza/crew", PHONE, "placed"],
   ["pizza-crew-order", `/pizza/crew/orders/${ORDER}`, DESK, "placed"],
   ["pizza-crew-order-phone", `/pizza/crew/orders/${ORDER}`, PHONE, "placed"],
+  // Mockups 18 and 19: the money step, with the AI reader on (CI's fake reader).
+  ["pizza-holder-money-phone", `/pizza/hold/${ORDER}/money`, PHONE, "placed"],
+  ["pizza-holder-money-scan-phone", `/pizza/hold/${ORDER}/money/scan`, PHONE, "placed"],
+  ["pizza-holder-money-total-phone", `/pizza/hold/${ORDER}/money/total`, PHONE, "placed"],
+  ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
+  ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
+  ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
@@ -85,8 +100,16 @@ const SHOTS = [
   ["pizza-pizzeria-phone", `/pizza/crew/pizzerias/${PIZZERIA}`, PHONE, "done"],
   ["pizza-import-preview", "/pizza/crew/pizzerias/import", DESK, "done"],
   ["pizza-import-preview-phone", "/pizza/crew/pizzerias/import", PHONE, "done"],
+  ["pizza-menu-read-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
   ["pizza-settings", "/pizza/crew/settings", DESK, "done"],
   ["pizza-settings-phone", "/pizza/crew/settings", PHONE, "done"],
+  // Mockup 12: the daily record, one order's money and the export; mockup 20: Integrations.
+  ["pizza-record", "/pizza/crew/record", DESK, "done"],
+  ["pizza-record-phone", "/pizza/crew/record", PHONE, "done"],
+  ["pizza-record-order-phone", `/pizza/crew/record/${ORDER}`, PHONE, "done"],
+  ["pizza-export", "/pizza/crew/export", DESK, "done"],
+  ["pizza-export-phone", "/pizza/crew/export", PHONE, "done"],
+  ["pizza-integrations-phone", "/pizza/integrations", PHONE, "done"],
 ];
 
 export function pizzaListed(at) {
@@ -98,12 +121,14 @@ export function pizzaListed(at) {
 
 /**
  * A pizza API call as the CI session through Caddy (SCREEN is Caddy's address here), each write
- * with a fresh `Idempotency-Key`; a string body is the menu CSV.
+ * with a fresh `Idempotency-Key`; a string body is the menu CSV, a Buffer a PNG photo.
  */
 function api(method, path, body) {
   return new Promise((resolve, reject) => {
     const csv = typeof body === "string";
-    const payload = body === undefined ? undefined : csv ? body : JSON.stringify(body);
+    const png = Buffer.isBuffer(body);
+    const payload =
+      body === undefined ? undefined : csv || png ? body : JSON.stringify(body);
     const req = request(
       {
         ...SCREEN,
@@ -118,7 +143,7 @@ function api(method, path, body) {
             : { "idempotency-key": randomBytes(12).toString("base64url") }),
           ...(payload === undefined
             ? {}
-            : { "content-type": csv ? "text/csv" : "application/json" }),
+            : { "content-type": png ? "image/png" : csv ? "text/csv" : "application/json" }),
         },
       },
       (res) => {
@@ -176,6 +201,31 @@ async function orderingOpen() {
   );
 }
 
+/**
+ * Settling to the holder allowed and the AI reader on, with a key set in Integrations (CI's fake
+ * reader never calls the provider), so the money step shows the reader's notice and its read.
+ */
+async function readerOn() {
+  const now = expect(
+    await api("GET", "/api/admin/settings/pizza"),
+    200,
+    "the pizza settings",
+  ).body;
+  expect(
+    await api("PUT", "/api/admin/settings/pizza", {
+      settings_version: now.settings_version,
+      values: { ...now.values, settle_to_payer: true, ai_reader: true },
+    }),
+    200,
+    "turning the AI reader on",
+  );
+  expect(
+    await api("PUT", "/api/pizza/reader/key", { api_key: "sk-ant-demo-ci-not-a-key-wxyz" }),
+    200,
+    "setting the reader's key",
+  );
+}
+
 async function openOrder(body) {
   for (let tries = 1; ; tries++) {
     const res = await api("POST", "/api/pizza/orders", body);
@@ -188,8 +238,10 @@ async function openOrder(body) {
 export async function pizzaShots({ shot, fail }) {
   let pz;
   let order;
+  let receipt = "";
   try {
     await orderingOpen();
+    await readerOn();
     // The screens' default zones (the main one shows the food box) exist once Studio reads them.
     expect(await api("GET", "/api/screen/zones"), 200, "the screens' zones");
     pz = await pizzerias();
@@ -224,6 +276,26 @@ export async function pizzaShots({ shot, fail }) {
   const steps = {
     closed: () => api("POST", `/api/pizza/orders/${order}/close`),
     placed: () => api("POST", `/api/pizza/orders/${order}/place`, { estimate_minutes: 45 }),
+    // The receipt's photo, read by the fake reader: the holder checks it (mockup 18 C).
+    read: async () => {
+      const added = await api("POST", `/api/pizza/orders/${order}/receipts`, RECEIPT_PNG);
+      expect(added, 201, "adding the receipt");
+      receipt = added.body.id;
+      return api("POST", `/api/pizza/receipts/${receipt}/read`, {});
+    },
+    confirmed: () =>
+      api("PATCH", `/api/pizza/orders/${order}/money`, { total_cents: 5450, receipt_id: receipt }),
+    payer: async () => {
+      expect(
+        await api("PUT", "/api/pizza/me/pay-details", {
+          mobilepay: "040 000 0000",
+          iban: "FI21 1234 5600 0007 85",
+        }),
+        200,
+        "Pay me with",
+      );
+      return api("PATCH", `/api/pizza/orders/${order}/money`, { settle_to: "payer" });
+    },
     arrived: () =>
       api("POST", `/api/pizza/orders/${order}/arrive`, { pickup: "Entrance table" }),
     done: () => api("POST", `/api/pizza/orders/${order}/hand-out`),
@@ -242,7 +314,7 @@ export async function pizzaShots({ shot, fail }) {
     const preview = name.startsWith("pizza-import-preview");
     await shot(
       name,
-      path.replace(ORDER, order).replace(PIZZERIA, pz),
+      path.replace(ORDER, order).replace(PIZZERIA, pz).replace(RECEIPT, receipt),
       viewport,
       cookie,
       {

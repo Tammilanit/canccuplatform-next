@@ -1,5 +1,6 @@
 /** The Food pages in Finnish: the same keys as messages.ts, whose test holds them to each other. */
 import { FOOD_FI } from "./food-messages.js";
+import { MONEY_FI } from "./money-messages-fi.js";
 import type { MessageKey } from "./messages.js";
 
 export const FI: Record<MessageKey, string> = {
@@ -268,4 +269,5 @@ export const FI: Record<MessageKey, string> = {
   "time.h": "{n} h",
   "time.h_min": "{h} h {m} min",
   ...FOOD_FI,
+  ...MONEY_FI,
 };

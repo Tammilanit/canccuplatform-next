@@ -119,3 +119,30 @@ describe("amounts", () => {
     expect(amounts({ total_cents: 500, split: null }, []).people).toEqual([]);
   });
 });
+
+describe("amounts always add up to the total (#644)", () => {
+  // A fixed seed: the same thousand orders every run, so a failure can be read back.
+  let seed = 644;
+  const rand = (n: number) => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed % n;
+  };
+  it("for any people, prices, extras and either split", () => {
+    for (let run = 0; run < 1000; run++) {
+      const rows = Array.from({ length: 1 + rand(12) }, () => {
+        const who = rand(5);
+        return {
+          user_id: `u_${who}`,
+          name: `P${who}`,
+          price_cents: rand(4) === 0 ? null : 500 + rand(1500),
+        };
+      });
+      const total = rand(30000);
+      for (const split of ["exact", "even", null] as const) {
+        const r = amounts({ total_cents: total, split }, rows);
+        expect(sum(r), `run ${run} ${split}`).toBe(total);
+        for (const p of r.people) expect(p.amount_cents ?? 0).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+});

@@ -8,7 +8,8 @@ info:
     the export CSV, privacy and events: contracts/pizza.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
     The event (tenant) comes from the hostname; no operation names a tenant.
-    Paths are in parts: pizza/orders.openapi.yaml and pizza/menus.openapi.yaml.
+    Paths are in parts: pizza/orders.openapi.yaml, pizza/menus.openapi.yaml and
+    pizza/receipts.openapi.yaml (receipts, the AI reader, Paid ticks and "Pay me with").
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -27,7 +28,9 @@ tags:
   - name: record
     description: The daily record and the export for the payment system.
   - name: me
-    description: The caller's own orders, and the privacy export and delete.
+    description: The caller's own orders, "Pay me with", and the privacy export and delete.
+  - name: reader
+    description: The AI reader's provider key, set in Admin → Integrations.
 security:
   - {}
   - session: []
@@ -74,6 +77,20 @@ paths:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1money"
   /api/pizza/items/{item_id}/price:
     $ref: "pizza/orders.openapi.yaml#/~1api~1pizza~1items~1{item_id}~1price"
+  /api/pizza/orders/{order_id}/receipts:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1receipts"
+  /api/pizza/receipts/{receipt_id}/photo:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1receipts~1{receipt_id}~1photo"
+  /api/pizza/receipts/{receipt_id}/read:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1receipts~1{receipt_id}~1read"
+  /api/pizza/orders/{order_id}/paid/{user_id}:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1orders~1{order_id}~1paid~1{user_id}"
+  /api/pizza/me/pay-details:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1me~1pay-details"
+  /api/pizza/menu/read:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1menu~1read"
+  /api/pizza/reader/key:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1reader~1key"
   /api/pizza/pizzerias:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1pizzerias"
   /api/pizza/pizzerias/{pizzeria_id}:
@@ -143,6 +160,13 @@ components:
       description: Pizza (row) id.
       schema:
         $ref: "#/components/schemas/Id"
+    ReceiptId:
+      name: receipt_id
+      in: path
+      required: true
+      description: Receipt id.
+      schema:
+        $ref: "#/components/schemas/Id"
     PizzeriaId:
       name: pizzeria_id
       in: path
@@ -179,6 +203,7 @@ components:
         `missing_right`; `not_a_member` (signed in, not a member of the event); `not_holder` (only the
         order's holder or the crew); `not_owner` (someone else's pizza); `closed` (the owner's change
         after the order closed); `money_locked` (the holder after the event day turned);
+        `not_a_member` also for "Pay me with";
         `ordering_closed`; `info_pages_closed` (a guest where the info-page mode keeps them out);
         `admin_access_restricted` (a right used away from the venue and Tailscale).
       content:
@@ -197,13 +222,41 @@ components:
         `claimed` (with `holder` and `since`), `item_limit`, `closed` (with `open_orders`, the event's
         other open orders), `placed`, `not_placed`, `not_arrived`, `cancelled`, `done`, `has_pizzas`,
         `prices_missing`, `settle_to_payer_off`, `pizzeria_exists`, `conflict` (it changed meanwhile),
-        or `event_archived`.
+        `event_archived`; and for money: `too_many_receipts`, `not_settled_to_payer`, `reader_off` (the
+        AI reader is off, has no key, or its key was refused).
       content:
         application/json:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     UnsupportedMediaType:
-      description: "`unsupported_media_type`: the body is not of a type this path takes (JSON, or `text/csv` for the menu import)."
+      description: "`unsupported_media_type`: the body is not of a type this path takes (JSON, `text/csv` for the menu import, a JPEG, PNG or WebP photo for a receipt or a menu read)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    TooLarge:
+      description: "`file_too_large`: a photo over 10 MB."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ReaderLimit:
+      description: "`reader_limit`: the event's reads for this event day are used up (`ai_reader_daily_reads`)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ReaderFailed:
+      description: |
+        `reader_failed`: the provider failed, refused the photo or took over 20 s; or
+        `reader_key_rejected`: the provider refused the key, and the reader stops until a key is set again.
+        Typing the numbers still works.
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    SecretsUnavailable:
+      description: "`secrets_unavailable`: the platform has no secrets key, so no API key can be kept."
       content:
         application/json:
           schema:
@@ -235,9 +288,11 @@ components:
       type: object
       description: |
         An order as the caller may see it (contracts/pizza.md, Who sees what). Every caller gets the base
-        fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents` and
-        `lines`; the holder and the crew `items` instead of `lines`, the pizzeria's `phone` and `website`,
-        `claimed_at`, `nudged_at`, `payer`, `total_cents`, `split` and `settle_to`.
+        fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents`,
+        `my_amount_estimated` and `lines`; a person in the order (and the holder and the crew) also
+        `settle_to`, `pay_to` (how to pay the payer, when it settles to them) and `my_paid` (their own
+        Paid mark, or null); the holder and the crew `items` instead of `lines`, the pizzeria's `phone`
+        and `website`, `claimed_at`, `nudged_at`, `payer`, `total_cents` and `split`.
       required: [id, seq, day, state, pizzeria, closes_at, target_at, pizza_count, people_count, revision, stale]
       properties:
         id:
@@ -553,6 +608,9 @@ components:
           type: integer
         amount_cents:
           type: [integer, "null"]
+        paid:
+          type: [boolean, "null"]
+          description: "In the money's `people`: the payer's Paid mark; null where there is none (settled through the organiser, or the payer)."
     Money:
       type: object
       required: [order_id, payer, total_cents, split, split_effective, exact_possible, estimated, settle_to, people]
@@ -565,6 +623,16 @@ components:
             - type: "null"
         total_cents:
           type: [integer, "null"]
+        total_set_at:
+          $ref: "#/components/schemas/NullableTime"
+        total_set_by:
+          type: [object, "null"]
+          properties:
+            name:
+              type: [string, "null"]
+        total_receipt_id:
+          type: [string, "null"]
+          description: The receipt whose read the total was confirmed from; null when it was typed in.
         split:
           type: [string, "null"]
           enum: [exact, even, null]
@@ -586,6 +654,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PersonAmount"
+        pay_to:
+          oneOf:
+            - $ref: "#/components/schemas/PayTo"
+            - type: "null"
+        receipts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Receipt"
         prices:
           type: array
           items:
@@ -614,6 +690,170 @@ components:
           $ref: "#/components/schemas/SettleTo"
         payer_user_id:
           type: string
+        prices:
+          type: array
+          description: Pizzas' prices set in the same change, as a confirmed receipt read sets them.
+          items:
+            type: object
+            required: [item_id, price_cents]
+            properties:
+              item_id:
+                $ref: "#/components/schemas/Id"
+              price_cents:
+                type: [integer, "null"]
+                minimum: 0
+                maximum: 99999
+        receipt_id:
+          type: [string, "null"]
+          description: With `total_cents`, the receipt of this order whose read is being confirmed.
+    PayDetails:
+      type: object
+      required: [mobilepay, iban, updated_at]
+      properties:
+        mobilepay:
+          type: [string, "null"]
+        iban:
+          type: [string, "null"]
+        updated_at:
+          $ref: "#/components/schemas/NullableTime"
+    PayTo:
+      type: object
+      required: [user_id, name, mobilepay, iban]
+      properties:
+        user_id:
+          type: string
+        name:
+          type: [string, "null"]
+        mobilepay:
+          type: [string, "null"]
+        iban:
+          type: [string, "null"]
+    Receipt:
+      type: object
+      required: [id, order_id, type, bytes, added_at, added_by, read]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        order_id:
+          $ref: "#/components/schemas/Id"
+        type:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        bytes:
+          type: integer
+        added_at:
+          type: string
+          format: date-time
+        added_by:
+          oneOf:
+            - $ref: "#/components/schemas/UserRef"
+            - type: "null"
+        read:
+          oneOf:
+            - $ref: "#/components/schemas/ReceiptRead"
+            - type: "null"
+    ReceiptRead:
+      type: object
+      description: |
+        The last machine read: a suggestion only. Each pizza gets the unit price of the line that names
+        it (menu number first, then name); a price unlike the pizza's is `differs`, a pizza with no line
+        has `line` null, and item lines that cover no or too few pizzas are in `unmatched_lines`.
+      required: [read_at, total_cents, lines, pizzas, unmatched_lines, extras_cents, adds_up]
+      properties:
+        read_at:
+          type: string
+          format: date-time
+        total_cents:
+          type: [integer, "null"]
+        lines:
+          type: array
+          items:
+            type: object
+            required: [text, number, name, quantity, amount_cents, kind]
+            properties:
+              text:
+                type: string
+              number:
+                type: [string, "null"]
+              name:
+                type: string
+              quantity:
+                type: integer
+              amount_cents:
+                type: integer
+              kind:
+                type: string
+                enum: [item, extra]
+        pizzas:
+          type: array
+          items:
+            type: object
+            required: [item_id, label, price_cents, suggested_cents, line, differs]
+            properties:
+              item_id:
+                $ref: "#/components/schemas/Id"
+              user_id:
+                type: [string, "null"]
+              name:
+                type: [string, "null"]
+              label:
+                type: string
+              price_cents:
+                type: [integer, "null"]
+              suggested_cents:
+                type: [integer, "null"]
+              line:
+                type: [integer, "null"]
+              differs:
+                type: boolean
+        unmatched_lines:
+          type: array
+          items:
+            type: integer
+        extras_cents:
+          type: integer
+        adds_up:
+          type: boolean
+    MenuRead:
+      type: object
+      required: [pizzeria_id, csv, items, unsure]
+      properties:
+        pizzeria_id:
+          $ref: "#/components/schemas/Id"
+        csv:
+          type: string
+          description: A menu CSV (contracts/pizza.md, The menu CSV) for the import's preview.
+        items:
+          type: integer
+        unsure:
+          type: array
+          description: The menu numbers the read was unsure of.
+          items:
+            type: string
+    ReaderKey:
+      type: object
+      required: [provider, model, set, last4, set_by, set_at, last_used_at, rejected, reads_this_month]
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        set:
+          type: boolean
+        last4:
+          type: [string, "null"]
+        set_by:
+          oneOf:
+            - $ref: "#/components/schemas/UserRef"
+            - type: "null"
+        set_at:
+          $ref: "#/components/schemas/NullableTime"
+        last_used_at:
+          $ref: "#/components/schemas/NullableTime"
+        rejected:
+          type: boolean
+        reads_this_month:
+          type: integer
     Service:
       type: string
       enum: [delivery, takeaway]
@@ -842,6 +1082,22 @@ components:
                     split_effective:
                       type: string
                       enum: [exact, even]
+                    placed_at:
+                      $ref: "#/components/schemas/NullableTime"
+                    arrived_at:
+                      $ref: "#/components/schemas/NullableTime"
+                    done_at:
+                      $ref: "#/components/schemas/NullableTime"
+                    edits_after_placed:
+                      type: integer
+                    closed_by_timer:
+                      type: boolean
+                    total_from_receipt:
+                      type: boolean
+                    paid_count:
+                      type: integer
+                    receipts:
+                      type: integer
                     people:
                       type: array
                       items:
@@ -857,10 +1113,13 @@ components:
           type: array
           items:
             type: object
-            required: [order_id, text]
+            required: [order_id, kind, text]
             properties:
               order_id:
                 $ref: "#/components/schemas/Id"
+              kind:
+                type: string
+                enum: [no_total, edited_after_placed, released, cancelled_after_placed, closed_by_timer]
               text:
                 type: string
     Export:
@@ -909,6 +1168,16 @@ components:
           type: array
           items:
             type: object
+        pay_details:
+          $ref: "#/components/schemas/PayDetails"
+        paid_marks:
+          type: array
+          description: The orders whose payer marked the caller paid.
+          items:
+            type: object
+        reader:
+          type: [object, "null"]
+          description: While the event's AI reader is on, the outside provider it sends photos to.
         history:
           type: array
           items:
