@@ -3,7 +3,7 @@
  * after admin's seed (#709), in dev mode only. Admin loads the demo profile but does not apply its
  * `pizza` section, so this applies it as contracts/profile.md says (a pizzeria matched by name is
  * edited, one not there added, its menu replaced, others stay) and opens one demo order with
- * several people, settling to its holder, some of them marked paid, as #704's demo order has it.
+ * several people, settling to its holder, some of them marked paid (when the event's `settle_to_payer` is on), as #704's demo order has it.
  *
  * Every write goes through the module's own steps (`openOrder`, `addItem`, `applyMenu`), so the
  * screens and the hub see an ordinary order. Never over work made by hand:
@@ -124,7 +124,8 @@ async function menuState(c: SqlClient): Promise<string> {
 }
 
 async function applyPizzerias(c: SqlClient, list: Pizzeria[], now: Date): Promise<void> {
-  const existing = await listPizzerias(c);
+  // Hidden ones too: the name index covers them, and a reset brings a named one back into view.
+  const existing = await listPizzerias(c, true);
   for (const p of list) {
     let id = existing.find((e) => e.name.toLowerCase() === p.name.toLowerCase())?.id;
     if (id === undefined) {
@@ -135,7 +136,8 @@ async function applyPizzerias(c: SqlClient, list: Pizzeria[], now: Date): Promis
       );
     } else {
       await c.query(
-        `UPDATE pizza_pizzerias SET phone = $2, website = $3, service = $4, updated_at = $5 WHERE id = $1`,
+        `UPDATE pizza_pizzerias SET phone = $2, website = $3, service = $4, hidden_at = NULL, updated_at = $5
+         WHERE id = $1`,
         [id, p.phone, p.website, p.service, now],
       );
     }
@@ -151,7 +153,7 @@ async function readMark(file: string): Promise<{ profile: string; menus: string 
 const LIVE: readonly OrderState[] = ["open", "closed", "placed", "arrived"];
 
 /** The demo order at Demo Pizzeria, open until the event day turns, its people and Paid ticks. */
-async function openDemoOrder(s: Step, timeZone: string): Promise<string> {
+async function openDemoOrder(s: Step, timeZone: string, settleToPayer: boolean): Promise<string> {
   const [pz] = (await listPizzerias(s.c)).filter((p) => p.name === DEMO_PIZZERIA);
   if (pz === undefined) return NO_PIZZERIA;
   const day = eventDay(s.now, timeZone);
@@ -174,7 +176,9 @@ async function openDemoOrder(s: Step, timeZone: string): Promise<string> {
     const snap = snapshotOf(input, menu);
     await addItem(s, person, order.id, input, snap, Number.MAX_SAFE_INTEGER, pz.id);
   }
-  // Settling to the holder, with Paid ticks: a memo only, never on the bus (paid.ts).
+  // The API refuses settle_to payer while the event's setting is off (settle_to_payer_off), so the
+  // seed writes that state only when it is on. Paid ticks are a memo only, never on the bus (paid.ts).
+  if (!settleToPayer) return OPENED_ORDER;
   await s.c.query(
     `UPDATE pizza_orders SET settle_to = 'payer', payer_user_id = $2, payer_name = $3 WHERE id = $1`,
     [order.id, holder.user_id, holder.name],
@@ -191,7 +195,13 @@ async function openDemoOrder(s: Step, timeZone: string): Promise<string> {
 
 export async function seedDemoFood(
   d: SeedDeps,
-  o: { version: string; timeZone: string; pizzerias: unknown; force: boolean },
+  o: {
+    version: string;
+    timeZone: string;
+    pizzerias: unknown;
+    settleToPayer: boolean;
+    force: boolean;
+  },
 ): Promise<string[]> {
   if (o.version !== "dev")
     throw new Refused(`CANCCU_VERSION is ${o.version}, not dev: nothing changed`);
@@ -224,7 +234,7 @@ export async function seedDemoFood(
           await cancel(step(c), order.id, LIVE, "cancelled", "Demo event reset");
       if (!o.force && live.length > 0) said.push(ORDER_LIVE);
       else {
-        said.push(await openDemoOrder(step(c), o.timeZone));
+        said.push(await openDemoOrder(step(c), o.timeZone, o.settleToPayer));
       }
       return { said, menus: said[0] === LOADED_MENUS ? await menuState(c) : null };
     });

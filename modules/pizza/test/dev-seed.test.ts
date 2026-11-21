@@ -50,11 +50,14 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
     now: () => w.now,
     filesRoot: w.filesRoot,
   });
-  const seed = (o: { force?: boolean; version?: string; pizzerias?: unknown } = {}) =>
+  const seed = (
+    o: { force?: boolean; version?: string; pizzerias?: unknown; settleToPayer?: boolean } = {},
+  ) =>
     seedDemoFood(deps(), {
       version: o.version ?? "dev",
       timeZone: "Europe/Helsinki",
       pizzerias: o.pizzerias ?? pizzerias,
+      settleToPayer: o.settleToPayer ?? true,
       force: o.force ?? false,
     });
   const q = <T>(sql: string, args: unknown[] = []): Promise<T[]> =>
@@ -189,6 +192,26 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
       [pz?.id],
     );
     expect(m?.price_cents).toBe(800);
+    expect((await orders()).map((o) => o.state)).toEqual(["cancelled", "open"]);
+  });
+
+  it("settles to the payer, with Paid ticks, only while the event's setting is on", async () => {
+    expect(await seed({ settleToPayer: false })).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    const [order] = await orders();
+    expect(order).toMatchObject({ state: "open", settle_to: "organiser" });
+    expect(await q(`SELECT user_id FROM pizza_paid`)).toEqual([]);
+  });
+
+  it("force brings back a pizzeria someone hid and opens the demo order", async () => {
+    await seed();
+    await q(`UPDATE pizza_pizzerias SET hidden_at = now() WHERE name = 'Demo Pizzeria'`);
+    w.advance(1);
+    expect(await seed({ force: true })).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    const rows = await q<{ hidden_at: Date | null }>(
+      `SELECT hidden_at FROM pizza_pizzerias WHERE name = 'Demo Pizzeria'`,
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0]?.hidden_at).toBeNull();
     expect((await orders()).map((o) => o.state)).toEqual(["cancelled", "open"]);
   });
 

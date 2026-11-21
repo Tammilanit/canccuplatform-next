@@ -4,11 +4,13 @@
  */
 import pg from "pg";
 import {
+  AdminClient,
   Bus,
   DEMO_TENANT,
   FILES_ROOT,
   Outbox,
   ServiceIdentity,
+  SettingsClient,
   TenantResolver,
   ValkeyStreamStore,
   createLogger,
@@ -16,6 +18,7 @@ import {
   serviceKeyFromEnv,
 } from "@canccu/kit";
 import { poolDb } from "./db.js";
+import { settingsReader } from "./settings.js";
 import { Refused, demoPizzerias, seedDemoFood } from "./dev-seed.js";
 
 async function run(force: boolean): Promise<string[]> {
@@ -34,9 +37,14 @@ async function run(force: boolean): Promise<string[]> {
     const log = createLogger(config.module);
     const db = poolDb(pool);
     const bus = new Bus(ValkeyStreamStore.fromUrl(config.valkeyUrl), config.module, log);
+    // Admin's dev seed has loaded the profile's settings by now; the seed follows them.
+    const settings = settingsReader(
+      new SettingsClient(new AdminClient(config.adminUrl), config.module, { service }),
+    );
+    const { settle_to_payer: settleToPayer } = await settings(DEMO_TENANT);
     return await seedDemoFood(
       { db, outbox: new Outbox(bus, db, { log }), now: () => new Date(), filesRoot: FILES_ROOT },
-      { version: config.version, timeZone: event.time_zone, pizzerias, force },
+      { version: config.version, timeZone: event.time_zone, pizzerias, settleToPayer, force },
     );
   } finally {
     await pool.end();
