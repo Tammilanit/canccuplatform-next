@@ -272,6 +272,19 @@ describe("parts", () => {
       '<div class="canccu-poster"><img class="canccu-poster__logo" src="/theming/logo" alt=""><div class="canccu-poster__name">Demo &lt;Event&gt;',
     );
   });
+  it("front page without an event shows the platform poster, never an empty one (#708)", () => {
+    const doc = s(frontPage({ title: "Sign in", card: html`<h1>Sign in</h1>` }));
+    expect(doc).not.toContain('<div class="canccu-poster__name"></div>');
+    expect(doc).not.toContain("/theming/logo"); // no event, so theming has no logo to give
+    expect(doc).toContain(
+      '<div class="canccu-poster canccu-poster--platform"><span class="canccu-poster__mark" aria-hidden="true">C</span><div class="canccu-poster__name">CanccuPlatform</div><p class="canccu-poster__meta">Organisers and crew sign in here</p></div>',
+    );
+  });
+  it("front page without an event leaves the organisers' line off the hub's pages (#708)", () => {
+    const doc = s(frontPage({ title: "Check in", card: "", surface: "hub" }));
+    expect(doc).toContain('<div class="canccu-poster__name">CanccuPlatform</div></div>');
+    expect(doc).not.toContain("Organisers and crew");
+  });
   it("front page with the privacy tag as the page's last child", () => {
     const doc = s(frontPage({ title: "Check in", card: "", privacy: "/notify/privacy" }));
     expect(doc).toContain(
