@@ -33,6 +33,8 @@ COPY --from=build /repo/modules/pizza/dist modules/pizza/dist
 COPY --from=build /repo/modules/pizza/migrations modules/pizza/migrations
 COPY --from=build /repo/modules/pizza/static modules/pizza/static
 COPY --from=build /repo/modules/pizza/node_modules modules/pizza/node_modules
+# The dev server's demo food (src/dev-seed.ts) applies the demo profile's pizza section.
+COPY events/demo/profile.yaml events/demo/profile.yaml
 WORKDIR /repo/modules/pizza
 USER nobody
 EXPOSE 8080
