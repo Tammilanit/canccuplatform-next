@@ -248,22 +248,37 @@ export interface FrontOptions extends DocumentOptions {
   privacy?: string;
 }
 
-/** A front door (sign-in, check-in): the event's poster beside or above one card. */
-export function frontPage(o: FrontOptions): Html {
-  const e = o.event;
-  const name = e?.name ?? "";
+/** The platform's own name, on a front door no event claims; renamed at the switch (AGENTS.md). */
+const PLATFORM_NAME = "CanccuPlatform";
+
+/** The event's poster: its logo, name, dates and venue. */
+function eventPoster(e: EventInfo, logoUrl: string | undefined, now: Date): Html {
+  const name = e.name ?? "";
   const long = name.length > 28 ? " canccu-poster__name--long" : "";
-  const dates = e === undefined ? "" : dateRange(e);
-  const meta =
-    e === undefined
-      ? ""
-      : html`<p class="canccu-poster__meta">${dates}${stateBadge(e, o.now ?? new Date())}</p>`;
-  const venue = e?.venue ? html`<p class="canccu-poster__venue">${icon("pin")}${e.venue}</p>` : "";
-  const logo =
-    e === undefined
-      ? ""
-      : html`<img${attrs({ class: "canccu-poster__logo", src: o.logoUrl ?? LOGO_URL, alt: "" })}>`;
-  const poster = html`<div class="canccu-poster">${logo}<div class="canccu-poster__name${long}">${name}</div>${meta}${venue}</div>`;
+  const venue = e.venue ? html`<p class="canccu-poster__venue">${icon("pin")}${e.venue}</p>` : "";
+  return html`<div class="canccu-poster"><img${attrs({ class: "canccu-poster__logo", src: logoUrl ?? LOGO_URL, alt: "" })}><div class="canccu-poster__name${long}">${name}</div><p class="canccu-poster__meta">${dateRange(e)}${stateBadge(e, now)}</p>${venue}</div>`;
+}
+
+/**
+ * The platform's poster, where no event resolves (a dev server, a platform-level sign-in): an
+ * empty poster would leave half the page blank (#708), and the design keeps the poster column in
+ * every state (docs/design/README.md, decision 7). Theming has no logo without an event, so the
+ * mark is drawn. The organisers' line is the admin surface's only: the hub's pages are attendees'.
+ */
+function platformPoster(surface: "admin" | "hub"): Html {
+  const line =
+    surface === "admin"
+      ? html`<p class="canccu-poster__meta">Organisers and crew sign in here</p>`
+      : "";
+  return html`<div class="canccu-poster canccu-poster--platform"><span class="canccu-poster__mark" aria-hidden="true">${initials(PLATFORM_NAME)}</span><div class="canccu-poster__name">${PLATFORM_NAME}</div>${line}</div>`;
+}
+
+/** A front door (sign-in, check-in): the event's poster, or the platform's, beside or above one card. */
+export function frontPage(o: FrontOptions): Html {
+  const poster =
+    o.event === undefined
+      ? platformPoster(o.surface ?? "admin")
+      : eventPoster(o.event, o.logoUrl, o.now ?? new Date());
   const card = html`<div class="canccu-front__card${o.centred ? " canccu-front__card--center" : ""}">${o.card}</div>`;
   if (!o.privacy)
     return document(o.title, o, html`<div class="canccu-front">${poster}${card}</div>`);

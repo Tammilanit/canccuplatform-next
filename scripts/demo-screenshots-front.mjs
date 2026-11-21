@@ -34,6 +34,7 @@ const NO_ROLE = "canccu_session=demo-no-role"; // demo-screenshots-front.sql
 const ARCHIVED = "demo-archived.localhost";
 const SOON = "demo-soon.localhost";
 const ELSEWHERE = "demo-elsewhere.localhost";
+const NO_EVENT = "no-event.localhost"; // no tenant has it, so nothing resolves
 // A well-formed code: the pages that answer before the code is checked never read it.
 const ANY_CODE = "/notify/check-in?p=arrival&c=AAAAAAAAAAAAAAAAAAAAAA";
 const FRESH = "@fresh"; // a code fetched right before the shot
@@ -74,6 +75,19 @@ const SHOTS = [
     "/admin/sign-in",
     PHONE,
     { cookie: NO_ROLE, text: "No role yet" },
+  ],
+  // A host no event claims (#708): the platform's poster, never an empty column.
+  [
+    "sign-in-no-event",
+    "/admin/sign-in",
+    DESK,
+    { cookie: null, host: NO_EVENT, text: "Organisers and crew sign in here" },
+  ],
+  [
+    "sign-in-no-event-phone",
+    "/admin/sign-in",
+    PHONE,
+    { cookie: null, host: NO_EVENT, text: "Organisers and crew sign in here" },
   ],
   // From another module's page (#474): no role at all lands on "No role yet", not "No access".
   [
