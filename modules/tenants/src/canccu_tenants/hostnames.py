@@ -12,16 +12,15 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import audit, core, model
-from .deps import Deps, deps
+from .deps import deps
 from .model import bad_request, body_of, conflict, not_found
 
 HOLD = timedelta(days=30)
 
 
-def kind_of(d: Deps, host: str) -> str:
+def kind_of(domain: str | None, host: str) -> str:
     """`platform` only for one label directly under the platform domain: the wildcard
     certificate covers exactly those."""
-    domain = d.platform_domain
     if domain and host.endswith("." + domain) and "." not in host[: -len(domain) - 1]:
         return "platform"
     return "custom"
@@ -65,7 +64,7 @@ async def add_hostname(request: Request) -> Response:
     if host in d.reserved_hosts:
         raise conflict("hostname_reserved", "the platform's own hostnames cannot be registered")
     tid = request.path_params["tenant_id"]
-    kind = kind_of(d, host)
+    kind = kind_of(d.platform_domain, host)
     status = "active" if kind == "platform" else "pending"
     token = None if kind == "platform" else secrets.token_urlsafe(24)
     outbox = core.Outbox()

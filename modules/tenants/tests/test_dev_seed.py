@@ -1,0 +1,109 @@
+"""`python -m canccu_tenants dev-hostnames`: the dev server's own names for the demo event
+(issue #709). Dev mode only; running it again changes nothing."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+from conftest import Env, make_tenant
+
+from canccu_tenants import dev_seed, seed
+
+# Fully qualified: resolving takes no single-label name (HostnameValue in the OpenAPI file).
+SHORT, FULL = "devbox.lan", "devbox.private.example.test"
+
+
+async def demo(env: Env) -> None:
+    await seed.seed_demo(
+        env.db, env.deps.files, Path("/nonexistent/profile.yaml"), env.deps.platform_domain
+    )
+
+
+async def run(env: Env, *hosts: str, version: str = "dev") -> list[str]:
+    d = env.deps
+    return await dev_seed.dev_hostnames(
+        d.db,
+        d.bus,
+        list(hosts),
+        version,
+        platform_domain=d.platform_domain,
+        reserved=d.reserved_hosts,
+    )
+
+
+async def demo_hosts(env: Env) -> list[tuple[str, str, bool]]:
+    async with env.db.platform() as conn:
+        rows = await conn.fetch(
+            "SELECT hostname, status, is_primary FROM hostnames WHERE tenant_id = 'demo'"
+            " ORDER BY hostname"
+        )
+    return [(r["hostname"], r["status"], r["is_primary"]) for r in rows]
+
+
+async def audit_count(env: Env) -> int:
+    async with env.db.pool.acquire() as conn:
+        return int(await conn.fetchval("SELECT count(*) FROM platform_audit"))
+
+
+async def test_the_demo_event_answers_on_the_dev_hostnames_the_first_primary(env: Env) -> None:
+    await demo(env)
+    changed = await run(env, FULL, SHORT)
+    # The old primary hands over, so absolute URLs name the dev server.
+    assert sorted(changed) == sorted(["demo.example.test", SHORT, FULL])
+    assert await demo_hosts(env) == [
+        ("demo.example.test", "active", False),
+        (SHORT, "active", False),
+        (FULL, "active", True),
+    ]
+    for host in (SHORT, FULL):
+        async with env.client(host) as c:
+            r = await c.get("/api/tenants/current")
+        assert (r.status_code, r.json().get("id")) == (200, "demo"), (host, r.text)
+    # Other modules drop their 30 s resolve cache on it, so the names answer at once.
+    assert [t for _, t in env.events()].count("tenants.hostname.changed") == 3
+
+
+async def test_running_it_twice_changes_nothing(env: Env) -> None:
+    await demo(env)
+    await run(env, FULL, SHORT)
+    hosts, audits, events = await demo_hosts(env), await audit_count(env), len(env.events())
+    assert await run(env, FULL, SHORT) == []
+    assert await demo_hosts(env) == hosts
+    assert await audit_count(env) == audits
+    assert len(env.events()) == events
+
+
+async def test_it_does_nothing_outside_dev_mode(env: Env) -> None:
+    await demo(env)
+    before = await demo_hosts(env)
+    with pytest.raises(dev_seed.Refused, match="not dev"):
+        await run(env, FULL, version="v0.5.1")
+    assert await demo_hosts(env) == before
+    assert env.events() == []
+
+
+async def test_a_name_another_event_holds_is_refused_and_nothing_changes(env: Env) -> None:
+    await demo(env)
+    await make_tenant(env.db, "other", SHORT)
+    before = await demo_hosts(env)
+    with pytest.raises(dev_seed.Refused, match="another event"):
+        await run(env, FULL, SHORT)
+    assert await demo_hosts(env) == before
+
+
+@pytest.mark.parametrize(
+    "bad",
+    ["devbox", "Devbox.lan", "dev box.lan", "devbox.lan.", "-devbox.lan", "super.example.test"],
+)
+async def test_a_bad_or_reserved_name_is_refused(env: Env, bad: str) -> None:
+    await demo(env)
+    before = await demo_hosts(env)
+    with pytest.raises(dev_seed.Refused):
+        await run(env, bad)
+    assert await demo_hosts(env) == before
+
+
+async def test_without_the_demo_event_it_refuses(env: Env) -> None:
+    with pytest.raises(dev_seed.Refused, match="no demo event"):
+        await run(env, FULL)

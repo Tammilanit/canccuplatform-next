@@ -1,5 +1,5 @@
 """Entry point: `python -m canccu_tenants.main` serves on port 8080; `python -m canccu_tenants`
-runs the shell commands (seed-demo, superadmin add)."""
+runs the shell commands (seed-demo, dev-hostnames, superadmin add)."""
 
 from __future__ import annotations
 
