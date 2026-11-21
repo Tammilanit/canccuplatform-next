@@ -1,151 +1,184 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1060" width="1920" height="1060" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Step 7 mockup Tournament settings: the crew, the scoring system and awards (lead)</title>
-<rect x="0.0" y="0.0" width="1920.0" height="1060.0" rx="0" fill="#f3f4f6"/>
-<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">19 · Tournament settings: the crew, the scoring system and awards (lead)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the tournament lead sets who helps, edits the points table and keeps the award types; the crew then gives awards at the desk</text>
-<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 592.0">Settings → Crew</text>
-<rect x="32.0" y="140.0" width="560.0" height="800.0" rx="12" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
-<text x="52.0" y="180.0" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="52.0 572.0">Tournament crew</text>
-<text x="52.0" y="204.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="52.0 572.0">Who runs this tournament. The lead holds every tournament right.</text>
-<text x="52.0" y="244.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start">TOURNAMENT LEAD</text>
-<rect x="52.0" y="256.0" width="520.0" height="76.0" rx="12" fill="#161a2e" stroke="#3ddcff" stroke-width="1.5"/>
-<text x="72.0" y="288.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="72.0 332.0">Demo Lead</text>
-<text x="72.0" y="312.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72.0 372.0">Contact on the rules page and in the hub</text>
-<rect x="392.0" y="282.0" width="160.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="472.0" y="303.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="396.0 548.0">Change the lead</text>
-<text x="52.0" y="366.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start">HELPERS · 3</text>
-<rect x="52.0" y="380.0" width="520.0" height="52.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="72.0" y="404.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="72.0 282.0">Crew Member</text>
-<text x="72.0" y="422.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72.0 332.0">Desk, check-in, results</text>
-<rect x="462.0" y="389.0" width="90.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="507.0" y="410.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="466.0 548.0">Remove</text>
-<rect x="52.0" y="444.0" width="520.0" height="52.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="72.0" y="468.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="72.0 282.0">Demo Helper</text>
-<text x="72.0" y="486.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72.0 332.0">Desk, check-in, results</text>
-<rect x="462.0" y="453.0" width="90.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="507.0" y="474.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="466.0 548.0">Remove</text>
-<rect x="52.0" y="508.0" width="520.0" height="52.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="72.0" y="532.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="72.0 282.0">Stage Helper</text>
-<text x="72.0" y="550.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72.0 332.0">Desk, check-in, results</text>
-<rect x="462.0" y="517.0" width="90.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="507.0" y="538.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="466.0 548.0">Remove</text>
-<text x="52.0" y="602.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="52.0 422.0">Add a helper (a person in this event)</text>
-<rect x="52.0" y="610.0" width="370.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="64.0" y="633.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="60.0 414.0">Search by name</text>
-<rect x="442.0" y="610.0" width="130.0" height="34.0" rx="8" fill="#3ddcff"/>
-<text x="507.0" y="631.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="446.0 568.0">Add helper</text>
-<text x="52.0" y="700.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="52.0 572.0">What a helper can do</text>
-<text x="52.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52.0 572.0">Run the desk and the crew phone, check in, mark present;</text>
-<text x="52.0" y="748.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52.0 572.0">enter results and give awards; reopen or delay sessions.</text>
-<text x="52.0" y="790.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="52.0 572.0">What only the lead (and the organiser) can do</text>
-<text x="52.0" y="816.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52.0 572.0">Sessions, settings, the scoring system and award types,</text>
-<text x="52.0" y="838.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52.0 572.0">the final, and who is in the crew.</text>
-<text x="52.0" y="880.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="52.0 572.0">Rights: tournament_lead and tournament_crew presets (D12).</text>
-<text x="624.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="624.0 1264.0">Settings → Scoring system</text>
-<rect x="624.0" y="140.0" width="640.0" height="800.0" rx="12" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
-<text x="644.0" y="180.0" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 1244.0">Points table</text>
-<text x="644.0" y="204.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="644.0 1244.0">The table in force. The rules page always shows it.</text>
-<text x="644.0" y="240.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start">PLACEMENT</text>
-<text x="924.0" y="240.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start">POINTS</text>
-<text x="1044.0" y="240.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start">AFTER THE CHANGE</text>
-<line x1="644.0" y1="252.0" x2="1244.0" y2="252.0" stroke="#343c66" stroke-width="1"/>
-<text x="644.0" y="284.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">1st</text>
-<rect x="924.0" y="262.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="284.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">3</text>
-<text x="1044.0" y="284.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">3</text>
-<line x1="644.0" y1="300.0" x2="1244.0" y2="300.0" stroke="#262c4a" stroke-width="1"/>
-<text x="644.0" y="330.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">2nd</text>
-<rect x="924.0" y="308.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="330.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">2</text>
-<text x="1044.0" y="330.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">2</text>
-<line x1="644.0" y1="346.0" x2="1244.0" y2="346.0" stroke="#262c4a" stroke-width="1"/>
-<text x="644.0" y="376.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">3rd</text>
-<rect x="924.0" y="354.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="376.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">—</text>
-<text x="1044.0" y="376.0" font-size="14" fill="#3ee39a" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">1 · added</text>
-<line x1="644.0" y1="392.0" x2="1244.0" y2="392.0" stroke="#262c4a" stroke-width="1"/>
-<text x="644.0" y="422.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">4th</text>
-<rect x="924.0" y="400.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="422.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">—</text>
-<text x="1044.0" y="422.0" font-size="14" fill="#3ee39a" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">1 · added</text>
-<line x1="644.0" y1="438.0" x2="1244.0" y2="438.0" stroke="#262c4a" stroke-width="1"/>
-<text x="644.0" y="468.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">Took part</text>
-<rect x="924.0" y="446.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="468.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">1</text>
-<text x="1044.0" y="468.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">1</text>
-<line x1="644.0" y1="484.0" x2="1244.0" y2="484.0" stroke="#262c4a" stroke-width="1"/>
-<text x="644.0" y="514.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="644.0 904.0">No-show</text>
-<rect x="924.0" y="492.0" width="90.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="936.0" y="514.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="932.0 1008.0">0</text>
-<text x="1044.0" y="514.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1044.0 1244.0">0</text>
-<line x1="644.0" y1="530.0" x2="1244.0" y2="530.0" stroke="#262c4a" stroke-width="1"/>
-<rect x="644.0" y="566.0" width="130.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="709.0" y="587.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="648.0 770.0">Add a place</text>
-<text x="794.0" y="588.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="794.0 1244.0">3rd and 4th were added above.</text>
-<text x="644.0" y="636.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start">Table shape</text>
-<rect x="644.0" y="644.0" width="300.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="656.0" y="667.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="652.0 936.0">By placement (default)</text>
-<rect x="964.0" y="644.0" width="280.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="976.0" y="667.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="972.0 1236.0">By rank, 1st to nth (available)</text>
-<text x="644.0" y="712.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="644.0 1244.0">A session may override this table in its own form.</text>
-<rect x="644.0" y="736.0" width="600.0" height="150.0" rx="12" fill="#161a2e" stroke="#ffc94d" stroke-width="1"/>
-<text x="660.0" y="766.0" font-size="14.5" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="660.0 1228.0">12 results already count: saving recalculates the standings</text>
-<text x="660.0" y="790.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="660.0 1228.0">Player Five 14 → 15 · Demo Player 13 → 13 · 9 more change</text>
-<text x="660.0" y="808.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="660.0 1228.0">Reason (kept in the History; shown on the rules page)</text>
-<rect x="660.0" y="816.0" width="568.0" height="34.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="672.0" y="838.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="668.0 1220.0">Added 3rd and 4th place for the bracket sessions</text>
-<rect x="1034.0" y="892.0" width="190.0" height="34.0" rx="8" fill="#3ddcff"/>
-<text x="1129.0" y="913.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1038.0 1220.0">Save and recalculate</text>
-<text x="1296.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1296.0 1888.0">Settings → Awards, and giving one</text>
-<rect x="1296.0" y="140.0" width="592.0" height="800.0" rx="12" fill="#0b0d1a" stroke="#343c66" stroke-width="1"/>
-<text x="1316.0" y="180.0" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1316.0 1868.0">Award types</text>
-<text x="1316.0" y="204.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1316.0 1868.0">Each has default points; the crew may edit them per award.</text>
-<rect x="1316.0" y="232.0" width="552.0" height="42.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1334.0" y="259.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1334.0 1596.0">MVP</text>
-<rect x="1718.0" y="243.0" width="96.0" height="21.0" rx="10.5" fill="#2c2348"/>
-<text x="1766.0" y="257.5" font-size="11" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="1721.0 1811.0">+2 points</text>
-<text x="1836.0" y="259.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1824.0 1862.0">Edit</text>
-<rect x="1316.0" y="284.0" width="552.0" height="42.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1334.0" y="311.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1334.0 1596.0">Best play</text>
-<rect x="1718.0" y="295.0" width="96.0" height="21.0" rx="10.5" fill="#2c2348"/>
-<text x="1766.0" y="309.5" font-size="11" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="1721.0 1811.0">+1 points</text>
-<text x="1836.0" y="311.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1824.0 1862.0">Edit</text>
-<rect x="1316.0" y="336.0" width="552.0" height="42.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1334.0" y="363.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1334.0 1596.0">Sportsmanship</text>
-<rect x="1718.0" y="347.0" width="96.0" height="21.0" rx="10.5" fill="#2c2348"/>
-<text x="1766.0" y="361.5" font-size="11" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="1721.0 1811.0">+1 points</text>
-<text x="1836.0" y="363.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1824.0 1862.0">Edit</text>
-<rect x="1316.0" y="394.0" width="170.0" height="34.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1401.0" y="415.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1320.0 1482.0">Add an award type</text>
-<line x1="1316.0" y1="452.0" x2="1868.0" y2="452.0" stroke="#343c66" stroke-width="1"/>
-<text x="1316.0" y="486.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1316.0 1868.0">Give an award · at the desk</text>
-<text x="1316.0" y="516.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1316.0 1868.0">Session</text>
-<rect x="1316.0" y="524.0" width="552.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="1328.0" y="547.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1324.0 1860.0">Demo Arena 5v5 · semi-final 2</text>
-<text x="1316.0" y="578.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1316.0 1868.0">Participant</text>
-<rect x="1316.0" y="586.0" width="552.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="1328.0" y="609.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1324.0 1860.0">Player Six (Team Beta)</text>
-<text x="1316.0" y="640.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1316.0 1586.0">Award</text>
-<rect x="1316.0" y="648.0" width="270.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="1328.0" y="671.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1324.0 1578.0">MVP</text>
-<text x="1598.0" y="640.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1598.0 1860.0">Points (editable)</text>
-<rect x="1598.0" y="648.0" width="262.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="1610.0" y="671.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1606.0 1852.0">2</text>
-<text x="1316.0" y="702.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1316.0 1868.0">Note (optional)</text>
-<rect x="1316.0" y="710.0" width="552.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
-<text x="1328.0" y="733.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1324.0 1860.0">Held the line in game 3</text>
-<rect x="1316.0" y="780.0" width="160.0" height="34.0" rx="8" fill="#3ddcff"/>
-<text x="1396.0" y="801.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="1320.0 1472.0">Give the award</text>
-<text x="1496.0" y="802.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1496.0 1868.0">One transaction; one History line; standings recalculate.</text>
-<text x="1316.0" y="852.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1316.0 1868.0">A participant may get several awards. Points add to the</text>
-<text x="1316.0" y="874.0" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1316.0 1868.0">session&#x27;s placing points; names show on the champions page.</text>
-<circle cx="45" cy="985" r="13" fill="#f59e0b"/>
-<text x="45.0" y="990.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="66.0" y="990.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 592.0">The lead adds or removes helpers and can change the lead (D12).</text>
-<circle cx="637" cy="985" r="13" fill="#f59e0b"/>
-<text x="637.0" y="990.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="658.0" y="990.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="658.0 1264.0">Changing the table after results exist asks for a reason (D2).</text>
-<circle cx="1309" cy="985" r="13" fill="#f59e0b"/>
-<text x="1309.0" y="990.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
-<text x="1330.0" y="990.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1330.0 1888.0">An award is a result change: D7&#x27;s rules apply (D20).</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1400" width="1920" height="1400" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 19: Tournament settings: the crew, the scoring system and awards (lead)</title>
+<defs></defs>
+<rect x="0" y="0" width="1920" height="1320" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">19 · The crew, the scoring system and awards: given while scoring (lead, crew)</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: the lead sets who helps, edits the points table and keeps the award types; the crew gives awards on the player row while scoring, not afterwards. Demo names only.</text>
+<text x="32" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">1 · Settings → Crew</text>
+<rect x="32" y="140" width="920" height="560" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="56" y="176" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 456">Tournament crew</text>
+<text x="56" y="198" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Who runs this tournament. The lead holds every tournament right.</text>
+<text x="56" y="232" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="56 356">TOURNAMENT LEAD</text>
+<rect x="56" y="242" width="872" height="56" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="84" cy="270" r="16" fill="#3b82f6"/>
+<text x="114" y="266" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="114 314">Demo Lead</text>
+<text x="114" y="286" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="114 514">Contact on the rules page and in the hub</text>
+<rect x="772" y="254" width="140" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="842" y="274.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="778 906">Change the lead</text>
+<text x="56" y="326" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="56 356">HELPERS · 3</text>
+<rect x="56" y="336" width="872" height="44" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="82" cy="358" r="13" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="108" y="355" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="108 308">Crew Member</text>
+<text x="108" y="372" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="108 508">Desk, check-in, scoring and awards</text>
+<rect x="822" y="342" width="92" height="30" rx="8" fill="#3a1f24" stroke="#ffb4a8" stroke-width="1"/>
+<text x="868" y="361.2" font-size="12" fill="#ffb4a8" font-weight="600" text-anchor="middle" data-box="828 908">Remove</text>
+<rect x="56" y="388" width="872" height="44" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="82" cy="410" r="13" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="108" y="407" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="108 308">Demo Helper</text>
+<text x="108" y="424" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="108 508">Desk, check-in, scoring and awards</text>
+<rect x="822" y="394" width="92" height="30" rx="8" fill="#3a1f24" stroke="#ffb4a8" stroke-width="1"/>
+<text x="868" y="413.2" font-size="12" fill="#ffb4a8" font-weight="600" text-anchor="middle" data-box="828 908">Remove</text>
+<rect x="56" y="440" width="872" height="44" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="82" cy="462" r="13" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="108" y="459" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="108 308">Stage Helper</text>
+<text x="108" y="476" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="108 508">Desk, check-in, scoring and awards</text>
+<rect x="822" y="446" width="92" height="30" rx="8" fill="#3a1f24" stroke="#ffb4a8" stroke-width="1"/>
+<text x="868" y="465.2" font-size="12" fill="#ffb4a8" font-weight="600" text-anchor="middle" data-box="828 908">Remove</text>
+<rect x="56" y="500" width="872" height="44" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="72" y="527" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="72 592">Search a person in this event by name</text>
+<rect x="772" y="506" width="140" height="32" rx="8" fill="#3b82f6"/>
+<text x="842" y="526.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="778 906">Add helper</text>
+<text x="56" y="574" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 456">What a helper can do</text>
+<text x="56" y="594" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Run the desk and the crew phone, check in, mark present, enter results and give awards, reopen or delay sessions.</text>
+<text x="56" y="638" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 556">What only the lead (and the organiser) can do</text>
+<text x="56" y="658" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Sessions, settings, the scoring system and award types, the final, and who is in the crew.</text>
+<text x="968" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">2 · Settings → Scoring system</text>
+<rect x="968" y="140" width="920" height="560" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="992" y="176" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="992 1392">Points table</text>
+<text x="992" y="198" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">The table in force. The rules page always shows it.</text>
+<text x="1052" y="232" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1052 1252">PLACEMENT</text>
+<text x="1252" y="232" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1252 1452">POINTS</text>
+<text x="1412" y="232" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1412 1612">AFTER THE CHANGE</text>
+<line x1="992" y1="274" x2="1864" y2="274" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="266" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">1st</text>
+<text x="1252" y="266" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">3</text>
+<text x="1412" y="266" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1612">3</text>
+<line x1="992" y1="308" x2="1864" y2="308" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="300" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">2nd</text>
+<text x="1252" y="300" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">2</text>
+<text x="1412" y="300" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1612">2</text>
+<line x1="992" y1="342" x2="1864" y2="342" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="334" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">3rd</text>
+<text x="1252" y="334" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">—</text>
+<text x="1412" y="334" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1412 1612">1 · added</text>
+<line x1="992" y1="376" x2="1864" y2="376" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="368" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">4th</text>
+<text x="1252" y="368" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">—</text>
+<text x="1412" y="368" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1412 1612">1 · added</text>
+<line x1="992" y1="410" x2="1864" y2="410" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="402" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">Took part</text>
+<text x="1252" y="402" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">1</text>
+<text x="1412" y="402" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1612">1</text>
+<line x1="992" y1="444" x2="1864" y2="444" stroke="#2a3050" stroke-width="1"/>
+<text x="1052" y="436" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1052 1212">No-show</text>
+<text x="1252" y="436" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1252 1352">0</text>
+<text x="1412" y="436" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1412 1612">0</text>
+<text x="992" y="470" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="992 1192">Table shape</text>
+<text x="992" y="492" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="992 1492">By placement (default) · By rank, 1st to nth (available)</text>
+<text x="992" y="516" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1492">A session may use its own table in its form.</text>
+<rect x="992" y="534" width="872" height="48" rx="8" fill="#3a2e12" stroke="#ffcf6e" stroke-width="1"/>
+<text x="1008" y="554" font-size="13" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="1008 1848">12 results already count: saving recalculates the standings.</text>
+<text x="1008" y="573" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1008 1848">Player Five 14 → 15 · Demo Player 12 → 12 · 9 more change</text>
+<text x="992" y="598" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="992 1552">Reason (kept in the History, shown on the rules page)</text>
+<rect x="992" y="606" width="560" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1004" y="628" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1004 1540">Added 3rd and 4th place for the bracket sessions</text>
+<rect x="1608" y="606" width="240" height="34" rx="8" fill="#3b82f6"/>
+<text x="1728" y="627.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1614 1842">Save and recalculate</text>
+<text x="32" y="720" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">3 · Settings → Award types</text>
+<rect x="32" y="730" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="56" y="766" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 456">Award types</text>
+<text x="56" y="788" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Each has default points; the crew can edit the points when giving one.</text>
+<rect x="56" y="810" width="872" height="46" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="839" font-size="16" fill="#ffcf6e" font-weight="700" text-anchor="start">⭐</text>
+<text x="116" y="839" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="116 416">MVP</text>
+<text x="452" y="839" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="452 652">+2 points</text>
+<rect x="822" y="818" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="868" y="837.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 908">Edit</text>
+<rect x="56" y="866" width="872" height="46" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="895" font-size="16" fill="#ffcf6e" font-weight="700" text-anchor="start">⭐</text>
+<text x="116" y="895" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="116 416">Best play</text>
+<text x="452" y="895" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="452 652">+1 point</text>
+<rect x="822" y="874" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="868" y="893.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 908">Edit</text>
+<rect x="56" y="922" width="872" height="46" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="951" font-size="16" fill="#ffcf6e" font-weight="700" text-anchor="start">⭐</text>
+<text x="116" y="951" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="116 416">Sportsmanship</text>
+<text x="452" y="951" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="452 652">+1 point</text>
+<rect x="822" y="930" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="868" y="949.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="828 908">Edit</text>
+<rect x="56" y="986" width="200" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="156" y="1007.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="62 250">Add an award type</text>
+<text x="56" y="1050" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">A player may get several awards in a session. Award points add to the placing points; the names show in the standings</text>
+<text x="56" y="1068" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">breakdown and on the champions page.</text>
+<text x="56" y="1106" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Changing what an award is worth after awards were given recalculates the standings and asks for a reason, as the points</text>
+<text x="56" y="1124" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">table does.</text>
+<text x="968" y="720" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">4 · The results step: an award on the player row</text>
+<rect x="968" y="730" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="992" y="766" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="992 1392">Demo Arena 5v5 · results</text>
+<text x="992" y="796" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="992 1192">PLACE</text>
+<text x="1068" y="796" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1068 1268">PLAYER</text>
+<text x="1368" y="796" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1368 1568">AWARD</text>
+<text x="1608" y="796" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1608 1808">POINTS</text>
+<rect x="992" y="806" width="872" height="38" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1004" y="831" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1004 1064">1st</text>
+<text x="1092" y="831" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1092 1342">Nova (Nightfall)</text>
+<text x="1632" y="831" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1632 1692">3</text>
+<rect x="1758" y="810" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1804" y="829.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1764 1844">⭐ Award</text>
+<rect x="992" y="850" width="872" height="38" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1004" y="875" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1004 1064">1st</text>
+<text x="1092" y="875" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1092 1342">Kestrel (Nightfall)</text>
+<rect x="1392" y="856" width="104.4" height="22" rx="11.0" fill="#22263f" stroke="#ffcf6e" stroke-width="1"/>
+<text x="1401" y="869" font-size="12" fill="#ffcf6e" font-weight="600" text-anchor="start" data-box="1401 1495.4">Best play +1</text>
+<text x="1632" y="875" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1632 1692">4</text>
+<rect x="1758" y="854" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1804" y="873.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1764 1844">⭐ Award</text>
+<rect x="992" y="894" width="872" height="38" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1004" y="919" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1004 1064">2nd</text>
+<text x="1092" y="919" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1092 1342">Juno (Ember)</text>
+<text x="1632" y="919" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1632 1692">2</text>
+<rect x="1758" y="898" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1804" y="917.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1764 1844">⭐ Award</text>
+<rect x="992" y="938" width="872" height="38" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1004" y="963" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1004 1064">3rd</text>
+<text x="1092" y="963" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1092 1342">Pike (Tidal)</text>
+<text x="1632" y="963" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1632 1692">1</text>
+<rect x="1758" y="942" width="92" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1804" y="961.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1764 1844">⭐ Award</text>
+<rect x="1392" y="990" width="470" height="170" rx="10" fill="#121528" stroke="#3ddcff" stroke-width="1"/>
+<text x="1408" y="1014" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1408 1808">Nova · give an award</text>
+<rect x="1408" y="1026" width="140" height="36" rx="8" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
+<text x="1478" y="1049" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1416 1540">MVP</text>
+<rect x="1558" y="1026" width="140" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1628" y="1049" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1566 1690">Best play</text>
+<rect x="1708" y="1026" width="140" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1778" y="1049" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1716 1840">Sportsmanship</text>
+<text x="1408" y="1090" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1408 1648">Points (prefilled, editable)</text>
+<rect x="1408" y="1098" width="70" height="34" rx="8" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="1443" y="1121" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="1418 1468">2</text>
+<rect x="1728" y="1098" width="120" height="34" rx="8" fill="#3b82f6"/>
+<text x="1788" y="1119.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="1734 1842">Add award</text>
+<text x="992" y="992" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="992 1372">Tap ⭐ on a row,</text>
+<text x="992" y="1014" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1372">pick an award, and its points prefill. The chip</text>
+<text x="992" y="1032" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1372">appears on the row and the standings preview updates</text>
+<text x="992" y="1050" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1372">at once.</text>
+<rect x="992" y="1080" width="380" height="76" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="1008" y="1106" font-size="13" fill="#7cecba" font-weight="700" text-anchor="start" data-box="1008 1348">Standings preview</text>
+<text x="1008" y="1128" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1008 1348">Nova 3rd → 1st ▲2 · after MVP +2: 1st</text>
+<rect x="992" y="1176" width="380" height="38" rx="8" fill="#3b82f6"/>
+<text x="1182" y="1199.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="998 1366">Save placements and awards together</text>
+<text x="1392" y="1200" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1392 1862">A later change is a correction with a reason, as for any result.</text>
+<circle cx="42" cy="1245" r="10" fill="#111827"/>
+<text x="42" y="1250" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">1</text>
+<text x="62" y="1250" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">The lead adds or removes helpers and can change the lead; the crew runs the night but never the rules.</text>
+<circle cx="970" cy="1245" r="10" fill="#111827"/>
+<text x="970" y="1250" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
+<text x="990" y="1250" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">Changing the points table after results exist asks for a reason and recalculates (D2).</text>
+<circle cx="42" cy="1276" r="10" fill="#111827"/>
+<text x="42" y="1281" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>
+<text x="62" y="1281" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">An award is given on the player row while scoring; one Save covers placements and awards (D20).</text>
+<circle cx="970" cy="1276" r="10" fill="#111827"/>
+<text x="970" y="1281" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">4</text>
+<text x="990" y="1281" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">Changing an award later is a result correction: the same history and reason rule (D7).</text>
+<rect x="0" y="1260" width="1920" height="140" rx="0" fill="#f3f4f6"/>
 </svg>

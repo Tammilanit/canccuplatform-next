@@ -1,237 +1,190 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 950" width="1920" height="950" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Step 7 mockup 06: The session desk: check-in, matches and players, live (organiser, crew)</title>
-<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
-<rect x="0.0" y="0.0" width="1920.0" height="950.0" rx="0" fill="#f3f4f6"/>
-<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">06 · The session desk: check-in, matches and players, live (organiser, crew)</text>
-<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the crew runs Demo Arena 5v5 from one page: who is in, which match to call, what to do next</text>
-<defs><clipPath id="c1"><rect x="0" y="0" width="1920" height="1000" rx="10"/></clipPath></defs>
-<g transform="translate(32.0,110.0) scale(0.8)"><g clip-path="url(#c1)">
-<rect x="0.0" y="0.0" width="1920.0" height="1000.0" rx="0" fill="#0b0d1a"/>
-<rect x="0.0" y="0.0" width="1920.0" height="56.0" rx="0" fill="#121528"/>
-<line x1="0.0" y1="56.0" x2="1920.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
-<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
-<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
-<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
-<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
-<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Fri 6 – Sun 8 Nov</text>
-<rect x="355.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
-<circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
-<text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
-<text x="1874.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">20:52</text>
-<text x="1900.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
-<rect x="0.0" y="57.0" width="255.0" height="943.0" rx="0" fill="#0e1122"/>
-<line x1="255.0" y1="57.0" x2="255.0" y2="1000.0" stroke="#343c66" stroke-width="1"/>
-<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
-<rect x="26.0" y="117.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="129.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
-<rect x="26.0" y="159.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="171.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
-<rect x="26.0" y="201.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="213.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
-<rect x="12.0" y="232.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
-<rect x="12.0" y="232.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
-<rect x="26.0" y="243.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="255.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Tournament</text>
-<rect x="26.0" y="285.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="297.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Food</text>
-<text x="24.0" y="338.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
-<rect x="26.0" y="369.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="381.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Screen studio</text>
-<rect x="26.0" y="411.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="423.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
-<text x="24.0" y="464.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
-<rect x="26.0" y="495.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="507.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
-<rect x="26.0" y="537.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="549.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
-<rect x="26.0" y="579.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="591.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
-<rect x="26.0" y="621.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
-<text x="55.0" y="633.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
-<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1660.0">Demo Arena 5v5</text>
-<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1660.0">Sat 19:30 – 21:30 · Stage · teams of 5 · 8 of 8 teams · check-in on</text>
-<text x="300.0" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Desk</text>
-<line x1="296.0" y1="186.0" x2="330.9" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
-<text x="356.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Matches</text>
-<text x="438.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Players and teams</text>
-<text x="602.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Results</text>
-<text x="684.2" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
-<line x1="296.0" y1="187.0" x2="1880.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
-<rect x="1733.9" y="96.0" width="146.1" height="24.0" rx="12.0" fill="#1e4244"/>
-<text x="1807.0" y="112.0" font-size="14" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1737.9 1876.0">Running · 20:52</text>
-<rect x="296.0" y="215.0" width="1584.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<line x1="326.0" y1="245.0" x2="570.0" y2="245.0" stroke="#3ddcff" stroke-width="3"/>
-<circle cx="326.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
-<text x="326.0" y="273.0" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">18:30</text>
-<text x="326.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Open</text>
-<line x1="570.0" y1="245.0" x2="814.0" y2="245.0" stroke="#3ddcff" stroke-width="3"/>
-<circle cx="570.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
-<text x="570.0" y="273.0" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">19:00</text>
-<text x="570.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Closed</text>
-<line x1="814.0" y1="245.0" x2="1058.0" y2="245.0" stroke="#3ddcff" stroke-width="3"/>
-<circle cx="814.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
-<text x="814.0" y="273.0" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">19:15</text>
-<text x="814.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Check-in</text>
-<line x1="1058.0" y1="245.0" x2="1302.0" y2="245.0" stroke="#3ddcff" stroke-width="3"/>
-<circle cx="1058.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
-<text x="1058.0" y="273.0" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">19:25</text>
-<text x="1058.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Check-in closed</text>
-<line x1="1302.0" y1="245.0" x2="1546.0" y2="245.0" stroke="#343c66" stroke-width="3"/>
-<circle cx="1302.0" cy="245.0" r="8" fill="#3ddcff" stroke="#343c66" stroke-width="1"/>
-<text x="1302.0" y="273.0" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">19:30</text>
-<text x="1302.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Running</text>
-<line x1="1546.0" y1="245.0" x2="1790.0" y2="245.0" stroke="#343c66" stroke-width="3"/>
-<circle cx="1546.0" cy="245.0" r="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
-<text x="1546.0" y="273.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="middle">21:30</text>
-<text x="1546.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Results</text>
-<circle cx="1790.0" cy="245.0" r="8" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
-<text x="1790.0" y="273.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="middle">22:30</text>
-<text x="1790.0" y="291.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="middle">Cleanup</text>
-<rect x="296.0" y="323.0" width="155.6" height="32.0" rx="8" fill="#3ddcff"/>
-<text x="373.8" y="343.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300.0 447.6">Call semi-final 2</text>
-<rect x="461.6" y="323.0" width="132.8" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="528.0" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="465.6 590.4">Enter a result</text>
-<rect x="604.4" y="323.0" width="155.6" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="682.2" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="608.4 756.0">Pause the session</text>
-<rect x="770.0" y="323.0" width="94.6" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="817.3" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="774.0 860.6">Announce…</text>
-<rect x="874.6" y="323.0" width="94.6" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="921.9" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="878.6 965.2">End early</text>
-<rect x="979.2" y="323.0" width="162.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1060.2" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="983.2 1137.2">Reopen registration</text>
-<rect x="1151.2" y="323.0" width="142.0" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1222.2" y="343.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1155.2 1289.2">Delay by N min</text>
-<rect x="296.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="316.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">40</text>
-<text x="376.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="376.0 668.0">registered · 8 teams</text>
-<rect x="696.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="716.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">38</text>
-<text x="776.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="776.0 1068.0">checked in</text>
-<rect x="1096.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1116.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">2</text>
-<text x="1176.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1176.0 1468.0">no-shows</text>
-<rect x="1496.0" y="379.0" width="384.0" height="84.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="1516.0" y="425.0" font-size="30" fill="#f3f5ff" font-weight="700" text-anchor="start">0</text>
-<text x="1576.0" y="425.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1576.0 1868.0">places left (full)</text>
-<text x="296.0" y="487.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">MATCHES · IN TIME ORDER · QUARTER-FINALS DONE · SEMI-FINALS NOW</text>
-<line x1="376.0" y1="520.0" x2="376.0" y2="725.0" stroke="#343c66" stroke-width="1"/>
-<text x="296.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">19:35</text>
-<circle cx="376.0" cy="525.0" r="5" fill="#3c446c"/>
-<rect x="396.0" y="503.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="412.0" y="531.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Quarter-final 1</text>
-<text x="596.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Alpha</text>
-<text x="916.0" y="531.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">2 – 0</text>
-<text x="996.0" y="531.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Eta</text>
-<rect x="1815.3" y="514.0" width="48.7" height="22.0" rx="11" fill="#22263f"/>
-<text x="1839.7" y="529.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1819.3 1860.0">Done</text>
-<text x="296.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:00</text>
-<circle cx="376.0" cy="575.0" r="5" fill="#3c446c"/>
-<rect x="396.0" y="553.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="412.0" y="581.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Quarter-final 2</text>
-<text x="596.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Gamma</text>
-<text x="916.0" y="581.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">2 – 1</text>
-<text x="996.0" y="581.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Zeta</text>
-<rect x="1815.3" y="564.0" width="48.7" height="22.0" rx="11" fill="#22263f"/>
-<text x="1839.7" y="579.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1819.3 1860.0">Done</text>
-<text x="296.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:30</text>
-<circle cx="376.0" cy="625.0" r="5" fill="#3ee39a"/>
-<rect x="396.0" y="603.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
-<text x="412.0" y="631.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Semi-final 2</text>
-<text x="596.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Beta</text>
-<text x="916.0" y="631.0" font-size="16" fill="#f3f5ff" font-weight="800" text-anchor="middle" data-box="856.0 976.0">1 – 0</text>
-<text x="996.0" y="631.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Delta</text>
-<rect x="1755.3" y="614.0" width="108.7" height="22.0" rx="11" fill="#1e4244"/>
-<text x="1809.6" y="629.0" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="1759.3 1860.0">Live · game 2</text>
-<text x="296.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">20:50</text>
-<circle cx="376.0" cy="675.0" r="5" fill="#3ee39a"/>
-<rect x="396.0" y="653.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="2"/>
-<text x="412.0" y="681.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Semi-final 1</text>
-<text x="596.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Team Alpha</text>
-<text x="916.0" y="681.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="856.0 976.0">vs</text>
-<text x="996.0" y="681.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Team Gamma</text>
-<rect x="1762.0" y="664.0" width="102.0" height="22.0" rx="11" fill="#3a3320"/>
-<text x="1813.0" y="679.0" font-size="11.5" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="1766.0 1860.0">Called 20:48</text>
-<text x="296.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296.0 364.0">21:15</text>
-<circle cx="376.0" cy="725.0" r="5" fill="#3ddcff"/>
-<rect x="396.0" y="703.0" width="1484.0" height="44.0" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
-<text x="412.0" y="731.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="412.0 572.0">Final</text>
-<text x="596.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="596.0 836.0">Winner of semi 1</text>
-<text x="916.0" y="731.0" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="856.0 976.0">vs</text>
-<text x="996.0" y="731.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="996.0 1236.0">Winner of semi 2</text>
-<rect x="1808.7" y="714.0" width="55.3" height="22.0" rx="11" fill="#22263f"/>
-<text x="1836.3" y="729.0" font-size="11.5" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="1812.7 1860.0">Later</text>
-<g transform="translate(0,125)">
-<text x="296.0" y="659.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">PLAYERS · 2 NEED YOU</text>
-<text x="296.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">TEAM</text>
-<text x="496.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">PLAYER</text>
-<text x="716.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">CHECK-IN</text>
-<text x="896.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">VOICE</text>
-<text x="1096.0" y="689.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">NOTE</text>
-<line x1="296.0" y1="701.0" x2="1880.0" y2="701.0" stroke="#343c66" stroke-width="1"/>
-<text x="296.0" y="726.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 486.0">Team Alpha</text>
-<text x="496.0" y="726.0" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="496.0 706.0">Player Four</text>
-<rect x="716.0" y="710.0" width="61.9" height="22.0" rx="11.0" fill="#3d1f2a"/>
-<text x="747.0" y="724.0" font-size="12" fill="#ff6b81" font-weight="600" text-anchor="middle" data-box="720.0 773.9">Not in</text>
-<text x="896.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">none</text>
-<text x="1096.0" y="726.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Asked at the stage 20:47</text>
-<rect x="1766.2" y="705.0" width="113.8" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1823.1" y="724.3" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1770.2 1876.0">Mark present</text>
-<line x1="296.0" y1="741.0" x2="1880.0" y2="741.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="766.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 486.0">Team Epsilon</text>
-<text x="496.0" y="766.0" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="496.0 706.0">Player Eleven</text>
-<rect x="716.0" y="750.0" width="120.5" height="22.0" rx="11.0" fill="#1c2a44"/>
-<text x="776.2" y="764.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="720.0 832.5">In 19:25</text>
-<text x="896.0" y="766.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">Alpha room</text>
-<text x="1096.0" y="766.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Marked present by the crew</text>
-<rect x="1824.7" y="745.0" width="55.3" height="30.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
-<text x="1852.4" y="764.3" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1828.7 1876.0">Undo</text>
-<line x1="296.0" y1="781.0" x2="1880.0" y2="781.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="806.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 486.0">Team Gamma</text>
-<text x="496.0" y="806.0" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="496.0 706.0">Player Nine</text>
-<rect x="716.0" y="790.0" width="76.6" height="22.0" rx="11.0" fill="#1e4244"/>
-<text x="754.3" y="804.0" font-size="12" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="720.0 788.6">In 19:16</text>
-<text x="896.0" y="806.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">Gamma room</text>
-<text x="1096.0" y="806.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">Leader</text>
-<line x1="296.0" y1="821.0" x2="1880.0" y2="821.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="846.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 486.0">Team Delta</text>
-<text x="496.0" y="846.0" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="496.0 706.0">Guest: Player Twelve</text>
-<rect x="716.0" y="830.0" width="120.5" height="22.0" rx="11.0" fill="#2c2348"/>
-<text x="776.2" y="844.0" font-size="12" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="720.0 832.5">Marked by crew</text>
-<text x="896.0" y="846.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="896.0 1086.0">none</text>
-<text x="1096.0" y="846.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1096.0 1526.0">No platform account</text>
-<line x1="296.0" y1="861.0" x2="1880.0" y2="861.0" stroke="#262c4a" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1010" width="1920" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 06: The session desk: the night runs itself; the crew changes things and scores (organiser, crew)</title>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1920" height="1060" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1920" height="1010" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">06 · The session desk: the night runs itself, the crew changes things and scores</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: the crew watches Demo Arena 5v5 from one page; the schedule does the rest, and the desk says what happens next and when. Demo names only.</text>
+<g transform="translate(32,110) scale(0.8)" clip-path="url(#c1)">
+<rect x="0" y="0" width="1920" height="1060" rx="0" fill="#0b0d1a"/>
+<rect x="0" y="0" width="1920" height="56" rx="0" fill="#121528"/>
+<line x1="0" y1="56" x2="1920" y2="56" stroke="#343c66" stroke-width="1"/>
+<rect x="20" y="14" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="62" y="33" font-size="14" fill="#fff" font-weight="700" text-anchor="middle" data-box="27 97">Demo</text>
+<text x="116" y="34" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="116 216">Demo Event</text>
+<text x="240" y="33" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="240 380">Fri 6 – Sun 8 Nov</text>
+<rect x="1800" y="18" width="8" height="8" rx="4" fill="#7cecba"/>
+<text x="1900" y="35" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1810 1900">20:52 UTC</text>
+<rect x="0" y="56" width="200" height="1004" rx="0" fill="#0e1124"/>
+<line x1="200" y1="56" x2="200" y2="1060" stroke="#343c66" stroke-width="1"/>
+<text x="30" y="96" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Run of show</text>
+<text x="30" y="140" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Notifications</text>
+<text x="30" y="184" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Announcements</text>
+<rect x="10" y="206" width="180" height="36" rx="6" fill="#1d2a4d"/>
+<text x="30" y="228" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="30 180">Tournament</text>
+<text x="30" y="272" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Food</text>
+<text x="30" y="316" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Screen studio</text>
+<text x="30" y="360" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Settings</text>
+<text x="30" y="404" font-size="15" fill="#c7cdea" font-weight="400" text-anchor="start" data-box="30 180">Health</text>
+<text x="296" y="114" font-size="24" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296 796">Demo Arena 5v5</text>
+<text x="296" y="138" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 1196">Sat 19:30 – 21:30 · Stage · teams of 5 · 8 of 8 teams · check-in on</text>
+<rect x="1700" y="100" width="135" height="23" rx="11.5" fill="#22263f" stroke="#7cecba" stroke-width="1"/>
+<text x="1709" y="114" font-size="13" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1709 1834">Running · 20:52</text>
+<text x="296" y="184" font-size="15" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="296 338">Desk</text>
+<rect x="296" y="192" width="36" height="3" rx="0" fill="#3ddcff"/>
+<text x="358" y="184" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="358 427">Matches</text>
+<text x="447" y="184" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="447 606">Players and teams</text>
+<text x="626" y="184" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="626 695">Results</text>
+<text x="715" y="184" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="715 784">History</text>
+<line x1="296" y1="200" x2="1888" y2="200" stroke="#2a3050" stroke-width="1"/>
+<text x="296" y="232" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="296 796">THE SCHEDULE RUNS THIS BY ITSELF</text>
+<line x1="310" y1="276" x2="1725.11" y2="276" stroke="#3c446c" stroke-width="2"/>
+<circle cx="310" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="296" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296 462.889">18:30</text>
+<text x="296" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296 456.889">Registration opened</text>
+<circle cx="486.889" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="472.889" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="472.889 639.778">19:00</text>
+<text x="472.889" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="472.889 633.778">Registration closed</text>
+<circle cx="663.778" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="649.778" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="649.778 816.667">19:15</text>
+<text x="649.778" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="649.778 810.667">Check-in opened · voice</text>
+<text x="649.778" y="341" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="649.778 810.667">rooms made</text>
+<circle cx="840.667" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="826.667" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="826.667 993.556">19:25</text>
+<text x="826.667" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="826.667 987.556">Check-in closed ·</text>
+<text x="826.667" y="341" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="826.667 987.556">no-shows marked</text>
+<circle cx="1017.56" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="1003.56" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1003.56 1170.44">19:30</text>
+<text x="1003.56" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1003.56 1164.44">Session started</text>
+<circle cx="1194.44" cy="276" r="8" fill="#7cecba" stroke="#7cecba" stroke-width="2"/>
+<text x="1180.44" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1180.44 1347.33">20:48</text>
+<text x="1180.44" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1180.44 1341.33">Semi-final 1 called</text>
+<circle cx="1371.33" cy="276" r="8" fill="#3ddcff" stroke="#3ddcff" stroke-width="2"/>
+<text x="1357.33" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1357.33 1524.22">21:15</text>
+<text x="1357.33" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1357.33 1518.22">Final called</text>
+<circle cx="1548.22" cy="276" r="8" fill="#22263f" stroke="#a9b1d6" stroke-width="2"/>
+<text x="1534.22" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1534.22 1701.11">21:30</text>
+<text x="1534.22" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1534.22 1695.11">Results step opens</text>
+<circle cx="1725.11" cy="276" r="8" fill="#22263f" stroke="#a9b1d6" stroke-width="2"/>
+<text x="1711.11" y="306" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1711.11 1878">22:30</text>
+<text x="1711.11" y="326" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1711.11 1872">Voice rooms removed</text>
+<rect x="296" y="352" width="1100" height="100" rx="10" fill="#12283a" stroke="#3ddcff" stroke-width="1"/>
+<text x="320" y="388" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="320 920">Nothing to do right now.</text>
+<text x="320" y="416" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="320 1180">Next: the final is called automatically at 21:15 · phones and the hall screen are told at once.</text>
+<text x="320" y="438" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="320 1180">The semi-finals were called automatically at 20:48.</text>
+<rect x="1216" y="396" width="150" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1291" y="417.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1222 1360">Call it now</text>
+<text x="1291" y="446" font-size="11" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1251 1331">override</text>
+<text x="1420" y="370" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1420 1720">CHANGE SOMETHING</text>
+<rect x="1420" y="382" width="160" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1500" y="403.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1426 1574">Reopen registration</text>
+<rect x="1590" y="382" width="130" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1655" y="403.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1596 1714">Delay by…</text>
+<rect x="1730" y="382" width="150" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1805" y="403.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1736 1874">End early</text>
+<rect x="1420" y="424" width="160" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1500" y="445.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1426 1574">Pause the session</text>
+<rect x="1590" y="424" width="130" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1655" y="445.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1596 1714">Announce…</text>
+<text x="296" y="498" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="296 376">40</text>
+<text x="366" y="496" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="366 556">registered · 8 teams</text>
+<text x="566" y="498" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="566 646">38</text>
+<text x="636" y="496" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="636 826">checked in</text>
+<text x="836" y="498" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="836 916">2</text>
+<text x="906" y="496" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="906 1096">no-shows</text>
+<text x="1106" y="498" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1106 1186">0</text>
+<text x="1176" y="496" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1176 1366">places left (full)</text>
+<text x="296" y="556" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="296 1196">MATCHES · IN TIME ORDER · QUARTER-FINALS DONE · SEMI-FINALS NOW</text>
+<rect x="296" y="568" width="1592" height="40" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="310" y="594" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="310 370">19:35</text>
+<text x="406" y="594" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="406 566">Quarter-final 1</text>
+<text x="606" y="594" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="606 796">Team Alpha</text>
+<text x="836" y="594" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="796 876">2 – 0</text>
+<text x="896" y="594" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="896 1086">Team Eta</text>
+<text x="1306" y="594" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1306 1606">Done</text>
+<rect x="296" y="614" width="1592" height="40" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="310" y="640" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="310 370">20:00</text>
+<text x="406" y="640" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="406 566">Quarter-final 2</text>
+<text x="606" y="640" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="606 796">Team Gamma</text>
+<text x="836" y="640" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="796 876">2 – 1</text>
+<text x="896" y="640" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="896 1086">Team Zeta</text>
+<text x="1306" y="640" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1306 1606">Done</text>
+<rect x="296" y="660" width="1592" height="40" rx="10" fill="#161a2e" stroke="#7cecba" stroke-width="1"/>
+<text x="310" y="686" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="310 370">20:30</text>
+<text x="406" y="686" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="406 566">Semi-final 2</text>
+<text x="606" y="686" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="606 796">Team Beta</text>
+<text x="836" y="686" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="796 876">1 – 0</text>
+<text x="896" y="686" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="896 1086">Team Delta</text>
+<text x="1306" y="686" font-size="13" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1306 1606">Live · game 2</text>
+<rect x="1716" y="665" width="150" height="30" rx="8" fill="#3b82f6"/>
+<text x="1791" y="684.2" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1722 1860">Enter result</text>
+<rect x="296" y="706" width="1592" height="40" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
+<text x="310" y="732" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="310 370">20:50</text>
+<text x="406" y="732" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="406 566">Semi-final 1</text>
+<text x="606" y="732" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="606 796">Team Alpha</text>
+<text x="836" y="732" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="796 876">vs</text>
+<text x="896" y="732" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="896 1086">Team Gamma</text>
+<text x="1306" y="732" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1306 1606">Called 20:48</text>
+<rect x="296" y="752" width="1592" height="40" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="310" y="778" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="310 370">21:15</text>
+<text x="406" y="778" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="406 566">Final</text>
+<text x="606" y="778" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="606 796">Winner of semi 1</text>
+<text x="836" y="778" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="796 876">vs</text>
+<text x="896" y="778" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="896 1086">Winner of semi 2</text>
+<text x="1306" y="778" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1306 1606">Called automatically at 21:15</text>
+<text x="296" y="826" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="296 596">PLAYERS · 2 NEED YOU</text>
+<text x="296" y="852" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="296 446">TEAM</text>
+<text x="476" y="852" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="476 626">PLAYER</text>
+<text x="696" y="852" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="696 846">CHECK-IN</text>
+<text x="856" y="852" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="856 1006">VOICE</text>
+<text x="1036" y="852" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1036 1186">NOTE</text>
+<line x1="296" y1="894" x2="1888" y2="894" stroke="#2a3050" stroke-width="1"/>
+<text x="296" y="884" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 456">Team Alpha</text>
+<text x="476" y="884" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="476 676">Player Four</text>
+<text x="696" y="884" font-size="13" fill="#ffcf6e" font-weight="600" text-anchor="start" data-box="696 846">Not in</text>
+<text x="856" y="884" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="856 1016">none</text>
+<text x="1036" y="884" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1036 1436">Asked at the stage 20:47</text>
+<rect x="1736" y="866" width="130" height="26" rx="8" fill="#3b82f6"/>
+<text x="1801" y="883.2" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="1742 1860">Mark present</text>
+<line x1="296" y1="928" x2="1888" y2="928" stroke="#2a3050" stroke-width="1"/>
+<text x="296" y="918" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 456">Team Epsilon</text>
+<text x="476" y="918" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="476 676">Player Eleven</text>
+<text x="696" y="918" font-size="13" fill="#7cecba" font-weight="600" text-anchor="start" data-box="696 846">In 19:25</text>
+<text x="856" y="918" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="856 1016">Alpha room</text>
+<text x="1036" y="918" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1036 1436">Marked present by the crew</text>
+<rect x="1736" y="900" width="130" height="26" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1801" y="917.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1742 1860">Undo</text>
+<line x1="296" y1="962" x2="1888" y2="962" stroke="#2a3050" stroke-width="1"/>
+<text x="296" y="952" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296 456">Team Delta</text>
+<text x="476" y="952" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="476 676">Guest: Player Twelve</text>
+<text x="696" y="952" font-size="13" fill="#7cecba" font-weight="600" text-anchor="start" data-box="696 846">Marked by crew</text>
+<text x="856" y="952" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="856 1016">none</text>
+<text x="1036" y="952" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1036 1436">No platform account</text>
 </g>
-</g></g>
-<circle cx="1593.0" cy="135.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="140.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
-<text x="1614.0" y="140.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">The timeline is the scheduler&#x27;s:</text>
-<text x="1614.0" y="161.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">the same times reach phones,</text>
-<text x="1614.0" y="182.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">screens and the bot (O1).</text>
-<circle cx="1593.0" cy="216.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="221.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
-<text x="1614.0" y="221.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">One band of crew actions; the</text>
-<text x="1614.0" y="242.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">first is what to do next, so a</text>
-<text x="1614.0" y="263.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">tired crew taps one button (L2).</text>
-<circle cx="1593.0" cy="297.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="302.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
-<text x="1614.0" y="302.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Counts are live by push and carry</text>
-<text x="1614.0" y="323.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">the session&#x27;s revision (D10).</text>
-<circle cx="1593.0" cy="357.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="362.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1614.0" y="362.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Matches are a list in time</text>
-<text x="1614.0" y="383.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">order, as the run of show: the</text>
-<text x="1614.0" y="404.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">called and live ones are framed (L2).</text>
-<circle cx="1593.0" cy="438.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="443.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
-<text x="1614.0" y="443.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Players stay a table: compared</text>
-<text x="1614.0" y="464.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">column by column (amendment 3).</text>
-<circle cx="1593.0" cy="498.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="503.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
-<text x="1614.0" y="503.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Guests without an account are</text>
-<text x="1614.0" y="524.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">marked present by the crew;</text>
-<text x="1614.0" y="545.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">they never scan a QR (U12).</text>
-<circle cx="1593.0" cy="579.0" r="13" fill="#f59e0b"/>
-<text x="1593.0" y="584.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">7</text>
-<text x="1614.0" y="584.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">Every crew action is audited</text>
-<text x="1614.0" y="605.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1614.0 1910.0">and shown under History (D7).</text>
+<circle cx="1603" cy="145" r="10" fill="#111827"/>
+<text x="1603" y="150" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">1</text>
+<text x="1623" y="150" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">The schedule, not a person, opens</text>
+<text x="1623" y="169" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">and closes registration, runs</text>
+<text x="1623" y="188" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">check-in, makes the voice rooms and</text>
+<text x="1623" y="207" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">calls the matches. The same times</text>
+<text x="1623" y="226" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">reach phones, screens and the bot.</text>
+<circle cx="1603" cy="254" r="10" fill="#111827"/>
+<text x="1603" y="259" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
+<text x="1623" y="259" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">The desk says what comes next and</text>
+<text x="1623" y="278" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">when, with an override (&quot;Call it</text>
+<text x="1623" y="297" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">now&quot;) for the rare day.</text>
+<circle cx="1603" cy="325" r="10" fill="#111827"/>
+<text x="1603" y="330" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>
+<text x="1623" y="330" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">The crew changes things (reopen,</text>
+<text x="1623" y="349" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">delay, rename a team, an exception)</text>
+<text x="1623" y="368" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">and scores.</text>
+<circle cx="1603" cy="396" r="10" fill="#111827"/>
+<text x="1603" y="401" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">4</text>
+<text x="1623" y="401" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">Matches are a list in time order.</text>
+<text x="1623" y="420" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">Players stay a table; guests without</text>
+<text x="1623" y="439" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">an account are marked present by the</text>
+<text x="1623" y="458" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">crew.</text>
+<circle cx="1603" cy="486" r="10" fill="#111827"/>
+<text x="1603" y="491" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">5</text>
+<text x="1623" y="491" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">Every crew action is audited and</text>
+<text x="1623" y="510" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="1623 1908">shown under History.</text>
 </svg>
