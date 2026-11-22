@@ -1,7 +1,7 @@
 /*
  * The rails in the Pulse's built-in look (#375, sheet 9 of docs/design): the run of show, the
- * venue card and the QRs. On screen.css's frame and unit, in `canccu-base` like widgets.css, so a
- * theme restyles any of it without `!important`.
+ * venue card and the QRs (the food box: food.css). On screen.css's frame and unit, in
+ * `canccu-base` like widgets.css, so a theme restyles any of it without `!important`.
  */
 @layer canccu-base {
   /*
@@ -17,27 +17,6 @@
   .canccu-widget--agenda_now .canccu-widget__body,
   .canccu-widget--venue_info .canccu-widget__body {
     color: var(--canccu-color-text);
-  }
-
-  /*
-   * The food box (mockup 14 of step 5, #643): a row per order, its pizzeria on one line (an
-   * ellipsis ends a long name) and its state under it, most urgent first as the server orders them.
-   */
-  .canccu-widget--food_status .canccu-widget__row {
-    /* canccu-grid: fixed screen — the player's or a layout's own grid: one order */
-    grid-template-columns: minmax(0, 1fr);
-    margin: 0;
-  }
-
-  .canccu-widget--food_status .canccu-widget__row + .canccu-widget__row {
-    padding-top: calc(1.5 * var(--canccu-u));
-  }
-
-  .canccu-widget--food_status .canccu-widget__name {
-    overflow: hidden;
-    color: var(--canccu-color-text);
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .canccu-widget--agenda_now .canccu-widget__row {

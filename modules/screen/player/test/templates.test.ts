@@ -94,9 +94,10 @@ describe("the player's default templates", () => {
     expect(password?.classList.contains("canccu-widget__meta")).toBe(true);
   });
 
-  // contracts/screen.md, Widgets: the food box lists every order (#643, D2); a claim's content (the
-  // pizza rule's one order, without `orders`) draws as before.
-  it("lists each order in the food box, and draws one order's claim as it always did", () => {
+  // contracts/screen.md, Widgets: the food box lists every order (#643, D2) and leads with the
+  // first order's time, large (#771); Moments' content without `orders` (Screen has not the order)
+  // draws the pizzeria alone, never the API's state name.
+  it("lists each order in the food box after its lead, and never shows a raw state", () => {
     const orders = [
       { pizzeria_name: "Demo Pizzeria", status_text: "Open · closes 18:30 · 9 pizzas" },
       { pizzeria_name: "Demo Trattoria", status_text: "On the way · about 19:31" },
@@ -105,22 +106,36 @@ describe("the player's default templates", () => {
       title: "Food",
       state: "open",
       pizzeria_name: "Demo Pizzeria",
+      big_label: "Open · closes",
+      big_text: "18:30",
       orders,
     });
     expect(box.querySelector(".canccu-widget__kicker")?.textContent).toBe("Food");
+    const lead = box.querySelector(".canccu-widget__lead");
+    expect(lead?.querySelector(".canccu-widget__label")?.textContent).toBe("Open · closes");
+    expect(lead?.querySelector(".canccu-widget__big")?.textContent).toBe("18:30");
+    // The look hides the first row's status after a lead, which says it (rail.css).
+    expect(lead?.nextElementSibling?.className).toBe("canccu-widget__row");
     const rows = [...box.querySelectorAll(".canccu-widget__row")].map((r) => r.textContent);
     expect(rows).toEqual([
       "Demo PizzeriaOpen · closes 18:30 · 9 pizzas",
       "Demo TrattoriaOn the way · about 19:31",
     ]);
-    expect(box.querySelector(".canccu-widget__big")).toBeNull();
+    const quiet = draw(DEFAULT_TEMPLATES.food_status ?? [], {
+      title: "Food",
+      big_label: null,
+      big_text: null,
+      orders,
+    });
+    expect(quiet.querySelector(".canccu-widget__lead")).toBeNull();
     const claim = draw(DEFAULT_TEMPLATES.food_status ?? [], {
       state: "placed",
       pizzeria_name: "Demo Pizzeria",
       target_at: "2026-01-01T18:30:00Z",
     });
     expect(claim.querySelector(".canccu-widget__title")?.textContent).toBe("Demo Pizzeria");
-    expect(claim.querySelector(".canccu-widget__big")?.textContent).toBe("placed");
+    expect(claim.textContent).not.toContain("placed");
+    expect(claim.querySelector("time")).toBeNull();
     expect(claim.querySelectorAll(".canccu-widget__row")).toHaveLength(0);
     expect(claim.querySelector(".canccu-widget__kicker")).toBeNull();
   });

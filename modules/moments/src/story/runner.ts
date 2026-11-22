@@ -75,7 +75,10 @@ function untilReached(story: Story, run: RunRow, items: RunItem[] | null, at: nu
   return when !== null && Date.parse(when) <= at;
 }
 
-/** Ends the run; `planned` ends play the finale first when the story has one (fix 3). */
+/**
+ * Ends the run; `planned` ends play the finale first when the story has one (fix 3), and
+ * `source_ended` (its source went past its end, #771) cuts a finale on air.
+ */
 export async function endRun(
   ctx: Ctx,
   run: RunRow,
@@ -84,7 +87,11 @@ export async function endRun(
   reason: string,
 ): Promise<void> {
   if (run.round !== null)
-    await endRound(ctx, run, reason === "planned" ? "source_ended" : "cleared");
+    await endRound(
+      ctx,
+      run,
+      reason === "planned" || reason === "source_ended" ? "source_ended" : "cleared",
+    );
   run.status = "ended";
   run.ended_at = ctx.now;
   run.end_reason = reason;

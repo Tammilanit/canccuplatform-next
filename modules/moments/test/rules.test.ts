@@ -206,7 +206,9 @@ run("the built-in rules", () => {
     });
   });
 
-  it("puts pizza in the rail, updates it when it arrives, and ends it when cancelled", async () => {
+  // #771: in the venue rail the call-in holds the food box in its own place, so the hall reads the
+  // order's state in one box; a layout without a venue rail has it on the ticker.
+  it("puts pizza in the venue rail, updates it when it arrives, and ends it when cancelled", async () => {
     await presetsOff(["pizza_arrived"]);
     await deliver(FIXTURES.placed());
     await deliver(FIXTURES.arrived());
@@ -214,7 +216,7 @@ run("the built-in rules", () => {
     expect(started).toMatchObject({
       template: "pizza_placed",
       rank: 80,
-      regions: ["rail", "ticker"],
+      regions: ["venue_rail", "ticker"],
     });
     expect(changed).toMatchObject({
       type: "moments.override.changed",

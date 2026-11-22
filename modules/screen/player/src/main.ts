@@ -8,6 +8,7 @@ import "./player.css";
 import "./screen.css";
 import "./widgets.css";
 import "./rail.css";
+import "./food.css";
 import "./claims.css";
 import "./cues.css";
 import "./layouts.css";

@@ -124,6 +124,20 @@ function shown(o: FoodOrder, nowMs: number): boolean {
 }
 
 /**
+ * The first order's time to show large (the screen-energy rule, docs/design amendment 1; #771),
+ * with the words of its status line before it, or null when its state has no time to lead with.
+ */
+function leadOf(
+  x: FoodOrder | undefined,
+  time: (iso: string | null) => string | null,
+): { label: string; text: string } | null {
+  const at = x?.state === "open" ? x.closes_at : x?.state === "placed" ? x.estimate_at : null;
+  const text = time(at ?? null);
+  if (text === null) return null;
+  return { label: x?.state === "open" ? "Open · closes" : "On the way · about", text };
+}
+
+/**
  * The `food_status` view-model: the first order's fields at the top, as one order's templates
  * read them, and every order in `orders` (D2); null when nothing is open or on the way.
  */
@@ -135,6 +149,8 @@ export function foodFields(
   if (list.length === 0) return null;
   const row = (x: FoodOrder) => {
     const holder = o.names ? x.holder_name : null;
+    // The holder's place note first, as the attendee's page and the notice say it (#771).
+    const place = x.pickup?.trim() ? `collect at ${x.pickup.trim()}` : null;
     const status =
       x.state === "open"
         ? `Open · closes ${o.time(x.closes_at) ?? ""} · ${x.pizza_count} pizzas`
@@ -144,9 +160,11 @@ export function foodFields(
             ? x.estimate_at === null
               ? "On the way"
               : `On the way · about ${o.time(x.estimate_at) ?? ""}`
-            : holder === null
-              ? "Pizza is here"
-              : `Pizza is here · collect from ${holder}`;
+            : place !== null
+              ? `Pizza is here · ${place}`
+              : holder === null
+                ? "Pizza is here"
+                : `Pizza is here · collect from ${holder}`;
     return {
       state: x.state,
       seq: x.seq,
@@ -163,8 +181,11 @@ export function foodFields(
   };
   const rows = list.map(row);
   const [first] = rows;
+  const lead = leadOf(list[0], o.time);
   return {
     title: "Food",
+    big_label: lead?.label ?? null,
+    big_text: lead?.text ?? null,
     state: first?.state,
     seq: first?.seq,
     pizzeria_name: first?.pizzeria_name,
