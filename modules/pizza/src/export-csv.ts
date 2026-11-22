@@ -74,12 +74,14 @@ export function buildExport(
       euros(o.total_cents),
       o.settle_to,
     ];
-    const people = [...money.people].sort((a, b) => byName(a.name, b.name));
+    // A forgotten person's name is gone; their pseudonym is their nick, which the export requires.
+    const nick = (p: { user_id: string | null; name: string | null }) => p.name ?? p.user_id ?? "";
+    const people = [...money.people].sort((a, b) => byName(nick(a), nick(b)));
     for (const p of people) {
       lines.push(
         csvLine([
           ...head,
-          p.name ?? "",
+          nick(p),
           discord.get(p.user_id) ?? "",
           String(p.units),
           money.split === "exact" && p.amount_cents !== null ? euros(p.amount_cents) : "",

@@ -95,7 +95,8 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
   it("keeps at most 10 receipts per order (409 too_many_receipts)", async () => {
     await place();
     const photo = await png();
-    for (let i = 0; i < 10; i++) expect((await upload("pena", photo, "image/png")).statusCode).toBe(201);
+    for (let i = 0; i < 10; i++)
+      expect((await upload("pena", photo, "image/png")).statusCode).toBe(201);
     const res = await upload("pena", photo, "image/png");
     expect(res.statusCode).toBe(409);
     expect(errorOf(res).code).toBe("too_many_receipts");

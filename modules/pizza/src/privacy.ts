@@ -6,7 +6,7 @@
  */
 import { randomBytes } from "node:crypto";
 import type { SqlClient } from "@canccu/kit";
-import { emitItem } from "./events.js";
+import { emitItem, emitOrder } from "./events.js";
 import type { Emitter } from "./events.js";
 import { release } from "./lifecycle.js";
 import { UNPLACED } from "./model.js";
@@ -17,8 +17,9 @@ const pseudonym = () => `anon_${randomBytes(9).toString("hex")}`;
 
 /**
  * A person who can no longer collect (E5): their holds on orders not called in are released and
- * their pizzas leave the orders still open; called-in orders keep theirs. `quiet`: for a delete,
- * the events name nobody.
+ * their pizzas leave the orders still open; called-in orders keep theirs. A removal names nobody,
+ * as the contract says for a person who left or deleted their data. `quiet`: for a delete, the
+ * release names nobody either.
  */
 export async function leave(
   c: SqlClient,
@@ -45,14 +46,7 @@ export async function leave(
     const after = (await getOrder(c, o.id)) as OrderRow;
     await logStep(c, o.id, now, null, "items_removed", { count: theirs.length });
     for (const i of theirs) {
-      await emitItem(
-        c,
-        e,
-        "pizza.item.removed",
-        after,
-        quiet ? { ...i, user_id: null, name: null } : i,
-        null,
-      );
+      await emitItem(c, e, "pizza.item.removed", after, { ...i, user_id: null, name: null }, null);
     }
   }
   // No longer told as the crew: a member who left holds no right here.
@@ -67,21 +61,37 @@ export async function forgetUser(
   now: Date,
 ): Promise<void> {
   await leave(c, e, userId, now, true);
+  const anon = pseudonym();
   await c.query(
     `UPDATE pizza_items SET user_id = $2, name = NULL, comment = NULL WHERE user_id = $1`,
-    [userId, pseudonym()],
+    [userId, anon],
   );
+  const named = await ordersWhere(c, `$1 IN (holder_user_id, payer_user_id)`, [userId]);
+  // The payer's name becomes their pseudonym, as their pizzas' person did: the export's
+  // `payer_nick` is required and must still match their own rows.
   await c.query(
     `UPDATE pizza_orders SET
        holder_user_id = CASE WHEN holder_user_id = $1 THEN NULL ELSE holder_user_id END,
        holder_name = CASE WHEN holder_user_id = $1 THEN NULL ELSE holder_name END,
        payer_user_id = CASE WHEN payer_user_id = $1 THEN NULL ELSE payer_user_id END,
-       payer_name = CASE WHEN payer_user_id = $1 THEN NULL ELSE payer_name END,
+       payer_name = CASE WHEN payer_user_id = $1 THEN $2 ELSE payer_name END,
        opened_by_user_id = NULLIF(opened_by_user_id, $1),
-       cancelled_by_user_id = NULLIF(cancelled_by_user_id, $1)
+       cancelled_by_user_id = NULLIF(cancelled_by_user_id, $1),
+       revision = revision + CASE WHEN $1 IN (holder_user_id, payer_user_id) THEN 1 ELSE 0 END
      WHERE $1 IN (holder_user_id, payer_user_id, opened_by_user_id, cancelled_by_user_id)`,
-    [userId],
+    [userId, anon],
   );
+  // Screen keeps the holder's name until a newer revision of the order comes (pizza.md, Events).
+  for (const o of named) {
+    const changed = [
+      ...(o.holder_user_id === userId ? ["holder"] : []),
+      ...(o.payer_user_id === userId ? ["payer"] : []),
+    ];
+    await emitOrder(c, e, "pizza.order.changed", (await getOrder(c, o.id)) as OrderRow, {
+      changed,
+      actor_user_id: null,
+    });
+  }
   await c.query(`DELETE FROM pizza_pay_details WHERE user_id = $1`, [userId]);
   await c.query(`DELETE FROM pizza_paid WHERE user_id = $1`, [userId]);
   await c.query(
@@ -130,18 +140,22 @@ export async function forgetUser(
 /** The 12-month retention (`personal`): every person at the event, anonymised; totals stay. */
 export async function anonymiseAll(c: SqlClient): Promise<void> {
   const { rows } = await c.query(
-    `SELECT DISTINCT user_id FROM pizza_items WHERE user_id IS NOT NULL AND user_id NOT LIKE 'anon\\_%'`,
+    `SELECT user_id FROM pizza_items WHERE user_id NOT LIKE 'anon\\_%'
+     UNION SELECT payer_user_id FROM pizza_orders WHERE payer_user_id IS NOT NULL`,
     [],
   );
   for (const r of rows as { user_id: string }[]) {
-    await c.query(`UPDATE pizza_items SET user_id = $2 WHERE user_id = $1`, [
+    const anon = pseudonym();
+    await c.query(`UPDATE pizza_items SET user_id = $2 WHERE user_id = $1`, [r.user_id, anon]);
+    // The export's payer_nick stays a pseudonym that matches the payer's own rows, as in forgetUser.
+    await c.query(`UPDATE pizza_orders SET payer_name = $2 WHERE payer_user_id = $1`, [
       r.user_id,
-      pseudonym(),
+      anon,
     ]);
   }
   await c.query(`UPDATE pizza_items SET name = NULL, comment = NULL`, []);
   await c.query(
-    `UPDATE pizza_orders SET holder_user_id = NULL, holder_name = NULL, payer_user_id = NULL, payer_name = NULL,
+    `UPDATE pizza_orders SET holder_user_id = NULL, holder_name = NULL, payer_user_id = NULL,
        opened_by_user_id = NULL, cancelled_by_user_id = NULL`,
     [],
   );

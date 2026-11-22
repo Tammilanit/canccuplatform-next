@@ -31,7 +31,7 @@ describe.skipIf(!DATABASE_URL)("an archived event", () => {
     ["pena", "PUT", "/api/pizza/me/pay-details", { mobilepay: "040 000 0000", iban: null }],
     ["integrator", "PUT", "/api/pizza/reader/key", { api_key: "sk-ant-demo-0000000000000000wxyz" }],
   ])("answers %s's %s %s with 409 event_archived", async (who, method, url, body) => {
-    const r = await w.call(who, method as "POST" | "PUT", url, body, { host });
+    const r = await w.call(who, method, url, body, { host });
     expect(r.statusCode).toBe(409);
     expect(errorOf(r).code).toBe("event_archived");
   });

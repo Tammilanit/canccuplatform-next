@@ -19,7 +19,7 @@ import type { OrderRow } from "./store.js";
 import { moneyView } from "./money-view.js";
 import { amountChanged, payToChanged } from "./notices.js";
 import { getReceipt } from "./receipts.js";
-import { InvalidBody, bad, parsePrice, parseTotal } from "./validate.js";
+import { InvalidBody, bad, parseTotal, requiredPrice } from "./validate.js";
 
 type Params = { id: string };
 type Changes = Record<string, { old: unknown; new: unknown }>;
@@ -160,7 +160,7 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
           const item = items.find((i) => i.id === e.item_id);
           if (item === undefined)
             throw new InvalidBody("prices", "every item_id must be a pizza of this order");
-          const price = parsePrice(e.price_cents, "price_cents");
+          const price = requiredPrice(e, "price_cents");
           if (price === item.price_cents) continue;
           await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [
             item.id,
@@ -223,7 +223,7 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (item === null) throw notFound("pizza");
       const { order, as } = await forMoney(c, w, item.order_id, "money.edit");
       const before = { order, as, amounts: await amountsOf(c, order) };
-      const price = parsePrice(body(request).price_cents, "price_cents");
+      const price = requiredPrice(body(request), "price_cents");
       const changes: Changes = {};
       if (price !== item.price_cents) {
         await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [

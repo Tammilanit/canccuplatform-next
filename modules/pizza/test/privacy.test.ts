@@ -147,9 +147,7 @@ describe.skipIf(!DATABASE_URL)("the privacy export and delete", () => {
       type: "pizza.order.changed",
       data: { changed: ["holder", "payer"], actor_user_id: null, order: { holder: null } },
     });
-    expect((changed.data.order as { revision: number }).revision).toBeGreaterThan(
-      before.revision,
-    );
+    expect((changed.data.order as { revision: number }).revision).toBeGreaterThan(before.revision);
     expect(JSON.stringify(changed)).not.toMatch(/Pena|u_pena/);
   });
   it("writes a pseudonym in the export for each person forgotten, never an empty nick", async () => {

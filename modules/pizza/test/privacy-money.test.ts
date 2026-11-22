@@ -69,9 +69,12 @@ beforeEach(async () => {
 });
 
 const count = async (table: string, where = "true", values: unknown[] = []) =>
-  ((await pool.query(`SELECT count(*)::int AS n FROM ${table} WHERE ${where}`, values)).rows[0] as {
-    n: number;
-  }).n;
+  (
+    (await pool.query(`SELECT count(*)::int AS n FROM ${table} WHERE ${where}`, values))
+      .rows[0] as {
+      n: number;
+    }
+  ).n;
 const receiptFile = () => join(w.filesRoot, "demo", "pizza", "receipts", `${receipt}.png`);
 const event = (type: string, data: Record<string, unknown>, tenant?: string): Event => ({
   id: `e_${type}_${Math.random()}`,
