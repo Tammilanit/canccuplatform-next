@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1110" width="2240" height="1110" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 05: Where settings live</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="1680" y="214" width="520" height="644" rx="12"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1110" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">05 · Where settings live</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">Today every module’s settings sit on one admin page. They move to a Settings tab on each module’s own page; admin keeps only the event basics.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: an organiser who wants to change how Food works opens Food, not admin; whoever changes the event’s dates opens Event basics</text>
+<text x="40" y="160" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="40 640" letter-spacing="1.4">TODAY</text>
+<text x="40" y="190" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="40 680">Admin → Settings: one page, every module</text>
+<rect x="40" y="214" width="620" height="644" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<rect x="60" y="234" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="268" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Screens</text>
+<text x="80" y="296" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">13 settings · playing, motion, slow network, web pages, food box</text>
+<rect x="60" y="338" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="372" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Food</text>
+<text x="80" y="400" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">17 settings · ordering, settling up, the AI reader, times</text>
+<rect x="60" y="442" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="476" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Run of show</text>
+<text x="80" y="504" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">2 settings · reminders</text>
+<rect x="60" y="546" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="580" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Notifications</text>
+<text x="80" y="608" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">5 settings · topics, push limits, check-in codes</text>
+<rect x="60" y="650" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="684" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Games</text>
+<text x="80" y="712" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">4 settings · surges, games members add</text>
+<rect x="60" y="754" width="580" height="88" rx="9" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="80" y="788" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="80 630">Time and language</text>
+<text x="80" y="816" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="80 636">2 settings · time zone, language</text>
+<text x="1000" y="160" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1000 1600" letter-spacing="1.4">AFTER</text>
+<text x="1000" y="190" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="1000 1700">Each module’s own page, a Settings tab</text>
+<rect x="1000" y="234" width="620" height="88" rx="9" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1020" y="268" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Screen studio → Settings</text>
+<text x="1020" y="296" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Zones · Scenes · Cues · Devices · Settings</text>
+<path d="M662,278 C800,278 860,278 992,278" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1000" y="338" width="620" height="88" rx="9" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1020" y="372" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Food → Settings</text>
+<text x="1020" y="400" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Orders · Pizzerias and menus · Record · Settings</text>
+<path d="M662,382 C800,382 860,382 992,382" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1000" y="442" width="620" height="88" rx="9" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1020" y="476" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Run of show → Settings</text>
+<text x="1020" y="504" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Day · Add · Settings</text>
+<path d="M662,486 C800,486 860,486 992,486" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1000" y="546" width="620" height="88" rx="9" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1020" y="580" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Notifications → Settings</text>
+<text x="1020" y="608" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Topics · Sent · Check-in · Settings</text>
+<path d="M662,590 C800,590 860,590 992,590" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1000" y="650" width="620" height="88" rx="9" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1020" y="684" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Games → Settings</text>
+<text x="1020" y="712" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Now playing · Games · Settings</text>
+<path d="M662,694 C800,694 860,694 992,694" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="1000" y="754" width="620" height="88" rx="9" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="1020" y="788" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="1020 1610">Admin → Event basics</text>
+<text x="1020" y="816" font-size="14.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1020 1610">Name, dates, time zone, language, venue, look, access</text>
+<path d="M662,798 C800,798 860,798 992,798" stroke="#374151" fill="none" stroke-width="2" marker-end="url(#ah)"/>
+<text x="810" y="840" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="660 960">only the page moves</text>
+<rect x="40" y="898" width="1580" height="150" rx="12" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="64" y="934" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="64 640">What does not move</text>
+<text x="64" y="974" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="64 834">• The values: still kept by admin, per event, with the same version check.</text>
+<text x="854" y="974" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="854 1624">• Who may change them: organisers, as today. A crew lead’s own right is a later choice.</text>
+<text x="64" y="1008" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="64 834">• Profiles: saving and loading an event carries every module’s settings as before.</text>
+<text x="854" y="1008" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="854 1624">• Old bookmarks: the old settings address of a module opens its new tab.</text>
+<text x="1680" y="160" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1680 2200" letter-spacing="1.4">THE TAB IN PLACE</text>
+<text x="1680" y="190" font-size="22" fill="#111827" font-weight="700" text-anchor="start" data-box="1680 2200">Food’s crew page</text>
+<g clip-path="url(#c1)">
+<rect x="1680" y="214" width="520" height="644" rx="0" fill="#0b0d1a"/>
+<rect x="1680" y="214" width="520" height="48" rx="0" fill="#121528"/>
+<text x="1700" y="244" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1700 1880">Food</text>
+<text x="1700" y="298" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1700 1762.98">Orders</text>
+<text x="1770.98" y="298" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1770.98 1935.75">Pizzerias and menus</text>
+<text x="1943.75" y="298" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1943.75 2006.73">Record</text>
+<text x="2014.73" y="298" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="2014.73 2093.37">Settings</text>
+<rect x="2014.73" y="308" width="62.64" height="3" rx="1.5" fill="#3b82f6"/>
+<line x1="1680" y1="312" x2="2200" y2="312" stroke="#343c66" stroke-width="1"/>
+<text x="1700" y="344" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1700 2200">Ordering</text>
+<text x="1700" y="364" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1700 2200">When and how people order</text>
+<text x="1700" y="394" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1700 2130">People can order food</text>
+<rect x="2136" y="378" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="2168" cy="390" r="9" fill="#ffffff"/>
+<text x="1700" y="414" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1700 2130">Off closes the Food page to new orders.</text>
+<text x="1700" y="450" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1700 2200">Who may start an order</text>
+<rect x="1700" y="462" width="71.24" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="1735.62" y="478.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1700 1771.24">Anyone</text>
+<rect x="1779.24" y="462" width="93.86" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1826.17" y="478.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1779.24 1873.1">Only crew</text>
+<text x="1700" y="520" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1700 2200">Orders open at once</text>
+<rect x="1700" y="532" width="170" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<rect x="1700" y="532" width="36" height="36" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<rect x="1834" y="532" width="36" height="36" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1718" y="556" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1700 1736">−</text>
+<text x="1852" y="556" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1834 1870">+</text>
+<text x="1785" y="555" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1736 1834">2 orders</text>
+<text x="1880" y="555" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1880 2200">1 to 20 · default 1</text>
+<text x="1700" y="596" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1700 2200">Last call before the close</text>
+<rect x="1700" y="608" width="63.7" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1731.85" y="624.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1700 1763.7">5 min</text>
+<rect x="1771.7" y="608" width="71.24" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="1807.32" y="624.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1771.7 1842.94">10 min</text>
+<rect x="1850.94" y="608" width="71.24" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1886.56" y="624.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1850.94 1922.18">15 min</text>
+<rect x="1930.18" y="608" width="63.7" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1962.03" y="624.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1930.18 1993.88">Other</text>
+<rect x="1680" y="794" width="520" height="64" rx="0" fill="#121528"/>
+<rect x="2050" y="808" width="124.72" height="32" rx="8" fill="#3b82f6"/>
+<text x="2112.36" y="828.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="2050 2174.72">Save changes</text>
+</g>
+<text x="1940" y="880" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1680 2200">Inside Food, beside its orders and menus (sheet 06 draws it all)</text>
+</svg>

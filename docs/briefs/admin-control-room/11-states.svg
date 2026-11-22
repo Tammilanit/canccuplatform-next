@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1130" width="2240" height="1130" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 11: States</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="520" height="400" rx="12"/></clipPath><clipPath id="c2"><rect x="584" y="150" width="520" height="400" rx="12"/></clipPath><clipPath id="c3"><rect x="1136" y="150" width="520" height="400" rx="12"/></clipPath><clipPath id="c4"><rect x="1688" y="150" width="520" height="400" rx="12"/></clipPath><clipPath id="c5"><rect x="32" y="630" width="520" height="400" rx="12"/></clipPath><clipPath id="c6"><rect x="584" y="630" width="520" height="400" rx="12"/></clipPath><clipPath id="c7"><rect x="1136" y="630" width="520" height="400" rx="12"/></clipPath><clipPath id="c8"><rect x="1688" y="630" width="520" height="400" rx="12"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1130" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">11 · States</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">Eight edge states at card size: empty, off, down, nothing to do, a clash, a refusal, loading and no role.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: whatever goes wrong or is not there yet, the page says what it means and what to do next</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="60" y="200" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="60 552">Control center</text>
+<rect x="60" y="226" width="464" height="270" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1" stroke-dasharray="6 4"/>
+<rect x="264" y="260" width="56" height="56" rx="14" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="292" y="354" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="60 524">Nothing on the run of show yet</text>
+<text x="292" y="380" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="60 524">Add the doors, meals and the tournament; the rest follows.</text>
+<rect x="182" y="404" width="220" height="32" rx="8" fill="#3b82f6"/>
+<text x="292" y="424.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="182 402">Set up the run of show</text>
+<text x="292" y="472" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="60 524">Or start from the demo event</text>
+</g>
+<text x="292" y="580" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 552">1 · A new event: the empty state teaches (E6)</text>
+<g clip-path="url(#c2)">
+<rect x="584" y="150" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="612" y="200" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="612 1104">Food</text>
+<rect x="612" y="226" width="464" height="270" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="844" y="310" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="612 1076">Food is off for this event</text>
+<text x="844" y="340" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="612 1076">Its orders, menus and settings are kept.</text>
+<text x="844" y="360" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="612 1076">Attendees see that food is not served here.</text>
+<rect x="754" y="390" width="180" height="32" rx="8" fill="#3b82f6"/>
+<text x="844" y="410.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="754 934">Switch Food on</text>
+<text x="844" y="462" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="612 1076">Modules →</text>
+</g>
+<text x="844" y="580" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="584 1104">2 · A part switched off, opened by an organiser (U4)</text>
+<g clip-path="url(#c3)">
+<rect x="1136" y="150" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="1164" y="200" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1164 1656">The event</text>
+<rect x="1164" y="222" width="226" height="116" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1178" y="248" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1164 1364">Screens</text>
+<circle cx="1372" cy="243" r="5" fill="#f87171"/>
+<text x="1178" y="286" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1164 1384">7 of 8</text>
+<text x="1178" y="318" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1164 1384">online · 1 offline</text>
+<rect x="1402" y="222" width="226" height="116" rx="10" fill="#161a2e" stroke="#8a6d2a" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="1416" y="248" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1402 1602">Food</text>
+<text x="1416" y="286" font-size="22" fill="#ffd36d" font-weight="700" text-anchor="start" data-box="1402 1622">No answer</text>
+<text x="1416" y="318" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1402 1622">last answer 18:09</text>
+<rect x="1164" y="352" width="226" height="116" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1178" y="378" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1164 1364">Tournament</text>
+<circle cx="1372" cy="373" r="5" fill="#3ee39a"/>
+<text x="1178" y="416" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1164 1384">Round 3</text>
+<text x="1178" y="448" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1164 1384">of 4 · 24 playing</text>
+<rect x="1402" y="352" width="226" height="116" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1416" y="378" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="1402 1602">People</text>
+<circle cx="1610" cy="373" r="5" fill="#3ee39a"/>
+<text x="1416" y="416" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1402 1622">84 here</text>
+<text x="1416" y="448" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1402 1622">9 crew on duty</text>
+<text x="1164" y="512" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1164 1656">The rest of the page keeps working.</text>
+</g>
+<text x="1396" y="580" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="1136 1656">3 · A part that does not answer (E2)</text>
+<g clip-path="url(#c4)">
+<rect x="1688" y="150" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="1716" y="200" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1716 2208">Crew desk</text>
+<rect x="1716" y="226" width="464" height="140" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1736" y="270" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1736 2168">Nothing needs you today</text>
+<text x="1736" y="296" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1736 2168">None of today’s items is one of your parts.</text>
+<text x="1736" y="318" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1736 2168">The whole day is below, to follow along.</text>
+<text x="1716" y="404" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1716 2208">Next for Food crew</text>
+<rect x="1716" y="416" width="464" height="70" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1732" y="446" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1732 2168">Sun 10:00  Breakfast</text>
+<text x="1732" y="468" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1732 2168">Food table</text>
+</g>
+<text x="1948" y="580" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="1688 2208">4 · A crew member with nothing of theirs today (U2)</text>
+<g clip-path="url(#c5)">
+<rect x="32" y="630" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="60" y="680" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="60 552">Food · Settings</text>
+<rect x="60" y="706" width="464" height="270" rx="12" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<text x="80" y="746" font-size="16" fill="#ffd36d" font-weight="700" text-anchor="start" data-box="80 512">Jonas saved Food’s settings at 18:10</text>
+<text x="80" y="770" font-size="13.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="80 512">while you were editing them.</text>
+<text x="80" y="810" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="80 512">Theirs: Orders open at once 1 → 2</text>
+<text x="80" y="834" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="80 512">Yours: Last call 10 min → 15 min</text>
+<text x="80" y="858" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="80 512">The two do not touch the same field.</text>
+<rect x="80" y="888" width="173.08" height="32" rx="8" fill="#3b82f6"/>
+<text x="166.54" y="908.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="80 253.08">Keep both and save</text>
+<rect x="263.08" y="888" width="213.38" height="32" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="369.77" y="908.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="263.08 476.46">Start again from theirs</text>
+</g>
+<text x="292" y="1060" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 552">5 · Two organisers changed the same settings (E3)</text>
+<g clip-path="url(#c6)">
+<rect x="584" y="630" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="612" y="680" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="612 1104">Food · Settings</text>
+<rect x="612" y="706" width="464" height="210" rx="12" fill="#161a2e" stroke="#a8464f" stroke-width="1"/>
+<text x="632" y="742" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="632 1064">Orders open at once</text>
+<rect x="632" y="758" width="180" height="36" rx="7" fill="#0b0d1a" stroke="#616788" stroke-width="1"/>
+<rect x="632" y="758" width="36" height="36" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<rect x="776" y="758" width="36" height="36" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="650" y="782" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="632 668">−</text>
+<text x="794" y="782" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="776 812">+</text>
+<text x="722" y="781" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="668 776">1 order</text>
+<text x="632" y="826" font-size="13.5" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="632 1064">2 orders are open now, so Food keeps 2</text>
+<text x="632" y="846" font-size="13.5" fill="#ffb4bd" font-weight="400" text-anchor="start" data-box="632 1064">until one of them closes.</text>
+<rect x="632" y="866" width="132.78" height="32" rx="8" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="698.39" y="886.68" font-size="13" fill="#ffb4bd" font-weight="600" text-anchor="middle" data-box="632 764.78">Use 2 for now</text>
+<text x="612" y="960" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="612 1104">Nothing was saved; the other changes wait.</text>
+</g>
+<text x="844" y="1060" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="584 1104">6 · A value the part refuses, said next to the field</text>
+<g clip-path="url(#c7)">
+<rect x="1136" y="630" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<text x="1164" y="680" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1164 1656">Control center</text>
+<rect x="1164" y="706" width="464" height="70" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1184" y="728" width="200" height="12" rx="6" fill="#1f2440"/>
+<rect x="1184" y="750" width="300" height="10" rx="5" fill="#1f2440"/>
+<rect x="1164" y="794" width="226" height="92" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1178" y="812" width="80" height="10" rx="5" fill="#1f2440"/>
+<rect x="1178" y="836" width="120" height="18" rx="6" fill="#1f2440"/>
+<rect x="1178" y="864" width="150" height="8" rx="4" fill="#1f2440"/>
+<rect x="1402" y="794" width="226" height="92" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1416" y="812" width="80" height="10" rx="5" fill="#1f2440"/>
+<rect x="1416" y="836" width="120" height="18" rx="6" fill="#1f2440"/>
+<rect x="1416" y="864" width="150" height="8" rx="4" fill="#1f2440"/>
+<rect x="1164" y="898" width="226" height="92" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1178" y="916" width="80" height="10" rx="5" fill="#1f2440"/>
+<rect x="1178" y="940" width="120" height="18" rx="6" fill="#1f2440"/>
+<rect x="1178" y="968" width="150" height="8" rx="4" fill="#1f2440"/>
+<rect x="1402" y="898" width="226" height="92" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<rect x="1416" y="916" width="80" height="10" rx="5" fill="#1f2440"/>
+<rect x="1416" y="940" width="120" height="18" rx="6" fill="#1f2440"/>
+<rect x="1416" y="968" width="150" height="8" rx="4" fill="#1f2440"/>
+<text x="1164" y="1014" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1164 1656">Shapes hold the layout; numbers fill in as parts answer.</text>
+</g>
+<text x="1396" y="1060" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="1136 1656">7 · Loading: no spinner page, the layout holds (O1)</text>
+<g clip-path="url(#c8)">
+<rect x="1688" y="630" width="520" height="400" rx="0" fill="#0b0d1a"/>
+<rect x="1716" y="680" width="464" height="296" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<circle cx="1948" cy="740" r="28" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1948" y="748" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="1920 1976">K</text>
+<text x="1948" y="810" font-size="19" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="1728 2168">You are signed in, Kai</text>
+<text x="1948" y="836" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1728 2168">You have no crew role at this event yet.</text>
+<text x="1948" y="856" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1728 2168">Ask an organiser to give you one in People.</text>
+<rect x="1868" y="884" width="160" height="32" rx="8" fill="#3b82f6"/>
+<text x="1948" y="904.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1868 2028">Open the hub</text>
+<text x="1948" y="956" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="middle" data-box="1728 2168">Sign out</text>
+</g>
+<text x="1948" y="1060" font-size="15" fill="#374151" font-weight="600" text-anchor="middle" data-box="1688 2208">8 · Signed in with no role (U3)</text>
+</svg>

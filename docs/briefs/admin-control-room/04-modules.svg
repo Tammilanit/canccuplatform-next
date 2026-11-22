@@ -1,0 +1,294 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1230" width="2240" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 04: Modules: on, off, status, settings</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="1280" height="1000" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1812" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1230" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">04 · Modules: on, off, status, settings</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">Every part of the platform in one table: what it is, how it is doing, its switch and its settings. Switching off asks first and says what happens.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: an organiser sets up which parts this event uses, and switches one off mid-event without losing anything (1280 px and 390 px)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1000" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="34" height="28" rx="6" fill="#3b82f6"/>
+<text x="69" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 86">DE</text>
+<text x="98" y="183" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="98 232">Demo Event</text>
+<line x1="198" y1="168" x2="198" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="210" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="210 392">Sat 21 Nov · day 2 of 3</text>
+<rect x="376" y="167" width="55.76" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="387" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="395" y="182" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="376 432">Live</text>
+<text x="1258" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1172 1260">18:12</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1262 1296">UTC</text>
+<rect x="32" y="207" width="256" height="943" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1150" stroke="#343c66" stroke-width="1"/>
+<rect x="58" y="223" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="234" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Control center</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Crew desk</text>
+<text x="56" y="318" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="329" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="340" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="367" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="378" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<rect x="58" y="405" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="416" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Tournament</text>
+<rect x="58" y="443" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="454" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Moments</text>
+<rect x="58" y="481" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="492" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Notifications</text>
+<text x="56" y="538" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="58" y="549" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="560" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Screen studio</text>
+<rect x="58" y="587" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="598" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Theme studio</text>
+<text x="56" y="644" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENT</text>
+<rect x="58" y="655" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="666" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+<rect x="44" y="684" width="232" height="32" rx="7" fill="#1d3b72"/>
+<rect x="44" y="684" width="3" height="32" rx="0" fill="#3b82f6"/>
+<rect x="58" y="693" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="704" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 288">Modules</text>
+<rect x="58" y="731" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="742" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event basics</text>
+<rect x="58" y="769" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="780" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Event profile</text>
+<rect x="58" y="807" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="818" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Health</text>
+<rect x="58" y="845" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="856" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Integrations</text>
+<line x1="32" y1="1060" x2="288" y2="1060" stroke="#343c66" stroke-width="1"/>
+<circle cx="66" cy="1088" r="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="66" y="1092" font-size="11" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="54 78">M</text>
+<text x="88" y="1092" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="88 282">Mira · organiser</text>
+<text x="88" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="88 152">Profile</text>
+<text x="162" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="162 282">Sign out</text>
+<text x="328" y="250" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 628">Modules</text>
+<text x="328" y="278" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 1272">Switch on the parts this event uses. Off hides a part and stops what it would do; its data stays.</text>
+<rect x="328" y="306" width="944" height="678" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="344" y="331" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="344 494" letter-spacing="1.2">PART</text>
+<text x="658" y="331" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="658 808" letter-spacing="1.2">NOW</text>
+<text x="1008" y="331" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1008 1158" letter-spacing="1.2">ON</text>
+<text x="1118" y="331" font-size="11" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1118 1268" letter-spacing="1.2">SETTINGS</text>
+<line x1="328" y1="346" x2="1272" y2="346" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="361" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="372" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Run of show</text>
+<text x="384" y="391" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">The event’s one schedule</text>
+<circle cx="664" cy="376" r="5" fill="#3ee39a"/>
+<text x="678" y="380" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">4 items left today · on time</text>
+<text x="1008" y="380" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1008 1108">Always on</text>
+<text x="1118" y="380" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="404" x2="1272" y2="404" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="419" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="430" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Screens</text>
+<text x="384" y="449" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Hall screens and their content</text>
+<circle cx="664" cy="434" r="5" fill="#f87171"/>
+<text x="678" y="438" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">7 of 8 screens online</text>
+<rect x="1008" y="421" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="433" r="9" fill="#ffffff"/>
+<text x="1118" y="438" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="462" x2="1272" y2="462" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="477" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="488" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Food</text>
+<text x="384" y="507" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Group pizza orders and pickup</text>
+<circle cx="664" cy="492" r="5" fill="#f59e0b"/>
+<text x="678" y="496" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">2 orders open · closes 18:30</text>
+<rect x="1008" y="479" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="491" r="9" fill="#ffffff"/>
+<text x="1118" y="496" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="520" x2="1272" y2="520" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="535" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="546" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Tournament</text>
+<text x="384" y="565" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Sessions, matches and standings</text>
+<circle cx="664" cy="550" r="5" fill="#3ee39a"/>
+<text x="678" y="554" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">Group stage, round 3 of 4</text>
+<rect x="1008" y="537" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="549" r="9" fill="#ffffff"/>
+<text x="1118" y="554" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="578" x2="1272" y2="578" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="593" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="604" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Moments</text>
+<text x="384" y="623" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Raffles, photos, shout-outs</text>
+<circle cx="664" cy="608" r="5" fill="#3ddcff"/>
+<text x="678" y="612" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">3 photos to approve · raffle 21:00</text>
+<rect x="1008" y="595" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="607" r="9" fill="#ffffff"/>
+<text x="1118" y="612" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="636" x2="1272" y2="636" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="651" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="662" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Notifications</text>
+<text x="384" y="681" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Push to phones and browsers</text>
+<circle cx="664" cy="666" r="5" fill="#3ee39a"/>
+<text x="678" y="670" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">212 people subscribed</text>
+<rect x="1008" y="653" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="665" r="9" fill="#ffffff"/>
+<text x="1118" y="670" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="694" x2="1272" y2="694" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="709" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="720" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Games</text>
+<text x="384" y="739" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">What people play right now</text>
+<circle cx="664" cy="724" r="5" fill="#3ee39a"/>
+<text x="678" y="728" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">14 games being played</text>
+<rect x="1008" y="711" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="723" r="9" fill="#ffffff"/>
+<text x="1118" y="728" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="752" x2="1272" y2="752" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="767" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="778" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Discord bot</text>
+<text x="384" y="797" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Commands and posts in Discord</text>
+<circle cx="664" cy="782" r="5" fill="#3ee39a"/>
+<text x="678" y="786" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">Connected to the event’s server</text>
+<rect x="1008" y="769" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="781" r="9" fill="#ffffff"/>
+<text x="1118" y="786" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="810" x2="1272" y2="810" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="825" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="836" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="384 648">Voice rooms</text>
+<text x="384" y="855" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="384 648">Voice rooms for teams and talk</text>
+<circle cx="664" cy="840" r="5" fill="#3ee39a"/>
+<text x="678" y="844" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="658 998">6 rooms · 31 people in them</text>
+<rect x="1008" y="827" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1040" cy="839" r="9" fill="#ffffff"/>
+<text x="1118" y="844" font-size="13.5" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="868" x2="1272" y2="868" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="883" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="894" font-size="15" fill="#616788" font-weight="700" text-anchor="start" data-box="384 648">Finals</text>
+<text x="384" y="913" font-size="12.5" fill="#616788" font-weight="400" text-anchor="start" data-box="384 648">Seasons played off the LAN</text>
+<text x="658" y="902" font-size="13.5" fill="#616788" font-weight="400" text-anchor="start" data-box="658 998">Off · not used at this event</text>
+<rect x="1008" y="885" width="44" height="24" rx="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<circle cx="1020" cy="897" r="9" fill="#a9b1d6"/>
+<text x="1118" y="902" font-size="13.5" fill="#616788" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+<line x1="328" y1="926" x2="1272" y2="926" stroke="#343c66" stroke-width="1"/>
+<rect x="344" y="941" width="28" height="28" rx="7" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="384" y="952" font-size="15" fill="#616788" font-weight="700" text-anchor="start" data-box="384 648">Cast</text>
+<text x="384" y="971" font-size="12.5" fill="#616788" font-weight="400" text-anchor="start" data-box="384 648">Streaming the stage</text>
+<text x="658" y="960" font-size="13.5" fill="#616788" font-weight="400" text-anchor="start" data-box="658 998">Off · no stream at this event</text>
+<rect x="1008" y="943" width="44" height="24" rx="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<circle cx="1020" cy="955" r="9" fill="#a9b1d6"/>
+<text x="1118" y="960" font-size="13.5" fill="#616788" font-weight="600" text-anchor="start" data-box="1118 1272">Settings →</text>
+</g>
+<text x="672" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · 1280 px: a table, because parts are compared column by column; an off part keeps its row and its settings</text>
+<rect x="1364" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1392 1462">18:12</text>
+<rect x="1702" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1512" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1372" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1372" y1="258" x2="1762" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1403" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1388 1418">DE</text>
+<text x="1428" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1428 1672">Modules</text>
+<rect x="1722" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<text x="1388" y="288" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1746">Modules</text>
+<text x="1388" y="312" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1746">9 on · 2 off</text>
+<rect x="1388" y="328" width="358" height="576" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="355" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Run of show</text>
+<circle cx="1406" cy="373" r="5" fill="#3ee39a"/>
+<text x="1418" y="377" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">4 items left today · on time</text>
+<text x="1732" y="365" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1656 1746">Always on</text>
+<line x1="1400" y1="392" x2="1734" y2="392" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="419" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Screens</text>
+<circle cx="1406" cy="437" r="5" fill="#f87171"/>
+<text x="1418" y="441" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">7 of 8 screens online</text>
+<rect x="1688" y="412" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="424" r="9" fill="#ffffff"/>
+<line x1="1400" y1="456" x2="1734" y2="456" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="483" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Food</text>
+<circle cx="1406" cy="501" r="5" fill="#f59e0b"/>
+<text x="1418" y="505" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">2 orders open · closes 18:30</text>
+<rect x="1688" y="476" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="488" r="9" fill="#ffffff"/>
+<line x1="1400" y1="520" x2="1734" y2="520" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="547" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Tournament</text>
+<circle cx="1406" cy="565" r="5" fill="#3ee39a"/>
+<text x="1418" y="569" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">Group stage, round 3 of 4</text>
+<rect x="1688" y="540" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="552" r="9" fill="#ffffff"/>
+<line x1="1400" y1="584" x2="1734" y2="584" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="611" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Moments</text>
+<circle cx="1406" cy="629" r="5" fill="#3ddcff"/>
+<text x="1418" y="633" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">3 photos to approve · raffle 21:00</text>
+<rect x="1688" y="604" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="616" r="9" fill="#ffffff"/>
+<line x1="1400" y1="648" x2="1734" y2="648" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="675" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Notifications</text>
+<circle cx="1406" cy="693" r="5" fill="#3ee39a"/>
+<text x="1418" y="697" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">212 people subscribed</text>
+<rect x="1688" y="668" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="680" r="9" fill="#ffffff"/>
+<line x1="1400" y1="712" x2="1734" y2="712" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="739" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Games</text>
+<circle cx="1406" cy="757" r="5" fill="#3ee39a"/>
+<text x="1418" y="761" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">14 games being played</text>
+<rect x="1688" y="732" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="744" r="9" fill="#ffffff"/>
+<line x1="1400" y1="776" x2="1734" y2="776" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="803" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Discord bot</text>
+<circle cx="1406" cy="821" r="5" fill="#3ee39a"/>
+<text x="1418" y="825" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">Connected to the event’s server</text>
+<rect x="1688" y="796" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="808" r="9" fill="#ffffff"/>
+<line x1="1400" y1="840" x2="1734" y2="840" stroke="#343c66" stroke-width="1"/>
+<text x="1402" y="867" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1676">Voice rooms</text>
+<circle cx="1406" cy="885" r="5" fill="#3ee39a"/>
+<text x="1418" y="889" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1416 1676">6 rooms · 31 people in them</text>
+<rect x="1688" y="860" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="1720" cy="872" r="9" fill="#ffffff"/>
+<rect x="1372" y="930" width="390" height="74" rx="0" fill="#121528"/>
+<line x1="1372" y1="930" x2="1762" y2="930" stroke="#343c66" stroke-width="1"/>
+<rect x="1403" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1411" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1372 1450">Home</text>
+<rect x="1481" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1489" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1450 1528">Desk</text>
+<circle cx="1567" cy="958" r="20" fill="#3b82f6"/>
+<text x="1567" y="965" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1547 1587">+</text>
+<rect x="1637" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1645" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1606 1684">Show</text>
+<rect x="1715" y="944" width="16" height="16" rx="4" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="1723" y="980" font-size="11.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1684 1762">Menu</text>
+</g>
+<text x="1567" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1364 1770">B · 390 px: one row per part, the switch at hand</text>
+<rect x="1804" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c3)">
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1846" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 1902">18:12</text>
+<rect x="2142" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1952" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1812" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1812" y1="258" x2="2202" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1828" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1843" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1828 1858">DE</text>
+<text x="1868" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1868 2112">Modules</text>
+<rect x="2162" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#000000" opacity="0.55"/>
+<rect x="1812" y="414" width="390" height="600" rx="22" fill="#121528" stroke="#343c66" stroke-width="1"/>
+<rect x="1987" y="424" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1828" y="464" font-size="21" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 2186">Switch Food off?</text>
+<text x="1828" y="492" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2186">While Food is off:</text>
+<circle cx="1834" cy="521" r="3" fill="#a9b1d6"/>
+<text x="1846" y="526" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">Food leaves the menu and the hub;</text>
+<text x="1846" y="546" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">its pages say it is not at this event.</text>
+<circle cx="1834" cy="573" r="3" fill="#a9b1d6"/>
+<text x="1846" y="578" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">Pizza orders stay in the run of show,</text>
+<text x="1846" y="598" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">but nothing opens, closes or reminds.</text>
+<circle cx="1834" cy="625" r="3" fill="#a9b1d6"/>
+<text x="1846" y="630" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">The food box leaves the screens</text>
+<text x="1846" y="650" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1846 2186">and Food’s Discord commands go away.</text>
+<rect x="1828" y="676" width="358" height="66" rx="10" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<text x="1842" y="702" font-size="14.5" fill="#ffd36d" font-weight="700" text-anchor="start" data-box="1828 2186">2 orders are open.</text>
+<text x="1842" y="724" font-size="13.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1828 2186">They stay as they are, hidden.</text>
+<text x="1828" y="770" font-size="14" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1828 2186">Nothing is deleted. Switch Food on again</text>
+<text x="1828" y="790" font-size="14" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1828 2186">and everything is where you left it.</text>
+<rect x="1828" y="814" width="358" height="46" rx="8" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="2007" y="842.4" font-size="15" fill="#ffb4bd" font-weight="600" text-anchor="middle" data-box="1828 2186">Switch Food off</text>
+<rect x="1828" y="870" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="2007" y="898.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1828 2186">Keep it on</text>
+</g>
+<text x="2007" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1804 2208">C · switching off says what happens first</text>
+<text x="1364" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Notes: one switch per module, on by default (D2). The run of show cannot be switched off: it is the event’s one schedule (U4).</text>
+<text x="1364" y="1134" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Live work is never refused or lost: it waits, hidden, until the part is on again (E1). A loaded profile sets the switches (D8).</text>
+</svg>

@@ -1,0 +1,314 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1230" width="2240" height="1230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Mockup 03: The crew desk</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><clipPath id="c1"><rect x="32" y="150" width="1280" height="1000" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1812" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2240" height="1230" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2208">03 · The crew desk</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2208">Crew land on today’s run of show: the day down the page, a now line, live controls on each item, and what needs them above it.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2208">Use case: a Food crew member runs the evening from one page, on the laptop at the food table or on a phone on the floor (1280 px and 390 px)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="1000" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="34" height="28" rx="6" fill="#3b82f6"/>
+<text x="69" y="183" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="52 86">DE</text>
+<text x="98" y="183" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="98 232">Demo Event</text>
+<line x1="198" y1="168" x2="198" y2="188" stroke="#343c66" stroke-width="1"/>
+<text x="210" y="183" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="210 392">Sat 21 Nov · day 2 of 3</text>
+<rect x="376" y="167" width="55.76" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="387" cy="178" r="3.5" fill="#3ee39a"/>
+<text x="395" y="182" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="376 432">Live</text>
+<text x="1258" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="1172 1260">18:12</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="1262 1296">UTC</text>
+<rect x="32" y="207" width="256" height="943" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1150" stroke="#343c66" stroke-width="1"/>
+<rect x="44" y="214" width="232" height="32" rx="7" fill="#1d3b72"/>
+<rect x="44" y="214" width="3" height="32" rx="0" fill="#3b82f6"/>
+<rect x="58" y="223" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="234" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 288">Crew desk</text>
+<text x="56" y="280" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="291" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="302" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Run of show</text>
+<rect x="58" y="329" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="340" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Food</text>
+<text x="56" y="386" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENT</text>
+<rect x="58" y="397" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="408" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">People</text>
+<line x1="32" y1="1060" x2="288" y2="1060" stroke="#343c66" stroke-width="1"/>
+<circle cx="66" cy="1088" r="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="66" y="1092" font-size="11" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="54 78">S</text>
+<text x="88" y="1092" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="88 282">Sami · crew, Food crew</text>
+<text x="88" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="88 152">Profile</text>
+<text x="162" y="1120" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="162 282">Sign out</text>
+<text x="328" y="250" font-size="26" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 628">Crew desk</text>
+<rect x="1200.76" y="230" width="71.24" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1236.38" y="246.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1200.76 1272">Sun 22</text>
+<rect x="1061.2" y="230" width="131.56" height="28" rx="14" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="1126.98" y="246.5" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1061.2 1192.76">Sat 21 · today</text>
+<rect x="981.96" y="230" width="71.24" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1017.58" y="246.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="981.96 1053.2">Fri 20</text>
+<text x="328" y="298" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 528">Needs you</text>
+<rect x="328" y="312" width="944" height="112" rx="10" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<circle cx="348" cy="336" r="5" fill="#f59e0b"/>
+<text x="364" y="337" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="364 928">Pizza order 2 is not called in yet</text>
+<text x="364" y="357" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="364 968">Held by Sami · closes 18:30, in 18 min</text>
+<rect x="1149.4" y="324" width="108.6" height="32" rx="8" fill="#3b82f6"/>
+<text x="1203.7" y="344.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1149.4 1258">Open order</text>
+<line x1="342" y1="368" x2="1258" y2="368" stroke="#343c66" stroke-width="1"/>
+<circle cx="348" cy="392" r="5" fill="#3ddcff"/>
+<text x="364" y="393" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="364 928">Delivery for order 1 is 10 min late</text>
+<text x="364" y="413" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="364 968">Ask the pizzeria, or tell the people waiting</text>
+<rect x="1157.46" y="380" width="100.54" height="32" rx="8" fill="#3b82f6"/>
+<text x="1207.73" y="400.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1157.46 1258">Tell them</text>
+<text x="328" y="464" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 528">Today</text>
+<text x="1272" y="464" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="628 1272">Delays move the later items too; attendees see the new times</text>
+<rect x="420" y="480" width="852" height="52" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="502" font-size="15" fill="#616788" font-weight="700" text-anchor="start" data-box="328 414">16:00</text>
+<text x="436" y="504" font-size="16" fill="#616788" font-weight="700" text-anchor="start" data-box="436 1182">Doors open</text>
+<text x="1256" y="504" font-size="12.5" fill="#616788" font-weight="400" text-anchor="end" data-box="1112 1272">Done at 16:02</text>
+<text x="566" y="504" font-size="13" fill="#616788" font-weight="400" text-anchor="start" data-box="436 1102">Main entrance</text>
+<rect x="420" y="542" width="852" height="106" rx="9" fill="#1f2440" stroke="#2a7e64" stroke-width="1"/>
+<rect x="420" y="542" width="4" height="106" rx="2" fill="#3ee39a"/>
+<text x="328" y="564" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 414">17:00</text>
+<text x="328" y="582" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 414">–19:00</text>
+<text x="436" y="566" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="436 1182">Tournament: group stage</text>
+<rect x="1202" y="552" width="48.32" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1213" cy="563" r="3.5" fill="#3ee39a"/>
+<text x="1221" y="567" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1198 1272">Now</text>
+<text x="436" y="588" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="436 1264">Main hall · Round 3 of 4 · the session’s own controls are for Tournament crew</text>
+<rect x="436" y="610" width="41.08" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="456.54" y="626.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="436 477.08">+5</text>
+<rect x="485.08" y="610" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="509.39" y="626.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="485.08 533.7">+15</text>
+<rect x="541.7" y="610" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="566.01" y="626.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="541.7 590.32">+30</text>
+<rect x="420" y="658" width="852" height="106" rx="9" fill="#1f2440" stroke="#2a7e64" stroke-width="1"/>
+<rect x="420" y="658" width="4" height="106" rx="2" fill="#3ee39a"/>
+<text x="328" y="680" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 414">18:00</text>
+<text x="328" y="698" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 414">–18:30</text>
+<text x="436" y="682" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="436 1182">Pizza order</text>
+<rect x="1202" y="668" width="48.32" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1213" cy="679" r="3.5" fill="#3ee39a"/>
+<text x="1221" y="683" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1198 1272">Now</text>
+<text x="436" y="704" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="436 1264">Food table · 2 orders open · ordering closes at 18:30</text>
+<rect x="436" y="724" width="100.54" height="30" rx="8" fill="#3b82f6"/>
+<text x="486.27" y="743.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="436 536.54">Close now</text>
+<rect x="544.54" y="726" width="78.78" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="583.93" y="742.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="544.54 623.32">+15 min</text>
+<rect x="631.32" y="724" width="116.66" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="689.65" y="743.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="631.32 747.98">Open orders</text>
+<line x1="328" y1="784" x2="1272" y2="784" stroke="#f87171" stroke-width="2"/>
+<circle cx="332" cy="784" r="5" fill="#f87171"/>
+<rect x="342" y="774" width="64" height="20" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="374" y="788.5" font-size="12" fill="#ffb4bd" font-weight="700" text-anchor="middle" data-box="342 406">18:12</text>
+<rect x="420" y="798" width="852" height="106" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="820" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 414">19:30</text>
+<text x="328" y="838" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 414">–20:30</text>
+<text x="436" y="822" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="436 1264">Dinner</text>
+<text x="436" y="844" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="436 1264">Food table</text>
+<rect x="436" y="866" width="41.08" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="456.54" y="882.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="436 477.08">+5</text>
+<rect x="485.08" y="866" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="509.39" y="882.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="485.08 533.7">+15</text>
+<rect x="541.7" y="866" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="566.01" y="882.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="541.7 590.32">+30</text>
+<rect x="598.32" y="864" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="628.44" y="883.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="598.32 658.56">Done</text>
+<rect x="420" y="914" width="852" height="106" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="936" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 414">21:00</text>
+<text x="436" y="938" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="436 1264">Raffle</text>
+<text x="436" y="960" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="436 1264">Main stage · Fires a Prize draw moment on the screens</text>
+<rect x="436" y="980" width="92.48" height="30" rx="8" fill="#3b82f6"/>
+<text x="482.24" y="999.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="436 528.48">Fire now</text>
+<rect x="536.48" y="982" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="560.79" y="998.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="536.48 585.1">+15</text>
+<rect x="593.1" y="980" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="623.22" y="999.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="593.1 653.34">Skip</text>
+<rect x="420" y="1030" width="852" height="106" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="328" y="1052" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="328 414">23:00</text>
+<text x="328" y="1070" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="328 414">–23:30</text>
+<text x="436" y="1054" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="436 1264">Night pizza order</text>
+<text x="436" y="1076" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="436 1264">Food table · Opens ordering at 23:00</text>
+<rect x="436" y="1096" width="108.6" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="490.3" y="1115.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="436 544.6">Open early</text>
+<rect x="552.6" y="1098" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="576.91" y="1114.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="552.6 601.22">+15</text>
+</g>
+<text x="672" y="1184" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · 1280 px: needs you as a band above the day; every item carries the controls its kind allows</text>
+<rect x="1364" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1392 1462">18:12</text>
+<rect x="1702" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1512" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1372" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1372" y1="258" x2="1762" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1388" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1403" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1388 1418">DE</text>
+<text x="1428" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1428 1672">Crew desk</text>
+<rect x="1722" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1722" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1388" y="274" width="47.75" height="27.5" rx="13.75" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1411.88" y="290" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1388 1435.75">Fri</text>
+<rect x="1443.75" y="274" width="127.5" height="27.5" rx="13.75" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="1507.5" y="290" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1443.75 1571.25">Sat 21 · today</text>
+<rect x="1579.25" y="274" width="47.75" height="27.5" rx="13.75" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1603.12" y="290" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1579.25 1627">Sun</text>
+<rect x="1388" y="312" width="358" height="64" rx="10" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<text x="1402" y="338" font-size="14.5" fill="#ffd36d" font-weight="700" text-anchor="start" data-box="1388 1740">Pizza order 2 is not called in</text>
+<text x="1402" y="360" font-size="12.5" fill="#ffd36d" font-weight="400" text-anchor="start" data-box="1388 1740">1 more needs you · Open</text>
+<rect x="1450" y="392" width="296" height="112" rx="9" fill="#1f2440" stroke="#2a7e64" stroke-width="1"/>
+<rect x="1450" y="392" width="4" height="112" rx="2" fill="#3ee39a"/>
+<text x="1388" y="414" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1444">17:00</text>
+<text x="1388" y="432" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1444">–19:00</text>
+<text x="1466" y="416" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1466 1656">Tournament: group stage</text>
+<rect x="1676" y="402" width="48.32" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1687" cy="413" r="3.5" fill="#3ee39a"/>
+<text x="1695" y="417" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1672 1746">Now</text>
+<text x="1466" y="436" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1466 1740">Round 3 of 4</text>
+<rect x="1466" y="468" width="41.08" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1486.54" y="484.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1466 1507.08">+5</text>
+<rect x="1515.08" y="468" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1539.39" y="484.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1515.08 1563.7">+15</text>
+<rect x="1571.7" y="468" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1596.01" y="484.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1571.7 1620.32">+30</text>
+<rect x="1450" y="514" width="296" height="112" rx="9" fill="#1f2440" stroke="#2a7e64" stroke-width="1"/>
+<rect x="1450" y="514" width="4" height="112" rx="2" fill="#3ee39a"/>
+<text x="1388" y="536" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1444">18:00</text>
+<text x="1388" y="554" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1444">–18:30</text>
+<text x="1466" y="538" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1466 1656">Pizza order</text>
+<rect x="1676" y="524" width="48.32" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1687" cy="535" r="3.5" fill="#3ee39a"/>
+<text x="1695" y="539" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1672 1746">Now</text>
+<text x="1466" y="558" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1466 1740">2 orders open</text>
+<rect x="1466" y="588" width="100.54" height="30" rx="8" fill="#3b82f6"/>
+<text x="1516.27" y="607.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1466 1566.54">Close now</text>
+<rect x="1574.54" y="590" width="78.78" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1613.93" y="606.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1574.54 1653.32">+15 min</text>
+<line x1="1388" y1="646" x2="1746" y2="646" stroke="#f87171" stroke-width="2"/>
+<circle cx="1392" cy="646" r="5" fill="#f87171"/>
+<rect x="1402" y="636" width="64" height="20" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="1434" y="650.5" font-size="12" fill="#ffb4bd" font-weight="700" text-anchor="middle" data-box="1402 1466">18:12</text>
+<rect x="1450" y="660" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="682" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1444">19:30</text>
+<text x="1388" y="700" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1444">–20:30</text>
+<text x="1466" y="684" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1466 1738">Dinner</text>
+<text x="1466" y="704" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1466 1740">Food table</text>
+<rect x="1466" y="720" width="41.08" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1486.54" y="736.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1466 1507.08">+5</text>
+<rect x="1515.08" y="720" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1539.39" y="736.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1515.08 1563.7">+15</text>
+<rect x="1571.7" y="720" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1596.01" y="736.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1571.7 1620.32">+30</text>
+<rect x="1628.32" y="718" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1658.44" y="737.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1628.32 1688.56">Done</text>
+<rect x="1450" y="766" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="788" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1444">21:00</text>
+<text x="1466" y="790" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1466 1738">Raffle</text>
+<text x="1466" y="810" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1466 1740">Fires a Prize draw moment on the screens</text>
+<rect x="1466" y="824" width="92.48" height="30" rx="8" fill="#3b82f6"/>
+<text x="1512.24" y="843.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1466 1558.48">Fire now</text>
+<rect x="1566.48" y="826" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1590.79" y="842.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1566.48 1615.1">+15</text>
+<rect x="1623.1" y="824" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1653.22" y="843.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1623.1 1683.34">Skip</text>
+<rect x="1450" y="872" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1388" y="894" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1388 1444">23:00</text>
+<text x="1388" y="912" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1388 1444">–23:30</text>
+<text x="1466" y="896" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1466 1738">Night pizza order</text>
+<text x="1466" y="916" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1466 1740">Opens ordering at 23:00</text>
+<rect x="1466" y="930" width="108.6" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1520.3" y="949.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1466 1574.6">Open early</text>
+<rect x="1582.6" y="932" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1606.91" y="948.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1582.6 1631.22">+15</text>
+<rect x="1372" y="930" width="390" height="74" rx="0" fill="#121528"/>
+<line x1="1372" y1="930" x2="1762" y2="930" stroke="#343c66" stroke-width="1"/>
+<rect x="1403" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1411" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1372 1450">Home</text>
+<rect x="1481" y="944" width="16" height="16" rx="4" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="1489" y="980" font-size="11.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1450 1528">Desk</text>
+<circle cx="1567" cy="958" r="20" fill="#3b82f6"/>
+<text x="1567" y="965" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1547 1587">+</text>
+<rect x="1637" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1645" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1606 1684">Show</text>
+<rect x="1715" y="944" width="16" height="16" rx="4" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="1723" y="980" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1684 1762">Menu</text>
+</g>
+<text x="1567" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1364 1770">B · 390 px: the same day, one column</text>
+<rect x="1804" y="152" width="406" height="860" rx="44" fill="#1b1d27"/>
+<g clip-path="url(#c3)">
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1846" y="190" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 1902">18:12</text>
+<rect x="2142" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1"/>
+<rect x="1952" y="172" width="110" height="26" rx="13" fill="#000000"/>
+<rect x="1812" y="206" width="390" height="52" rx="0" fill="#121528"/>
+<line x1="1812" y1="258" x2="2202" y2="258" stroke="#343c66" stroke-width="1"/>
+<rect x="1828" y="218" width="30" height="28" rx="6" fill="#3b82f6"/>
+<text x="1843" y="237" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" data-box="1828 1858">DE</text>
+<text x="1868" y="237" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1868 2112">Crew desk</text>
+<rect x="2162" y="224" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="231" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="2162" y="238" width="20" height="2.2" rx="0" fill="#a9b1d6"/>
+<rect x="1890" y="282" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1828" y="304" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 1884">19:30</text>
+<text x="1828" y="322" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 1884">–20:30</text>
+<text x="1906" y="306" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1906 2178">Dinner</text>
+<text x="1906" y="326" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1906 2180">Food table</text>
+<rect x="1906" y="342" width="41.08" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1926.54" y="358.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1906 1947.08">+5</text>
+<rect x="1955.08" y="342" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1979.39" y="358.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1955.08 2003.7">+15</text>
+<rect x="2011.7" y="342" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="2036.01" y="358.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2011.7 2060.32">+30</text>
+<rect x="2068.32" y="340" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2098.44" y="359.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2068.32 2128.56">Done</text>
+<rect x="1890" y="388" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1828" y="410" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 1884">21:00</text>
+<text x="1906" y="412" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1906 2178">Raffle</text>
+<text x="1906" y="432" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1906 2180">Fires a Prize draw moment on the screens</text>
+<rect x="1906" y="446" width="92.48" height="30" rx="8" fill="#3b82f6"/>
+<text x="1952.24" y="465.68" font-size="13" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1906 1998.48">Fire now</text>
+<rect x="2006.48" y="448" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="2030.79" y="464.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2006.48 2055.1">+15</text>
+<rect x="2063.1" y="446" width="60.24" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2093.22" y="465.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="2063.1 2123.34">Skip</text>
+<rect x="1890" y="494" width="296" height="96" rx="9" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1828" y="516" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 1884">23:00</text>
+<text x="1828" y="534" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 1884">–23:30</text>
+<text x="1906" y="518" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1906 2178">Night pizza order</text>
+<text x="1906" y="538" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1906 2180">Opens ordering at 23:00</text>
+<rect x="1906" y="552" width="108.6" height="30" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1960.3" y="571.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1906 2014.6">Open early</text>
+<rect x="2022.6" y="554" width="48.62" height="28" rx="14" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="2046.91" y="570.5" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2022.6 2071.22">+15</text>
+<rect x="1812" y="160" width="390" height="844" rx="0" fill="#000000" opacity="0.55"/>
+<rect x="1812" y="490" width="390" height="514" rx="22" fill="#121528" stroke="#343c66" stroke-width="1"/>
+<rect x="1987" y="500" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1828" y="538" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 2186">Delay the raffle</text>
+<text x="1828" y="562" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2186">21:00 · Main stage</text>
+<rect x="1828" y="582" width="72.98" height="28.5" rx="14.25" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1864.49" y="599" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1828 1900.98">+5 min</text>
+<rect x="1908.98" y="582" width="80.81" height="28.5" rx="14.25" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="1949.38" y="599" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1908.98 1989.79">+10 min</text>
+<rect x="1997.79" y="582" width="80.81" height="28.5" rx="14.25" fill="#1d3b72" stroke="#3b82f6" stroke-width="1"/>
+<text x="2038.19" y="599" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1997.79 2078.6">+15 min</text>
+<rect x="2086.6" y="582" width="80.81" height="28.5" rx="14.25" fill="#1f2440" stroke="#343c66" stroke-width="1"/>
+<text x="2127.01" y="599" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2086.6 2167.41">+30 min</text>
+<text x="1828" y="650" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1828 2186">New time: 21:15</text>
+<text x="1828" y="690" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1828 2126">Move the later items too</text>
+<rect x="2142" y="674" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="2174" cy="686" r="9" fill="#ffffff"/>
+<text x="1828" y="710" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2126">Night pizza order moves to 23:15</text>
+<text x="1828" y="748" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1828 2126">Tell attendees</text>
+<rect x="2142" y="732" width="44" height="24" rx="12" fill="#3b82f6"/>
+<circle cx="2174" cy="744" r="9" fill="#ffffff"/>
+<text x="1828" y="768" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1828 2126">A notice to everyone who follows the raffle</text>
+<rect x="1828" y="796" width="358" height="46" rx="8" fill="#3b82f6"/>
+<text x="2007" y="824.4" font-size="15" fill="#ffffff" font-weight="600" text-anchor="middle" data-box="1828 2186">Delay 15 min</text>
+<rect x="1828" y="852" width="358" height="42" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="2007" y="878.4" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1828 2186">Cancel</text>
+</g>
+<text x="2007" y="1060" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1804 2208">C · 390 px: a delay is chips, never a typed number</text>
+<text x="1364" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Notes: crew see every item of today but act only on their own parts (U2); the session’s own controls stay with Tournament crew.</text>
+<text x="1364" y="1134" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1364 2208">Food’s order times and the raffle are run-of-show items, as the run of show is the event’s one schedule (L2).</text>
+</svg>
