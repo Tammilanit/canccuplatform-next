@@ -43,7 +43,6 @@ export const MONEY_EN = {
   "money.unpriced_one": "1 pizza has no price",
   "money.unpriced_hint": "Add its price for exact amounts.",
   "money.unpriced_even": "Or keep even shares: {line}.",
-  "money.price": "Price",
   "money.save_price": "Save the price",
   "money.who_paid": "Who is paid",
   "money.organiser": "The organiser",

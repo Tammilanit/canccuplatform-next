@@ -81,12 +81,6 @@ export function nextLocalTime(hhmm: string | null, timeZone: string, now: Date):
   return null;
 }
 
-/** `HH:MM` local. */
-export function localTime(at: Date, timeZone: string): string {
-  const p = partsIn(at, timeZone);
-  return `${pad(p.hour)}:${pad(p.minute)}`;
-}
-
 /** ISO 8601 with the event's offset, to the second: `2026-11-21T17:20:00+02:00`. */
 export function withOffset(at: Date, timeZone: string): string {
   const p = partsIn(at, timeZone);

@@ -3,109 +3,24 @@
  * and an admin has set the provider's key (write-only, sealed, audited); a read only suggests, and
  * nothing changes an order until a person confirms; a daily cap; the fake reader, never a provider.
  */
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { DEFAULT_SETTINGS } from "../src/settings.js";
-import {
-  DATABASE_URL,
-  TRUNCATE,
-  errorOf,
-  freshDatabase,
-  itemId,
-  json,
-  open,
-  seedPizzerias,
-  world,
-} from "./helpers.js";
+import { DATABASE_URL, errorOf, json } from "./helpers.js";
 import type { World } from "./helpers.js";
-import { photoWithLocation, png } from "./images.js";
+import { photoWithLocation } from "./images.js";
+import { KEY, readerCalls, useReaderWorld } from "./reader-world.js";
+import type { ReaderWorld } from "./reader-world.js";
 
 let pool: pg.Pool;
 let w: World;
-let pz: string;
 let id: string;
-let items: { anni: string; anni2: string; mikko: string };
-const KEY = "sk-ant-demo-0000000000000000wxyz";
-
-beforeAll(async () => {
-  if (DATABASE_URL) pool = await freshDatabase();
+let items: ReaderWorld["items"];
+const r = useReaderWorld();
+const { setKey, keyStatus, addReceipt, read, money } = readerCalls(r);
+beforeEach(() => {
+  ({ pool, w, id, items } = r);
 });
-afterAll(async () => {
-  if (DATABASE_URL) await pool.end();
-});
-beforeEach(async () => {
-  if (!DATABASE_URL) return;
-  await pool.query(TRUNCATE);
-  w = await world(pool);
-  w.settings.set("demo", { ...DEFAULT_SETTINGS, ai_reader: true });
-  ({ pz } = await seedPizzerias(w));
-  id = json(await open(w, "pena", pz)).id as string;
-  const add = async (who: string, number: string) =>
-    json(
-      await w.call(who, "POST", `/api/pizza/orders/${id}/items`, {
-        kind: "menu",
-        menu_item_id: await itemId(w, pz, number),
-      }),
-    ).id as string;
-  items = {
-    anni: await add("anni", "1"),
-    anni2: await add("anni", "1"),
-    mikko: await add("mikko", "12"),
-  };
-  await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
-  // Two Margheritas at 8.50 (the menu says 8.00), a Kebab at 9.50, delivery, and a line for no pizza.
-  w.reader.receipt = {
-    total_cents: 3200,
-    lines: [
-      {
-        text: "2 x 1 Margherita 17.00",
-        number: "1",
-        name: "Margherita",
-        quantity: 2,
-        amount_cents: 1700,
-        kind: "item",
-      },
-      {
-        text: "1 x 12 Kebab 9.50",
-        number: "12",
-        name: "Kebab",
-        quantity: 1,
-        amount_cents: 950,
-        kind: "item",
-      },
-      {
-        text: "Garlic bread 2.50",
-        number: null,
-        name: "Garlic bread",
-        quantity: 1,
-        amount_cents: 250,
-        kind: "item",
-      },
-      {
-        text: "Delivery 3.00",
-        number: null,
-        name: "Delivery",
-        quantity: 1,
-        amount_cents: 300,
-        kind: "extra",
-      },
-    ],
-  };
-});
-
-const setKey = (who = "integrator", key = KEY) =>
-  w.call(who, "PUT", "/api/pizza/reader/key", { api_key: key });
-const keyStatus = (who = "integrator") => w.call(who, "GET", "/api/pizza/reader/key");
-const addReceipt = async (photo?: Buffer) =>
-  json(
-    await w.call("pena", "POST", `/api/pizza/orders/${id}/receipts`, undefined, {
-      raw: photo ?? (await png()),
-      contentType: photo === undefined ? "image/png" : "image/jpeg",
-    }),
-  ).id as string;
-const read = (receipt: string, who = "pena") =>
-  w.call(who, "POST", `/api/pizza/receipts/${receipt}/read`, {});
-const money = () => w.call("pena", "GET", `/api/pizza/orders/${id}/money`);
 
 describe.skipIf(!DATABASE_URL)("the reader's key in Admin → Integrations", () => {
   it("is set, shown only by its last four, never returned, sealed at rest and audited without it", async () => {
@@ -333,136 +248,5 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
     expect(errorOf(await read(receipt, "anni")).code).toBe("not_holder");
     expect(errorOf(await read(receipt, "treasurer")).code).toBe("not_holder");
     expect((await read(receipt, "crew")).statusCode).toBe(200);
-  });
-});
-
-describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
-  it("gives a menu CSV for the import's preview, and keeps no photo", async () => {
-    await setKey();
-    const res = await w.call("menus", "POST", `/api/pizza/menu/read?pizzeria_id=${pz}`, undefined, {
-      raw: await png(),
-      contentType: "image/png",
-    });
-    expect(res.statusCode).toBe(200);
-    const r = json(res);
-    expect(r).toMatchObject({ items: 3, unsure: ["12"] });
-    const csv = r.csv as string;
-    expect(csv.split("\n")[0]).toBe("pizzeria,kind,number,name,description,price");
-    expect(csv).toContain('Demo Pizzeria,item,4,Margherita,"tomato, mozzarella",8.00');
-    const preview = await w.call("menus", "POST", "/api/pizza/menu/import/preview", undefined, {
-      raw: csv,
-      contentType: "text/csv",
-    });
-    expect(preview.statusCode).toBe(200);
-    expect(json(preview)).toMatchObject({
-      pizzerias: [expect.objectContaining({ status: "matched" })],
-    });
-    const { rows } = await pool.query("SELECT count(*)::int AS n FROM pizza_receipts");
-    expect(rows[0]).toEqual({ n: 0 });
-  });
-
-  it("needs pizza.menu.write", async () => {
-    await setKey();
-    const res = await w.call("pena", "POST", `/api/pizza/menu/read?pizzeria_id=${pz}`, undefined, {
-      raw: await png(),
-      contentType: "image/png",
-    });
-    expect(errorOf(res).code).toBe("missing_right");
-  });
-});
-
-describe.skipIf(!DATABASE_URL)("the privacy delete and a confirmed read", () => {
-  it("leaves no user id or name in the money view, the receipts or the key status", async () => {
-    await setKey();
-    const receipt = await addReceipt();
-    expect((await read(receipt)).statusCode).toBe(200);
-    // Anni's pizza is in the stored read; Pena, the holder, confirms the total.
-    expect(
-      (
-        await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, {
-          total_cents: 3200,
-          receipt_id: receipt,
-        })
-      ).statusCode,
-    ).toBe(200);
-    expect((await money()).body).toContain("Anni");
-    const found = await pool.query<{ user_id: string }>(
-      "SELECT user_id FROM pizza_items WHERE id = $1",
-      [items.anni],
-    );
-    const anniId = found.rows[0]?.user_id ?? "";
-    expect(anniId).not.toBe("");
-    const mikkoId = (
-      await pool.query<{ user_id: string }>("SELECT user_id FROM pizza_items WHERE id = $1", [
-        items.mikko,
-      ])
-    ).rows[0]?.user_id as string;
-    await w.call("anni", "DELETE", "/api/pizza/me");
-    await w.call("pena", "DELETE", "/api/pizza/me");
-    await w.call("integrator", "DELETE", "/api/pizza/me");
-    await w.call("mikko", "DELETE", "/api/pizza/me");
-    const shown = [
-      (await w.call("organiser", "GET", `/api/pizza/orders/${id}/money`)).body,
-      (await w.call("organiser", "GET", `/api/pizza/orders/${id}/receipts`)).body,
-      (await keyStatus()).body,
-    ].join("\n");
-    expect(shown).not.toContain(anniId);
-    expect(shown).not.toContain("Anni");
-    expect(shown).not.toContain("Integrator");
-    expect(shown).not.toContain("Pena");
-    expect(shown).not.toContain("Mikko");
-    const stored = await pool.query(
-      "SELECT read::text AS r, total_set_by_name AS n FROM pizza_receipts, pizza_orders WHERE pizza_orders.id = pizza_receipts.order_id",
-    );
-    const rows = JSON.stringify(stored.rows);
-    expect(rows).not.toContain(anniId);
-    expect(rows).not.toContain("Anni");
-    expect(rows).not.toContain("Mikko");
-    expect(rows).not.toContain(mikkoId);
-  });
-
-  it("does not store a person deleted while the provider was still reading", async () => {
-    await setKey();
-    const receipt = await addReceipt();
-    const anniId = (
-      await pool.query<{ user_id: string }>("SELECT user_id FROM pizza_items WHERE id = $1", [
-        items.anni,
-      ])
-    ).rows[0]?.user_id as string;
-    let release!: () => void;
-    w.reader.hold = new Promise<void>((r) => (release = r));
-    const reading = read(receipt);
-    // Wait until the module has handed the photo to the provider, then delete Anni.
-    for (let i = 0; i < 200 && w.reader.sent.length === 0; i++)
-      await new Promise((r) => setTimeout(r, 10));
-    expect(w.reader.sent).toHaveLength(1);
-    await w.call("anni", "DELETE", "/api/pizza/me");
-    release();
-    expect((await reading).statusCode).toBe(200);
-    const stored = await pool.query("SELECT read::text AS r FROM pizza_receipts");
-    expect(JSON.stringify(stored.rows)).not.toContain(anniId);
-    expect(JSON.stringify(stored.rows)).not.toContain("Anni");
-    expect(
-      (await w.call("organiser", "GET", `/api/pizza/orders/${id}/receipts`)).body,
-    ).not.toContain("Anni");
-  });
-
-  it("scrubs a stored answer that names the setter, who is neither the payer nor has a pizza", async () => {
-    const set = await w.call("organiser", "PATCH", `/api/pizza/orders/${id}/money`, {
-      total_cents: 3200,
-    });
-    expect(set.statusCode).toBe(200);
-    // Pena's own write is answered with a view that names the setter, and is stored under Pena.
-    const price = await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, {
-      prices: [{ item_id: items.anni, price_cents: 850 }],
-    });
-    expect(price.statusCode).toBe(200);
-    expect(json(price).total_set_by).toMatchObject({ name: "Organiser" });
-    const before = await pool.query("SELECT body::text AS b FROM pizza_idempotency");
-    expect(JSON.stringify(before.rows)).toContain("Organiser");
-    await w.call("organiser", "DELETE", "/api/pizza/me");
-    const after = await pool.query("SELECT body::text AS b FROM pizza_idempotency");
-    expect(JSON.stringify(after.rows)).not.toContain("Organiser");
-    expect((await money()).body).not.toContain("Organiser");
   });
 });

@@ -11,7 +11,6 @@ export const OPEN = "pizza.order.open";
 export const MANAGE = "pizza.order.manage";
 export const MENU_WRITE = "pizza.menu.write";
 export const RECORD_READ = "pizza.record.read";
-export const RIGHTS = [OPEN, MANAGE, MENU_WRITE, RECORD_READ] as const;
 /** Admin's right over the event's integrations: here, the AI reader's provider key (#644). */
 export const INTEGRATIONS_WRITE = "admin.integrations.write";
 
