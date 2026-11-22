@@ -159,6 +159,9 @@ async def test_the_hub_reader_reads_as_the_person_and_never_fails_the_page() -> 
     ]
     assert await reader.agenda_now(HOST, "canccu_session=s") is None
     assert [r.headers["host"] for r in seen] == [HOST, HOST]
+    assert "x-forwarded-for" not in seen[1].headers
+    await reader.agenda_now(HOST, None, "192.0.2.10")
+    assert seen[2].headers["x-forwarded-for"] == "192.0.2.10"
     assert seen[0].headers["cookie"] == "canccu_session=s"
 
 
@@ -181,7 +184,9 @@ async def test_done_reads_the_wifi_and_what_is_on_now_at_once(env: Env) -> None:
         await asyncio.wait_for(started["now"].wait(), 1)
         return await wifi(host, cookie)
 
-    async def agenda_now(host: str, cookie: str | None) -> dict[str, Any] | None:
+    async def agenda_now(
+        host: str, cookie: str | None, client_ip: str | None = None
+    ) -> dict[str, Any] | None:
         started["now"].set()
         await asyncio.wait_for(started["wifi"].wait(), 1)
         return await now(host, cookie)

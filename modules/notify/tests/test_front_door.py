@@ -95,7 +95,9 @@ async def test_venue_only_shows_a_guest_away_from_the_venue_only_where_to_open_i
     assert "Crew & organisers" in text and env.hub.asked_now == []
     # The test client is 198.51.100.7: at the venue, the page opens.
     env.contexts["ev-a"]["venue"] = {"id": "v", "name": "Hall", "addresses": ["198.51.100.0/24"]}
+    env.hub.now_ips.clear()
     assert "Opening show" in text_of(await front(env))
+    assert env.hub.now_ips == ["198.51.100.7"]
 
 
 async def test_sign_in_mode_keeps_the_page_for_people_signed_in(env: Env) -> None:

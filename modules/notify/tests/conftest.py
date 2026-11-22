@@ -164,13 +164,18 @@ class FakeHub:
     """None: the agenda did not answer."""
     asked: list[tuple[str, str | None]] = field(default_factory=list)
     asked_now: list[tuple[str, str | None]] = field(default_factory=list)
+    now_ips: list[str | None] = field(default_factory=list)
+    """The visitor's address handed to agenda, as it judges the info-page mode by it."""
 
     async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]:
         self.asked.append((host, cookie))
         return self.wifi
 
-    async def agenda_now(self, host: str, cookie: str | None) -> dict[str, Any] | None:
+    async def agenda_now(
+        self, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> dict[str, Any] | None:
         self.asked_now.append((host, cookie))
+        self.now_ips.append(client_ip)
         return self.now
 
 

@@ -67,7 +67,7 @@ async def _card(request: Request, ctx: TenantContext, session: Session | None) -
         now = None
         if d.hub:
             host = request.headers.get("host", "")
-            now = await d.hub.agenda_now(host, request.headers.get("cookie"))
+            now = await d.hub.agenda_now(host, request.headers.get("cookie"), client_ip(request))
         parts += [views.whats_on(), views.now_next(now, ctx["time_zone"], d.now())]
     parts.append(views.links(ctx["flags"]))
     return "".join(parts)
