@@ -43,12 +43,30 @@ const CHANGED_MENU = [
 const ORDER = "<order>";
 const PIZZERIA = "<pizzeria>";
 const RECEIPT = "<receipt>";
-/** A receipt photo for the fake reader, which answers mockup 18's receipt whatever it is sent. */
+/**
+ * A receipt photo for the fake reader, which answers mockup 18's receipt whatever it is sent: a
+ * paper slip of lines, so the confirmed step's thumbnail shows a receipt, not a blank tile (#704).
+ */
 const RECEIPT_PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWP48vEVVsQwtCQAPmKzwWePQ/wAAAAASUVORK5CYII=",
+  "iVBORw0KGgoAAAANSUhEUgAAANwAAAEsBAMAAABakcAfAAAACVBMVEX08eo6OjoaGhpRcC/1AAAACXBIWXMAAAsTAAALEwEA" +
+  "mpwYAAAAy0lEQVR4nO3VQQrDMAwEQH1BX8j/H1mKKT20SRPbNYkzcxcLi2AjAIBpLA3EKXMnr+JVpnkVACiyn9hB3E6hzKnL" +
+  "BIBi8NikuE/K/CbrxDXiAKBpgGrnKcUdFcqcsEwAKAYvTor7KZT5lF3ESeMAoOcAvcW27CzE9RPKHFYmABSDxybFrVDmrV4F" +
+  "AIrBi5PiXpS5LY+Iq8UBQMUAtc9TitsnlDl1mQAAAPex/E2cIA4AipYlqTgTt0aZhwrxmWsqvmv9zmcCAAAA5/AAuW8AxxeE" +
+  "zb8AAAAASUVORK5CYII=",
   "base64",
 );
 const GUEST = null;
+/**
+ * The order's other people (#704): Players 1–3 of the CI session stub (deploy/compose.ci.yml), each
+ * with a pizza, so the money step shows who owes the holder; two are marked paid once it settles
+ * to the holder, as mockup 19 C.
+ */
+const PLAYERS = [
+  ["canccu_session=demo-player-1", "1"],
+  ["canccu_session=demo-player-2", "1"],
+  ["canccu_session=demo-player-3", "3"],
+];
+const PAID = ["u_demo_01", "u_demo_02"];
 const HALL = { width: 1920, height: 1080 };
 /** The main zone's screen, as Studio mirrors it (#643, mockup 14): the food box in its rail. */
 const BOX = "/screen/zones/main";
@@ -106,6 +124,7 @@ const SHOTS = [
   // Mockup 12: the daily record, one order's money and the export; mockup 20: Integrations.
   ["pizza-record", "/pizza/crew/record", DESK, "done"],
   ["pizza-record-phone", "/pizza/crew/record", PHONE, "done"],
+  ["pizza-record-order", `/pizza/crew/record/${ORDER}`, DESK, "done"],
   ["pizza-record-order-phone", `/pizza/crew/record/${ORDER}`, PHONE, "done"],
   ["pizza-export", "/pizza/crew/export", DESK, "done"],
   ["pizza-export-phone", "/pizza/crew/export", PHONE, "done"],
@@ -120,10 +139,11 @@ export function pizzaListed(at) {
 }
 
 /**
- * A pizza API call as the CI session through Caddy (SCREEN is Caddy's address here), each write
- * with a fresh `Idempotency-Key`; a string body is the menu CSV, a Buffer a PNG photo.
+ * A pizza API call as the CI session (or `cookie`'s person) through Caddy (SCREEN is Caddy's
+ * address here), each write with a fresh `Idempotency-Key`; a string body is the menu CSV, a
+ * Buffer a PNG photo.
  */
-function api(method, path, body) {
+function api(method, path, body, cookie = SESSION) {
   return new Promise((resolve, reject) => {
     const csv = typeof body === "string";
     const png = Buffer.isBuffer(body);
@@ -137,7 +157,7 @@ function api(method, path, body) {
         timeout: 10_000,
         headers: {
           host: DEMO_HOST,
-          cookie: SESSION,
+          cookie,
           ...(method === "GET"
             ? {}
             : { "idempotency-key": randomBytes(12).toString("base64url") }),
@@ -268,6 +288,19 @@ export async function pizzaShots({ shot, fail }) {
         "adding a pizza",
       );
     }
+    for (const [cookie, number] of PLAYERS) {
+      const item = menu.body.menu.items.find((i) => i.number === number);
+      expect(
+        await api(
+          "POST",
+          `/api/pizza/orders/${order}/items`,
+          { kind: "menu", menu_item_id: item.id },
+          cookie,
+        ),
+        201,
+        "adding a player's pizza",
+      );
+    }
   } catch (err) {
     fail(`pizza: the order for the shots: ${firstLine(err)}`);
     return;
@@ -294,7 +327,17 @@ export async function pizzaShots({ shot, fail }) {
         200,
         "Pay me with",
       );
-      return api("PATCH", `/api/pizza/orders/${order}/money`, { settle_to: "payer" });
+      const settled = await api("PATCH", `/api/pizza/orders/${order}/money`, {
+        settle_to: "payer",
+      });
+      for (const user of PAID) {
+        expect(
+          await api("PUT", `/api/pizza/orders/${order}/paid/${user}`, { paid: true }),
+          200,
+          "marking a player paid",
+        );
+      }
+      return settled;
     },
     arrived: () =>
       api("POST", `/api/pizza/orders/${order}/arrive`, { pickup: "Entrance table" }),

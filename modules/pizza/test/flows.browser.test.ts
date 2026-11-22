@@ -2,7 +2,8 @@
 /**
  * The holder's and the crew's flows in Chromium, on the real app and a real Postgres: the holder
  * from close to "Everyone got theirs" (its undo included) on a phone; the crew stepping in on the
- * desk and reading the same page on a phone; a menu CSV through its preview; a settings slider.
+ * desk and reading the same page on a phone; a receipt photo and the split on the money step; a
+ * menu CSV through its preview; a settings slider.
  */
 import type pg from "pg";
 import type { Browser } from "playwright-core";
@@ -11,6 +12,7 @@ import { HOSTS, serve, signedIn } from "./browser.js";
 import type { Served } from "./browser.js";
 import { launch } from "./chromium.js";
 import { SPEC_MENU } from "./fixtures.js";
+import { png } from "./images.js";
 import {
   DATABASE_URL,
   freshDatabase,
@@ -135,6 +137,34 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     expect(await small.locator(".pizza-phone").textContent()).toContain("Order 1 · Demo Pizzeria");
     await desk.close();
     await phone.close();
+  });
+
+  it("sends the receipt as soon as the camera's photo is taken, and selects the split on tap", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan`);
+    await page.locator("input[capture]").setInputFiles({
+      name: "receipt.png",
+      mimeType: "image/png",
+      buffer: await png(),
+    });
+    // The reader is off: the photo is kept and the holder types the total.
+    await page.waitForURL(`**/pizza/hold/${id}/money/total`);
+    await page.locator("input[name=total]").fill("30.00");
+    await page.getByRole("button", { name: "Save the total" }).click();
+    await page.waitForURL(`**/pizza/hold/${id}/money`);
+    await page.getByRole("button", { name: "Even shares" }).click();
+    await page.waitForURL(`**/pizza/hold/${id}/money`);
+    expect(
+      await page.getByRole("button", { name: "Even shares" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      (json(await w.call("pena", "GET", `/api/pizza/orders/${id}/money`)) as { split: string })
+        .split,
+    ).toBe("even");
+    await context.close();
   });
 
   it("imports a menu CSV from a file through its preview", async () => {

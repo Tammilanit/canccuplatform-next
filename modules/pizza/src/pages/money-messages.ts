@@ -68,7 +68,6 @@ export const MONEY_EN = {
   "money.memo":
     "A tick is your memo: no money moves through the app. Each person sees only their own mark.",
   "money.mark": "Mark {name} paid",
-  "money.save": "Save",
   "pad.title": "Type the total",
   "pad.paid_to": "paid to {pizzeria}",
   "pad.save": "Save the total",
@@ -76,7 +75,8 @@ export const MONEY_EN = {
   "pad.invalid": "Type the total in euros, like 38.50.",
   "pad.delete": "Delete",
   "scan.title": "Scan",
-  "scan.photo": "Photo of the receipt",
+  "scan.take": "Take a photo of the receipt",
+  "scan.saved": "Use a saved photo",
   "scan.read": "Read the receipt",
   "scan.keep": "Keep the photo",
   "scan.reading": "Reading the receipt… Usually a few seconds.",

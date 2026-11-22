@@ -66,7 +66,6 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.memo":
     "Merkintä on sinun muistiinpanosi: sovellus ei siirrä rahaa. Kukin näkee vain oman merkintänsä.",
   "money.mark": "Merkitse {name} maksaneeksi",
-  "money.save": "Tallenna",
   "pad.title": "Kirjoita summa",
   "pad.paid_to": "maksettu: {pizzeria}",
   "pad.save": "Tallenna summa",
@@ -74,7 +73,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "pad.invalid": "Kirjoita summa euroina, esim. 38,50.",
   "pad.delete": "Poista",
   "scan.title": "Skannaa",
-  "scan.photo": "Kuva kuitista",
+  "scan.take": "Ota kuva kuitista",
+  "scan.saved": "Käytä tallennettua kuvaa",
   "scan.read": "Lue kuitti",
   "scan.keep": "Säilytä kuva",
   "scan.reading": "Luetaan kuittia… Yleensä muutama sekunti.",

@@ -55,7 +55,14 @@ function orderCard(c: PageCtx, o: RecordOrder, flags: DailyRecord["flags"]): Htm
           amount: euro(c, o.total_cents),
         });
   const payer = o.payer_name ?? "—";
-  return html`<li>
+  return html`<li class="pizza-schedule__row">
+    ${
+      o.placed_at === null
+        ? html`<span class="pizza-schedule__time">—</span>`
+        : html`<time class="pizza-schedule__time" datetime="${o.placed_at}"
+            >${time(c, o.placed_at)}</time
+          >`
+    }
     <a class="pizza-card pizza-card--link" href="${PREFIX}crew/record/${o.id}">
       <p class="pizza-card__title">${c.t("record.order", { seq: o.seq, pizzeria: o.pizzeria })}</p>
       <p>${total}</p>
@@ -75,7 +82,19 @@ function orderCard(c: PageCtx, o: RecordOrder, flags: DailyRecord["flags"]): Htm
   </li>`;
 }
 
-/** Mockup 12 A: the picked day's orders, or the whole event's, day by day. */
+/** Called-in orders by their call time, then the ones never called in (cancelled before). */
+const byCallTime = (orders: RecordOrder[]) =>
+  [...orders].sort(
+    (a, b) =>
+      (a.placed_at === null ? 1 : 0) - (b.placed_at === null ? 1 : 0) ||
+      (a.placed_at ?? "").localeCompare(b.placed_at ?? "") ||
+      a.seq - b.seq,
+  );
+
+/**
+ * Mockup 12 A: the picked day's orders, or the whole event's, day by day, as a day schedule with
+ * the call time down the side (amendment 4 of the design guideline, 0031).
+ */
 export function recordView(c: PageCtx, r: DailyRecord, picked: string, all: RecordDay[]): Html {
   const days = picked === WHOLE ? r.days : r.days.filter((d) => d.day === picked);
   return html`${dayChips(c, all, picked, "crew/record")}
@@ -93,9 +112,9 @@ export function recordView(c: PageCtx, r: DailyRecord, picked: string, all: Reco
               ),
             })}
           </p>
-          <ul class="pizza-people">
-            ${d.orders.map((o) => orderCard(c, o as RecordOrder, r.flags))}
-          </ul>
+          <ol class="pizza-schedule">
+            ${byCallTime(d.orders as RecordOrder[]).map((o) => orderCard(c, o, r.flags))}
+          </ol>
         </section>`,
     )}
     <a class="canccu-button canccu-button--primary" href="${PREFIX}crew/export?day=${picked}"
@@ -114,90 +133,96 @@ export function recordOrderView(
 ): Html {
   const sum = m.people.reduce((s, p) => s + (p.amount_cents ?? 0), 0);
   const owing = m.people.filter((p) => p.paid !== null);
-  return html`<section class="pizza-card">
-      <p class="pizza-card__title">${o.pizzeria} · ${day}</p>
-      <p class="pizza-card__meta">
-        ${c.t("record.times", {
-          placed: time(c, o.placed_at) || "—",
-          arrived: time(c, o.arrived_at) || "—",
-          done: time(c, o.done_at) || "—",
-        })}
-      </p>
-      ${o.payer_name === null ? "" : html`<p>${c.t("record.payer_paid", { name: o.payer_name })}</p>`}
-      <p class="pizza-card__title">
+  // Two panels side by side on a desktop, one column on a phone (amendment 5).
+  return html`<div class="canccu-band">
+    <div class="pizza-stack">
+      <section class="pizza-card">
+        <p class="pizza-card__title">${o.pizzeria} · ${day}</p>
+        <p class="pizza-card__meta">
+          ${c.t("record.times", {
+            placed: time(c, o.placed_at) || "—",
+            arrived: time(c, o.arrived_at) || "—",
+            done: time(c, o.done_at) || "—",
+          })}
+        </p>
+        ${o.payer_name === null ? "" : html`<p>${c.t("record.payer_paid", { name: o.payer_name })}</p>`}
+        <p class="pizza-card__title">
+          ${
+            o.total_cents === null
+              ? c.t("money.no_total")
+              : c.t(o.total_from_receipt ? "record.receipt_confirmed" : "record.total_typed", {
+                  amount: euro(c, o.total_cents),
+                })
+          }
+        </p>
+        ${flags
+          .filter((f) => f.order_id === o.id)
+          .map((f) => html`<p class="pizza-badge pizza-badge--warn">${f.text}</p>`)}
+      </section>
+      <p>
         ${
-          o.total_cents === null
-            ? c.t("money.no_total")
-            : c.t(o.total_from_receipt ? "record.receipt_confirmed" : "record.total_typed", {
-                amount: euro(c, o.total_cents),
-              })
+          m.settle_to === "payer"
+            ? c.t("record.settles_payer", { name: m.payer?.name ?? "—" })
+            : c.t("record.settles_organiser")
         }
       </p>
-      ${flags
-        .filter((f) => f.order_id === o.id)
-        .map((f) => html`<p class="pizza-badge pizza-badge--warn">${f.text}</p>`)}
-    </section>
-    <p class="pizza-section">
-      ${c.t(m.split_effective === "exact" ? "money.each_exact" : "money.each_even")}
-    </p>
-    <ul class="pizza-people">
-      ${m.people.map(
-        (p) =>
-          html`<li class="pizza-person">
-            <span class="pizza-person__text"
-              ><span class="pizza-person__name">${p.name ?? "—"}</span
-              ><span class="pizza-person__what"
-                >${pizzasOf(c, p.units)}${
-                  p.user_id !== null && p.user_id === m.payer?.user_id
-                    ? ` · ${c.t("record.paid_pizzeria")}`
-                    : ""
-                }</span
-              ></span
-            ><span class="pizza-amount canccu-num"
-              >${p.amount_cents === null ? "—" : euro(c, p.amount_cents)}</span
-            >
-          </li>`,
-      )}
-    </ul>
-    ${
-      o.total_cents !== null && sum === o.total_cents
-        ? html`<p class="pizza-ok">${c.t("record.sum_ok", { amount: euro(c, sum) })}</p>`
-        : ""
-    }
-    <p>
       ${
         m.settle_to === "payer"
-          ? c.t("record.settles_payer", { name: m.payer?.name ?? "—" })
-          : c.t("record.settles_organiser")
+          ? html`<p class="pizza-muted">
+              ${c.t("record.marked", { k: owing.filter((p) => p.paid === true).length, n: owing.length })}
+            </p>`
+          : ""
       }
-    </p>
-    ${
-      m.settle_to === "payer"
-        ? html`<p class="pizza-muted">
-            ${c.t("record.marked", { k: owing.filter((p) => p.paid === true).length, n: owing.length })}
-          </p>`
-        : ""
-    }
-    ${
-      m.receipts.length === 0
-        ? ""
-        : html`<p class="pizza-section">${c.t("record.receipts")}</p>
-            <ul class="pizza-receipts">
-              ${m.receipts.map(
-                (r, i) =>
-                  html`<li class="pizza-receipt">
-                    <a href="/api/pizza/receipts/${r.id}/photo"
-                      ><img
-                        src="/api/pizza/receipts/${r.id}/photo"
-                        alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"
-                        loading="lazy"
-                    /></a>
-                  </li>`,
-              )}
-            </ul>
-            <p class="pizza-muted">${c.t("money.receipt_who")}</p>`
-    }
-    ${history}`;
+      ${
+        m.receipts.length === 0
+          ? ""
+          : html`<p class="pizza-section">${c.t("record.receipts")}</p>
+              <ul class="pizza-receipts">
+                ${m.receipts.map(
+                  (r, i) =>
+                    html`<li class="pizza-receipt">
+                      <a href="/api/pizza/receipts/${r.id}/photo"
+                        ><img
+                          src="/api/pizza/receipts/${r.id}/photo"
+                          alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"
+                      /></a>
+                    </li>`,
+                )}
+              </ul>
+              <p class="pizza-muted">${c.t("money.receipt_who")}</p>`
+      }
+      ${history}
+    </div>
+    <div>
+      <p class="pizza-section">
+        ${c.t(m.split_effective === "exact" ? "money.each_exact" : "money.each_even")}
+      </p>
+      <ul class="pizza-people">
+        ${m.people.map(
+          (p) =>
+            html`<li class="pizza-person">
+              <span class="pizza-person__text"
+                ><span class="pizza-person__name">${p.name ?? "—"}</span
+                ><span class="pizza-person__what"
+                  >${pizzasOf(c, p.units)}${
+                    p.user_id !== null && p.user_id === m.payer?.user_id
+                      ? ` · ${c.t("record.paid_pizzeria")}`
+                      : ""
+                  }</span
+                ></span
+              ><span class="pizza-amount canccu-num"
+                >${p.amount_cents === null ? "—" : euro(c, p.amount_cents)}</span
+              >
+            </li>`,
+        )}
+      </ul>
+      ${
+        o.total_cents !== null && sum === o.total_cents
+          ? html`<p class="pizza-ok">${c.t("record.sum_ok", { amount: euro(c, sum) })}</p>`
+          : ""
+      }
+    </div>
+  </div>`;
 }
 
 export interface ExportAnswer {

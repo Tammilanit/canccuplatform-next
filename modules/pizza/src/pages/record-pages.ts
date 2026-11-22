@@ -41,7 +41,6 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
       tab: "record",
-      narrow: true,
       body: recordView(c, r, pick(request, r), r.days),
     });
   });
@@ -63,7 +62,6 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
     return organiserPage(request, reply, deps, c, {
       title: c.t("hold.order", { seq: o.seq }),
       crumb: { href: `${PREFIX}crew/record?day=${day.day}`, label: c.t("tab.record") },
-      narrow: true,
       body: recordOrderView(
         c,
         o as Parameters<typeof recordOrderView>[1],
@@ -86,7 +84,6 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
     return organiserPage(request, reply, deps, c, {
       title: c.t("export.title"),
       crumb: { href: `${PREFIX}crew/record?day=${picked}`, label: c.t("tab.record") },
-      narrow: true,
       body: exportView(c, e, readCsv(e.csv), picked, r.days),
     });
   });

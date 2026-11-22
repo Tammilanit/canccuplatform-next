@@ -76,6 +76,26 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
     expect(r.body).toContain("Export for the payment system");
   });
 
+  it("shows the day as a schedule by call time, at the page's width (amendment 4)", async () => {
+    const r = await view(w, "treasurer", "/crew/record?day=2026-10-29");
+    expect(r.body).toMatch(/<time[^>]*class="pizza-schedule__time"[^>]*>18:00<\/time\s*>/);
+    expect(r.body).toContain("pizza-schedule");
+    expect(r.body).not.toContain("canccu-main--narrow");
+    const shot = await view(w, "treasurer", "/crew/export?day=2026-10-29");
+    expect(shot.body).not.toContain("canccu-main--narrow");
+  });
+
+  it("lists the day's orders by call time, not by number", async () => {
+    await w.call("pena", "POST", `/api/pizza/orders/${one}/undo`, {});
+    w.advance(30);
+    await w.call("pena", "POST", `/api/pizza/orders/${one}/place`, {});
+    const body = (await view(w, "treasurer", "/crew/record?day=2026-10-29")).body;
+    expect(body).toMatch(/>18:30<\/time/);
+    expect(body.indexOf("Order 2 · Demo Grill")).toBeLessThan(
+      body.indexOf("Order 1 · Demo Pizzeria"),
+    );
+  });
+
   it("shows one order's money: each person, the sum, who is paid and the marks", async () => {
     const r = await view(w, "treasurer", `/crew/record/${one}`);
     expect(r.statusCode).toBe(200);

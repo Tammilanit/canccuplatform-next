@@ -73,7 +73,11 @@ export function padView(
     </form>`;
 }
 
-/** Mockup 18 A and B: the notice before the photo is sent, then the photo. */
+/**
+ * Mockup 18 A and B: the notice before the photo is sent, then the photo. The camera field opens
+ * the phone's own camera; the saved-photo field has no `capture`, for laptops and earlier photos.
+ * Neither is required, as only one is filled: the form sends whichever photo it has.
+ */
 export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?: string }): Html {
   return html`${flash(s.error)}
     ${s.reader ? outsideNotice(c, c.t("money.outside_text", { provider: PROVIDER.name })) : ""}
@@ -85,15 +89,24 @@ export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?:
       data-reading="${s.reader ? c.t("scan.reading") : ""}"
     >
       ${formKey()}
-      <label class="canccu-field"
-        ><span class="canccu-field__label">${c.t("scan.photo")}</span
-        ><input
-          class="canccu-input"
+      <label class="pizza-camera">
+        <span class="pizza-camera__frame" aria-hidden="true"></span>
+        <span class="pizza-camera__text">${c.t("scan.take")}</span>
+        <input
+          class="pizza-camera__input"
           type="file"
           name="photo"
           accept="image/jpeg,image/png,image/webp"
           capture="environment"
-          required
+          data-auto-send
+      /></label>
+      <label class="pizza-saved"
+        >${c.t("scan.saved")}<input
+          class="pizza-camera__input"
+          type="file"
+          name="photo"
+          accept="image/jpeg,image/png,image/webp"
+          data-auto-send
       /></label>
       <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
         ${c.t(s.reader ? "scan.read" : "scan.keep")}

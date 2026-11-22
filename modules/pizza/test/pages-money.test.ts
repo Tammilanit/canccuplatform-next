@@ -156,6 +156,18 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     expect(page).toContain("€9.00 still to collect");
   });
 
+  it("selects the split and who is paid on tap, one button per choice, no Save (mockup 19)", async () => {
+    await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
+    const page = (await view(w, "pena", `/hold/${id}/money`)).body;
+    expect(page).toMatch(/<button[^>]*name="split"[^>]*value="even"/);
+    expect(page).toMatch(/<button[^>]*name="split"[^>]*value="exact"[^>]*aria-pressed="true"/);
+    expect(page).toMatch(/<button[^>]*name="settle_to"[^>]*value="payer"[^>]*aria-pressed="false"/);
+    expect(page).not.toContain('type="radio"');
+    expect(page).not.toMatch(/<button[^>]*>\s*Save\s*<\/button>/);
+    await form(w, "pena", `/hold/${id}/money/settle`, { settle_to: "payer" });
+    expect((await money()).settle_to).toBe("payer");
+  });
+
   it("hides Me directly where the event settles through the organiser", async () => {
     w.settings.set("demo", DEFAULT_SETTINGS);
     expect((await view(w, "pena", `/hold/${id}/money`)).body).not.toContain("Me directly");
@@ -246,6 +258,41 @@ describe.skipIf(!DATABASE_URL)(
       expect(page).toContain("by Pena at 18:00");
       expect(page).toContain("Receipt 1 · 18:00");
       expect(page).toContain("Seen by you, the crew and the organiser only");
+    });
+
+    it("offers the camera as a big button and a saved photo as the other way (mockup 18 B)", async () => {
+      const page = (await view(w, "pena", `/hold/${id}/money/scan`)).body;
+      expect(page).toContain("Take a photo of the receipt");
+      expect(page).toContain("Use a saved photo");
+      const inputs = page.match(/<input[^>]*type="file"[^>]*>/g) ?? [];
+      expect(inputs).toHaveLength(2);
+      expect(inputs.filter((i) => i.includes('capture="environment"'))).toHaveLength(1);
+      expect(inputs.every((i) => !i.includes("required"))).toBe(true);
+      expect(page).toContain("pizza-camera");
+    });
+
+    it("keeps a saved photo sent beside an empty camera field, as a browser posts it", async () => {
+      const r = await upload(w, "pena", `/hold/${id}/money/scan`, [
+        { name: "", type: "application/octet-stream", bytes: Buffer.alloc(0) },
+        { name: "receipt.png", type: "image/png", bytes: await png() },
+      ]);
+      expect(location(r)).toBe(`/pizza/hold/${id}/money/total`);
+      expect(((await money()).receipts as unknown[]).length).toBe(1);
+    });
+
+    it("shows the confirmed receipt's photo, which the holder's browser can load (mockup 18 E)", async () => {
+      await upload(w, "pena", `/hold/${id}/money/scan`, [
+        { name: "receipt.png", type: "image/png", bytes: await png() },
+      ]);
+      await form(w, "pena", `/hold/${id}/money/total`, { total: "39.00" });
+      const page = (await view(w, "pena", `/hold/${id}/money`)).body;
+      const img = page.match(/<img[^>]*src="([^"]+)"[^>]*>/);
+      expect(img).not.toBeNull();
+      // The thumbnail is at the top of the page: lazy loading left it blank in a full-page shot.
+      expect(img?.[0]).not.toContain('loading="lazy"');
+      const photo = await view(w, "pena", img?.[1] ?? "");
+      expect(photo.statusCode).toBe(200);
+      expect(photo.headers["content-type"]).toMatch(/^image\//);
     });
 
     it("shows a refused Confirm on the check page, with the read still there", async () => {

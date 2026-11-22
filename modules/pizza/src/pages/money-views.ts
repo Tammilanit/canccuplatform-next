@@ -131,7 +131,6 @@ function confirmed(c: PageCtx, o: OrderView, m: MoneyView): Html {
                       ><img
                         src="${photoUrl(r.id)}"
                         alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"
-                        loading="lazy"
                     /></a>
                     <span>${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}</span>
                   </li>`,
@@ -179,18 +178,27 @@ function unpriced(c: PageCtx, o: OrderView, m: MoneyView): Slot {
   </section>`;
 }
 
+/**
+ * One choice of a pair (mockup 19's pills): a submit button, so a tap selects it at once, as the
+ * mockup does, and the page still works without a script. The current one shows as pressed.
+ */
 function choice(
   name: string,
   value: string,
   label: string,
-  checked: boolean,
+  pressed: boolean,
   disabled = false,
 ): Html {
-  return html`<label class="pizza-choice"
-    ><input${attrs({ type: "radio", name, value, checked, disabled })} /><span
-      >${label}</span
-    ></label
-  >`;
+  return html`<button${attrs({
+    class: "pizza-pill",
+    type: "submit",
+    name,
+    value,
+    disabled,
+    "aria-pressed": pressed ? "true" : "false",
+  })}>
+    ${label}
+  </button>`;
 }
 
 function split(c: PageCtx, o: OrderView, m: MoneyView): Slot {
@@ -199,15 +207,12 @@ function split(c: PageCtx, o: OrderView, m: MoneyView): Slot {
     ${formKey()}
     <fieldset class="pizza-fieldset">
       <legend class="pizza-section">${c.t("money.split")}</legend>
-      <div class="pizza-choices pizza-choices--two">
+      <div class="pizza-pills">
         ${choice("split", "exact", c.t("money.exact"), m.split_effective === "exact", !m.exact_possible)}
         ${choice("split", "even", c.t("money.even"), m.split_effective === "even")}
       </div>
     </fieldset>
     <p class="pizza-muted">${splitLine(c, m)}</p>
-    <button class="canccu-button canccu-button--secondary" type="submit">
-      ${c.t("money.save")}
-    </button>
   </form>`;
 }
 
@@ -239,15 +244,12 @@ function whoIsPaid(c: PageCtx, o: OrderView, m: MoneyView, directly: boolean): S
     ${formKey()}
     <fieldset class="pizza-fieldset">
       <legend class="pizza-section">${c.t("money.who_paid")}</legend>
-      <div class="pizza-choices pizza-choices--two">
+      <div class="pizza-pills">
         ${choice("settle_to", "organiser", c.t("money.organiser"), !payer)}
         ${choice("settle_to", "payer", c.t("money.directly"), payer, !directly)}
       </div>
     </fieldset>
     <p class="pizza-muted">${c.t(payer ? "money.directly_text" : "money.organiser_text")}</p>
-    <button class="canccu-button canccu-button--secondary" type="submit">
-      ${c.t("money.save")}
-    </button>
   </form>`;
 }
 
