@@ -21,6 +21,22 @@ const brief = (o: OrderRow) => ({
   pizzeria: { id: o.pizzeria_id, name: o.pizzeria_name },
 });
 
+/** A pizza's columns from `kind` to `price_cents`, in the order the INSERT and the UPDATE list them. */
+function pizzaValues(input: ItemInput, snap: Snapshot): unknown[] {
+  return [
+    input.kind,
+    snap.menu_item_id,
+    snap.number,
+    snap.label,
+    snap.description,
+    snap.toppings === null ? null : JSON.stringify(snap.toppings),
+    snap.text,
+    input.note,
+    input.comment,
+    snap.price_cents,
+  ];
+}
+
 export interface Opening {
   pizzeria: { id: string; name: string };
   closes_at: Date;
@@ -136,23 +152,7 @@ export async function addItem(
        toppings, text, note, comment, price_cents, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $15)
      RETURNING id`,
-    [
-      newId("pi"),
-      orderId,
-      actor.user_id,
-      actor.name,
-      input.kind,
-      snap.menu_item_id,
-      snap.number,
-      snap.label,
-      snap.description,
-      snap.toppings === null ? null : JSON.stringify(snap.toppings),
-      snap.text,
-      input.note,
-      input.comment,
-      snap.price_cents,
-      s.now,
-    ],
+    [newId("pi"), orderId, actor.user_id, actor.name, ...pizzaValues(input, snap), s.now],
   );
   const item = (await getItem(s.c, (ins.rows[0] as { id: string }).id)) as ItemRow;
   await logStep(s.c, orderId, s.now, actor, "item_added", { item_id: item.id });
@@ -181,20 +181,7 @@ export async function editItem(
     `UPDATE pizza_items SET kind = $2, menu_item_id = $3, number = $4, label = $5, description = $6,
        toppings = $7, text = $8, note = $9, comment = $10, price_cents = $11, updated_at = $12 WHERE id = $1
      RETURNING id`,
-    [
-      item.id,
-      input.kind,
-      snap.menu_item_id,
-      snap.number,
-      snap.label,
-      snap.description,
-      snap.toppings === null ? null : JSON.stringify(snap.toppings),
-      snap.text,
-      input.note,
-      input.comment,
-      snap.price_cents,
-      s.now,
-    ],
+    [item.id, ...pizzaValues(input, snap), s.now],
   );
   const after = await getItem(s.c, item.id);
   if (updated.rows.length === 0 || after === null) throw noPizza();

@@ -41,7 +41,6 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.unpriced_one": "1 pizzalta puuttuu hinta",
   "money.unpriced_hint": "Lisää sen hinta, niin summat ovat tarkat.",
   "money.unpriced_even": "Tai jaa tasan: {line}.",
-  "money.price": "Hinta",
   "money.save_price": "Tallenna hinta",
   "money.who_paid": "Kenelle maksetaan",
   "money.organiser": "Järjestäjälle",
