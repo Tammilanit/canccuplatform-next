@@ -277,7 +277,7 @@ Review finding 1 of #137: does a tournament check-in count as presence data unde
 - **A.** The hub's button and the stage QR both go through Notify's check-in with purpose `tournament:<session id>`; the module consumes `notify.checkin.recorded`, checks the session and the registration, and emits `tournament.player.checked_in`.
 - **B.** The button posts to the tournament directly; only the QR goes through Notify.
 - **Changed (lead round 7): lobby presence is the check-in.** One of the three participation sources ([D21](#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)); the crew can still mark someone present. The stage QR and the "I'm here" button are dropped: Notify's check-in stays built and is not used for the cup. **C.** (now the recommendation) the module reads the lobby channel's roster from the bot ([D4](#d4-the-voice-handshake)).
-- **Recommendation: A.** One path, already built and tested in Notify; the button calls the same API without the code (a check-in the module requests on the player's behalf, with their session).
+- **Recommendation: C** (changed, lead round 7): lobby presence from the bot's roster is the check-in, and the crew marks others present; Notify's check-in stays built and unused for the cup. (History: A was recommended before round 7, for its one tested path through Notify.)
 
 ### D7. Corrections and the history
 - **A.** A result is versioned; a correction needs a reason, emits `tournament.result.corrected` with the whole new list, recomputes the standings and shows a note on the match; the session's History lists every crew and scheduler action.
