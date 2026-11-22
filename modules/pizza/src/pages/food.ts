@@ -82,7 +82,7 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
       title: string;
       back?: string;
       live?: string;
-      layout?: "pair" | "wide";
+      layout?: "pair";
       body: Parameters<typeof hubPage>[4]["body"];
     },
   ) =>
@@ -102,7 +102,6 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     const orders = a.status === 403 ? null : ((must(a).orders ?? []) as OrderView[]);
     return page(request, reply, c, {
       title: c.t("hold.food"),
-      layout: "wide",
       // A refused read means the stream refuses too: no live page that can never be live.
       ...(orders === null ? {} : { live: STREAM }),
       body: foodView(c, orders, {

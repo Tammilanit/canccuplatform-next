@@ -2,8 +2,7 @@
    task rather than cut into a main part and a side panel (#771). A page that is one flow is one
    centred column of readable width (`pizza-hub--column`); two columns only where the second is
    used with the first (`pizza-pair`: the receipt's photo beside its lines, the order's timeline
-   beside the order); Food's list of orders takes the shared 64 rem (`pizza-hub--wide`). Phones are
-   as pizza.css draws them: one column, in the page's order. */
+   beside the order). Phones are as pizza.css draws them: one column, in the page's order. */
 
 .pizza-pair,
 .pizza-pair__main,
@@ -21,17 +20,14 @@
     padding-inline: 2rem;
   }
   .pizza-hub--pair .pizza-hub__head,
-  .pizza-hub--pair .pizza-hub__main,
-  .pizza-hub--wide .pizza-hub__head,
-  .pizza-hub--wide .pizza-hub__main {
+  .pizza-hub--pair .pizza-hub__main {
     max-width: 64rem;
   }
   /* "Reconnecting…" spans the content, as the main part's padding leaves it. */
   .pizza-live {
     max-width: 40rem;
   }
-  .pizza-hub--pair .pizza-live,
-  .pizza-hub--wide .pizza-live {
+  .pizza-hub--pair .pizza-live {
     max-width: 60rem;
   }
   .pizza-hub__head {

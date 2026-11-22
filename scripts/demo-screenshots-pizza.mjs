@@ -355,6 +355,9 @@ export async function pizzaShots({ shot, fail }) {
       cookie,
       {
         touch: viewport === PHONE,
+        // The read's sum and Confirm stay in view at the window's foot: shot as tall as the page,
+        // so that footer sits under the lines, not over them.
+        ...(name.startsWith("pizza-holder-money-check") ? { tall: true } : {}),
         // The attendee's pages keep their live stream open, so the network never goes idle.
         ...(name.startsWith("pizza-food")
           ? { ready: (page) => page.locator(".pizza-hub__main").waitFor() }

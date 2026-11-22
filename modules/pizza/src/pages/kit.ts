@@ -10,17 +10,16 @@ import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import type { Session } from "@canccu/kit";
-import { attrs, errorTitle, errorView, html, icon, shellPage } from "@canccu/ui";
+import { attrs, errorTitle, errorView, html, shellPage } from "@canccu/ui";
 import type { EventInfo, Html, Slot, Tab } from "@canccu/ui";
 import { tenantOf, whoIs } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { MANAGE, MENU_WRITE, RECORD_READ } from "../policy.js";
+import { frame } from "./frame.js";
 import { translator } from "./messages.js";
 import type { Translate } from "./messages.js";
 
 export const SIGN_IN = "/admin/sign-in";
-/** Theming's one address for the event's logo, its initials without one (contracts/theming.md). */
-const LOGO = "/theming/logo";
 /** Caddy strips this prefix (handle_path), so the module's own paths start at `/`. */
 export const PREFIX = "/pizza/";
 export const SETTINGS_READ = "admin.settings.read";
@@ -84,43 +83,6 @@ function send(
 }
 
 /**
- * The hub's frame around an attendee's page (amendment 5, mockups 03–05): the event's header,
- * which leads back to its front door `/`, and the hub's bar. The bar holds only pages that exist
- * (Now and Food; More for the rest): Schedule, Play and Alerts join it with their pages, which the
- * App track builds, so no tab leads nowhere. One nav for both widths: a bar at a phone's foot, the
- * header's links on a desktop (static/hub.css).
- */
-function frame(event: EventInfo | undefined, t: Translate, signedIn: boolean): Html {
-  const more = html`<button class="pizza-hubbar__item" type="button" popovertarget="pizza-more">
-      ${icon("more")}<span>${t("frame.more")}</span>
-    </button>
-    <div class="pizza-more" id="pizza-more" popover>
-      <a href="/privacy">${t("frame.privacy")}</a>
-      ${
-        signedIn
-          ? html`<form method="post" action="/admin/sign-out">
-              <button type="submit">${t("frame.sign_out")}</button>
-            </form>`
-          : html`<a href="${SIGN_IN}?next=${encodeURIComponent(PREFIX)}">${t("frame.sign_in")}</a>`
-      }
-    </div>`;
-  return html`<header class="pizza-frame">
-    <a class="pizza-frame__event" href="/"
-      ><img class="pizza-frame__logo" src="${LOGO}" alt="" /><span class="pizza-frame__name"
-        >${event?.name ?? t("frame.event")}</span
-      ></a
-    >
-    <nav class="pizza-hubbar" aria-label="${t("frame.hub")}">
-      <a class="pizza-hubbar__item" href="/">${icon("pulse")}<span>${t("frame.now")}</span></a>
-      <a class="pizza-hubbar__item" href="${PREFIX}" aria-current="page"
-        >${icon("food")}<span>${t("frame.food")}</span></a
-      >
-      ${more}
-    </nav>
-  </header>`;
-}
-
-/**
  * The holder's page: the hub's look, which takes the event's theme (theming's tokens.css for the
  * `hub` surface), in the hub's frame, laid out for a phone and for a desktop, with the way back at its top.
  */
@@ -138,7 +100,7 @@ export async function hubPage(
     /** The live stream the page follows (static/food.js): a change redraws it, no polling (D13). */
     live?: { url: string; offline: string };
     /** The page's width on a desktop: one readable column, or two used together (static/wide.css). */
-    layout?: "column" | "pair" | "wide";
+    layout?: "column" | "pair";
   },
 ): Promise<FastifyReply> {
   const nonce = newNonce();
@@ -164,7 +126,7 @@ export async function hubPage(
       <body
         class="canccu-page canccu-surface canccu-surface--hub pizza-hub pizza-hub--${o.layout ?? "column"}"
       >
-        ${frame(event, c.t, c.signedIn !== false)}
+        ${frame(event, c.t, c.signedIn !== false, `${SIGN_IN}?next=${encodeURIComponent(PREFIX)}`)}
         <div class="pizza-hub__head">
           ${back}
           <h1 class="pizza-hub__title">${o.title}</h1>

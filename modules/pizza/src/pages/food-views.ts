@@ -150,15 +150,16 @@ export function foodView(
   const open = orders.filter(isOpen);
   const stale = orders.filter((x) => x.stale);
   const earlier = orders.filter((x) => !isOpen(x) && !x.stale).sort((a, b) => b.seq - a.seq);
-  // The open orders are what people browse and join: cards in the shared grid, the way to start
-  // another beside their heading, so the page reads as one task at any width (A2).
+  // The open orders are what people browse and join: cards, the way to start another beside their
+  // heading. An event has a few open at once, so they stack at the column's full width rather
+  // than fill a grid, where one order was one small card in an empty window (A2).
   const openPart =
     open.length > 0
       ? html`<div class="pizza-heading">
             <h2 class="pizza-section">${c.t("food.open_orders")}</h2>
             ${start(c.t("food.start_another"), false, false)}
           </div>
-          <ul class="canccu-grid pizza-orders">
+          <ul class="pizza-orders">
             ${open.map((x) => html`<li>${orderCard(c, x)}</li>`)}
           </ul>`
       : c.member && o.ordering

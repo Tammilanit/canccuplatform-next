@@ -87,7 +87,7 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(bar).toContain("More");
   });
 
-  it("lays the open orders out as a grid of cards with the start next to their heading, never a generic split (A2)", async () => {
+  it("lays the open orders out as cards with the start next to their heading, never a generic split (A2)", async () => {
     await open(w, "pena", pz);
     const r = await view(w, "anni", "/");
     expect(r.body).not.toContain("pizza-split");
@@ -96,7 +96,8 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(head.indexOf("Start another order")).toBeLessThan(
       head.indexOf("Order 1 · Demo Pizzeria"),
     );
-    expect(r.body).toContain('class="canccu-grid pizza-orders"');
+    expect(r.body).toContain('<ul class="pizza-orders">');
+    expect(r.body).toContain("pizza-hub--column");
     const css = await w.app.inject({ url: "/static/wide.css", headers: { host: "demo.test" } });
     expect(css.statusCode).toBe(200);
     expect(css.body).not.toContain("pizza-split");

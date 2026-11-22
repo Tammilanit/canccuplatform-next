@@ -45,9 +45,12 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     title: string,
     body: ReturnType<typeof moneyPageView>,
     to = `/pizza/hold/${o.id}`,
+    /** The read to check sets its photo beside its lines (H3); every other money page is one flow. */
+    layout?: "pair",
   ) =>
     hubPage(request, reply, deps, c, {
       title,
+      ...(layout === undefined ? {} : { layout }),
       back: {
         href: to,
         label: to.endsWith("/money") ? c.t("money.title") : c.t("money.back", { seq: o.seq }),
@@ -122,6 +125,7 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       l.c.t("check.title"),
       checkView(l.c, l.o, r.id, r.read, request.query.error),
       `/pizza/hold/${l.o.id}/money/scan`,
+      "pair",
     );
   });
 
