@@ -83,44 +83,13 @@
 .pizza-csv {
   font-family: var(--canccu-font-mono);
 }
-.pizza-switch,
-.pizza-setting {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.pizza-switch__text {
+/* Food → Settings: its cards in one fieldset, so a reader without the write right gets them all
+   read only at once. */
+.pizza-settings {
   display: grid;
-}
-.pizza-switch__label {
-  font-weight: 600;
-}
-.pizza-switch__box {
-  flex: none;
-  width: 2.75rem;
-  height: 1.5rem;
-  accent-color: var(--canccu-color-primary);
-}
-.pizza-number {
-  width: 5.5rem;
-  text-align: center;
-}
-.pizza-slider {
-  display: grid;
-  /* canccu-grid: fixed form — a slider beside its value, as mockup 17 B */
-  grid-template-columns: minmax(0, 1fr) 6rem;
-  align-items: center;
-  gap: 0.25rem 1rem;
-}
-.pizza-slider > .pizza-switch__label {
-  grid-column: 1 / -1;
-  font-weight: 500;
-}
-.pizza-slider > input {
-  width: 100%;
-  accent-color: var(--canccu-color-primary);
-}
-.pizza-slider > output {
-  text-align: right;
+  gap: var(--canccu-gap);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }

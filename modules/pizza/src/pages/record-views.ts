@@ -159,20 +159,22 @@ export function recordOrderView(
           .filter((f) => f.order_id === o.id)
           .map((f) => html`<p class="pizza-badge pizza-badge--warn">${f.text}</p>`)}
       </section>
-      <p>
+      <section class="pizza-card">
+        <p>
+          ${
+            m.settle_to === "payer"
+              ? c.t("record.settles_payer", { name: m.payer?.name ?? "—" })
+              : c.t("record.settles_organiser")
+          }
+        </p>
         ${
           m.settle_to === "payer"
-            ? c.t("record.settles_payer", { name: m.payer?.name ?? "—" })
-            : c.t("record.settles_organiser")
+            ? html`<p class="pizza-muted">
+                ${c.t("record.marked", { k: owing.filter((p) => p.paid === true).length, n: owing.length })}
+              </p>`
+            : ""
         }
-      </p>
-      ${
-        m.settle_to === "payer"
-          ? html`<p class="pizza-muted">
-              ${c.t("record.marked", { k: owing.filter((p) => p.paid === true).length, n: owing.length })}
-            </p>`
-          : ""
-      }
+      </section>
       ${
         m.receipts.length === 0
           ? ""

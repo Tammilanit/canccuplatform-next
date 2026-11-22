@@ -3,7 +3,7 @@
  * The holder's and the crew's flows in Chromium, on the real app and a real Postgres: the holder
  * from close to "Everyone got theirs" (its undo included) on a phone; the crew stepping in on the
  * desk and reading the same page on a phone; a receipt photo and the split on the money step; a
- * menu CSV through its preview; a settings slider.
+ * menu CSV through its preview; a time setting's quick picks and stepper.
  */
 import type pg from "pg";
 import type { Browser } from "playwright-core";
@@ -190,16 +190,25 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     await context.close();
   });
 
-  it("says a time setting's value as its slider moves", async () => {
+  it("sets a time setting with a quick pick and steps it inside its bounds", async () => {
     if (browser === undefined) return;
     const context = await signedIn(browser, s, "organiser", 390);
     const page = await context.newPage();
     await page.goto(`${s.origin}/pizza/crew/settings`);
-    const slider = page.locator("input[name=release_after_minutes]");
-    await slider.fill("150");
-    expect(await slider.locator("xpath=following-sibling::output").textContent()).toBe(
-      "2 h 30 min",
-    );
+    const field = page.locator("input[name=release_after_minutes]");
+    await page
+      .locator('[data-canccu-for="pizza-release_after_minutes"][data-canccu-pick="240"]')
+      .click();
+    expect(await field.inputValue()).toBe("240");
+    await page
+      .locator('[data-canccu-for="pizza-release_after_minutes"][data-canccu-step="1"]')
+      .click();
+    expect(await field.inputValue()).toBe("241");
+    await field.fill("720");
+    await page
+      .locator('[data-canccu-for="pizza-release_after_minutes"][data-canccu-step="1"]')
+      .click();
+    expect(await field.inputValue()).toBe("720");
     await context.close();
   });
 });

@@ -56,6 +56,10 @@ MODULE_ICONS = {
     "screen": "monitor",
     "games": "flag",
 }
+# Modules whose settings form is a Settings tab on their own page (the admin control room brief,
+# direction B, D3): the values and the API stay admin's, only the page moved, and the old address
+# opens the tab. The others move in their own step's polish.
+SETTINGS_TABS = {"pizza": "/pizza/crew/settings"}
 HEALTH_WORDS = {"ok": "Running", "degraded": "Slow", "down": "Down"}
 HEALTH_ORDER = {"down": -2, "degraded": -1}  # trouble first
 # What a refused page is, for "Your role doesn't include …".

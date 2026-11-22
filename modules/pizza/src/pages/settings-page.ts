@@ -1,154 +1,21 @@
 /**
- * Food settings (`/pizza/crew/settings`, mockup 17): ordering, the scheduler's times and forgotten
- * orders, settling up and the AI reader. Read and saved through admin's settings API as the person,
- * with `admin.settings.write` and the version they read, so admin checks, audits and announces the
- * change; keys the page does not show (the reader's, without a provider key) are sent back as read.
+ * Food → Settings (`/pizza/crew/settings`, mockup 17, the admin control room's sheets 05 and 06):
+ * ordering, the scheduler's times and forgotten orders, settling up and the AI reader. Admin's old
+ * address for Food's form opens this tab (#747). Read and saved through admin's settings API as the
+ * person, with `admin.settings.write` and the version they read, so admin checks, audits and
+ * announces the change; keys the page does not show (the reader's, without a provider key) are
+ * sent back as read. Whoever may only read the event's settings sees them read only.
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
-import { attrs, html, notice } from "@canccu/ui";
-import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
-import { PROVIDER } from "../reader.js";
 import { readerKeySet } from "../reader-key.js";
-import { DEFAULT_SETTINGS, NOTE_MAX, READS_BOUNDS, TIME_BOUNDS } from "../settings.js";
-import type { TimeKey } from "../settings.js";
-import { flash } from "./order-view.js";
-import { PREFIX, SETTINGS_WRITE, formKey, organiserPage, pageCtx } from "./kit.js";
-import type { PageCtx } from "./kit.js";
-import type { MessageKey } from "./messages.js";
+import { NOTE_MAX, TIME_BOUNDS } from "../settings.js";
+import { PREFIX, SETTINGS_READ, SETTINGS_WRITE, organiserPage, pageCtx } from "./kit.js";
+import { COUNTS, settingsForm } from "./settings-views.js";
 
 type Values = Record<string, unknown>;
 const PATH = "/api/admin/settings/pizza";
-const TIMES = Object.keys(TIME_BOUNDS) as TimeKey[];
-const COUNTS = {
-  max_open_orders: [1, 20],
-  max_items_per_person: [1, 20],
-  ai_reader_daily_reads: READS_BOUNDS,
-} as const;
-
-/** The minutes as people read them: "10 min", "2 h", "1 h 30 min". */
-export function duration(c: PageCtx, minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return c.t("time.min", { n: m });
-  return m === 0 ? c.t("time.h", { n: h }) : c.t("time.h_min", { h, m });
-}
-
-/** Mockup 17 C: settling up, and the AI reader once an admin has set its provider key. */
-function settling(
-  c: PageCtx,
-  sw: (k: string, l: MessageKey, h: MessageKey) => Html,
-  count: (k: keyof typeof COUNTS, l: MessageKey, h: MessageKey) => Html,
-  reader: boolean,
-): Html {
-  return html`<section class="canccu-card pizza-form">
-      <h2 class="canccu-card__title">${c.t("settings.settling")}</h2>
-      <p class="pizza-switch">
-        <span class="pizza-switch__text"
-          ><span class="pizza-switch__label">${c.t("settings.organiser")}</span
-          ><span class="canccu-muted canccu-small">${c.t("settings.organiser_hint")}</span></span
-        >
-      </p>
-      ${sw("settle_to_payer", "settings.settle_to_payer", "settings.settle_to_payer_hint")}
-    </section>
-    ${
-      reader
-        ? html`<section class="canccu-card pizza-form">
-            <h2 class="canccu-card__title">${c.t("settings.reader")}</h2>
-            ${sw("ai_reader", "settings.ai_reader", "settings.ai_reader_hint")}
-            ${notice({
-              kind: "info",
-              title: c.t("settings.reader_outside"),
-              text: c.t("settings.reader_cost", { provider: PROVIDER.name, model: PROVIDER.model }),
-            })}
-            ${count("ai_reader_daily_reads", "settings.ai_reader_daily_reads", "settings.ai_reader_daily_reads_hint")}
-          </section>`
-        : ""
-    }`;
-}
-
-function form(c: PageCtx, values: Values, version: number, reader: boolean, error?: string): Html {
-  const v = { ...DEFAULT_SETTINGS, ...values } as Values;
-  const sw = (key: string, label: MessageKey, hint: MessageKey) =>
-    html`<label class="pizza-switch"
-      ><span class="pizza-switch__text"
-        ><span class="pizza-switch__label">${c.t(label)}</span
-        ><span class="canccu-muted canccu-small">${c.t(hint)}</span></span
-      ><input
-        type="hidden"
-        name="${key}"
-        value="off" /><input${attrs({ class: "pizza-switch__box", type: "checkbox", name: key, value: "on", checked: v[key] === true })}
-    /></label>`;
-  const count = (key: keyof typeof COUNTS, label: MessageKey, hint: MessageKey) =>
-    html`<label class="pizza-setting"
-      ><span class="pizza-switch__text"
-        ><span class="pizza-switch__label">${c.t(label)}</span
-        ><span class="canccu-muted canccu-small">${c.t(hint)}</span></span
-      ><input${attrs({ class: "canccu-input pizza-number", type: "number", name: key, min: COUNTS[key][0], max: COUNTS[key][1], step: 1, value: Number(v[key]), required: true })}
-    /></label>`;
-  const slider = (key: TimeKey) =>
-    html`<label class="pizza-slider"
-      ><span class="pizza-switch__label">${c.t(`settings.${key}` as MessageKey)}</span
-      ><input${attrs({ type: "range", name: key, min: TIME_BOUNDS[key][0], max: TIME_BOUNDS[key][1], step: key === "last_call_minutes" ? 1 : 5, value: Number(v[key]), "data-minutes": "" })} /><output
-        class="canccu-num"
-        data-minutes-out
-        >${duration(c, Number(v[key]))}</output
-      ></label
-    >`;
-  const by = v.open_by === "crew" ? "crew" : "anyone";
-  return html`${flash(error)}
-    <form
-      method="post"
-      action="${PREFIX}crew/settings"
-      class="canccu-settings"
-      data-min="${c.t("time.min")}"
-      data-h="${c.t("time.h")}"
-      data-hmin="${c.t("time.h_min")}"
-    >
-      ${formKey()}<input type="hidden" name="settings_version" value="${version}" />
-      <section class="canccu-card pizza-form">
-        <h2 class="canccu-card__title">${c.t("settings.ordering")}</h2>
-        ${sw("ordering_open", "settings.ordering_open", "settings.ordering_open_hint")}
-        <label class="canccu-field"
-          ><span class="canccu-field__label">${c.t("settings.ordering_note")}</span>
-          <input${attrs({ class: "canccu-input", name: "ordering_note", maxlength: NOTE_MAX, value: typeof v.ordering_note === "string" ? v.ordering_note : "" })}
-        /></label>
-        <fieldset class="pizza-fieldset">
-          <legend class="pizza-switch__label">${c.t("settings.open_by")}</legend>
-          <div class="pizza-choices pizza-choices--two">
-            <label class="pizza-choice"
-              ><input${attrs({ type: "radio", name: "open_by", value: "anyone", checked: by === "anyone" })} /><span
-                >${c.t("settings.anyone")}</span
-              ></label
-            >
-            <label class="pizza-choice"
-              ><input${attrs({ type: "radio", name: "open_by", value: "crew", checked: by === "crew" })} /><span
-                >${c.t("settings.crew_only")}</span
-              ></label
-            >
-          </div>
-        </fieldset>
-        ${count("max_open_orders", "settings.max_open_orders", "settings.max_open_orders_hint")}
-        ${count("max_items_per_person", "settings.max_items_per_person", "settings.max_items_per_person_hint")}
-      </section>
-      <section class="canccu-card pizza-form">
-        <h2 class="canccu-card__title">${c.t("settings.times")}</h2>
-        ${TIMES.map(slider)} ${sw("auto_close", "settings.auto_close", "settings.auto_close_hint")}
-        ${sw("close_forgotten", "settings.close_forgotten", "settings.close_forgotten_hint")}
-      </section>
-      ${settling(c, sw, count, reader)}
-      <div class="canccu-savebar">
-        <span class="canccu-savebar__text">${c.t("settings.saved_where")}</span>
-        <a class="canccu-button canccu-button--secondary" href="${PREFIX}crew/settings"
-          >${c.t("settings.cancel")}</a
-        >
-        <button class="canccu-button canccu-button--primary" type="submit">
-          ${c.t("settings.save")}
-        </button>
-      </div>
-    </form>`;
-}
 
 /** The form's values as admin's settings take them: numbers within bounds, switches as booleans. */
 export function valuesOf(form: Record<string, unknown>, read: Values): Values {
@@ -193,6 +60,13 @@ export function settingsPage(app: FastifyInstance, deps: AppDeps): void {
       throw new KitError(`needs right ${SETTINGS_WRITE}`, { status: 403, code: "missing_right" });
     return c;
   };
+  // Whoever may read the event's settings sees them here, as on admin's page they replace.
+  const reader = async (request: FastifyRequest) => {
+    const c = await pageCtx(deps, request);
+    if (!c.session.rights.has(SETTINGS_READ) && !c.session.rights.has(SETTINGS_WRITE))
+      throw new KitError(`needs right ${SETTINGS_READ}`, { status: 403, code: "missing_right" });
+    return c;
+  };
   const read = async (request: FastifyRequest) => {
     const r = await deps.admin.request("GET", PATH, asPerson(request));
     // Nothing saved yet is version 0 with no values; a 404 says admin keeps no food settings for
@@ -216,13 +90,18 @@ export function settingsPage(app: FastifyInstance, deps: AppDeps): void {
   };
 
   app.get<{ Querystring: { error?: string } }>("/crew/settings", async (request, reply) => {
-    const c = await writer(request);
+    const c = await reader(request);
     const s = await read(request);
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
       tab: "settings",
       narrow: true,
-      body: form(c, s.values, s.version, await readerKeySet(deps), request.query.error),
+      body: settingsForm(c, {
+        ...s,
+        reader: await readerKeySet(deps),
+        write: c.session.rights.has(SETTINGS_WRITE),
+        ...(request.query.error === undefined ? {} : { error: request.query.error }),
+      }),
     });
   });
 

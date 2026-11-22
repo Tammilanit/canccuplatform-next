@@ -1,6 +1,7 @@
 /** The Food pages in Finnish: the same keys as messages.ts, whose test holds them to each other. */
 import { FOOD_FI } from "./food-messages.js";
 import { MONEY_FI } from "./money-messages-fi.js";
+import { SETTINGS_FI } from "./settings-messages.js";
 import type { MessageKey } from "./messages.js";
 
 export const FI: Record<MessageKey, string> = {
@@ -238,36 +239,10 @@ export const FI: Record<MessageKey, string> = {
   "import.dropped": "ei tiedostossa: piilotetaan, vanhat tilaukset säilyttävät sen",
   "import.cancel": "Peru",
   "import.apply": "Hyväksy",
-  "settings.ordering": "Tilaaminen",
-  "settings.ordering_open": "Tilaaminen on auki",
-  "settings.ordering_open_hint": "Pois: kukaan ei voi aloittaa tilausta",
-  "settings.open_by": "Kuka saa aloittaa tilauksen",
-  "settings.anyone": "Kuka tahansa liittynyt",
-  "settings.crew_only": "Vain crew",
-  "settings.max_open_orders": "Avoimia tilauksia kerralla",
-  "settings.max_open_orders_hint": "yksi per pizzeria",
-  "settings.max_items_per_person": "Pizzoja per henkilö",
-  "settings.max_items_per_person_hint": "yhdessä tilauksessa",
-  "settings.times": "Ajat ja unohtuneet tilaukset",
-  "settings.last_call_minutes": "Viimeinen kutsu ennen sulkemista",
-  "settings.remind_holder_minutes": "Muistuta hoitajaa, kun on kulunut",
-  "settings.remind_crew_minutes": "Sitten myös crew'ta, kun on kulunut",
-  "settings.release_after_minutes": "Vapauta jumittunut hoitaja, kun on kulunut",
-  "settings.arrival_check_minutes": "Kysy, onko perillä, arvion jälkeen",
-  "settings.arrival_check_no_estimate_minutes": "Ilman arviota, soiton jälkeen",
-  "settings.done_after_arrival_minutes": "Valmis perille tulon jälkeen",
-  "settings.auto_close": "Sulje ajallaan",
-  "settings.auto_close_hint": "Avoin tilaus sulkeutuu sulkemisaikanaan",
-  "settings.close_forgotten": "Sulje unohtuneet tilaukset",
-  "settings.close_forgotten_hint": "Klo 06: soittamaton → peruttu; soitettu → valmis, merkitty",
-  "settings.saved_where": "Tallennetaan tapahtuman asetuksiin",
-  "settings.cancel": "Peru",
-  "settings.save": "Tallenna",
-  "settings.conflict": "Joku tallensi välissä: tässä hänen asetuksensa. Tee muutoksesi uudelleen.",
-  "settings.failed": "Tallennus ei onnistunut. Yritä uudelleen.",
   "time.min": "{n} min",
   "time.h": "{n} h",
   "time.h_min": "{h} h {m} min",
   ...FOOD_FI,
   ...MONEY_FI,
+  ...SETTINGS_FI,
 };

@@ -154,18 +154,18 @@ export const MONEY_EN = {
   "export.download": "Download CSV",
   "settings.settling": "Settling up",
   "settings.organiser": "People pay the organiser",
-  "settings.organiser_hint": "After the event, in the payment system",
+  "settings.organiser_hint": "after the event, in the payment system.",
   "settings.settle_to_payer": "Let holders take payment",
   "settings.settle_to_payer_hint":
-    "The holder then picks per order: via the organiser, or paid to them",
+    "The holder then picks per order: via the organiser, or paid to them.",
   "settings.reader": "AI reader",
   "settings.ai_reader": "Read receipts and menus",
-  "settings.ai_reader_hint": "From photos; a person confirms",
+  "settings.ai_reader_hint": "From photos; a person checks what it read.",
   "settings.reader_outside": "Photos go to an outside service",
   "settings.reader_cost":
     "{provider}, {model}. About $0.001 a receipt, $0.002 a menu page. People see this before a photo is sent.",
   "settings.ai_reader_daily_reads": "Reads a day",
-  "settings.ai_reader_daily_reads_hint": "at most, for the event",
+  "settings.ai_reader_daily_reads_hint": "The most photos read in one event day, to cap the cost.",
   "integrations.title": "Integrations",
   "integrations.reader": "AI reader",
   "integrations.reader_text":

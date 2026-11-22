@@ -260,7 +260,36 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
     expect(w.adminSettings.writes).toHaveLength(0);
   });
 
-  it("is for whoever may write the event's settings", async () => {
+  it("is for whoever may read the event's settings, and saved by whoever may write them", async () => {
     expect((await view(w, "crew", "/crew/settings")).statusCode).toBe(403);
+    const r = await view(w, "reader", "/crew/settings");
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toMatch(/<fieldset[^>]*disabled/);
+    expect(r.body).not.toContain("canccu-savebar");
+    expect(r.body).toContain("Only organisers change these.");
+    expect(r.body).toContain('href="/pizza/crew/settings"');
+    const saved = await form(w, "reader", "/crew/settings", { settings_version: "1" });
+    expect(saved.statusCode).toBe(403);
+    expect(w.adminSettings.writes).toHaveLength(0);
+  });
+
+  it("draws each field with the shared control and says what it is for (sheet 06)", async () => {
+    const r = await view(w, "organiser", "/crew/settings");
+    // A switch for on/off, chips for a choice, a stepper with its range and default for counts.
+    expect(r.body).toMatch(/<input[^>]*class="canccu-switch"[^>]*name="ordering_open"/);
+    expect(r.body).toMatch(/<label class="canccu-chip"\s*>\s*<input[^>]*name="open_by"/);
+    expect(r.body).toMatch(/class="canccu-stepper"[\s\S]*?name="max_open_orders"/);
+    expect(r.body).toContain("From 1 to 20. Default: 3.");
+    // Durations: quick picks inside the bounds, a stepper with its unit; no slider.
+    expect(r.body).not.toContain('type="range"');
+    expect(r.body).toMatch(/data-canccu-for="pizza-last_call_minutes"[^>]*data-canccu-pick="10"/);
+    expect(r.body).not.toMatch(
+      /data-canccu-for="pizza-last_call_minutes"[^>]*data-canccu-pick="90"/,
+    );
+    expect(r.body).toContain("From 1 min to 1 h. Default: 10 min.");
+    expect(r.body).toContain("People in an order hear the last call this long before it closes.");
+    expect(r.body).toMatch(
+      /placeholder="[^"]+"[^>]*name="ordering_note"|name="ordering_note"[^>]*placeholder="[^"]+"/,
+    );
   });
 });

@@ -21,6 +21,7 @@ import type { Translate } from "./messages.js";
 export const SIGN_IN = "/admin/sign-in";
 /** Caddy strips this prefix (handle_path), so the module's own paths start at `/`. */
 export const PREFIX = "/pizza/";
+export const SETTINGS_READ = "admin.settings.read";
 export const SETTINGS_WRITE = "admin.settings.write";
 const STATIC = new URL("../../static/", import.meta.url);
 
@@ -139,7 +140,12 @@ export function foodTabs(c: PageCtx, current: FoodTab): Tab[] {
     ["orders", `${PREFIX}crew`, c.t("tab.orders"), r.has(MANAGE)],
     ["pizzerias", `${PREFIX}crew/pizzerias`, c.t("tab.pizzerias"), r.has(MENU_WRITE)],
     ["record", `${PREFIX}crew/record`, c.t("tab.record"), r.has(RECORD_READ)],
-    ["settings", `${PREFIX}crew/settings`, c.t("tab.settings"), r.has(SETTINGS_WRITE)],
+    [
+      "settings",
+      `${PREFIX}crew/settings`,
+      c.t("tab.settings"),
+      r.has(SETTINGS_READ) || r.has(SETTINGS_WRITE),
+    ],
   ];
   return all
     .filter(([, , , may]) => may)

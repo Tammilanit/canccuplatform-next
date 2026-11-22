@@ -19,6 +19,7 @@ import { remindUnpaid, shareReady } from "./notices.js";
 import type { PizzaSettings } from "./settings.js";
 import { getOrder, logStep, ordersWhere } from "./store.js";
 import type { OrderRow } from "./store.js";
+import { foodOn } from "./switch.js";
 
 export const TICK_MS = 30_000;
 /** Due steps one tick takes per event at most; the rest wait for the next tick. */
@@ -83,8 +84,9 @@ export class Scheduler {
   /** Answers the lag in seconds: how late the oldest due step was. */
   private async tickTenant(tenant: string, now: Date): Promise<number> {
     const ctx = await this.deps.tenants.byId(tenant);
-    // An archived event is read-only, and a deleted one is gone.
-    if (ctx === null || ctx.status === "archived") return 0;
+    // An archived event is read-only, a deleted one is gone, and one with Food off has no
+    // reminders or timed steps until it is switched on again.
+    if (ctx === null || ctx.status === "archived" || !foodOn(ctx)) return 0;
     return withTenant(tenant, async () => {
       const settings = await this.deps.settings(tenant);
       const zone = ctx.time_zone;

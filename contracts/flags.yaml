@@ -5,3 +5,5 @@ flags:
   # contracts/screen.md, Feature flags
   screen.photos: {default: false}
   screen.web: {default: true}
+  # contracts/pizza.md, Feature flags
+  pizza.enabled: {default: true}

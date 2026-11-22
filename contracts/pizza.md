@@ -221,6 +221,9 @@ order_id,ordered_at,pizzeria,payer_nick,order_total,settle_to,nick,discord_id,un
 2026-11-21-3,2026-11-21T18:31:00+02:00,Demo Trattoria,Player Three,54.50,payer,Player Two,,1,8.50
 ```
 
+
+## Feature flags
+`pizza.enabled` (Food at this event, default `true`; declared in [flags.yaml](flags.yaml)). Off, Food's pages answer "not at this event" and [the scheduler](#the-scheduler) takes no step and sends no reminder for the event's orders; its orders, pizzerias, menus and money stay as they are, and switching it on again finds them so.
 ## Settings
 Saved through admin's settings API with `admin.settings.write` ([admin.md](admin.md#settings)); the module follows `admin.settings.changed`.
 

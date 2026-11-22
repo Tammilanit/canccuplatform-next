@@ -92,6 +92,8 @@ export const TENANTS: Record<string, TenantContext> = {
   "venue.test": ctx("venue", { info_page_mode: "venue_only" }),
   "restricted.test": ctx("restricted", { admin_access: "restricted" }),
   "archived.test": ctx("archived", { status: "archived" }),
+  // Food switched off for the event (#747): its pages answer "not at this event".
+  "off.test": ctx("off", { flags: { "pizza.enabled": false } }),
 };
 
 /** People by session id: the name is the id, capitalised; `outsider` is signed in but no member. */
@@ -112,6 +114,7 @@ const RIGHTS: Record<string, string[]> = {
     INTEGRATIONS_WRITE,
   ],
   integrator: [INTEGRATIONS_WRITE],
+  reader: ["admin.settings.read"],
 };
 
 /** Every tenant table pizza has: the tests empty them between cases. */
