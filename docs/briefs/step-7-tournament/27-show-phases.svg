@@ -165,7 +165,7 @@
 <rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
 <rect x="40" y="32" width="1840" height="86" rx="16" fill="#161a2e"/>
 <text x="80" y="92" font-size="46" fill="#f3f5ff" font-weight="800" text-anchor="start">Demo Event</text>
-<text x="1840" y="92" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">Sat 19:10</text>
+<text x="1840" y="92" font-size="46" fill="#f3f5ff" font-weight="700" text-anchor="end">Sat 19:22</text>
 <rect x="40" y="150" width="820" height="890" rx="24" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
 <text x="80" y="230" font-size="44" fill="#a9b1d6" font-weight="700" text-anchor="start">The rotation</text>
 <rect x="80" y="270" width="740" height="230" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1"/>
@@ -176,7 +176,7 @@
 <text x="940" y="240" font-size="50" fill="#3ddcff" font-weight="800" text-anchor="start">DEMO ARENA 5V5 · STARTS 19:30</text>
 <text x="940" y="350" font-size="64" fill="#f3f5ff" font-weight="800" text-anchor="start">Lobby open: 31 of 40 here</text>
 <text x="940" y="440" font-size="38" fill="#a9b1d6" font-weight="500" text-anchor="start">Teams forming · Night Owls 5/5 · Team Alpha 4/5</text>
-<text x="940" y="520" font-size="64" fill="#ffc94d" font-weight="800" text-anchor="start">starts in 20:00</text>
+<text x="940" y="520" font-size="64" fill="#ffc94d" font-weight="800" text-anchor="start">starts in 8:00</text>
 <text x="940" y="990" font-size="34" fill="#3ddcff" font-weight="700" text-anchor="start">scan to join</text>
 <rect x="1700" y="820" width="160" height="160" rx="6" fill="#fff"/>
 <rect x="1708.0" y="828.0" width="18.571428571428573" height="18.571428571428573" rx="0" fill="#111827"/>

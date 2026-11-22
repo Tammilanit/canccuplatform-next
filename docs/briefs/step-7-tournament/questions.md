@@ -9,6 +9,7 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 > - **Back to the accepted answer:** U8, U16, U18, D12, D15, D16, O6, P5.
 > - **New:** D18, P9, F1 (F1 was M12).
 > - **Changed by the lead round of 2026-11-21 (the second: the product owner reviewed the plan against that day's tournament and made six decisions):** U5 (no waiting list), U7, U10, E7, D11 (the waiting list goes), E2 (a manual delay), D2 (the scoring system is editable), D12 (a lead and a crew), P3. **New:** U19 (reopen registration for a while), D20 (named awards).
+> - **Changed by lead round 7 (2026-11-22):** P5 (the QR feed), plus the ones named in the brief's round 7 note.
 > - **Changed by the fourth lead round (2026-11-21: the product owner and the lead brainstormed sign-up, scoring and the screens):** U4, U7, E10, L3, L5, D9, D20, O6. **New:** U20 (sign-up without missing out), L10 (the screens around the tournament), L11 (PC and phone are equal), D21 (scoring from a screenshot), D22 (clips and photos).
 > - **Changed by the sixth lead round (2026-11-21: the product owner reviewed every sheet):** U3, U4, U11 (the finalist default is 4, a setting, everywhere), U14, U19, U20, L2, L6, L10, D9, D20, D21, D22, O1, O3. **New:** O12 (the tournament runs itself), D23 (the session form: game art, instructions link, voice rooms), D24 (the player card).
 > - **Changed by the seventh lead round (2026-11-22, the last: footage, the show, the lobby, QR codes):** U3, U9, U10, U14, L3, L10, D4, D5, D6, D9, D22, D23, O12. **New:** L12 (the hype curve and Screen's zones), D25 (storage for the footage), O13 (the show presets).
@@ -192,7 +193,7 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **Recommendation: A**, built; step 7 fills `voice_channels` and `where` (D8).
 
 ### L5. The champion moment
-- **A.** Moments' Champion preset on the final's result: sting, winner card with the photo, the bracket, a QR to the photos.
+- **A.** Moments' Champion preset on the final's result: sting, winner card with the photo, the bracket.
 - **B.** A plain standings update.
 - **Recommendation: A**, built; the crew takes the photo first, or the card falls back to the occasion photo, then to none (the legacy order).
 - **Changed for 0030:** Two champions now reach the screen: the official final's and the Finals app's. **Recommendation now: A** for the official final; a Finals champion keeps the app's own graphics and theming (0030 point 1) and is the Finals track's ([F1](#f1-where-finals-and-tournament-meet)).
@@ -542,7 +543,7 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 
 ### P5. The screen and hub feed in step 7
 Step 9 is to wire tournament events into Screen.
-- **A.** Feed Screen's `bracket` and `leaderboard` and `checkin_qr` in step 7 (a new issue), and register Notify's topic.
+- **A.** Feed Screen's `bracket` and `leaderboard` and the session card's "scan to join" QR in step 7 (a new issue), and register Notify's topic. **Changed (lead round 7):** the QR opens that session's sign-up; it no longer feeds `checkin_qr`, because the lobby is the check-in.
 - **B.** Leave them to step 9.
 - **Recommendation: A**, as step 5 did for food. Moments and the templates are built; without the feed, the exit "runs end to end" stops at the admin page.
 - **Back to its accepted answer** (A): the 0030 change fed a running mini tournament's bracket and champion card, which wait.
