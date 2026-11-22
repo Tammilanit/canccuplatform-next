@@ -651,6 +651,10 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
     for (const [name, path, viewport, o] of INPUT_PAGES)
       await shot(name, path, viewport, SESSION, o);
     await placeStories(false);
+    // The `started` item above is already running, so Moments' own clock may have fired Starting
+    // soon for it by now (a race with the shots' pace, not a fixed order). Fire from the page then
+    // refuses with "it already runs for this source"; end such a run so the page's Fire is the one.
+    for (const run of await liveRuns()) await stop(run);
     let answered = null;
     await shot(fired[0], fired[1], fired[2], SESSION, {
       ready: async (page) => {
