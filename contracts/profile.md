@@ -18,7 +18,7 @@ Asset paths in `profile.yaml` are relative to the profile directory and start wi
 | `schema_version` | yes | Integer, `1` for this format. See Versions. |
 | `name` | yes | Display name of the event. |
 | `modules` | yes | Modules the event runs: `screen`, `tournament`, `pizza`, `bot`, `admin`, `games`, `moments`, `voices`, `cast`, `agenda`, `notify`, `theming`, `finals`. |
-| `settings` | no | `{<module>: {<key>: value}}`. Values are strings, numbers, booleans or flat lists of those. Same keys as the admin settings API ([admin.md](admin.md#settings)). |
+| `settings` | no | `{<module>: {<key>: value}}`. Values are strings, numbers, booleans or flat lists of those. Same keys as the admin settings API ([admin.md](admin.md#settings)); each value fits what admin declares for the setting (its type, bounds, choices, time zones or format), as in the API. |
 | `theme` | no | `colors` (`#rrggbb` or `#rrggbbaa`) and `fonts` (font family names), by token name. |
 | `logos` | no | `{<role>: <asset path>}`, e.g. `main`. |
 | `sounds` | no | `{<name>: <asset path>}`. |

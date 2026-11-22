@@ -4,25 +4,31 @@ settings:
   - key: topics
     type: list
     label: Topics offered at this event
+    help: "The topic keys people can choose to hear about here. Left empty, every topic is offered."
+    example: "schedule, announcements, food"
   - key: hourly_cap
     type: integer
     min: 1
     max: 60
     label: Pushes per recipient per hour
+    help: "The most pushes one person gets in an hour; urgent ones still go through."
     default: 6
   - key: dm_fallback
     type: boolean
     label: Fall back to a Discord DM for personal notifications
+    help: "Personal notifications go by Discord DM to people who get no pushes."
     default: true
   - key: schedule_lead_minutes
     type: integer
     label: Schedule notification lead (minutes)
+    help: "How long before an item starts the schedule notification goes: the nearest agenda reminder is used."
     default: 10
   - key: check_in_rotation_seconds
     type: integer
     min: 15
     max: 120
     label: Check-in code rotation (seconds)
+    help: "How often the code on the check-in screen changes, so an old photo of it stops working."
     default: 30
 groups:
   - id: topics

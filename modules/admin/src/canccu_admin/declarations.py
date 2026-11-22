@@ -6,9 +6,24 @@ settings:
     type: number              # string | number | integer | boolean | list
     label: Rotation (seconds)
     short: Per slide          # optional: the form's label, where the full one is too long
-    hint: How long each slide stays.   # optional: one line under the field
+    help: How long each slide stays.   # one line under the field: what it is for
     default: 15
-    choices: [a, b]           # optional, string settings only
+  - key: ticker_look
+    type: string
+    choices: [a, b]           # optional, string settings only: a dropdown
+    default: a
+  - key: timezone
+    type: string
+    choices_from: timezones   # instead of choices: a list the platform knows (IANA zones)
+    default: UTC
+  - key: accent
+    type: string
+    format: color             # color (#rrggbb, a swatch) | url (http(s), with a preview)
+    default: "#ff8800"
+  - key: closed_note
+    type: string
+    example: Back at 18:00    # the empty field's placeholder: what to write
+    default: ""
   - key: hourly_cap
     type: integer             # whole numbers only; a bool or float is refused
     min: 1                    # optional bounds, integer settings only
@@ -36,6 +51,9 @@ groups:                       # the form's cards, in order; every key in exactly
 
 The groups are the `groups` of the settings answer (contracts/admin.md, Settings).
 
+A label in a unit, "Rotation (seconds)", makes the field's unit; in seconds or minutes the form
+offers quick picks of durations too.
+
 A bad declaration fails at load, so a typo in a YAML file stops the module at
 start instead of surfacing as a confusing 400 on some later save.
 """
@@ -49,9 +67,16 @@ from typing import Any
 
 import yaml
 
+from .zones import zone_names
+
 KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 TYPES = ("string", "number", "integer", "boolean", "list")
 ITEM_TYPES = ("string", "integer")
+CHOICE_LISTS = ("timezones",)
+FORMATS = ("color", "url")
+COLOR_RE = re.compile(r"#[0-9a-fA-F]{6}")
+# A scheme, then a host: what a browser opens as a page. javascript: and bare names are refused.
+URL_RE = re.compile(r"https?://[^\s/?#]+[^\s]*")
 
 
 class DeclarationError(Exception):
@@ -69,7 +94,10 @@ class Setting:
     max: int | None = None
     items: str = "string"
     short: str = ""
-    hint: str = ""
+    help: str = ""
+    example: str = ""
+    choices_from: str = ""
+    format: str = ""
 
 
 @dataclass(frozen=True)
@@ -124,8 +152,18 @@ def _build(module: str, item: dict[str, Any]) -> Setting:
         raise DeclarationError(f"{where}: choices only apply to string settings")
     if lo is not None and hi is not None and lo > hi:
         raise DeclarationError(f"{where}: min {lo} is above max {hi}")
-    if not all(isinstance(item.get(k, ""), str) for k in ("short", "hint")):
-        raise DeclarationError(f"{where}: short and hint must be text")
+    if not all(isinstance(item.get(k, ""), str) for k in ("short", "help", "example")):
+        raise DeclarationError(f"{where}: short, help and example must be text")
+    choices_from, form = item.get("choices_from", ""), item.get("format", "")
+    if choices_from and choices_from not in CHOICE_LISTS:
+        raise DeclarationError(f"{where}: choices_from must be one of {CHOICE_LISTS}")
+    if form and form not in FORMATS:
+        raise DeclarationError(f"{where}: format must be one of {FORMATS}")
+    for name, given in (("choices_from", choices_from), ("format", form)):
+        if given and kind != "string":
+            raise DeclarationError(f"{where}: {name} only applies to string settings")
+    if choices and choices_from:
+        raise DeclarationError(f"{where}: either choices or choices_from, not both")
     setting = Setting(
         key=item["key"],
         type=kind,
@@ -136,7 +174,10 @@ def _build(module: str, item: dict[str, Any]) -> Setting:
         max=hi,
         items=items,
         short=item.get("short", ""),
-        hint=item.get("hint", ""),
+        help=item.get("help", ""),
+        example=item.get("example", ""),
+        choices_from=choices_from,
+        format=form,
     )
     if setting.default is not None:
         problem = check_values([setting], {setting.key: setting.default})
@@ -223,6 +264,7 @@ def _check_item(s: Setting, value: Any, scalar: bool = False) -> str | None:
             return f"{key} must be a string" if scalar else f"{key} must list strings"
         if s.choices and value not in s.choices:
             return f"{key} must be one of {', '.join(s.choices)}"
+        return _check_text(s, value)
     elif kind == "integer":
         if not _is_int(value):
             return f"{key} must be an integer" if scalar else f"{key} must list integers"
@@ -235,6 +277,17 @@ def _check_item(s: Setting, value: Any, scalar: bool = False) -> str | None:
             return f"{key} must be a number"
     elif kind == "boolean" and not isinstance(value, bool):
         return f"{key} must be a boolean"
+    return None
+
+
+def _check_text(s: Setting, value: str) -> str | None:
+    if s.choices_from == "timezones" and value not in zone_names():
+        return f"{s.key} must be a time zone, such as UTC"
+    if s.format == "color" and not COLOR_RE.fullmatch(value):
+        return f"{s.key} must be a colour such as #ff8800"
+    # Empty is no link at all, as an empty asset id is no asset.
+    if s.format == "url" and value and not URL_RE.fullmatch(value):
+        return f"{s.key} must be a link starting https:// or http://"
     return None
 
 
