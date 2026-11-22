@@ -4,6 +4,14 @@
  * status words are the plan's (L4): open, closed (being called), called in, on the way, here.
  */
 export const FOOD_EN = {
+  "frame.hub": "The event's hub",
+  "frame.event": "The event",
+  "frame.now": "Now",
+  "frame.food": "Food",
+  "frame.more": "More",
+  "frame.privacy": "Privacy",
+  "frame.sign_in": "Sign in",
+  "frame.sign_out": "Sign out",
   "off.title": "Food is not at this event",
   "off.text": "The organisers have switched Food off for this event. Orders made before are kept.",
   "food.open_orders": "Open orders",
@@ -108,6 +116,14 @@ export const FOOD_EN = {
 } as const;
 
 export const FOOD_FI: Record<keyof typeof FOOD_EN, string> = {
+  "frame.hub": "Tapahtuman sivut",
+  "frame.event": "Tapahtuma",
+  "frame.now": "Nyt",
+  "frame.food": "Ruoka",
+  "frame.more": "Lisää",
+  "frame.privacy": "Tietosuoja",
+  "frame.sign_in": "Kirjaudu",
+  "frame.sign_out": "Kirjaudu ulos",
   "off.title": "Ruoka ei ole tässä tapahtumassa",
   "off.text":
     "Järjestäjät ovat kytkeneet Ruoan pois tästä tapahtumasta. Aiemmat tilaukset säilyvät.",

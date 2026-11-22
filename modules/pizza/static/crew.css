@@ -4,34 +4,38 @@
   align-items: center;
   margin-bottom: 1rem;
 }
-.pizza-day {
-  display: flex;
-  align-items: end;
-  gap: 0.5rem;
-  margin-left: auto;
-}
-.pizza-day label {
-  display: grid;
-}
 .pizza-needs__text {
   color: var(--canccu-ink-degraded);
 }
-.pizza-phone {
-  display: none;
-}
-.pizza-cards {
+/* An order in the day schedule: a line, not a box; one that needs the crew has a mark at its side. */
+.pizza-slot {
   display: grid;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
-  padding: 0;
-  list-style: none;
+  gap: 0.125rem;
+  padding: 0.625rem 0.75rem;
+  border-left: 3px solid transparent;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  color: inherit;
+  text-decoration: none;
 }
+.pizza-slot:hover {
+  background: var(--canccu-tint);
+}
+.pizza-slot--needs {
+  border-left-color: var(--canccu-ink-degraded);
+}
+/* Food's four tabs on a phone: all of them in one row that scrolls, so Settings is never hidden
+   behind the shell's "1 more" (C1). Only the Food pages load this sheet. */
 @media (max-width: 47.99rem) {
-  .pizza-desk {
-    display: none;
+  .canccu-tabs {
+    overflow-x: auto;
+    scrollbar-width: thin;
   }
-  .pizza-phone {
-    display: block;
+  .canccu-tabs .canccu-tabs__extra {
+    display: inline-flex;
+  }
+  .canccu-tabs__more,
+  .canccu-tabs__menu {
+    display: none;
   }
 }
 .pizza-order-head {
@@ -84,4 +88,27 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+/* A section of a crew page: a heading and space, never a frame (amendment 3, #771). */
+.pizza-part {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding-top: 1.25rem;
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.pizza-part:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.pizza-part__title {
+  margin: 0;
+  font-size: var(--canccu-text-lg);
+  font-weight: 600;
+}
+.pizza-part__desc {
+  margin: 0;
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-sm);
 }

@@ -98,6 +98,8 @@ const LISTED = [
   ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
   ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
+  // The plan's "Pay me with": what a member who still owes the holder sees on their order (#769).
+  ["pizza-food-pay-phone", `/pizza/orders/${ORDER}`, PHONE, "payer", PLAYERS[2][0]],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
@@ -353,6 +355,9 @@ export async function pizzaShots({ shot, fail }) {
       cookie,
       {
         touch: viewport === PHONE,
+        // The read's sum and Confirm stay in view at the window's foot: shot as tall as the page,
+        // so that footer sits under the lines, not over them.
+        ...(name.startsWith("pizza-holder-money-check") ? { tall: true } : {}),
         // The attendee's pages keep their live stream open, so the network never goes idle.
         ...(name.startsWith("pizza-food")
           ? { ready: (page) => page.locator(".pizza-hub__main").waitFor() }

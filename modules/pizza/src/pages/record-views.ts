@@ -63,10 +63,10 @@ function orderCard(c: PageCtx, o: RecordOrder, flags: DailyRecord["flags"]): Htm
             >${time(c, o.placed_at)}</time
           >`
     }
-    <a class="pizza-card pizza-card--link" href="${PREFIX}crew/record/${o.id}">
-      <p class="pizza-card__title">${c.t("record.order", { seq: o.seq, pizzeria: o.pizzeria })}</p>
+    <a class="pizza-slot" href="${PREFIX}crew/record/${o.id}">
+      <p class="pizza-title">${c.t("record.order", { seq: o.seq, pizzeria: o.pizzeria })}</p>
       <p>${total}</p>
-      <p class="pizza-card__meta">
+      <p class="pizza-meta">
         ${
           o.payer_name === null
             ? pizzasOf(c, pizzasIn(o))
@@ -136,9 +136,9 @@ export function recordOrderView(
   // Two panels side by side on a desktop, one column on a phone (amendment 5).
   return html`<div class="canccu-band">
     <div class="pizza-stack">
-      <section class="pizza-card">
-        <p class="pizza-card__title">${o.pizzeria} · ${day}</p>
-        <p class="pizza-card__meta">
+      <section class="pizza-block">
+        <p class="pizza-title">${o.pizzeria} · ${day}</p>
+        <p class="pizza-meta">
           ${c.t("record.times", {
             placed: time(c, o.placed_at) || "—",
             arrived: time(c, o.arrived_at) || "—",
@@ -146,7 +146,7 @@ export function recordOrderView(
           })}
         </p>
         ${o.payer_name === null ? "" : html`<p>${c.t("record.payer_paid", { name: o.payer_name })}</p>`}
-        <p class="pizza-card__title">
+        <p class="pizza-title">
           ${
             o.total_cents === null
               ? c.t("money.no_total")
@@ -159,7 +159,7 @@ export function recordOrderView(
           .filter((f) => f.order_id === o.id)
           .map((f) => html`<p class="pizza-badge pizza-badge--warn">${f.text}</p>`)}
       </section>
-      <section class="pizza-card">
+      <section class="pizza-block">
         <p>
           ${
             m.settle_to === "payer"
@@ -247,7 +247,7 @@ export function exportView(
   const shown = body.slice(0, 4);
   const seqOf = (id: string) => id.split("-").at(-1) ?? id;
   return html`${dayChips(c, days, picked, "crew/export")}
-    <p class="pizza-card__title">
+    <p class="pizza-title">
       ${c.t("export.count", { orders: count(c, orders, "order"), rows: count(c, body.length, "row") })}
     </p>
     ${e.left_out.map(

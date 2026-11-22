@@ -7,7 +7,7 @@
 import { qrView } from "../content.js";
 import { own, startsIn } from "../announce/text.js";
 import type { RunItem } from "../announce/store.js";
-import { DOMAIN_TYPES, TOKEN } from "./model.js";
+import { DOMAIN_TYPES, PASSED, TOKEN } from "./model.js";
 import { localParts } from "./schedule.js";
 
 type Data = Record<string, unknown>;
@@ -77,9 +77,15 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
   ) as Facts;
 }
 
+/** The source kind of an event that only passes an end (`pizza.order.cancelled`), as its end's. */
+const passedKind = (type: string): string | undefined => {
+  const end = Object.keys(PASSED).find((k) => PASSED[k]?.includes(type) === true);
+  return end === undefined ? undefined : DOMAIN_TYPES[end]?.source;
+};
+
 /** What a domain event's story keys on (`per_source`, `once` per source), or null. */
 export function domainSource(type: string, d: Data): string | null {
-  const kind = DOMAIN_TYPES[type]?.source;
+  const kind = DOMAIN_TYPES[type]?.source ?? passedKind(type);
   if (kind === "photo") return typeof d.photo_id === "string" ? `photo:${d.photo_id}` : null;
   if (kind === "round") {
     // A round has no id of its own: its session and number name it, once per round.

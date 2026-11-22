@@ -90,7 +90,7 @@ Rules turn catalog events into moments. Each built-in has these settings per eve
 | `match_called` | `tournament.match.called` | `match_called`, `tournament`, hero → rail, 300 s | `tournament.match.started` of the match |
 | `standings` | `tournament.leaderboard.changed` | `leaderboard`, `tournament`, hero → rail, 120 s, bound to the leaderboard | — |
 | `finals_result` | `tournament.match.finished` of a final (`session.is_final`) | `winner_card`, `finals`, hero, 120 s | — |
-| `pizza` | `pizza.order.placed`, `pizza.order.arrived` | `pizza_placed`, `announcement`, rail → ticker, 300 s | `pizza.order.cancelled` |
+| `pizza` | `pizza.order.placed`, `pizza.order.arrived` | `pizza_placed`, `announcement`, venue rail → ticker (the food box's own place, #771), 300 s | `pizza.order.cancelled` |
 | `hot_game` | `games.surge.started` | `hot_game`, `hot_game`, hero → rail, 120 s | `games.surge.ended` of the game |
 
 ## Scenes (design sheet 12; D5, D6, E7, L10, L14, O7)
@@ -210,7 +210,7 @@ Sequences for the peaks as data an organiser edits without code (the [storyboard
 
 ### Ends, the finale and the cap
 - **Ends** (any one, at least one): `rounds` (1–20), `for_minutes` (up to 360), `until_clock` (HH:MM, the first after T), `until_event` (`item_starts`, `item_ends`, `next_item_starts`: the next public item on the zone; or a `domain` event of the run's source: a match started, an order closed, check-in closed), `crew` (Stop loop).
-- **The finale** plays once on every planned end (a count, a time, a clock time, an event), never on the crew's Stop loop or an item's cancel; Skip to finale plays it at once. An end event that comes while a round plays ends that round early (`source_ended`).
+- **The finale** plays once on every planned end (a count, a time, a clock time, an event), never on the crew's Stop loop or an item's cancel; Skip to finale plays it at once. An end event that comes while a round plays ends that round early (`source_ended`). A later event of the run's source that takes it past its `domain` end (for `pizza.order.closed`: the order placed, arrived, done or cancelled) ends the run at once without its finale, and ends a finale on air (`source_ended`), so the screen never tells "Order closed" beside an order already called in (#771).
 - **The 6 h cap** holds for `until_event` loops and for `every` loops whose only end is the crew's Stop loop: such a run ends at the latest 6 h after it started, history "ended: time limit", without a finale; the time a video step plays, with its pauses, does not count. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop by its count, a `for_minutes` loop by its time.
 
 ### How a run plays

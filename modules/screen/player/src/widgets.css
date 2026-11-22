@@ -15,7 +15,9 @@
     padding: 0;
   }
 
-  .canccu-region[data-role="header"] > .canccu-widget--logo {
+  /* The ticker's one-row band draws an idle logo as the header does: the card's below is taller
+     than the band and was cut in half (#771). */
+  .canccu-region:is([data-role="header"], [data-role="ticker"]) > .canccu-widget--logo {
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
@@ -71,22 +73,26 @@
   }
 
   /*
-   * A logo out of the header (an empty region's idle choice): a card like the rail's others, the
-   * mark large over the event's name, both in its middle.
+   * A logo out of the header and the ticker (an empty region's idle choice): a card like the
+   * rail's others, the mark large over the event's name, both in its middle.
    */
-  .canccu-region:not([data-role="header"]) > .canccu-widget--logo {
+  .canccu-region:not([data-role="header"], [data-role="ticker"]) > .canccu-widget--logo {
     justify-content: center;
     align-items: center;
     gap: calc(2.4 * var(--canccu-u));
     text-align: center;
   }
 
-  .canccu-region:not([data-role="header"]) > .canccu-widget--logo .canccu-widget__image {
+  .canccu-region:not([data-role="header"], [data-role="ticker"])
+    > .canccu-widget--logo
+    .canccu-widget__image {
     height: calc(14 * var(--canccu-u));
     max-width: 80%;
   }
 
-  .canccu-region:not([data-role="header"]) > .canccu-widget--logo .canccu-widget__name {
+  .canccu-region:not([data-role="header"], [data-role="ticker"])
+    > .canccu-widget--logo
+    .canccu-widget__name {
     font-size: calc(5.5 * var(--canccu-u));
   }
 

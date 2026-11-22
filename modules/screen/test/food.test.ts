@@ -9,6 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { newId, withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { applyFoodEvent } from "../src/compose/food.js";
+import { applyOverrideEvent } from "../src/compose/overrides.js";
 import { DATABASE_URL, call, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
@@ -134,6 +135,100 @@ describe.skipIf(!DATABASE_URL)("food on the screens", () => {
     expect((v.orders as { status_text: string }[])[0]?.status_text).toBe(
       "Pizza is here · collect from Demo Player",
     );
+  });
+
+  // #771: the attendee's page and the notice say the pickup place; the box said the holder's name.
+  it("says where to collect it when the holder named a place, whatever the names setting", async () => {
+    await apply("pizza.order.arrived", {
+      order: order("po_1", {
+        state: "arrived",
+        arrived_at: "2026-01-01T16:55:00Z",
+        pickup: "Entrance table",
+        revision: 6,
+      }),
+      user_ids: [],
+      people: [],
+    });
+    const rows = async () => (await box()).orders as { status_text: string }[];
+    expect((await rows())[0]?.status_text).toBe("Pizza is here · collect at Entrance table");
+    h.settings.alpha = { food_holder_names: false };
+    expect((await rows())[0]?.status_text).toBe("Pizza is here · collect at Entrance table");
+  });
+
+  // #771, the screen-energy rule: the first order's time, large, with its words small beside it.
+  it("leads with the first order's close or estimate time, nothing to lead with otherwise", async () => {
+    await apply("pizza.order.opened", { order: order("po_1") });
+    expect(await box()).toMatchObject({ big_label: "Open · closes", big_text: "17:30" });
+    await apply("pizza.order.placed", {
+      order: order("po_1", {
+        state: "placed",
+        placed_at: "2026-01-01T16:31:00Z",
+        estimate_at: "2026-01-01T17:31:00Z",
+        revision: 4,
+      }),
+    });
+    expect(await box()).toMatchObject({ big_label: "On the way · about", big_text: "17:31" });
+    await apply("pizza.order.arrived", {
+      order: order("po_1", { state: "arrived", arrived_at: "2026-01-01T16:55:00Z", revision: 6 }),
+      user_ids: [],
+      people: [],
+    });
+    expect(await box()).toMatchObject({ big_label: null, big_text: null });
+  });
+
+  // #771: Moments' `pizza` rule claimed a region that said "placed" and a countdown beside the box.
+  it("draws Moments' pizza claim in the box's own words, never the API's state name", async () => {
+    await apply("pizza.order.opened", { order: order("po_2") });
+    await apply("pizza.order.placed", {
+      order: order("po_1", {
+        state: "placed",
+        placed_at: "2026-01-01T16:31:00Z",
+        estimate_at: "2026-01-01T17:31:00Z",
+        revision: 4,
+      }),
+    });
+    const claim = {
+      id: "ov_pizza",
+      kind: "block",
+      zones: [],
+      rank: 80,
+      source: { module: "moments", event_id: null, ref: "po_1" },
+      template: "pizza_placed",
+      content: { state: "placed", seq: 1, pizzeria_name: "Demo Pizzeria", pizza_count: 9 },
+      regions: ["venue_rail", "ticker"],
+      ttl_seconds: 300,
+      sound: null,
+      steps: null,
+      on_end: "resume",
+      starts_at: NOW,
+      ends_at: null,
+    };
+    await withTenant("alpha", () =>
+      applyOverrideEvent(h.db, {
+        id: newId(),
+        type: "moments.override.started",
+        version: 1,
+        time: NOW,
+        source: "moments",
+        tenant: "alpha",
+        data: { actor_user_id: null, override: claim },
+      }),
+    );
+    const res = await call(h, "GET", "/api/screen/now?zone=main", { host: "alpha.test" });
+    const regions = res.json<{
+      regions: { claim: { content: Record<string, unknown> } | null }[];
+    }>().regions;
+    const content = regions.find((r) => r.claim !== null)?.claim?.content;
+    // Its own order only, as the box draws it: the other order stays in the box.
+    expect(content).toMatchObject({
+      title: "Food",
+      state: "placed",
+      big_label: "On the way · about",
+      big_text: "17:31",
+      orders: [expect.objectContaining({ seq: 1, status_text: "On the way · about 17:31" })],
+    });
+    expect(content?.orders).toHaveLength(1);
+    await withTenant("alpha", () => h.db.tenant((c) => c.query("DELETE FROM screen_claims")));
   });
 
   it("loses the holder's name when pizza forgets them (a privacy delete, #759)", async () => {

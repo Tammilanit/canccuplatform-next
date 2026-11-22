@@ -42,6 +42,7 @@ import type { BundleStore } from "../pins/bundles.js";
 import { readPin } from "../pins/store.js";
 import { themeFor } from "../pins/look.js";
 import type { Sources, ThemeNow } from "./sources.js";
+import { foodClaim } from "./widgets.js";
 import type { ZoneFacts } from "./widgets.js";
 import { agendaAt, lookFor } from "../preview/look.js";
 import type { DraftUse, PreviewLook } from "../preview/look.js";
@@ -248,6 +249,7 @@ export async function composeZone(
     highlight: highlightOf(items, at.getTime()),
     food: { orders: read.food, names: deps.settings.get("food_holder_names", true) !== false },
   };
+  const claims = read.claims.map((o) => foodClaim(o, facts));
   const build = (portrait: boolean): ZoneView => {
     const once = (showcase?: "grow" | "keep"): ZoneView => {
       const { layout, regions } = buildRegions({
@@ -267,7 +269,7 @@ export async function composeZone(
         facts,
         ...(showcase === undefined ? {} : { showcase }),
       });
-      return { layout, ...placeClaims(regions, read.claims) };
+      return { layout, ...placeClaims(regions, claims) };
     };
     const plain = once();
     // A claim's place follows roles alone, so the second build places every claim as this one

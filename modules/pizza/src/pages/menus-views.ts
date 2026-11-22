@@ -106,7 +106,7 @@ export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string, reader
     >`;
   const shown = visible(p);
   return html`${flash(error)}
-    <form method="post" action="${P}/${p.id}" class="canccu-card pizza-form">
+    <form method="post" action="${P}/${p.id}" class="pizza-part pizza-form">
       ${formKey()}
       <label class="canccu-field"
         ><span class="canccu-field__label">${c.t("menus.name")}</span
@@ -192,7 +192,7 @@ export function pizzeriaView(c: PageCtx, p: PizzeriaView, error?: string, reader
 /** The import's first step: a CSV file or its text. */
 export function importView(c: PageCtx, error?: string): Html {
   return html`${flash(error)}
-    <form method="post" action="${P}/import" class="canccu-card pizza-form" data-csv>
+    <form method="post" action="${P}/import" class="pizza-part pizza-form" data-csv>
       ${formKey()}
       <label class="canccu-field"
         ><span class="canccu-field__label">${c.t("import.file")}</span
@@ -291,8 +291,8 @@ export function previewView(
       ${i.message}
     </li>`;
   const blocked = file.errors.length > 0;
-  return html`<section class="canccu-card">
-      <p class="pizza-card__title">
+  return html`<section class="pizza-block">
+      <p class="pizza-title">
         ${c.t("import.summary", { rows, pizzerias: file.pizzerias.length })}
       </p>
     </section>

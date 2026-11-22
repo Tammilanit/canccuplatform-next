@@ -94,6 +94,20 @@ export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: read
     "screen.photo.added": { source: "photo", fills: [] },
   };
 
+/**
+ * The events that take a source past a domain `until_event` (#771): a run still waiting for it
+ * ends at once, without its finale, and a finale on air ends too, since either would tell a step
+ * the source has left behind ("Order closed" beside an order already called in or cancelled).
+ */
+export const PASSED: Readonly<Record<string, readonly string[]>> = {
+  "pizza.order.closed": [
+    "pizza.order.placed",
+    "pizza.order.arrived",
+    "pizza.order.done",
+    "pizza.order.cancelled",
+  ],
+};
+
 /** Domain types no module sends yet: provisional in contracts/events.md, with who will send them. */
 export const PROVISIONAL: Readonly<Record<string, string>> = {
   "pizza.order.closing": "the pizza module, step 5",

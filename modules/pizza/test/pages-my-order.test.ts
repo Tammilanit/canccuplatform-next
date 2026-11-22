@@ -217,6 +217,21 @@ describe.skipIf(!DATABASE_URL)("my order", () => {
     expect(r.body).toContain("Collect from Pena");
   });
 
+  it("draws What happens next as a timeline, never as boxes to tick (A5–A7, amendment 3)", async () => {
+    await step("place", { estimate_minutes: 40 });
+    const r = await view(w, "anni", `/orders/${id}`);
+    expect(r.body).not.toContain("pizza-step__box");
+    expect(r.body).not.toContain("pizza-split");
+    const line = r.body.slice(r.body.indexOf('<ol class="pizza-timeline"'));
+    expect(line).toMatch(/pizza-timeline__step--done[\s\S]*Called in[\s\S]*18:00/);
+    expect(line).toMatch(/pizza-timeline__step--now"[^>]*aria-current="step"[\s\S]*On the way/);
+    expect(line).toMatch(/pizza-timeline__step--later[\s\S]*Pizza is here/);
+    // The order's own header is a hero, not a framed card; only Food's list keeps cards.
+    expect(r.body).not.toMatch(/class="pizza-card[ "]/);
+    expect(r.body).toContain('class="pizza-hero"');
+    expect(r.body).toMatch(/<nav class="pizza-hubbar"/);
+  });
+
   it("says where to collect it, and ticks you off with I’ve got mine (U9)", async () => {
     await step("place");
     await step("arrive", { pickup: "Entrance table" });

@@ -7,7 +7,7 @@
 import { emptyState, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { Translate } from "./messages.js";
-import { PREFIX, SIGN_IN, formKey, split } from "./kit.js";
+import { PREFIX, SIGN_IN, formKey } from "./kit.js";
 import { stateLabel } from "./crew-views.js";
 import { counts, flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
@@ -61,10 +61,10 @@ function orderCard(c: FoodCtx, o: OrderView): Html {
         : c.t("food.held_by", { name: o.holder.name ?? "—" });
   return html`<a class="pizza-card pizza-card--link" href="${orderHref(o)}">
     <span class="pizza-row">
-      <span class="pizza-card__title">${orderName(c, o)}</span>${stateLabel(c, o)}
+      <span class="pizza-title">${orderName(c, o)}</span>${stateLabel(c, o)}
     </span>
-    <span class="pizza-card__meta">${standing(c, o)} · ${counts(c, o)}</span>
-    ${holder === "" ? "" : html`<span class="pizza-card__meta">${holder}</span>`}
+    <span class="pizza-meta">${standing(c, o)} · ${counts(c, o)}</span>
+    ${holder === "" ? "" : html`<span class="pizza-meta">${holder}</span>`}
     ${
       stake === 0
         ? ""
@@ -78,8 +78,8 @@ function orderCard(c: FoodCtx, o: OrderView): Html {
 /** The way in for someone who cannot order yet: sign in, or join the event. */
 export function wayIn(c: FoodCtx, back: string): Slot {
   if (!c.signedIn)
-    return html`<section class="pizza-card">
-      <p class="pizza-card__title">${c.t("food.guest_title")}</p>
+    return html`<section class="pizza-block pizza-wayin">
+      <p class="pizza-title">${c.t("food.guest_title")}</p>
       <p class="pizza-muted">${c.t("food.guest_text")}</p>
       <a
         class="canccu-button canccu-button--primary pizza-wide"
@@ -88,8 +88,8 @@ export function wayIn(c: FoodCtx, back: string): Slot {
       >
     </section>`;
   if (!c.member)
-    return html`<section class="pizza-card">
-      <p class="pizza-card__title">${c.t("food.join_title")}</p>
+    return html`<section class="pizza-block pizza-wayin">
+      <p class="pizza-title">${c.t("food.join_title")}</p>
       <p class="pizza-muted">${c.t("food.join_text")}</p>
       <a class="canccu-button canccu-button--primary pizza-wide" href="/notify/join"
         >${c.t("food.join")}</a
@@ -99,20 +99,33 @@ export function wayIn(c: FoodCtx, back: string): Slot {
 }
 
 /** Mockup 16: an order open from an earlier day blocks nothing, but should not stay (E10). */
-function staleCard(c: FoodCtx, o: OrderView): Html {
-  return html`<section class="pizza-card">
-    <p class="pizza-card__title">${c.t("food.stale", { seq: o.seq, day: o.day })}</p>
-    <p class="pizza-muted">${c.t("food.stale_text")}</p>
-    ${
-      c.member
-        ? post(
+function staleNotice(c: FoodCtx, o: OrderView): Html {
+  return notice({
+    kind: "warn",
+    title: c.t("food.stale", { seq: o.seq, day: o.day }),
+    text: c.t("food.stale_text"),
+    ...(c.member
+      ? {
+          actions: post(
             `${orderHref(o)}/step/cancel`,
             c.t("food.stale_cancel"),
-            "canccu-button--secondary pizza-wide",
-          )
-        : ""
-    }
-  </section>`;
+            "canccu-button--secondary",
+          ),
+        }
+      : {}),
+  });
+}
+
+/** An earlier order of the day: one line of a plain list, as it is only looked up. */
+function earlierRow(c: FoodCtx, o: OrderView): Html {
+  return html`<li>
+    <a class="pizza-list__link" href="${orderHref(o)}"
+      ><span class="pizza-list__text"
+        ><span class="pizza-title">${orderName(c, o)}</span
+        ><span class="pizza-meta">${standing(c, o)} · ${counts(c, o)}</span></span
+      >${stateLabel(c, o)}</a
+    >
+  </li>`;
 }
 
 /** Mockup 03: the Food page. `orders` is null where a guest may not read them (info-page mode). */
@@ -122,9 +135,9 @@ export function foodView(
   o: { ordering: boolean; note: string; error?: string },
 ): Html {
   const start = c.mayStart
-    ? (label: string, primary: boolean) =>
+    ? (label: string, primary: boolean, wide = true) =>
         html`<a
-          class="canccu-button ${primary ? "canccu-button--primary" : "canccu-button--secondary"} pizza-wide"
+          class="canccu-button ${primary ? "canccu-button--primary" : "canccu-button--secondary"}${wide ? " pizza-wide" : ""}"
           href="${PREFIX}start"
           >${label}</a
         >`
@@ -137,10 +150,18 @@ export function foodView(
   const open = orders.filter(isOpen);
   const stale = orders.filter((x) => x.stale);
   const earlier = orders.filter((x) => !isOpen(x) && !x.stale).sort((a, b) => b.seq - a.seq);
+  // The open orders are what people browse and join: cards, the way to start another beside their
+  // heading. An event has a few open at once, so they stack at the column's full width rather
+  // than fill a grid, where one order was one small card in an empty window (A2).
   const openPart =
     open.length > 0
-      ? html`<h2 class="pizza-section">${c.t("food.open_orders")}</h2>
-          ${open.map((x) => orderCard(c, x))}`
+      ? html`<div class="pizza-heading">
+            <h2 class="pizza-section">${c.t("food.open_orders")}</h2>
+            ${start(c.t("food.start_another"), false, false)}
+          </div>
+          <ul class="pizza-orders">
+            ${open.map((x) => html`<li>${orderCard(c, x)}</li>`)}
+          </ul>`
       : c.member && o.ordering
         ? emptyState({
             icon: "food",
@@ -149,18 +170,16 @@ export function foodView(
             action: start(c.t("food.start"), true),
           })
         : html`<p class="pizza-muted">${c.t("food.none_open")}</p>`;
-  // On a desktop the open orders lead and today's earlier ones sit beside them.
-  return html`${flash(o.error)}${closed}${split(
-    html`${stale.map((x) => staleCard(c, x))} ${openPart}`,
-    html`${open.length > 0 ? start(c.t("food.start_another"), false) : ""}
-    ${
-      earlier.length === 0
-        ? ""
-        : html`<h2 class="pizza-section">${c.t("food.earlier")}</h2>
-            ${earlier.map((x) => orderCard(c, x))}`
-    }
-    ${wayIn(c, PREFIX)}`,
-  )}`;
+  return html`${flash(o.error)}${closed}${stale.map((x) => staleNotice(c, x))} ${openPart}
+  ${
+    earlier.length === 0
+      ? ""
+      : html`<h2 class="pizza-section">${c.t("food.earlier")}</h2>
+          <ul class="pizza-list">
+            ${earlier.map((x) => earlierRow(c, x))}
+          </ul>`
+  }
+  ${wayIn(c, PREFIX)}`;
 }
 
 export interface PizzeriaChoice {
@@ -182,8 +201,8 @@ export function startView(
   const choices = pizzerias.map((p) => {
     const has = openAt.get(p.id);
     if (has !== undefined)
-      return html`<div class="pizza-card">
-        <span class="pizza-card__title">${p.name}</span>
+      return html`<div class="pizza-block">
+        <span class="pizza-title">${p.name}</span>
         <a href="${orderHref(has)}/add">${c.t("start.join_instead", { seq: has.seq })}</a>
       </div>`;
     const checked = first;
@@ -191,7 +210,7 @@ export function startView(
     return html`<label class="pizza-choice">
       <input type="radio" name="pizzeria_id" value="${p.id}" ${checked ? "checked" : ""} required />
       <span class="pizza-choice__stack"
-        ><span class="pizza-card__title">${p.name}</span>
+        ><span class="pizza-title">${p.name}</span>
         <span class="pizza-choice__hint"
           >${c.t(p.service === "takeaway" ? "start.takeaway" : "start.delivery")}</span
         ></span

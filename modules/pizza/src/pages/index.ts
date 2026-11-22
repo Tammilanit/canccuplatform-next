@@ -32,7 +32,8 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       return hubPage(
         request,
         reply,
-        { lang },
+        deps,
+        { lang, t },
         {
           title: t("off.title"),
           status: 404,

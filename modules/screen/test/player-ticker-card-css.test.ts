@@ -41,3 +41,33 @@ describe("claims.css, a card in the ticker role", () => {
     expect(title).toMatch(/overflow:\s*hidden;/);
   });
 });
+
+/**
+ * The ticker band's idle logo (#771): the out-of-header card's 5.5u name over a large mark is
+ * taller than the one-row band, which cut "DEMO EVENT" in half at 1920×1080. In the ticker the logo
+ * is one row at the header's size, as in the header.
+ */
+describe("widgets.css, a logo in the ticker band", () => {
+  const widgets = readFileSync(new URL("../player/src/widgets.css", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ");
+  const LOGO = "> .canccu-widget--logo";
+
+  it("never takes the out-of-header card's large mark and name", () => {
+    const card = [
+      ...widgets.matchAll(
+        /([^{}]*\.canccu-region:not\(([^)]*)\) > \.canccu-widget--logo[^{}]*)\{/g,
+      ),
+    ];
+    expect(card.length).toBeGreaterThan(0);
+    for (const m of card) expect(m[2], m[1]).toContain('[data-role="ticker"]');
+  });
+
+  it("is one row, as the header's logo", () => {
+    const row = [...widgets.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(
+      (m) => (m[1] ?? "").includes('[data-role="ticker"]') && (m[1] ?? "").trim().endsWith(LOGO),
+    );
+    expect(row?.[1]).toContain('[data-role="header"]');
+    expect(row?.[2]).toMatch(/flex-direction: row;/);
+  });
+});

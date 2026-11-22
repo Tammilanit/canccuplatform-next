@@ -124,7 +124,9 @@ export const RULES: readonly RuleDef[] = [
     defaults: {
       template: "pizza_placed",
       class: "announcement",
-      regions: ["rail", "ticker"],
+      // The food box's own place (#771): Screen draws the claim in the box's words, so the hall
+      // reads the order's state in one box; a layout without a venue rail has it on the ticker.
+      regions: ["venue_rail", "ticker"],
       ttl_seconds: 300,
       cue: "pizza.placed",
     },
