@@ -13,6 +13,7 @@ import {
   itemId,
   json,
   open,
+  closesAt,
   seedPizzerias,
   world,
 } from "./helpers.js";
@@ -22,6 +23,7 @@ import type { World } from "./helpers.js";
 let pool: pg.Pool;
 let w: World;
 let pz: string;
+let grill: string;
 let id: string;
 
 beforeAll(async () => {
@@ -36,7 +38,7 @@ beforeEach(async () => {
     "TRUNCATE pizza_receipts, pizza_paid, pizza_pay_details, pizza_reader_keys, pizza_reads, pizza_due, pizza_crew, pizza_pizzerias, pizza_menu_entries, pizza_orders, pizza_items, pizza_order_log, pizza_idempotency, pizza_outbox, pizza_outbox_tenants, pizza_tenants",
   );
   w = await world(pool);
-  ({ pz } = await seedPizzerias(w));
+  ({ pz, grill } = await seedPizzerias(w));
   id = json(await open(w, "pena", pz)).id as string;
   await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
     kind: "menu",
@@ -57,10 +59,27 @@ describe.skipIf(!DATABASE_URL)("the crew's Food page", () => {
     expect(r.body).toContain("Demo Pizzeria");
     expect(r.body).toContain("Closed · Nobody holds it");
     expect(r.body).toContain("Needs you · 1");
-    expect(r.body).toContain("pizza-desk");
-    expect(r.body).toContain("pizza-phone");
+    // Amendment 4: one day schedule by call time on the desk and on a phone, no table or cards.
+    expect(r.body).toMatch(/<ol class="pizza-schedule"/);
+    expect(r.body).not.toContain("pizza-desk");
+    expect(r.body).not.toContain('type="date"');
     expect(r.body).toContain(`href="/pizza/crew/orders/${id}"`);
     expect(r.body).toContain('aria-current="page"');
+  });
+
+  it("puts the day's orders in call time order, with the day in the event's format (C1)", async () => {
+    const other = json(await open(w, "pena", grill, { closes_at: closesAt(w, 30) })).id as string;
+    const r = await view(w, "crew", "/crew");
+    const rows = r.body.slice(r.body.indexOf('<ol class="pizza-schedule"'));
+    expect(rows.indexOf(`/pizza/crew/orders/${other}`)).toBeLessThan(
+      rows.indexOf(`/pizza/crew/orders/${id}`),
+    );
+    expect(r.body).toMatch(/<time class="pizza-schedule__time"[^>]*>18:30<\/time>/);
+    expect(r.body).toMatch(/aria-current="page"[^>]*>\s*\w{3} \d{1,2}\.\d{1,2}\.\s*</);
+    // The section's tabs scroll on a phone, so Settings is never behind "1 more".
+    const css = await w.app.inject({ url: "/static/crew.css", headers: { host: "demo.test" } });
+    expect(css.body).toContain(".canccu-tabs__extra");
+    expect(css.body).toContain("overflow-x: auto");
   });
 
   it("shows one order's people with their comments, and its history", async () => {

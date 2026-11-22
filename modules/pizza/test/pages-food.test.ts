@@ -77,20 +77,27 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(r.body).toContain("Done");
   });
 
-  it("is laid out for a desktop too: the open orders beside Start another order (amendment 5)", async () => {
+  it("sits in the hub's frame: the event's header back to the front door, and the hub's bar (amendment 5)", async () => {
     await open(w, "pena", pz);
     const r = await view(w, "anni", "/");
-    expect(r.body).toContain('href="/pizza/static/wide.css"');
-    const side = r.body.slice(r.body.indexOf('class="pizza-split__side"'));
-    expect(r.body.indexOf('class="pizza-split__main"')).toBeLessThan(
-      r.body.indexOf("Order 1 · Demo Pizzeria"),
-    );
-    expect(side).toContain("Start another order");
-    expect(side).not.toContain("Order 1 · Demo Pizzeria");
+    expect(r.body).toMatch(/<a class="pizza-frame__event" href="\/"/);
+    const bar = r.body.slice(r.body.indexOf('<nav class="pizza-hubbar"'));
+    expect(bar).toMatch(/href="\/"[^>]*>[\s\S]*?Now/);
+    expect(bar).toMatch(/href="\/pizza\/"[^>]*aria-current="page"/);
+    expect(bar).toContain("More");
+  });
+
+  it("lays the open orders out as a grid of cards with the start next to their heading, never a generic split (A2)", async () => {
+    await open(w, "pena", pz);
+    const r = await view(w, "anni", "/");
+    expect(r.body).not.toContain("pizza-split");
+    const head = r.body.slice(r.body.indexOf('class="pizza-heading"'));
+    expect(head.indexOf("Open orders")).toBeLessThan(head.indexOf("Start another order"));
+    expect(head.indexOf("Start another order")).toBeLessThan(head.indexOf("Order 1 · Demo Pizzeria"));
+    expect(r.body).toContain('class="canccu-grid pizza-orders"');
     const css = await w.app.inject({ url: "/static/wide.css", headers: { host: "demo.test" } });
     expect(css.statusCode).toBe(200);
-    expect(css.headers["content-type"]).toContain("text/css");
-    expect(css.body).toContain("@media (min-width: 60rem)");
+    expect(css.body).not.toContain("pizza-split");
   });
   it("offers one clear action when nothing is open", async () => {
     const r = await view(w, "anni", "/");
