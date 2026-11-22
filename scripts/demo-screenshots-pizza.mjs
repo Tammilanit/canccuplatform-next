@@ -99,7 +99,7 @@ const LISTED = [
   ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
   ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
-  // Mockup 19 B: what a member who still owes the holder sees, the amount and "Pay me with" (#769).
+  // The plan's "Pay me with": what a member who still owes the holder sees on their order (#769).
   ["pizza-food-pay-phone", `/pizza/orders/${ORDER}`, PHONE, "payer", PLAYERS[2][0]],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
