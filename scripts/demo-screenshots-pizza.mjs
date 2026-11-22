@@ -2,10 +2,11 @@
 // 16–20): one order taken by the CI session from open to handed out, with the attendee's Food
 // page, menu and order page and the holder's page at each step, at phone and desktop width (the
 // guest's Food page too); the crew's Food page and the order's page; the money step (the total,
-// a receipt read by CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria,
-// the menu CSV's preview and reading a menu photo; the daily record, one order's money and the
-// export; Food settings and Integrations. The group has a shard of its own, so its orders never
-// reach the screens of another group's shots (Moments' pizza stories). The order ends done.
+// a receipt read by CI's fake reader and confirmed, paid to the holder, and a member's view of
+// it); pizzerias, a pizzeria, the menu CSV's preview and reading a menu photo; the daily record,
+// one order's money and the export; Food settings and Integrations. The group has a shard of its
+// own, so its orders never reach the screens of another group's shots (Moments' pizza stories).
+// The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -98,6 +99,8 @@ const LISTED = [
   ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
   ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
+  // Mockup 19 B: what a member who still owes the holder sees, the amount and "Pay me with" (#769).
+  ["pizza-food-pay-phone", `/pizza/orders/${ORDER}`, PHONE, "payer", PLAYERS[2][0]],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
