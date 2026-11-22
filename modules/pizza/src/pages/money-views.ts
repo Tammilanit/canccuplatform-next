@@ -210,6 +210,8 @@ function splitChoice(c: PageCtx, o: OrderView, m: MoneyView): Slot {
 
 /** "#12 Kebab ×2, #1 Margherita": a person's pizzas, the same ones counted once. */
 function pizzasLine(m: MoneyView, userId: string | null): { labels: string; cents: number | null } {
+  // Anonymised people all have a null user_id: their rows cannot be told apart, so no breakdown.
+  if (userId === null) return { labels: "", cents: null };
   const mine = m.prices.filter((p) => p.user_id === userId);
   const counts = new Map<string, number>();
   for (const p of mine) counts.set(p.label, (counts.get(p.label) ?? 0) + 1);

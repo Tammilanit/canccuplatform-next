@@ -85,6 +85,7 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(bar).toMatch(/href="\/"[^>]*>[\s\S]*?Now/);
     expect(bar).toMatch(/href="\/pizza\/"[^>]*aria-current="page"/);
     expect(bar).toContain("More");
+    expect(r.body).toContain('<a href="/notify/privacy">');
   });
 
   it("lays the open orders out as cards with the start next to their heading, never a generic split (A2)", async () => {

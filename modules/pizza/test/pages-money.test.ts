@@ -111,6 +111,19 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     expect((await money()).split).toBe("even");
   });
 
+  it("gives anonymised people no pizza breakdown of another's (their rows cannot be told apart)", async () => {
+    // Two people with no user id, as after a retention run on rows that kept no pseudonym.
+    await pool.query(
+      `UPDATE pizza_items SET user_id = NULL, name = NULL WHERE user_id IN ($1, $2)`,
+      ["u_anni", "u_mikko"],
+    );
+    await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
+    const page = (await view(w, "pena", `/hold/${id}/money`)).body;
+    expect(page).not.toContain("Margherita");
+    expect(page).not.toContain("Kebab");
+    expect(page).toContain("Pepperoni");
+  });
+
   it("asks for the price of a pizza without one, for exact amounts (mockup 19 D)", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
     await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`, {});

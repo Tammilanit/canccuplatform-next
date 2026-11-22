@@ -22,7 +22,7 @@ export function frame(
       ${icon("more")}<span>${t("frame.more")}</span>
     </button>
     <div class="pizza-more" id="pizza-more" popover>
-      <a href="/privacy">${t("frame.privacy")}</a>
+      <a href="/notify/privacy">${t("frame.privacy")}</a>
       ${
         signedIn
           ? html`<form method="post" action="/admin/sign-out">
