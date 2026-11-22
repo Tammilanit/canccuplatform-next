@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1190" width="1920" height="1190" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 26: PC and phone are equal: the player pages at 1280 px and wider</title>
+<defs></defs>
+<rect x="0" y="0" width="1920" height="1160" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">26 · PC and phone are equal: the player pages at 1280 px and wider</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: every attendee page works fully in a PC browser, with a desktop layout at 1280 px and wider, and on a phone (amendment 5, #707). Phone views: sheets 02, 03, 04, 14, 21, 22.</text>
+<text x="32" y="136" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">1 · The Tournament page: the whole weekend, a section per day</text>
+<text x="968" y="136" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">2 · A session page</text>
+<text x="32" y="676" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">3 · Check-in and your match</text>
+<text x="968" y="676" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">4 · Standings and champions</text>
+<rect x="32" y="150" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<rect x="968" y="150" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<rect x="32" y="690" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<rect x="968" y="690" width="920" height="500" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<g transform="translate(32,150) scale(1)">
+<rect x="0" y="0" width="920" height="40" rx="0" fill="#121528"/>
+<text x="16" y="26" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="16 156">Demo Event</text>
+<text x="240" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="240 310">Now</text>
+<text x="324" y="26" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="324 394">Schedule</text>
+<text x="408" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="408 478">Play</text>
+<text x="492" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="492 562">Alerts</text>
+<text x="576" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="576 646">More</text>
+<rect x="800" y="8" width="100" height="24" rx="12" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="850" y="25" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="810 890">Nova</text>
+<text x="24" y="76" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="24 524">My sessions · Demo Game Cup</text>
+<text x="24" y="98" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="24 524">Fri 6 – Sun 8 Nov · tick to join, untick to leave</text>
+<rect x="560" y="60" width="330" height="44" rx="8" fill="#2a2010" stroke="#ffcf6e" stroke-width="1"/>
+<text x="574" y="78" font-size="12.5" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="574 874">Last call: Demo Racer closes 21:00</text>
+<text x="574" y="96" font-size="11.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="574 874">19 min left</text>
+<text x="24" y="136" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="24 304">FRI 6 NOV</text>
+<line x1="24" y1="144" x2="304" y2="144" stroke="#3c446c" stroke-width="1"/>
+<rect x="24" y="156" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="34" y="180" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="34 80">19:00</text>
+<text x="86" y="180" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 246">Demo Racer time trial</text>
+<text x="86" y="200" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 276">Solo · closes 18:30</text>
+<rect x="268" y="164" width="26" height="26" rx="7" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="281" y="183" font-size="15" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<rect x="24" y="232" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="34" y="256" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="34 80">21:00</text>
+<text x="86" y="256" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 246">Demo Party</text>
+<text x="86" y="276" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 276">Solo · closes 20:30</text>
+<rect x="268" y="240" width="26" height="26" rx="7" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="281" y="259" font-size="15" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="320" y="136" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="320 600">SAT 7 NOV</text>
+<line x1="320" y1="144" x2="600" y2="144" stroke="#3c446c" stroke-width="1"/>
+<rect x="320" y="156" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="330" y="180" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="330 376">14:00</text>
+<text x="382" y="180" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="382 542">Demo Racer time trial</text>
+<text x="382" y="200" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="382 572">Solo · closed</text>
+<rect x="564" y="164" width="26" height="26" rx="7" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<rect x="320" y="232" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="330" y="256" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="330 376">19:30</text>
+<text x="382" y="256" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="382 542">Demo Arena 5v5</text>
+<text x="382" y="276" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="382 572">Teams of 5 · closes 19:00</text>
+<rect x="564" y="240" width="26" height="26" rx="7" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="577" y="259" font-size="15" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<rect x="320" y="308" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="330" y="332" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="330 376">22:00</text>
+<text x="382" y="332" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="382 542">Demo Party</text>
+<text x="382" y="352" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="382 572">Solo · closes 21:30</text>
+<rect x="564" y="316" width="26" height="26" rx="7" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="616" y="136" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="616 896">SUN 8 NOV</text>
+<line x1="616" y1="144" x2="896" y2="144" stroke="#3c446c" stroke-width="1"/>
+<rect x="616" y="156" width="280" height="66" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="626" y="180" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626 672">13:00</text>
+<text x="678" y="180" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="678 838">Demo Racer finals</text>
+<text x="678" y="200" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="678 868">Solo · Full</text>
+<rect x="860" y="164" width="26" height="26" rx="7" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="24" y="404" font-size="11.5" fill="#ffcf6e" font-weight="600" text-anchor="start" data-box="24 224">Closes in 12 min</text>
+<text x="24" y="424" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="24 624">🔔 Remind me sets one reminder 30 min before sign-up closes.</text>
+<text x="24" y="470" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="24 424">Standings · Champions · Rules</text>
+</g>
+<g transform="translate(968,150) scale(1)">
+<rect x="0" y="0" width="920" height="40" rx="0" fill="#121528"/>
+<text x="16" y="26" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="16 156">Demo Event</text>
+<text x="240" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="240 310">Now</text>
+<text x="324" y="26" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="324 394">Schedule</text>
+<text x="408" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="408 478">Play</text>
+<text x="492" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="492 562">Alerts</text>
+<text x="576" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="576 646">More</text>
+<rect x="800" y="8" width="100" height="24" rx="12" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="850" y="25" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="810 890">Nova</text>
+<text x="24" y="76" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="24 524">Demo Arena 5v5 · 19:30</text>
+<text x="24" y="98" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="24 524">Teams of 5 · closes 19:00 · 14 signed up · Stage 2</text>
+<rect x="24" y="116" width="540" height="110" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="40" y="142" font-size="13.5" fill="#7cecba" font-weight="700" text-anchor="start" data-box="40 340">You are in</text>
+<text x="40" y="164" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="40 440">Team Nightfall · you are the leader</text>
+<text x="40" y="186" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="40 440">Invite: demo.example/join/nightfall</text>
+<rect x="40" y="194" width="110" height="26" rx="8" fill="#3b82f6"/>
+<text x="95" y="211.2" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="46 144">Copy invite</text>
+<rect x="24" y="238" width="540" height="190" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="40" y="264" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="40 340">Timeline</text>
+<text x="40" y="292" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="40 90">19:00</text>
+<text x="100" y="292" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="100 540">Registration closes</text>
+<text x="40" y="322" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="40 90">19:15</text>
+<text x="100" y="322" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="100 540">Check-in opens · scan the screen&#x27;s QR or tap</text>
+<text x="40" y="352" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="40 90">19:30</text>
+<text x="100" y="352" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="100 540">Match called · voice room B</text>
+<text x="40" y="382" font-size="12.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="40 90">21:00</text>
+<text x="100" y="382" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="100 540">Results</text>
+<rect x="584" y="116" width="312" height="150" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="600" y="142" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="600 850">Rules</text>
+<text x="600" y="164" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="600 880">Points: 1st 3 · 2nd 2 · 3rd 1 · took part</text>
+<text x="600" y="181" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="600 880">1 · no-show 0. Contact: Demo Lead,</text>
+<text x="600" y="198" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="600 880">tournament lead.</text>
+</g>
+<g transform="translate(32,690) scale(1)">
+<rect x="0" y="0" width="920" height="40" rx="0" fill="#121528"/>
+<text x="16" y="26" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="16 156">Demo Event</text>
+<text x="240" y="26" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="240 310">Now</text>
+<text x="324" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="324 394">Schedule</text>
+<text x="408" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="408 478">Play</text>
+<text x="492" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="492 562">Alerts</text>
+<text x="576" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="576 646">More</text>
+<rect x="800" y="8" width="100" height="24" rx="12" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="850" y="25" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="810 890">Nova</text>
+<text x="24" y="76" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="24 524">Check in · Demo Arena 5v5</text>
+<text x="24" y="98" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="24 324">19:15 · closes 19:25</text>
+<rect x="24" y="116" width="350" height="190" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
+<text x="40" y="144" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="40 340">Scan the code on the screen</text>
+<text x="40" y="166" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="40 340">On a PC: tap the button instead.</text>
+<rect x="40" y="182" width="150" height="34" rx="8" fill="#3b82f6"/>
+<text x="115" y="203.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="46 184">I am here</text>
+<text x="40" y="250" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="40 340">Checked in: 11 of 14. Waiting for 3.</text>
+<rect x="396" y="116" width="500" height="190" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="412" y="144" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="412 712">Your match</text>
+<text x="412" y="170" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="412 812">Nightfall vs Ember · Stage 2</text>
+<text x="412" y="194" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="412 812">Voice room B · lobby code shown at the call</text>
+<text x="412" y="222" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="412 712">How to join the game ›</text>
+</g>
+<g transform="translate(968,690) scale(1)">
+<rect x="0" y="0" width="920" height="40" rx="0" fill="#121528"/>
+<text x="16" y="26" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="16 156">Demo Event</text>
+<text x="240" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="240 310">Now</text>
+<text x="324" y="26" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="324 394">Schedule</text>
+<text x="408" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="408 478">Play</text>
+<text x="492" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="492 562">Alerts</text>
+<text x="576" y="26" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="576 646">More</text>
+<rect x="800" y="8" width="100" height="24" rx="12" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="850" y="25" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="middle" data-box="810 890">Nova</text>
+<text x="24" y="76" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="24 524">Standings and champions</text>
+<rect x="24" y="92" width="540" height="96" rx="12" fill="#27316e"/>
+<circle cx="70" cy="140" r="28" fill="#1d2a4d" stroke="#fff" stroke-width="2"/>
+<text x="70" y="150" font-size="26" fill="#fff" font-weight="700" text-anchor="middle" data-box="50 90">N</text>
+<text x="116" y="122" font-size="11.5" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="116 316">CHAMPION</text>
+<text x="116" y="148" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="116 366">Nova</text>
+<text x="116" y="172" font-size="12.5" fill="#dfe3ff" font-weight="400" text-anchor="start" data-box="116 416">Demo Game Cup · 14 points</text>
+<line x1="24" y1="236" x2="564" y2="236" stroke="#2a3050" stroke-width="1"/>
+<text x="32" y="226" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 282">2  Kestrel</text>
+<text x="300" y="226" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="300 420">5 podiums</text>
+<text x="556" y="226" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="end" data-box="496 556">12</text>
+<line x1="24" y1="274" x2="564" y2="274" stroke="#2a3050" stroke-width="1"/>
+<text x="32" y="264" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 282">3  Juno</text>
+<text x="300" y="264" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="300 420">5 podiums</text>
+<text x="556" y="264" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="end" data-box="496 556">11</text>
+<line x1="24" y1="312" x2="564" y2="312" stroke="#2a3050" stroke-width="1"/>
+<text x="32" y="302" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="32 282">4  Pike</text>
+<text x="300" y="302" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="300 420">3 podiums</text>
+<text x="556" y="302" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="end" data-box="496 556">8</text>
+<line x1="24" y1="322" x2="564" y2="322" stroke="#3ddcff" stroke-width="2"/>
+<text x="294" y="340" font-size="11.5" fill="#3ddcff" font-weight="700" text-anchor="middle" data-box="144 444">the cut · top 4 play the final</text>
+<line x1="24" y1="376" x2="564" y2="376" stroke="#2a3050" stroke-width="1"/>
+<text x="32" y="366" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 282">5  Echo</text>
+<text x="556" y="366" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="end" data-box="496 556">7</text>
+<line x1="24" y1="410" x2="564" y2="410" stroke="#2a3050" stroke-width="1"/>
+<text x="32" y="400" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 282">6  Rook</text>
+<text x="556" y="400" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="end" data-box="496 556">7</text>
+<rect x="584" y="92" width="312" height="200" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="600" y="118" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="600 850">Awards</text>
+<text x="600" y="144" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="600 885">⭐ MVP · Player Six · Demo Arena 5v5</text>
+<text x="600" y="168" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="600 885">⭐ Best play · Demo Player · Demo Racer</text>
+<text x="600" y="208" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="600 885">Clips and photos from the night below</text>
+</g>
+<text x="32" y="1140" font-size="14" fill="#374151" font-weight="400" text-anchor="start" data-box="32 1882">Same content and the same one-tap actions as the phone; the second column (standings, last call, rules) appears from 1280 px and below that it stacks under the main column.</text>
+</svg>

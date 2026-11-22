@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1260" width="1920" height="1260" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 20: Reopen registration and delay a session (crew)</title>
+<defs></defs>
+<rect x="0" y="0" width="1920" height="1150" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">20 · Reopen registration and delay a session (crew)</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: a closed session and a late team, or an evening running behind: the crew reopens for a few minutes or delays, and everyone affected is told. Demo names only.</text>
+<text x="32" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">1 · Desk: a closed session → Reopen registration</text>
+<rect x="32" y="140" width="920" height="440" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="56" y="176" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 576">Demo Arena 5v5 · registration closed 19:00</text>
+<rect x="592" y="156" width="64.8" height="23" rx="11.5" fill="#22263f" stroke="#a9b1d6" stroke-width="1"/>
+<text x="601" y="170" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="601 655.8">Closed</text>
+<text x="56" y="202" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 456">7 of 8 teams · 1 place left</text>
+<rect x="56" y="220" width="200" height="36" rx="8" fill="#3b82f6"/>
+<text x="156" y="242.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="62 250">Reopen registration</text>
+<rect x="266" y="220" width="180" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="356" y="242.9" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="272 440">Delay this session</text>
+<rect x="56" y="276" width="560" height="290" rx="10" fill="#121528" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="308" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="76 476">Reopen registration</text>
+<text x="76" y="332" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 596">It closes by itself through the scheduler when the time is up.</text>
+<text x="76" y="366" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="76 166">Reopen for</text>
+<rect x="172" y="346" width="80" height="40" rx="8" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="212" y="373" font-size="18" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="182 242">15</text>
+<text x="264" y="372" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="264 354">minutes</text>
+<text x="76" y="408" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="76 176">Quick picks</text>
+<rect x="76" y="418" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="100" y="439" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="79 121">5</text>
+<rect x="134" y="418" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="158" y="439" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="137 179">10</text>
+<rect x="192" y="418" width="48" height="32" rx="16" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
+<text x="216" y="439" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="195 237">15</text>
+<rect x="250" y="418" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="274" y="439" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="253 295">30</text>
+<text x="76" y="476" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 596">Registrants and followers get a push: &quot;Registration for Demo Arena 5v5 is</text>
+<text x="76" y="493" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 596">open again until 19:20.&quot; The screen and the hub show it. The History records</text>
+<text x="76" y="510" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="76 596">who and for how long.</text>
+<rect x="76" y="526" width="200" height="32" rx="8" fill="#3b82f6"/>
+<text x="176" y="546.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="82 270">Reopen for 15 minutes</text>
+<rect x="286" y="526" width="100" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="336" y="546.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="292 380">Cancel</text>
+<text x="642" y="310" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="642 932">Why one control</text>
+<text x="642" y="332" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="642 932">A number of minutes is the only choice a</text>
+<text x="642" y="350" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="642 932">tired crew needs. The close time shows</text>
+<text x="642" y="368" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="642 932">below it, so nobody does clock sums.</text>
+<text x="968" y="130" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">2 · Reopened: Close now, or let it close</text>
+<rect x="968" y="140" width="920" height="440" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="992" y="176" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="992 1552">Demo Arena 5v5 · registration open again</text>
+<rect x="1608" y="156" width="142.8" height="23" rx="11.5" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="1617" y="170" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1617 1749.8">Open until 19:20</text>
+<text x="992" y="202" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1492">closes by itself · 7 of 8 teams · 1 place left</text>
+<rect x="992" y="220" width="150" height="36" rx="8" fill="#3a2e12" stroke="#ffcf6e" stroke-width="1"/>
+<text x="1067" y="242.9" font-size="14" fill="#ffcf6e" font-weight="600" text-anchor="middle" data-box="998 1136">Close now</text>
+<rect x="1152" y="220" width="180" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1242" y="242.9" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1158 1326">Delay this session</text>
+<text x="992" y="296" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="992 1412">On the venue screen and in the hub</text>
+<rect x="992" y="306" width="420" height="130" rx="8" fill="#2a2010" stroke="#ffcf6e" stroke-width="1"/>
+<text x="1008" y="334" font-size="14" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="1008 1398">Registration open again · Demo Arena 5v5</text>
+<text x="1008" y="360" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1008 1398">Until 19:20 · 1 place left. Register in the hub.</text>
+<text x="1438" y="296" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1438 1858">History</text>
+<rect x="1438" y="306" width="420" height="150" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1454" y="336" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1454 1504">19:05</text>
+<text x="1514" y="336" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1514 1844">Reopened for 15 minutes · Crew Member</text>
+<text x="1454" y="370" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1454 1504">19:00</text>
+<text x="1514" y="370" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1514 1844">Registration closed (schedule)</text>
+<text x="1454" y="404" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1454 1504">18:30</text>
+<text x="1514" y="404" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1514 1844">Registration opened (schedule)</text>
+<text x="992" y="480" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">The places stay as they were: reopening adds time, never places. A late team fills the one place left; with none left the</text>
+<text x="992" y="498" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">row says Full.</text>
+<text x="32" y="630" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 952">3 · The push on a phone</text>
+<rect x="32" y="640" width="920" height="440" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="56" y="684" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="56 436">19:05 · lock screen</text>
+<rect x="56" y="696" width="400" height="150" rx="14" fill="#1a2038" stroke="#3ddcff" stroke-width="1"/>
+<text x="74" y="724" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="74 354">DEMO EVENT · TOURNAMENT</text>
+<text x="438" y="724" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="378 438">now</text>
+<text x="74" y="754" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="74 438">Demo Arena 5v5 is open again</text>
+<text x="74" y="778" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="74 438">Registration is open until 19:20. Tap to</text>
+<text x="74" y="796" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="74 438">register.</text>
+<text x="496" y="684" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="496 876">19:10 · lock screen</text>
+<rect x="496" y="696" width="400" height="150" rx="14" fill="#1a2038" stroke="#ffcf6e" stroke-width="1"/>
+<text x="514" y="724" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="514 794">DEMO EVENT · TOURNAMENT</text>
+<text x="878" y="724" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="818 878">now</text>
+<text x="514" y="754" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="514 878">Demo Arena 5v5 · moved to 19:45</text>
+<text x="514" y="778" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="514 878">Delayed 15 minutes. Registration closes 19:15.</text>
+<text x="514" y="796" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="514 878">Your place and check-in are kept.</text>
+<text x="56" y="890" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="56 356">Who gets it</text>
+<text x="56" y="916" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Reopened: registrants and followers of the tournament.</text>
+<text x="56" y="940" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">Delayed: everyone signed up for the session.</text>
+<text x="56" y="972" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="56 916">The push goes through app push or browser notification, plus Discord.</text>
+<text x="968" y="630" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="968 1888">4 · Delay a session: this one, or it and every later session that day</text>
+<rect x="968" y="640" width="920" height="440" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<text x="992" y="678" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="992 1492">Delay Demo Arena 5v5</text>
+<text x="992" y="714" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="992 1072">Delay by</text>
+<rect x="1078" y="694" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1102" y="715" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1081 1123">+5</text>
+<rect x="1136" y="694" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1160" y="715" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1139 1181">+10</text>
+<rect x="1194" y="694" width="48" height="32" rx="16" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
+<text x="1218" y="715" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1197 1239">+15</text>
+<rect x="1252" y="694" width="48" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1276" y="715" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1255 1297">+30</text>
+<rect x="1310" y="694" width="63" height="32" rx="16" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1341.5" y="715" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1313 1370">Other</text>
+<text x="992" y="762" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="992 1092">Applies to</text>
+<circle cx="1098" cy="756" r="9" fill="#22263f" stroke="#3ddcff" stroke-width="2"/>
+<circle cx="1098" cy="756" r="4.5" fill="#3ddcff"/>
+<text x="1118" y="762" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1118 1318">This session only</text>
+<circle cx="1368" cy="756" r="9" fill="#22263f" stroke="#3c446c" stroke-width="2"/>
+<text x="1388" y="762" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1388 1708">It and every later session today</text>
+<rect x="992" y="790" width="870" height="110" rx="10" fill="#121528" stroke="#3c446c" stroke-width="1"/>
+<text x="1012" y="822" font-size="15" fill="#7cecba" font-weight="700" text-anchor="start" data-box="1012 1412">Start 19:30 → 19:45</text>
+<text x="1012" y="850" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1012 1832">Registration is open, so its close moves 19:00 → 19:15 (the gap before the start stays the same)</text>
+<text x="1012" y="878" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1012 1832">The run of show moves with it. Places and check-ins are kept.</text>
+<text x="992" y="930" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">Registrants get a push. The same happens when someone delays the session in the run of show.</text>
+<text x="992" y="954" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">A delay moves the close only while registration is open. A closed or reopened registration keeps its time,</text>
+<text x="992" y="974" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="992 1852">and a running reopen is never ended early.</text>
+<rect x="992" y="1020" width="200" height="36" rx="8" fill="#3b82f6"/>
+<text x="1092" y="1042.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="998 1186">Delay 15 minutes</text>
+<rect x="1202" y="1020" width="100" height="36" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1252" y="1042.9" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1208 1296">Cancel</text>
+<circle cx="42" cy="1105" r="10" fill="#111827"/>
+<text x="42" y="1110" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">1</text>
+<text x="62" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Reopen is one control: a number of minutes, with quick picks 5, 10, 15 and 30. It closes by itself;</text>
+<text x="62" y="1131" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Close now is always there.</text>
+<circle cx="970" cy="1105" r="10" fill="#111827"/>
+<text x="970" y="1110" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
+<text x="990" y="1110" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">Reopening adds time, not places; a reopen is in the History (U19).</text>
+<circle cx="42" cy="1157" r="10" fill="#111827"/>
+<text x="42" y="1162" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>
+<text x="62" y="1162" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Delaying by hand keeps the gap before the start; places stay (E2).</text>
+<circle cx="970" cy="1136" r="10" fill="#111827"/>
+<text x="970" y="1141" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">4</text>
+<text x="990" y="1141" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">Both need the crew desk right, not the lead.</text>
+<rect x="0" y="1150" width="1920" height="110" rx="0" fill="#f3f4f6"/>
+</svg>

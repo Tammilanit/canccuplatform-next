@@ -2,11 +2,32 @@
 
 Every open question the research for [the step 7 brief](../step-7-tournament.md) found, grouped by theme, each with its options and a recommendation, for the product owner's brainstorming session (#126). IDs are stable, so the session can answer "U2: C" and the mockups can point here.
 
-The themes: **U** who uses it and how · **L** look and feel · **D** data and integrations · **E** edge cases and failure · **O** operations and scale · **P** plan and scope.
+The themes: **U** who uses it and how · **L** look and feel · **D** data and integrations · **E** edge cases and failure · **O** operations and scale · **P** plan and scope · **F** Finals beside the tournament (added for 0030). **Later: mini tournaments (after version 1)** at the end holds the questions that wait: kept, not asked now.
 
-**Decide first** (they change the most): P1 (the direction), U1 (the competitive shape), U2 (solo, teams or both), P4 (brackets in step 7), U8 (who enters results), U9 and U10 (check-in and no-shows), P2 (the issue set), P5 (the screen and hub feed in step 7).
+> **Revised for [0030](../../decisions/0030-finals-integrated-one-tourney-core.md) (2026-11-20, #682) and the product owner's lead round (2026-11-21, decision 0031, recorded in #695).** Finals is integrated as it is and stays apart; one tourney core is the engine of the cup, and it is still built fully general in step 7. Mini tournaments for any game wait until after version 1; the questions about them moved to [Later](#later-mini-tournaments-after-version-1). The earlier questions and their answers stay as they were. Where the core changes a question, a last bullet **Changed for 0030** says what changed and gives the recommendation now; a question the 0030 revision changed only for mini tournaments is back to its accepted answer, with one line saying so; new questions start with **New for 0030**. The core's design is the core plan of #681 (`docs/plans/tourney-core.md`, in PR #688 while this is written): its parameters, its API and THE FINALS preset; "the core plan" below means it.
+> - **Changed (the core):** U1, U6, L2, L3, L5, D2, D3, D13, E13, P1, P2, P3, P4.
+> - **Back to the accepted answer:** U8, U16, U18, D12, D15, D16, O6, P5.
+> - **New:** D18, P9, F1 (F1 was M12).
+> - **Changed by the lead round of 2026-11-21 (the second: the product owner reviewed the plan against that day's tournament and made six decisions):** U5 (no waiting list), U7, U10, E7, D11 (the waiting list goes), E2 (a manual delay), D2 (the scoring system is editable), D12 (a lead and a crew), P3. **New:** U19 (reopen registration for a while), D20 (named awards).
+> - **Changed by lead round 7 (2026-11-22):** P5 (the QR feed), plus the ones named in the brief's round 7 note.
+> - **Changed by the fourth lead round (2026-11-21: the product owner and the lead brainstormed sign-up, scoring and the screens):** U4, U7, E10, L3, L5, D9, D20, O6. **New:** U20 (sign-up without missing out), L10 (the screens around the tournament), L11 (PC and phone are equal), D21 (scoring from a screenshot), D22 (clips and photos).
+> - **Changed by the sixth lead round (2026-11-21: the product owner reviewed every sheet):** U3, U4, U11 (the finalist default is 4, a setting, everywhere), U14, U19, U20, L2, L6, L10, D9, D20, D21, D22, O1, O3. **New:** O12 (the tournament runs itself), D23 (the session form: game art, instructions link, voice rooms), D24 (the player card).
+> - **Changed by the seventh lead round (2026-11-22, the last: footage, the show, the lobby, QR codes):** U3, U9, U10, U14, L3, L10, D4, D5, D6, D9, D22, D23, O12. **New:** L12 (the hype curve and Screen's zones), D25 (storage for the footage), O13 (the show presets).
+> - **Later:** D17, D19, O11 and M1–M11, M13–M15.
 
-**Already decided, so not asked again:** check-in is optional, off by default, set per tournament and switchable per session, and matches inside a session are optional ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md), the catalog); the tournament builds on the signup site's code, not the tourney core, and the mini tourney is the Finals track's ([0025](../../decisions/0025-finals-and-games-modules.md)); registration lives in the module ([0005](../../decisions/0005-signup-site-stays-outside.md)); no tournament history is migrated ([0004](../../decisions/0004-nothing-migrated.md)); sign-in instead of tokens in URLs ([0010](../../decisions/0010-scope.md)); every account is a Discord account and attendees join by venue, link or QR (0027); one standings table across all competitions is backlog ([0022](../../decisions/0022-product-vision.md)); sessions appear in the run of show through the agenda's mirror, and the module follows `agenda.item.delayed` ([agenda.md](../../../contracts/agenda.md#tournament-sessions)).
+**Decided in the lead round of 2026-11-21 (the sixth):** the tournament runs itself on the schedule the crew set in advance, and the crew acts only to change something and to score (O12); a session's form holds game art found from its name, an optional instructions link and voice rooms made automatically (D23); awards are given on the player row while scoring (D20); the finalist default is 4 (U11); "Interested" becomes the bell button "Remind me" (U20); reopening is one number of minutes (U19); the tick list is the whole weekend, by day (U4); the screens' key moments are loud full frames (L10); there is no consent tick for game captures, and links work like uploads (D22); the player card is lively and shared (D24).
+
+**Decide first** (they change the most): P1 (the direction), U1 (the competitive shape), U2 (solo, teams or both), P4 (brackets in step 7), U8 (who enters results), U9 and U10 (check-in and no-shows), P2 (the issue set), P5 (the screen and hub feed in step 7). Since 0030 also: F1 (where Finals and Tournament meet).
+
+**Decided in the lead round of 2026-11-21 (the second):** no waiting list: places per session stay optional and off by default, and a full session shows "Full" (U5); the crew can reopen a closed session's registration for a while (U19); the crew can delay sessions by hand (E2); the tournament has a lead and helpers (D12); named awards such as MVP add points (D20); the lead edits the scoring system (D2). Each is folded into its question below as the answer, not asked again.
+
+**Decided in the lead round of 2026-11-21 (the fourth):** sign-up is one tick list with a closing chip, a "Remind me" button with one reminder, a last call and Ask to join (U20); the crew scores with an optional screenshot reader, three sources for who played, remembered in-game names, tap to place, an award preview and a reveal (D21); the screen follows a session, the evening and the final (L10); participants share clips and photos, the crew approves (D22); PC and phone are equal (L11). Each is its own question below with the decision as its answer.
+
+**Already decided, so not asked again:** check-in is optional, off by default, set per tournament and switchable per session, and matches inside a session are optional ([0027](../../decisions/0027-product-decisions-2026-11-07-08.md), the catalog); the tournament builds on the signup site's code, not the tourney core, and the mini tourney is the Finals track's ([0025](../../decisions/0025-finals-and-games-modules.md); **superseded by 0030**, see below); registration lives in the module ([0005](../../decisions/0005-signup-site-stays-outside.md)); no tournament history is migrated ([0004](../../decisions/0004-nothing-migrated.md)); sign-in instead of tokens in URLs ([0010](../../decisions/0010-scope.md)); every account is a Discord account and attendees join by venue, link or QR (0027); one standings table across all competitions is backlog ([0022](../../decisions/0022-product-vision.md)); sessions appear in the run of show through the agenda's mirror, and the module follows `agenda.item.delayed` ([agenda.md](../../../contracts/agenda.md#tournament-sessions)).
+
+**Decided since, by [0030](../../decisions/0030-finals-integrated-one-tourney-core.md):** the tourney core (finals-core generalised, THE FINALS one preset of it) is the one engine for brackets, team forming and scoring, and this module takes it as a pinned dependency; the Finals app is integrated as it is, keeps its own look and data, and a Finals champion adds no Tournament points. Not asked again either.
+
+**Decided since, by the product owner's lead round (2026-11-21, decision 0031, recorded in #695):** mini tournaments for any game wait until after version 1 (the questions are kept under [Later](#later-mini-tournaments-after-version-1), not asked now); the THE FINALS mini tourney is integrated from day 1 as the Finals track's, unchanged; the core is still built fully general in step 7 and the cup runs on it; each game's competition rules (Games) and the rosters and rounds for casual play wait with the mini tournaments, because the cup needs neither (a session's team size and format are set by the organiser); and **things planned in time are a day schedule, not a card grid**: one day at a time, times down the side, items in time order like the run of show of `modules/agenda/src/canccu_agenda/day_view.py`, with a day picker, and the same list at phone width; a card grid stays only for like items with no time order.
 
 A question marked **contract** needs a contract change if the recommendation is taken. Every such change here is additive (new fields, endpoints, events or settings), so it ships in the package whose code uses it ([0029](../../decisions/0029-additive-contracts-ship-with-consumers.md)). None removes or renames a name in the catalog's outlines.
 
@@ -18,41 +39,48 @@ The legacy is a season: sessions in many games, coarse placements, points, a fin
 - **B.** Brackets for every session (direction B).
 - **C.** The season as the spine; inside a session, matches and rounds are an option (heats, rounds, a small knock-out), drawn as a bracket on the screen (direction C).
 - **Recommendation: C.** Any game fits the season because placements are coarse; rounds give the screen its bracket and Moments' Round start a reason to fire, without an engine (P4).
+- **Changed for 0030:** The core now gives the bracket: "rounds without an engine" becomes rounds filled by the core's `next`, and a full bracket (single elimination, groups then knock-out) costs a template, not a module engine. **Recommendation now: C**, with each session choosing placements only (the default, as the legacy) or a bracket from the core ([P4](#p4-brackets-in-step-7)).
 
 ### U2. Solo, teams or both
 The legacy registered players one by one; teams formed by voice channel at T−15.
 - **A.** Solo only, as the legacy; teams form in voice.
 - **B.** Teams only for team games, solo for the rest, chosen per session.
 - **C.** B, plus solo players may register for a team session and be placed on a team (U6).
-- **Recommendation: C.** A called match needs its teams before the voice room exists, and the screen needs their names; solo sign-ups keep the legacy's "just show up" for people without a group ([mockup 03](03-teams.svg)). **Contract:** teams and registrations in `contracts/tournament.md` (new).
+- **Recommendation: C.** A called match needs its teams before the voice room exists, and the screen needs their names; solo sign-ups keep the legacy's "just show up" for people without a group ([mockup 03](03-teams.svg)). **Contract:** teams and registrations in `contracts/tournament.md` (new). **The season is individual:** a team exists for one session only; every member gets the team's placement points plus their own awards, and no team carries points to the next session.
 
 ### U3. How teams form
 - **A.** A leader creates the team and shares a link or a short code; others join until the close (esports platforms).
 - **B.** The leader types the members' names.
 - **C.** The crew builds every team.
-- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session.
+- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session. **Changed (lead round 6):** the team page is one panel: the name, members as a list and one invite link, with no QR (lead round 7: only "scan to join" on the screen's session card stays; no player name is in the link) ([mockup 03](03-teams.svg)). A team ends with its session; the season never sees team names.
 
 ### U4. What the player sees of the timeline
 - **A.** Each session page shows its timeline (close, voice rooms, the call, results) from the scheduler's own times, and the For you card shows the next step.
 - **B.** Only the start time, as the legacy; the rest by push.
+- **Added (lead round 8, 2026-11-21): one page for many sessions.** The Tournament page's "My sessions" list is the legacy register page's ease back: every session in time order as the day schedule (amendment 4), each row with a tick to join or leave, saved by one tap (no Save button). A row shows the time, the game, solo or team, the close time, "Full" or "Closed" when it cannot be ticked, and when a reopened session closes again ([U19](#u19-reopening-registration-for-a-while)). Ticking a team session signs you up as a solo player ([U6](#u6-solo-players-in-a-team-session)); a small "Create or join a team" link is for groups. The session page and `/tournament register` stay. **API need:** one registration toggle per session, idempotent (`PUT /sessions/{id}/registration/me` with `{registered}`), additive ([mockup 21](21-my-sessions.svg), [flow 02](02-flow-register.svg)).
+- **Changed (lead round 6): all sessions on one screen, divided by days.** Signing up is choosing across the weekend. On a PC the whole weekend is one page with a section (a column) per day, in time order inside each day. On a phone it is one scrolling list with sticky day headings and a day jump bar at the top. The day-schedule rule (amendment 4) still holds ([mockup 21](21-my-sessions.svg), [26](26-pc-layout.svg)).
 - **Recommendation: A.** One set of times for the page, the screen, the bot and the pushes, so they never disagree as the legacy's 30 and 60 minutes did ([mockup 02](02-flow-register.svg)).
 
-### U5. Capacity and the waiting list
-- **A.** Places per session (players or teams), optional; a full session offers a waiting list that moves up by itself when a place frees before the close, with a push.
-- **B.** A waiting list the crew moves by hand.
-- **C.** No capacity, as the legacy.
-- **Recommendation: A.** #127 asks for limits and a waiting list; moving up by itself saves the crew the busiest minutes. After the close the list moves only when no-shows are replaced (U10). **Contract:** `places`, `waiting_count` on the Session; `tournament.player.waitlisted` and `tournament.player.promoted` (personal).
+### U5. Capacity
+**Decided (lead round, 2026-11-21): places optional, no waiting list.** The legacy had no capacity and no waiting list, and the product owner keeps the list out.
+- **A.** Places per session (players or teams), optional and off by default, as today; a full session just shows "Full".
+- **B.** No capacity, as the legacy.
+- **Recommendation: A**, the decided answer. A freed place (a player gives up, U7) is open for the next to register while registration is open; once it is closed the crew may reopen it for a while ([U19](#u19-reopening-registration-for-a-while)). **Contract:** `places` on the Session; no `waiting_count`, and no `tournament.player.waitlisted` or `.promoted` events. ([Mockup 02](02-flow-register.svg).)
+- **Changed by the lead round:** the earlier option "a waiting list that moves up by itself, with a push" is dropped everywhere: the `waiting_count` field, the two events, the "moved up" push and replacing no-shows from a list at the close of check-in (U10, U7, E6, E7).
 
 ### U6. Solo players in a team session
 - **A.** They register alone; at the close the crew places them on short teams, by hand or by "fill from the standings" (balanced by points).
 - **B.** Random teams made by the module at the close.
 - **C.** Not allowed: a team session needs a team.
 - **Recommendation: A.** The crew knows who sits together; a balanced fill is one button, not a rule. Random teams surprise friends sitting side by side.
+- **Changed for 0030:** B no longer means a random draw: the core's team builder makes balanced teams (the most even sums). **Recommendation now: A**, and the crew's "fill" button calls the builder. Its input is one number per player: the player's season points so far, which the builder sums like a rating (it needs no rating scale). At the first session everyone has 0, so the fill is then a seeded shuffle, not a balance. The builder needs a player count that is a multiple of the team size, so the button fills the teams that complete and leaves the rest to the crew (E7). The seed is stored, so a fill is repeatable. Random teams still never form by themselves in an official session.
 
 ### U7. Giving up a place
-- **A.** "I can't make it" until the close frees the place at once; after the close it asks the crew (the legacy's wording), and before the start the crew can still promote from the list.
+- **A.** "I can't make it" until the close frees the place at once; after the close it asks the crew (the legacy's wording), and before the start the crew can still free the place or reopen registration ([U19](#u19-reopening-registration-for-a-while)).
 - **B.** Free until the start.
 - **Recommendation: A.** Matches are made at the close; a late drop-out needs a person to decide ([mockup 02](02-flow-register.svg)).
+- **Added (lead round 8):** on "My sessions" ([U4](#u4-what-the-player-sees-of-the-timeline)) unticking works until the close and frees the place at once; after the close the row offers "I can't make it", which asks the crew ([mockup 21](21-my-sessions.svg)).
+- **Changed by the lead round:** there is no list to promote from; a freed place is simply open again while registration is open, and the crew may reopen it ([U19](#u19-reopening-registration-for-a-while)).
 
 ### U8. Who enters results
 #129 asks for "results agreed by both sides where the format has two sides".
@@ -60,25 +88,27 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **B.** Each side reports and the other confirms; a dispute goes to the crew.
 - **C.** A, with B as a per-session setting for formats with two sides.
 - **Recommendation: A for step 7, C later if wanted.** The legacy never had disputes because the crew scored; two-side reporting adds states, timeouts and a dispute queue for the rare serious match, which the Finals track covers with its own reporting. A player can "Report a problem" from the match page ([mockup 04](04-session-evening.svg)).
+- **Back to its accepted answer** (A for step 7, C later): the 0030 change rested on the mini tournaments' reports and queue, which wait until after version 1.
 
 ### U9. The check-in window
 Check-in is off by default (0027). When on:
-- **A.** Opens at T−15, closes at T−5, both settings; by the hub's button or the stage QR; the crew marks others present.
+- **A.** The bot opens a lobby voice channel about 10 minutes before the start (a setting) and pings everyone who signed up; being in the lobby is the check-in; the crew marks others present. It closes at T−5 (a setting). **Changed (lead round 7):** no button and no stage QR; the lobby is the way in ([mockup 04](04-session-evening.svg), [D6](#d6-check-in-through-notify)).
 - **B.** Opens when registration closes, closes at T.
-- **Recommendation: A.** The legacy's T−15 is when players gather and the voice rooms appear; closing at T−5 leaves five minutes to replace no-shows and still start on time ([mockup 11](11-lifecycle.svg)).
+- **Recommendation: A.** The legacy's T−15 is when players gather and the voice rooms appear (now the lobby, at T−10); closing at T−5 leaves five minutes to replace no-shows and still start on time ([mockup 11](11-lifecycle.svg)).
 
 ### U10. No-shows
 With check-in on, at its close:
-- **A.** Players not checked in are moved out; the waiting list moves up into their places (team: a substitute first, then the list); each gets a push (and a DM in step 6); the crew can undo until the session ends.
+- **A.** Players not in the lobby (and not marked present by the crew) are marked no-show (0 points); each gets a push (and a DM in step 6); the crew can undo until the session ends. Nobody is replaced from a list; the crew may reopen registration ([U19](#u19-reopening-registration-for-a-while)) to fill places, and a team gets a substitute from its own roster first.
 - **B.** The crew decides one by one.
 - **C.** Only flagged; nothing moves.
-- **Recommendation: A**, as #129 says. With check-in off nobody is a no-show; the legacy's 0-point "no-show" row stays for registrants who never played (from the roster). A team below its size after replacements goes to the crew (E7).
+- **Recommendation: A**, as #129 says. With check-in off nobody is a no-show; the legacy's 0-point "no-show" row stays for registrants who never played (from the roster). A team below its size after a no-show goes to the crew (E7). **Changed by the lead round:** the waiting list no longer moves up at the close of check-in.
 
 ### U11. The final
 The legacy flagged one session as the final; finalists were picked outside the system and validated against the leaderboard.
-- **A.** The final's size is a setting (top 10 by default); the module proposes the cut from the standings and the tie-break chain, an organiser confirms it (finalists notified), and the final's ranks lead the standings once scored.
+- **A.** The final's size is a setting (**4 by default**: several finalists, one champion); the module proposes the cut from the standings and the tie-break chain, an organiser confirms it (finalists notified), and the final's ranks lead the standings once scored.
 - **B.** The organiser picks finalists by hand, as the legacy.
 - **Recommendation: A.** The rule is the legacy's; only the picking moves into the system, with the crew's confirmation ([mockup 08](08-standings-and-final.svg)). **Contract:** `tournament.final.confirmed` (finalists; personal).
+- **Changed (lead round 6):** the default is 4 everywhere (the brief, the mockups, the contract's `final_size`); it was 10 before. The cut line, the confirm button and the finalist cards all follow the setting ([mockup 08](08-standings-and-final.svg), [24](24-screens-around-tournament.svg)). The player card ([D24](#d24-the-player-card)) is the finalist intro.
 
 ### U12. Players without an account
 Every account is a Discord account (0027), but a walk-in friend may have none.
@@ -92,10 +122,11 @@ Every account is a Discord account (0027), but a walk-in friend may have none.
 - **Recommendation: A**, as the App track's mockup 12 drew it. Calling a match sets where and the lobby id ([mockup 09](09-crew-phone.svg)). **Contract:** `where`, `lobby_id`, `voice_channels` on the Match (D8).
 
 ### U14. The crew phone
-- **A.** The desk works at 390 px: what to do next first, then what needs the crew, the stage QR, mark present, a quick result, the champion photo.
+- **A.** The desk works at 390 px: what to do next first, then what needs the crew, the lobby and the show (hold, skip, spotlight now), mark present, a quick result, the champion photo.
 - **B.** A separate crew app.
 - **C.** Desk only.
 - **Recommendation: A.** One page that reflows, as step 5's crew Food page; the stage crew rarely has a laptop.
+- **Changed (lead round 6):** the phone's first view is usually "Nothing to do" with the next automatic step and its time; a match is called by the schedule and the phone shows it; an override sits small under the next step. The buttons that remain change something (reopen, delay, an exception) or score ([O12](#o12-the-tournament-runs-itself), [mockup 09](09-crew-phone.svg)).
 
 ### U15. Spectators
 - **A.** Standings, a live session and the champions page are readable by anyone at the event (members and guests of the hub), without signing in.
@@ -107,6 +138,7 @@ Every account is a Discord account (0027), but a walk-in friend may have none.
 - **A.** One page per event: the final's top three with photos, then each session's winner, kept after the event.
 - **B.** A hall of fame across the series.
 - **Recommendation: A** now; B is a roadmap note for the series (step 8's clone and series).
+- **Back to its accepted answer** (A): the 0030 change added mini tournament champions, which wait; the Finals app keeps its own champions page, linked from the hub's Finals tile, and this page never lists it.
 
 ### U17. Walk-ins
 The legacy added "present, not registered" players from the roster at scoring.
@@ -119,6 +151,20 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **A.** The bot's `/tournament register`, `schedule`, `my-registrations` and `leaderboard` link to or read the module's API with the person's rights; its DMs follow the same events as Notify.
 - **B.** The bot keeps its own registration flow.
 - **Recommendation: A**, as the catalog says ("bot admin commands that change tournament data are API calls made with the person's rights").
+- **Back to its accepted answer** (A): the 0030 change added mini tournaments to `/tournament`, which wait; `/finals` stays the Finals app's command, through its provider contract.
+
+### U19. Reopening registration for a while
+**New for the lead round (2026-11-21).** The legacy had a reopen on its admin page; its logic is ported.
+- **A.** A crew action on a closed session: "Reopen registration" **for N minutes** (one control: a number box and quick picks 5, 10, 15 and 30; no "until a time"), and "Close now". It closes by itself through the scheduler; registrants and the tournament's followers get a push ("Registration for {session} is open again until {time}"); the screen and the hub show it; the session's history records who reopened it and until when.
+- **B.** The organiser edits the close time of the session by hand.
+- **Changed (lead round 6):** one control only, "Reopen for [__] minutes"; the close time shows below it. Reopening adds time, never places.
+- **Recommendation: A** (decided; [mockup 20](20-reopen-and-delay.svg)). It replaces the waiting list as the way to fill a late place (U5, U10, E7). The legacy's reopen logic is ported, and the close is a due row in the scheduler like the others (O1). Right: `tournament.desk.run`. **Contract (additive):** `registration_reopened_until` (string or null) on the Session; a new event `tournament.registration.reopened` (event-wide, `public`, for followers and the screen, and personal to the session's registered players; `data`: `session`, `until`, `actor_user_id`), declared as a trigger of Notify's `tournament` topic ([D11](#d11-pushes-and-dms)); the automatic close emits the catalog's existing `tournament.registration.closed`; `POST /api/tournament/sessions/{id}/registration/reopen` (`minutes`) and `/close`. The alternative, a `reopened_until` field on `tournament.registration.opened`, would reuse Notify's declared trigger but blurs a first opening with a reopening, so the pack recommends the new event.
+
+### U20. Signing up without missing out
+**New for the lead round 4 (2026-11-21).** Several sessions a day is the normal case; the tick list ([U4](#u4-what-the-player-sees-of-the-timeline)) is the one page.
+- **A.** The list gets: a **"Closes in N min"** chip on rows near the close; a **bell button "Remind me"** per session (it replaces "Interested", which was vague) that sends one reminder 30 minutes before sign-up closes, only for a session you have not joined, with the line "We'll remind you 30 min before sign-up closes" shown the first time it is pressed and on hover; sessions without the bell send nothing; **last call** on the hall screen, the hub and as a Discord channel post ("Last call: {game} closes {time}"); **Ask to join** on a closed session, a request in the crew's queue that the crew grants with one tap (in addition to reopening, [U19](#u19-reopening-registration-for-a-while)); and an **overlap warning** when two ticked sessions overlap ([E10](#e10-overlapping-sessions)). The tick list, the hub and the screen work by day.
+- **B.** Only the tick list and the push at the start.
+- **Recommendation: A** (decided; [mockup 22](22-signup-nudges.svg)). The chip window and the reminder lead (30 minutes) are settings with those defaults. Opt-in by the bell keeps pushes rare ([D11](#d11-pushes-and-dms)); the post uses mentions off. **Contract (additive):** the reminder (`/interest/me`), the join request, the last call read and event (gap 16).
 
 ## L · Look and feel
 
@@ -130,12 +176,16 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 ### L2. The organiser pages
 - **A.** One Tournament entry in "Run the event": tabs Sessions, Standings and final, Players and teams, Settings; each session opens its desk (Desk, Matches, Players and teams, Results, History).
 - **B.** One long page per session, as the legacy.
-- **Recommendation: A.** Sessions and matches are card grids at card size, players and history stay tables, crew actions in one band above (amendment 3) ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), [15](15-grids.svg)).
+- **Changed (lead round 6):** crew actions are only the ones that change something; the desk shows what happens next and when, with an override ([O12](#o12-the-tournament-runs-itself), [mockup 06](06-session-desk.svg)).
+- **Recommendation: A.** Sessions and matches are card grids at card size, players and history stay tables, crew actions in one band above (amendment 3) ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), 15 (the card-grid mockup, replaced by 15-day-schedule)).
+- **Changed for 0031 (the day schedule rule):** Sessions and a session's matches are things planned in time, so they are no longer card grids. **Recommendation now: A**, with sessions and a session's matches as a day schedule: one day at a time, times down the side, items in time order like the run of show, with a day picker, and the same list at phone width. Players and history stay tables, crew actions sit in one band above ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), [15](15-day-schedule.svg)).
 
 ### L3. The screen during a session
-- **A.** The Pulse shows the bracket (when the session has rounds) or the standings as the hero, with the check-in QR while it is open; Moments' rules and presets do the peaks.
+- **A.** The Pulse shows the bracket (when the session has rounds) or the standings as the hero, with the session card's "scan to join" QR; Moments' rules and presets do the peaks.
 - **B.** The legacy's leaderboard pin from T−15 to T+10.
 - **Recommendation: A.** The Director already orders `bracket` and `leaderboard` first; step 4 rebuilt the pin as Starting soon and Match called ([mockup 10](10-venue-screen.svg)).
+- **Added (lead round 4):** the screen follows the whole evening, not only the session's peak: the arcs of [L10](#l10-the-screens-around-the-tournament) ([mockup 24](24-screens-around-tournament.svg)); the order in F1 still decides who leads.
+- **Changed for 0030:** The Finals app can run beside a session. **Recommendation now: A**, with the order in [F1](#f1-where-finals-and-tournament-meet): the official session leads the Pulse while it runs; a Finals card never shares a widget with the tournament.
 
 ### L4. Match called on the screen
 - **A.** Moments' built rule (and preset 3): the teams, where, the voice rooms and a countdown, 30 s, then the rail until the match starts.
@@ -143,14 +193,16 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **Recommendation: A**, built; step 7 fills `voice_channels` and `where` (D8).
 
 ### L5. The champion moment
-- **A.** Moments' Champion preset on the final's result: sting, winner card with the photo, the bracket, a QR to the photos.
+- **A.** Moments' Champion preset on the final's result: sting, winner card with the photo, the bracket.
 - **B.** A plain standings update.
 - **Recommendation: A**, built; the crew takes the photo first, or the card falls back to the occasion photo, then to none (the legacy order).
+- **Changed for 0030:** Two champions now reach the screen: the official final's and the Finals app's. **Recommendation now: A** for the official final; a Finals champion keeps the app's own graphics and theming (0030 point 1) and is the Finals track's ([F1](#f1-where-finals-and-tournament-meet)).
+- **Added (lead round 4):** the final has several finalists (a setting, for example 4) and one winner; the champion moment follows the finalist cards and the ranking 1–N, and places 2–N are celebrated as finalists ([L10](#l10-the-screens-around-the-tournament), [mockup 24](24-screens-around-tournament.svg)).
 
 ### L6. Game art
-- **A.** From the games catalogue's cover, when the session's game is linked; the organiser may upload one.
-- **B.** A Steam store URL per session, as the legacy.
-- **Recommendation: A.** Screen's Pulse hero already reads the catalogue's cover for `game`.
+- **A.** Found automatically from the session's game name by the legacy's cover-art chain (signup-site T12: cache, then Steam search, then IGDB), or from a pasted Steam store link; the catalogue's cover wins when the game is linked; the crew can replace the art ([D23](#d23-the-session-form), [mockup 05](05-sessions.svg)).
+- **B.** A Steam store URL per session, as the legacy, with no search.
+- **Recommendation: A** (changed, lead round 6). Screen's Pulse hero already reads the catalogue's cover for `game`; the chain fills the games the catalogue lacks, and the art is the background of the session's screen views.
 
 ### L7. Names on the screen
 - **A.** Display names by default; a setting for initials only; a player who hides their name from screens is shown as "Player 7".
@@ -167,6 +219,25 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **B.** Everything at the end, for a reveal.
 - **Recommendation: A**, with the reveal as a crew spotlight of the standings when the crew wants a moment.
 
+### L10. The screens around the tournament
+**New for the lead round 4.** The hall screen tells the story all evening.
+- **A.** Three arcs: **a session's life** (Today or Tonight cards with game art, the sign-up count and a QR; last call with a countdown; the teams revealed; the lobby "Waiting for 3: names"; match called; now playing with the stage, a round timer and the bracket between rounds; the result reveal, winners then awards then the standings sliding; a recap of approved clips and photos), **all evening** (the race to the final with the cut line; player spotlights; game-stat highlights from the screenshots; rivalries; the biggest climber; best moments; a "Next up" strip with several sessions, delays and last calls, alternating between overlapping sessions) and **the final** (several finalists, a setting with the default 4, and one winner: intro cards, the final, the ranking 1–N, then the champion moment and the champion photos; places 2–N are celebrated as finalists). It reuses Moments' presets and cues, Screen's templates, story pages, the pulse effects and the game art as the background; each new widget is named in the brief, under mockup 24.
+- **Changed (lead round 6): pop and hype.** The tournament's look on screen is loud and celebratory: the key moments are drawn as full 1920×1080 frames (the result reveal, an MVP and award moment, the race to the final with the cut line, a player spotlight, a finalist intro card, the champion), each with the game art as the background, big type, the player's avatar, motion notes (glow, pulse, confetti, slide-in, count-up, from the screen-energy rules and widgets.md's pulse effects) and a hold time. The small tiles stay only as an index ([mockup 24](24-screens-around-tournament.svg)).
+- **B.** Only the leaderboard, bracket, match called and champion card of the first plan ([L3](#l3-the-screen-during-a-session), [L4](#l4-match-called-on-the-screen), [L5](#l5-the-champion-moment)).
+- **Recommendation: A** (decided; mockup 24). It is the largest part of the lead round and of the screens' work; the package plan may cut it by arc. Spotlights and highlights use names as [L7](#l7-names-on-the-screen) allows. **Contract (additive):** `final_size`, the feed for each view (gap 19).
+
+### L11. PC and phone are equal
+**New for the lead round 4 (amendment 5, #707, being written in parallel).**
+- **A.** Every attendee page works fully in a PC browser and on a phone, with a desktop layout at 1280 px and wider. Alerts go through app push or browser notifications, plus Discord. The player pages are drawn at 1280 px ([mockup 26](26-pc-layout.svg)); the phone views stay.
+- **B.** Phone first, the desktop only readable.
+- **Recommendation: A** (decided). A player may be at the gaming PC, with the phone elsewhere; the clip upload by drag and drop ([D22](#d22-clips-and-photos-from-participants)) depends on it.
+
+### L12. The hype curve and Screen's zones
+**New for the lead round 7 (the product owner's suggestion).** A story's size follows how close its session is.
+- **A.** A small box in the rotation long before and long after the session; a larger panel as it nears (the gathering phase); the hero while it is live and for the result and the finals ([mockup 27](27-show-phases.svg): three frames of one screen layout).
+- **B.** One size for every story, as the first plan.
+- **Recommendation: A** (decided). **How it maps to Screen's zones** (no new region role): the small box is a tile in the `rail` region (the Pulse's 4×6 rail); the larger panel is the same story in a wider rail, the `split` layout's 5×5 rail, or the `rail` with `grow_for_showcase` where the zone allows it; the hero is the `hero` region (the Pulse's 8×10, or the `hero` layout's 12×10). Moments' claim for each phase names the region role it wants (`rail` or `hero`), and Screen draws it there; the preset's phase decides which, not a new Screen layout. Open for the lead: whether the zone switches the layout (`pulse` to `split` to `hero`) or keeps the Pulse and only moves the story between `rail` and `hero`; the pack recommends the second, because a layout change redraws the whole screen. **Contract (additive):** none beyond the preset's region role per phase (O13).
+
 ## D · Data and integrations
 
 ### D1. Tournaments, sessions, matches
@@ -175,31 +246,38 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **Recommendation: A.** The catalog already has `tournament_id` and matches; TB4 asked for a season id from the start. **Contract:** the Tournament (`id`, `name`) (P8).
 
 ### D2. Formats and points
-- **A.** Three shapes: solo, teams, final. Points per placement are an event setting (3, 2, 1, 0 by default) with an optional bonus; a session may override.
+- **A.** Three shapes: solo, teams, final. Points per placement are an editable table in the tournament's settings (3, 2, 1, 0 by default: 1st, 2nd, took part, no-show); more places can be added (3rd, 4th …); a session may override the table.
 - **B.** Points by rank for solo games (for example 10, 8, 6 …).
-- **Recommendation: A**, with B as a later option. Coarse placements are why any game fits; a per-rank table invites arguments about game modes.
+- **Recommendation: A, editable, with B available** (decided in the lead round, 2026-11-21). Coarse placements are why any game fits, and the core supports a per-rank table as data, so B is a choice of the table's shape, not code. **Who:** the tournament lead edits the table in settings (right `tournament.settings.write`, [D12](#d12-rights)). **Changing it after results exist** recalculates the standings, asks for a reason (shown on the rules page and kept in the History) and shows which standings change before saving. The rules page always shows the table in force ([mockup 19](19-crew-scoring-awards.svg)).
+- **Changed for 0030:** Points are the core's scoring tables (`points` with `{ranks, rest, no_show}`), so B is a table in data, not code. The season's default table is 3, 2, 1, 0 and a session may override it.
+- **Changed by the lead round:** the table is editable by the lead, with a reason and a recalculation; the plain "bonus" is replaced by named awards ([D20](#d20-awards)).
 
 ### D3. Standings and tie-breaks
 The legacy sorted by points only.
 - **A.** Points, then more first places, then more sessions played, then a tie-break game the crew records.
 - **B.** Points, then the earlier registration.
 - **Recommendation: A.** The rules page already asked for tie-break games; this makes the last step a record, not a guess. **Contract:** `tie_break` on a standings row.
+- **The season is individual:** the standings, the final cut and the champions are per person, as the legacy's `collapseLeaderboardRows` ("one person once"); a team's placement points go to each member, and no team standing exists.
+- **Changed for 0030:** The standings and their tie-break chain are the core's `standings` (chain `points`, `firsts`, `played`, `tie_break`), whose ranks are also the final's cut. **Recommendation now: A**, computed by the core; the module keeps the crew's recorded tie-break order.
 
 ### D4. The voice handshake
 - **A.** As the catalog: `tournament.scoring.started` → the bot's `bot.voice_roster.captured` (members with `dwell_seconds`); `bot.voice_channels.created` and `.removed`. The qualifying dwell (10 minutes) is a tournament setting sent with `scoring.started`.
 - **B.** The tournament reads the bot's live voice API.
+- **Changed (lead round 7): a lobby channel per session.** About 10 minutes before the start the bot opens a lobby voice channel and pings everyone who signed up; the crew gives instructions there (no TTS). The lobby's roster is the check-in ([D6](#d6-check-in-through-notify)). When the teams are set the bot creates the team channels and moves the players in; after the game it moves them back to the lobby. Team channels need not be known in advance: `bot.voice_channels.created` carries what the bot made, and the Match shows it. **Contract (additive):** the lobby's timing on the Session and the bot's create-and-move commands; the bot's side is step 6 ([P6](#p6-the-bots-side-and-the-order)).
 - **Recommendation: A.** The handshake is outlined and built on the consumer side; one setting moves from the bot's env into the event. **Contract:** `dwell_seconds_min` on `tournament.scoring.started`.
 
 ### D5. Presence opt-out and check-in
 Review finding 1 of #137: does a tournament check-in count as presence data under the opt-out?
 - **A.** A check-in the player makes is an action, not tracking: it is allowed under the opt-out, stored as presence data (deleted 30 days after archiving) and never on the bus beyond counts and the player's own events.
 - **B.** The opt-out blocks check-in; the crew marks such players present.
+- **Changed (lead round 7):** with lobby presence as the check-in, an opted-out player is not in the bot's roster, so the crew marks them present by hand (as for voice rosters); nothing is blocked for the player, who still joins the lobby.
 - **Recommendation: A.** The opt-out is about being watched (voice rosters, who plays what); refusing a button the player presses would punish them. Opted-out players are still left out of voice rosters and ticked by hand ([mockup 12](12-edge-states.svg)).
 
 ### D6. Check-in through Notify
 - **A.** The hub's button and the stage QR both go through Notify's check-in with purpose `tournament:<session id>`; the module consumes `notify.checkin.recorded`, checks the session and the registration, and emits `tournament.player.checked_in`.
 - **B.** The button posts to the tournament directly; only the QR goes through Notify.
-- **Recommendation: A.** One path, already built and tested in Notify; the button calls the same API without the code (a check-in the module requests on the player's behalf, with their session).
+- **Changed (lead round 7): lobby presence is the check-in.** One of the three participation sources ([D21](#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)); the crew can still mark someone present. The stage QR and the "I'm here" button are dropped: Notify's check-in stays built and is not used for the cup. **C.** (now the recommendation) the module reads the lobby channel's roster from the bot ([D4](#d4-the-voice-handshake)).
+- **Recommendation: C** (changed, lead round 7): lobby presence from the bot's roster is the check-in, and the crew marks others present; Notify's check-in stays built and unused for the cup. (History: A was recommended before round 7, for its one tested path through Notify.)
 
 ### D7. Corrections and the history
 - **A.** A result is versioned; a correction needs a reason, emits `tournament.result.corrected` with the whole new list, recomputes the standings and shows a note on the match; the session's History lists every crew and scheduler action.
@@ -213,9 +291,10 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **Recommendation: A.** Each field has a real use on a screen or a phone; none renames anything. **Contract:** Session `name`, `tournament`, `teams_left`; Result `name`; Match `where`, `lobby_id`, `voice_channels`.
 
 ### D9. Photos
-- **A.** Four slots per final (winner, second, third, the moment), in the tenant's files volume, taken on the crew phone or uploaded; a consent tick before saving; deleted with the player's data on request.
+- **A.** Four slots per final (winner, second, third, the moment), in the tenant's files volume, taken on the crew phone or uploaded; no consent tick (the crew's own photos of the event; the crew can delete); deleted with the player's data on request.
 - **B.** As the legacy (a BLOB column).
-- **Recommendation: A.** Containers keep no state; photos of people are personal data.
+- **Recommendation: A.** Containers keep no state; photos of people are personal data, kept and deleted as such (changed, lead round 6: no consent tick).
+- **Added (lead round 4):** the final's four slots stay the crew's; photos and clips from participants are [D22](#d22-clips-and-photos-from-participants).
 
 ### D10. The hub's reads
 - **A.** `GET /api/tournament/me/matches` (my sessions and matches with state, where and when) and `GET /api/tournament/me/summary` (For you cards); pages update by server-sent events from the module, keyed by the session's `revision`.
@@ -223,19 +302,21 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **Recommendation: A**, as step 5 settled for pizza. **Contract:** both endpoints and the stream.
 
 ### D11. Pushes and DMs
-- **A.** Notify's tournament topic as declared (registration opened; check-in opened; match called, urgent), plus "you moved up", "you're out (no-show)" and "session moved or cancelled" in the personal part; the bot's DMs (step 6) follow the same events.
+- **A.** Notify's tournament topic as declared (registration opened; check-in opened; match called, urgent), plus "registration open again" (a reopening, to registrants and the tournament's followers), "you're out (no-show)" and "session moved or cancelled" in the personal part; the bot's DMs (step 6) follow the same events.
 - **B.** Only what Notify declares today.
 - **Recommendation: A.** Each added push answers a question the player would otherwise ask the crew. **Contract:** triggers added to the topic (notify.md, additive).
 
 ### D12. Rights
-- **A.** `tournament.sessions.write`, `tournament.desk.run`, `tournament.players.manage`, `tournament.results.write`, `tournament.final.manage`; a `tournament_crew` preset; settings through `admin.settings.write`.
+- **A.** A tournament lead and a crew of helpers. Rights: `tournament.sessions.write`, `tournament.settings.write` (settings, the scoring system and the award types), `tournament.crew.manage` (who is in the crew, and the lead), `tournament.final.manage`, `tournament.desk.run` (check-in, call and start matches, reopen or delay a session), `tournament.players.manage` and `tournament.results.write` (results, corrections and awards). Presets `tournament_lead` (all of them) and `tournament_crew` (`desk.run`, `players.manage`, `results.write`, `notify.checkin.display`, the moments spotlight).
 - **B.** One `tournament.manage` right.
-- **Recommendation: A** ([mockup 13](13-settings-and-rights.svg)). The stage crew can run the desk without editing sessions; defined and tested in #127 (high), so the other packages stay normal.
+- **Recommendation: A** ([mockup 13](13-settings-and-rights.svg), [mockup 19](19-crew-scoring-awards.svg)), decided in the lead round (2026-11-21). The **tournament lead** is the main responsible person, set per tournament by the organiser, named on the rules page and in the hub as the contact; they hold every tournament right. **Tournament crew** are helpers added by the lead or the organiser: they run the desk and the crew phone, check in, enter results and awards, and reopen or delay sessions; they do not change settings, the scoring system, the final or the crew. The settings page has a crew list (add or remove a helper, change the lead; `GET` and `PUT /api/tournament/crew`, additive). The event admin role still holds every right. Defined and tested in #127 (high), so the other packages stay normal.
+- **Changed by the lead round:** the earlier answer had one `tournament_crew` preset and settings through `admin.settings.write`; the lead is new, and the settings and crew rights are the lead's. The `tournament.minis.manage` of the 0030 revision still waits with the mini tournaments.
 
 ### D13. Seeding
 - **A.** From the event series' earlier results (#150's series) when the session has rounds, else from this event's standings, else random; the crew may reorder.
 - **B.** Manual only.
 - **Recommendation: A**, as #129 asks. Seeding only matters where there are rounds (U1); for a one-match session it is the order of the list.
+- **Changed for 0030:** Seeds now feed the core's draw (arrangement `keep` for seeded rounds, `shuffle` with a stored seed otherwise), and a random seeding replays from its seed. **Recommendation now: A**, unchanged.
 
 ### D14. Clone and series
 - **A.** `POST /api/tournament/clone` copies the tournament, its sessions (shifted) and settings, not registrations, teams or results (tenants contract).
@@ -246,11 +327,68 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **A.** A session links a catalogue game (`game.id`) when there is one; otherwise a name only.
 - **B.** Name only.
 - **Recommendation: A**, as the catalog's Session already allows; the cover and the hot-game link come with it.
+- **Back to its accepted answer** (A): the 0030 change read a game's competition rules, which wait with the mini tournaments; the cup needs none, because a session's team size and format are set by the organiser, with or without a linked game.
 
 ### D16. Export and personal data
 - **A.** `GET /api/tournament/me/export` and `DELETE /api/tournament/me` (registrations, check-ins, results as the player's own); anonymisation after 12 months keeps counts and totals.
 - **B.** Later, with the privacy centre.
 - **Recommendation: A.** The contract convention requires both; the App track's privacy centre reads them.
+- **Back to its accepted answer** (A): the 0030 change added mini tournament sign-ups, reports and ratings, which wait.
+
+### D18. The core as a dependency
+**New for 0030.** The core is a pure library ([0030](../../decisions/0030-finals-integrated-one-tourney-core.md) point 3), pinned to a release.
+- **A.** Pin the core's 2.0.0 tag; when a competition starts, store the built format (the core's data) and each draw's seed with it, so a running competition never changes under a later core version and every draw can be replayed.
+- **B.** Store only the template and the entrant count, and rebuild the format with the core at each step.
+- **Recommendation: A**, as the core plan has it. A core bump is a normal platform PR whose module tests run against it; THE FINALS preset's equivalence tests stay in the core's repo.
+
+### D20. Awards
+**New for the lead round (2026-11-21).** The legacy's plain "bonus" (a non-negative number added to a result) becomes named awards.
+- **A.** The tournament lead keeps a list of award types in settings (default: MVP; examples: best play, sportsmanship), each with default points. The crew gives an award to a participant in a session, with editable points and an optional note; a participant may get several. Award points add to the session's points (the legacy's base plus a non-negative bonus, ported); the standings show the breakdown (placing + awards), and the player's page and the champions page show the award names.
+- **B.** Keep one bonus number per result.
+- **Recommendation: A** ([mockup 19](19-crew-scoring-awards.svg), [07](07-results-and-corrections.svg), [08](08-standings-and-final.svg), [14](14-follow-and-champions.svg)). Giving, changing or taking back an award is a **result change**: one transaction under the row lock, a History line, and the correction rules of [D7](#d7-corrections-and-the-history) (a reason to change one; after the final is crowned it needs `tournament.final.manage`, E5). The award types and their default points are the lead's (`tournament.settings.write`); giving one needs `tournament.results.write`. **Contract (additive):** `awards` (type, points, note) and `points_placing` on the Result (`points` stays the total, so no consumer changes) and `award_types` in the tournament's settings; `tournament-scores-bonus` stays as the points rule's test, now over awards.
+- **Changed (lead round 6): awards are given while scoring, not afterwards.** In the results step each player row has an award button (⭐). Tap it, pick an award (MVP, best play, …) and its points prefill (editable); the award chip appears on the row and the standings preview updates at once. One Save covers placements and awards together. Changing an award later stays possible with the same history and reason rule ([mockups 19](19-crew-scoring-awards.svg), [23](23-scoring-screenshot.svg)).
+- **Added (lead round 4):** at the desk an award shows its effect on the standings before saving ("Nova 3rd → 1st ▲2"), and saving is a reveal on the hall screen ([D21](#d21-scoring-from-a-screenshot-three-sources-and-a-reveal), [mockup 23](23-scoring-screenshot.svg)).
+
+### D21. Scoring from a screenshot, three sources and a reveal
+**New for the lead round 4.** Making the crew's work as easy and fun as possible.
+- **A.**
+  - **Screenshots, crew only.** The crew adds the game's score screen. An optional AI reader (the same provider setting, consent notice and "a person confirms" pattern as pizza's receipt reader, #644) reads placements, names and per-player game stats. The crew checks before anything counts, and typing by hand always works.
+  - **Who played comes from three sources together:** registration, voice presence and the screenshot, side by side per person. All three agree: filled in. The screenshot plus one other source: took part, with a warning when one is missing. In the screenshot and in voice but not registered: took part with a warning, and one tap adds them as registered. In the screenshot only (not registered, not in voice): listed for the crew to decide, and one tap adds them as registered. Registered only: suggested as a no-show. Registered and in voice, but not in the screenshot: the crew decides. Voice alone never decides: a person in voice who is neither registered nor on the screenshot is not listed (the crew can add them by hand), as the brief's table says. Nothing is final until the crew saves.
+  - **In-game names:** the first time the crew links a screenshot name to a person, the platform remembers it for that game (per person, per game).
+  - **Tap to place:** tap a team or player for 1st, the next for 2nd; everyone else is "took part".
+  - **Awards on the player row (⭐), with a live preview** ("Nova 3rd → 1st ▲2") and **save as a reveal** on the hall screen ([L10](#l10-the-screens-around-the-tournament)).
+  - **The crew names the teams for each session**; team names appear on the match, the reveal and the results, never in the season standings ([D3](#d3-standings-and-tie-breaks)).
+- **B.** The crew types every result, as in the first plan ([U8](#u8-who-enters-results)).
+- **Recommendation: A** (decided; [mockup 23](23-scoring-screenshot.svg)). Players never add a screen: a wrong picture would move the standings. The reader is off until the organiser turns it on, and a picture is personal data (names), so it is kept as the results are ([O6](#o6-retention)). The reader only drafts: the Result is written by the crew's save, under the row lock, with the History ([D7](#d7-corrections-and-the-history)); the sources are kept on the participant so a correction can show them. **Contract (additive):** gap 17.
+
+### D22. Clips and photos from participants
+**New for the lead round 4; lean since lead round 7.** Moderated by the crew, and everything is kept.
+- **A.** Anyone taking part sends a file or a link from the hub, the session page or a PC browser (drag and drop a clip recorded on the gaming PC), picks the session and optionally tags people. The crew approves or rejects in a queue on the desk and the crew phone, and can delete. Only approved items reach the screen and the recaps. Files go in the tenant's files volume, with size and type limits ([mockup 25](25-clips-and-photos.svg)).
+  - **No consent step and no removal flow (lead round 7):** game captures are game footage. Tagging people is optional. The crew's approve/reject queue is the only gate, and the crew can delete.
+  - **Links (YouTube, Twitch, Medal, Steam) or files:** accepted by hosts the event allows (the crew can add one): YouTube, Twitch clips, Medal, and a Steam screenshot or recording page (`steamcommunity.com/sharedfiles/…`) or content link (`cdn.steamusercontent.com/ugc/…`). The platform tries to save a copy when the link is sent, within a size, type and time limit. A Steam link expires, so if the copy fails the sender is asked for the file. Why a host list: the platform fetches only from places the event trusts, never an arbitrary address. A link from any other host, or one that needs a login, is refused with a clear message.
+  - **Keep everything for the LAN video (lead round 7):** every clip and photo is kept, shown or not. The organiser gets **one export per event**: the files plus a list of the links, each with session, game, who and time ([mockup 25](25-clips-and-photos.svg), panel 7). Storage is [D25](#d25-storage-for-the-footage).
+  - **When and how often things are shown:** in the session recap right after its results; in the between-sessions rotation; before the final. Each approved item is shown at most a few times an hour (default 3, a setting), newest and least-shown first, spread fairly across players. The crew can pin one or push one now. Clips play muted for about 30 s at most unless the crew allows sound.
+- **B.** Only the crew's photos, as the final's four slots ([D9](#d9-photos)).
+- **Recommendation: A** (decided). Retention follows [D16](#d16-export-and-personal-data) and [O6](#o6-retention), except that the footage is kept for the export (a decision for the lead if it should end with the event: [D25](#d25-storage-for-the-footage)). The limits are settings (defaults in the mockup: 200 MB a clip, 15 MB a photo). Open: does Reject keep the file for the export? Recommended yes (kept, never shown); only Delete removes a file. **Contract (additive):** gap 18, with a link field beside the file, the crew's delete, the export and the showing rules as settings.
+
+### D23. The session form
+**New for the lead round 6.** What a crew member fills in once, in advance, for each session (a game).
+- **A.** The form holds: the game; **game art, found automatically** from the game's name (the legacy's cover-art chain, signup-site T12: cache, Steam search, IGDB, ported with changes) or from a pasted Steam store link, replaceable by the crew; an **optional link to an instructions page** (rules, how to join the game), shown on the session page and the match card; **voice channels, made automatically (lead round 7):** the bot opens a lobby channel about 10 minutes before the start and makes the team channels when the teams are set (the legacy's `vc-plan`, reworked: no choice of none, per player or per team on the form); **the show preset**, one dropdown ("Standard night" by default, "Big final", "Low-key"; [O13](#o13-the-show-presets)); and, as before, the format, places, close time and points ([mockup 05](05-sessions.svg)).
+- **B.** Art and instructions stay in Discord and the organiser's head, as the legacy.
+- **Recommendation: A** (decided). The art makes every screen and card look like the game; the link answers "how do I join" once; the voice plan is already tested in the legacy. **Contract (additive):** `art_url`, `instructions_url` on the Session; `voice_plan` is already in the catalog (its creation time before the start is a setting of the session).
+
+### D24. The player card
+**New for the lead round 6.** One card for a player, used wherever a player is shown big.
+- **A.** The card shows a nickname, a motto the player sets in their profile, the avatar, achievement badges (MVPs, podiums, streaks, first win), season points and the best result. The same card is the finalist intro on the screen and the spotlight, and is shown at the final on the organiser's page ([mockups 08](08-standings-and-final.svg), [24](24-screens-around-tournament.svg)). Badges are computed from results; nothing is typed by the crew.
+- **B.** A name and a number, as the standings.
+- **Recommendation: A** (decided). It makes the finals feel like an event. The motto is the player's own text and follows the usual profile rules (moderation by the crew, names as [L7](#l7-names-on-the-screen) allows). **Contract (additive):** `motto` on the player's profile read, `badges` and `best_result` in the finalist feed.
+
+### D25. Storage for the footage
+**New for the lead round 7.** Every clip and photo is kept for the LAN video, so the footage can outgrow the event's files quota (2 GiB by default today), and video is far bigger than photos (a 200 MB clip is a tenth of it).
+- **A.** The superadmin raises the event's quota for the weekend (a setting per event); the footage stays in the shared files volume under `/files/<tenant>/tournament/`.
+- **B.** A separate footage volume on the host (a second mount), outside the quota, with its own backup rule.
+- **C.** Keep only the links and a short thumbnail, and fetch the files only at export (a lost link is then lost).
+- **Recommendation: A** for the first events, because it adds nothing to deploy and the limits already are settings; B if one event's footage passes about 20 GiB. C breaks "keep all footage" for expiring Steam links. Either way the organiser's export lists the size before it starts, and the retention is [O6](#o6-retention)'s unless the lead says the footage ends with the event. For the lead to settle: the size of a typical LAN's footage (a first estimate: 200 to 400 clips of 40 to 100 MB). **Contract (additive):** the export's size on the export endpoint (gap 18).
 
 ## E · Edge cases and failure
 
@@ -261,7 +399,8 @@ Two players take the last place; two players join a team with one place left; th
 ### E2. A session moves
 - **A.** On `agenda.item.delayed` the module moves the start and keeps the close's offset (the legacy's `computePostpone`), only while the times still match the item's; registrants get a push; places are kept.
 - **B.** The organiser moves sessions by hand.
-- **Recommendation: A**, as agenda.md says ([mockup 12](12-edge-states.svg)). A move after check-in opened reopens nothing; the crew decides.
+- **C.** A plus the manual delay: a crew action "Delay by N minutes" for one session, or for it and every later session that day, with the same effect.
+- **Recommendation: C** (decided in the lead round, 2026-11-21: "A plus the manual delay", [mockup 20](20-reopen-and-delay.svg)). The close keeps its offset (`computePostpone`) either way; registrants get a push; the agenda item moves too, so the run of show stays one: the module never writes the agenda, so the move reaches it through `tournament.session.changed`, which the agenda applies to the item as a move ([agenda.md](../../../contracts/agenda.md#tournament-sessions)); the run of show shows it as a new plan, not as a delay; places and check-ins are kept; History records it. The right is `tournament.desk.run`, so a helper can do it. **Contract (additive):** `POST /api/tournament/sessions/{id}/delay` (`minutes`, `scope`: `session` or `session_and_later`); it emits the catalog's `tournament.session.changed` (`changed` names the start and the close). A move after check-in opened reopens nothing; the crew decides.
 
 ### E3. The bot is down
 - **A.** Every step has a manual path: no voice rooms means results by hand; the desk shows the bot's health and a "ask the bot again".
@@ -282,7 +421,7 @@ Two players take the last place; two players join a team with one place left; th
 - **Recommendation: A.** A LAN party's timing is soft; a timer the crew forgets is worse than a decision.
 
 ### E7. A team short at the close
-- **A.** It goes to the crew: fill from solo players (U6), play short, or move to the waiting list.
+- **A.** It goes to the crew: fill from solo players (U6), play short, or remove the team (registration may be reopened, U19, to bring a replacement).
 - **B.** Dropped automatically.
 - **Recommendation: A** ([mockup 03](03-teams.svg)).
 
@@ -298,6 +437,7 @@ Two players take the last place; two players join a team with one place left; th
 - **A.** Warn, never block; the crew sees overlaps on the desk.
 - **B.** Block.
 - **Recommendation: A.** Players often play two things in an evening ([mockup 12](12-edge-states.svg)).
+- **Added (lead round 4):** a player ticking two sessions that overlap sees a warning on "My sessions", never a block ([U20](#u20-signing-up-without-missing-out), [mockup 22](22-signup-nudges.svg)).
 
 ### E11. A check-in by someone not registered
 - **Recommendation:** Notify records it (it does not know registrations); the module ignores it for the session and the hub says "You're not registered for this session". No event.
@@ -310,6 +450,7 @@ Two players take the last place; two players join a team with one place left; th
 - **A.** Move that test to the Finals track; in step 7, add regression tests for this module's own legacy bugs: the first room pre-picked as the winner, the close time that differed by path, dates compared as strings, name-keyed identity merging two players, no tie-break.
 - **B.** Keep the criterion and ask the author which bug was meant.
 - **Recommendation: A**, unless the product owner remembers a tournament-side format bug.
+- **Changed for 0030:** The core plan settles it: the `four`/`fourqc` fix is `formatForTeams` with its test in the core's 1.1.0 (its ticket C1), then the app's own fix, and the core's 2.0.0 that this module pins carries it. **Recommendation now: A**, unchanged; the format test lives in the core, and this module's own legacy bugs keep their regression tests here.
 
 ### E14. The uplink drops
 - **Recommendation:** screens keep the last standings and bracket (Screen, built); the crew's phones on the venue Wi-Fi lose the desk too, so the crew phone shows "offline, last updated 19:31" and queues nothing.
@@ -322,14 +463,14 @@ Two players take the last place; two players join a team with one place left; th
 ### O1. The scheduler
 - **A.** A scheduler in the container with due rows in Postgres, taken with `FOR UPDATE SKIP LOCKED`, as step 5's plan settled for pizza; it publishes the timeline and survives restarts and replicas.
 - **B.** Cron.
-- **Recommendation: A** (#127's criterion).
+- **Recommendation: A** (#127's criterion). **Changed (lead round 6):** the scheduler runs the whole night by itself ([O12](#o12-the-tournament-runs-itself)).
 
 ### O2. Scale: the large event
 About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sessions an hour on several stages.
 - **Recommendation:** standings recomputed incrementally per saved result; `tournament.leaderboard.changed` carries the top 10 only; pages read the full standings from the API. A load test is the backlog's load harness, not step 7.
 
 ### O3. Timeline defaults
-- **A.** Reminder T−60, close T−30, check-in T−15 to T−5, voice rooms T−15, cleanup backstop T+3 h; each an event setting, a session may override the close and check-in.
+- **A.** Reminder T−60, close T−30, check-in T−15 to T−5, voice rooms T−15, cleanup backstop T+3 h; each an event setting, a session may override the close and check-in; each of these steps starts by itself at its time.
 - **B.** Close at T−60 (the site's default).
 - **Recommendation: A** ([mockup 13](13-settings-and-rights.svg)). The bot's 30 minutes was what players were told.
 
@@ -343,6 +484,8 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 
 ### O6. Retention
 - **Recommendation:** registrations, results and standings lines are personal data, anonymised after 12 months (counts and totals stay); check-ins and voice rosters are presence data, deleted 30 days after archiving (tenants contract).
+- **Back to its accepted answer:** the 0030 change added mini tournament data and ratings, which wait.
+- **Added (lead round 4):** score-screen pictures, in-game names, per-player game stats and approved clips and photos are personal data like the results: anonymised or deleted with the player's data on request, and otherwise after 12 months, as registrations ([D16](#d16-export-and-personal-data), [D21](#d21-scoring-from-a-screenshot-three-sources-and-a-reveal), [D22](#d22-clips-and-photos-from-participants)).
 
 ### O7. Demo data
 - **Recommendation:** `events/demo/` gets a Demo Game Cup with five sessions (solo, team, rounds, a final), demo players and teams, loaded by the profile; the demo stack's screenshots show every view in this pack.
@@ -358,21 +501,37 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 - **B.** Nothing.
 - **Recommendation: A.** The legacy had none; organisers post results after events.
 
+### O12. The tournament runs itself
+**New for the lead round 6 (a principle).** The crew defines the sessions in advance, preferably before the LAN.
+- **A.** On its own schedule, without a button, the module opens and closes registration, sends the reminders and last calls, opens the lobby voice channel about 10 minutes before the start, makes the team channels when the teams are set, calls the matches, starts each phase of the show from the session's preset and cleans up. The crew acts only to change something (reopen, delay, rename a team, an exception) and to score. The desk and the crew phone show what happens next and when ("The lobby opens automatically at 19:40"), with a small override; the next action is usually "Nothing to do". No button exists only to start a step the schedule already starts ([O1](#o1-the-scheduler), [O3](#o3-timeline-defaults), [mockups 06](06-session-desk.svg), [09](09-crew-phone.svg)).
+- **B.** The crew starts each step by hand, as the legacy's admin page did (with the bot's polling behind it).
+- **Recommendation: A** (decided). A tired crew at the stage should watch and score, not press eleven buttons; every step is still reachable by hand when the bot or a time is wrong (E3, E8).
+
+### O13. The show presets
+**New for the lead round 7.** The show runs itself.
+- **A.** The tournament ships **storyline presets** on Moments' storyboards (step 4), one per phase of a session: build-up, gathering, live, result, between sessions, finals. The schedule starts each phase from its row, as it starts registration. The session form has one dropdown for the preset: "Standard night" (default), "Big final", "Low-key". The presets are editable in the step 4 storyboard builder. From the desk the crew only holds a phase, skips to the next, or fires "spotlight now" ([mockup 27](27-show-phases.svg), [09](09-crew-phone.svg), [05](05-sessions.svg)). A story's size follows the hype curve ([L12](#l12-the-hype-curve-and-screens-zones)).
+- **B.** The crew fires every screen moment by hand, as in the first plan.
+- **C.** One fixed show for every session, with no dropdown.
+- **Recommendation: A** (decided). A tired crew should not run a show. The three presets are a start: "Big final" turns the finals phase up (longer lead-up, the champion moment), "Low-key" keeps everything small and quiet. **Contract (additive):** `show_preset` on the Session (a preset key, default the event's); the phase rows in the scheduler; the presets themselves are Moments' data, shipped by the tournament as storyboard presets (step 4's contract), not a new tournament table.
+
 ## P · Plan and scope
 
 ### P1. The direction
 - **A.** The LAN cup, ported. **B.** Brackets everywhere. **C.** The cup, live.
 - **Recommendation: C** (the brief argues it).
+- **Changed for 0030:** The brief re-weighs the three directions with the core ([Re-weighed for 0030](../step-7-tournament.md#re-weighed-for-0030)). **Recommendation now: C**, with rounds and brackets from the core as its engine.
 
 ### P2. The issue set
 - **A.** Keep #127, #128 and #129 as written.
 - **B.** Rewrite them and add two: the player's pages in the hub, and the tournament on the screens and in Notify (the brief's proposal).
 - **Recommendation: B.** It keeps the high-risk package (#127) small and the rest normal, and it puts the whole venue in the step's exit.
+- **Changed for 0030:** **Recommendation now: B**, unchanged; the core itself is not a step 7 issue (its tickets live in the core's repo, the core plan's C1–C5), and no issue is added for mini tournaments, which wait.
 
 ### P3. The exit criterion
 - **A.** "A test tournament runs end to end" as it stands.
-- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a waiting list, check-in, a called match on a phone and a screen, results, a correction, the standings live, a crowned final.
+- **B.** The brief's concrete run on the demo event with a fake bot: register, a team, a closed session with a place left reopened for a few minutes, check-in, a called match on a phone and a screen, results with an award, a correction, the standings live, a crowned final.
 - **Recommendation: B.** It is testable in CI's demo stack.
+- **Changed for 0030:** **Recommendation now: B**, plus one session played as a bracket from the core, so the exit shows the engine the cup runs on.
 
 ### P4. Brackets in step 7
 #127's Out of scope says "brackets for any game (the Games track)"; experience-map.md says the tournament's bracket is "to be planned later".
@@ -380,12 +539,14 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 - **B.** Matches and rounds as data (0027 allows them), "winners advance" fills the next round, the crew edits any match; Screen's `bracket` widget draws them. No elimination engine, no double elimination.
 - **C.** A bracket engine in the module.
 - **Recommendation: B.** It is what the catalog and Moments' Round start already expect, and what the screen design draws; an engine stays the Finals track's.
+- **Changed for 0030:** C is gone as a cost: the core is the engine, and "winners advance" is the core's `next`. **Recommendation now: B, widened:** a session chooses **placements only** (one match for everyone, the default, as the legacy) or **a bracket from the core** (heats with winners advance, single elimination, or groups then knock-out, from the game's default format or the organiser's choice); the crew can still edit any match, and the core then builds the next round from the stored results. No double elimination in step 7.
 
 ### P5. The screen and hub feed in step 7
 Step 9 is to wire tournament events into Screen.
-- **A.** Feed Screen's `bracket` and `leaderboard` and `checkin_qr` in step 7 (a new issue), and register Notify's topic.
+- **A.** Feed Screen's `bracket` and `leaderboard` and the session card's "scan to join" QR in step 7 (a new issue), and register Notify's topic. **Changed (lead round 7):** the QR opens that session's sign-up; it no longer feeds `checkin_qr`, because the lobby is the check-in.
 - **B.** Leave them to step 9.
 - **Recommendation: A**, as step 5 did for food. Moments and the templates are built; without the feed, the exit "runs end to end" stops at the admin page.
+- **Back to its accepted answer** (A): the 0030 change fed a running mini tournament's bracket and champion card, which wait.
 
 ### P6. The bot's side and the order
 - **Recommendation:** #123 (step 6) builds against the catalog with contract tests; #128's end-to-end test uses a fake bot that answers `scoring.started` with a roster; the live handshake is checked when #123 lands (OC8).
@@ -397,3 +558,139 @@ Step 9 is to wire tournament events into Screen.
 - **A.** One by default; a second ("Demo Kids Cup") is possible from the start, each with its own standings.
 - **B.** Exactly one per event.
 - **Recommendation: A.** TB4's "a season id from the start" costs one column and one select; the screens show the tournament of the running session.
+
+### P9. The core before the first build package
+**New for 0030.** The core plan's tickets C1–C5 live in the core's own repo and end with its 2.0.0 tag, which step 7's packages pin; C4 (the templates) takes its defaults from this step's accepted plan.
+- **A.** Step 7's first build package starts only after 2.0.0 is tagged; until then the module's packages may write their contract and model but no code that calls the core.
+- **B.** The module starts on a pre-release of the core and moves to 2.0.0 later.
+- **Recommendation: A**, as the core plan says: C1–C3 can run now, C4 right after this step's plan, so the wait is short, and the module is never built against an API that still moves.
+
+## F · Finals beside the tournament
+
+### F1. Where Finals and Tournament meet
+**New for 0030** (was M12 in the first 0030 revision).
+0030 keeps them apart: the Finals app has its own data, look and champions, and adds no points.
+- **A.** **The screen:** never in one widget; a THE FINALS card (the app's bracket or champion, in its own graphics and theming) is its own claim, ranked below a live official session and the cup's Champion (55). **Moments:** a Finals champion is a moment of its own, started through the external-app hooks of the Apps track (#193), never by a `tournament.*` event; the official final's Champion stays Tournament's (`finals_result`). **The hub:** one Play list with the official tournament and a THE FINALS tile that opens the app with the platform's sign-in link. **Champions:** separate pages.
+- **B.** The Finals app's results are shown as a competition of the platform.
+- **Recommendation: A** ([mockup 18](18-finals-and-tournament.svg)). B would need a data sync, which 0030 rules out. Moments' `finals` class today means the official tournament's final, not the Finals app; how a Finals app moment is classed is the Finals track's question, and the brief notes the clash as a roadmap note.
+
+## Later: mini tournaments (after version 1)
+The product owner decided on 2026-11-21 (decision 0031, recorded in #695) that **mini tournaments for any game wait until after version 1**. These questions are kept for that time and are **not asked now**; their recommendations stand as written and are not part of step 7's plan, issues or exit. The THE FINALS mini tourney is not among them: it is integrated from day 1 as the Finals track's, unchanged. The core is still built fully general in step 7, so a mini tournament later runs on it without a new engine; the core plan's mini tournament row is its later user.
+
+What they were: mini tournaments for any catalogue game, run by the players like the Finals app: sign-up, a balanced draw, lobby codes and a match card, self-reported placements, a crew queue for disputes ([0030](../../decisions/0030-finals-integrated-one-tourney-core.md) point 4; the [Finals app's features](../../legacy-inventory/thefinals_mini_tourney.md#features) as the model). They would be new pages in the platform's design. Mockups [16](16-mini-player.svg) and [17](17-mini-crew.svg) are kept and marked later, not redrawn. Where they meet Finals is asked now, as [F1](#f1-where-finals-and-tournament-meet). The Games track's per-game competition rules (D19, M2) and the rosters and rounds for casual play (M13) wait with them.
+
+### D17. Mini tournaments in the contract
+**New for 0030.** The catalog's Session, Match and Result outlines and the 17 `tournament.*` events were written for the official tournament, and built consumers act on them: the agenda mirrors every session into the run of show, Moments' `match_called` rule calls a match to the floor, `finals_result` fires on a final.
+- **A.** A mini tournament is a Session with a `kind` (`official` or `mini`) on the same events; every consumer filters by `kind`.
+- **B.** Mini tournaments reuse the Match and Result outlines but have their own events (`tournament.mini.opened`, `.started`, `.match.ready`, `.result.reported`, `.result.disputed`, `.result.decided`, `.finished`, `.cancelled`), which only the consumers that want them follow.
+- **Recommendation: B.** It is additive, and no built consumer starts acting on player-run matches by surprise: a mini tournament never lands in the run of show or calls the hall to a stage unless a consumer chooses to follow it ([M11](#m11-mini-tournaments-on-the-screen)). **Contract:** the MiniTournament outline and its events in `contracts/tournament.md`, with the mini tournaments issue.
+
+### D19. Reading a game's competition rules
+**New for 0030.** Games owns the rules as catalogue data; the Games track adds them to its contract with the code that uses them ([0029](../../decisions/0029-additive-contracts-ship-with-consumers.md)).
+- **A.** Tournament reads a game's rules from the catalogue's API when a session or a mini tournament is created, and keeps a copy with it (as D18 keeps the format).
+- **B.** Tournament follows a rules event from Games and keeps a cache of every game's rules.
+- **Recommendation: A.** The copy is needed anyway, so that a rules change never alters a running competition; a cache would be a second store of the catalogue. When the catalogue has no rules for a game, or is not live yet, see [M2](#m2-which-games).
+
+### O11. Many mini tournaments at once
+**New for 0030.** At the large event, players may start many.
+- **A.** Any number at once, but one open sign-up per game at a time (a second start joins the open one); sizes from 2 entrants up to what the format allows (the core's templates take any count, with byes).
+- **B.** A per-event cap set by the crew.
+- **Recommendation: A**, with B as a setting (off by default). The crew queue and the screen order ([M11](#m11-mini-tournaments-on-the-screen)) keep many small ones from crowding the official tournament.
+
+### M1. Who starts a mini tournament
+**New for 0030.**
+- **A.** Any signed-in member of the event, from a game's page or the Tournament page; a per-event setting can restrict it to the crew.
+- **B.** The crew only.
+- **C.** Any member, held until the crew approves it.
+- **Recommendation: A.** "Run by the players" is the point (the Finals app's public start); the starter becomes its host, with no crew right. The setting covers events that want control, and the crew can cancel any one (M15).
+
+### M2. Which games
+**New for 0030.**
+Each game's rules come from the catalogue: team size, teams per match, a default format. The Games track builds them; it is a parallel track and may land after step 7.
+- **A.** A member can start one only for a game whose rules are set and pass the core's `check_rules`; the crew can start one for any game and set the rules in the form, for that tournament only; when the catalogue is not live, the crew's form is the only way.
+- **B.** Any game, with the rules typed by whoever starts it.
+- **C.** Step 7's mini tournaments wait for the Games track's rules.
+- **Recommendation: A.** Players see only games that can really run; the crew is never blocked by the parallel track, and its rules are kept with that one tournament (D19), never written back to the catalogue.
+
+### M3. Sign-up and the draw
+**New for 0030.**
+- **A.** Solo sign-up, with balanced teams drawn at the start by the core's team builder from the players' ratings (M4); a game with team size 1 has no draw.
+- **B.** Teams sign up as teams (a name, its players by invite, as U3).
+- **C.** Both, chosen by the starter: solo with a balanced draw by default, teams when friends want to play together.
+- **Recommendation: C**, solo by default. Solo sign-up with a balanced draw is how the Finals app is run most; team sign-up reuses U3's invites. Players left over when the count does not fill the last team are listed as "left out", first in line for the next one (the Finals app's rule).
+
+### M4. Ratings
+**New for 0030.**
+The balanced draw needs a rating per player and game; the Finals app keeps a 0–100 roster across seasons.
+- **A.** Per game per event, starting at 50 each event.
+- **B.** Per game across the event series (#150), updated by the core's bands and scoring table when a mini tournament finishes, clamped 0–100.
+- **C.** No ratings: a random draw.
+- **Recommendation: B.** Balance improves with history, and the series is the group that plays together; a player sees their own rating and its change after each tournament, others see only the change marks (the Finals app's setting, on by default). Ratings are personal data (D16, O6). Mini tournaments never touch season points (M10).
+
+### M5. The format: placements only or a bracket
+**New for 0030.**
+- **A.** The game's default format, which the starter may change to any format the core can run for the count: single elimination, groups then knock-out, heats, open heats, or a preset's formats for a game that fits it (THE FINALS' seven for a game with teams of three and 2–4 teams per match).
+- **B.** Always the game's default.
+- **C.** Placements only: one match, no bracket.
+- **Recommendation: A**, with the choice shown as cards with a small drawing of each format, not a list of names; the format is built when sign-up closes, for the count that signed up, and frozen (D18). Placements only is one of the choices.
+
+### M6. When it starts
+**New for 0030.**
+- **A.** The starter sets a start time and a minimum; at the time it starts with the largest count the format allows; the starter or the crew can start it early once the minimum is in.
+- **B.** It starts when full.
+- **C.** A vote to start early and availability voting, as the Finals app.
+- **Recommendation: A.** At a LAN party the players are in the hall; the Finals app's votes serve its off-LAN seasons, which it keeps. A mini tournament that has not reached its minimum at the time stays open for 30 minutes and is then cancelled with a push (the only automatic cancel before it starts; once running, only the event's end cancels it, M15).
+
+### M7. The match card and the lobby code
+**New for 0030.**
+- **A.** Each player's current match has a card: the teams with their players, the lobby code (set by any player of the match or the crew, 4–8 characters, kept for the next game of a series), the voice room when the bot makes one, and "Report placements"; it is the For you card while the match is open.
+- **B.** The lobby code from the crew only.
+- **Recommendation: A**, as the Finals app's lobby id ([mockup 16](16-mini-player.svg)). A code is not a secret: it is shown to the players of that match only.
+
+### M8. Self-reported placements
+**New for 0030.**
+- **A.** Any player of a team in the match reports the order of the teams; two matching reports from different teams decide it; differing reports go to the crew queue; a team can re-report until it is decided (the Finals app's rule).
+- **B.** One report decides; the other teams can dispute within five minutes.
+- **C.** The crew enters every result.
+- **Recommendation: A**, plus a timer: a match with one report and no second after 10 minutes reaches the crew queue as "one report, waiting" for a one-tap confirm. Two-team games need the other team's report, so nobody crowns themselves. The crew can always decide (M9).
+
+### M9. The crew queue
+**New for 0030.**
+- **A.** A queue on the Tournament page and the crew phone: differing reports side by side, single reports waiting, problem notes from a match card; the crew picks a report, or sets the order by dragging the teams, with a note the teams see.
+- **B.** The starter settles disputes.
+- **C.** The starter first, then the crew.
+- **Recommendation: A.** The starter is a player and may be in the disputed match. Every decision is kept in the tournament's history with who decided it, as D7 does for corrections ([mockup 17](17-mini-crew.svg)).
+
+### M10. Mini tournaments and the season
+**New for 0030.**
+- **A.** Mini tournaments never add season points; their champions are their own.
+- **B.** An organiser may make one count as a session.
+- **C.** Bonus points for mini tournament champions.
+- **Recommendation: A.** The season stays the official tournament's, and its rules stay visible (L8). A game the organiser wants in the season runs as an official session with a bracket from the core (P4). The Finals app adds no points either (0030 point 6).
+
+### M11. Mini tournaments on the screen
+**New for 0030.**
+- **A.** A running mini tournament feeds Screen's `bracket` widget and gets a small winner card for its champion (in the platform's screen theme), both ranked below the official session: its bracket takes the Pulse hero only when no session runs, and its champion is a moment from a rule set to the `hot_game` class (rank 50), below the `tournament` class (60, a live official session) and the `finals` class (55, the cup's Champion); the rule fires only when no session is live; no match is called to the floor.
+- **B.** Mini tournaments are on the phones only.
+- **C.** Mini tournaments get the same moments as a session.
+- **Recommendation: A.** The screen shows that the hall is playing, without a call to the floor for a match the players run themselves. **Contract:** a Moments rule on `tournament.mini.finished` with its class set to `hot_game` (additive, D17). A rule picks one of the ten classes and a class's rank is the rank of its place in the event's order ([moments.md](../../../contracts/moments.md#classes-and-the-priority-order)), so there is no new class and no rank number of its own; where a Finals card sits is the Finals track's ([F1](#f1-where-finals-and-tournament-meet)).
+
+### M13. Rosters and rounds for casual play
+**New for 0030.**
+Moved from Games by 0030 (the product owner's decision of 2026-11-07). A casual round is people playing a game together with no bracket or champion, wanting only teams and a rotation.
+- **A.** A mini tournament with the format "open heats" and no ratings change: a roster of who is in, balanced or random teams per round, the next round drawn from who is waiting (the core's `open_heat`), no reports needed, no champion.
+- **B.** A separate "casual session" entity.
+- **C.** Leave it out of step 7.
+- **Recommendation: A**, as one of the format cards (M5), named "Casual rounds". It is the same sign-up and draw, so it costs a format, not a feature.
+
+### M14. Rights for mini tournaments
+**New for 0030.**
+- **A.** Membership to start, sign up, report and set a lobby code; the starter (host) may edit the start time, start early, cancel before the start and remove a player before the draw; `tournament.minis.manage` for the crew queue, editing any result, cancelling and setting rules for one tournament (D12).
+- **B.** One right for everything.
+- **Recommendation: A.** Player-run means players need no rights; the crew's right goes in the `tournament_crew` preset. The rights are in the high-risk package with D12's.
+
+### M15. A mini tournament nobody finishes
+**New for 0030.**
+- **A.** A match with no report for 60 minutes, and a mini tournament whose host leaves, go to the crew queue; the crew decides or cancels; a cancelled one is kept as cancelled, with no rating effect (the Finals app's rule); at the event's end any running one is cancelled. Cancel before it starts: one below its minimum is cancelled 30 minutes after its start time (M6).
+- **B.** Cancelled automatically after a timer.
+- **Recommendation: A**, with the event's end as the only automatic cancel of a running mini tournament; the one earlier automatic cancel is M6's, for one that never reaches its minimum and so never starts.

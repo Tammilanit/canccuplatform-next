@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1160" width="1920" height="1160" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Step 7 mockup 22: Sign-up nudges: closing soon, remind me, last call, ask to join, overlap</title>
+<defs></defs>
+<rect x="0" y="0" width="1920" height="1160" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">22 · Sign-up nudges: closing soon, Remind me, last call, ask to join, overlap</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: several sessions a day, and nobody misses one by accident. Everything sits on the My sessions list of sheet 21. Demo names only.</text>
+<text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 372">1 · Closing soon, Remind me</text>
+<text x="432" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="432 772">2 · The reminder, and Ask to join</text>
+<text x="832" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="832 1532">3 · Last call: hall screen, hub, Discord</text>
+<g transform="translate(32,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="40 100">20:48</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="280 350">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 136">‹ More</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110 280">Tournament</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="15 79">Now</text>
+<text x="121" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="89 153">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="163 227">Play</text>
+<text x="269" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="237 301">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="311 375">More</text>
+<text x="26" y="128" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="26 226">My sessions</text>
+<text x="26" y="150" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 356">Tap a row to join. The bell sets a reminder.</text>
+<rect x="26" y="164" width="338" height="80" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="188" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 86">19:30</text>
+<text x="86" y="188" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 286">Demo Arena 5v5</text>
+<text x="86" y="208" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 326">Teams of 5 · closes 19:00</text>
+<rect x="322" y="172" width="30" height="30" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="337" y="194" font-size="18" fill="#7cecba" font-weight="700" text-anchor="middle">✓</text>
+<text x="86" y="230" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="86 286">You are in</text>
+<rect x="26" y="254" width="338" height="122" rx="10" fill="#161a2e" stroke="#ffcf6e" stroke-width="1"/>
+<text x="38" y="278" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 86">21:30</text>
+<text x="86" y="278" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 286">Demo Racer time trial</text>
+<text x="86" y="298" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 326">Solo · closes 21:00</text>
+<rect x="322" y="262" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<rect x="86" y="310" width="133.2" height="22" rx="11.0" fill="#22263f" stroke="#ffcf6e" stroke-width="1"/>
+<text x="95" y="323" font-size="12" fill="#ffcf6e" font-weight="600" text-anchor="start" data-box="95 218.2">Closes in 12 min</text>
+<rect x="86" y="342" width="150" height="28" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="161" y="360.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="92 230">🔔  Remind me</text>
+<rect x="26" y="386" width="338" height="138" rx="10" fill="#161a2e" stroke="#3ddcff" stroke-width="1"/>
+<text x="38" y="410" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 86">22:00</text>
+<text x="86" y="410" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 286">Demo Party</text>
+<text x="86" y="430" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 326">Solo · closes 21:30</text>
+<rect x="322" y="394" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<rect x="86" y="442" width="160" height="28" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
+<text x="166" y="460.55" font-size="13" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="92 240">🔔  Reminder set</text>
+<rect x="86" y="478" width="266" height="36" rx="8" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
+<text x="96" y="494" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="96 342">We&#x27;ll remind you 30 min before</text>
+<text x="96" y="508" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="96 342">sign-up closes</text>
+<rect x="26" y="536" width="338" height="78" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="560" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 86">22:30</text>
+<text x="86" y="560" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 286">Demo Kart cup</text>
+<text x="86" y="580" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 326">Solo · closes 22:00</text>
+<rect x="322" y="544" width="30" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<rect x="86" y="588" width="130" height="22" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="151" y="603.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="92 210">🔔  Remind me</text>
+<rect x="26" y="626" width="338" height="78" rx="10" fill="#3a2e12" stroke="#ffcf6e" stroke-width="1"/>
+<text x="48" y="650" font-size="13" fill="#ffcf6e" font-weight="700" text-anchor="start">⚠ Demo Party and Demo Kart cup overlap</text>
+<text x="38" y="672" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 354">22:00–23:30 and 22:30–23:30. You can keep</text>
+<text x="38" y="688" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 354">both.</text>
+<text x="195" y="742" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="30 360">Sat 7 Nov · several sessions today</text>
+</g>
+<g transform="translate(432,140) scale(0.9)">
+<rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
+<rect x="10" y="10" width="370" height="824" rx="36" fill="#0b0d1a"/>
+<text x="40" y="50" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="40 100">21:00</text>
+<text x="350" y="50" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="280 350">●●● ▮</text>
+<text x="26" y="92" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 136">‹ Back</text>
+<text x="195" y="92" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110 280">Alerts</text>
+<rect x="10" y="760" width="370" height="74" rx="0" fill="#161a2e"/>
+<text x="47" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="15 79">Now</text>
+<text x="121" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="89 153">Schedule</text>
+<text x="195" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="163 227">Play</text>
+<text x="269" y="800" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="237 301">Alerts</text>
+<text x="343" y="800" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle" data-box="311 375">More</text>
+<rect x="26" y="110" width="338" height="100" rx="10" fill="#1a2038" stroke="#3ddcff" stroke-width="1"/>
+<text x="40" y="134" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="40 240">Canccu · now</text>
+<text x="40" y="160" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="40 356">🔔 Demo Party closes in 30 min</text>
+<text x="40" y="182" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="40 356">You asked for a reminder and have not joined.</text>
+<text x="40" y="198" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="40 356">Tap to join.</text>
+<text x="26" y="244" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="26 226">A closed session</text>
+<rect x="26" y="256" width="338" height="184" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="280" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 86">22:00</text>
+<text x="86" y="280" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="86 286">Demo Party</text>
+<text x="86" y="300" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="86 326">Solo · closed 21:30</text>
+<text x="86" y="320" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="86 186">Closed</text>
+<rect x="38" y="336" width="160" height="32" rx="8" fill="#3b82f6"/>
+<text x="118" y="356.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="44 192">Ask to join</text>
+<text x="38" y="392" font-size="13" fill="#7cecba" font-weight="700" text-anchor="start" data-box="38 188">Request sent</text>
+<text x="38" y="410" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 348">The crew has your request. If they add you,</text>
+<text x="38" y="425" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 348">you get a push. Ask once.</text>
+<text x="26" y="468" font-size="13" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="26 356">Crew queue (desk and crew phone)</text>
+<rect x="26" y="480" width="338" height="140" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="38" y="504" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="38 338">Ask to join · Demo Party</text>
+<text x="38" y="524" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 338">Pike · asked 21:33 · not registered</text>
+<rect x="38" y="540" width="170" height="32" rx="8" fill="#3b82f6"/>
+<text x="123" y="560.55" font-size="13" fill="#fff" font-weight="600" text-anchor="middle" data-box="44 202">Add to the session</text>
+<rect x="218" y="540" width="100" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="268" y="560.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="224 312">Not now</text>
+<text x="38" y="596" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 348">One tap adds Pike through the normal register</text>
+<text x="38" y="611" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 348">rule.</text>
+</g>
+<text x="832" y="150" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="832 1352">Hall screen · Next up with last call</text>
+<rect x="832" y="160" width="520" height="292" rx="8" fill="#05060f" stroke="#3c446c" stroke-width="1"/>
+<text x="852" y="190" font-size="13" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="852 1252">NEXT UP · Sat 7 Nov · 20:41</text>
+<rect x="852" y="204" width="330" height="110" rx="8" fill="#2a2010" stroke="#ffcf6e" stroke-width="1"/>
+<text x="866" y="230" font-size="13" fill="#ffcf6e" font-weight="700" text-anchor="start" data-box="866 1066">LAST CALL</text>
+<text x="866" y="262" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="866 1166">Demo Racer time trial</text>
+<text x="866" y="290" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="866 1166">Registration closes at 21:00</text>
+<rect x="1204" y="214" width="92" height="92" rx="4" fill="#fff"/>
+<text x="1250" y="330" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1190 1310">Scan to sign up</text>
+<text x="852" y="346" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="852 902">22:00</text>
+<text x="916" y="346" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="916 1086">Demo Party</text>
+<text x="1102" y="346" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1102 1332">12 signed up</text>
+<text x="852" y="376" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="852 902">22:40</text>
+<text x="916" y="376" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="916 1086">Demo Kart cup</text>
+<text x="1102" y="376" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1102 1332">moved 10 min · 9 signed up</text>
+<text x="852" y="406" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="852 902">23:45</text>
+<text x="916" y="406" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="916 1086">Demo Final</text>
+<text x="1102" y="406" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1102 1332">top 4 of the season</text>
+<text x="1380" y="150" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1380 1880">Hub · Now</text>
+<rect x="1380" y="160" width="508" height="128" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1396" y="186" font-size="14.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1396 1866">Last call: Demo Racer closes 21:00</text>
+<text x="1396" y="208" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1396 1866">19 min left. 14 have signed up.</text>
+<rect x="1396" y="224" width="120" height="32" rx="8" fill="#3b82f6"/>
+<text x="1456" y="244.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="1402 1510">Sign up</text>
+<rect x="1526" y="224" width="150" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="1601" y="244.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1532 1670">🔔  Remind me</text>
+<text x="1396" y="276" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1396 1866">Shows on the hub from 30 min before the close</text>
+<text x="1380" y="326" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1380 1880">Discord · #tournament</text>
+<rect x="1380" y="336" width="508" height="116" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<circle cx="1410" cy="366" r="16" fill="#3b82f6"/>
+<text x="1436" y="364" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1436 1536">Canccu</text>
+<rect x="1500" y="350" width="36" height="20" rx="10.0" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="1509" y="361" font-size="10" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1509 1535">BOT</text>
+<text x="1436" y="388" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1436 1876">Last call: Demo Racer time trial closes 21:00</text>
+<text x="1436" y="408" font-size="12.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="1436 1876">Sign up: https://demo.example/tournament</text>
+<text x="1436" y="430" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1436 1876">Mentions are off; only the tournament link is in the post.</text>
+<text x="832" y="490" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="832 1532">PC: the same bell, the same line on hover</text>
+<g transform="translate(832,500) scale(1)">
+<rect x="0" y="0" width="700" height="230" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<rect x="0" y="0" width="700" height="36" rx="10" fill="#1b1f36"/>
+<rect x="0" y="20" width="700" height="16" rx="0" fill="#1b1f36"/>
+<circle cx="20" cy="18" r="5" fill="#ff6b6b"/>
+<circle cx="38" cy="18" r="5" fill="#ffd166"/>
+<circle cx="56" cy="18" r="5" fill="#7cecba"/>
+<rect x="90" y="7" width="520" height="22" rx="11" fill="#22263f"/>
+<text x="104" y="23" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="104 594">demo.example/tournament/my-sessions</text>
+<text x="24" y="70" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="24 524">Demo Party · Sat 22:00 · Solo · closes 21:30</text>
+<rect x="24" y="90" width="160" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="104" y="110.9" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="30 178">🔔  Remind me</text>
+<rect x="24" y="130" width="370" height="40" rx="8" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
+<text x="36" y="155" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="36 386">We&#x27;ll remind you 30 min before sign-up closes</text>
+<text x="24" y="200" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="24 664">The line shows the first time the button is pressed, and on hover.</text>
+</g>
+<circle cx="42" cy="945" r="10" fill="#111827"/>
+<text x="42" y="950" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">1</text>
+<text x="62" y="950" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">The closing chip sits on its own line from 30 minutes before a close. The bell button (Remind me) sends</text>
+<text x="62" y="971" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">one reminder 30 minutes before sign-up closes, only for a session you have not joined; sessions without</text>
+<text x="62" y="992" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">a bell send nothing.</text>
+<circle cx="970" cy="945" r="10" fill="#111827"/>
+<text x="970" y="950" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
+<text x="990" y="950" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">The line &quot;We&#x27;ll remind you 30 min before sign-up closes&quot; shows the first time the button is pressed and</text>
+<text x="990" y="971" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">on hover (PC).</text>
+<circle cx="42" cy="1018" r="10" fill="#111827"/>
+<text x="42" y="1023" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>
+<text x="62" y="1023" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Ask to join works on a closed session and goes to the crew queue; reopening registration (sheet 20)</text>
+<text x="62" y="1044" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">stays the way to open a session to everyone.</text>
+<circle cx="970" cy="997" r="10" fill="#111827"/>
+<text x="970" y="1002" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">4</text>
+<text x="990" y="1002" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">The overlap warning shows only where two ticked sessions overlap; it is a warning, never a block. Last</text>
+<text x="990" y="1023" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">call goes to the hall screen, the hub and a Discord post.</text>
+</svg>

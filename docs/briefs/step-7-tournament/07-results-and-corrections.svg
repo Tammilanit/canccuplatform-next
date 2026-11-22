@@ -65,6 +65,8 @@
 <rect x="312.0" y="375.0" width="18.0" height="18.0" rx="4" fill="#3ddcff" stroke="#a9b1d6" stroke-width="1"/>
 <text x="342.0" y="390.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="342.0 536.0">Player Six</text>
 <text x="546.0" y="390.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">38 min</text>
+<rect x="632.0" y="374.0" width="108.0" height="21.0" rx="10.5" fill="#2c2348"/>
+<text x="686.0" y="388.0" font-size="11" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="636.0 736.0">MVP +2</text>
 <rect x="312.0" y="421.0" width="18.0" height="18.0" rx="4" fill="#3ddcff" stroke="#a9b1d6" stroke-width="1"/>
 <text x="342.0" y="436.0" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start" data-box="342.0 536.0">Player Seven</text>
 <text x="546.0" y="436.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">37 min</text>
@@ -104,13 +106,15 @@
 <text x="1026.0" y="528.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">35 min</text>
 <text x="792.0" y="572.0" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start">Games won</text>
 <text x="1224.0" y="572.0" font-size="18" fill="#f3f5ff" font-weight="800" text-anchor="end">1</text>
-<text x="296.0" y="612.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">Points when the session ends: winner 3 · runner-up 2 · played 1 · no-show 0 (the event&#x27;s table).</text>
+<text x="296.0" y="612.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1240.0">Points when the session ends: the placing from the table in force (3 · 2 · 1 · 0) plus awards: MVP +2 for Player Six.</text>
 <rect x="296.0" y="642.0" width="140.4" height="36.0" rx="8" fill="#3ddcff"/>
 <text x="366.2" y="664.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300.0 432.4">Save the result</text>
 <rect x="446.4" y="642.0" width="117.5" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="505.1" y="664.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="450.4 559.9">Add a player</text>
 <rect x="573.9" y="642.0" width="79.4" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
 <text x="613.6" y="664.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="577.9 649.2">Rematch</text>
+<rect x="663.3" y="642.0" width="129.0" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="727.8" y="664.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="667.3 788.3">Give an award</text>
 </g></g>
 <text x="1000.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000.0 1880.0">Correct a result: reason required, kept in History</text>
 <defs><clipPath id="c2"><rect x="0" y="0" width="1220" height="960" rx="10"/></clipPath></defs>
@@ -184,22 +188,26 @@
 <text x="356.0" y="525.0" font-size="14" fill="#ffc94d" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Corrected semi-final 2: Team Beta → Team Delta</text>
 <text x="356.0" y="547.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · Game 3 was won by Delta: screenshot</text>
 <line x1="296.0" y1="559.0" x2="1180.0" y2="559.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="587.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">20:14</text>
-<text x="356.0" y="587.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Saved semi-final 2: Team Beta won 2 – 1</text>
-<text x="356.0" y="609.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · From the voice roster</text>
+<text x="296.0" y="587.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">20:50</text>
+<text x="356.0" y="587.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Gave an award: MVP +2 to Player Six, semi-final 2</text>
+<text x="356.0" y="609.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · standings recalculated in the same step</text>
 <line x1="296.0" y1="621.0" x2="1180.0" y2="621.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="649.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:31</text>
-<text x="356.0" y="649.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Called semi-final 1 and semi-final 2</text>
-<text x="356.0" y="671.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Scheduler</text>
+<text x="296.0" y="649.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">20:14</text>
+<text x="356.0" y="649.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Saved semi-final 2: Team Beta won 2 – 1</text>
+<text x="356.0" y="671.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · From the voice roster</text>
 <line x1="296.0" y1="683.0" x2="1180.0" y2="683.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="711.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:25</text>
-<text x="356.0" y="711.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Check-in closed: 38 in, 2 no-shows replaced</text>
+<text x="296.0" y="711.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:31</text>
+<text x="356.0" y="711.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Called semi-final 1 and semi-final 2</text>
 <text x="356.0" y="733.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Scheduler</text>
 <line x1="296.0" y1="745.0" x2="1180.0" y2="745.0" stroke="#262c4a" stroke-width="1"/>
-<text x="296.0" y="773.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:24</text>
-<text x="356.0" y="773.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Marked Player Twelve present</text>
-<text x="356.0" y="795.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · Guest, no account</text>
+<text x="296.0" y="773.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:25</text>
+<text x="356.0" y="773.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Check-in closed: 38 in, 2 no-shows marked</text>
+<text x="356.0" y="795.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Scheduler</text>
 <line x1="296.0" y1="807.0" x2="1180.0" y2="807.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="835.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">19:24</text>
+<text x="356.0" y="835.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="356.0 1180.0">Marked Player Twelve present</text>
+<text x="356.0" y="857.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="356.0 1180.0">Crew Member · Guest, no account</text>
+<line x1="296.0" y1="869.0" x2="1180.0" y2="869.0" stroke="#262c4a" stroke-width="1"/>
 </g></g>
 <circle cx="45.0" cy="867.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="872.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
@@ -215,7 +223,7 @@
 <text x="1006.0" y="906.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Without a roster (bot down, opt-outs) the same page is a plain form (E3, D5).</text>
 <circle cx="45.0" cy="935.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="940.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
-<text x="66.0" y="940.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A correction emits tournament.result.corrected with the whole new list and the reason (D7).</text>
+<text x="66.0" y="940.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A correction or an award is a result change: one transaction, a reason for a correction, one History line (D7, D20).</text>
 <circle cx="985.0" cy="935.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="940.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
 <text x="1006.0" y="940.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">History is the session&#x27;s audit trail: crew actions, the scheduler, corrections (D7).</text>
