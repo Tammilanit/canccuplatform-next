@@ -89,7 +89,7 @@ The issue's criteria map as: the module, the pool, routing, queues, clone, unbin
 5. **Client (B2):** our own thin client, kept lean: the legacy's logic ported, nothing beyond what bot.md requires.
 6. **B8 privacy:** the alternative. Admin emits a sign-in event and the bot answers with that person's role-derived rights, so admin keeps no rights list for people who never signed in (B8, C2). The 10-minute reconcile and `GUILD_MEMBER_UPDATE` stay as they are for people who are signed in.
 
-**Order:** the links run after step 5's deep review, polish and gate work (#755); the pace rule caps runs at 1.
+**Order:** this PR stays the plan, with no code. After it merges, the lead files the six link issues; link 1 starts after step 5's deep review, polish and gate work (#755), and the pace rule caps runs at 1.
 
 ## Decisions made
 - Plan tier, not feature: the size and the missing foundations above.
