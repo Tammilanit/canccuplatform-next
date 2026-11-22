@@ -7,7 +7,7 @@
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { Summary } from "../summary.js";
-import { formKey } from "./kit.js";
+import { formKey, split } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { base, counts, flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
@@ -73,8 +73,8 @@ function steps(c: PageCtx, o: OrderView, s: { lastCall: string; autoClose: boole
 export function checklistView(
   c: PageCtx,
   o: OrderView,
-  s: { lastCall: string; autoClose: boolean; error?: string },
-): Html {
+  s: { lastCall: string; autoClose: boolean; error?: string; aside?: Slot },
+): Slot {
   const unplaced = o.state === "open" || o.state === "closed";
   const phone = o.pizzeria.phone ?? null;
   const web = o.pizzeria.website ?? null;
@@ -106,24 +106,27 @@ export function checklistView(
             "canccu-button--ghost",
           )
         : "";
-  return html`${flash(s.error)}
-    <section class="pizza-card">
-      <p class="pizza-card__title">
-        ${o.pizzeria.name} · ${c.t("check.closes", { time: time(c, o.closes_at) })}
-      </p>
-      <p class="pizza-card__meta">${counts(c, o)} · ${c.t("check.you_hold")}</p>
-      <p class="pizza-card__links">
-        ${phone === null ? "" : html`<a href="tel:${phone.replace(/\s+/g, "")}">${c.t("pizzeria.call", { phone })}</a>`}
-        ${web === null ? "" : html`<a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a>`}
-      </p>
-    </section>
-    ${steps(c, o, s)} ${main}
-    <div class="pizza-row">
-      ${unplaced ? post(`${base(o)}/step/release`, c.t("check.release"), "canccu-button--ghost") : undo}
-      ${unplaced ? html`<a class="canccu-danger-link" href="${base(o)}/cancel">${c.t("check.cancel")}</a>` : ""}
-    </div>
-    ${unplaced ? html`<div class="pizza-row">${undo}</div>` : ""}
-    ${o.state === "open" || o.state === "closed" ? editForm(c, o) : ""}`;
+  return split(
+    html`${flash(s.error)}
+      <section class="pizza-card">
+        <p class="pizza-card__title">
+          ${o.pizzeria.name} · ${c.t("check.closes", { time: time(c, o.closes_at) })}
+        </p>
+        <p class="pizza-card__meta">${counts(c, o)} · ${c.t("check.you_hold")}</p>
+        <p class="pizza-card__links">
+          ${phone === null ? "" : html`<a href="tel:${phone.replace(/\s+/g, "")}">${c.t("pizzeria.call", { phone })}</a>`}
+          ${web === null ? "" : html`<a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a>`}
+        </p>
+      </section>
+      ${steps(c, o, s)} ${main}
+      <div class="pizza-row">
+        ${unplaced ? post(`${base(o)}/step/release`, c.t("check.release"), "canccu-button--ghost") : undo}
+        ${unplaced ? html`<a class="canccu-danger-link" href="${base(o)}/cancel">${c.t("check.cancel")}</a>` : ""}
+      </div>
+      ${unplaced ? html`<div class="pizza-row">${undo}</div>` : ""}`,
+    // On a desktop the order's money and its edit sit beside the checklist.
+    html`${s.aside ?? ""} ${o.state === "open" || o.state === "closed" ? editForm(c, o) : ""}`,
+  );
 }
 
 /** "Edit": the close time and the note, while not called in. */
@@ -192,45 +195,50 @@ export function callView(c: PageCtx, o: OrderView, summary: Summary): Html {
   const phone = o.pizzeria.phone ?? null;
   const web = o.pizzeria.website ?? null;
   return html`<div class="pizza-call" data-call="${o.id}">
-    <p class="pizza-call__name">${o.pizzeria.name}</p>
-    <p class="pizza-muted">
-      ${counts(c, o)} ·
-      ${o.pizzeria.service === "takeaway" ? c.t("call.takeaway") : c.t("call.delivery")}
-    </p>
-    ${
-      phone === null
-        ? html`<p class="pizza-muted">${c.t("call.no_phone")}</p>`
-        : html`<a class="canccu-button pizza-go pizza-wide" href="tel:${phone.replace(/\s+/g, "")}"
-            >📞 ${c.t("pizzeria.call", { phone })}</a
-          >`
-    }
-    ${web === null ? "" : html`<p><a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a></p>`}
-    <ul class="pizza-lines">
-      ${summary.lines.map(
-        (l, i) =>
-          html`<li>
-            <label class="pizza-line"
-              ><span class="pizza-line__count">${l.count} ×</span
-              ><span class="pizza-line__text"
-                ><span class="pizza-line__label">${l.label}</span>${
-                  l.note === null ? "" : html`<span class="pizza-line__note">${l.note}</span>`
-                }</span
-              ><input
-                class="canccu-check"
-                type="checkbox"
-                data-tick="${i}"
-                aria-label="${c.t("call.tick")}"
-            /></label>
-          </li>`,
-      )}
-    </ul>
-    <details class="pizza-details" data-copy>
-      <summary>${c.t("call.copy")}</summary>
-      <textarea class="canccu-input pizza-copy" readonly rows="8">${summary.text}</textarea>
-    </details>
-    <a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/called-in"
-      >${c.t("call.called_in")}</a
-    >
+    ${split(
+      html`<p class="pizza-call__name">${o.pizzeria.name}</p>
+        <p class="pizza-muted">
+          ${counts(c, o)} ·
+          ${o.pizzeria.service === "takeaway" ? c.t("call.takeaway") : c.t("call.delivery")}
+        </p>
+        ${
+          phone === null
+            ? html`<p class="pizza-muted">${c.t("call.no_phone")}</p>`
+            : html`<a
+                class="canccu-button pizza-go pizza-wide"
+                href="tel:${phone.replace(/\s+/g, "")}"
+                >📞 ${c.t("pizzeria.call", { phone })}</a
+              >`
+        }
+        ${web === null ? "" : html`<p><a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a></p>`}
+        <ul class="pizza-lines">
+          ${summary.lines.map(
+            (l, i) =>
+              html`<li>
+                <label class="pizza-line"
+                  ><span class="pizza-line__count">${l.count} ×</span
+                  ><span class="pizza-line__text"
+                    ><span class="pizza-line__label">${l.label}</span>${
+                      l.note === null ? "" : html`<span class="pizza-line__note">${l.note}</span>`
+                    }</span
+                  ><input
+                    class="canccu-check"
+                    type="checkbox"
+                    data-tick="${i}"
+                    aria-label="${c.t("call.tick")}"
+                /></label>
+              </li>`,
+          )}
+        </ul>`,
+      // On a desktop the copy and "Called in" sit beside the lines read out.
+      html`<details class="pizza-details" data-copy>
+          <summary>${c.t("call.copy")}</summary>
+          <textarea class="canccu-input pizza-copy" readonly rows="8">${summary.text}</textarea>
+        </details>
+        <a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/called-in"
+          >${c.t("call.called_in")}</a
+        >`,
+    )}
   </div>`;
 }
 
@@ -251,44 +259,46 @@ export function calledInView(
   return html`${flash(error)}
     <form method="post" action="${base(o)}/called-in" class="pizza-form" data-estimate>
       ${formKey()}
-      <fieldset class="pizza-fieldset">
-        <legend>${c.t("called.when")}</legend>
-        <div class="pizza-choices">
-          ${choices.map(
-            ([v, label]) =>
-              html`<label class="pizza-choice"
-                ><input
-                  type="radio"
-                  name="estimate_minutes"
-                  value="${v}"
-                  ${v === "45" ? "checked" : ""}
-                /><span>${label}</span></label
-              >`,
-          )}
-        </div>
-        <p class="pizza-about" data-about aria-live="polite"></p>
-      </fieldset>
-      <fieldset class="pizza-fieldset">
-        <legend class="canccu-overline">${c.t("called.payer")}</legend>
-        ${people.map(
-          (p) =>
-            html`<label class="pizza-choice pizza-choice--row"
-              ><input
-                type="radio"
-                name="payer_user_id"
-                value="${p.user_id}"
-                ${p.user_id === me ? "checked" : ""}
-              /><span
-                >${p.user_id === me ? c.t("called.me", { name: p.name }) : p.name}</span
-              ></label
-            >`,
-        )}
-        <p class="pizza-muted">${c.t("called.payer_hint")}</p>
-      </fieldset>
-      <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
-        ${c.t("called.mark")}
-      </button>
-      <a class="pizza-center" href="${base(o)}/call">${c.t("called.back")}</a>
+      ${split(
+        html`<fieldset class="pizza-fieldset">
+          <legend>${c.t("called.when")}</legend>
+          <div class="pizza-choices">
+            ${choices.map(
+              ([v, label]) =>
+                html`<label class="pizza-choice"
+                  ><input
+                    type="radio"
+                    name="estimate_minutes"
+                    value="${v}"
+                    ${v === "45" ? "checked" : ""}
+                  /><span>${label}</span></label
+                >`,
+            )}
+          </div>
+          <p class="pizza-about" data-about aria-live="polite"></p>
+        </fieldset>`,
+        html`<fieldset class="pizza-fieldset">
+            <legend class="canccu-overline">${c.t("called.payer")}</legend>
+            ${people.map(
+              (p) =>
+                html`<label class="pizza-choice pizza-choice--row"
+                  ><input
+                    type="radio"
+                    name="payer_user_id"
+                    value="${p.user_id}"
+                    ${p.user_id === me ? "checked" : ""}
+                  /><span
+                    >${p.user_id === me ? c.t("called.me", { name: p.name }) : p.name}</span
+                  ></label
+                >`,
+            )}
+            <p class="pizza-muted">${c.t("called.payer_hint")}</p>
+          </fieldset>
+          <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
+            ${c.t("called.mark")}
+          </button>
+          <a class="pizza-center" href="${base(o)}/call">${c.t("called.back")}</a>`,
+      )}
     </form>`;
 }
 

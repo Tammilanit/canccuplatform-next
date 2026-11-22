@@ -1,7 +1,7 @@
 /** The hand-out (mockup 09, with each person's amount and Paid), cancelling, and an order that is over. */
 import { html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
-import { formKey } from "./kit.js";
+import { formKey, split } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { euro } from "./money-format.js";
 import type { MoneyPerson, MoneyView } from "./money-format.js";
@@ -74,8 +74,9 @@ export function handOutView(
           : euro(c, mp.amount_cents);
     return [...p.labels, ...(tail === null ? [] : [tail])].join(" · ");
   };
-  return html`${flash(error)}
-    <section class="pizza-card pizza-card--here">
+  // On a phone the order's state and "Everyone got theirs" come first; on a desktop the people
+  // lead and those sit beside them.
+  const side = html`<section class="pizza-card pizza-card--here">
       <p class="pizza-card__title">
         ${c.t("hand.here", { time: time(c, o.arrived_at), pickup: o.pickup ?? "—" })}
       </p>
@@ -110,8 +111,8 @@ export function handOutView(
             </button>
             <p class="pizza-muted pizza-centered">${c.t("hand.everyone_hint")}</p>
           </form>`
-    }
-    <p class="pizza-progress-label">
+    }`;
+  const main = html`<p class="pizza-progress-label">
       ${
         toPayer
           ? c.t("hand.collected_paid", { got, all: people.length, paid: paidCount })
@@ -181,6 +182,7 @@ export function handOutView(
             ${post(`${base(o)}/step/done`, c.t("hand.done_button"), "canccu-button--primary")}
           </div>`
     }`;
+  return html`${flash(error)}${split(main, side, { lead: true })}`;
 }
 
 /** Cancel, with the words the people in it are told. */

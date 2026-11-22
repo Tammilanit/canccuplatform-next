@@ -5,7 +5,7 @@
  */
 import { attrs, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
-import { PREFIX } from "./kit.js";
+import { PREFIX, split } from "./kit.js";
 import { flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 import { orderHref, orderName, wayIn } from "./food-views.js";
@@ -263,10 +263,13 @@ export function myOrderView(
         >`
       : "";
   const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
-  return html`${flash(q.error)}${opened}${added}${header}${hereCard(c, o)}
-  ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${myMoney(c, o)} ${add}
-  ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
-  ${steps(c, o)} ${wayIn(c, orderHref(o))}`;
+  // On a desktop the order's steps sit beside your pizzas and share.
+  return html`${flash(q.error)}${opened}${added}${split(
+    html`${header}${hereCard(c, o)} ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)}
+    ${myMoney(c, o)} ${add}`,
+    html`${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
+    ${steps(c, o)} ${wayIn(c, orderHref(o))}`,
+  )}`;
 }
 
 /** Mockup 16: the order closed while you chose (E3); the API names the orders still open. */

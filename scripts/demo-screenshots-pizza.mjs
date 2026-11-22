@@ -1,11 +1,11 @@
 // The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 02–12 and
 // 16–20): one order taken by the CI session from open to handed out, with the attendee's Food
-// page, menu and order page and the holder's page at each step on a phone (the guest's Food page
-// too); the crew's Food page and the order's page; the money step (the total, a receipt read by
-// CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria, the menu CSV's
-// preview and reading a menu photo; the daily record, one order's money and the export; Food
-// settings and Integrations. The group has a shard of its own, so its orders never reach the
-// screens of another group's shots (Moments' pizza stories). The order ends done.
+// page, menu and order page and the holder's page at each step, at phone and desktop width (the
+// guest's Food page too); the crew's Food page and the order's page; the money step (the total,
+// a receipt read by CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria,
+// the menu CSV's preview and reading a menu photo; the daily record, one order's money and the
+// export; Food settings and Integrations. The group has a shard of its own, so its orders never
+// reach the screens of another group's shots (Moments' pizza stories). The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -75,39 +75,63 @@ const SHOTS = [
   ["pizza-food-phone", "/pizza/", PHONE, "open"],
   ["pizza-food", "/pizza/", DESK, "open"],
   ["pizza-food-guest-phone", "/pizza/", PHONE, "open", GUEST],
+  ["pizza-food-guest", "/pizza/", DESK, "open", GUEST],
   ["pizza-food-start-phone", "/pizza/start", PHONE, "open"],
+  ["pizza-food-start", "/pizza/start", DESK, "open"],
   ["pizza-food-menu-phone", `/pizza/orders/${ORDER}/add`, PHONE, "open"],
+  ["pizza-food-menu", `/pizza/orders/${ORDER}/add`, DESK, "open"],
   ["pizza-food-menu-filter-phone", `/pizza/orders/${ORDER}/add?q=kebab`, PHONE, "open"],
+  ["pizza-food-menu-filter", `/pizza/orders/${ORDER}/add?q=kebab`, DESK, "open"],
   ["pizza-food-own-pizza-phone", `/pizza/orders/${ORDER}/add?tab=own`, PHONE, "open"],
+  ["pizza-food-own-pizza", `/pizza/orders/${ORDER}/add?tab=own`, DESK, "open"],
   ["pizza-food-other-phone", `/pizza/orders/${ORDER}/add?tab=other`, PHONE, "open"],
+  ["pizza-food-other", `/pizza/orders/${ORDER}/add?tab=other`, DESK, "open"],
   ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
   ["pizza-food-added", `/pizza/orders/${ORDER}?added=1`, DESK, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
+  ["pizza-holder-checklist", `/pizza/hold/${ORDER}`, DESK, "open"],
   ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
+  ["pizza-food-closed", `/pizza/orders/${ORDER}`, DESK, "closed"],
   ["pizza-holder-call-phone", `/pizza/hold/${ORDER}/call`, PHONE, "closed"],
+  ["pizza-holder-call", `/pizza/hold/${ORDER}/call`, DESK, "closed"],
   ["pizza-holder-called-in-phone", `/pizza/hold/${ORDER}/called-in`, PHONE, "closed"],
+  ["pizza-holder-called-in", `/pizza/hold/${ORDER}/called-in`, DESK, "closed"],
   ["pizza-holder-placed-phone", `/pizza/hold/${ORDER}`, PHONE, "placed"],
+  ["pizza-holder-placed", `/pizza/hold/${ORDER}`, DESK, "placed"],
   ["pizza-food-on-the-way-phone", `/pizza/orders/${ORDER}`, PHONE, "placed"],
+  ["pizza-food-on-the-way", `/pizza/orders/${ORDER}`, DESK, "placed"],
   ["pizza-screen-food-on-the-way", BOX, HALL, "placed"],
   ["pizza-holder-here-phone", `/pizza/hold/${ORDER}/here`, PHONE, "placed"],
+  ["pizza-holder-here", `/pizza/hold/${ORDER}/here`, DESK, "placed"],
   ["pizza-crew", "/pizza/crew", DESK, "placed"],
   ["pizza-crew-phone", "/pizza/crew", PHONE, "placed"],
   ["pizza-crew-order", `/pizza/crew/orders/${ORDER}`, DESK, "placed"],
   ["pizza-crew-order-phone", `/pizza/crew/orders/${ORDER}`, PHONE, "placed"],
   // Mockups 18 and 19: the money step, with the AI reader on (CI's fake reader).
   ["pizza-holder-money-phone", `/pizza/hold/${ORDER}/money`, PHONE, "placed"],
+  ["pizza-holder-money", `/pizza/hold/${ORDER}/money`, DESK, "placed"],
   ["pizza-holder-money-scan-phone", `/pizza/hold/${ORDER}/money/scan`, PHONE, "placed"],
+  ["pizza-holder-money-scan", `/pizza/hold/${ORDER}/money/scan`, DESK, "placed"],
   ["pizza-holder-money-total-phone", `/pizza/hold/${ORDER}/money/total`, PHONE, "placed"],
+  ["pizza-holder-money-total", `/pizza/hold/${ORDER}/money/total`, DESK, "placed"],
   ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
+  ["pizza-holder-money-check", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, DESK, "read"],
   ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
+  ["pizza-holder-money-confirmed", `/pizza/hold/${ORDER}/money`, DESK, "confirmed"],
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
+  ["pizza-holder-money-payer", `/pizza/hold/${ORDER}/money`, DESK, "payer"],
   ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
+  ["pizza-food-here", `/pizza/orders/${ORDER}`, DESK, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
+  ["pizza-holder-hand-out", `/pizza/hold/${ORDER}/hand-out`, DESK, "arrived"],
   ["pizza-holder-done-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "done"],
+  ["pizza-holder-done", `/pizza/hold/${ORDER}/hand-out`, DESK, "done"],
   ["pizza-food-done-phone", `/pizza/orders/${ORDER}`, PHONE, "done"],
+  ["pizza-food-done", `/pizza/orders/${ORDER}`, DESK, "done"],
   ["pizza-food-earlier-phone", "/pizza/", PHONE, "done"],
+  ["pizza-food-earlier", "/pizza/", DESK, "done"],
   ["pizza-pizzerias", "/pizza/crew/pizzerias", DESK, "done"],
   ["pizza-pizzerias-phone", "/pizza/crew/pizzerias", PHONE, "done"],
   ["pizza-pizzeria", `/pizza/crew/pizzerias/${PIZZERIA}`, DESK, "done"],
@@ -115,6 +139,7 @@ const SHOTS = [
   ["pizza-import-preview", "/pizza/crew/pizzerias/import", DESK, "done"],
   ["pizza-import-preview-phone", "/pizza/crew/pizzerias/import", PHONE, "done"],
   ["pizza-menu-read-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
+  ["pizza-menu-read", `/pizza/crew/pizzerias/${PIZZERIA}/read`, DESK, "done"],
   ["pizza-settings", "/pizza/crew/settings", DESK, "done"],
   ["pizza-settings-phone", "/pizza/crew/settings", PHONE, "done"],
   // Mockup 12: the daily record, one order's money and the export; mockup 20: Integrations.
@@ -125,6 +150,7 @@ const SHOTS = [
   ["pizza-export", "/pizza/crew/export", DESK, "done"],
   ["pizza-export-phone", "/pizza/crew/export", PHONE, "done"],
   ["pizza-integrations-phone", "/pizza/integrations", PHONE, "done"],
+  ["pizza-integrations", "/pizza/integrations", DESK, "done"],
 ];
 
 export function pizzaListed(at) {

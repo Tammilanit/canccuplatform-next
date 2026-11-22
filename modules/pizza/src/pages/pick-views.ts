@@ -8,7 +8,7 @@ import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { menuMatches } from "../menu-filter.js";
 import { LIMITS } from "../validate.js";
-import { formKey } from "./kit.js";
+import { formKey, split } from "./kit.js";
 import { flash } from "./order-view.js";
 import type { MineView, OrderView } from "./order-view.js";
 import { orderHref } from "./food-views.js";
@@ -210,11 +210,15 @@ export function pickView(
     <form method="post" action="${orderHref(o)}/add" class="pizza-form">
       ${formKey()}
       <input type="hidden" name="kind" value="${kindOf[q.tab]}" />
-      ${edit === null ? "" : html`<input type="hidden" name="edit" value="${edit.id}" />`} ${body}
-      ${textField("note", c.t("pick.note"), LIMITS.note, edit?.note ?? null)}
-      ${textField("comment", c.t("pick.comment"), LIMITS.comment, edit?.comment ?? null)}
-      <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
-        ${c.t(edit === null ? "pick.add" : "pick.save")}
-      </button>
+      ${edit === null ? "" : html`<input type="hidden" name="edit" value="${edit.id}" />`}
+      ${split(
+        body,
+        // On a desktop the note, the comment and Add stay beside the menu as it scrolls by.
+        html`${textField("note", c.t("pick.note"), LIMITS.note, edit?.note ?? null)}
+          ${textField("comment", c.t("pick.comment"), LIMITS.comment, edit?.comment ?? null)}
+          <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
+            ${c.t(edit === null ? "pick.add" : "pick.save")}
+          </button>`,
+      )}
     </form>`;
 }
