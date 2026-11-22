@@ -12,9 +12,11 @@ import {
   json,
   open,
   seedPizzerias,
+  types,
   world,
 } from "./helpers.js";
 import type { World } from "./helpers.js";
+import { view } from "./forms.js";
 
 let pool: pg.Pool;
 let w: World;
@@ -64,6 +66,36 @@ describe.skipIf(!DATABASE_URL)("money", () => {
       ],
     });
     expect(json(await w.call("anni", "GET", `/api/pizza/orders/${id}`)).my_amount_cents).toBe(800);
+  });
+  it("tells a member their amount is an estimate until the total is in, and says so on My order", async () => {
+    const mine = async () => json(await w.call("anni", "GET", `/api/pizza/orders/${id}`));
+    expect(await mine()).toMatchObject({ my_amount_cents: 800, my_amount_estimated: true });
+    const note = "From the menu&#39;s prices; the receipt confirms it.";
+    expect((await view(w, "anni", `/orders/${id}`)).body).toContain(note);
+    await place();
+    await patch("pena", { total_cents: 1950 });
+    expect(await mine()).toMatchObject({ my_amount_estimated: false });
+    expect((await view(w, "anni", `/orders/${id}`)).body).not.toContain(note);
+  });
+  it("answers 400 to a price write without price_cents, and clears a price only on null", async () => {
+    await place();
+    const price = (b: unknown) => w.call("pena", "PUT", `/api/pizza/items/${items.anni}/price`, b);
+    for (const b of [{}, { price: 850 }]) {
+      const r = await price(b);
+      expect(r.statusCode).toBe(400);
+      expect(errorOf(r)).toMatchObject({ field: "price_cents" });
+    }
+    const r = await patch("pena", { prices: [{ item_id: items.anni }] });
+    expect(r.statusCode).toBe(400);
+    expect(errorOf(r)).toMatchObject({ field: "price_cents" });
+    const priced = (await money()).json<{ people: { name: string; amount_cents: number }[] }>();
+    expect(priced.people.find((p) => p.name === "Anni")?.amount_cents).toBe(800);
+    expect(types(w.events())).not.toContain("pizza.amount.changed");
+    expect((await price({ price_cents: null })).statusCode).toBe(200);
+    const { rows } = await pool.query("SELECT price_cents FROM pizza_items WHERE id = $1", [
+      items.anni,
+    ]);
+    expect(rows).toEqual([{ price_cents: null }]);
   });
   it("splits the extras per pizza once the total is in", async () => {
     await place();

@@ -282,6 +282,28 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     expect(json(r)).toMatchObject({ state: "done", done_reason: "handed_out" });
     expect((json(r).items as { handed_out: boolean }[]).every((i) => i.handed_out)).toBe(true);
   });
+  it("answers a second Everyone got theirs with the order as it is, without a second event", async () => {
+    await post("pena", `orders/${id}/place`);
+    await post("pena", `orders/${id}/arrive`);
+    const first = json(await post("pena", `orders/${id}/hand-out`));
+    const events = w.events().length;
+    const again = await post("crew", `orders/${id}/hand-out`);
+    expect(again.statusCode).toBe(200);
+    expect(json(again)).toMatchObject({ state: "done", revision: first.revision });
+    expect(w.events()).toHaveLength(events);
+    expect(w.audit.map((a) => a.action)).not.toContain("pizza.order.done");
+  });
+  it("audits the crew's Everyone got theirs on an order they do not hold", async () => {
+    await post("pena", `orders/${id}/place`);
+    await post("pena", `orders/${id}/arrive`);
+    expect((await post("crew", `orders/${id}/hand-out`)).statusCode).toBe(200);
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "pizza.order.done",
+      actor_user_id: "u_crew",
+      target: { type: "order", id },
+      changes: { state: { old: "arrived", new: "done" } },
+    });
+  });
   it("is done by the holder's Done too, with reason holder", async () => {
     await post("pena", `orders/${id}/place`);
     expect((await post("pena", `orders/${id}/done`)).statusCode).toBe(409);

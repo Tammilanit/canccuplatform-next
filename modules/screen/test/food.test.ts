@@ -136,6 +136,22 @@ describe.skipIf(!DATABASE_URL)("food on the screens", () => {
     );
   });
 
+  it("loses the holder's name when pizza forgets them (a privacy delete, #759)", async () => {
+    const here = { state: "arrived", arrived_at: "2026-01-01T16:55:00Z" };
+    await apply("pizza.order.arrived", {
+      order: order("po_1", { ...here, revision: 6 }),
+      user_ids: ["u_a"],
+      people: [],
+    });
+    await apply("pizza.order.changed", {
+      order: order("po_1", { ...here, holder: null, revision: 7 }),
+      changed: ["holder"],
+    });
+    const v = await box();
+    expect(v).toMatchObject({ seq: 1, state: "arrived", holder_name: null });
+    expect(JSON.stringify(v)).not.toContain("Demo Player");
+  });
+
   it("is empty when nothing is open or on the way (L3)", async () => {
     expect(await box()).toMatchObject({ empty: true });
     await apply("pizza.order.opened", { order: order("po_1") });

@@ -145,6 +145,78 @@ describe.skipIf(!DATABASE_URL)("races", () => {
     expect(types(w.events())).not.toContain("pizza.order.released");
   });
 
+  /**
+   * A pizza's write that waited on the order's row while another took the pizza out: the order's
+   * row is held, the write starts, the pizza goes and the row is let go.
+   */
+  async function whileRemoved(
+    pizza: string,
+    write: () => ReturnType<World["call"]>,
+  ): Promise<Awaited<ReturnType<World["call"]>>> {
+    const other = await pool.connect();
+    try {
+      await other.query("BEGIN");
+      await other.query(
+        "SELECT 1 FROM pizza_orders WHERE id = (SELECT order_id FROM pizza_items WHERE id = $1) FOR UPDATE",
+        [pizza],
+      );
+      const waiting = write();
+      await waitForLockWaiter(other);
+      await other.query("DELETE FROM pizza_items WHERE id = $1", [pizza]);
+      await other.query("COMMIT");
+      return await waiting;
+    } finally {
+      other.release();
+    }
+  }
+
+  it("answers 404 to a pizza's removal that waited behind another removal, without a second event", async () => {
+    const id = json(await open(w, "pena", pz)).id as string;
+    const pizza = json(
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: margherita,
+      }),
+    ).id as string;
+    const r = await whileRemoved(pizza, () =>
+      w.call("pena", "DELETE", `/api/pizza/items/${pizza}`),
+    );
+    expect(r.statusCode).toBe(404);
+    expect(types(w.events())).not.toContain("pizza.item.removed");
+    expect(w.audit.map((a) => a.action)).not.toContain("pizza.item.removed");
+  });
+
+  it("answers 404, not 500, to a pizza's edit that waited behind its removal", async () => {
+    const id = json(await open(w, "pena", pz)).id as string;
+    const pizza = json(
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: margherita,
+      }),
+    ).id as string;
+    const r = await whileRemoved(pizza, () =>
+      w.call("anni", "PUT", `/api/pizza/items/${pizza}`, { kind: "text", text: "kebab" }),
+    );
+    expect(r.statusCode).toBe(404);
+    expect(types(w.events())).not.toContain("pizza.item.changed");
+  });
+
+  it("tells the owner once when they and the holder remove the same pizza at once", async () => {
+    const id = json(await open(w, "pena", pz)).id as string;
+    const pizza = json(
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: margherita,
+      }),
+    ).id as string;
+    const rs = await Promise.all([
+      w.call("anni", "DELETE", `/api/pizza/items/${pizza}`),
+      w.call("pena", "DELETE", `/api/pizza/items/${pizza}`),
+    ]);
+    expect(statuses(rs)).toEqual([204, 404]);
+    expect(types(w.events()).filter((t) => t === "pizza.item.removed")).toHaveLength(1);
+  });
+
   it("opens one order per pizzeria when ten open at once", async () => {
     const rs = await Promise.all(people(10).map((p) => open(w, p, pz)));
     expect(rs.filter((r) => r.statusCode === 201)).toHaveLength(1);

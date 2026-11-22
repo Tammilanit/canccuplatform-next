@@ -138,6 +138,36 @@ describe.skipIf(!DATABASE_URL)("the privacy export and delete", () => {
     expect(after.payer).toBeNull();
     expect(await text()).not.toMatch(/Pena|u_pena/);
   });
+  it("tells the screens the holder's name is gone, with a newer revision and no actor", async () => {
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/arrive`, {});
+    const before = must(w.events().at(-1)).data.order as { revision: number };
+    await w.call("pena", "DELETE", "/api/pizza/me");
+    const changed = must(w.events().at(-1));
+    expect(changed).toMatchObject({
+      type: "pizza.order.changed",
+      data: { changed: ["holder", "payer"], actor_user_id: null, order: { holder: null } },
+    });
+    expect((changed.data.order as { revision: number }).revision).toBeGreaterThan(
+      before.revision,
+    );
+    expect(JSON.stringify(changed)).not.toMatch(/Pena|u_pena/);
+  });
+  it("writes a pseudonym in the export for each person forgotten, never an empty nick", async () => {
+    await w.call("anni", "DELETE", "/api/pizza/me");
+    await w.call("pena", "DELETE", "/api/pizza/me");
+    const csv = (await w.call("treasurer", "GET", "/api/pizza/export.csv")).body;
+    const rows = csv
+      .trim()
+      .split("\n")
+      .slice(1)
+      .map((l) => l.split(","));
+    expect(rows).toHaveLength(2);
+    const [payer, anon] = [must(rows[0])[3], rows.map((r) => must(r[6])).sort()];
+    expect(payer).toMatch(/^anon_[0-9a-f]+$/);
+    expect(anon[0]).toBe("Mikko");
+    expect(anon[1]).toMatch(/^anon_[0-9a-f]+$/);
+    expect(csv).not.toMatch(/Pena|Anni/);
+  });
 });
 
 describe.skipIf(!DATABASE_URL)("retention and the tenants events", () => {
@@ -184,6 +214,13 @@ describe.skipIf(!DATABASE_URL)("retention and the tenants events", () => {
         .at(-1)?.data,
     ).toMatchObject({ reason: "released", actor_user_id: null });
     expect((await crewView()).pizza_count).toBe(2); // a called-in order keeps theirs
+    // The removal names nobody: the person left (contracts/pizza.md, Events).
+    expect(
+      w
+        .events()
+        .filter((e) => e.type === "pizza.item.removed")
+        .at(-1)?.data,
+    ).toMatchObject({ order_id: second, user_id: null, person: null, actor_user_id: null });
   });
 });
 
