@@ -89,3 +89,26 @@
   padding: 0;
   border: 0;
 }
+/* A section of a crew page: a heading and space, never a frame (amendment 3, #771). */
+.pizza-part {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding-top: 1.25rem;
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.pizza-part:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.pizza-part__title {
+  margin: 0;
+  font-size: var(--canccu-text-lg);
+  font-weight: 600;
+}
+.pizza-part__desc {
+  margin: 0;
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-sm);
+}

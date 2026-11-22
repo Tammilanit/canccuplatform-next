@@ -226,10 +226,10 @@ export function orderView(c: PageCtx, o: OrderView, history: HistoryEntry[], err
       : html`<form
           method="post"
           action="${PREFIX}crew/orders/${o.id}"
-          class="canccu-card pizza-stepin"
+          class="pizza-part pizza-stepin"
         >
           ${formKey()}
-          <h2 class="canccu-card__title">${c.t("crew.step_in")}</h2>
+          <h2 class="pizza-part__title">${c.t("crew.step_in")}</h2>
           <p class="canccu-muted canccu-small">${c.t("crew.step_in_hint")}</p>
           <label class="canccu-field"
             ><span class="canccu-field__label">${c.t("crew.reason")}</span
@@ -274,8 +274,8 @@ export function orderView(c: PageCtx, o: OrderView, history: HistoryEntry[], err
     ${o.state === "cancelled" && o.cancel_reason ? html`<p class="canccu-muted">${o.cancel_reason}</p>` : ""}
     ${stepIn}
     <div class="canccu-band">
-      <section class="canccu-card">
-        <h2 class="canccu-card__title">${c.t("crew.people")}</h2>
+      <section class="pizza-part">
+        <h2 class="pizza-part__title">${c.t("crew.people")}</h2>
         ${
           people.length === 0
             ? html`<p class="canccu-muted">${c.t("crew.no_pizzas")}</p>`
@@ -296,8 +296,8 @@ export function orderView(c: PageCtx, o: OrderView, history: HistoryEntry[], err
               </ul>`
         }
       </section>
-      <section class="canccu-card">
-        <h2 class="canccu-card__title">${c.t("crew.history")}</h2>
+      <section class="pizza-part">
+        <h2 class="pizza-part__title">${c.t("crew.history")}</h2>
         <ul class="canccu-history">
           ${history.map(
             (e) =>

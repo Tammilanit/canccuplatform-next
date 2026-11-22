@@ -83,6 +83,16 @@ describe.skipIf(!DATABASE_URL)("the crew's Food page", () => {
     expect(css.body).toContain("overflow-x: auto");
   });
 
+  it("parts Settings and one order's page by headings, never a frame per section (C2, C3)", async () => {
+    const settings = await view(w, "organiser", "/crew/settings");
+    expect(settings.statusCode).toBe(200);
+    expect(settings.body).not.toContain("canccu-card");
+    expect(settings.body).toMatch(/<h2 class="pizza-part__title">/);
+    const one = await view(w, "crew", `/crew/orders/${id}`);
+    expect(one.body).not.toContain("canccu-card");
+    expect(one.body).toMatch(/<h2 class="pizza-part__title">/);
+  });
+
   it("shows one order's people with their comments, and its history", async () => {
     const r = await view(w, "crew", `/crew/orders/${id}`);
     expect(r.body).toContain("Order 1 · Demo Pizzeria");

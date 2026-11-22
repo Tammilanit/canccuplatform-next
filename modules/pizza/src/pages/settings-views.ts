@@ -52,9 +52,10 @@ const hint = (...parts: string[]) =>
   html`<p class="canccu-field__hint">${parts.filter((p) => p !== "").join(" ")}</p>`;
 
 function section(c: PageCtx, title: MessageKey, desc: MessageKey, fields: Html): Html {
-  return html`<section class="canccu-card">
-    <h2 class="canccu-card__title">${c.t(title)}</h2>
-    <p class="canccu-card__desc">${c.t(desc)}</p>
+  // A heading and space part the sections, never a frame each (amendment 3, #771).
+  return html`<section class="pizza-part">
+    <h2 class="pizza-part__title">${c.t(title)}</h2>
+    <p class="pizza-part__desc">${c.t(desc)}</p>
     <div class="canccu-form">${fields}</div>
   </section>`;
 }
