@@ -92,6 +92,18 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
     expect(errorOf(res).code).toBe("file_too_large");
   });
 
+  it("keeps at most 10 receipts per order (409 too_many_receipts)", async () => {
+    await place();
+    const photo = await png();
+    for (let i = 0; i < 10; i++)
+      expect((await upload("pena", photo, "image/png")).statusCode).toBe(201);
+    const res = await upload("pena", photo, "image/png");
+    expect(res.statusCode).toBe(409);
+    expect(errorOf(res).code).toBe("too_many_receipts");
+    const list = json(await w.call("pena", "GET", `/api/pizza/orders/${id}/receipts`));
+    expect((list.receipts as unknown[]).length).toBe(10);
+  });
+
   it("is for the money of a called-in order only", async () => {
     expect(errorOf(await upload("pena", await png(), "image/png")).code).toBe("not_placed");
   });

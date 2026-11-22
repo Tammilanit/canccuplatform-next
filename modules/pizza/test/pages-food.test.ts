@@ -77,6 +77,21 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(r.body).toContain("Done");
   });
 
+  it("is laid out for a desktop too: the open orders beside Start another order (amendment 5)", async () => {
+    await open(w, "pena", pz);
+    const r = await view(w, "anni", "/");
+    expect(r.body).toContain('href="/pizza/static/wide.css"');
+    const side = r.body.slice(r.body.indexOf('class="pizza-split__side"'));
+    expect(r.body.indexOf('class="pizza-split__main"')).toBeLessThan(
+      r.body.indexOf("Order 1 · Demo Pizzeria"),
+    );
+    expect(side).toContain("Start another order");
+    expect(side).not.toContain("Order 1 · Demo Pizzeria");
+    const css = await w.app.inject({ url: "/static/wide.css", headers: { host: "demo.test" } });
+    expect(css.statusCode).toBe(200);
+    expect(css.headers["content-type"]).toContain("text/css");
+    expect(css.body).toContain("@media (min-width: 60rem)");
+  });
   it("offers one clear action when nothing is open", async () => {
     const r = await view(w, "anni", "/");
     expect(r.body).toContain("No order is open");

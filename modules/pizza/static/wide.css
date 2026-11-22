@@ -1,0 +1,68 @@
+/* The hub pages on a desktop (amendment 5, 0032: equal on PC and phone): from 60 rem the page
+   takes the shared 64 rem width, its head sits left as the organiser pages' does, a main part and
+   its side panel sit side by side (`split` in pages/kit.ts), and a page of one part keeps a
+   readable 40 rem column at the page's left edge, never a phone column centred. Phones are as
+   pizza.css draws them. */
+
+.pizza-split,
+.pizza-split__main,
+.pizza-split__side {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (max-width: 59.99rem) {
+  /* The side holds the page's one action (hand-out's "Everyone got theirs"): first on a phone. */
+  .pizza-split--lead > .pizza-split__side {
+    order: -1;
+  }
+}
+
+@media (min-width: 60rem) {
+  .pizza-hub__head,
+  .pizza-hub__main {
+    max-width: 64rem;
+    padding-inline: 2rem;
+  }
+  /* "Reconnecting…" spans the content, as the main part's padding leaves it. */
+  .pizza-live {
+    max-width: 60rem;
+  }
+  .pizza-hub__head {
+    /* canccu-grid: fixed row — the way back above the title, both at the page's left edge */
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 1.5rem;
+  }
+  .pizza-back {
+    grid-row: 1;
+  }
+  .pizza-hub__title {
+    grid-column: 1;
+    grid-row: 2;
+    text-align: left;
+    font-size: var(--canccu-text-2xl);
+  }
+  .pizza-hub__main {
+    gap: 1rem;
+  }
+  /* A part that holds a split (a form, call mode) takes the page's width as the split does. */
+  .pizza-hub__main > :not(.pizza-split):not(:has(> .pizza-split)) {
+    max-width: 40rem;
+  }
+  .pizza-split {
+    /* canccu-grid: fixed master-detail — the page's main part and its side panel (amendment 5) */
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+    gap: 1rem 2rem;
+    align-items: start;
+  }
+  .pizza-split > .pizza-split__main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pizza-split > .pizza-split__side {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

@@ -1,11 +1,11 @@
 // The Food pages' shots of scripts/demo-screenshots.mjs (group `pizza`; step 5 mockups 02–12 and
 // 16–20): one order taken by the CI session from open to handed out, with the attendee's Food
-// page, menu and order page and the holder's page at each step on a phone (the guest's Food page
-// too); the crew's Food page and the order's page; the money step (the total, a receipt read by
-// CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria, the menu CSV's
-// preview and reading a menu photo; the daily record, one order's money and the export; Food
-// settings and Integrations. The group has a shard of its own, so its orders never reach the
-// screens of another group's shots (Moments' pizza stories). The order ends done.
+// page, menu and order page and the holder's page at each step, at phone and desktop width (the
+// guest's Food page too); the crew's Food page and the order's page; the money step (the total,
+// a receipt read by CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria,
+// the menu CSV's preview and reading a menu photo; the daily record, one order's money and the
+// export; Food settings and Integrations. The group has a shard of its own, so its orders never
+// reach the screens of another group's shots (Moments' pizza stories). The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -71,9 +71,8 @@ const BOX = "/screen/zones/main";
  * looks (the CI session unless GUEST). The attendee's shots are named as attendee.browser.test.ts
  * walks the flow: the Food page, the menu, my order at each step.
  */
-const SHOTS = [
+const LISTED = [
   ["pizza-food-phone", "/pizza/", PHONE, "open"],
-  ["pizza-food", "/pizza/", DESK, "open"],
   ["pizza-food-guest-phone", "/pizza/", PHONE, "open", GUEST],
   ["pizza-food-start-phone", "/pizza/start", PHONE, "open"],
   ["pizza-food-menu-phone", `/pizza/orders/${ORDER}/add`, PHONE, "open"],
@@ -81,7 +80,6 @@ const SHOTS = [
   ["pizza-food-own-pizza-phone", `/pizza/orders/${ORDER}/add?tab=own`, PHONE, "open"],
   ["pizza-food-other-phone", `/pizza/orders/${ORDER}/add?tab=other`, PHONE, "open"],
   ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
-  ["pizza-food-added", `/pizza/orders/${ORDER}?added=1`, DESK, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
   ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
@@ -91,9 +89,7 @@ const SHOTS = [
   ["pizza-food-on-the-way-phone", `/pizza/orders/${ORDER}`, PHONE, "placed"],
   ["pizza-screen-food-on-the-way", BOX, HALL, "placed"],
   ["pizza-holder-here-phone", `/pizza/hold/${ORDER}/here`, PHONE, "placed"],
-  ["pizza-crew", "/pizza/crew", DESK, "placed"],
   ["pizza-crew-phone", "/pizza/crew", PHONE, "placed"],
-  ["pizza-crew-order", `/pizza/crew/orders/${ORDER}`, DESK, "placed"],
   ["pizza-crew-order-phone", `/pizza/crew/orders/${ORDER}`, PHONE, "placed"],
   // Mockups 18 and 19: the money step, with the AI reader on (CI's fake reader).
   ["pizza-holder-money-phone", `/pizza/hold/${ORDER}/money`, PHONE, "placed"],
@@ -108,24 +104,23 @@ const SHOTS = [
   ["pizza-holder-done-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "done"],
   ["pizza-food-done-phone", `/pizza/orders/${ORDER}`, PHONE, "done"],
   ["pizza-food-earlier-phone", "/pizza/", PHONE, "done"],
-  ["pizza-pizzerias", "/pizza/crew/pizzerias", DESK, "done"],
   ["pizza-pizzerias-phone", "/pizza/crew/pizzerias", PHONE, "done"],
-  ["pizza-pizzeria", `/pizza/crew/pizzerias/${PIZZERIA}`, DESK, "done"],
   ["pizza-pizzeria-phone", `/pizza/crew/pizzerias/${PIZZERIA}`, PHONE, "done"],
-  ["pizza-import-preview", "/pizza/crew/pizzerias/import", DESK, "done"],
   ["pizza-import-preview-phone", "/pizza/crew/pizzerias/import", PHONE, "done"],
   ["pizza-menu-read-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
-  ["pizza-settings", "/pizza/crew/settings", DESK, "done"],
   ["pizza-settings-phone", "/pizza/crew/settings", PHONE, "done"],
   // Mockup 12: the daily record, one order's money and the export; mockup 20: Integrations.
-  ["pizza-record", "/pizza/crew/record", DESK, "done"],
   ["pizza-record-phone", "/pizza/crew/record", PHONE, "done"],
-  ["pizza-record-order", `/pizza/crew/record/${ORDER}`, DESK, "done"],
   ["pizza-record-order-phone", `/pizza/crew/record/${ORDER}`, PHONE, "done"],
-  ["pizza-export", "/pizza/crew/export", DESK, "done"],
   ["pizza-export-phone", "/pizza/crew/export", PHONE, "done"],
   ["pizza-integrations-phone", "/pizza/integrations", PHONE, "done"],
 ];
+/** Every page at both widths (amendment 5): a phone shot not listed at desk width gets it next. */
+const SHOTS = LISTED.flatMap((s) => {
+  const desk = s[0].replace(/-phone$/, "");
+  const twin = s[2] === PHONE && !LISTED.some((t) => t[0] === desk);
+  return twin ? [s, [desk, s[1], DESK, ...s.slice(3)]] : [s];
+});
 
 export function pizzaListed(at) {
   return SHOTS.map(

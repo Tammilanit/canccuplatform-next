@@ -15,6 +15,7 @@ import {
 } from "./items.js";
 import { authorize } from "./policy.js";
 import type { Action, As } from "./policy.js";
+import { auditCrew } from "./order-routes.js";
 import { facts, orderFor, present } from "./present.js";
 import { getItem, getOrder, liveMenu } from "./store.js";
 import type { ItemRow, OrderRow } from "./store.js";
@@ -29,11 +30,14 @@ async function itemFor(
   id: string,
   action: Action,
 ): Promise<{ item: ItemRow; order: OrderRow; as: As }> {
+  const seen = await getItem(c, id);
+  if (seen === null) throw notFound("pizza");
+  // Locked, as in orderFor: the holder's rights are checked against the row the write changes.
+  const order = await getOrder(c, seen.order_id, true);
+  if (order === null) throw notFound("pizza");
+  // Read again under the lock: a write that waited on it may find the pizza changed or gone.
   const item = await getItem(c, id);
   if (item === null) throw notFound("pizza");
-  // Locked, as in orderFor: the holder's rights are checked against the row the write changes.
-  const order = await getOrder(c, item.order_id, true);
-  if (order === null) throw notFound("pizza");
   return { item, order, as: authorize(action, w.caller, facts(w.ctx, w.now, order, item)).as };
 }
 
@@ -133,7 +137,7 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
 
   app.post<{ Params: Params }>("/api/pizza/orders/:id/hand-out", (request, reply) =>
     write(deps, request, reply, async (c, w) => {
-      const { order } = await orderFor(
+      const { order, as } = await orderFor(
         c,
         request.params.id,
         "order.hand_out",
@@ -143,6 +147,8 @@ export function itemRoutes(app: FastifyInstance, deps: AppDeps): void {
         true,
       );
       const m = await handOutAll(w.step(c), order.id);
+      // The crew's step on an order they do not hold, as the order's other steps (pizza.md, Audit).
+      await auditCrew(deps, w, as, "pizza.order.done", m, null);
       return ok(await present(c, w.caller, w.ctx, w.now, m.row));
     }),
   );

@@ -71,6 +71,15 @@ export function parseTotal(v: unknown): number {
 }
 
 /** A price in cents, 0 to 999.99 euros, or null for none. */
+/**
+ * A price that must be given: absent is 400, and only an explicit null clears it, so a misspelt
+ * field never deletes a stored price (the contract's `required: [price_cents]`).
+ */
+export function requiredPrice(b: Record<string, unknown>, field: string): number | null {
+  if (!Object.hasOwn(b, field)) return bad(field, "is required; null clears the price");
+  return parsePrice(b[field], field);
+}
+
 export function parsePrice(v: unknown, field: string): number | null {
   if (v === null || v === undefined) return null;
   if (typeof v !== "number" || !Number.isInteger(v) || v < 0 || v > 99_999) {

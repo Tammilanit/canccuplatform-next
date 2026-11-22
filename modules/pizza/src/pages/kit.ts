@@ -82,8 +82,21 @@ function send(
 }
 
 /**
+ * A hub page's main part and its side panel: side by side on a desktop, one column on a phone
+ * (amendment 5, 0032: a desktop layout, never the phone column centred). `lead`: on a phone the
+ * side comes first, where it holds the page's one action. Without a side, the main part alone.
+ */
+export function split(main: Slot, side: Slot, o: { lead?: boolean } = {}): Slot {
+  if (String(side ?? "").trim() === "") return main;
+  return html`<div class="pizza-split${o.lead === true ? " pizza-split--lead" : ""}">
+    <div class="pizza-split__main">${main}</div>
+    <div class="pizza-split__side">${side}</div>
+  </div>`;
+}
+
+/**
  * The holder's page: the hub's look, which takes the event's theme (theming's tokens.css for the
- * `hub` surface), phone first, with the way back at its top.
+ * `hub` surface), laid out for a phone and for a desktop, with the way back at its top.
  */
 export function hubPage(
   request: FastifyRequest,
@@ -114,6 +127,7 @@ export function hubPage(
         <link rel="stylesheet" href="${PREFIX}static/pizza.css" />
         <link rel="stylesheet" href="${PREFIX}static/food.css" />
         <link rel="stylesheet" href="${PREFIX}static/money.css" />
+        <link rel="stylesheet" href="${PREFIX}static/wide.css" />
       </head>
       <body class="canccu-page canccu-surface canccu-surface--hub pizza-hub">
         <header class="pizza-hub__head">
@@ -240,6 +254,7 @@ const TYPES: Record<string, string> = {
   "food.js": "text/javascript; charset=utf-8",
   "money.css": "text/css; charset=utf-8",
   "money.js": "text/javascript; charset=utf-8",
+  "wide.css": "text/css; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();
 

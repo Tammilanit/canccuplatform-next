@@ -23,7 +23,7 @@ type Params = { id: string };
 type Body = Record<string, unknown>;
 
 /** A crew override, audited with before and after (D16). */
-async function auditCrew(
+export async function auditCrew(
   deps: AppDeps,
   w: WriteCtx,
   as: As,

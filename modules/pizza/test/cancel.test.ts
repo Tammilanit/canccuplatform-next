@@ -13,6 +13,7 @@ import {
   world,
 } from "./helpers.js";
 import type { World } from "./helpers.js";
+import { dropOldKeys } from "../src/idempotency.js";
 
 let pool: pg.Pool;
 let w: World;
@@ -95,25 +96,40 @@ describe.skipIf(!DATABASE_URL)("cancel", () => {
 });
 
 describe.skipIf(!DATABASE_URL)("idempotency (E2)", () => {
-  it("answers a repeated close with the first answer and sends one event", async () => {
+  // Adding a pizza is not idempotent on its own: only the key keeps a retry from adding a second.
+  const add = (who: string, id: string, key: string) =>
+    w.call(who, "POST", `/api/pizza/orders/${id}/items`, { kind: "text", text: "x" }, { key });
+  const added = () => types(w.events()).filter((t) => t === "pizza.item.added").length;
+  it("answers a repeated write with the first answer, acting and sending its event once", async () => {
     const id = await opened("pena");
-    const a = await w.call(
-      "pena",
-      "POST",
-      `/api/pizza/orders/${id}/close`,
-      {},
-      { key: "close-once-1" },
-    );
-    const b = await w.call(
-      "pena",
-      "POST",
-      `/api/pizza/orders/${id}/close`,
-      {},
-      { key: "close-once-1" },
-    );
-    expect(b.statusCode).toBe(a.statusCode);
+    const a = await add("anni", id, "add-once-1");
+    const b = await add("anni", id, "add-once-1");
+    expect(a.statusCode).toBe(201);
+    expect(b.statusCode).toBe(201);
     expect(json(b)).toEqual(json(a));
-    expect(types(w.events()).filter((t) => t === "pizza.order.closed")).toHaveLength(1);
+    expect(json(await get("crew", `orders/${id}`)).pizza_count).toBe(1);
+    expect(added()).toBe(1);
+  });
+  it("keeps each person's keys apart: the same key from another person acts", async () => {
+    const id = await opened("pena");
+    await add("anni", id, "add-once-1");
+    expect((await add("mikko", id, "add-once-1")).statusCode).toBe(201);
+    expect(json(await get("crew", `orders/${id}`)).pizza_count).toBe(2);
+    expect(added()).toBe(2);
+  });
+  it("forgets a key after 24 hours, when it acts again", async () => {
+    const id = await opened("pena");
+    await add("anni", id, "add-once-1");
+    w.advance(23 * 60);
+    await w.tx("demo", (c) => dropOldKeys(c, w.now));
+    await add("anni", id, "add-once-1");
+    expect(added()).toBe(1);
+    w.advance(61);
+    await w.tx("demo", (c) => dropOldKeys(c, w.now));
+    const again = await add("anni", id, "add-once-1");
+    expect(again.statusCode).toBe(201);
+    expect(json(await get("crew", `orders/${id}`)).pizza_count).toBe(2);
+    expect(added()).toBe(2);
   });
   it("needs a key on every write", async () => {
     const id = await opened("pena");

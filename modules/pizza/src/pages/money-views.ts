@@ -6,7 +6,7 @@
 import { attrs, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { PROVIDER } from "../reader.js";
-import { formKey } from "./kit.js";
+import { formKey, split } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { euro, pizzasOf } from "./money-format.js";
 import type { MoneyPerson, MoneyView } from "./money-format.js";
@@ -201,7 +201,7 @@ function choice(
   </button>`;
 }
 
-function split(c: PageCtx, o: OrderView, m: MoneyView): Slot {
+function splitChoice(c: PageCtx, o: OrderView, m: MoneyView): Slot {
   if (m.total_effective_cents === null) return "";
   return html`<form method="post" action="${base(o)}/money/split" class="pizza-card pizza-form">
     ${formKey()}
@@ -351,9 +351,12 @@ function owes(c: PageCtx, o: OrderView, m: MoneyView): Slot {
 }
 
 export function moneyPageView(c: PageCtx, o: OrderView, m: MoneyView, s: MoneyPageOpts): Html {
-  return html`${flash(s.error)} ${header(c, o, m, s.me)}
-  ${m.total_cents === null ? addReceipt(c, o, m, s.reader) : confirmed(c, o, m)}
-  ${unpriced(c, o, m)}
-  ${m.total_cents === null ? "" : html`${split(c, o, m)} ${people(c, m, s.me)}`}
-  ${whoIsPaid(c, o, m, s.directly)} ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`;
+  // On a desktop who is paid, "Pay me with" and who owes sit beside the total and the amounts.
+  return html`${flash(s.error)}${split(
+    html`${header(c, o, m, s.me)}
+    ${m.total_cents === null ? addReceipt(c, o, m, s.reader) : confirmed(c, o, m)}
+    ${unpriced(c, o, m)}
+    ${m.total_cents === null ? "" : html`${splitChoice(c, o, m)} ${people(c, m, s.me)}`}`,
+    html`${whoIsPaid(c, o, m, s.directly)} ${payWith(c, o, m, s.me)} ${owes(c, o, m)}`,
+  )}`;
 }

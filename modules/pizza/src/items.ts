@@ -8,7 +8,7 @@ import type { SqlClient } from "@canccu/kit";
 import { emitItem, emitOrder } from "./events.js";
 import { newId } from "./ids.js";
 import { Conflict, cannot, guarded, uniqueConflict } from "./conflicts.js";
-import { done } from "./lifecycle.js";
+import { done, unchanged } from "./lifecycle.js";
 import type { Moved, Step } from "./lifecycle.js";
 import type { OrderState } from "./model.js";
 import { ORDER_COLUMNS, getItem, getOrder, itemsOf, logStep, ordersWhere } from "./store.js";
@@ -160,6 +160,8 @@ export async function addItem(
   return { order: o, item };
 }
 
+const noPizza = () => new KitError("No such pizza.", { status: 404, code: "not_found" });
+
 /** The states a pizza may change in: its owner while open; the holder and crew until it is done (U14). */
 export const EDITABLE_BY_OWNER: readonly OrderState[] = ["open"];
 export const EDITABLE_BY_HOLDER: readonly OrderState[] = ["open", "closed", "placed", "arrived"];
@@ -175,9 +177,10 @@ export async function editItem(
 ): Promise<{ order: OrderRow; before: ItemRow; after: ItemRow }> {
   const o = await lockOrder(s.c, item.order_id, from, "edit");
   sameMenu(o, pizzeria);
-  await s.c.query(
+  const updated = await s.c.query(
     `UPDATE pizza_items SET kind = $2, menu_item_id = $3, number = $4, label = $5, description = $6,
-       toppings = $7, text = $8, note = $9, comment = $10, price_cents = $11, updated_at = $12 WHERE id = $1`,
+       toppings = $7, text = $8, note = $9, comment = $10, price_cents = $11, updated_at = $12 WHERE id = $1
+     RETURNING id`,
     [
       item.id,
       input.kind,
@@ -193,7 +196,8 @@ export async function editItem(
       s.now,
     ],
   );
-  const after = (await getItem(s.c, item.id)) as ItemRow;
+  const after = await getItem(s.c, item.id);
+  if (updated.rows.length === 0 || after === null) throw noPizza();
   if (item.user_id !== actor.user_id) {
     await logStep(s.c, o.id, s.now, actor, "item_changed", {
       item_id: item.id,
@@ -213,7 +217,8 @@ export async function removeItem(
   from: readonly OrderState[],
 ): Promise<OrderRow> {
   const o = await lockOrder(s.c, item.order_id, from, "edit");
-  await s.c.query(`DELETE FROM pizza_items WHERE id = $1`, [item.id]);
+  const removed = await s.c.query(`DELETE FROM pizza_items WHERE id = $1 RETURNING id`, [item.id]);
+  if (removed.rows.length === 0) throw noPizza();
   await logStep(s.c, o.id, s.now, actor, "item_removed", { item_id: item.id, label: item.label });
   await emitItem(s.c, s.e, "pizza.item.removed", o, item, actor.user_id);
   return o;
@@ -231,6 +236,9 @@ export async function handOut(s: Step, item: ItemRow, handedOut: boolean): Promi
 
 /** "Everyone got theirs" (the U4 note): one press ticks the whole order. */
 export async function handOutAll(s: Step, orderId: string): Promise<Moved> {
+  // Already done (the timer, or another press first): answered as it is, as every step is.
+  const o = await getOrder(s.c, orderId);
+  if (o?.state === "done") return unchanged(o);
   await lockOrder(s.c, orderId, ["arrived"], "hand_out");
   await s.c.query(
     `UPDATE pizza_items SET handed_out_at = COALESCE(handed_out_at, $2) WHERE order_id = $1`,

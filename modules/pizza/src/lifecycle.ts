@@ -72,7 +72,8 @@ async function current(c: SqlClient, id: string): Promise<OrderRow> {
   return o;
 }
 
-const unchanged = (row: OrderRow): Moved => ({
+/** A step already taken: the order as it is, for an answer without a second event. */
+export const unchanged = (row: OrderRow): Moved => ({
   row,
   changed: false,
   was: { state: row.state, holder_user_id: row.holder_user_id, holder_name: row.holder_name },

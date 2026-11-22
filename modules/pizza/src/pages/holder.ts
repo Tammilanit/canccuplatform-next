@@ -62,7 +62,12 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
     );
     return hubPage(request, reply, c, {
       title,
-      body: html`${checklistView(c, o, { lastCall, autoClose: s.auto_close, ...opt(request.query.error) })}${money}`,
+      body: checklistView(c, o, {
+        lastCall,
+        autoClose: s.auto_close,
+        aside: money,
+        ...opt(request.query.error),
+      }),
     });
   });
 

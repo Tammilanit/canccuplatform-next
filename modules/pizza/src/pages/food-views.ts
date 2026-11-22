@@ -7,7 +7,7 @@
 import { emptyState, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { Translate } from "./messages.js";
-import { PREFIX, SIGN_IN, formKey } from "./kit.js";
+import { PREFIX, SIGN_IN, formKey, split } from "./kit.js";
 import { stateLabel } from "./crew-views.js";
 import { counts, flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
@@ -140,7 +140,7 @@ export function foodView(
   const openPart =
     open.length > 0
       ? html`<h2 class="pizza-section">${c.t("food.open_orders")}</h2>
-          ${open.map((x) => orderCard(c, x))} ${start(c.t("food.start_another"), false)}`
+          ${open.map((x) => orderCard(c, x))}`
       : c.member && o.ordering
         ? emptyState({
             icon: "food",
@@ -149,14 +149,18 @@ export function foodView(
             action: start(c.t("food.start"), true),
           })
         : html`<p class="pizza-muted">${c.t("food.none_open")}</p>`;
-  return html`${flash(o.error)}${closed}${stale.map((x) => staleCard(c, x))} ${openPart}
-  ${
-    earlier.length === 0
-      ? ""
-      : html`<h2 class="pizza-section">${c.t("food.earlier")}</h2>
-          ${earlier.map((x) => orderCard(c, x))}`
-  }
-  ${wayIn(c, PREFIX)}`;
+  // On a desktop the open orders lead and today's earlier ones sit beside them.
+  return html`${flash(o.error)}${closed}${split(
+    html`${stale.map((x) => staleCard(c, x))} ${openPart}`,
+    html`${open.length > 0 ? start(c.t("food.start_another"), false) : ""}
+    ${
+      earlier.length === 0
+        ? ""
+        : html`<h2 class="pizza-section">${c.t("food.earlier")}</h2>
+            ${earlier.map((x) => orderCard(c, x))}`
+    }
+    ${wayIn(c, PREFIX)}`,
+  )}`;
 }
 
 export interface PizzeriaChoice {
