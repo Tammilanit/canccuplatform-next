@@ -1,0 +1,46 @@
+# shellcheck shell=bash
+# Sourced by scripts/demo-stack-test, whose TESTS, check, COMPOSE and TMP it uses.
+#
+# CI's `upgrade` check (weekly.yml) brings the last step tag's stack up and then this commit's on
+# top. Compose recreates a container only when its service's config hash changes, and a top-level
+# `configs:` content is not part of that hash: the session stub once kept the tag's rights, so a
+# module's rights added since then were 403 on the upgraded stack (#739). This upgrades the stub
+# alone, in a project of its own beside the running stack: first a stub that holds no rights, as
+# one from a tag older than every module's rights, then this commit's, which must answer the
+# rights deploy/compose.ci.yml gives it.
+
+# shellcheck disable=SC2329
+stub_upgrade() {
+  # shellcheck disable=SC2034  # $code is the caller's: no HTTP call here, so check names none
+  code=
+  local project="canccu-stub-upgrade-$$" head="$TMP/stub-head.json" old="$TMP/stub-old.json" want ok
+  # The stub alone, no network of the stack's: its fixed subnet would overlap the running one's.
+  # Not interpolated, so the stub's `$$` reach the copies as they are written in the file.
+  "${COMPOSE[@]}" config --no-interpolate --format json > "$TMP/stack.json" 2> "$TMP/body" || return 1
+  jq '{services: {"session-stub": (.services["session-stub"] | del(.networks, .depends_on))},
+       configs: ((.configs // {}) | map_values(del(.name)))}' "$TMP/stack.json" > "$head" || return 1
+  jq 'walk(if type == "string" then gsub("(?<k>\"rights\": )\\[[^\\]]*\\]"; "\(.k)[]") else . end)' \
+    "$head" > "$old" || return 1
+  want=$(jq -c '[.. | strings | scan("respond `(\\{\"user\": \\{\"id\": \"demo-ci\"[^`]*)`")[0]]
+    | first | fromjson | .rights' "$head") || return 1
+  [ "$want" != "[]" ] || { echo "no rights for demo-ci found in the stub" > "$TMP/body"; return 1; }
+  stub() { local f=$1; shift; docker compose -p "$project" -f "$f" "$@"; }
+  ask() {
+    stub "$1" exec -T session-stub wget -q -O - --header "Cookie: canccu_session=demo-ci" \
+      http://127.0.0.1:8080/api/admin/session > "$2"
+  }
+  ok=1
+  if stub "$old" up -d --wait > "$TMP/body" 2>&1 && ask "$old" "$TMP/stub-old" &&
+    jq -e '.rights == []' "$TMP/stub-old" > /dev/null &&
+    stub "$head" up -d --wait > "$TMP/body" 2>&1 && ask "$head" "$TMP/stub-new"; then
+    if jq -e --argjson want "$want" '.rights == $want' "$TMP/stub-new" > /dev/null; then
+      ok=0
+    else
+      printf 'the upgraded stub answers: %s\nwant rights: %s\n' "$(cat "$TMP/stub-new")" "$want" \
+        > "$TMP/body"
+    fi
+  fi
+  stub "$head" down -t 0 > /dev/null 2>&1
+  return "$ok"
+}
+check "${TESTS[36]}" stub_upgrade

@@ -93,10 +93,48 @@ services:
 
   session-stub:
     image: caddy:2.11-alpine
-    command: ["caddy", "run", "--adapter", "caddyfile", "--config", "/etc/caddy/Caddyfile"]
-    configs:
-      - source: session-stub
-        target: /etc/caddy/Caddyfile
+    # The Caddyfile is part of the command, not a top-level `configs:` entry: Compose recreates a
+    # container only when its service's config hash changes, and a config's content is not in it.
+    # As a config, an upgrade kept the old stub and its old rights (#739, the `upgrade` check);
+    # scripts/demo-stack-test-stub upgrades the stub alone to hold it to that.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cat > /etc/caddy/Caddyfile <<'CANCCU_CADDYFILE'
+        {
+        	auto_https off
+        	admin off
+        }
+        :8081 {
+        	respond /ready "ok" 200
+        }
+        :8080 {
+        	@demo {
+        		path /api/admin/session
+        		header_regexp Cookie (^|;\s*)canccu_session=demo-ci(;|$$)
+        	}
+        	handle @demo {
+        		header Content-Type application/json
+        		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+        	}
+        	@no_role {
+        		path /api/admin/session
+        		header_regexp Cookie (^|;\s*)canccu_session=demo-no-role(;|$$)
+        	}
+        	handle @no_role {
+        		header Content-Type application/json
+        		respond `{"user": {"id": "u_demo_new", "name": "Player Zero"}, "rights": [], "expires_at": "2099-01-01T00:00:00Z"}` 200
+        	}
+        	handle /api/admin/session {
+        		header Content-Type application/json
+        		respond `{"error": {"code": "not_signed_in", "message": "sign in first"}}` 401
+        	}
+        	handle {
+        		reverse_proxy admin:8080
+        	}
+        }
+        CANCCU_CADDYFILE
+        exec caddy run --adapter caddyfile --config /etc/caddy/Caddyfile
     tmpfs:
       - /data
       - /config
@@ -168,39 +206,3 @@ services:
     depends_on:
       session-stub:
         condition: service_healthy
-
-configs:
-  session-stub:
-    content: |
-      {
-      	auto_https off
-      	admin off
-      }
-      :8081 {
-      	respond /ready "ok" 200
-      }
-      :8080 {
-      	@demo {
-      		path /api/admin/session
-      		header_regexp Cookie (^|;\s*)canccu_session=demo-ci(;|$$)
-      	}
-      	handle @demo {
-      		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
-      	}
-      	@no_role {
-      		path /api/admin/session
-      		header_regexp Cookie (^|;\s*)canccu_session=demo-no-role(;|$$)
-      	}
-      	handle @no_role {
-      		header Content-Type application/json
-      		respond `{"user": {"id": "u_demo_new", "name": "Player Zero"}, "rights": [], "expires_at": "2099-01-01T00:00:00Z"}` 200
-      	}
-      	handle /api/admin/session {
-      		header Content-Type application/json
-      		respond `{"error": {"code": "not_signed_in", "message": "sign in first"}}` 401
-      	}
-      	handle {
-      		reverse_proxy admin:8080
-      	}
-      }
