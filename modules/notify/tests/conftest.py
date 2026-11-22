@@ -156,18 +156,21 @@ class FakeUsers:
 
 @dataclass
 class FakeHub:
-    """What the check-in's done page reads as the person: the venue's Wi-Fi and what is on now
-    (`GET /api/tenants/current/venue-info`, `GET /api/agenda/now`)."""
+    """What the check-in's done page and the front door read as the person: the venue's Wi-Fi and
+    what is on now (`GET /api/tenants/current/venue-info`, `GET /api/agenda/now`)."""
 
     wifi: list[dict[str, Any]] = field(default_factory=list)
-    now: dict[str, Any] = field(default_factory=lambda: {"current": [], "next": []})
+    now: dict[str, Any] | None = field(default_factory=lambda: {"current": [], "next": []})
+    """None: the agenda did not answer."""
     asked: list[tuple[str, str | None]] = field(default_factory=list)
+    asked_now: list[tuple[str, str | None]] = field(default_factory=list)
 
     async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]:
         self.asked.append((host, cookie))
         return self.wifi
 
     async def agenda_now(self, host: str, cookie: str | None) -> dict[str, Any] | None:
+        self.asked_now.append((host, cookie))
         return self.now
 
 
