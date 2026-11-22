@@ -31,10 +31,11 @@ CONSTANT = re.compile(
 )
 # The calls that check a right, in the kit and the modules: TS `needs`, `requireRight`,
 # `rights.check`, `rights.has`, `holds`; Python `require_right`, `right_dependency`,
-# `session.has`, `need`, tenants' `can`, `require` and `require_all`.
+# `session.has`, `need`, screen's `needsAny` and `contentAccess`, tenants' `can`, `require` and
+# `require_all`.
 CHECK = re.compile(
-    r"\b(?:needs|need|requireRight|require_right|right_dependency|has|check|holds|can|require|"
-    r"require_all)\(([^()]*)\)"
+    r"\b(?:needs\w*|need|contentAccess|requireRight|require_right|right_dependency|has|check|holds|"
+    r"can|require|require_all)\(([^()]*)\)"
 )
 NAME = re.compile(r"\b[A-Z][A-Z0-9_]*\b")
 
@@ -174,6 +175,8 @@ def test_the_scan_finds_a_right_only_the_code_checks(tmp_path: Path) -> None:
         "const BY_RIGHT = {\n  swap: WRITE,\n  pin: 'crew.pins.write',\n};\n"
         'app.post("/x", { preHandler: needs(deps.rights, "crew.shifts.close") });\n'
         'app.post("/y", { preHandler: requireRight(deps.rights, WRITE) });\n'
+        'const any = needsAny(deps.rights, ["crew.probe.read", "crew.probe.write"]);\n'
+        'contentAccess(app, deps, "crew.access.read");\n'
         'await bus.publish("crew.shift.closed", {});\n'
     )
     (tmp_path / "modules/crew/src/access.py").write_text(
@@ -185,6 +188,9 @@ def test_the_scan_finds_a_right_only_the_code_checks(tmp_path: Path) -> None:
         "crew.shifts.close",
         "crew.pins.write",
         "crew.team.read",
+        "crew.probe.read",
+        "crew.probe.write",
+        "crew.access.read",
     }
     assert every_right(tmp_path) == code_rights(tmp_path) | {"crew.list.read", "crew.a.b"}
 
