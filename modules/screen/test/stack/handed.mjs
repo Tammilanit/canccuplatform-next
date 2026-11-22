@@ -81,7 +81,9 @@ export const TILES = [
 
 /**
  * The photo wall in the hero beside the countdown, so the hero rotates (change 6, sheets 13 and 16):
- * five tiles, the lead large; `featured` is a new photo popping over the whole box.
+ * five tiles, the lead large; `featured` is a new photo popping over the whole box. The hero's
+ * claim goes: the demo stack's Moments presets put a storyboard's title card there now and then,
+ * which hid the wall until its step ended, past the shot's wait (#742).
  */
 export function withPhoto(s, featured = false) {
   const photo = {
@@ -96,7 +98,7 @@ export function withPhoto(s, featured = false) {
     regions: s.regions.map((r) =>
       r.role !== "hero" || r.idle_view === null
         ? r
-        : { ...r, order: [0, 1], widgets: [photo, { ...r.idle_view, template: null, dwell_seconds: 15, stale_after_seconds: null }] },
+        : { ...r, claim: null, order: [0, 1], widgets: [photo, { ...r.idle_view, template: null, dwell_seconds: 15, stale_after_seconds: null }] },
     ), // prettier-ignore
   };
 }
