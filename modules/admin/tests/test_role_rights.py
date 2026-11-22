@@ -14,8 +14,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from canccu_admin.auth import ROLE_RIGHTS
 from conftest import ROOT, World, owner_and_member
+
+from canccu_admin.roles import ROLE_RIGHTS
 
 # The file that holds the list under test: scanning it would make the list prove itself.
 ROLE_LIST = ROOT / "modules/admin/src/canccu_admin/roles.py"
@@ -25,7 +26,9 @@ TOKEN = re.compile(r"`([a-z][a-z_]*(?:\.[a-z_]+)+)`")
 NAMED_RIGHT = re.compile(r"[Rr]ights? `([a-z][a-z_]*(?:\.[a-z_]+)+)`")
 LITERAL = re.compile(r"""["']([a-z][a-z_]*(?:\.[a-z_]+)+)["']""")
 # An UPPER_CASE constant's assignment: `X = …`, `export const X: T = …`.
-CONSTANT = re.compile(r"^[ \t]*(?:export\s+)?(?:const\s+)?([A-Z][A-Z0-9_]*)\b[^=\n]*?=(?![=>])", re.M)
+CONSTANT = re.compile(
+    r"^[ \t]*(?:export\s+)?(?:const\s+)?([A-Z][A-Z0-9_]*)\b[^=\n]*?=(?![=>])", re.M
+)
 # The calls that check a right, in the kit and the modules: TS `needs`, `requireRight`,
 # `rights.check`, `rights.has`, `holds`; Python `require_right`, `right_dependency`,
 # `session.has`, `need`, tenants' `can`, `require` and `require_all`.
@@ -96,6 +99,31 @@ def initializer(text: str, start: int) -> str:
     return text[start:i]
 
 
+def resolve(expr: str, constants: dict[str, list[str]], seen: frozenset[str]) -> set[str]:
+    """The strings in `expr`, and those of the constants it names, followed through."""
+    out = set(LITERAL.findall(expr))
+    for name in set(NAME.findall(expr)) - seen:
+        for value in constants.get(name, []):
+            out |= resolve(value, constants, seen | {name})
+    return out
+
+
+def unit_rights(texts: list[str]) -> set[str]:
+    constants: dict[str, list[str]] = {}
+    for text in texts:
+        for m in CONSTANT.finditer(text):
+            constants.setdefault(m.group(1), []).append(initializer(text, m.end()))
+    found: set[str] = set()
+    for text in texts:
+        for args in CHECK.findall(text):
+            found |= resolve(args, constants, frozenset())
+    for name, values in constants.items():
+        if "RIGHT" in name:
+            for value in values:
+                found |= resolve(value, constants, frozenset({name}))
+    return found
+
+
 def code_rights(root: Path) -> set[str]:
     """Every right a module's code checks: a string, or an UPPER_CASE constant of the same unit
     (a module or a package), passed to a rights check, and every constant named for rights
@@ -111,26 +139,7 @@ def code_rights(root: Path) -> set[str]:
             and "node_modules" not in p.parts
             and not p.name.endswith(".d.ts")
         ]
-        texts = [p.read_text(encoding="utf-8") for p in files]
-        constants: dict[str, list[str]] = {}
-        for text in texts:
-            for m in CONSTANT.finditer(text):
-                constants.setdefault(m.group(1), []).append(initializer(text, m.end()))
-
-        def resolve(expr: str, seen: frozenset[str]) -> set[str]:
-            out = set(LITERAL.findall(expr))
-            for name in set(NAME.findall(expr)) - seen:
-                for value in constants.get(name, []):
-                    out |= resolve(value, seen | {name})
-            return out
-
-        for text in texts:
-            for args in CHECK.findall(text):
-                found |= resolve(args, frozenset())
-        for name, values in constants.items():
-            if "RIGHT" in name:
-                for value in values:
-                    found |= resolve(value, frozenset({name}))
+        found |= unit_rights([p.read_text(encoding="utf-8") for p in files])
     return right_shaped(found, root)
 
 
