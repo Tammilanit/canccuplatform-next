@@ -68,7 +68,8 @@ describe.skipIf(!DATABASE_URL)("the crew's Food page", () => {
   });
 
   it("puts the day's orders in call time order, with the day in the event's format (C1)", async () => {
-    const other = json(await open(w, "pena", grill, { closes_at: closesAt(w, 30) })).id as string;
+    // Anni holds it: one person holds one order at a time.
+    const other = json(await open(w, "anni", grill, { closes_at: closesAt(w, 30) })).id as string;
     const r = await view(w, "crew", "/crew");
     const rows = r.body.slice(r.body.indexOf('<ol class="pizza-schedule"'));
     expect(rows.indexOf(`/pizza/crew/orders/${other}`)).toBeLessThan(

@@ -55,7 +55,7 @@ function resultView(c: PageCtx, csv: string, items: number, unsure: string[]): H
     .split("\n")
     .slice(1)
     .filter((l) => l !== "");
-  return html`<p class="pizza-card__title">${c.t("read.result", { n: items })}</p>
+  return html`<p class="pizza-title">${c.t("read.result", { n: items })}</p>
     ${
       unsure.length === 0
         ? ""

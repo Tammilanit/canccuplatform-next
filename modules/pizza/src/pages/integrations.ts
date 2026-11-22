@@ -52,7 +52,7 @@ function view(c: PageCtx, k: KeyStatus, error?: string): Html {
       }
       ${
         k.set
-          ? html`<p class="pizza-card__title">
+          ? html`<p class="pizza-title">
                 ${c.t("integrations.key_ending", { last_four: k.last4 ?? "" })}
               </p>
               <p class="canccu-muted">
@@ -71,7 +71,7 @@ function view(c: PageCtx, k: KeyStatus, error?: string): Html {
                     : c.t("integrations.reads", { n: k.reads_this_month })
                 }
               </p>`
-          : html`<p class="pizza-card__title">${c.t("integrations.not_set")}</p>`
+          : html`<p class="pizza-title">${c.t("integrations.not_set")}</p>`
       }
       <form method="post" action="${PREFIX}integrations/key" class="pizza-form">
         ${formKey()}

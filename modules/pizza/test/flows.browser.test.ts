@@ -121,20 +121,27 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     const desk = await signedIn(browser, s, "crew", 1280);
     const page = await desk.newPage();
     await page.goto(`${s.origin}/pizza/crew`);
-    expect(await page.locator(".pizza-desk").isVisible()).toBe(true);
-    expect(await page.locator(".pizza-desk").textContent()).toContain("Nobody holds it");
-    await page.locator(".pizza-desk").getByRole("link", { name: "Open ›" }).click();
+    const schedule = page.locator(".pizza-schedule");
+    expect(await schedule.isVisible()).toBe(true);
+    expect(await schedule.textContent()).toContain("Nobody holds it");
+    await schedule.getByRole("link", { name: /Order 1 · Demo Pizzeria/ }).click();
     await page.getByLabel("Why").fill("The holder went home");
     await page.getByRole("button", { name: "Take over" }).click();
     await page.locator(".canccu-history", { hasText: "Taken over by Crew" }).waitFor();
     expect(((await state()).holder as { name: string }).name).toBe("Crew");
     expect(w.audit.at(-1)).toMatchObject({ reason: "The holder went home" });
 
-    const phone = await signedIn(browser, s, "crew", 390);
+    // The organiser has all four Food tabs, one more than the shell shows on a phone.
+    const phone = await signedIn(browser, s, "organiser", 390);
     const small = await phone.newPage();
     await small.goto(`${s.origin}/pizza/crew`);
-    expect(await small.locator(".pizza-desk").isVisible()).toBe(false);
-    expect(await small.locator(".pizza-phone").textContent()).toContain("Order 1 · Demo Pizzeria");
+    // The same day schedule on a phone, and every Food tab in the row: none behind "N more".
+    expect(await small.locator(".pizza-schedule").textContent()).toContain(
+      "Order 1 · Demo Pizzeria",
+    );
+    const tabs = small.locator(".canccu-tabs > a");
+    expect(await tabs.count()).toBe(4);
+    for (const tab of await tabs.all()) expect(await tab.isVisible()).toBe(true);
     await desk.close();
     await phone.close();
   });
@@ -165,6 +172,32 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
         .split,
     ).toBe("even");
     await context.close();
+  });
+
+  it("offers the camera on a phone and, on a PC, a file to attach that it sends from (H2)", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const phone = await signedIn(browser, s, "pena", 390);
+    const small = await phone.newPage();
+    await small.goto(`${s.origin}/pizza/hold/${id}/money/scan`);
+    expect(await small.getByText("Take a photo of the receipt").isVisible()).toBe(true);
+    expect(await small.getByText("Attach the receipt image").isVisible()).toBe(false);
+    await phone.close();
+
+    const desk = await signedIn(browser, s, "pena", 1280);
+    const page = await desk.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan`);
+    expect(await page.getByText("Take a photo of the receipt").isVisible()).toBe(false);
+    expect(await page.getByText("Attach the receipt image").isVisible()).toBe(true);
+    await page.locator(".pizza-drop__input").setInputFiles({
+      name: "receipt.png",
+      mimeType: "image/png",
+      buffer: await png(),
+    });
+    await page.locator("form[data-reading] button[type=submit]").click();
+    // The reader is off: the photo is kept and the holder types the total.
+    await page.waitForURL(`**/pizza/hold/${id}/money/total`);
+    await desk.close();
   });
 
   it("imports a menu CSV from a file through its preview", async () => {

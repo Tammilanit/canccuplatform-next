@@ -1,7 +1,7 @@
 /**
  * The crew's Food page (mockup 10, without its door helper: U5 B): the day's orders with what needs
  * the crew, one order's people and pizzas with their comments, its history, and stepping in with a
- * reason. The desk shows a table; a phone the same orders as cards, what needs the crew first.
+ * reason. The day's orders are one day schedule by call time, on the desk and on a phone.
  */
 import { attrs, html, timeLabel } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
@@ -9,6 +9,7 @@ import type { PizzaSettings } from "../settings.js";
 import type { OrderView } from "./order-view.js";
 import { counts, flash, peopleOf } from "./order-view.js";
 import { PREFIX, formKey } from "./kit.js";
+import { formatDayLabel } from "../time.js";
 import { isKey } from "./messages.js";
 import type { MessageKey } from "./messages.js";
 import type { PageCtx } from "./kit.js";
@@ -73,7 +74,41 @@ function times(c: PageCtx, o: OrderView): string {
 
 const open = (o: OrderView) => `${PREFIX}crew/orders/${o.id}`;
 
-/** Mockup 10: the day's orders. */
+/** The day before or after `day` (YYYY-MM-DD), for the day picker's arrows. */
+const nextDay = (day: string, by: number) => {
+  const [y = 0, m = 1, d = 1] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + by)).toISOString().slice(0, 10);
+};
+
+/**
+ * The day picker as the Record's: the day in the event's words ("Sun 22.11."), never the
+ * browser's own date field, which writes it in its own locale's format.
+ */
+function dayPicker(c: PageCtx, day: string): Html {
+  const go = (d: string, label: string, cls: string) =>
+    html`<a class="canccu-button canccu-button--sm ${cls}" href="${PREFIX}crew?day=${d}"
+      >${label}</a
+    >`;
+  return html`<nav class="pizza-days" aria-label="${c.t("crew.day")}">
+    ${go(nextDay(day, -1), `‹ ${c.t("crew.prev")}`, "canccu-button--ghost")}
+    <a
+      class="canccu-button canccu-button--sm canccu-button--primary"
+      href="${PREFIX}crew?day=${day}"
+      aria-current="page"
+      >${formatDayLabel(day)}</a
+    >
+    ${go(nextDay(day, 1), `${c.t("crew.next")} ›`, "canccu-button--ghost")}
+  </nav>`;
+}
+
+/** When an order is called in: when it was, or when it is planned (its close). */
+const callAt = (o: OrderView) => o.placed_at ?? o.closes_at;
+
+/**
+ * Mockup 10 as a day schedule by call time (amendment 4), as the Record is: the call time down
+ * the side, each order's state, people and times beside it, what needs the crew in its line. One
+ * list for the desk and the phone.
+ */
 export function ordersView(
   c: PageCtx,
   day: string,
@@ -86,94 +121,49 @@ export function ordersView(
   const needing = orders.filter((o) => need.get(o.id) !== null);
   const openCount = orders.filter((o) => o.state === "open" || o.state === "closed").length;
   const chips = html`<div class="canccu-chips pizza-chips">
-    <span class="pizza-badge pizza-badge--info">${c.t("crew.today", { n: orders.length })}</span>
-    <span class="pizza-badge pizza-badge--warn"
-      >${c.t("crew.needs_you", { n: needing.length })}</span
-    >
-    <span class="pizza-badge pizza-badge--ok">${c.t("crew.open", { n: openCount })}</span>
-    <form method="get" action="${PREFIX}crew" class="pizza-day">
-      <label
-        ><span class="canccu-small">${c.t("crew.day")}</span>
-        <input class="canccu-input" type="date" name="day" value="${day}"
-      /></label>
-      <button class="canccu-button canccu-button--secondary canccu-button--sm" type="submit">
-        ${c.t("crew.show")}
-      </button>
-    </form>
-  </div>`;
+      <span class="pizza-badge pizza-badge--info">${c.t("crew.today", { n: orders.length })}</span>
+      <span class="pizza-badge pizza-badge--warn"
+        >${c.t("crew.needs_you", { n: needing.length })}</span
+      >
+      <span class="pizza-badge pizza-badge--ok">${c.t("crew.open", { n: openCount })}</span>
+    </div>
+    ${dayPicker(c, day)}`;
   if (orders.length === 0)
     return html`${flash(error)}${chips}
       <div class="canccu-empty"><p class="canccu-empty__title">${c.t("crew.none")}</p></div>`;
-  const table = html`<div class="canccu-card canccu-card--flush pizza-desk">
-    <table class="canccu-table">
-      <thead>
-        <tr>
-          <th>${c.t("crew.col_order")}</th>
-          <th>${c.t("crew.col_pizzeria")}</th>
-          <th>${c.t("crew.col_state")}</th>
-          <th>${c.t("crew.col_holder")}</th>
-          <th>${c.t("crew.col_pizzas")}</th>
-          <th>${c.t("crew.col_times")}</th>
-          <th>${c.t("crew.col_needs")}</th>
-          <th><span class="pizza-sr">${c.t("crew.open_order")}</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${orders.map(
-          (o) => html`<tr${attrs({ class: need.get(o.id) === null ? undefined : "pizza-needs" })}>
-            <td class="canccu-num">${o.seq}</td>
-            <td>${o.pizzeria.name}</td>
-            <td>${stateLabel(c, o)}</td>
-            <td>${o.holder?.name ?? "—"}</td>
-            <td class="canccu-num">${o.pizza_count} · ${o.people_count}</td>
-            <td>${times(c, o)}</td>
-            <td class="pizza-needs__text">${need.get(o.id) ?? "—"}</td>
-            <td><a href="${open(o)}">${c.t("crew.open_order")} ›</a></td>
-          </tr>`,
-        )}
-      </tbody>
-    </table>
-  </div>`;
-  const groups: [string, OrderView[]][] = [
-    [c.t("crew.group_needs"), needing],
-    [
-      c.t("crew.group_way"),
-      orders.filter(
-        (o) => need.get(o.id) === null && (o.state === "placed" || o.state === "arrived"),
-      ),
-    ],
-    [
-      c.t("crew.group_open"),
-      orders.filter((o) => need.get(o.id) === null && (o.state === "open" || o.state === "closed")),
-    ],
-    [c.t("crew.group_over"), orders.filter((o) => o.state === "done" || o.state === "cancelled")],
-  ];
-  const cards = html`<div class="pizza-phone">
-    ${groups
-      .filter(([, list]) => list.length > 0)
-      .map(
-        ([title, list]) =>
-          html`<p class="canccu-overline">${title}</p>
-            <ul class="pizza-cards">
-              ${list.map(
-                (o) =>
-                  html`<li>
-                    <a class="pizza-card pizza-card--link" href="${open(o)}">
-                      <span class="pizza-card__title"
-                        >${c.t("order.title", { seq: o.seq, pizzeria: o.pizzeria.name })}</span
-                      >
-                      ${stateLabel(c, o)}
-                      <span class="pizza-card__meta">${times(c, o)} · ${counts(c, o)}</span>
-                      ${o.holder?.name ? html`<span class="pizza-card__meta">${c.t("crew.holder", { name: o.holder.name })}</span>` : ""}
-                      ${o.pickup ? html`<span class="pizza-card__meta">${c.t("crew.pickup", { pickup: o.pickup })}</span>` : ""}
-                      ${need.get(o.id) ? html`<span class="pizza-needs__text">${need.get(o.id)}</span>` : ""}
-                    </a>
-                  </li>`,
-              )}
-            </ul>`,
-      )}
-  </div>`;
-  return html`${flash(error)}${chips}${table}${cards}`;
+  const byTime = [...orders].sort(
+    (a, b) => Date.parse(callAt(a)) - Date.parse(callAt(b)) || a.seq - b.seq,
+  );
+  return html`${flash(error)}${chips}
+    <ol class="pizza-schedule">
+      ${byTime.map((o) => {
+        const n = need.get(o.id) ?? null;
+        return html`<li class="pizza-schedule__row">
+          <time class="pizza-schedule__time" datetime="${callAt(o)}">${time(c, callAt(o))}</time>
+          <a${attrs({ class: `pizza-slot${n === null ? "" : " pizza-slot--needs"}`, href: open(o) })}>
+            <span class="pizza-row"
+              ><span class="pizza-title"
+                >${c.t("order.title", { seq: o.seq, pizzeria: o.pizzeria.name })}</span
+              >${stateLabel(c, o)}</span
+            >
+            <span class="pizza-meta">${times(c, o)} · ${counts(c, o)}</span>
+            ${
+              o.holder?.name || o.pickup
+                ? html`<span class="pizza-meta"
+                    >${[
+                      o.holder?.name ? c.t("crew.holder", { name: o.holder.name }) : "",
+                      o.pickup ? c.t("crew.pickup", { pickup: o.pickup }) : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}</span
+                  >`
+                : ""
+            }
+            ${n === null ? "" : html`<span class="pizza-needs__text">${n}</span>`}
+          </a>
+        </li>`;
+      })}
+    </ol>`;
 }
 
 export interface HistoryEntry {

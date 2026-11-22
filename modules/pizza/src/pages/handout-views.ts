@@ -1,7 +1,7 @@
 /** The hand-out (mockup 09, with each person's amount and Paid), cancelling, and an order that is over. */
 import { html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
-import { formKey, split } from "./kit.js";
+import { formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { euro } from "./money-format.js";
 import type { MoneyPerson, MoneyView } from "./money-format.js";
@@ -15,9 +15,9 @@ function moneyAfter(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
   const amount = euro(c, m.total_cents);
   const paid = m.people.filter((p) => p.paid === true).map((p) => p.name ?? "—");
   const open = m.people.filter((p) => p.paid === false);
-  return html`<section class="pizza-card">
-    <p class="pizza-section">${c.t("hand.money")}</p>
-    <p class="pizza-card__title">
+  return html`<section class="pizza-block">
+    <h2 class="pizza-section">${c.t("hand.money")}</h2>
+    <p class="pizza-title">
       ${
         m.payer?.user_id === me
           ? c.t("hand.you_paid_total", { pizzeria: o.pizzeria.name, amount })
@@ -29,7 +29,7 @@ function moneyAfter(c: PageCtx, o: OrderView, m: MoneyView, me: string): Slot {
       open.length === 0
         ? ""
         : html`<p class="pizza-section">${c.t("hand.still_owes")}</p>
-            <ul class="pizza-people">
+            <ul class="pizza-list">
               ${open.map(
                 (p) =>
                   html`<li class="pizza-person">
@@ -74,44 +74,47 @@ export function handOutView(
           : euro(c, mp.amount_cents);
     return [...p.labels, ...(tail === null ? [] : [tail])].join(" · ");
   };
-  // On a phone the order's state and "Everyone got theirs" come first; on a desktop the people
-  // lead and those sit beside them.
-  const side = html`<section class="pizza-card pizza-card--here">
-      <p class="pizza-card__title">
-        ${c.t("hand.here", { time: time(c, o.arrived_at), pickup: o.pickup ?? "—" })}
-      </p>
-      <p class="pizza-card__meta">${c.t("hand.told")}</p>
-    </section>
-    ${
-      m === undefined || toPayer
-        ? ""
-        : html`<section class="pizza-card">
-            <p class="pizza-card__title">${c.t("hand.organiser")}</p>
-            <p class="pizza-card__meta">${c.t("hand.organiser_text")}</p>
-          </section>`
-    }
-    ${done && m !== undefined && toPayer ? moneyAfter(c, o, m, me) : ""}
-    ${
-      done
-        ? html`<section class="pizza-card">
-            <p class="pizza-card__title">${c.t("hand.done", { seq: o.seq })}</p>
-            <p class="pizza-card__meta">
-              ${c.t("hand.done_at", { got, all: people.length, time: time(c, o.done_at) })}
-            </p>
-          </section>`
-        : html`<form
-            method="post"
-            action="${base(o)}/hand-out"
-            data-everyone="${c.t("hand.everyone_done", { seq: o.seq })}"
-            data-undo="${c.t("hand.undo")}"
-          >
-            ${formKey()}
-            <button class="canccu-button pizza-go pizza-wide" type="submit">
-              ✓ ${c.t("hand.everyone")}
-            </button>
-            <p class="pizza-muted pizza-centered">${c.t("hand.everyone_hint")}</p>
-          </form>`
-    }`;
+  // One flow at every width: where it is and the one press for everyone, then the people.
+  const lead = html`${
+    done
+      ? html`<section class="pizza-hero pizza-hero--here">
+          <p class="pizza-hero__title">${c.t("hand.done", { seq: o.seq })}</p>
+          <p class="pizza-meta">
+            ${c.t("hand.done_at", { got, all: people.length, time: time(c, o.done_at) })}
+          </p>
+        </section>`
+      : html`<section class="pizza-hero">
+          <p class="pizza-hero__title">
+            ${c.t("hand.here", { time: time(c, o.arrived_at), pickup: o.pickup ?? "—" })}
+          </p>
+          <p class="pizza-meta">${c.t("hand.told")}</p>
+        </section>`
+  }`;
+  const side = html` ${
+    m === undefined || toPayer
+      ? ""
+      : html`<section class="pizza-block">
+          <p class="pizza-title">${c.t("hand.organiser")}</p>
+          <p class="pizza-meta">${c.t("hand.organiser_text")}</p>
+        </section>`
+  }
+  ${done && m !== undefined && toPayer ? moneyAfter(c, o, m, me) : ""}
+  ${
+    done
+      ? ""
+      : html`<form
+          method="post"
+          action="${base(o)}/hand-out"
+          data-everyone="${c.t("hand.everyone_done", { seq: o.seq })}"
+          data-undo="${c.t("hand.undo")}"
+        >
+          ${formKey()}
+          <button class="canccu-button pizza-go pizza-wide" type="submit">
+            ✓ ${c.t("hand.everyone")}
+          </button>
+          <p class="pizza-muted pizza-centered">${c.t("hand.everyone_hint")}</p>
+        </form>`
+  }`;
   const main = html`<p class="pizza-progress-label">
       ${
         toPayer
@@ -123,7 +126,7 @@ export function handOutView(
     <p class="pizza-cols">
       <span>${c.t("hand.got_it")}</span>${toPayer ? html`<span>${c.t("hand.paid_you")}</span>` : ""}
     </p>
-    <ul class="pizza-people">
+    <ul class="pizza-people pizza-list">
       ${people.map(
         (p) =>
           html`<li class="pizza-person">
@@ -182,7 +185,8 @@ export function handOutView(
             ${post(`${base(o)}/step/done`, c.t("hand.done_button"), "canccu-button--primary")}
           </div>`
     }`;
-  return html`${flash(error)}${split(main, side, { lead: true })}`;
+  // The money is read after the people: it comes last once everyone got theirs (09 C).
+  return html`${flash(error)}${lead}${done ? "" : side}${main}${done ? side : ""}`;
 }
 
 /** Cancel, with the words the people in it are told. */
@@ -208,11 +212,11 @@ export function cancelView(c: PageCtx, o: OrderView, error?: string): Html {
 
 /** An order that is over: done or cancelled. */
 export function overView(c: PageCtx, o: OrderView): Html {
-  return html`<section class="pizza-card">
-    <p class="pizza-card__title">
+  return html`<section class="pizza-hero">
+    <p class="pizza-hero__title">
       ${o.state === "done" ? c.t("hand.done", { seq: o.seq }) : c.t("over.cancelled", { seq: o.seq })}
     </p>
-    <p class="pizza-card__meta">
+    <p class="pizza-meta">
       ${o.state === "done" ? c.t("over.done_at", { time: time(c, o.done_at) }) : (o.cancel_reason ?? "")}
     </p>
   </section>`;

@@ -56,21 +56,21 @@
 .pizza-card--link:hover {
   border-color: var(--canccu-color-primary);
 }
-.pizza-card__title {
+.pizza-title {
   font-weight: 600;
 }
-.pizza-card__meta,
+.pizza-meta,
 .pizza-muted {
   margin: 0;
   color: var(--canccu-ink-muted);
   font-size: var(--canccu-text-sm);
 }
-.pizza-card__links {
+.pizza-links {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
-.pizza-card__links a,
+.pizza-links a,
 .pizza-center {
   color: var(--canccu-ink-primary);
 }
@@ -93,63 +93,15 @@
   white-space: nowrap;
 }
 
-.pizza-steps,
+/* Lists of lines and people are plain lists (amendment 3: no box per line), parted by hairlines. */
 .pizza-lines,
 .pizza-people {
   display: grid;
-  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* The checklist (07): the first unfinished step is highlighted. */
-.pizza-step__row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border: var(--canccu-border-width) solid var(--canccu-color-border);
-  border-radius: calc(var(--canccu-radius) * 1.5);
-  background: var(--canccu-color-surface);
-  color: inherit;
-  text-decoration: none;
-}
-.pizza-step--now .pizza-step__row {
-  border-color: var(--canccu-color-primary);
-  box-shadow: 0 0 0 1px var(--canccu-color-primary);
-}
-.pizza-step--now .pizza-step__hint {
-  color: var(--canccu-color-accent);
-}
-.pizza-step__box {
-  flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid var(--canccu-color-border);
-  border-radius: 0.3rem;
-}
-.pizza-step--done .pizza-step__box {
-  border-color: var(--canccu-color-status-ok);
-  background: var(--canccu-color-status-ok);
-}
-.pizza-step--done .pizza-step__box::after {
-  content: "✓";
-  display: block;
-  margin-top: -0.2rem;
-  color: var(--canccu-color-background);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-align: center;
-}
-.pizza-step__text {
-  display: grid;
-  min-width: 0;
-}
-.pizza-step__hint {
-  color: var(--canccu-ink-muted);
-  font-size: var(--canccu-text-xs);
-}
 .pizza-wide {
   width: 100%;
   justify-content: center;
@@ -199,15 +151,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border: var(--canccu-border-width) solid var(--canccu-color-border);
-  border-radius: calc(var(--canccu-radius) * 1.5);
-  background: var(--canccu-color-surface);
+  padding: 0.875rem 0.25rem;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
   cursor: pointer;
 }
+/* A line read out is dimmed, so the eye lands on the next one. */
 .pizza-line:has(:checked) {
-  border-color: var(--canccu-color-status-ok);
-  opacity: 0.75;
+  opacity: 0.5;
 }
 .pizza-line__count {
   flex: none;
@@ -315,10 +265,8 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border: var(--canccu-border-width) solid var(--canccu-color-border);
-  border-radius: calc(var(--canccu-radius) * 1.5);
-  background: var(--canccu-color-surface);
+  padding: 0.625rem 0.25rem;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
 }
 .pizza-person__text {
   display: grid;

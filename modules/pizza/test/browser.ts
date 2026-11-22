@@ -40,7 +40,9 @@ export async function signedIn(
 ): Promise<BrowserContext> {
   const context = await browser.newContext({
     viewport: { width, height: 844 },
+    // A phone is touch only, so its pages' `(any-pointer: fine)` rules do not apply (H2).
     hasTouch: width < 600,
+    isMobile: width < 600,
   });
   await context.addCookies([{ name: "canccu_session", value: who, url: s.origin }]);
   return context;

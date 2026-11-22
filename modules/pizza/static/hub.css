@@ -1,0 +1,293 @@
+/* The hub's frame around the attendee's and the holder's pages (amendment 5, mockups 03–05), and
+   the forms these pages are drawn in (amendment 3, "Choose the form first"): a hero for the one
+   thing that matters, plain lists for pizzas and people, a timeline for the order's steps.
+   Sections part by headings and space, never by frames; a card is only Food's list of orders.
+   Colours only from ui.css's tokens, so the pages take the event's theme. */
+
+/* The event's header: its logo and name lead back to the front door. */
+.pizza-frame {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.pizza-frame__event {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pizza-frame__logo {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--canccu-radius);
+  object-fit: contain;
+}
+.pizza-frame__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The hub's bar: at a phone's foot, as the hub's bottom bar (mockups 03–05). */
+.pizza-hubbar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+  padding: 0.25rem 0.5rem calc(0.25rem + env(safe-area-inset-bottom));
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  background: var(--canccu-color-surface);
+}
+.pizza-hubbar__item {
+  display: grid;
+  justify-items: center;
+  gap: 0.125rem;
+  min-width: 4rem;
+  min-height: 3rem;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-radius: var(--canccu-radius);
+  background: none;
+  color: var(--canccu-ink-muted);
+  font: inherit;
+  font-size: var(--canccu-text-xs);
+  text-decoration: none;
+  cursor: pointer;
+}
+.pizza-hubbar__item[aria-current="page"] {
+  color: var(--canccu-ink-primary);
+  font-weight: 600;
+}
+.pizza-hubbar__item:focus-visible {
+  outline: 2px solid var(--canccu-color-primary);
+  outline-offset: 2px;
+}
+/* The page keeps room above the bar, so its last action is never under it. */
+.pizza-hub {
+  padding-bottom: 4.5rem;
+}
+.pizza-more {
+  inset: auto 0.5rem 4.25rem auto;
+  margin: 0;
+  min-width: 12rem;
+  padding: 0.5rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) * 1.5);
+  background: var(--canccu-color-surface);
+  color: var(--canccu-color-text);
+}
+.pizza-more a,
+.pizza-more button {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pizza-more form {
+  margin: 0;
+}
+
+@media (min-width: 60rem) {
+  /* On a desktop the bar's links sit in the header, at its right. */
+  .pizza-hub {
+    padding-bottom: 2rem;
+  }
+  .pizza-frame {
+    padding: 0.75rem 2rem;
+  }
+  .pizza-hubbar {
+    position: static;
+    margin-left: auto;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .pizza-hubbar__item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: var(--canccu-text-sm);
+  }
+  .pizza-hubbar__item[aria-current="page"] {
+    background: var(--canccu-tint);
+  }
+  .pizza-more {
+    inset: 3.5rem 2rem auto auto;
+  }
+}
+
+/* A heading with the action that belongs to its section, at its right. */
+.pizza-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.pizza-heading > .pizza-section {
+  margin: 0;
+}
+.pizza-block {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+.pizza-block p {
+  margin: 0;
+}
+
+/* The hero: the one thing the page is for, large and unframed. */
+.pizza-hero {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0.5rem;
+}
+.pizza-hero p {
+  margin: 0;
+}
+.pizza-hero__kicker {
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-sm);
+}
+.pizza-hero__title {
+  font-size: var(--canccu-text-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.pizza-hero__big {
+  font-size: var(--canccu-text-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pizza-hero--here .pizza-hero__title {
+  color: var(--canccu-ink-ok);
+}
+
+/* Plain lists: one line per pizza or person, parted by a hairline, never framed. */
+.pizza-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pizza-list > li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.5rem 0;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.pizza-list > li:first-child {
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+/* The order's steps as a timeline: done with its time, the current one lit, later ones dimmed.
+   Nothing here is ticked: only "I've got mine" is. */
+.pizza-timeline {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pizza-timeline__step {
+  position: relative;
+  display: grid;
+  gap: 0.125rem;
+  padding: 0 0 1rem 1.75rem;
+}
+.pizza-timeline__step::before {
+  content: "";
+  position: absolute;
+  top: 0.3rem;
+  left: 0.25rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--canccu-color-border);
+}
+.pizza-timeline__step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 1.25rem;
+  bottom: 0.1rem;
+  left: 0.5625rem;
+  width: 2px;
+  background: var(--canccu-color-border);
+}
+.pizza-timeline__step--done::before {
+  background: var(--canccu-color-status-ok);
+}
+.pizza-timeline__step--done:not(:last-child)::after {
+  background: var(--canccu-color-status-ok);
+}
+.pizza-timeline__step--now::before {
+  left: 0.125rem;
+  top: 0.175rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--canccu-color-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--canccu-color-primary) 25%, transparent);
+}
+.pizza-timeline__step--now .pizza-timeline__title {
+  color: var(--canccu-ink-primary);
+  font-weight: 700;
+}
+.pizza-timeline__step--later {
+  color: var(--canccu-ink-muted);
+}
+.pizza-timeline__title {
+  font-weight: 600;
+}
+.pizza-timeline__hint {
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-sm);
+}
+.pizza-timeline__step--now .pizza-timeline__hint {
+  color: var(--canccu-color-accent);
+}
+.pizza-timeline a.pizza-timeline__title {
+  color: inherit;
+}
+
+/* Food's open orders: the one collection of cards, each as tall as its row. */
+.pizza-orders > li {
+  display: grid;
+}
+.pizza-list__link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.pizza-list__text {
+  display: grid;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+.pizza-wayin {
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}

@@ -93,7 +93,9 @@ describe.skipIf(!DATABASE_URL)("the Food page", () => {
     expect(r.body).not.toContain("pizza-split");
     const head = r.body.slice(r.body.indexOf('class="pizza-heading"'));
     expect(head.indexOf("Open orders")).toBeLessThan(head.indexOf("Start another order"));
-    expect(head.indexOf("Start another order")).toBeLessThan(head.indexOf("Order 1 · Demo Pizzeria"));
+    expect(head.indexOf("Start another order")).toBeLessThan(
+      head.indexOf("Order 1 · Demo Pizzeria"),
+    );
     expect(r.body).toContain('class="canccu-grid pizza-orders"');
     const css = await w.app.inject({ url: "/static/wide.css", headers: { host: "demo.test" } });
     expect(css.statusCode).toBe(200);

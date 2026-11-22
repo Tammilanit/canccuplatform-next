@@ -5,7 +5,7 @@
  */
 import { attrs, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
-import { PREFIX, split } from "./kit.js";
+import { PREFIX } from "./kit.js";
 import { flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 import { orderHref, orderName, wayIn } from "./food-views.js";
@@ -32,7 +32,10 @@ function status(c: FoodCtx, o: OrderView): string {
   }
 }
 
-/** The four steps people say (L4): open, closed and being called, called in, on the way, here. */
+/**
+ * The four steps people say (L4) as a timeline: done ones with their times, the current one lit,
+ * later ones dimmed. Nothing in it is ticked, so nothing looks like a box to tick (A5–A7).
+ */
 function steps(c: FoodCtx, o: OrderView): Html {
   const reached = { open: 1, closed: 2, placed: 3, arrived: 5, done: 5, cancelled: 0 }[o.state];
   const onTheWay = o.state === "placed" && o.estimate_at !== null ? 4 : reached;
@@ -49,28 +52,33 @@ function steps(c: FoodCtx, o: OrderView): Html {
     ],
     [
       c.t("state.closed"),
-      o.state === "closed" ? c.t("mine.since", { time: time(c, o.closed_at) }) : "",
+      o.state === "closed"
+        ? c.t("mine.since", { time: time(c, o.closed_at) })
+        : time(c, o.closed_at),
     ],
     [c.t("mine.called_in"), time(c, o.placed_at)],
     [
       c.t("state.placed"),
       o.estimate_at === null ? "" : c.t("mine.estimate", { time: time(c, o.estimate_at) }),
     ],
-    [c.t("mine.here"), o.state === "open" || o.state === "closed" ? "" : collect],
+    [
+      c.t("mine.here"),
+      o.state === "open" || o.state === "closed"
+        ? ""
+        : o.arrived_at === null
+          ? collect
+          : `${time(c, o.arrived_at)} · ${collect}`,
+    ],
   ];
+  // Once it is here, the last step is where things stand: it is lit, not done.
   const now = Math.max(reached, onTheWay);
-  return html`<ol class="pizza-steps">
+  return html`<ol class="pizza-timeline">
     ${rows.map(([title, hint], i) => {
       const n = i + 1;
       const state = n < now ? "done" : n === now ? "now" : "later";
-      return html`<li${attrs({ class: `pizza-step pizza-step--${state}`, "aria-current": state === "now" ? "step" : undefined })}>
-        <div class="pizza-step__row">
-          <span class="pizza-step__box" aria-hidden="true"></span
-          ><span class="pizza-step__text"
-            ><span class="pizza-step__title">${title}</span
-            >${hint === "" ? "" : html`<span class="pizza-step__hint">${hint}</span>`}</span
-          >
-        </div>
+      return html`<li${attrs({ class: `pizza-timeline__step pizza-timeline__step--${state}`, "aria-current": state === "now" ? "step" : undefined })}>
+        <span class="pizza-timeline__title">${title}</span>
+        ${hint === "" ? "" : html`<span class="pizza-timeline__hint">${hint}</span>`}
       </li>`;
     })}
   </ol>`;
@@ -81,10 +89,10 @@ function myPizzas(c: FoodCtx, o: OrderView): Slot {
   if (mine.length === 0) return "";
   const editable = o.state === "open";
   return html`<h2 class="pizza-section">${c.t("mine.your_pizzas")}</h2>
-    <ul class="pizza-lines">
+    <ul class="pizza-list">
       ${mine.map((p) => {
         const extra = [p.note, p.comment].filter((x): x is string => x !== null).join(" · ");
-        return html`<li class="pizza-line">
+        return html`<li>
           <span class="pizza-line__text"
             ><span class="pizza-line__label">${p.label}</span>
             ${extra === "" ? "" : html`<span class="pizza-line__note">${extra}</span>`}</span
@@ -113,17 +121,33 @@ function myPizzas(c: FoodCtx, o: OrderView): Slot {
     }`;
 }
 
-/** Arrived: where to collect it, and the tick that takes you off the holder's list. */
-function hereCard(c: FoodCtx, o: OrderView): Slot {
+/**
+ * The page's hero: where the order stands in one line. Once it is here, that line is "Pizza is
+ * here", where to collect it and "I've got mine" (U9), the one thing the page is then for.
+ */
+function hero(c: FoodCtx, o: OrderView): Html {
+  const held =
+    o.holder === undefined
+      ? ""
+      : html`<p class="pizza-meta">
+          ${o.holder === null ? c.t("hold.nobody") : c.t("food.held_by", { name: o.holder.name ?? "—" })}
+        </p>`;
+  const note = o.note ? html`<p class="pizza-muted">${o.note}</p>` : "";
+  if (o.state !== "arrived" && o.state !== "done")
+    return html`<section class="pizza-hero">
+      <p class="pizza-hero__kicker">${orderName(c, o)}</p>
+      <p class="pizza-hero__title">${status(c, o)}</p>
+      ${held}${note}
+    </section>`;
   const mine = o.mine ?? [];
-  if (o.state !== "arrived" && o.state !== "done") return "";
   const got = mine.length > 0 && mine.every((p) => p.handed_out);
-  return html`<section class="pizza-card pizza-card--here">
-    <p class="pizza-card__title">${c.t("mine.here_title")}</p>
-    <p class="pizza-card__meta">
+  return html`<section class="pizza-hero pizza-hero--here">
+    <p class="pizza-hero__kicker">
       ${c.t("mine.arrived", { seq: o.seq, time: time(c, o.arrived_at) })}
     </p>
-    ${o.pickup === null ? "" : html`<p>${c.t("mine.collect_at", { pickup: o.pickup })}</p>`}
+    <p class="pizza-hero__title">${c.t("mine.here_title")}</p>
+    ${o.pickup === null ? "" : html`<p class="pizza-hero__big">${c.t("mine.collect_at", { pickup: o.pickup })}</p>`}
+    ${held}
     ${
       mine.length === 0
         ? ""
@@ -139,8 +163,8 @@ function hereCard(c: FoodCtx, o: OrderView): Slot {
 
 /** Mockup 16: who cancelled and why, never the holder's name when the crew did it. */
 function cancelledCard(c: FoodCtx, o: OrderView): Html {
-  return html`<section class="pizza-card">
-    <p class="pizza-card__title">${c.t("mine.cancelled", { seq: o.seq })}</p>
+  return html`<section class="pizza-block">
+    <p class="pizza-title">${c.t("mine.cancelled", { seq: o.seq })}</p>
     ${o.cancel_reason ? html`<p>“${o.cancel_reason}”</p>` : ""}
     ${(o.mine?.length ?? 0) > 0 ? html`<p class="pizza-muted">${c.t("mine.not_ordered")}</p>` : ""}
     <a class="canccu-button canccu-button--secondary pizza-wide" href="${PREFIX}"
@@ -151,8 +175,8 @@ function cancelledCard(c: FoodCtx, o: OrderView): Html {
 
 /** Mockup 16: released (by the holder, the crew or the timer); anyone in the event may take it. */
 function nobodyCard(c: FoodCtx, o: OrderView): Html {
-  return html`<section class="pizza-card">
-    <p class="pizza-card__title">${c.t("mine.nobody", { seq: o.seq })}</p>
+  return html`<section class="pizza-block">
+    <p class="pizza-title">${c.t("mine.nobody", { seq: o.seq })}</p>
     <p class="pizza-muted">${c.t("mine.nobody_text")}</p>
     ${
       c.member
@@ -168,7 +192,7 @@ function nobodyCard(c: FoodCtx, o: OrderView): Html {
 
 /** A value with its Copy button (static/pizza.js); without a script the text is selectable. */
 const copyable = (c: FoodCtx, label: string, value: string) =>
-  html`<p class="pizza-copyable">
+  html`<li class="pizza-copyable">
     <span>${label}</span
     ><button
       type="button"
@@ -178,7 +202,7 @@ const copyable = (c: FoodCtx, label: string, value: string) =>
     >
       ${c.t("mine.copy")}
     </button>
-  </p>`;
+  </li>`;
 
 /**
  * The person's own amount once the order has one, and whom they pay (U12 A, M1): the organiser
@@ -190,20 +214,26 @@ function myMoney(c: FoodCtx, o: OrderView): Slot {
   const sum = euro(c, amount);
   const p = o.pay_to;
   const payer = o.settle_to === "payer" && p !== null && p !== undefined && o.my_paid !== null;
-  return html`<section class="pizza-card">
-    <p class="pizza-section">${c.t("mine.share")}</p>
-    <p class="pizza-card__title canccu-num">${sum}</p>
-    ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+  // The amount shows once (A6): on its own, or in the sentence that says whom to pay.
+  return html`<section class="pizza-block pizza-share">
+    <h2 class="pizza-section">${c.t("mine.share")}</h2>
     ${
       !payer
-        ? o.settle_to === "payer"
-          ? ""
-          : html`<p>${c.t("mine.pay_organiser")}</p>`
-        : html`<p class="pizza-card__title">
+        ? html`<p class="pizza-hero__big canccu-num">${sum}</p>
+            ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+            ${o.settle_to === "payer" ? "" : html`<p>${c.t("mine.pay_organiser")}</p>`}`
+        : html`<p class="pizza-hero__big">
               ${c.t("mine.pay_to", { name: p.name ?? "—", amount: sum })}
             </p>
-            ${p.mobilepay === null ? "" : copyable(c, c.t("money.mobilepay", { number: p.mobilepay }), p.mobilepay)}
-            ${p.iban === null ? "" : copyable(c, c.t("money.bank", { iban: p.iban }), p.iban)}
+            ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+            ${
+              p.mobilepay === null && p.iban === null
+                ? ""
+                : html`<ul class="pizza-list">
+                    ${p.mobilepay === null ? "" : copyable(c, c.t("money.mobilepay", { number: p.mobilepay }), p.mobilepay)}
+                    ${p.iban === null ? "" : copyable(c, c.t("money.bank", { iban: p.iban }), p.iban)}
+                  </ul>`
+            }
             <p class="pizza-muted">${c.t("mine.no_app_money", { name: p.name ?? "—" })}</p>
             ${
               o.my_paid === true
@@ -221,18 +251,7 @@ export function myOrderView(
   o: OrderView,
   q: { added?: boolean; opened?: boolean; error?: string },
 ): Html {
-  const header = html`<section class="pizza-card">
-    <p class="pizza-card__title">${orderName(c, o)}</p>
-    <p class="pizza-card__meta">${status(c, o)}</p>
-    ${
-      o.holder === undefined
-        ? ""
-        : html`<p class="pizza-card__meta">
-            ${o.holder === null ? c.t("hold.nobody") : c.t("food.held_by", { name: o.holder.name ?? "—" })}
-          </p>`
-    }
-    ${o.note ? html`<p class="pizza-muted">${o.note}</p>` : ""}
-  </section>`;
+  const header = hero(c, o);
   if (o.state === "cancelled")
     return html`${flash(q.error)}${header}${cancelledCard(c, o)}${wayIn(c, orderHref(o))}`;
   const opened =
@@ -263,13 +282,18 @@ export function myOrderView(
         >`
       : "";
   const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
-  // On a desktop the order's steps sit beside your pizzas and share.
-  return html`${flash(q.error)}${opened}${added}${split(
-    html`${header}${hereCard(c, o)} ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)}
-    ${myMoney(c, o)} ${add}`,
-    html`${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
-    ${steps(c, o)} ${wayIn(c, orderHref(o))}`,
-  )}`;
+  // Two columns on a desktop, as the timeline is read with the order: what is yours, then where
+  // it stands. On a phone the timeline follows your pizzas and share.
+  return html`${flash(q.error)}${opened}${added}
+    <div class="pizza-pair">
+      <div class="pizza-pair__main">
+        ${header} ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${myMoney(c, o)} ${add}
+      </div>
+      <aside class="pizza-pair__aside">
+        ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
+        ${steps(c, o)} ${wayIn(c, orderHref(o))}
+      </aside>
+    </div>`;
 }
 
 /** Mockup 16: the order closed while you chose (E3); the API names the orders still open. */
@@ -278,8 +302,8 @@ export function closedWhileView(
   o: OrderView,
   others: { id: string; seq: number; pizzeria: { name: string } }[],
 ): Html {
-  return html`<section class="pizza-card">
-      <p class="pizza-card__title">
+  return html`<section class="pizza-block">
+      <p class="pizza-title">
         ${c.t("mine.closed_while", { seq: o.seq, time: time(c, o.closed_at ?? o.placed_at) })}
       </p>
       <p>${c.t("mine.not_added")}</p>
@@ -287,8 +311,8 @@ export function closedWhileView(
     ${others.map(
       (x) =>
         html`<a class="pizza-card pizza-card--link" href="${orderHref(x)}/add">
-          <span class="pizza-card__title">${orderName(c, x)}</span>
-          <span class="pizza-card__meta">${c.t("mine.add_there")}</span>
+          <span class="pizza-title">${orderName(c, x)}</span>
+          <span class="pizza-meta">${c.t("mine.add_there")}</span>
         </a>`,
     )}
     <a class="canccu-button canccu-button--secondary pizza-wide" href="${PREFIX}"

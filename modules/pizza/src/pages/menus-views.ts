@@ -292,7 +292,7 @@ export function previewView(
     </li>`;
   const blocked = file.errors.length > 0;
   return html`<section class="canccu-card">
-      <p class="pizza-card__title">
+      <p class="pizza-title">
         ${c.t("import.summary", { rows, pizzerias: file.pizzerias.length })}
       </p>
     </section>

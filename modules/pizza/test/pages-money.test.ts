@@ -260,8 +260,10 @@ describe.skipIf(!DATABASE_URL)(
       // H3: the photo beside the lines, the line to check first, and the sum by Confirm.
       expect(check).toMatch(/<img[^>]*src="\/api\/pizza\/receipts\/pr_[^"]*\/photo"/);
       expect(check).not.toContain("pizza-split");
-      const lines = check.slice(check.indexOf('class="pizza-check__lines"'));
-      expect(lines.indexOf("Menu said €8.00")).toBeLessThan(lines.indexOf("€9.50 each · as the menu"));
+      const lines = check.slice(check.indexOf('pizza-check__lines"'));
+      expect(lines.indexOf("Menu said €8.00")).toBeLessThan(
+        lines.indexOf("€9.50 each · as the menu"),
+      );
       const bar = check.slice(check.indexOf('class="pizza-checkbar"'));
       expect(bar).toMatch(/Adds up to €39\.00 ✓[\s\S]*Retake[\s\S]*Confirm/);
       const receipt = new URL(location(r), "http://x").searchParams.get("receipt") ?? "";
@@ -277,7 +279,9 @@ describe.skipIf(!DATABASE_URL)(
       expect(location(done)).toBe(`/pizza/hold/${id}/money`);
       expect(await money()).toMatchObject({ total_cents: 3900, total_receipt_id: receipt });
       const page = (await view(w, "pena", `/hold/${id}/money`)).body;
-      expect(page).toContain("Total €39.00 confirmed");
+      // The hero says the total once, and that the receipt confirmed it (H4).
+      expect(page).toContain("€39.00 paid by you");
+      expect(page).toContain("Demo Pizzeria · receipt confirmed");
       expect(page).toContain("by Pena at 18:00");
       expect(page).toContain("Receipt 1 · 18:00");
       expect(page).toContain("Seen by you, the crew and the organiser only");
@@ -297,7 +301,10 @@ describe.skipIf(!DATABASE_URL)(
     it("offers the camera on a phone only, and on a PC a file to attach or drop (H2)", async () => {
       await turnOnReader();
       const page = (await view(w, "pena", `/hold/${id}/money/scan`)).body;
-      const phone = page.slice(page.indexOf('class="pizza-only-touch'), page.indexOf('class="pizza-only-pointer'));
+      const phone = page.slice(
+        page.indexOf('class="pizza-only-touch'),
+        page.indexOf('class="pizza-only-pointer'),
+      );
       const pc = page.slice(page.indexOf('class="pizza-only-pointer'));
       expect(phone).toContain("Take a photo of the receipt");
       expect(phone).toContain('capture="environment"');
@@ -325,7 +332,8 @@ describe.skipIf(!DATABASE_URL)(
       ]);
       await form(w, "pena", `/hold/${id}/money/total`, { total: "39.00" });
       const page = (await view(w, "pena", `/hold/${id}/money`)).body;
-      const img = page.match(/<img[^>]*src="([^"]+)"[^>]*>/);
+      // The receipt's, not the hub frame's event logo.
+      const img = page.match(/<img[^>]*src="(\/api\/pizza\/receipts\/[^"]+)"[^>]*>/);
       expect(img).not.toBeNull();
       // The thumbnail is at the top of the page: lazy loading left it blank in a full-page shot.
       expect(img?.[0]).not.toContain('loading="lazy"');

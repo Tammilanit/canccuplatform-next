@@ -49,9 +49,9 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
           >`
         : "";
     if (o.state === "done" || o.state === "cancelled")
-      return hubPage(request, reply, c, { title, body: html`${overView(c, o)}${money}` });
+      return hubPage(request, reply, deps, c, { title, body: html`${overView(c, o)}${money}` });
     if (!mine(o, c))
-      return hubPage(request, reply, c, {
+      return hubPage(request, reply, deps, c, {
         title,
         body: notHeldView(c, o, request.query.error),
       });
@@ -60,7 +60,7 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
       new Date(new Date(o.closes_at).getTime() - s.last_call_minutes * 60_000).toISOString(),
       c.zone,
     );
-    return hubPage(request, reply, c, {
+    return hubPage(request, reply, deps, c, {
       title,
       body: checklistView(c, o, {
         lastCall,
@@ -84,7 +84,7 @@ export function holderPages(app: FastifyInstance, deps: AppDeps): void {
     const c = await pageCtx(deps, request);
     const o = await read(request, request.params.id);
     if (!mine(o, c) || !states.includes(o.state)) return reply.redirect(`/pizza/hold/${o.id}`, 303);
-    return hubPage(request, reply, c, {
+    return hubPage(request, reply, deps, c, {
       title: title(c, o),
       back: backTo(c, o),
       body: await body(c, o),

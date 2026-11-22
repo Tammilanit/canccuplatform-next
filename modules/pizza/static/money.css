@@ -227,3 +227,113 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+
+/* H2: the camera is a phone's. A device with a fine pointer (a mouse or a trackpad, a touch
+   laptop too) gets the file picker that takes a dropped file; a touch-only one the camera. Input
+   capability, not width: a narrow desktop window is still a PC. */
+.pizza-only-pointer {
+  display: none;
+}
+@media (any-pointer: fine) {
+  .pizza-only-touch {
+    display: none;
+  }
+  .pizza-only-pointer {
+    display: grid;
+  }
+}
+.pizza-drop {
+  position: relative;
+  place-items: center;
+  gap: 0.25rem;
+  min-height: 10rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) * 1.5);
+  text-align: center;
+  cursor: pointer;
+}
+.pizza-drop:hover,
+.pizza-drop:focus-within {
+  border-color: var(--canccu-color-primary);
+}
+.pizza-drop__title {
+  font-size: var(--canccu-text-lg);
+  font-weight: 600;
+}
+/* The input covers the zone, so a file dropped anywhere on it lands in the field, with no script. */
+.pizza-drop__input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* H3: the photo read, then its lines; the sum and Confirm in a footer that stays in view. */
+.pizza-check__photo {
+  gap: 0.25rem;
+}
+.pizza-check__photo img {
+  display: block;
+  width: 100%;
+  max-height: 12rem;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--canccu-radius);
+}
+.pizza-check__total .pizza-person__name {
+  font-weight: 600;
+}
+.pizza-checkbar {
+  position: sticky;
+  /* Above the hub's bar on a phone. */
+  bottom: 4.25rem;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem 0;
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  background: var(--canccu-color-background);
+}
+.pizza-checkbar > p {
+  flex: 1 1 100%;
+  margin: 0;
+}
+.pizza-checkbar > .canccu-button--primary {
+  margin-left: auto;
+}
+@media (min-width: 60rem) {
+  .pizza-check__photo img {
+    max-height: none;
+  }
+  .pizza-checkbar {
+    bottom: 0;
+  }
+  .pizza-checkbar > p {
+    flex: 1 1 auto;
+  }
+}
+
+/* H4: the total and its receipts as the hero, the people as one table. */
+.pizza-money-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.pizza-money-hero > .pizza-receipts {
+  margin: 0;
+}
+.pizza-money-hero > #pizza-receipt-who {
+  flex-basis: 100%;
+}
+.pizza-people-table td {
+  vertical-align: middle;
+}
+.pizza-table__tick {
+  width: 3rem;
+  text-align: center;
+}

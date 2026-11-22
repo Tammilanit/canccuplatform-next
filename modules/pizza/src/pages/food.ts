@@ -78,12 +78,19 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     request: FastifyRequest,
     reply: FastifyReply,
     c: FoodCtx,
-    o: { title: string; back?: string; live?: string; body: Parameters<typeof hubPage>[3]["body"] },
+    o: {
+      title: string;
+      back?: string;
+      live?: string;
+      layout?: "pair" | "wide";
+      body: Parameters<typeof hubPage>[4]["body"];
+    },
   ) =>
-    hubPage(request, reply, c, {
+    hubPage(request, reply, deps, c, {
       title: o.title,
       ...(o.back === undefined ? {} : { back: { href: o.back, label: c.t("hold.food") } }),
       ...(o.live === undefined ? {} : { live: { url: o.live, offline: c.t("live.offline") } }),
+      ...(o.layout === undefined ? {} : { layout: o.layout }),
       body: o.body,
     });
 
@@ -95,6 +102,7 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
     const orders = a.status === 403 ? null : ((must(a).orders ?? []) as OrderView[]);
     return page(request, reply, c, {
       title: c.t("hold.food"),
+      layout: "wide",
       // A refused read means the stream refuses too: no live page that can never be live.
       ...(orders === null ? {} : { live: STREAM }),
       body: foodView(c, orders, {
@@ -164,6 +172,7 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
         title: c.t("hold.order", { seq: o.seq }),
         back: "/pizza/",
         live: `${STREAM}?order=${o.id}`,
+        layout: "pair",
         body: myOrderView(c, o, {
           added: request.query.added === "1",
           opened: request.query.opened === "1",
@@ -195,6 +204,7 @@ export function foodPages(app: FastifyInstance, deps: AppDeps): void {
       return page(request, reply, c, {
         title: c.t("hold.order", { seq: o.seq }),
         back: orderHref(o),
+        layout: "pair",
         body: pickView(c, o, menu, {
           tab,
           query: request.query.q ?? "",

@@ -46,7 +46,7 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
     body: ReturnType<typeof moneyPageView>,
     to = `/pizza/hold/${o.id}`,
   ) =>
-    hubPage(request, reply, c, {
+    hubPage(request, reply, deps, c, {
       title,
       back: {
         href: to,
