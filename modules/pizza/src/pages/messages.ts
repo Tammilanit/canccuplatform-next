@@ -5,6 +5,7 @@
  */
 import { FOOD_EN } from "./food-messages.js";
 import { MONEY_EN } from "./money-messages.js";
+import { SETTINGS_EN } from "./settings-messages.js";
 import { FI } from "./messages-fi.js";
 
 export const EN = {
@@ -240,39 +241,12 @@ export const EN = {
   "import.dropped": "not in the file: hidden, old orders keep it",
   "import.cancel": "Cancel",
   "import.apply": "Apply",
-  "settings.ordering": "Ordering",
-  "settings.ordering_open": "Ordering is open",
-  "settings.ordering_open_hint": "Off: nobody can start an order",
-  "settings.open_by": "Who may start an order",
-  "settings.anyone": "Anyone who joined",
-  "settings.crew_only": "Crew only",
-  "settings.max_open_orders": "Open orders at once",
-  "settings.max_open_orders_hint": "one per pizzeria",
-  "settings.max_items_per_person": "Pizzas per person",
-  "settings.max_items_per_person_hint": "in one order",
-  "settings.times": "Times and forgotten orders",
-  "settings.last_call_minutes": "Last call before the close",
-  "settings.remind_holder_minutes": "Remind the holder after",
-  "settings.remind_crew_minutes": "Then the crew too, after",
-  "settings.release_after_minutes": "Release a stalled holder after",
-  "settings.arrival_check_minutes": "Ask if it arrived, past the estimate",
-  "settings.arrival_check_no_estimate_minutes": "Without an estimate, after the call",
-  "settings.done_after_arrival_minutes": "Done after arrival",
-  "settings.auto_close": "Close at the time",
-  "settings.auto_close_hint": "An open order closes at its close time",
-  "settings.close_forgotten": "Close forgotten orders",
-  "settings.close_forgotten_hint":
-    "At 06:00: never called in → cancelled; called in → done, flagged",
-  "settings.saved_where": "Saved in the event's settings",
-  "settings.cancel": "Cancel",
-  "settings.save": "Save",
-  "settings.conflict": "Someone saved meanwhile: here are their settings. Make your change again.",
-  "settings.failed": "Saving did not work. Try again.",
   "time.min": "{n} min",
   "time.h": "{n} h",
   "time.h_min": "{h} h {m} min",
   ...FOOD_EN,
   ...MONEY_EN,
+  ...SETTINGS_EN,
 } as const;
 
 export type MessageKey = keyof typeof EN;

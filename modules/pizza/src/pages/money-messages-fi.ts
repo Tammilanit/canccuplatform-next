@@ -66,7 +66,6 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.memo":
     "Merkintä on sinun muistiinpanosi: sovellus ei siirrä rahaa. Kukin näkee vain oman merkintänsä.",
   "money.mark": "Merkitse {name} maksaneeksi",
-  "money.save": "Tallenna",
   "pad.title": "Kirjoita summa",
   "pad.paid_to": "maksettu: {pizzeria}",
   "pad.save": "Tallenna summa",
@@ -74,7 +73,8 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "pad.invalid": "Kirjoita summa euroina, esim. 38,50.",
   "pad.delete": "Poista",
   "scan.title": "Skannaa",
-  "scan.photo": "Kuva kuitista",
+  "scan.take": "Ota kuva kuitista",
+  "scan.saved": "Käytä tallennettua kuvaa",
   "scan.read": "Lue kuitti",
   "scan.keep": "Säilytä kuva",
   "scan.reading": "Luetaan kuittia… Yleensä muutama sekunti.",
@@ -152,18 +152,19 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "export.download": "Lataa CSV",
   "settings.settling": "Maksaminen",
   "settings.organiser": "Kaikki maksavat järjestäjälle",
-  "settings.organiser_hint": "Tapahtuman jälkeen, maksujärjestelmässä",
+  "settings.organiser_hint": "tapahtuman jälkeen, maksujärjestelmässä.",
   "settings.settle_to_payer": "Tilaaja voi ottaa maksut",
   "settings.settle_to_payer_hint":
-    "Tilaaja valitsee tilauskohtaisesti: järjestäjän kautta tai itselleen",
+    "Tilaaja valitsee tilauskohtaisesti: järjestäjän kautta tai itselleen.",
   "settings.reader": "Tekoälylukija",
   "settings.ai_reader": "Lue kuitit ja menut",
-  "settings.ai_reader_hint": "Kuvista; ihminen vahvistaa",
+  "settings.ai_reader_hint": "Kuvista; ihminen tarkistaa luetun.",
   "settings.reader_outside": "Kuvat lähetetään ulkopuoliseen palveluun",
   "settings.reader_cost":
     "{provider}, {model}. Noin 0,001 $ kuitilta, 0,002 $ menusivulta. Käyttäjät näkevät tämän ennen kuvan lähetystä.",
   "settings.ai_reader_daily_reads": "Lukuja päivässä",
-  "settings.ai_reader_daily_reads_hint": "enintään, koko tapahtumalle",
+  "settings.ai_reader_daily_reads_hint":
+    "Enintään näin monta kuvaa tapahtumapäivässä, kulujen rajaksi.",
   "integrations.title": "Integraatiot",
   "integrations.reader": "Tekoälylukija",
   "integrations.reader_text":

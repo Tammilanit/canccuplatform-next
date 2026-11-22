@@ -123,20 +123,16 @@
     });
   }
 
-  // Food settings: each slider says its time as it moves.
-  document.querySelectorAll("input[data-minutes]").forEach(function (range) {
-    var out = range.parentElement.querySelector("[data-minutes-out]");
-    var form = range.form;
-    var say = function () {
-      var n = Number(range.value);
-      var h = Math.floor(n / 60);
-      var m = n % 60;
-      var t = h === 0 ? form.dataset.min : m === 0 ? form.dataset.h : form.dataset.hmin;
-      out.textContent = t
-        .replace("{n}", h === 0 ? m : h)
-        .replace("{h}", h)
-        .replace("{m}", m);
-    };
-    range.addEventListener("input", say);
+  // Food settings: a quick pick sets its field; Less and More step it inside its bounds, as
+  // admin's settings forms do. Without the script the number field is typed.
+  document.addEventListener("click", function (event) {
+    var button =
+      event.target.closest("[data-canccu-pick]") || event.target.closest("[data-canccu-step]");
+    var input = button && document.getElementById(button.getAttribute("data-canccu-for"));
+    if (!input || input.disabled) return;
+    if (button.hasAttribute("data-canccu-pick"))
+      input.value = button.getAttribute("data-canccu-pick");
+    else if (button.getAttribute("data-canccu-step") === "-1") input.stepDown();
+    else input.stepUp();
   });
 })();

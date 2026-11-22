@@ -61,6 +61,20 @@ async def test_health_names_every_part_with_a_badge(
     assert "<b>Admin</b>" in r.text and 'canccu-badge--ok">Running</span>' in r.text
 
 
+async def test_food_s_settings_open_in_food_s_own_settings_tab(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    # The admin control room's direction B (#747): Food's settings live in Food → Settings, and
+    # the old address opens it; admin's list still leads there.
+    owner, _ = await owner_and_member(world, caplog)
+    r = await world.browser(owner).get("/admin/settings/pizza")
+    assert r.status_code == 303 and r.headers["location"] == "/pizza/crew/settings"
+    listed = (await world.browser(owner).get("/admin/settings")).text
+    assert 'href="/pizza/crew/settings"' in listed
+    assert 'href="/admin/settings/pizza"' not in listed
+    assert 'href="/admin/settings/screen"' in listed
+
+
 async def test_an_unknown_settings_page_is_not_found_in_words(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:

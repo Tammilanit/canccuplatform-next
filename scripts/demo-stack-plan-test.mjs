@@ -317,6 +317,29 @@ export function selftest({ plan, format, changedPaths }) {
       assert.deepEqual(needsOf("modules/pizza/src/menus.ts"), ["pizza"]);
     },
   );
+  // The weekly run takes every group on one stack: its first pass changes the demo event, which
+  // the seeds refuse as made by hand, so the run of show stayed empty there (#751).
+  const seeds = (...args) =>
+    execFileSync(
+      new URL("demo-screenshots", import.meta.url).pathname,
+      ["--dry-run", ...args],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    )
+      .split("\n")
+      .filter((l) => /^ {2}(admin|agenda|pizza|moments) /.test(l))
+      .map((l) => l.trim());
+  check(
+    "the dev seeds reset the demo event only after a pass on the same stack changed it",
+    () => {
+      const alone = seeds("--groups", "dev-seed");
+      assert.equal(alone.length, 4, alone.join("\n"));
+      assert.ok(alone.every((l) => !l.endsWith("--force")), alone.join("\n"));
+      const after = seeds();
+      assert.equal(after.length, 4, after.join("\n"));
+      assert.ok(after.every((l) => l.endsWith("--force")), after.join("\n"));
+      assert.deepEqual(seeds("--groups", "agenda"), []);
+    },
+  );
   check("one group takes only its own shots", () => {
     const agenda = shots("demo-screenshots.mjs", "--groups", "agenda");
     assert.ok(

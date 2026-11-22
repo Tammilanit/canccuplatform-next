@@ -33,8 +33,16 @@
     });
   }
 
-  // Scanning: say that the receipt is being read while the page waits for the reader.
+  // Scanning: a photo taken or picked is sent at once; without a script the form's button sends it.
   var scan = document.querySelector("form[data-reading]");
+  if (scan) {
+    scan.querySelectorAll("input[data-auto-send]").forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (input.files && input.files.length > 0) scan.requestSubmit();
+      });
+    });
+  }
+  // Say that the receipt is being read while the page waits for the reader.
   if (scan && scan.getAttribute("data-reading")) {
     scan.addEventListener("submit", function () {
       var note = document.createElement("p");

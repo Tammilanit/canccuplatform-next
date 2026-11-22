@@ -34,6 +34,7 @@ from .health_view import health_body, health_live
 from .pages import (
     BASE,
     MODULE_ICONS,
+    SETTINGS_TABS,
     event_of,
     not_signed_in,
     page,
@@ -224,7 +225,7 @@ def create_app(
             about, values_now = glance(m, declared, values)
             rows.append(
                 (
-                    f"{BASE}/settings/{m}",
+                    SETTINGS_TABS.get(m, f"{BASE}/settings/{m}"),
                     MODULE_ICONS.get(m, "sliders"),
                     groups[m],
                     about,
@@ -269,6 +270,8 @@ def create_app(
     async def settings_form(request: Request) -> Response:
         module = module_of(request)
         session = await need(request, "admin.settings.read")
+        if module in SETTINGS_TABS:
+            return RedirectResponse(SETTINGS_TABS[module], status_code=303)
         version, stored = await service.store.get_settings(module)
         body = settings_form_html(
             service.declarations.get(module, []),

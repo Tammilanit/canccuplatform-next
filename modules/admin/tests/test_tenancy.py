@@ -122,14 +122,15 @@ class SettingsApi(Probe):
 class SettingsPage(Probe):
     async def seed(self, tenant: str, marker: str) -> None:
         async with self.env.client(HOSTS[tenant]) as c:
-            # A free-text setting carries the marker: the time zone must be a zone (#732).
-            form = {"settings_version": "0", "ordering_note": marker}
-            r = await c.post("/settings/pizza", data=form)
+            # A free-text setting carries the marker: the time zone must be a zone (#732). Food's
+            # form moved to Food's own Settings tab (#747), so Screens' form carries it.
+            form = {"settings_version": "0", "ready_fallback_asset_id": marker}
+            r = await c.post("/settings/screen", data=form)
             assert r.status_code == 303, r.text
 
     async def read(self, tenant: str) -> object:
         async with self.env.client(HOSTS[tenant]) as c:
-            return (await c.get("/settings/pizza")).text
+            return (await c.get("/settings/screen")).text
 
 
 class ProfileApi(Probe):
