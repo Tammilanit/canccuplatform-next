@@ -35,6 +35,8 @@ const ARCHIVED = "demo-archived.localhost";
 const SOON = "demo-soon.localhost";
 const ELSEWHERE = "demo-elsewhere.localhost";
 const NO_EVENT = "no-event.localhost"; // no tenant has it, so nothing resolves
+const DRAFT = "demo-draft.localhost";
+const VENUE_ONLY = "demo-venue-only.localhost"; // its pages open only at a venue CI is not at
 // A well-formed code: the pages that answer before the code is checked never read it.
 const ANY_CODE = "/notify/check-in?p=arrival&c=AAAAAAAAAAAAAAAAAAAAAA";
 const FRESH = "@fresh"; // a code fetched right before the shot
@@ -216,6 +218,32 @@ const SHOTS = [
         { host: ARCHIVED, text: "nothing in the Screen studio can be changed" },
       ],
     ];
+  }),
+  // The event's front door at its base address (#750), as a guest sees it in each state; the
+  // first pass's run of show gives the open event its now and next.
+  ...[DESK, PHONE].flatMap((viewport) => {
+    const phone = viewport === PHONE ? "-phone" : "";
+    return [
+      ["front-door", "/", viewport, { cookie: null, text: "What's on" }],
+      [
+        "front-door-archived",
+        "/",
+        viewport,
+        { cookie: null, host: ARCHIVED, text: "The event has ended" },
+      ],
+      [
+        "front-door-draft",
+        "/",
+        viewport,
+        { cookie: null, host: DRAFT, text: "Not open yet" },
+      ],
+      [
+        "front-door-venue-only",
+        "/",
+        viewport,
+        { cookie: null, host: VENUE_ONLY, text: "Open at the venue" },
+      ],
+    ].map(([name, ...rest]) => [`${name}${phone}`, ...rest]);
   }),
   [
     "privacy-phone",

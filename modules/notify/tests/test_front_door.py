@@ -150,5 +150,5 @@ async def test_a_host_no_event_claims_answers_a_page_not_json(env: Env) -> None:
 async def test_a_tenants_module_that_does_not_answer_gives_a_way_to_try_again(env: Env) -> None:
     r = await front(env, host=DOWN_HOST)
     text = text_of(r)
-    assert r.status_code == 502 and r.headers["content-type"].startswith("text/html")
+    assert r.status_code == 503 and r.headers["content-type"].startswith("text/html")
     assert "Couldn't load the event" in text and 'href="/">' in text and "Try again" in text

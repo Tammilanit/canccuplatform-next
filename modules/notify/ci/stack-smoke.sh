@@ -21,3 +21,7 @@ jq -e '.topics | map(.topic) | index("schedule")' "$t/r.json"
 echo "-- notify answers the VAPID public key of ci/stack-env.sh's private key"
 curl -fsS "$base/api/notify/push-key" | tee "$t/r.json"; echo
 jq -e '.vapid_public_key | test("^B[A-Za-z0-9_-]{86}$")' "$t/r.json"
+echo "-- the event's base address is its front door, from notify through Caddy (#750)"
+curl -fsS "$base/" > "$t/front.html"
+grep -c 'canccu-poster' "$t/front.html"
+grep -c 'Crew &amp; organisers' "$t/front.html"
