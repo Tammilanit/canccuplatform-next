@@ -23,6 +23,7 @@ from . import (
     custom_api,
     custom_pages,
     follows,
+    front_door,
     inbox,
     me,
     push,
@@ -42,7 +43,13 @@ def create_app(
     install(private)
     install_service_identity(private, service)
     # /admin/topics/new before /admin/topics/{topic}: Starlette takes the first route that matches.
-    pages = custom_pages.ROUTES + topic_pages.ROUTES + web.ROUTES + checkin_page.ROUTES
+    pages = (
+        custom_pages.ROUTES
+        + topic_pages.ROUTES
+        + web.ROUTES
+        + checkin_page.ROUTES
+        + front_door.ROUTES
+    )
     api = (
         config.ROUTES
         + custom_api.ROUTES
@@ -88,4 +95,6 @@ async def _page_error(request: Request, exc: KitError) -> Response | None:
     """A page gets its errors as a page, the API as the kit's JSON body (None)."""
     if request.url.path == checkin_page.PATH.removeprefix("/notify"):
         return await checkin_page.error_page(request, exc)
+    if request.url.path == "/":
+        return await front_door.error_page(request, exc)
     return await web.error_page(request, exc) if _is_page(request) else None

@@ -235,6 +235,9 @@ export function selftest({ plan, format, changedPaths }) {
     assert.equal(groupOf("/notify/check-in?p=arrival"), "notify");
     assert.equal(groupOf("/theming/studio/"), "theming");
     assert.equal(groupOf("/screen/"), "screens");
+    // The event's front door, at its base address, is notify's (#750); only the bare address.
+    assert.equal(groupOf("/"), "notify");
+    assert.equal(groupOf("/?x=1"), "notify");
     // Only the Screen studio's own pages: a page named like it stays admin's.
     assert.equal(groupOf("/admin/screenshots"), "admin");
     assert.throws(() => groupOf("/games/"), /no screenshot group/);

@@ -23,8 +23,14 @@ class HubReader:
         self.agenda = agenda_url.rstrip("/")
         self.http = http
 
-    async def _get(self, url: str, host: str, cookie: str | None) -> Any:
+    async def _get(
+        self, url: str, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> Any:
         headers = {"host": host} | ({"cookie": cookie} if cookie else {})
+        # Agenda judges the info-page mode by the caller's address; without this it would judge
+        # notify's own, never the visitor's (agenda trusts the forwarded address from the proxies).
+        if client_ip:
+            headers["x-forwarded-for"] = client_ip
         try:
             response = await self.http.get(url, headers=headers)
             response.raise_for_status()
@@ -38,6 +44,8 @@ class HubReader:
         wifi = body.get("wifi") if isinstance(body, dict) else None
         return [w for w in wifi if isinstance(w, dict)] if isinstance(wifi, list) else []
 
-    async def agenda_now(self, host: str, cookie: str | None) -> dict[str, Any] | None:
-        body = await self._get(f"{self.agenda}/api/agenda/now", host, cookie)
+    async def agenda_now(
+        self, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> dict[str, Any] | None:
+        body = await self._get(f"{self.agenda}/api/agenda/now", host, cookie, client_ip)
         return body if isinstance(body, dict) else None

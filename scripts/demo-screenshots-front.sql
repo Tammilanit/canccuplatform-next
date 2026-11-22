@@ -45,6 +45,17 @@ INSERT INTO tenants (id, name, time_zone, venue_id, status, starts_at, ends_at) 
    date_trunc('day', now()) + interval '3 days 17 hours', date_trunc('day', now()) + interval '4 days 22 hours'),
   ('demo-elsewhere', 'Demo Event', 'UTC', 'demo-elsewhere-venue', 'live', NULL, NULL)
   ON CONFLICT DO NOTHING;
+-- The front door (#750): a draft, which a guest sees only as not open yet, and an event whose
+-- pages open only at its venue, which CI is not at.
+INSERT INTO tenants (id, name, time_zone, venue_id, status, starts_at, ends_at, info_page_mode)
+  VALUES
+  ('demo-draft', 'Demo Event', 'UTC', 'demo-venue', 'draft',
+   date_trunc('day', now()) + interval '10 days 17 hours', date_trunc('day', now()) + interval '11 days 22 hours',
+   'public'),
+  ('demo-venue-only', 'Demo Event', 'UTC', 'demo-elsewhere-venue', 'live',
+   date_trunc('day', now()) - interval '7 hours', date_trunc('day', now()) + interval '1 day 22 hours',
+   'venue_only')
+  ON CONFLICT DO NOTHING;
 INSERT INTO venue_info (tenant_id, venue_id, copied_at, revision, wifi)
   VALUES ('demo-elsewhere', 'demo-elsewhere-venue', now(), 1,
           '[{"ssid": "demo-hall", "password": null, "note": null, "visibility": "public"}]')
@@ -52,7 +63,9 @@ INSERT INTO venue_info (tenant_id, venue_id, copied_at, revision, wifi)
 INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary) VALUES
   ('demo-archived.localhost', 'demo-archived', 'platform', 'active', true),
   ('demo-soon.localhost', 'demo-soon', 'platform', 'active', true),
-  ('demo-elsewhere.localhost', 'demo-elsewhere', 'platform', 'active', true)
+  ('demo-elsewhere.localhost', 'demo-elsewhere', 'platform', 'active', true),
+  ('demo-draft.localhost', 'demo-draft', 'platform', 'active', true),
+  ('demo-venue-only.localhost', 'demo-venue-only', 'platform', 'active', true)
   ON CONFLICT DO NOTHING;
 -- The archived event's run of show (#439): one item of its day, which its pages show read-only.
 -- Its state row too, so the agenda never adds its starter kinds beside this one (store.ensure_event).

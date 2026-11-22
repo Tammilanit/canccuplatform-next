@@ -40,6 +40,9 @@ const PAGE_GROUPS = [
 
 /** The group of a shot, from the path of the page it opens. */
 export function groupOf(path) {
+  // The event's front door, the bare base address, is notify's (#750): no prefix, as "/" would
+  // take every path.
+  if (path === "/" || path.startsWith("/?")) return "notify";
   const hit = PAGE_GROUPS.find(([prefix]) => path.startsWith(prefix));
   if (!hit)
     throw new Error(

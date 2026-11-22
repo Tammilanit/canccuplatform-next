@@ -221,6 +221,13 @@
 		}
 	}
 
+	# The event's front door, its base address (#750): notify's own `/`, as the hub's module. The
+	# bare address only, so every other path no route takes stays "not found".
+	@front-door path /
+	handle @front-door {
+		reverse_proxy notify:8080
+	}
+
 	handle {
 		respond "not found" 404
 	}
