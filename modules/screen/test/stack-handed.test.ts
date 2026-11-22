@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withHeroShowcase, withShowcase, withSmallShowcase } from "./stack/handed.mjs";
+import { withHeroShowcase, withPhoto, withShowcase, withSmallShowcase } from "./stack/handed.mjs";
 
 const region = (id: string, widgets: string[], order: number[]) => ({
   id,
@@ -63,5 +63,29 @@ describe("withHeroShowcase", () => {
     expect(hero?.claim?.template).toBe("announcement");
     expect(hero?.order).toEqual([0]);
     expect(rail).toBe(s.regions[1]);
+  });
+});
+
+describe("withPhoto", () => {
+  // The demo stack's Moments presets put their storyboards' title cards on the hero now and then:
+  // left in the handed state, one hid the wall until its step ended, past the shot's wait (#742).
+  const pulse = () => ({
+    regions: [
+      { ...region("hero", ["countdown"], [0]), role: "hero", idle_view: { widget: "countdown", view: {} }, claim: { template: "title_card" } },
+      { ...region("rail", ["agenda_now"], [0]), role: "rail", claim: { template: "announcement" } },
+    ],
+  }); // prettier-ignore
+
+  it("gives the hero to the wall, without a claim from the server over it", () => {
+    for (const featured of [false, true]) {
+      const hero = withPhoto(pulse(), featured).regions[0];
+      expect(hero?.widgets[0]?.widget).toBe("photo");
+      expect(hero?.claim).toBeNull();
+    }
+  });
+
+  it("leaves the other boxes as they are", () => {
+    const before = pulse();
+    expect(withPhoto(before).regions[1]).toBe(before.regions[1]);
   });
 });
