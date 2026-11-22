@@ -1,11 +1,14 @@
 settings:
   - key: timezone
     type: string
+    choices_from: timezones
     label: Time zone
+    help: "Every time on the event's pages and screens is shown in this zone."
     default: UTC
   - key: language
     type: string
     label: Language
+    help: "The language of the event's organiser pages and screens."
     default: en
     choices: [en, fi]
 groups:

@@ -29,25 +29,31 @@ async def test_the_screen_form_draws_the_sheets_labels_and_hints(
     heartbeat = field_of(text, "heartbeat_seconds")
     assert heartbeat.startswith("for=canccu-field-heartbeat_seconds>Heartbeat</label>")
     assert 'canccu-inputgroup__add">seconds</span>' in heartbeat
-    # The declared hint first, then the bounds.
-    assert '<p class="canccu-field__hint">How often a screen checks in. From 5 to 60.</p>' in (
-        heartbeat
+    # The declared help line first, then the bounds and the default.
+    assert (
+        '<p class="canccu-field__hint">How often a screen checks in. From 5 to 60. Default: 15.</p>'
+        in (heartbeat)
     )
     offline = field_of(text, "offline_after_seconds")
     assert offline.startswith("for=canccu-field-offline_after_seconds>Mark offline after<")
-    assert "Shorter: more false alarms on a slow uplink. From 15 to 300.</p>" in offline
+    assert (
+        "Shorter: more false alarms on a slow uplink. From 15 to 300. Default: 45.</p>" in offline
+    )
     assert ">Least time between breaks</label>" in text and ">Ticker look</label>" in text
     # A box draws its hint too, under its label.
     bars = field_of(text, "progress_bars")
     assert ">Show progress bars</label>" in bars
-    assert '<p class="canccu-field__hint">A thin bar under each rotating slide.</p>' in bars
+    assert (
+        '<p class="canccu-field__hint">A thin bar under each rotating slide. Default: on.</p>'
+        in bars
+    )
 
 
-def test_short_and_hint_are_optional_text() -> None:
+def test_short_and_help_are_optional_text() -> None:
     plain = one(type="integer", label="Wait (seconds)", default=3)
-    assert (plain.short, plain.hint) == ("", "")
+    assert (plain.short, plain.help) == ("", "")
     assert ">Wait</label>" in field_html(plain, None)
-    for bad in ({"short": 3}, {"hint": ["x"]}):
+    for bad in ({"short": 3}, {"help": ["x"]}):
         with pytest.raises(DeclarationError, match="must be text"):
             one(type="integer", default=3, **bad)
 

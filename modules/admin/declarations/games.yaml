@@ -2,22 +2,26 @@ settings:
   - key: surges
     type: boolean
     label: Detect surges
+    help: "Used to tell the screens when many players start the same game."
     default: true
   - key: surge_threshold
     type: integer
     min: 2
     max: 500
     label: Players on one game that start a surge
+    help: "A game surges when this many people play it at once."
     default: 4
   - key: surge_cooldown_minutes
     type: integer
     min: 1
     max: 1440
     label: Surge cooldown (minutes)
+    help: "After a surge, the same game can surge again only after this."
     default: 15
   - key: attendee_additions
     type: boolean
     label: Members may add games
+    help: "Off: only moderators add games to the list."
     default: true
 groups:
   - id: surges

@@ -2,43 +2,52 @@ settings:
   - key: ordering_open
     type: boolean
     label: People can order food
+    help: "Off: nobody can start or join an order; the Food page shows the note below."
     default: true
   - key: ordering_note
     type: string
     label: The note on the Food page while ordering is off
+    help: "Shown to attendees on the Food page while ordering is off."
+    example: "Breakfast orders open at 09:00"
     short: Note while closed
     default: ""
   - key: open_by
     type: string
     choices: [anyone, crew]
     label: Who may start an order
+    help: "Crew: only people with the right to open orders can start one."
     default: anyone
   - key: max_open_orders
     type: integer
     min: 1
     max: 20
     label: Orders open at once
+    help: "How many orders can be open at the same time in the event."
     default: 3
   - key: max_items_per_person
     type: integer
     min: 1
     max: 20
     label: Pizzas per person in one order
+    help: "How many pizzas one person can add to one order."
     default: 5
   - key: settle_to_payer
     type: boolean
     label: An order may be settled with whoever paid it
+    help: "On: people pay back whoever paid the order, instead of the organiser."
     default: false
   - key: last_call_minutes
     type: integer
     min: 1
     max: 60
     label: Last call before the close (minutes)
+    help: "People in an order hear the last call this long before it closes."
     short: Last call
     default: 10
   - key: auto_close
     type: boolean
     label: An open order closes at its close time
+    help: "Off: the holder closes the order by hand."
     short: Close at the time
     default: true
   - key: remind_holder_minutes
@@ -46,6 +55,7 @@ settings:
     min: 5
     max: 240
     label: Remind the holder of a stalled order after (minutes)
+    help: "A closed order that is not called in reminds its holder after this."
     short: Remind the holder
     default: 30
   - key: remind_crew_minutes
@@ -53,6 +63,7 @@ settings:
     min: 10
     max: 480
     label: Then remind the crew too, after (minutes)
+    help: "If it is still not called in, the crew hears about it after this."
     short: Then the crew too
     default: 60
   - key: release_after_minutes
@@ -60,6 +71,7 @@ settings:
     min: 30
     max: 720
     label: Release a holder who never calls it in, after (minutes)
+    help: "A holder who never calls the order in is released after this, so someone else can."
     short: Release a stalled holder
     default: 120
   - key: arrival_check_minutes
@@ -67,6 +79,7 @@ settings:
     min: 5
     max: 240
     label: Ask "has it arrived?" this long past the estimate (minutes)
+    help: "The holder is asked whether the food came, this long after the pizzeria's estimate."
     short: Arrived? past the estimate
     default: 30
   - key: arrival_check_no_estimate_minutes
@@ -74,6 +87,7 @@ settings:
     min: 15
     max: 480
     label: Without an estimate, ask after the call-in (minutes)
+    help: "When the pizzeria gave no estimate, the question comes this long after the call-in."
     short: Arrived? without an estimate
     default: 90
   - key: done_after_arrival_minutes
@@ -81,17 +95,19 @@ settings:
     min: 15
     max: 720
     label: An arrived order is done after (minutes)
+    help: "An order whose food came is marked done after this."
     short: Done after arrival
     default: 120
   - key: close_forgotten
     type: boolean
     label: Close forgotten orders when the event day turns at 06:00
     short: Close forgotten orders
-    hint: Never called in is cancelled; called in but not done is done, flagged in the record.
+    help: Never called in is cancelled; called in but not done is done, flagged in the record.
     default: true
   - key: ai_reader
     type: boolean
     label: Read receipts and menus from photos (an outside service; a person confirms)
+    help: "Photos are sent to an outside service, and a person checks what it read. Needs a key in Integrations."
     short: AI reader
     default: false
   - key: ai_reader_daily_reads
@@ -99,6 +115,7 @@ settings:
     min: 1
     max: 1000
     label: Reads a day, at most, for the event
+    help: "The most photos the reader reads in one event day, to cap the cost."
     short: Reads a day
     default: 100
 groups:
