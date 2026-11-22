@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1320" width="1920" height="1320" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Step 7 mockup 10: The venue screen: standings, bracket, check-in, match called, champion (attendees in the hall)</title>
+  <title>Step 7 mockup 10: The venue screen: standings, bracket, scan to join, match called, champion (attendees in the hall)</title>
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
 <rect x="0.0" y="0.0" width="1920.0" height="1320.0" rx="0" fill="#f3f4f6"/>
-<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">10 · The venue screen: standings, bracket, check-in, match called, champion (attendees in the hall)</text>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">10 · The venue screen: standings, bracket, scan to join, match called, champion (attendees in the hall)</text>
 <text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: the hall follows the session from the screens; Screen draws the widgets (built), Moments decides the peaks (built)</text>
-<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 896.0">The Pulse during the session: bracket hero, standings, check-in QR</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 896.0">The Pulse during the session: bracket hero, standings, scan to join</text>
 <defs><clipPath id="c1"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
 <g transform="translate(32.0,140.0) scale(0.45)"><g clip-path="url(#c1)">
 <rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#0b0d1a"/>
@@ -114,8 +114,8 @@
 <rect x="253.6" y="856.0" width="17.6" height="17.6" rx="0" fill="#111827"/>
 <rect x="253.6" y="895.2" width="17.6" height="17.6" rx="0" fill="#111827"/>
 <rect x="253.6" y="914.8" width="17.6" height="17.6" rx="0" fill="#111827"/>
-<text x="330.0" y="880.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="start">Check in for Demo Arena 5v5</text>
-<text x="330.0" y="940.0" font-size="32" fill="#a9b1d6" font-weight="400" text-anchor="start">until 19:25 · scan with your phone, or tap the push</text>
+<text x="330.0" y="880.0" font-size="44" fill="#f3f5ff" font-weight="700" text-anchor="start">Scan to join Demo Party</text>
+<text x="330.0" y="940.0" font-size="32" fill="#a9b1d6" font-weight="400" text-anchor="start">Sat 22:00 · 8 places left · opens its sign-up</text>
 </g></g>
 <text x="960.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="960.0 1824.0">Match called (Moments&#x27; claim, built): 30 s, then the rail</text>
 <defs><clipPath id="c2"><rect x="0" y="0" width="1920" height="1080" rx="10"/></clipPath></defs>
@@ -129,7 +129,7 @@
 <text x="960.0" y="300.0" font-size="54" fill="#3ddcff" font-weight="800" text-anchor="middle" letter-spacing="6">MATCH CALLED</text>
 <text x="960.0" y="460.0" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="middle">Team Alpha  vs  Team Gamma</text>
 <text x="960.0" y="570.0" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="middle">Semi-final 1 · Demo Arena 5v5</text>
-<text x="960.0" y="700.0" font-size="46" fill="#f3f5ff" font-weight="600" text-anchor="middle">Go to Stage 2 now · Voice: Alpha room, Gamma room</text>
+<text x="960.0" y="700.0" font-size="46" fill="#f3f5ff" font-weight="600" text-anchor="middle">Go to Stage 2 now · your team channel is ready</text>
 <text x="960.0" y="820.0" font-size="64" fill="#ffc94d" font-weight="800" text-anchor="middle">starts in 03:00</text>
 </g></g>
 <text x="32.0" y="688.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 896.0">Standings takeover at the end of a session (crew spotlight or the rule)</text>
@@ -205,7 +205,7 @@
 <text x="820.0" y="480.0" font-size="120" fill="#f3f5ff" font-weight="800" text-anchor="start">Player Five</text>
 <text x="820.0" y="580.0" font-size="44" fill="#a9b1d6" font-weight="500" text-anchor="start">Demo Arena final · 1st · 2 410</text>
 <text x="820.0" y="700.0" font-size="40" fill="#c5cae3" font-weight="500" text-anchor="start">2nd Player Two · 3rd Demo Player</text>
-<text x="820.0" y="880.0" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start">Photos and the champions page: scan</text>
+<text x="820.0" y="880.0" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start">Photos and the champions page: in the hub</text>
 </g></g>
 <circle cx="45.0" cy="1217.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="1222.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
@@ -215,10 +215,10 @@
 <text x="1006.0" y="1222.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Rank changes slide with ▲▼ for 60 s; finalists are framed (widgets.md, accepted design).</text>
 <circle cx="45.0" cy="1251.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="1256.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
-<text x="66.0" y="1256.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">checkin_qr with purpose tournament:&lt;session&gt; while check-in is open (screen.md) (D6).</text>
+<text x="66.0" y="1256.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">One QR on the session card: &quot;scan to join&quot; opens its sign-up (D6).</text>
 <circle cx="985.0" cy="1251.0" r="13" fill="#f59e0b"/>
 <text x="985.0" y="1256.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
-<text x="1006.0" y="1256.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Match called fills voice_channels from the bot&#x27;s room names; today it is always empty (D8).</text>
+<text x="1006.0" y="1256.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Match called names the team channels the bot made when the teams were set (D8).</text>
 <circle cx="45.0" cy="1285.0" r="13" fill="#f59e0b"/>
 <text x="45.0" y="1290.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
 <text x="66.0" y="1290.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">One happening, one owner: the standings rule or the crew&#x27;s spotlight, never both (step 4).</text>

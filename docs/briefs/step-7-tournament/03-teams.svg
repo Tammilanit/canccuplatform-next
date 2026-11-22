@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1090" width="1920" height="1090" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-<title>Step 7 mockup 03: Teams: one team panel, one invite line (player, team leader)</title>
+<title>Step 7 mockup 03: Teams: one team panel, one invite link (player, team leader)</title>
 <defs></defs>
 <rect x="0" y="0" width="1920" height="1000" rx="0" fill="#f3f4f6"/>
-<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">03 · Teams: one team panel, members as a list, one invite line (player, team leader)</text>
-<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: a team leader registers a team of five for Demo Arena 5v5 and gathers players with one invite; a solo player is placed by the crew. A team lives for one session.</text>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">03 · Teams: one team panel, members as a list, one invite link (player, team leader)</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: a team leader registers a team of five for Demo Arena 5v5 and gathers players with one invite link; a solo player is placed by the crew. A team lives for one session.</text>
 <text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 402">1 · Name the team</text>
 <text x="512" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="512 882">2 · The team panel and its invite</text>
 <text x="992" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="992 1362">3 · Join from the invite</text>
@@ -64,34 +64,9 @@
 <text x="38" y="439" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 258">demo.example/join/night-owls</text>
 <rect x="268" y="420" width="88" height="28" rx="8" fill="#3b82f6"/>
 <text x="312" y="438.2" font-size="12" fill="#fff" font-weight="600" text-anchor="middle" data-box="274 350">Copy</text>
-<rect x="26" y="472" width="150" height="150" rx="6" fill="#fff"/>
-<rect x="59.1667" y="488.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="75.6667" y="488.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="108.667" y="488.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="125.167" y="488.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="59.1667" y="521.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="75.6667" y="521.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="108.667" y="521.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="125.167" y="521.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="59.1667" y="538.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="75.6667" y="538.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="108.667" y="538.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="125.167" y="538.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="59.1667" y="571.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="75.6667" y="571.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="108.667" y="571.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="125.167" y="571.167" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="59.1667" y="587.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="75.6667" y="587.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="108.667" y="587.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<rect x="125.167" y="587.667" width="13.3333" height="13.3333" rx="0" fill="#111827"/>
-<text x="190" y="496" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="190 364">Scan to join Night</text>
-<text x="190" y="515" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="190 364">Owls</text>
-<text x="190" y="540" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="190 364">The QR opens the same</text>
-<text x="190" y="556" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="190 364">invite link. No code to</text>
-<text x="190" y="572" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="190 364">type, and no player name</text>
-<text x="190" y="588" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="190 364">is in it.</text>
-<text x="26" y="656" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 356">Hand the lead over · Withdraw the team</text>
+<text x="26" y="486" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 364">Send the link in chat. It opens this team&#x27;s join page.</text>
+<text x="26" y="504" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 364">No code to type, and no player name is in it.</text>
+<text x="26" y="548" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="26 356">Hand the lead over · Withdraw the team</text>
 </g>
 <g transform="translate(992,140) scale(0.95)">
 <rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
@@ -145,7 +120,7 @@
 <text x="62" y="1006" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 620.667">invite line. A team lives for one session (U3).</text>
 <circle cx="660.667" cy="980" r="10" fill="#111827"/>
 <text x="660.667" y="985" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
-<text x="680.667" y="985" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="680.667 1239.33">The invite is a link with a QR for the same link; it is valid</text>
+<text x="680.667" y="985" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="680.667 1239.33">The invite is a link only (no QR code); it is valid</text>
 <text x="680.667" y="1006" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="680.667 1239.33">until the close and never names a person.</text>
 <circle cx="1279.33" cy="980" r="10" fill="#111827"/>
 <text x="1279.33" y="985" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>

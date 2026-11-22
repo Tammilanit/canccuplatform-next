@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1900" width="1920" height="1900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-<title>Step 7 mockup 25: Clips and photos from anyone taking part: uploads and links, approved by the crew</title>
+<title>Step 7 mockup 25: Clips and photos from anyone taking part: links or files, approved by the crew, all kept</title>
 <defs></defs>
 <rect x="0" y="0" width="1920" height="1900" rx="0" fill="#f3f4f6"/>
-<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">25 · Clips and photos from anyone taking part: uploads and links, approved by the crew</text>
-<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: players share game footage and photos by upload or by a link; the crew approves; only approved items reach the screen. No consent ticks for game captures. Demo names only.</text>
+<text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">25 · Clips and photos from anyone taking part: links or files, approved by the crew, all kept</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: players share game footage and photos by a link or a file; the crew approves; only approved items reach the screen; everything is kept for the LAN video. No consent steps. Demo names only.</text>
 <text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 372">1 · From the hub (phone)</text>
 <text x="420" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="420 1120">2 · From a PC browser: drop a file or paste a link</text>
 <text x="1160" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1160 1880">3 · The crew queue on the desk</text>
@@ -28,11 +28,11 @@
 <text x="26" y="262" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26 226">Paste a link</text>
 <rect x="26" y="270" width="338" height="40" rx="8" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
 <text x="38" y="295" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 348">https://cdn.steamusercontent.com/ugc/…</text>
-<text x="26" y="332" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 356">Steam screenshot or recording, or a clip link</text>
+<text x="26" y="332" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 356">YouTube, Twitch, Medal or Steam link</text>
 <text x="26" y="370" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26 226">Session</text>
 <rect x="26" y="378" width="338" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="38" y="403" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 338">Demo Arena 5v5 · 19:30</text>
-<text x="26" y="444" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26 276">Who is in it (tag people)</text>
+<text x="26" y="444" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26 276">Tag people (optional)</text>
 <rect x="26" y="452" width="338" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="38" y="477" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 338">Nova · Kestrel</text>
 <text x="26" y="520" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="26 364">The crew checks it first. Only then it shows.</text>
@@ -57,14 +57,14 @@
 <text x="350" y="126" font-size="13" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="350 650">Or paste a link</text>
 <rect x="350" y="136" width="326" height="40" rx="8" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
 <text x="362" y="161" font-size="12" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 662">https://cdn.steamusercontent.com/ugc/…</text>
-<text x="350" y="200" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">Steam screenshots and recordings, or a clip</text>
-<text x="350" y="216" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">link from the usual capture services. The</text>
-<text x="350" y="232" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">platform fetches and keeps a copy; the crew</text>
-<text x="350" y="248" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">checks it like an upload.</text>
+<text x="350" y="200" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">YouTube, Twitch, Medal or Steam links.</text>
+<text x="350" y="216" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">We try to save a copy when you send it.</text>
+<text x="350" y="232" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">If we cannot (Steam links expire), we ask</text>
+<text x="350" y="248" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 670">you for the file. The crew checks it first.</text>
 <text x="24" y="300" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="24 224">Session</text>
 <rect x="24" y="308" width="300" height="38" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="36" y="332" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="36 306">Demo Arena 5v5 · 19:30</text>
-<text x="350" y="300" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="350 550">Tag people</text>
+<text x="350" y="300" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="350 550">Tag people (optional)</text>
 <rect x="350" y="308" width="326" height="38" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="362" y="332" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="362 652">Nova · Kestrel</text>
 <rect x="24" y="372" width="160" height="38" rx="8" fill="#3b82f6"/>
@@ -111,14 +111,16 @@
 <rect x="1196" y="491" width="80" height="48" rx="6" fill="#1a1030" stroke="#3c446c" stroke-width="1"/>
 <text x="1236" y="520" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle">▶</text>
 <text x="1290" y="508" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1290 1670">best-moment.mp4 · shown 2× this hour</text>
+<rect x="1580" y="494" width="80" height="30" rx="8" fill="#3a1f24" stroke="#ffb4a8" stroke-width="1"/>
+<text x="1620" y="513.2" font-size="12" fill="#ffb4a8" font-weight="600" text-anchor="middle" data-box="1586 1654">Delete</text>
 <rect x="1680" y="494" width="80" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="1720" y="513.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1686 1754">Pin</text>
 <rect x="1766" y="494" width="90" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="1811" y="513.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1772 1850">Show now</text>
 <text x="1184" y="590" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1184 1864">Approved: it goes to the session recap and the rotation on the hall screen. Rejected: the sender gets</text>
-<text x="1184" y="606" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1184 1864">a short reason, and nothing was shown. The same queue is on the crew phone.</text>
-<text x="32" y="920" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 412">4 · A tagged person asks for removal</text>
-<text x="420" y="920" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="420 1120">5 · The links we accept</text>
+<text x="1184" y="606" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1184 1864">a short reason and nothing is shown. Only Delete removes a file. The same queue is on the crew phone.</text>
+<text x="32" y="920" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 412">4 · Your clips: where each one stands</text>
+<text x="420" y="920" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="420 1120">5 · The links and files we accept</text>
 <text x="1160" y="920" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1160 1880">6 · When and how often things are shown</text>
 <g transform="translate(32,932) scale(0.9)">
 <rect x="0" y="0" width="390" height="844" rx="44" fill="#0f172a"/>
@@ -138,13 +140,13 @@
 <text x="93" y="167" font-size="16" fill="#a9b1d6" font-weight="400" text-anchor="middle">▶</text>
 <text x="160" y="142" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="160 350">nova-clutch.mp4</text>
 <text x="160" y="164" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="160 350">Demo Arena 5v5</text>
-<text x="38" y="230" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 338">Shared by Nova · you are tagged</text>
-<rect x="38" y="240" width="200" height="32" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="138" y="260.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="44 232">Ask to remove it</text>
+<text x="38" y="230" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="38 338">Shared by you · tags: Nova, Kestrel</text>
+<rect x="38" y="240" width="200" height="32" rx="16" fill="#3a2f12" stroke="#ffcf6e" stroke-width="1"/>
+<text x="138" y="260.55" font-size="13" fill="#ffcf6e" font-weight="600" text-anchor="middle" data-box="44 232">Waiting for the crew</text>
 <rect x="26" y="300" width="338" height="70" rx="8" fill="#1e4244" stroke="#7cecba" stroke-width="1"/>
-<text x="38" y="326" font-size="13" fill="#7cecba" font-weight="700" text-anchor="start" data-box="38 348">Request sent to the crew</text>
-<text x="38" y="346" font-size="11.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 353">They take it off the screen and the recap, and</text>
-<text x="38" y="361" font-size="11.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 353">delete it if you ask.</text>
+<text x="38" y="326" font-size="13" fill="#7cecba" font-weight="700" text-anchor="start" data-box="38 348">Approved: it can show on the screen</text>
+<text x="38" y="346" font-size="11.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 353">Rejected: you get a short reason. Either way</text>
+<text x="38" y="361" font-size="11.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="38 353">the crew keeps it for the LAN video.</text>
 </g>
 <rect x="420" y="932" width="700" height="540" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
 <text x="444" y="968" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 1084">Hosts the event accepts (the crew can add one)</text>
@@ -165,18 +167,18 @@
 <text x="444" y="1178" font-size="11.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="444 744">clips.twitch.tv/…</text>
 <text x="780" y="1168" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="780 1090">A clip page</text>
 <line x1="444" y1="1236" x2="1096" y2="1236" stroke="#2a3050" stroke-width="1"/>
-<text x="444" y="1212" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 664">Xbox game clip</text>
-<text x="444" y="1230" font-size="11.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="444 744">Xbox share pages</text>
-<text x="780" y="1220" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="780 1090">A shared console clip</text>
+<text x="444" y="1212" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 664">YouTube video</text>
+<text x="444" y="1230" font-size="11.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="444 744">youtube.com/watch… · youtu.be/…</text>
+<text x="780" y="1220" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="780 1090">A video page</text>
 <line x1="444" y1="1288" x2="1096" y2="1288" stroke="#2a3050" stroke-width="1"/>
-<text x="444" y="1264" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 664">Streamable</text>
-<text x="444" y="1282" font-size="11.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="444 744">streamable.com/…</text>
-<text x="780" y="1272" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="780 1090">A clip page</text>
+<text x="444" y="1264" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 664">File upload</text>
+<text x="444" y="1282" font-size="11.5" fill="#3ddcff" font-weight="400" text-anchor="start" data-box="444 744">Choose a file, or drop it on a PC</text>
+<text x="780" y="1272" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="780 1090">Video up to 200 MB · photo up to 15 MB</text>
 <text x="444" y="1314" font-size="13.5" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="444 844">Why a list of hosts</text>
-<text x="444" y="1334" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">The platform fetches the link on its own and keeps a copy for the screen, so it only fetches</text>
-<text x="444" y="1350" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">from hosts the event trusts, within a size, type and time limit. A deleted or private link then</text>
-<text x="444" y="1366" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">leaves no hole in the recap. The link is kept as a credit, never shown. Any other link: the page</text>
-<text x="444" y="1382" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">says it is not accepted.</text>
+<text x="444" y="1334" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">The platform tries to save a copy of a link when it is sent, from hosts the event trusts, within a size,</text>
+<text x="444" y="1350" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">type and time limit. A Steam link expires: if the copy fails, the sender is asked for the file. The</text>
+<text x="444" y="1366" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">link stays in the export list, never shown on the screen. Any other link: the page says it is not</text>
+<text x="444" y="1382" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1094">accepted.</text>
 <rect x="1160" y="932" width="728" height="540" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
 <text x="1184" y="966" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1184 1784">Three places an approved item can show</text>
 <rect x="1184" y="984" width="220" height="110" rx="10" fill="#161a2e" stroke="#ffcf6e" stroke-width="1"/>
@@ -212,14 +214,47 @@
 <rect x="1304" y="1370" width="130" height="34" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="1369" y="1391.55" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1310 1428">Push now</text>
 <text x="1450" y="1392" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1450 1830">on the queue row, by the crew</text>
+<text x="420" y="1508" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="420 1880">7 · One export per event, for the LAN video: every file and a list of the links</text>
+<rect x="420" y="1520" width="1468" height="190" rx="10" fill="#0b0d1a" stroke="#475569" stroke-width="1"/>
+<rect x="1620" y="1540" width="244" height="40" rx="8" fill="#3b82f6"/>
+<text x="1742" y="1565.5" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="1630 1854">Export footage (organiser)</text>
+<text x="1620" y="1604" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1620 1870">214 files + links.csv · 3.1 GB</text>
+<text x="1620" y="1624" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1620 1870">Event storage: 1.4 of 2 GiB used</text>
+<text x="444" y="1556" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="444 594">SESSION</text>
+<text x="640" y="1556" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="640 790">GAME</text>
+<text x="800" y="1556" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="800 950">WHO</text>
+<text x="980" y="1556" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="980 1130">TIME</text>
+<text x="1120" y="1556" font-size="11.5" fill="#a9b1d6" font-weight="700" text-anchor="start" data-box="1120 1270">FILE OR LINK</text>
+<line x1="444" y1="1566" x2="1590" y2="1566" stroke="#2a3050" stroke-width="1"/>
+<text x="444" y="1590" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="444 634">Demo Arena 5v5</text>
+<text x="640" y="1590" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="640 790">Demo Arena</text>
+<text x="800" y="1590" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="800 970">Nova, Kestrel</text>
+<text x="980" y="1590" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="980 1110">Sat 19:41</text>
+<text x="1120" y="1590" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1120 1450">nova-clutch.mp4 · file</text>
+<text x="444" y="1616" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="444 634">Demo Racer time trial</text>
+<text x="640" y="1616" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="640 790">Demo Racer</text>
+<text x="800" y="1616" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="800 970">Juno</text>
+<text x="980" y="1616" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="980 1110">Sat 15:02</text>
+<text x="1120" y="1616" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1120 1450">medal.tv/clips/… · copy saved</text>
+<text x="444" y="1642" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="444 634">Demo Party</text>
+<text x="640" y="1642" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="640 790">Demo Party</text>
+<text x="800" y="1642" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="800 970">(not tagged)</text>
+<text x="980" y="1642" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="980 1110">Sat 22:10</text>
+<text x="1120" y="1642" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1120 1450">steamcommunity.com/… · copy saved</text>
+<text x="444" y="1668" font-size="12.5" fill="#ffcf6e" font-weight="400" text-anchor="start" data-box="444 634">Demo Racer time trial</text>
+<text x="640" y="1668" font-size="12.5" fill="#ffcf6e" font-weight="400" text-anchor="start" data-box="640 790">Demo Racer</text>
+<text x="800" y="1668" font-size="12.5" fill="#ffcf6e" font-weight="400" text-anchor="start" data-box="800 970">Juno</text>
+<text x="980" y="1668" font-size="12.5" fill="#ffcf6e" font-weight="400" text-anchor="start" data-box="980 1110">Sun 11:20</text>
+<text x="1120" y="1668" font-size="12.5" fill="#ffcf6e" font-weight="400" text-anchor="start" data-box="1120 1450">Steam link expired · file asked</text>
+<text x="444" y="1696" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="444 1590">Shown or not, every clip and photo is in the export.</text>
 <circle cx="42" cy="1735" r="10" fill="#111827"/>
 <text x="42" y="1740" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">1</text>
-<text x="62" y="1740" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Game captures are game footage, so there are no consent ticks. The crew moderates every item, and a</text>
-<text x="62" y="1761" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">tagged person can still ask for an item&#x27;s removal.</text>
+<text x="62" y="1740" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Game captures are game footage: no consent step and no removal flow. Tagging is optional. The crew</text>
+<text x="62" y="1761" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">queue is the only gate, and the crew can delete an item.</text>
 <circle cx="970" cy="1735" r="10" fill="#111827"/>
 <text x="970" y="1740" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">2</text>
-<text x="990" y="1740" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">A participant can upload a file or paste a link; the platform fetches and keeps a copy, and the crew</text>
-<text x="990" y="1761" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">approves it like an upload.</text>
+<text x="990" y="1740" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">A participant sends a file or a link (YouTube, Twitch, Medal, Steam); the platform tries to save a copy,</text>
+<text x="990" y="1761" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">and the crew approves it like an upload.</text>
 <circle cx="42" cy="1787" r="10" fill="#111827"/>
 <text x="42" y="1792" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">3</text>
 <text x="62" y="1792" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Crew uploads skip the queue; a participant&#x27;s item never does. Files sit in the files volume with a size</text>

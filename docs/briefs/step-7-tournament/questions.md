@@ -11,6 +11,7 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 > - **Changed by the lead round of 2026-11-21 (the second: the product owner reviewed the plan against that day's tournament and made six decisions):** U5 (no waiting list), U7, U10, E7, D11 (the waiting list goes), E2 (a manual delay), D2 (the scoring system is editable), D12 (a lead and a crew), P3. **New:** U19 (reopen registration for a while), D20 (named awards).
 > - **Changed by the fourth lead round (2026-11-21: the product owner and the lead brainstormed sign-up, scoring and the screens):** U4, U7, E10, L3, L5, D9, D20, O6. **New:** U20 (sign-up without missing out), L10 (the screens around the tournament), L11 (PC and phone are equal), D21 (scoring from a screenshot), D22 (clips and photos).
 > - **Changed by the sixth lead round (2026-11-21: the product owner reviewed every sheet):** U3, U4, U11 (the finalist default is 4, a setting, everywhere), U14, U19, U20, L2, L6, L10, D9, D20, D21, D22, O1, O3. **New:** O12 (the tournament runs itself), D23 (the session form: game art, instructions link, voice rooms), D24 (the player card).
+> - **Changed by the seventh lead round (2026-11-22, the last: footage, the show, the lobby, QR codes):** U3, U9, U10, U14, L3, L10, D4, D5, D6, D9, D22, D23, O12. **New:** L12 (the hype curve and Screen's zones), D25 (storage for the footage), O13 (the show presets).
 > - **Later:** D17, D19, O11 and M1–M11, M13–M15.
 
 **Decided in the lead round of 2026-11-21 (the sixth):** the tournament runs itself on the schedule the crew set in advance, and the crew acts only to change something and to score (O12); a session's form holds game art found from its name, an optional instructions link and voice rooms made automatically (D23); awards are given on the player row while scoring (D20); the finalist default is 4 (U11); "Interested" becomes the bell button "Remind me" (U20); reopening is one number of minutes (U19); the tick list is the whole weekend, by day (U4); the screens' key moments are loud full frames (L10); there is no consent tick for game captures, and links work like uploads (D22); the player card is lively and shared (D24).
@@ -50,7 +51,7 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 - **A.** A leader creates the team and shares a link or a short code; others join until the close (esports platforms).
 - **B.** The leader types the members' names.
 - **C.** The crew builds every team.
-- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session. **Changed (lead round 6):** the team page is one panel: the name, members as a list and one invite line with a QR that opens the same invite link ("Scan to join Night Owls"; no player name is in it) ([mockup 03](03-teams.svg)). A team ends with its session; the season never sees team names.
+- **Recommendation: A**, with the crew able to edit any team. A link names a team, never a person, so no token in a URL identifies anyone (0010). The code works when the link cannot be shared (a Discord voice chat). One team per player per session. **Changed (lead round 6):** the team page is one panel: the name, members as a list and one invite link, with no QR (lead round 7: only "scan to join" on the screen's session card stays; no player name is in the link) ([mockup 03](03-teams.svg)). A team ends with its session; the season never sees team names.
 
 ### U4. What the player sees of the timeline
 - **A.** Each session page shows its timeline (close, voice rooms, the call, results) from the scheduler's own times, and the For you card shows the next step.
@@ -90,13 +91,13 @@ The legacy registered players one by one; teams formed by voice channel at T−1
 
 ### U9. The check-in window
 Check-in is off by default (0027). When on:
-- **A.** Opens at T−15, closes at T−5, both settings; by the hub's button or the stage QR; the crew marks others present.
+- **A.** The bot opens a lobby voice channel about 10 minutes before the start (a setting) and pings everyone who signed up; being in the lobby is the check-in; the crew marks others present. It closes at T−5 (a setting). **Changed (lead round 7):** no button and no stage QR; the lobby is the way in ([mockup 04](04-session-evening.svg), [D6](#d6-check-in-through-notify)).
 - **B.** Opens when registration closes, closes at T.
-- **Recommendation: A.** The legacy's T−15 is when players gather and the voice rooms appear; closing at T−5 leaves five minutes to replace no-shows and still start on time ([mockup 11](11-lifecycle.svg)).
+- **Recommendation: A.** The legacy's T−15 is when players gather and the voice rooms appear (now the lobby, at T−10); closing at T−5 leaves five minutes to replace no-shows and still start on time ([mockup 11](11-lifecycle.svg)).
 
 ### U10. No-shows
 With check-in on, at its close:
-- **A.** Players not checked in are marked no-show (0 points); each gets a push (and a DM in step 6); the crew can undo until the session ends. Nobody is replaced from a list; the crew may reopen registration ([U19](#u19-reopening-registration-for-a-while)) to fill places, and a team gets a substitute from its own roster first.
+- **A.** Players not in the lobby (and not marked present by the crew) are marked no-show (0 points); each gets a push (and a DM in step 6); the crew can undo until the session ends. Nobody is replaced from a list; the crew may reopen registration ([U19](#u19-reopening-registration-for-a-while)) to fill places, and a team gets a substitute from its own roster first.
 - **B.** The crew decides one by one.
 - **C.** Only flagged; nothing moves.
 - **Recommendation: A**, as #129 says. With check-in off nobody is a no-show; the legacy's 0-point "no-show" row stays for registrants who never played (from the roster). A team below its size after a no-show goes to the crew (E7). **Changed by the lead round:** the waiting list no longer moves up at the close of check-in.
@@ -120,7 +121,7 @@ Every account is a Discord account (0027), but a walk-in friend may have none.
 - **Recommendation: A**, as the App track's mockup 12 drew it. Calling a match sets where and the lobby id ([mockup 09](09-crew-phone.svg)). **Contract:** `where`, `lobby_id`, `voice_channels` on the Match (D8).
 
 ### U14. The crew phone
-- **A.** The desk works at 390 px: what to do next first, then what needs the crew, the stage QR, mark present, a quick result, the champion photo.
+- **A.** The desk works at 390 px: what to do next first, then what needs the crew, the lobby and the show (hold, skip, spotlight now), mark present, a quick result, the champion photo.
 - **B.** A separate crew app.
 - **C.** Desk only.
 - **Recommendation: A.** One page that reflows, as step 5's crew Food page; the stage crew rarely has a laptop.
@@ -179,7 +180,7 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **Changed for 0031 (the day schedule rule):** Sessions and a session's matches are things planned in time, so they are no longer card grids. **Recommendation now: A**, with sessions and a session's matches as a day schedule: one day at a time, times down the side, items in time order like the run of show, with a day picker, and the same list at phone width. Players and history stay tables, crew actions sit in one band above ([mockup 05](05-sessions.svg), [06](06-session-desk.svg), [15](15-day-schedule.svg)).
 
 ### L3. The screen during a session
-- **A.** The Pulse shows the bracket (when the session has rounds) or the standings as the hero, with the check-in QR while it is open; Moments' rules and presets do the peaks.
+- **A.** The Pulse shows the bracket (when the session has rounds) or the standings as the hero, with the session card's "scan to join" QR; Moments' rules and presets do the peaks.
 - **B.** The legacy's leaderboard pin from T−15 to T+10.
 - **Recommendation: A.** The Director already orders `bracket` and `leaderboard` first; step 4 rebuilt the pin as Starting soon and Match called ([mockup 10](10-venue-screen.svg)).
 - **Added (lead round 4):** the screen follows the whole evening, not only the session's peak: the arcs of [L10](#l10-the-screens-around-the-tournament) ([mockup 24](24-screens-around-tournament.svg)); the order in F1 still decides who leads.
@@ -219,7 +220,7 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 
 ### L10. The screens around the tournament
 **New for the lead round 4.** The hall screen tells the story all evening.
-- **A.** Three arcs: **a session's life** (Today or Tonight cards with game art, the sign-up count and a QR; last call with a countdown; the teams revealed; check-in "Waiting for 3: names"; match called; now playing with the stage, a round timer and the bracket between rounds; the result reveal, winners then awards then the standings sliding; a recap of approved clips and photos), **all evening** (the race to the final with the cut line; player spotlights; game-stat highlights from the screenshots; rivalries; the biggest climber; best moments; a "Next up" strip with several sessions, delays and last calls, alternating between overlapping sessions) and **the final** (several finalists, a setting with the default 4, and one winner: intro cards, the final, the ranking 1–N, then the champion moment and the champion photos; places 2–N are celebrated as finalists). It reuses Moments' presets and cues, Screen's templates, story pages, the pulse effects and the game art as the background; each new widget is named in the brief, under mockup 24.
+- **A.** Three arcs: **a session's life** (Today or Tonight cards with game art, the sign-up count and a QR; last call with a countdown; the teams revealed; the lobby "Waiting for 3: names"; match called; now playing with the stage, a round timer and the bracket between rounds; the result reveal, winners then awards then the standings sliding; a recap of approved clips and photos), **all evening** (the race to the final with the cut line; player spotlights; game-stat highlights from the screenshots; rivalries; the biggest climber; best moments; a "Next up" strip with several sessions, delays and last calls, alternating between overlapping sessions) and **the final** (several finalists, a setting with the default 4, and one winner: intro cards, the final, the ranking 1–N, then the champion moment and the champion photos; places 2–N are celebrated as finalists). It reuses Moments' presets and cues, Screen's templates, story pages, the pulse effects and the game art as the background; each new widget is named in the brief, under mockup 24.
 - **Changed (lead round 6): pop and hype.** The tournament's look on screen is loud and celebratory: the key moments are drawn as full 1920×1080 frames (the result reveal, an MVP and award moment, the race to the final with the cut line, a player spotlight, a finalist intro card, the champion), each with the game art as the background, big type, the player's avatar, motion notes (glow, pulse, confetti, slide-in, count-up, from the screen-energy rules and widgets.md's pulse effects) and a hold time. The small tiles stay only as an index ([mockup 24](24-screens-around-tournament.svg)).
 - **B.** Only the leaderboard, bracket, match called and champion card of the first plan ([L3](#l3-the-screen-during-a-session), [L4](#l4-match-called-on-the-screen), [L5](#l5-the-champion-moment)).
 - **Recommendation: A** (decided; mockup 24). It is the largest part of the lead round and of the screens' work; the package plan may cut it by arc. Spotlights and highlights use names as [L7](#l7-names-on-the-screen) allows. **Contract (additive):** `final_size`, the feed for each view (gap 19).
@@ -229,6 +230,12 @@ Step 6 (#123) builds the bot's tournament side against the catalog.
 - **A.** Every attendee page works fully in a PC browser and on a phone, with a desktop layout at 1280 px and wider. Alerts go through app push or browser notifications, plus Discord. The player pages are drawn at 1280 px ([mockup 26](26-pc-layout.svg)); the phone views stay.
 - **B.** Phone first, the desktop only readable.
 - **Recommendation: A** (decided). A player may be at the gaming PC, with the phone elsewhere; the clip upload by drag and drop ([D22](#d22-clips-and-photos-from-participants)) depends on it.
+
+### L12. The hype curve and Screen's zones
+**New for the lead round 7 (the product owner's suggestion).** A story's size follows how close its session is.
+- **A.** A small box in the rotation long before and long after the session; a larger panel as it nears (the gathering phase); the hero while it is live and for the result and the finals ([mockup 27](27-show-phases.svg): three frames of one screen layout).
+- **B.** One size for every story, as the first plan.
+- **Recommendation: A** (decided). **How it maps to Screen's zones** (no new region role): the small box is a tile in the `rail` region (the Pulse's 4×6 rail); the larger panel is the same story in a wider rail, the `split` layout's 5×5 rail, or the `rail` with `grow_for_showcase` where the zone allows it; the hero is the `hero` region (the Pulse's 8×10, or the `hero` layout's 12×10). Moments' claim for each phase names the region role it wants (`rail` or `hero`), and Screen draws it there; the preset's phase decides which, not a new Screen layout. Open for the lead: whether the zone switches the layout (`pulse` to `split` to `hero`) or keeps the Pulse and only moves the story between `rail` and `hero`; the pack recommends the second, because a layout change redraws the whole screen. **Contract (additive):** none beyond the preset's region role per phase (O13).
 
 ## D · Data and integrations
 
@@ -255,17 +262,20 @@ The legacy sorted by points only.
 ### D4. The voice handshake
 - **A.** As the catalog: `tournament.scoring.started` → the bot's `bot.voice_roster.captured` (members with `dwell_seconds`); `bot.voice_channels.created` and `.removed`. The qualifying dwell (10 minutes) is a tournament setting sent with `scoring.started`.
 - **B.** The tournament reads the bot's live voice API.
+- **Changed (lead round 7): a lobby channel per session.** About 10 minutes before the start the bot opens a lobby voice channel and pings everyone who signed up; the crew gives instructions there (no TTS). The lobby's roster is the check-in ([D6](#d6-check-in-through-notify)). When the teams are set the bot creates the team channels and moves the players in; after the game it moves them back to the lobby. Team channels need not be known in advance: `bot.voice_channels.created` carries what the bot made, and the Match shows it. **Contract (additive):** the lobby's timing on the Session and the bot's create-and-move commands; the bot's side is step 6 ([P6](#p6-the-bots-side-and-the-order)).
 - **Recommendation: A.** The handshake is outlined and built on the consumer side; one setting moves from the bot's env into the event. **Contract:** `dwell_seconds_min` on `tournament.scoring.started`.
 
 ### D5. Presence opt-out and check-in
 Review finding 1 of #137: does a tournament check-in count as presence data under the opt-out?
 - **A.** A check-in the player makes is an action, not tracking: it is allowed under the opt-out, stored as presence data (deleted 30 days after archiving) and never on the bus beyond counts and the player's own events.
 - **B.** The opt-out blocks check-in; the crew marks such players present.
+- **Changed (lead round 7):** with lobby presence as the check-in, an opted-out player is not in the bot's roster, so the crew marks them present by hand (as for voice rosters); nothing is blocked for the player, who still joins the lobby.
 - **Recommendation: A.** The opt-out is about being watched (voice rosters, who plays what); refusing a button the player presses would punish them. Opted-out players are still left out of voice rosters and ticked by hand ([mockup 12](12-edge-states.svg)).
 
 ### D6. Check-in through Notify
 - **A.** The hub's button and the stage QR both go through Notify's check-in with purpose `tournament:<session id>`; the module consumes `notify.checkin.recorded`, checks the session and the registration, and emits `tournament.player.checked_in`.
 - **B.** The button posts to the tournament directly; only the QR goes through Notify.
+- **Changed (lead round 7): lobby presence is the check-in.** One of the three participation sources ([D21](#d21-scoring-from-a-screenshot-three-sources-and-a-reveal)); the crew can still mark someone present. The stage QR and the "I'm here" button are dropped: Notify's check-in stays built and is not used for the cup. **C.** (now the recommendation) the module reads the lobby channel's roster from the bot ([D4](#d4-the-voice-handshake)).
 - **Recommendation: A.** One path, already built and tested in Notify; the button calls the same API without the code (a check-in the module requests on the player's behalf, with their session).
 
 ### D7. Corrections and the history
@@ -280,7 +290,7 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **Recommendation: A.** Each field has a real use on a screen or a phone; none renames anything. **Contract:** Session `name`, `tournament`, `teams_left`; Result `name`; Match `where`, `lobby_id`, `voice_channels`.
 
 ### D9. Photos
-- **A.** Four slots per final (winner, second, third, the moment), in the tenant's files volume, taken on the crew phone or uploaded; no consent tick (the crew's own photos of the event, and a tagged person can ask for removal); deleted with the player's data on request.
+- **A.** Four slots per final (winner, second, third, the moment), in the tenant's files volume, taken on the crew phone or uploaded; no consent tick (the crew's own photos of the event; the crew can delete); deleted with the player's data on request.
 - **B.** As the legacy (a BLOB column).
 - **Recommendation: A.** Containers keep no state; photos of people are personal data, kept and deleted as such (changed, lead round 6: no consent tick).
 - **Added (lead round 4):** the final's four slots stay the crew's; photos and clips from participants are [D22](#d22-clips-and-photos-from-participants).
@@ -351,17 +361,18 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **Recommendation: A** (decided; [mockup 23](23-scoring-screenshot.svg)). Players never add a screen: a wrong picture would move the standings. The reader is off until the organiser turns it on, and a picture is personal data (names), so it is kept as the results are ([O6](#o6-retention)). The reader only drafts: the Result is written by the crew's save, under the row lock, with the History ([D7](#d7-corrections-and-the-history)); the sources are kept on the participant so a correction can show them. **Contract (additive):** gap 17.
 
 ### D22. Clips and photos from participants
-**New for the lead round 4.** Moderated by the crew.
-- **A.** Anyone taking part uploads a clip or a photo from the hub, the session page or a PC browser (drag and drop a clip recorded on the gaming PC), tagging the session and people. The crew approves or rejects in a queue on the desk and the crew phone. Only approved items reach the screen and the recaps. Tagged people can ask for removal. Files go in the tenant's files volume, with size and type limits ([mockup 25](25-clips-and-photos.svg)).
-  - **No consent ticks** anywhere for game captures (they are game footage): the crew's moderation and a tagged person's removal request are the only gates.
-  - **Links as well as uploads (lead round 6):** a participant can paste a link instead of a file. Accepted kinds, by hosts the event allows (the crew can add one): a Steam screenshot or recording page (`steamcommunity.com/sharedfiles/…`), a Steam content link (`cdn.steamusercontent.com/ugc/…`), and clip pages of the usual capture services (Medal, Twitch clips, Xbox share pages, Streamable). The platform fetches the link on its own and keeps a copy for the screen, within a size, type and time limit, so a deleted or private link leaves no hole in the recap; the crew moderates it like an upload. Why a host list: the platform fetches only from places the event trusts, never an arbitrary address. A link from any other host, or one that needs a login, is refused with a clear message.
+**New for the lead round 4; lean since lead round 7.** Moderated by the crew, and everything is kept.
+- **A.** Anyone taking part sends a file or a link from the hub, the session page or a PC browser (drag and drop a clip recorded on the gaming PC), picks the session and optionally tags people. The crew approves or rejects in a queue on the desk and the crew phone, and can delete. Only approved items reach the screen and the recaps. Files go in the tenant's files volume, with size and type limits ([mockup 25](25-clips-and-photos.svg)).
+  - **No consent step and no removal flow (lead round 7):** game captures are game footage. Tagging people is optional. The crew's approve/reject queue is the only gate, and the crew can delete.
+  - **Links (YouTube, Twitch, Medal, Steam) or files:** accepted by hosts the event allows (the crew can add one): YouTube, Twitch clips, Medal, and a Steam screenshot or recording page (`steamcommunity.com/sharedfiles/…`) or content link (`cdn.steamusercontent.com/ugc/…`). The platform tries to save a copy when the link is sent, within a size, type and time limit. A Steam link expires, so if the copy fails the sender is asked for the file. Why a host list: the platform fetches only from places the event trusts, never an arbitrary address. A link from any other host, or one that needs a login, is refused with a clear message.
+  - **Keep everything for the LAN video (lead round 7):** every clip and photo is kept, shown or not. The organiser gets **one export per event**: the files plus a list of the links, each with session, game, who and time ([mockup 25](25-clips-and-photos.svg), panel 7). Storage is [D25](#d25-storage-for-the-footage).
   - **When and how often things are shown:** in the session recap right after its results; in the between-sessions rotation; before the final. Each approved item is shown at most a few times an hour (default 3, a setting), newest and least-shown first, spread fairly across players. The crew can pin one or push one now. Clips play muted for about 30 s at most unless the crew allows sound.
 - **B.** Only the crew's photos, as the final's four slots ([D9](#d9-photos)).
-- **Recommendation: A** (decided). Retention follows [D16](#d16-export-and-personal-data) and [O6](#o6-retention). The limits are settings (defaults in the mockup: 200 MB a clip, 15 MB a photo). There is no consent tick: game captures are game footage, and the queue plus a tagged person's removal request are the gate. **Contract (additive):** gap 18, with a link field beside the file and the showing rules as settings.
+- **Recommendation: A** (decided). Retention follows [D16](#d16-export-and-personal-data) and [O6](#o6-retention), except that the footage is kept for the export (a decision for the lead if it should end with the event: [D25](#d25-storage-for-the-footage)). The limits are settings (defaults in the mockup: 200 MB a clip, 15 MB a photo). Open: does Reject keep the file for the export? Recommended yes (kept, never shown); only Delete removes a file. **Contract (additive):** gap 18, with a link field beside the file, the crew's delete, the export and the showing rules as settings.
 
 ### D23. The session form
 **New for the lead round 6.** What a crew member fills in once, in advance, for each session (a game).
-- **A.** The form holds: the game; **game art, found automatically** from the game's name (the legacy's cover-art chain, signup-site T12: cache, Steam search, IGDB, ported with changes) or from a pasted Steam store link, replaceable by the crew; an **optional link to an instructions page** (rules, how to join the game), shown on the session page and the match card; **voice channels per session**: none, one per player or one per team, made automatically at a set time before the start (the legacy's `vc-plan`, already in the brief); and, as before, the format, places, close time, check-in and points ([mockup 05](05-sessions.svg)).
+- **A.** The form holds: the game; **game art, found automatically** from the game's name (the legacy's cover-art chain, signup-site T12: cache, Steam search, IGDB, ported with changes) or from a pasted Steam store link, replaceable by the crew; an **optional link to an instructions page** (rules, how to join the game), shown on the session page and the match card; **voice channels, made automatically (lead round 7):** the bot opens a lobby channel about 10 minutes before the start and makes the team channels when the teams are set (the legacy's `vc-plan`, reworked: no choice of none, per player or per team on the form); **the show preset**, one dropdown ("Standard night" by default, "Big final", "Low-key"; [O13](#o13-the-show-presets)); and, as before, the format, places, close time and points ([mockup 05](05-sessions.svg)).
 - **B.** Art and instructions stay in Discord and the organiser's head, as the legacy.
 - **Recommendation: A** (decided). The art makes every screen and card look like the game; the link answers "how do I join" once; the voice plan is already tested in the legacy. **Contract (additive):** `art_url`, `instructions_url` on the Session; `voice_plan` is already in the catalog (its creation time before the start is a setting of the session).
 
@@ -370,6 +381,13 @@ The brief lists six gaps between the catalog and its built consumers (Moments' `
 - **A.** The card shows a nickname, a motto the player sets in their profile, the avatar, achievement badges (MVPs, podiums, streaks, first win), season points and the best result. The same card is the finalist intro on the screen and the spotlight, and is shown at the final on the organiser's page ([mockups 08](08-standings-and-final.svg), [24](24-screens-around-tournament.svg)). Badges are computed from results; nothing is typed by the crew.
 - **B.** A name and a number, as the standings.
 - **Recommendation: A** (decided). It makes the finals feel like an event. The motto is the player's own text and follows the usual profile rules (moderation by the crew, names as [L7](#l7-names-on-the-screen) allows). **Contract (additive):** `motto` on the player's profile read, `badges` and `best_result` in the finalist feed.
+
+### D25. Storage for the footage
+**New for the lead round 7.** Every clip and photo is kept for the LAN video, so the footage can outgrow the event's files quota (2 GiB by default today), and video is far bigger than photos (a 200 MB clip is a tenth of it).
+- **A.** The superadmin raises the event's quota for the weekend (a setting per event); the footage stays in the shared files volume under `/files/<tenant>/tournament/`.
+- **B.** A separate footage volume on the host (a second mount), outside the quota, with its own backup rule.
+- **C.** Keep only the links and a short thumbnail, and fetch the files only at export (a lost link is then lost).
+- **Recommendation: A** for the first events, because it adds nothing to deploy and the limits already are settings; B if one event's footage passes about 20 GiB. C breaks "keep all footage" for expiring Steam links. Either way the organiser's export lists the size before it starts, and the retention is [O6](#o6-retention)'s unless the lead says the footage ends with the event. For the lead to settle: the size of a typical LAN's footage (a first estimate: 200 to 400 clips of 40 to 100 MB). **Contract (additive):** the export's size on the export endpoint (gap 18).
 
 ## E · Edge cases and failure
 
@@ -484,9 +502,16 @@ About 1,000–2,000 attendees: a session of 64 players or 16 teams, several sess
 
 ### O12. The tournament runs itself
 **New for the lead round 6 (a principle).** The crew defines the sessions in advance, preferably before the LAN.
-- **A.** On its own schedule, without a button, the module opens and closes registration, sends the reminders and last calls, opens and closes check-in, makes the voice channels at the planned time, calls the matches, plays the screen moments and cleans up. The crew acts only to change something (reopen, delay, rename a team, an exception) and to score. The desk and the crew phone show what happens next and when ("Check-in opens automatically at 19:40"), with a small override; the next action is usually "Nothing to do". No button exists only to start a step the schedule already starts ([O1](#o1-the-scheduler), [O3](#o3-timeline-defaults), [mockups 06](06-session-desk.svg), [09](09-crew-phone.svg)).
+- **A.** On its own schedule, without a button, the module opens and closes registration, sends the reminders and last calls, opens the lobby voice channel about 10 minutes before the start, makes the team channels when the teams are set, calls the matches, starts each phase of the show from the session's preset and cleans up. The crew acts only to change something (reopen, delay, rename a team, an exception) and to score. The desk and the crew phone show what happens next and when ("The lobby opens automatically at 19:40"), with a small override; the next action is usually "Nothing to do". No button exists only to start a step the schedule already starts ([O1](#o1-the-scheduler), [O3](#o3-timeline-defaults), [mockups 06](06-session-desk.svg), [09](09-crew-phone.svg)).
 - **B.** The crew starts each step by hand, as the legacy's admin page did (with the bot's polling behind it).
 - **Recommendation: A** (decided). A tired crew at the stage should watch and score, not press eleven buttons; every step is still reachable by hand when the bot or a time is wrong (E3, E8).
+
+### O13. The show presets
+**New for the lead round 7.** The show runs itself.
+- **A.** The tournament ships **storyline presets** on Moments' storyboards (step 4), one per phase of a session: build-up, gathering, live, result, between sessions, finals. The schedule starts each phase from its row, as it starts registration. The session form has one dropdown for the preset: "Standard night" (default), "Big final", "Low-key". The presets are editable in the step 4 storyboard builder. From the desk the crew only holds a phase, skips to the next, or fires "spotlight now" ([mockup 27](27-show-phases.svg), [09](09-crew-phone.svg), [05](05-sessions.svg)). A story's size follows the hype curve ([L12](#l12-the-hype-curve-and-screens-zones)).
+- **B.** The crew fires every screen moment by hand, as in the first plan.
+- **C.** One fixed show for every session, with no dropdown.
+- **Recommendation: A** (decided). A tired crew should not run a show. The three presets are a start: "Big final" turns the finals phase up (longer lead-up, the champion moment), "Low-key" keeps everything small and quiet. **Contract (additive):** `show_preset` on the Session (a preset key, default the event's); the phase rows in the scheduler; the presets themselves are Moments' data, shipped by the tournament as storyboard presets (step 4's contract), not a new tournament table.
 
 ## P · Plan and scope
 

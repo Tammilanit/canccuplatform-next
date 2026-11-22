@@ -3,7 +3,7 @@
 <defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="980" rx="10"/></clipPath><clipPath id="c2"><rect x="0" y="0" width="1060" height="1190" rx="10"/></clipPath></defs>
 <rect x="0" y="0" width="1920" height="1340" rx="0" fill="#f3f4f6"/>
 <text x="32" y="48" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32 1888">05 · Organiser: the sessions, planned in advance, and a new session (organiser)</text>
-<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: before the LAN an organiser plans the weekend as sessions and adds one with its game art, instructions link, voice rooms and timing; the schedule then runs them. Demo names only.</text>
+<text x="32" y="80" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 1888">Use case: before the LAN an organiser plans the weekend as sessions and adds one with its game art, instructions link, lobby and show preset and timing; the schedule then runs them. Demo names only.</text>
 <text x="32" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32 932">1 · Sessions · 1280 px: one day, times down the side</text>
 <text x="1000" y="128" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000 1800">2 · New session · a form page</text>
 <g transform="translate(32,140) scale(0.72)" clip-path="url(#c1)">
@@ -62,10 +62,10 @@
 <text x="254" y="490" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="254 314">19:30</text>
 <text x="254" y="510" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="254 324">to 21:30</text>
 <text x="350" y="488" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="350 710">Demo Arena 5v5</text>
-<text x="350" y="510" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 990">Stage · teams of 5 · 8 of 8 · Full · check-in closes 19:25</text>
+<text x="350" y="510" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="350 990">Stage · teams of 5 · 8 of 8 · Full · lobby opens 19:20</text>
 <text x="350" y="532" font-size="12.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="350 990">Next, automatic: semi-finals called 20:50</text>
 <rect x="970" y="470" width="133.2" height="22" rx="11.0" fill="#22263f" stroke="#7cecba" stroke-width="1"/>
-<text x="979" y="483" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="979 1102.2">Check-in · 31/40</text>
+<text x="979" y="483" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="979 1102.2">Lobby · 31/40</text>
 <rect x="1140" y="470" width="64" height="28" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="1172" y="488.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1146 1198">Edit</text>
 <rect x="240" y="560" width="980" height="90" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
@@ -131,9 +131,9 @@
 <text x="760" y="458" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="760 980">Registration closes</text>
 <rect x="760" y="466" width="220" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="772" y="491" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="772 968">30 min before</text>
-<text x="240" y="526" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 480">Check-in</text>
+<text x="240" y="526" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 480">Lobby opens</text>
 <rect x="240" y="534" width="240" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="252" y="559" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="252 468">Off (event default)</text>
+<text x="252" y="559" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="252 468">10 min before</text>
 <text x="500" y="544" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="500 980">Everything else runs by itself on this schedule.</text>
 <text x="240" y="626" font-size="11.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="240 540">FORMAT AND PLAYERS</text>
 <text x="240" y="652" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 440">Format</text>
@@ -155,17 +155,16 @@
 <text x="256" y="802" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="256 756">Or: one match with everyone (the default)</text>
 <rect x="880" y="764" width="84" height="30" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
 <text x="922" y="783.2" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="886 958">Change</text>
-<text x="240" y="852" font-size="11.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="240 540">VOICE CHANNELS</text>
-<text x="240" y="878" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 440">Voice rooms</text>
-<rect x="240" y="886" width="68.4" height="36" rx="18" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="274.2" y="909" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="245 303.4">None</text>
-<rect x="330" y="886" width="149.4" height="36" rx="18" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="404.7" y="909" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="335 474.4">One per player</text>
-<rect x="500" y="886" width="133.2" height="36" rx="18" fill="#1d2a4d" stroke="#3ddcff" stroke-width="1"/>
-<text x="566.6" y="909" font-size="13.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="505 628.2">One per team</text>
-<text x="660" y="868" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="660 980">Made automatically, before the start</text>
-<rect x="660" y="876" width="320" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="672" y="901" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="672 968">15 min before</text>
+<text x="240" y="852" font-size="11.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="240 540">VOICE AND SHOW</text>
+<text x="240" y="868" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 640">Voice channels</text>
+<rect x="240" y="876" width="400" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
+<text x="252" y="901" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="252 628">Lobby and team channels · made automatically</text>
+<text x="240" y="934" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="240 640">The lobby opens 10 min before; team channels when teams are set.</text>
+<text x="660" y="868" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="660 980">Show preset</text>
+<rect x="660" y="876" width="320" height="40" rx="8" fill="#22263f" stroke="#3ddcff" stroke-width="1"/>
+<text x="672" y="901" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="672 940">Standard night</text>
+<text x="962" y="901" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="940 972">▾</text>
+<text x="660" y="934" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="660 980">Also: Big final, Low-key. Editable in the storyboard builder.</text>
 <text x="240" y="968" font-size="11.5" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="240 540">POINTS AND PLACE</text>
 <text x="240" y="986" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="240 480">Points</text>
 <rect x="240" y="994" width="240" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
@@ -175,7 +174,7 @@
 <text x="512" y="1019" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="512 728">Stage</text>
 <text x="760" y="986" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="760 980">Note for players (optional)</text>
 <rect x="760" y="994" width="220" height="40" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
-<text x="772" y="1019" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="772 968">Be in voice by 22:00</text>
+<text x="772" y="1019" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="772 968">Bring a headset</text>
 <rect x="240" y="1070" width="170" height="38" rx="8" fill="#3b82f6"/>
 <text x="325" y="1093.9" font-size="14" fill="#fff" font-weight="600" text-anchor="middle" data-box="246 404">Add the session</text>
 <rect x="420" y="1070" width="100" height="38" rx="8" fill="#22263f" stroke="#3c446c" stroke-width="1"/>
@@ -195,8 +194,8 @@
 <text x="62" y="1232" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">The instructions link is optional and shows on the session page and the match card.</text>
 <circle cx="970" cy="1227" r="10" fill="#111827"/>
 <text x="970" y="1232" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">4</text>
-<text x="990" y="1232" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">Voice rooms: none, one per player or one per team, made automatically at the set time before the start.</text>
+<text x="990" y="1232" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="990 1858">The lobby and team channels are made by the bot; the one dropdown picks the show preset the schedule runs.</text>
 <circle cx="42" cy="1258" r="10" fill="#111827"/>
 <text x="42" y="1263" font-size="12" fill="#fff" font-weight="700" text-anchor="middle">5</text>
-<text x="62" y="1263" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Format, places, close time, check-in and points come from the event&#x27;s settings unless set here.</text>
+<text x="62" y="1263" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="62 930">Format, places, close time and points come from the event&#x27;s settings unless set here.</text>
 </svg>
