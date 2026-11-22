@@ -63,7 +63,7 @@ function orderCard(c: PageCtx, o: RecordOrder, flags: DailyRecord["flags"]): Htm
             >${time(c, o.placed_at)}</time
           >`
     }
-    <a class="pizza-card pizza-card--link" href="${PREFIX}crew/record/${o.id}">
+    <a class="pizza-slot" href="${PREFIX}crew/record/${o.id}">
       <p class="pizza-title">${c.t("record.order", { seq: o.seq, pizzeria: o.pizzeria })}</p>
       <p>${total}</p>
       <p class="pizza-meta">
@@ -136,7 +136,7 @@ export function recordOrderView(
   // Two panels side by side on a desktop, one column on a phone (amendment 5).
   return html`<div class="canccu-band">
     <div class="pizza-stack">
-      <section class="pizza-card">
+      <section class="pizza-block">
         <p class="pizza-title">${o.pizzeria} · ${day}</p>
         <p class="pizza-meta">
           ${c.t("record.times", {
@@ -159,7 +159,7 @@ export function recordOrderView(
           .filter((f) => f.order_id === o.id)
           .map((f) => html`<p class="pizza-badge pizza-badge--warn">${f.text}</p>`)}
       </section>
-      <section class="pizza-card">
+      <section class="pizza-block">
         <p>
           ${
             m.settle_to === "payer"

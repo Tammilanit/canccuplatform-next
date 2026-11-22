@@ -144,14 +144,6 @@
 .pizza-heading > .pizza-section {
   margin: 0;
 }
-.pizza-block {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0;
-}
-.pizza-block p {
-  margin: 0;
-}
 
 /* The hero: the one thing the page is for, large and unframed. */
 .pizza-hero {

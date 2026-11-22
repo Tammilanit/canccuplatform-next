@@ -81,6 +81,9 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
     expect(r.body).toMatch(/<time[^>]*class="pizza-schedule__time"[^>]*>18:00<\/time\s*>/);
     expect(r.body).toContain("pizza-schedule");
     expect(r.body).not.toContain("canccu-main--narrow");
+    // Each order is a line of the schedule, as on the Orders tab, not a box of its own (#771).
+    expect(r.body).not.toContain("pizza-card");
+    expect(r.body).toContain('class="pizza-slot"');
     const shot = await view(w, "treasurer", "/crew/export?day=2026-10-29");
     expect(shot.body).not.toContain("canccu-main--narrow");
   });
@@ -98,6 +101,7 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
 
   it("shows one order's money: each person, the sum, who is paid and the marks", async () => {
     const r = await view(w, "treasurer", `/crew/record/${one}`);
+    expect(r.body).not.toContain("pizza-card");
     expect(r.statusCode).toBe(200);
     expect(r.body).toContain("Pena paid the pizzeria");
     expect(r.body).toContain("€20.00 · total typed in");

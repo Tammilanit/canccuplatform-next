@@ -27,7 +27,7 @@ function pickView(c: PageCtx, id: string, error?: string): Html {
       method="post"
       action="${P}/${id}/read"
       enctype="multipart/form-data"
-      class="canccu-card pizza-form"
+      class="pizza-part pizza-form"
     >
       ${formKey()}
       <label class="canccu-field"
@@ -64,7 +64,7 @@ function resultView(c: PageCtx, csv: string, items: number, unsure: string[]): H
           </p>`
     }
     <p class="canccu-muted canccu-small">${c.t("read.fix")}</p>
-    <form method="post" action="${P}/import" class="canccu-card pizza-form">
+    <form method="post" action="${P}/import" class="pizza-part pizza-form">
       ${formKey()}
       <textarea
         class="canccu-input pizza-csv"

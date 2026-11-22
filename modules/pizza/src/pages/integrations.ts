@@ -38,8 +38,8 @@ const date = (c: PageCtx, iso: string | null) =>
 
 function view(c: PageCtx, k: KeyStatus, error?: string): Html {
   return html`${flash(error)}
-    <section class="canccu-card pizza-stack pizza-key">
-      <h2 class="canccu-card__title">${c.t("integrations.reader")}</h2>
+    <section class="pizza-part pizza-stack pizza-key">
+      <h2 class="pizza-part__title">${c.t("integrations.reader")}</h2>
       <p class="canccu-muted">${PROVIDER.name} · ${PROVIDER.model}</p>
       <p>${c.t("integrations.reader_text")}</p>
       ${

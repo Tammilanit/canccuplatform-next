@@ -50,6 +50,16 @@
 .pizza-card p {
   margin: 0;
 }
+/* A group of lines with no frame: the holder's, the attendee's and the crew's pages share it. */
+.pizza-block {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+.pizza-block p,
+.pizza-slot p {
+  margin: 0;
+}
 .pizza-card--here {
   border-color: var(--canccu-color-accent);
 }
