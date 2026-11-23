@@ -1,0 +1,144 @@
+/*
+ * The food box in the Pulse's built-in look (mockup 14 of step 5, #643; #771), wherever it stands:
+ * its own place in the venue rail, or Moments' pizza claim on the ticker. On screen.css's frame
+ * and unit, in `canccu-base` like widgets.css, so a theme restyles any of it without `!important`.
+ */
+@layer canccu-base {
+  /* Never cut at the top: more orders than fit run off the foot, the lead and first row stay. */
+  .canccu-region > .canccu-widget--food_status {
+    justify-content: safe center;
+  }
+
+  /*
+   * The pizzeria and the pickup note are the holder's own words, of any length (#775): they wrap
+   * inside the box, a long word too, and the box's type steps down while they overflow it (fit.ts,
+   * every size below). Never under 2.8 units: the unit is 1 % of the layout's short side inside its
+   * margins, so 2.6 would be 25.6 px at 1080p, under the CI check's 2.5 % of the screen (27 px).
+   * Not on the ticker's one line.
+   */
+  .canccu-region:not([data-role="ticker"]) > .canccu-widget--food_status {
+    overflow-wrap: anywhere;
+  }
+
+  .canccu-widget--food_status .canccu-widget__row .canccu-widget__meta {
+    font-size: max(2.8 * var(--canccu-u), calc(3.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  /* The venue rail's half has room for two orders: a third waits for the hub, as the rail's
+     third run-of-show row does (rail.css), so the type never steps down for orders unseen. */
+  .canccu-region[data-role="venue_rail"]
+    > .canccu-widget--food_status
+    .canccu-widget__row
+    ~ .canccu-widget__row
+    ~ .canccu-widget__row {
+    display: none;
+  }
+
+  /* The box's mark (the screen-energy rule, docs/design amendment 1): a pizza in the theme's
+     accent before its kicker, so the box reads as food from across the hall. */
+  .canccu-widget--food_status .canccu-widget__kicker {
+    display: flex;
+    align-items: center;
+    gap: calc(1.2 * var(--canccu-u));
+    font-size: max(2.8 * var(--canccu-u), calc(3.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  .canccu-widget--food_status .canccu-widget__kicker::before {
+    content: "";
+    flex: none;
+    width: calc(4.4 * var(--canccu-u));
+    height: calc(4.4 * var(--canccu-u));
+    background: var(--canccu-color-accent);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 5.6C8.4 1.6 15.6 1.6 22 5.6l-1.3 2.4C15 4.8 9 4.8 3.3 8z'/%3E%3Cpath fill-rule='evenodd' d='M4.3 9.9C9.3 7.2 14.7 7.2 19.7 9.9L12 22.5zM9.5 10.6a1.6 1.6 0 1 0 0 3.2a1.6 1.6 0 1 0 0-3.2zM14.6 12.2a1.4 1.4 0 1 0 0 2.8a1.4 1.4 0 1 0 0-2.8zM11.6 16a1.3 1.3 0 1 0 0 2.6a1.3 1.3 0 1 0 0-2.6z'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+
+  /*
+   * The lead: the first order's time large, its words small above it. It says what the first
+   * row's status says, so that status steps aside and the pizzeria's name stays.
+   */
+  .canccu-widget--food_status .canccu-widget__label {
+    display: block;
+    font-size: max(2.8 * var(--canccu-u), calc(3.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-widget--food_status .canccu-widget__big {
+    display: block;
+    font-size: max(4.4 * var(--canccu-u), calc(7.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  .canccu-widget--food_status .canccu-widget__lead + .canccu-widget__row .canccu-widget__meta {
+    display: none;
+  }
+
+  /* A row per order, its pizzeria and its state under it, most urgent first as the server orders
+     them. A long name wraps, never cut: the box's fit makes room for it (#775). */
+  .canccu-widget--food_status .canccu-widget__row {
+    /* canccu-grid: fixed screen — the player's or a layout's own grid: one order */
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+  }
+
+  .canccu-widget--food_status .canccu-widget__row + .canccu-widget__row {
+    padding-top: calc(1.5 * var(--canccu-u));
+  }
+
+  .canccu-widget--food_status .canccu-widget__name {
+    font-size: max(2.8 * var(--canccu-u), calc(4.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+    color: var(--canccu-color-text);
+  }
+
+  /*
+   * Moments' pizza claim on the ticker (a layout without a venue rail): one line as the ticker's
+   * own, the box's kicker as its label, then the order's row in the box's words; no lead or QR.
+   */
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: calc(2.4 * var(--canccu-u));
+    padding: 0 calc(2.4 * var(--canccu-u)) 0 0;
+    white-space: nowrap;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__kicker {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 calc(2.4 * var(--canccu-u));
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+    font-size: calc(3.4 * var(--canccu-u));
+  }
+
+  /* The box's wrap and fit (#775) are not the ticker's: its one line ends a long name with an
+     ellipsis, as the ticker's own text does. */
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__lead,
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__qr {
+    display: none;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__row {
+    display: flex;
+    align-items: baseline;
+    gap: calc(1.6 * var(--canccu-u));
+    min-width: 0;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__meta {
+    display: inline;
+    font-size: calc(4.4 * var(--canccu-u));
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__meta::before {
+    content: "· ";
+  }
+}

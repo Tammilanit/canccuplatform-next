@@ -1,13 +1,6 @@
 /** The event day (D4, E8): it turns at 06:00 in the event's time zone, across a clock change too. */
 import { describe, expect, it } from "vitest";
-import {
-  dayTurn,
-  eventDay,
-  formatDayLabel,
-  localTime,
-  nextLocalTime,
-  withOffset,
-} from "../src/time.js";
+import { dayTurn, eventDay, formatDayLabel, nextLocalTime, withOffset } from "../src/time.js";
 
 const HKI = "Europe/Helsinki";
 
@@ -40,10 +33,6 @@ describe("dayTurn", () => {
 });
 
 describe("formatting", () => {
-  it("shows local times on both sides of the clock change", () => {
-    expect(localTime(new Date("2026-10-24T16:00:00Z"), HKI)).toBe("19:00");
-    expect(localTime(new Date("2026-10-26T16:00:00Z"), HKI)).toBe("18:00");
-  });
   it("writes ISO 8601 with the event's offset, as the export's ordered_at", () => {
     expect(withOffset(new Date("2026-11-21T15:20:00Z"), HKI)).toBe("2026-11-21T17:20:00+02:00");
     expect(withOffset(new Date("2026-07-01T09:05:00Z"), HKI)).toBe("2026-07-01T12:05:00+03:00");

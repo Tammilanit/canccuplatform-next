@@ -48,10 +48,11 @@ type Spec = Omit<Partial<Story>, "round"> &
   Pick<Story, "key" | "name" | "triggers" | "rounds" | "end"> & {
     steps: StoryStep[];
     repeat?: Round["repeat"];
+    hold_seconds?: Round["hold_seconds"];
   };
 
 /** A preset with the usual defaults: on, every zone, per source, hero → rail, first round sounds. */
-export const preset = ({ steps, repeat = null, ...o }: Spec): Story => ({
+export const preset = ({ steps, repeat = null, hold_seconds = null, ...o }: Spec): Story => ({
   preset: o.key,
   enabled: true,
   conditions: { ...EMPTY_CONDITIONS },
@@ -60,7 +61,7 @@ export const preset = ({ steps, repeat = null, ...o }: Spec): Story => ({
   finale: null,
   sound: "first",
   ...o,
-  round: { steps, repeat, hold_seconds: null },
+  round: { steps, repeat, hold_seconds },
 });
 
 export const item = (kinds: string[], anchor: "start" | "end"): Trigger => ({

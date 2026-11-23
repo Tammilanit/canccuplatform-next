@@ -6,6 +6,7 @@ import qrcode from "qrcode-generator";
 import { graphFields, todayFields } from "./features.js";
 import { foodFields } from "./food.js";
 import type { FoodOrder } from "./food.js";
+import type { Override } from "./claims.js";
 import type { Presence } from "./features.js";
 import type { Props } from "./layouts.js";
 import type { MotionPhase } from "./motion.js";
@@ -151,6 +152,23 @@ function clockText(at: Date, timeZone: string, part: "time" | "date"): string {
 const textOf = (iso: string | null, facts: ZoneFacts): string | null =>
   iso === null ? null : clockText(new Date(iso), facts.timeZone, "time");
 
+const foodView = (orders: FoodOrder[], facts: ZoneFacts, names: boolean) =>
+  foodFields(orders, { nowMs: facts.now.getTime(), time: (iso) => textOf(iso, facts), names });
+
+/**
+ * A `pizza_placed` claim (Moments' `pizza` rule) drawn as the food box draws its order (#771), so
+ * the screen tells an order's state in one set of words and never the API's state name. Its order
+ * is the box's of the same number and pizzeria (a number is unique within its event day); while
+ * the box has none (the order over, or not read yet) the claim keeps Moments' content.
+ */
+export function foodClaim(o: Override, facts: ZoneFacts): Override {
+  if (o.template !== "pizza_placed" || facts.food === undefined) return o;
+  const { seq, pizzeria_name } = o.content;
+  const mine = facts.food.orders.filter((x) => x.seq === seq && x.pizzeria_name === pizzeria_name);
+  const view = mine.length === 0 ? null : foodView(mine, facts, facts.food.names);
+  return view === null ? o : { ...o, content: view };
+}
+
 /** The agenda's screen read already leaves non-public items out; the filter keeps a screen public if one slips in. */
 const publicOnly = (items: AgendaItem[]): AgendaItem[] =>
   items.filter((i) => i.visibility === "public");
@@ -288,13 +306,7 @@ function fields(
     case "stats":
       return facts.stats ?? null;
     case "food_status":
-      return facts.food === undefined
-        ? null
-        : foodFields(facts.food.orders, {
-            nowMs: facts.now.getTime(),
-            time: (iso) => textOf(iso, facts),
-            names: facts.food.names,
-          });
+      return facts.food === undefined ? null : foodView(facts.food.orders, facts, facts.food.names);
     case "checkin_qr":
       return facts.checkin == null ? null : checkinFields(facts.checkin, facts);
     case "embed": {

@@ -15,6 +15,7 @@ import {
   SESSION,
   expect,
 } from "../modules/screen/test/stack/client.mjs";
+import { roomReady } from "../modules/screen/test/stack/food.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 /** The demo pizzerias, when the stack has not loaded the event profile that holds them. */
@@ -73,6 +74,9 @@ const BOX = "/screen/zones/main";
  * walks the flow: the Food page, the menu, my order at each step.
  */
 const LISTED = [
+  // The hall's screen first at each step that has a story (#775): Moments' Pizza order open plays
+  // its card for 20 s, and Pizza is here holds the hero three minutes, from the order's event.
+  ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-phone", "/pizza/", PHONE, "open"],
   ["pizza-food-guest-phone", "/pizza/", PHONE, "open", GUEST],
   ["pizza-food-start-phone", "/pizza/start", PHONE, "open"],
@@ -82,7 +86,6 @@ const LISTED = [
   ["pizza-food-other-phone", `/pizza/orders/${ORDER}/add?tab=other`, PHONE, "open"],
   ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
-  ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
   ["pizza-holder-call-phone", `/pizza/hold/${ORDER}/call`, PHONE, "closed"],
   ["pizza-holder-called-in-phone", `/pizza/hold/${ORDER}/called-in`, PHONE, "closed"],
@@ -101,8 +104,8 @@ const LISTED = [
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
   // The plan's "Pay me with": what a member who still owes the holder sees on their order (#769).
   ["pizza-food-pay-phone", `/pizza/orders/${ORDER}`, PHONE, "payer", PLAYERS[2][0]],
-  ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-screen-food-here", BOX, HALL, "arrived"],
+  ["pizza-food-here-phone", `/pizza/orders/${ORDER}`, PHONE, "arrived"],
   ["pizza-holder-hand-out-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "arrived"],
   ["pizza-holder-done-phone", `/pizza/hold/${ORDER}/hand-out`, PHONE, "done"],
   ["pizza-food-done-phone", `/pizza/orders/${ORDER}`, PHONE, "done"],
@@ -356,6 +359,9 @@ export async function pizzaShots({ shot, fail }) {
       cookie,
       {
         touch: viewport === PHONE,
+        // The read's sum and Confirm stay in view at the window's foot: shot as tall as the page,
+        // so that footer sits under the lines, not over them.
+        ...(name.startsWith("pizza-holder-money-check") ? { tall: true } : {}),
         // The attendee's pages keep their live stream open, so the network never goes idle.
         ...(name.startsWith("pizza-food")
           ? { ready: (page) => page.locator(".pizza-hub__main").waitFor() }
@@ -365,19 +371,7 @@ export async function pizzaShots({ shot, fail }) {
           ? {
               fullPage: false,
               readable: true,
-              // The rail takes turns (venue info, the QR, the food box): shot once the box has
-              // faded in, and again from its next turn when the rail moved on meanwhile.
-              ready: async (page) => {
-                const box = page
-                  .locator(".canccu-widget--food_status .canccu-widget__row")
-                  .first();
-                for (let turn = 0; turn < 4; turn++) {
-                  await box.waitFor({ timeout: 60_000 });
-                  await page.waitForTimeout(900);
-                  if (await box.isVisible()) return;
-                }
-                throw new Error("the food box never stayed on the screen");
-              },
+              ready: (page) => roomReady(page, step),
             }
           : {}),
         ...(preview

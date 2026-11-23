@@ -22,6 +22,7 @@ from canccu_kit.rights import Session
 
 from .auth_db import AuthStore, Flow, Person, User
 from .discord import Discord, DiscordFailed
+from .roles import ROLE_RIGHTS
 
 log = logging.getLogger("canccu.admin")
 
@@ -33,23 +34,6 @@ TOUCH_AFTER = timedelta(minutes=1)
 # No 0/O, 1/I/L or 8: the code is read from a log and typed by hand. 12 of 30 symbols ≈ 59 bits.
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ2345679"
 CODE_LENGTH = 12
-
-ADMIN_RIGHTS = frozenset(
-    {
-        "admin.settings.read",
-        "admin.settings.write",
-        "admin.profile.read",
-        "admin.profile.write",
-        # The event's integrations: today the Food AI reader's provider key (contracts/pizza.md).
-        "admin.integrations.write",
-    }
-)
-# Other modules' rights join these sets as their modules land; the event-admin role per tenant
-# (contracts/tenants.md, Roles) replaces them with the central sign-in (#52).
-ROLE_RIGHTS: dict[str, frozenset[str]] = {
-    "owner": ADMIN_RIGHTS | {"admin.rights.write"},
-    "admin": ADMIN_RIGHTS,
-}
 
 
 class SignInFailed(KitError):

@@ -7,8 +7,8 @@ import pytest
 from conftest import START, World, owner_and_member
 from test_pages import TROUBLE
 
-from canccu_admin.auth import ADMIN_RIGHTS, ROLE_RIGHTS
 from canccu_admin.health import Check, Part
+from canccu_admin.roles import EVENT_ADMIN_RIGHTS, ROLE_RIGHTS
 
 NOTE = "/api/admin/health/note"
 
@@ -77,7 +77,7 @@ async def test_the_live_parts_need_the_right_to_open_health(
     r = await world.browser(member).get("/admin/health-view/live")
     assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"
     # A role without the right to open Health is refused.
-    monkeypatch.setitem(ROLE_RIGHTS, "admin", ADMIN_RIGHTS - {"admin.settings.read"})
+    monkeypatch.setitem(ROLE_RIGHTS, "admin", EVENT_ADMIN_RIGHTS - {"admin.settings.read"})
     me = (await world.browser(member).get("/api/admin/session")).json()["user"]["id"]
     await world.auth.set_role(me, "admin", "u_owner")
     world.checker.forget_session(member)  # as admin.rights.changed drops it

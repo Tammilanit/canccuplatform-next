@@ -80,7 +80,7 @@ describe.skipIf(!DATABASE_URL)("the preset catalogue among the other moments", (
     // The placed order's sound, then the arrived one's: each once.
     expect(played).toEqual(["pizza.placed", "pizza.placed"]);
     const steps = (started[0]?.steps ?? []) as { content: Record<string, unknown> }[];
-    expect(steps[1]?.content).toMatchObject({ subtitle: "Order 1: come and get it" });
+    expect(steps[1]?.content).toMatchObject({ subtitle: "Order 1 · Collect at the pickup point" });
   });
 
   it("plays Quiet hours soon's finale calm and silent as quiet hours start, then the quiet scene within the hand-over (SD9)", async () => {

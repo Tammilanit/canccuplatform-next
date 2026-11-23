@@ -9,7 +9,6 @@ import { dayTurn } from "./time.js";
 import { CALLED_IN } from "./model.js";
 
 export type ReminderKind = "open_past_target" | "closed_not_placed" | "not_arrived" | "released";
-export type Role = "holder" | "crew";
 
 /** A reminder: who hears it, and how many minutes past its anchor it says. */
 export interface Remind {

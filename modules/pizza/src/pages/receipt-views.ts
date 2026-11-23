@@ -8,7 +8,7 @@ import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { PROVIDER } from "../reader.js";
 import type { ReceiptMatch } from "../receipt-match.js";
-import { formKey, split } from "./kit.js";
+import { formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { euro } from "./money-format.js";
 import { outsideNotice } from "./money-views.js";
@@ -73,10 +73,15 @@ export function padView(
     </form>`;
 }
 
+const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
+
 /**
- * Mockup 18 A and B: the notice before the photo is sent, then the photo. The camera field opens
- * the phone's own camera; the saved-photo field has no `capture`, for laptops and earlier photos.
- * Neither is required, as only one is filled: the form sends whichever photo it has.
+ * Mockup 18 A and B: the notice before the photo is sent, then the photo. A phone gets the camera
+ * (its field opens the phone's own camera) and a saved photo as the second way; a PC, where nobody
+ * photographs a receipt with the screen, gets one file picker that also takes a dropped file
+ * (H2). Both are drawn and money.css shows one by the input the device has, not by its width: a
+ * touch laptop with a mouse is a PC. Neither field is required, as only one is filled: the form
+ * sends whichever photo it has.
  */
 export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?: string }): Html {
   return html`${flash(s.error)}
@@ -89,25 +94,32 @@ export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?:
       data-reading="${s.reader ? c.t("scan.reading") : ""}"
     >
       ${formKey()}
-      <label class="pizza-camera">
-        <span class="pizza-camera__frame" aria-hidden="true"></span>
-        <span class="pizza-camera__text">${c.t("scan.take")}</span>
-        <input
-          class="pizza-camera__input"
-          type="file"
-          name="photo"
-          accept="image/jpeg,image/png,image/webp"
-          capture="environment"
-          data-auto-send
-      /></label>
-      <label class="pizza-saved"
-        >${c.t("scan.saved")}<input
-          class="pizza-camera__input"
-          type="file"
-          name="photo"
-          accept="image/jpeg,image/png,image/webp"
-          data-auto-send
-      /></label>
+      <div class="pizza-only-touch pizza-form">
+        <label class="pizza-camera">
+          <span class="pizza-camera__frame" aria-hidden="true"></span>
+          <span class="pizza-camera__text">${c.t("scan.take")}</span>
+          <input
+            class="pizza-camera__input"
+            type="file"
+            name="photo"
+            accept="${PHOTO_TYPES}"
+            capture="environment"
+            data-auto-send
+        /></label>
+        <label class="pizza-saved"
+          >${c.t("scan.saved")}<input
+            class="pizza-camera__input"
+            type="file"
+            name="photo"
+            accept="${PHOTO_TYPES}"
+            data-auto-send
+        /></label>
+      </div>
+      <label class="pizza-only-pointer pizza-drop">
+        <span class="pizza-drop__title">${c.t("scan.attach")}</span>
+        <span class="pizza-muted">${c.t("scan.drop")}</span>
+        <input class="pizza-drop__input" type="file" name="photo" accept="${PHOTO_TYPES}" />
+      </label>
       <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
         ${c.t(s.reader ? "scan.read" : "scan.keep")}
       </button>
@@ -115,7 +127,15 @@ export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?:
     </form>`;
 }
 
-/** Mockup 18 C: the read to check; Confirm sends the total and every price in one write. */
+const photoUrl = (id: string) => `/api/pizza/receipts/${encodeURIComponent(id)}/photo`;
+
+/**
+ * Mockup 18 C, laid out for its task (H3): the photo beside the lines read from it (sticky on a
+ * desktop, a tap opens it whole on a phone); what needs a look first, each pizza with no line next
+ * to the receipt line that matched no pizza; then the lines with their prices, the extras and the
+ * total; and the sum check with Retake and Confirm in one footer that stays in view. Confirm sends
+ * the total and every price in one write.
+ */
 export function checkView(
   c: PageCtx,
   o: OrderView,
@@ -133,39 +153,59 @@ export function checkView(
       ? c.t("check.menu_said", { price: euro(c, p.price_cents) })
       : c.t("check.as_menu", { price: euro(c, p.price_cents) });
   };
-  return html`${flash(error)}
-    <form method="post" action="${base(o)}/money/check" class="pizza-form">
-      ${formKey()}<input type="hidden" name="receipt_id" value="${receiptId}" />
-      ${split(
-        html`<section class="pizza-card">
-            <label class="canccu-field"
-              ><span class="pizza-section">${c.t("check.total")}</span>
-              <span class="pizza-card__title"
-                >${r.total_cents === null ? "—" : euro(c, r.total_cents)}</span
-              >
-              ${amountField("total", r.total_cents, c.t("check.total"))}</label
-            >
-          </section>
-          <p class="pizza-section">${c.t("check.each")}</p>
-          <ul class="pizza-people">
-            ${r.pizzas.map(
-              (p) =>
-                html`<li
-                  class="pizza-person${p.differs || p.line === null ? " pizza-person--warn" : ""}"
-                >
+  const problem = (p: ReceiptMatch["pizzas"][number]) => p.differs || p.line === null;
+  const pizzaRow = (p: ReceiptMatch["pizzas"][number]) =>
+    html`<li class="pizza-person${problem(p) ? " pizza-person--warn" : ""}">
+      <span class="pizza-person__text"
+        ><span class="pizza-person__name">${p.label}</span
+        ><span class="pizza-person__what">${why(p)}</span></span
+      >
+      ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
+    </li>`;
+  const toCheck = r.pizzas.filter(problem);
+  const unmatched = r.unmatched_lines.map((i) => r.lines[i]?.text ?? "");
+  const first =
+    toCheck.length + unmatched.length === 0
+      ? ""
+      : html`<h2 class="pizza-section">${c.t("check.first")}</h2>
+          <ul class="pizza-people pizza-list">
+            ${toCheck.map(pizzaRow)}
+            ${unmatched.map(
+              (text) =>
+                html`<li class="pizza-person pizza-person--warn">
                   <span class="pizza-person__text"
-                    ><span class="pizza-person__name">${p.label}</span
-                    ><span class="pizza-person__what">${why(p)}</span></span
+                    ><span class="pizza-person__name">${text}</span
+                    ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
                   >
-                  ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
                 </li>`,
             )}
-          </ul>
+          </ul>`;
+  const rest = r.pizzas.filter((p) => !problem(p));
+  return html`${flash(error)}
+    <form method="post" action="${base(o)}/money/check" class="pizza-form pizza-check">
+      ${formKey()}<input type="hidden" name="receipt_id" value="${receiptId}" />
+      <div class="pizza-pair pizza-pair--lead">
+        <aside class="pizza-pair__aside pizza-check__photo">
+          <a href="${photoUrl(receiptId)}" target="_blank" rel="noopener"
+            ><img src="${photoUrl(receiptId)}" alt="${c.t("check.photo")}"
+          /></a>
+          <span class="pizza-muted">${c.t("check.zoom")}</span>
+        </aside>
+        <div class="pizza-pair__main pizza-check__lines">
+          ${first}
+          ${
+            rest.length === 0
+              ? ""
+              : html`<h2 class="pizza-section">${c.t("check.each")}</h2>
+                  <ul class="pizza-people pizza-list">
+                    ${rest.map(pizzaRow)}
+                  </ul>`
+          }
           ${
             extras.length === 0
               ? ""
-              : html`<p class="pizza-section">${c.t("check.extras")}</p>
-                  <ul class="pizza-people">
+              : html`<h2 class="pizza-section">${c.t("check.extras")}</h2>
+                  <ul class="pizza-people pizza-list">
                     ${extras.map(
                       (l) =>
                         html`<li class="pizza-person">
@@ -176,37 +216,27 @@ export function checkView(
                     )}
                   </ul>`
           }
+          <label class="pizza-person pizza-check__total"
+            ><span class="pizza-person__text"
+              ><span class="pizza-person__name">${c.t("check.total")}</span></span
+            >${amountField("total", r.total_cents, c.t("check.total"))}</label
+          >
+        </div>
+      </div>
+      <div class="pizza-checkbar">
+        <p class="${r.adds_up ? "pizza-ok" : "pizza-warn"}">
           ${
-            r.unmatched_lines.length === 0
-              ? ""
-              : html`<ul class="pizza-people">
-                  ${r.unmatched_lines.map(
-                    (i) =>
-                      html`<li class="pizza-person pizza-person--warn">
-                        <span class="pizza-person__text"
-                          ><span class="pizza-person__name">${r.lines[i]?.text ?? ""}</span
-                          ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
-                        >
-                      </li>`,
-                  )}
-                </ul>`
-          } `,
-        // On a desktop whether it adds up, and Confirm, sit beside the pizzas checked.
-        html`<p class="pizza-centered ${r.adds_up ? "pizza-ok" : "pizza-warn"}">
-            ${
-              r.adds_up
-                ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
-                : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })
-            }
-          </p>
-          <div class="pizza-row">
-            <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan"
-              >${c.t("check.retake")}</a
-            >
-            <button class="canccu-button canccu-button--primary" type="submit">
-              ${c.t("check.confirm")}
-            </button>
-          </div>`,
-      )}
+            r.adds_up
+              ? c.t("check.adds_up", { amount: euro(c, r.total_cents ?? 0) })
+              : c.t("check.off_by", { sum: euro(c, sum), total: euro(c, r.total_cents ?? 0) })
+          }
+        </p>
+        <a class="canccu-button canccu-button--secondary" href="${base(o)}/money/scan"
+          >${c.t("check.retake")}</a
+        >
+        <button class="canccu-button canccu-button--primary" type="submit">
+          ${c.t("check.confirm")}
+        </button>
+      </div>
     </form>`;
 }

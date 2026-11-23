@@ -128,6 +128,17 @@
     order: 2;
   }
 
+  /* A card's art (Pizza is here's pizza, #775) over its title, at one share of the hero whatever
+     the image's own size, stepping down with the type. */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--title_card.canccu-is-claim
+    .canccu-widget__image,
+  .canccu-region--_full > .canccu-widget--title_card.canccu-is-claim .canccu-widget__image {
+    flex: none;
+    width: auto;
+    height: max(8.1 * var(--canccu-u), calc(22 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
   /* The QR step (R20): the code large, beside its words. */
   .canccu-region[data-role="hero"] > .canccu-widget--qr.canccu-is-claim .canccu-widget__qr,
   .canccu-region--_full > .canccu-widget--qr.canccu-is-claim .canccu-widget__qr {

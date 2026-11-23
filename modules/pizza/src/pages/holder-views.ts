@@ -7,7 +7,7 @@
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { Summary } from "../summary.js";
-import { formKey, split } from "./kit.js";
+import { formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { base, counts, flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
@@ -53,17 +53,14 @@ function steps(c: PageCtx, o: OrderView, s: { lastCall: string; autoClose: boole
   ];
   // The step to take now: the ones before it are done (all of them once the order is done).
   const current = { open: 2, closed: 3, placed: 5, arrived: 6, done: 7, cancelled: 0 }[o.state];
-  return html`<ol class="pizza-steps">
+  // A timeline, as the attendee's: the holder's main action is the button under it, not a tick.
+  return html`<ol class="pizza-timeline">
     ${rows.map(([title, hint, href], i) => {
       const n = i + 1;
       const state = n < current ? "done" : n === current ? "now" : "later";
-      const body = html`<span class="pizza-step__box" aria-hidden="true"></span
-        ><span class="pizza-step__text"
-          ><span class="pizza-step__title">${n} ${title}</span
-          ><span class="pizza-step__hint">${hint}</span></span
-        >`;
-      return html`<li${attrs({ class: `pizza-step pizza-step--${state}`, "aria-current": state === "now" ? "step" : undefined })}>
-        ${href === null ? html`<div class="pizza-step__row">${body}</div>` : html`<a class="pizza-step__row" href="${href}">${body}</a>`}
+      return html`<li${attrs({ class: `pizza-timeline__step pizza-timeline__step--${state}`, "aria-current": state === "now" ? "step" : undefined })}>
+        ${href === null ? html`<span class="pizza-timeline__title">${title}</span>` : html`<a class="pizza-timeline__title" href="${href}">${title}</a>`}
+        <span class="pizza-timeline__hint">${hint}</span>
       </li>`;
     })}
   </ol>`;
@@ -106,27 +103,25 @@ export function checklistView(
             "canccu-button--ghost",
           )
         : "";
-  return split(
-    html`${flash(s.error)}
-      <section class="pizza-card">
-        <p class="pizza-card__title">
-          ${o.pizzeria.name} · ${c.t("check.closes", { time: time(c, o.closes_at) })}
-        </p>
-        <p class="pizza-card__meta">${counts(c, o)} · ${c.t("check.you_hold")}</p>
-        <p class="pizza-card__links">
-          ${phone === null ? "" : html`<a href="tel:${phone.replace(/\s+/g, "")}">${c.t("pizzeria.call", { phone })}</a>`}
-          ${web === null ? "" : html`<a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a>`}
-        </p>
-      </section>
-      ${steps(c, o, s)} ${main}
-      <div class="pizza-row">
-        ${unplaced ? post(`${base(o)}/step/release`, c.t("check.release"), "canccu-button--ghost") : undo}
-        ${unplaced ? html`<a class="canccu-danger-link" href="${base(o)}/cancel">${c.t("check.cancel")}</a>` : ""}
-      </div>
-      ${unplaced ? html`<div class="pizza-row">${undo}</div>` : ""}`,
-    // On a desktop the order's money and its edit sit beside the checklist.
-    html`${s.aside ?? ""} ${o.state === "open" || o.state === "closed" ? editForm(c, o) : ""}`,
-  );
+  // One flow: the order, its steps with the one action under them, then its money and edit.
+  return html`${flash(s.error)}
+    <section class="pizza-hero">
+      <p class="pizza-hero__title">
+        ${o.pizzeria.name} · ${c.t("check.closes", { time: time(c, o.closes_at) })}
+      </p>
+      <p class="pizza-meta">${counts(c, o)} · ${c.t("check.you_hold")}</p>
+      <p class="pizza-links">
+        ${phone === null ? "" : html`<a href="tel:${phone.replace(/\s+/g, "")}">${c.t("pizzeria.call", { phone })}</a>`}
+        ${web === null ? "" : html`<a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a>`}
+      </p>
+    </section>
+    ${steps(c, o, s)} ${main}
+    <div class="pizza-row">
+      ${unplaced ? post(`${base(o)}/step/release`, c.t("check.release"), "canccu-button--ghost") : undo}
+      ${unplaced ? html`<a class="canccu-danger-link" href="${base(o)}/cancel">${c.t("check.cancel")}</a>` : ""}
+    </div>
+    ${unplaced ? html`<div class="pizza-row">${undo}</div>` : ""} ${s.aside ?? ""}
+    ${o.state === "open" || o.state === "closed" ? editForm(c, o) : ""}`;
 }
 
 /** "Edit": the close time and the note, while not called in. */
@@ -164,27 +159,27 @@ export function notHeldView(c: PageCtx, o: OrderView, error?: string): Html {
     holder === null
       ? html`<span class="pizza-badge pizza-badge--warn">${c.t("hold.nobody")}</span>`
       : html`<span class="pizza-badge pizza-badge--info">${c.t("hold.held")}</span>`;
-  const head = html`<section class="pizza-card">
-    <p class="pizza-card__title">
+  const head = html`<section class="pizza-hero">
+    <p class="pizza-hero__title">
       ${c.t("order.title", { seq: o.seq, pizzeria: o.pizzeria.name })}
     </p>
     ${badge}
-    <p class="pizza-card__meta">${counts(c, o)}</p>
+    <p class="pizza-meta">${counts(c, o)}</p>
   </section>`;
   if (holder === null && unplaced)
     return html`${flash(error)}${head}
-      <section class="pizza-card">
+      <section class="pizza-block">
         <p>${c.t("hold.needs_someone")}</p>
         ${post(`${base(o)}/step/claim`, c.t("hold.take_over"), "canccu-button--primary pizza-wide")}
       </section>
       <p class="pizza-muted">${c.t("hold.race")}</p>`;
   const since = o.claimed_at ?? null;
   return html`${flash(error)}${head}
-    <section class="pizza-card">
-      <p class="pizza-card__title">
+    <section class="pizza-block">
+      <p class="pizza-title">
         ${holder === null ? c.t("hold.nobody") : c.t("hold.holds", { name: holder.name ?? "—" })}
       </p>
-      <p class="pizza-card__meta">
+      <p class="pizza-meta">
         ${since === null ? "" : c.t("hold.since", { time: time(c, since) })} ${c.t("hold.ask")}
       </p>
     </section>`;
@@ -194,51 +189,47 @@ export function notHeldView(c: PageCtx, o: OrderView, error?: string): Html {
 export function callView(c: PageCtx, o: OrderView, summary: Summary): Html {
   const phone = o.pizzeria.phone ?? null;
   const web = o.pizzeria.website ?? null;
+  // One column: the lines are read out from top to bottom, then "Called in" right under them.
   return html`<div class="pizza-call" data-call="${o.id}">
-    ${split(
-      html`<p class="pizza-call__name">${o.pizzeria.name}</p>
-        <p class="pizza-muted">
-          ${counts(c, o)} ·
-          ${o.pizzeria.service === "takeaway" ? c.t("call.takeaway") : c.t("call.delivery")}
-        </p>
-        ${
-          phone === null
-            ? html`<p class="pizza-muted">${c.t("call.no_phone")}</p>`
-            : html`<a
-                class="canccu-button pizza-go pizza-wide"
-                href="tel:${phone.replace(/\s+/g, "")}"
-                >📞 ${c.t("pizzeria.call", { phone })}</a
-              >`
-        }
-        ${web === null ? "" : html`<p><a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a></p>`}
-        <ul class="pizza-lines">
-          ${summary.lines.map(
-            (l, i) =>
-              html`<li>
-                <label class="pizza-line"
-                  ><span class="pizza-line__count">${l.count} ×</span
-                  ><span class="pizza-line__text"
-                    ><span class="pizza-line__label">${l.label}</span>${
-                      l.note === null ? "" : html`<span class="pizza-line__note">${l.note}</span>`
-                    }</span
-                  ><input
-                    class="canccu-check"
-                    type="checkbox"
-                    data-tick="${i}"
-                    aria-label="${c.t("call.tick")}"
-                /></label>
-              </li>`,
-          )}
-        </ul>`,
-      // On a desktop the copy and "Called in" sit beside the lines read out.
-      html`<details class="pizza-details" data-copy>
-          <summary>${c.t("call.copy")}</summary>
-          <textarea class="canccu-input pizza-copy" readonly rows="8">${summary.text}</textarea>
-        </details>
-        <a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/called-in"
-          >${c.t("call.called_in")}</a
-        >`,
-    )}
+    <p class="pizza-call__name">${o.pizzeria.name}</p>
+    <p class="pizza-muted">
+      ${counts(c, o)} ·
+      ${o.pizzeria.service === "takeaway" ? c.t("call.takeaway") : c.t("call.delivery")}
+    </p>
+    ${
+      phone === null
+        ? html`<p class="pizza-muted">${c.t("call.no_phone")}</p>`
+        : html`<a class="canccu-button pizza-go pizza-wide" href="tel:${phone.replace(/\s+/g, "")}"
+            >📞 ${c.t("pizzeria.call", { phone })}</a
+          >`
+    }
+    ${web === null ? "" : html`<p><a href="${web}" rel="noreferrer noopener" target="_blank">${c.t("pizzeria.web")} ↗</a></p>`}
+    <ul class="pizza-lines">
+      ${summary.lines.map(
+        (l, i) =>
+          html`<li>
+            <label class="pizza-line"
+              ><span class="pizza-line__count">${l.count} ×</span
+              ><span class="pizza-line__text"
+                ><span class="pizza-line__label">${l.label}</span>${
+                  l.note === null ? "" : html`<span class="pizza-line__note">${l.note}</span>`
+                }</span
+              ><input
+                class="canccu-check"
+                type="checkbox"
+                data-tick="${i}"
+                aria-label="${c.t("call.tick")}"
+            /></label>
+          </li>`,
+      )}
+    </ul>
+    <details class="pizza-details" data-copy>
+      <summary>${c.t("call.copy")}</summary>
+      <textarea class="canccu-input pizza-copy" readonly rows="8">${summary.text}</textarea>
+    </details>
+    <a class="canccu-button canccu-button--primary pizza-wide" href="${base(o)}/called-in"
+      >${c.t("call.called_in")}</a
+    >
   </div>`;
 }
 
@@ -259,46 +250,44 @@ export function calledInView(
   return html`${flash(error)}
     <form method="post" action="${base(o)}/called-in" class="pizza-form" data-estimate>
       ${formKey()}
-      ${split(
-        html`<fieldset class="pizza-fieldset">
-          <legend>${c.t("called.when")}</legend>
-          <div class="pizza-choices">
-            ${choices.map(
-              ([v, label]) =>
-                html`<label class="pizza-choice"
-                  ><input
-                    type="radio"
-                    name="estimate_minutes"
-                    value="${v}"
-                    ${v === "45" ? "checked" : ""}
-                  /><span>${label}</span></label
-                >`,
-            )}
-          </div>
-          <p class="pizza-about" data-about aria-live="polite"></p>
-        </fieldset>`,
-        html`<fieldset class="pizza-fieldset">
-            <legend class="canccu-overline">${c.t("called.payer")}</legend>
-            ${people.map(
-              (p) =>
-                html`<label class="pizza-choice pizza-choice--row"
-                  ><input
-                    type="radio"
-                    name="payer_user_id"
-                    value="${p.user_id}"
-                    ${p.user_id === me ? "checked" : ""}
-                  /><span
-                    >${p.user_id === me ? c.t("called.me", { name: p.name }) : p.name}</span
-                  ></label
-                >`,
-            )}
-            <p class="pizza-muted">${c.t("called.payer_hint")}</p>
-          </fieldset>
-          <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
-            ${c.t("called.mark")}
-          </button>
-          <a class="pizza-center" href="${base(o)}/call">${c.t("called.back")}</a>`,
-      )}
+      <fieldset class="pizza-fieldset">
+        <legend>${c.t("called.when")}</legend>
+        <div class="pizza-choices">
+          ${choices.map(
+            ([v, label]) =>
+              html`<label class="pizza-choice"
+                ><input
+                  type="radio"
+                  name="estimate_minutes"
+                  value="${v}"
+                  ${v === "45" ? "checked" : ""}
+                /><span>${label}</span></label
+              >`,
+          )}
+        </div>
+        <p class="pizza-about" data-about aria-live="polite"></p>
+      </fieldset>
+      <fieldset class="pizza-fieldset">
+        <legend class="canccu-overline">${c.t("called.payer")}</legend>
+        ${people.map(
+          (p) =>
+            html`<label class="pizza-choice pizza-choice--row"
+              ><input
+                type="radio"
+                name="payer_user_id"
+                value="${p.user_id}"
+                ${p.user_id === me ? "checked" : ""}
+              /><span
+                >${p.user_id === me ? c.t("called.me", { name: p.name }) : p.name}</span
+              ></label
+            >`,
+        )}
+        <p class="pizza-muted">${c.t("called.payer_hint")}</p>
+      </fieldset>
+      <button class="canccu-button canccu-button--primary pizza-wide" type="submit">
+        ${c.t("called.mark")}
+      </button>
+      <a class="pizza-center" href="${base(o)}/call">${c.t("called.back")}</a>
     </form>`;
 }
 

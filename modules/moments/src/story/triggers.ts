@@ -15,10 +15,10 @@ import type { Actor } from "../store.js";
 import { domainFacts, domainSource, itemFacts } from "./fill.js";
 import { fireStory } from "./fire.js";
 import type { Fired, Occurrence } from "./fire.js";
-import { roundCount } from "./model.js";
+import { PASSED, roundCount } from "./model.js";
 import type { Story, Trigger } from "./model.js";
 import type { Ctx } from "./round.js";
-import { compiledOf, planEnd, tickRuns } from "./runner.js";
+import { compiledOf, endRun, planEnd, tickRuns } from "./runner.js";
 import { clockTimes, patienceMs, roundAt } from "./schedule.js";
 import { ensureStories, liveRuns, readMark, runSince, writeMark } from "./store.js";
 
@@ -227,14 +227,10 @@ export async function storyEvent(ctx: Omit<Ctx, "settings" | "event">, e: Event)
   for (const run of source === null ? [] : await liveRuns(ctx.c, "source = $1", [source], true)) {
     const s = doc.stories.find((x) => x.key === run.story_key);
     const u = s?.end.until_event;
-    if (
-      s !== undefined &&
-      u?.kind === "domain" &&
-      u.type === e.type &&
-      source !== null &&
-      run.source === source
-    )
-      await planEnd(full, run, s, e.type);
+    if (s === undefined || u?.kind !== "domain" || run.source !== source) continue;
+    if (u.type === e.type) await planEnd(full, run, s, e.type);
+    else if (PASSED[u.type]?.includes(e.type) === true)
+      await endRun(full, run, s, e.type, "source_ended");
   }
   if (source === null) return;
   for (const s of doc.stories.filter((x) => x.enabled)) {

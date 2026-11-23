@@ -12,6 +12,7 @@ from canccu_kit import NotSignedIn
 from conftest import CALLBACK, PUBLIC, START, World, first_run_code, owner_and_member
 
 from canccu_admin.auth import ABSOLUTE, IDLE
+from canccu_admin.roles import ROLE_RIGHTS
 
 # --- first-run code
 
@@ -24,14 +25,9 @@ async def test_first_run_code_makes_the_owner(
     assert r.status_code == 303 and r.headers["location"] == "/admin/"
     session = (await world.client.get("/api/admin/session")).json()
     assert session["user"]["name"] == "Olli"
-    assert set(session["rights"]) == {
-        "admin.settings.read",
-        "admin.settings.write",
-        "admin.profile.read",
-        "admin.profile.write",
-        "admin.rights.write",
-        "admin.integrations.write",
-    }
+    # The owner holds every right, other modules' too (#772; tests/test_role_rights.py).
+    assert set(session["rights"]) == ROLE_RIGHTS["owner"]
+    assert {"admin.rights.write", "screen.devices.read"} <= set(session["rights"])
     # Used once: no second owner, and no new code while an owner exists.
     world.client.cookies.clear()
     again = await world.client.post("/admin/first-run", data={"code": code})

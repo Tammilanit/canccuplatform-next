@@ -7,7 +7,7 @@
 import { qrView } from "../content.js";
 import { own, startsIn } from "../announce/text.js";
 import type { RunItem } from "../announce/store.js";
-import { DOMAIN_TYPES, TOKEN } from "./model.js";
+import { DOMAIN_TYPES, PASSED, TOKEN } from "./model.js";
 import { localParts } from "./schedule.js";
 
 type Data = Record<string, unknown>;
@@ -68,6 +68,7 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
     "order.target_at": hhmm(str(order.target_at), timeZone),
     "order.pizza_count": str(order.pizza_count),
     "order.closes_at": hhmm(str(d.closes_at), timeZone),
+    "order.pickup": str(order.pickup).trim(),
     "round.number": str(obj(d.round).number),
     "game.name": str(game.name),
     "game.players": str(d.players),
@@ -77,9 +78,15 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
   ) as Facts;
 }
 
+/** The source kind of an event that only passes an end (`pizza.order.cancelled`), as its end's. */
+const passedKind = (type: string): string | undefined => {
+  const end = Object.keys(PASSED).find((k) => PASSED[k]?.includes(type) === true);
+  return end === undefined ? undefined : DOMAIN_TYPES[end]?.source;
+};
+
 /** What a domain event's story keys on (`per_source`, `once` per source), or null. */
 export function domainSource(type: string, d: Data): string | null {
-  const kind = DOMAIN_TYPES[type]?.source;
+  const kind = DOMAIN_TYPES[type]?.source ?? passedKind(type);
   if (kind === "photo") return typeof d.photo_id === "string" ? `photo:${d.photo_id}` : null;
   if (kind === "round") {
     // A round has no id of its own: its session and number name it, once per round.
@@ -120,6 +127,7 @@ export const SAMPLE: Readonly<Facts> = {
   "order.target_at": "19:30",
   "order.pizza_count": "12",
   "order.closes_at": "19:00",
+  "order.pickup": "Entrance table",
   "round.number": "2",
   "game.name": "Demo Game",
   "game.players": "24",

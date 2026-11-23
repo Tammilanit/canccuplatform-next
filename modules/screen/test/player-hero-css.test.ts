@@ -148,4 +148,15 @@ describe("hero.css, the hero rule", () => {
     expect(rule?.[1]).toContain(".canccu-widget__label");
     expect(rule?.[2]).toContain("background: var(--canccu-color-status-degraded);");
   });
+
+  // #775: Pizza is here's art, a pizza over the title, at one size whatever the image's own.
+  it("draws a card's art in the hero at a share of it, stepping down with the fit", () => {
+    const art = ruleOf(
+      '.canccu-region[data-role="hero"] > .canccu-widget--title_card.canccu-is-claim .canccu-widget__image',
+    );
+    expect(art).toMatch(
+      /height:\s*max\(8\.1 \* var\(--canccu-u\), calc\(22 \* var\(--canccu-u\) \* var\(--canccu-fit, 1\)\)\);/,
+    );
+    expect(art).toMatch(/flex:\s*none;/);
+  });
 });

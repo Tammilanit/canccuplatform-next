@@ -47,7 +47,8 @@ async def test_check_again_lets_them_in_once_they_have_a_role(
     aino = next(u for u, _ in await world.store.list_users() if u.name == "Aino")
     await world.auth.set_role(aino.id, "admin", "u_owner")
     r = await world.browser(member).get("/admin/")
-    assert r.status_code == 303 and r.headers["location"] == "/admin/settings"
+    # The first page of the menu they may open: an admin holds every right, so Agenda (#772).
+    assert r.status_code == 303 and r.headers["location"] == "/agenda/"
     # Signed in with a role, the sign-in page has nothing to offer: on to the pages.
     r = await world.browser(member).get("/admin/sign-in")
     assert r.status_code == 303 and r.headers["location"] == "/admin/"

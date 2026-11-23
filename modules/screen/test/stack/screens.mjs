@@ -16,6 +16,7 @@ import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
+import { withFoodClaim } from "./food.mjs";
 import {
   CLAIM_OF,
   MOTION_VIEWS,
@@ -45,6 +46,8 @@ import {
   CLAIMS,
   LAYOUTS,
   DEFAULT_LAYOUT_VIEWS,
+  FOOD_VIEWS,
+  foodSizes,
   landscapeOf,
   NEW_VIEWS,
   SURGE_MS,
@@ -150,6 +153,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         );
       }
     }
+    for (const view of FOOD_VIEWS)
+      for (const size of foodSizes(check))
+        await attempt(nameOf("default", view, size), () =>
+          handed("default", view, size, withFoodClaim(view)),
+        );
     await attempt(nameOf("default", "entrance", HD[1]), async () => {
       const { page, close } = await open(HD[1], entrance.cookie);
       await page.goto(at("/screen/"));
