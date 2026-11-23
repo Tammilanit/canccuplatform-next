@@ -11,7 +11,10 @@ import { handleTenantEvent } from "../src/consumer.js";
 import { FIXTURES, event } from "./fixtures.js";
 import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
-import { TABLES, kit, preset, story } from "./story-kit.js";
+import { TABLES, kit, preset, step, story } from "./story-kit.js";
+import { loadStories } from "../src/story/store.js";
+import { takeStory } from "../src/story/triggers.js";
+import type { Story } from "../src/story/model.js";
 
 describe.skipIf(!DATABASE_URL)("pizza orders ready and the order's done", () => {
   let pool: pg.Pool;
@@ -76,6 +79,33 @@ describe.skipIf(!DATABASE_URL)("pizza orders ready and the order's done", () => 
       subtitle: "Order 3 · Collect at Entrance table",
     });
     expect(String(card?.content.image_url)).toMatch(/^data:image\/svg\+xml;base64,/);
+  });
+
+  // #775: on the full screenshot run the stories shot before had spent the airtime cap, and the
+  // arrival's round was deferred past the shot's wait; a busy hall must not delay the pizza.
+  it("is not held back by the airtime cap when other stories used it up", async () => {
+    const busy = story({
+      key: "busy",
+      round: {
+        steps: [step({ message: true, duration_seconds: 115 })],
+        repeat: null,
+        hold_seconds: null,
+      },
+    });
+    await k.setup([busy, preset("pizza_arrived")], { airtime_percent: 20 });
+    await k.tx(async (c) => {
+      const doc = await loadStories(c);
+      const s = doc.stories.find((x) => x.key === "busy") as Story;
+      await takeStory(
+        { c, engine: w.engine, now: w.at(0), settings: doc.settings, event: doc.event },
+        s,
+        { item: null, variables: {}, actor: { user_id: "u_crew", name: "Demo Crew" }, test: null },
+      );
+    });
+    await k.run(1, 120, 5);
+    await deliver(125, arrived("Entrance table"));
+    await k.run(126, 150, 5);
+    expect((await onAir()).map((m) => m.content.title)).toContain("Pizza is here");
   });
 
   it("says where to collect it in general words when the holder gave no place", async () => {
