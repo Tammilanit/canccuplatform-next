@@ -24,6 +24,9 @@ export const CLAIMS = [
   "claim-takeover",
   "claim-hero-emergency",
 ];
+/** The food box handed a long pizzeria name and pickup note (food.mjs, #775): 1080p, portrait, 4K. */
+export const FOOD_VIEWS = ["claim-food-long", "claim-food-on-the-way-long"];
+export const foodSizes = (check) => (check ? HD : [...HD, UHD[0]]);
 /** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
 export const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
 /** The default theme's other views of those layouts at 1080p: each view and its layout. */
@@ -69,6 +72,8 @@ export function planned(check = false) {
   for (const size of HD)
     for (const view of ["photo", "photo-pop", "rail-empty", ...CLAIMS])
       out.push(nameOf("default", view, size));
+  for (const view of FOOD_VIEWS)
+    for (const size of foodSizes(check)) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
   out.push(nameOf("default", "pulse-one-screen", HD[0]));
   out.push(nameOf("default", "portrait-right-now", HD[1]));

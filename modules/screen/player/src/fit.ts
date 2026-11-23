@@ -4,15 +4,22 @@
  * never below half, and claims.css holds the type at the readability floor besides. The step is
  * `--canccu-fit`, which claims.css and hero.css multiply into the type sizes, so a theme keeps its
  * own scale. A storyboard's step at hero size (hero.css, #625) steps down the same way, also while
- * a word runs out across its box: a sting's one word at 230 px is wider than a narrow hero.
+ * a word runs out across its box: a sting's one word at 230 px is wider than a narrow hero; and so
+ * does the food box (food.css).
  */
 const STEPS = [1, 0.85, 0.72, 0.6, 0.5];
-/** An announcement anywhere; a claim's step of the types hero.css draws large. */
+const FOOD = ".canccu-widget--food_status";
+/**
+ * An announcement anywhere; a claim's step of the types hero.css draws large; the food box, whose
+ * pizzeria and pickup note are the holder's own words, of any length (#775), but not as the
+ * ticker's one line, which runs along the edge as the ticker's own.
+ */
 const FITTED = [
   ".canccu-widget--announcement",
   ...["sting", "title_card", "countdown", "qr", "photo"].map(
     (type) => `.canccu-widget--${type}.canccu-is-claim`,
   ),
+  `.canccu-region:not([data-role="ticker"]) > ${FOOD}`,
 ].join(", ");
 
 /** Web fonts loaded so far: a late font reflows the text, so every box is measured again. */

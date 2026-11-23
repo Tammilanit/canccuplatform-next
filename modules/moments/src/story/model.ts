@@ -86,7 +86,11 @@ export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: read
       source: "order",
       fills: ["order.seq", "order.target_at", "order.pizza_count"],
     },
-    "pizza.order.arrived": { source: "order", fills: ["order.seq", "order.pizza_count"] },
+    // `order.pickup`: where the holder said to collect it, when they said (#775; U4).
+    "pizza.order.arrived": {
+      source: "order",
+      fills: ["order.seq", "order.pizza_count", "order.pickup"],
+    },
     "pizza.order.closed": { source: "order", fills: ["order.seq"] },
     // D3: everyone got theirs, the holder's Done, or the timer (which starts nothing: triggers.ts).
     "pizza.order.done": { source: "order", fills: ["order.seq"] },

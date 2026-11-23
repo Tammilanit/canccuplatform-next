@@ -115,10 +115,11 @@ describe("the preset catalogue", () => {
         path: "/pizza/go",
         label: "Order pizza in the hub",
       });
-    // An arrived order is already closed: its end is the count, or the order's done (#643).
-    expect(preset("pizza_arrived").end).toMatchObject({
-      rounds: 3,
-      until_event: { kind: "domain", type: "pizza.order.done" },
+    // An arrived order is already closed: its end is its one round, held three minutes while the
+    // arrival is fresh, or the order's done (#643, #775).
+    expect(preset("pizza_arrived")).toMatchObject({
+      round: { hold_seconds: 180 },
+      end: { rounds: 1, until_event: { kind: "domain", type: "pizza.order.done" } },
     });
     expect(preset("round_start").conditions.once).toBe("source");
     expect(preset("hot_game").conditions.cooldown_minutes).toBe(30);

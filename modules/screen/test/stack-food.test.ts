@@ -30,7 +30,9 @@ describe("the food box's fit check", () => {
 
   // #775: "On the way · about" and "collect at Entrance table" ran into the QR's half.
   it("fails text that runs past the box's edge, under the QR", () => {
-    const texts = [{ text: "collect at Entrance table", left: 1304, top: 820, right: 1620, bottom: 860 }];
+    const texts = [
+      { text: "collect at Entrance table", left: 1304, top: 820, right: 1620, bottom: 860 },
+    ];
     const problems = judgeFood(measure({ texts }));
     expect(problems).toContain('"collect at Entrance table" runs past the box\'s right edge');
     expect(problems).toContain('"collect at Entrance table" runs under the QR');

@@ -45,10 +45,12 @@ describe("food.css", () => {
     expect(rulesOf(`.canccu-region:not([data-role="ticker"]) > ${BOX}`)).toMatch(
       /overflow-wrap:\s*anywhere;/,
     );
+    // A long pizzeria name wraps too, never cut with an ellipsis: the fit makes room for it.
+    expect(rulesOf(`${BOX} .canccu-widget__name`)).not.toMatch(/white-space|text-overflow/);
   });
 
-  it("steps its type down with the fit (fit.ts), never under the readability floor", () => {
-    const stepped = (base: number, floor = 2.6) =>
+  it("steps its type down with the fit (fit.ts), never under 27 px at 1080p (2.8 units)", () => {
+    const stepped = (base: number, floor = 2.8) =>
       new RegExp(
         `font-size:\\s*max\\(${floor} \\* var\\(--canccu-u\\), calc\\(${base} \\* var\\(--canccu-u\\) \\* var\\(--canccu-fit, 1\\)\\)\\);`,
       );
@@ -69,9 +71,10 @@ describe("food.css", () => {
   // QR's half, so the box showed a second line through it.
   it("draws a cue's frame and rings round the whole box in the venue rail: one frame", () => {
     const rail = read("rail.css").replace(/\/\*[\s\S]*?\*\//g, "");
-    const rule = /\.canccu-region--venue_rail\.canccu-cue::after,\s*\.canccu-region--venue_rail\.canccu-cue::before\s*\{([^}]*)\}/.exec(
-      rail,
-    );
+    const rule =
+      /\.canccu-region--venue_rail\.canccu-cue::after,\s*\.canccu-region--venue_rail\.canccu-cue::before\s*\{([^}]*)\}/.exec(
+        rail,
+      );
     expect(rule?.[1]).toMatch(/right:\s*calc\(-1 \* var\(--canccu-venue-seam\)\);/);
     expect(rule?.[1]).toMatch(
       /border-radius:\s*var\(--canccu-card-radius\) 0 0 var\(--canccu-card-radius\);/,
