@@ -132,7 +132,7 @@ const PRESET_SHOTS = [
   ["venue_info", shows("Venue info")],
   ["stage_break", shows("Back at"), "tournament"],
   ["pizza_last_call", shows("Last call: pizza order")],
-  ["pizza_arrived", shows("come and get it")],
+  ["pizza_arrived", shows("Collect at")],
   ["round_start", shows("starts now")],
   ["champion_replay", shows("Our champion")],
 ];

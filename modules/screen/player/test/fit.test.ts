@@ -120,3 +120,33 @@ describe("fitting a storyboard step in the hero (#625)", () => {
     expect(fitIn(root)).toBe("");
   });
 });
+
+// #775: the food box's status ran off its slot with a long pickup note.
+describe("fitting the food box to its slot", () => {
+  /** The food box in a region of `role`, whose text needs `need` px down at full size in 300. */
+  function box(role: string, need: number): HTMLElement {
+    const root = document.createElement("main");
+    root.innerHTML = `<section class="canccu-region" data-role="${role}"><div class="canccu-widget canccu-widget--food_status"><p class="canccu-widget__row">Pizza is here</p></div></section>`;
+    const el = root.querySelector<HTMLElement>(".canccu-widget") as HTMLElement;
+    const fit = () => Number(el.style.getPropertyValue("--canccu-fit") || "1");
+    Object.defineProperty(el, "clientHeight", { get: () => 300 });
+    Object.defineProperty(el, "scrollHeight", { get: () => need * fit() });
+    Object.defineProperty(el, "clientWidth", { get: () => 300 });
+    Object.defineProperty(el, "scrollWidth", { get: () => 300 });
+    return root;
+  }
+  const fitIn = (root: HTMLElement) =>
+    root.querySelector<HTMLElement>(".canccu-widget")?.style.getPropertyValue("--canccu-fit");
+
+  it("steps the box down while its text runs off the foot, claimed or not", () => {
+    const root = box("venue_rail", 400);
+    fitAnnouncements(root);
+    expect(fitIn(root)).toBe("0.72");
+  });
+
+  it("leaves the ticker's one line alone: it runs along the edge, as the ticker's own", () => {
+    const root = box("ticker", 400);
+    fitAnnouncements(root);
+    expect(fitIn(root)).toBe("");
+  });
+});

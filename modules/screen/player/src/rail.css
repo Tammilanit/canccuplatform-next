@@ -171,6 +171,15 @@
     --canccu-venue-seam: calc(4 * var(--canccu-u));
   }
 
+  /* A cue's frame and rings (cues.css) go round the box the claim draws, seam and all, with its
+     corners: on the region alone they ran 4 units inside the claimed food box's own frame, a
+     second line through the box (#775). */
+  .canccu-region--venue_rail.canccu-cue::after,
+  .canccu-region--venue_rail.canccu-cue::before {
+    right: calc(-1 * var(--canccu-venue-seam));
+    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
+  }
+
   .canccu-widget--qr .canccu-widget__qr,
   .canccu-widget--checkin_qr .canccu-widget__qr {
     flex-direction: column;

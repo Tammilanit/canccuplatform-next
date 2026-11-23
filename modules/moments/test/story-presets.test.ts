@@ -115,10 +115,11 @@ describe("the preset catalogue", () => {
         path: "/pizza/go",
         label: "Order pizza in the hub",
       });
-    // An arrived order is already closed: its end is the count, or the order's done (#643).
-    expect(preset("pizza_arrived").end).toMatchObject({
-      rounds: 3,
-      until_event: { kind: "domain", type: "pizza.order.done" },
+    // An arrived order is already closed: its end is its one round, held three minutes while the
+    // arrival is fresh, or the order's done (#643, #775).
+    expect(preset("pizza_arrived")).toMatchObject({
+      round: { hold_seconds: 180 },
+      end: { rounds: 1, until_event: { kind: "domain", type: "pizza.order.done" } },
     });
     expect(preset("round_start").conditions.once).toBe("source");
     expect(preset("hot_game").conditions.cooldown_minutes).toBe(30);
@@ -223,6 +224,17 @@ describe("the provisional events (WD3)", () => {
       "order.closes_at": "18:50",
     });
     expect(domainSource("pizza.order.closing", d)).toBe("order:po_1");
+  });
+
+  it("fills `pizza.order.arrived` with where to collect it, when the holder gave a place (#775)", () => {
+    const order = { id: "po_1", seq: 3, pizza_count: 6, pickup: "Entrance table" };
+    expect(domainFacts("pizza.order.arrived", { order }, "UTC")).toEqual({
+      "order.seq": "3",
+      "order.pizza_count": "6",
+      "order.pickup": "Entrance table",
+    });
+    const none = { order: { ...order, pickup: null } };
+    expect(domainFacts("pizza.order.arrived", none, "UTC")).not.toHaveProperty("order.pickup");
   });
 
   it("fills `tournament.round.started` with its number and keys it on the session's round", () => {

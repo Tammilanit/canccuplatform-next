@@ -1,6 +1,7 @@
 // The clear spaces of the v8 look on the stack shots (#493; test/stack/screens.mjs and
 // preview-shots.mjs): what a mark, a band and a box must keep free, and the hero's panel full
 // (#520), checked before the shot.
+import { foodFits } from "./food.mjs";
 
 /** The indexes of the rectangles in `others` that `rect` overlaps by more than a pixel each way. */
 export function overlapping(rect, others) {
@@ -250,6 +251,8 @@ export async function venueOnOneLine(page) {
 
 /** Each view's check, run once it has drawn. */
 export const CLEAR_CHECKS = {
+  "claim-food-long": foodFits,
+  "claim-food-on-the-way-long": foodFits,
   "photo-pop": popKeepsBand,
   "portrait-right-now": rightNowFits,
   "claim-hero": surgingSince,
