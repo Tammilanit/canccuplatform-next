@@ -1,6 +1,7 @@
 /**
- * Pizza orders ready (preset 21) and `pizza.order.done` (#643; step 5, D3): the story may end on the
- * order's done as well as on its count, so the hall stops calling people once everyone got theirs;
+ * Pizza orders ready (preset 21) and `pizza.order.done` (#643; step 5, D3): "Pizza is here" takes
+ * the hero while the arrival is fresh and hands it back after its hold or on the order's done,
+ * whichever comes first, so the hall stops calling people once everyone got theirs (#775);
  * and a `done` the timer made (nobody marked it arrived or handed out) starts nothing. Pizza order
  * open ends, its finale too, once the order is called in or cancelled (#771).
  */
@@ -36,24 +37,73 @@ describe.skipIf(!DATABASE_URL)("pizza orders ready and the order's done", () => 
       ),
     );
 
-  it("ends Pizza orders ready once everyone got theirs, before its count runs out", async () => {
+  /** The order's arrival, with where to collect it (U4) when `pickup` is given. */
+  const arrived = (pickup: string | null) => {
+    const e = FIXTURES.arrived();
+    const data = e.data as { order: Record<string, unknown> };
+    return event(
+      "pizza.order.arrived",
+      { ...data, order: { ...data.order, seq: 3, pickup } },
+      w.at(0).toISOString(),
+    );
+  };
+  /** The stories' rounds on air: where each stands, and its card, the round's last step. */
+  const onAir = () =>
+    w.tx("demo", async (c) => {
+      const { rows } = await c.query(
+        `SELECT regions, steps->-1 AS card FROM moments
+          WHERE ended_at IS NULL AND class = 'storyboard'`,
+        [],
+      );
+      return (rows as { regions: string[]; card: Record<string, unknown> }[]).map((r) => ({
+        regions: r.regions,
+        template: r.card.template,
+        content: r.card.content as Record<string, unknown>,
+        duration_ms: r.card.duration_ms,
+      }));
+    });
+
+  // #775: the hall's biggest food moment was a 20 s card, gone before most of the hall looked up.
+  it("puts Pizza is here in the hero with the order and where to collect it, and its art", async () => {
     await k.setup([preset("pizza_arrived")]);
-    await deliver(0, FIXTURES.arrived());
+    await deliver(0, arrived("Entrance table"));
+    await k.run(1, 10, 5);
+    const [card] = await onAir();
+    expect(card?.regions[0]).toBe("hero");
+    expect(card?.template).toBe("title_card");
+    expect(card?.content).toMatchObject({
+      title: "Pizza is here",
+      subtitle: "Order 3 · Collect at Entrance table",
+    });
+    expect(String(card?.content.image_url)).toMatch(/^data:image\/svg\+xml;base64,/);
+  });
+
+  it("says where to collect it in general words when the holder gave no place", async () => {
+    await k.setup([preset("pizza_arrived")]);
+    await deliver(0, arrived(null));
+    await k.run(1, 10, 5);
+    expect((await onAir())[0]?.content.subtitle).toBe("Order 3 · Collect at the pickup point");
+  });
+
+  it("holds the hero for a few minutes while the arrival is fresh, then hands it back", async () => {
+    await k.setup([preset("pizza_arrived")]);
+    await deliver(0, arrived("Entrance table"));
+    await k.run(1, 150, 5);
+    expect((await onAir()).map((m) => m.content.title)).toEqual(["Pizza is here"]);
+    await k.run(155, 600, 5);
+    expect(await onAir()).toEqual([]);
+    expect((await k.runs())[0]).toMatchObject({ status: "ended", rounds_played: 1 });
+  });
+
+  it("hands the hero back at once when everyone got theirs, mid-hold", async () => {
+    await k.setup([preset("pizza_arrived")]);
+    await deliver(0, arrived("Entrance table"));
     await k.run(1, 30, 5);
     expect((await k.runs())[0]).toMatchObject({ story_key: "pizza_arrived", status: "live" });
     await deliver(40, FIXTURES.done());
+    expect(await onAir()).toEqual([]);
     await k.run(41, 400, 5);
-    const [run] = await k.runs();
-    expect(run?.status).toBe("ended");
-    // Its three rounds come five minutes apart: the done ended it after the first.
-    expect(run?.rounds_played).toBe(1);
-  });
-
-  it("plays on to its count when the order is not done", async () => {
-    await k.setup([preset("pizza_arrived")]);
-    await deliver(0, FIXTURES.arrived());
-    await k.run(1, 400, 5);
-    expect((await k.runs())[0]).toMatchObject({ status: "live", rounds_played: 2 });
+    expect((await k.runs())[0]).toMatchObject({ status: "ended", rounds_played: 1 });
   });
 
   /** The order's event a second `s` after T0, its state as the type says. */

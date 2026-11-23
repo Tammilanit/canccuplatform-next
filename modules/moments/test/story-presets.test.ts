@@ -225,6 +225,17 @@ describe("the provisional events (WD3)", () => {
     expect(domainSource("pizza.order.closing", d)).toBe("order:po_1");
   });
 
+  it("fills `pizza.order.arrived` with where to collect it, when the holder gave a place (#775)", () => {
+    const order = { id: "po_1", seq: 3, pizza_count: 6, pickup: "Entrance table" };
+    expect(domainFacts("pizza.order.arrived", { order }, "UTC")).toEqual({
+      "order.seq": "3",
+      "order.pizza_count": "6",
+      "order.pickup": "Entrance table",
+    });
+    const none = { order: { ...order, pickup: null } };
+    expect(domainFacts("pizza.order.arrived", none, "UTC")).not.toHaveProperty("order.pickup");
+  });
+
   it("fills `tournament.round.started` with its number and keys it on the session's round", () => {
     const d = {
       session: { id: "ts_1", name: "Demo Game Cup", game: { name: "Demo Game" } },

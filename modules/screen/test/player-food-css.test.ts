@@ -40,6 +40,44 @@ describe("food.css", () => {
     expect(mark).toMatch(/mask:\s*url\("data:image\/svg\+xml,/);
   });
 
+  // #775: "collect at Entrance table" and a long pizzeria name ran into the QR's half.
+  it("wraps a long word inside the box, wherever it stands but the ticker's one line", () => {
+    expect(rulesOf(`.canccu-region:not([data-role="ticker"]) > ${BOX}`)).toMatch(
+      /overflow-wrap:\s*anywhere;/,
+    );
+  });
+
+  it("steps its type down with the fit (fit.ts), never under the readability floor", () => {
+    const stepped = (base: number, floor = 2.6) =>
+      new RegExp(
+        `font-size:\\s*max\\(${floor} \\* var\\(--canccu-u\\), calc\\(${base} \\* var\\(--canccu-u\\) \\* var\\(--canccu-fit, 1\\)\\)\\);`,
+      );
+    expect(rulesOf(`${BOX} .canccu-widget__kicker`)).toMatch(stepped(3.4));
+    expect(rulesOf(`${BOX} .canccu-widget__label`)).toMatch(stepped(3.4));
+    expect(rulesOf(`${BOX} .canccu-widget__big`)).toMatch(stepped(7.4, 4.4));
+    expect(rulesOf(`${BOX} .canccu-widget__name`)).toMatch(stepped(4.4));
+    expect(rulesOf(`${BOX} .canccu-widget__row .canccu-widget__meta`)).toMatch(stepped(3.4));
+    expect(read("fit.ts")).toContain('`.canccu-region:not([data-role="ticker"]) > ${FOOD}`');
+  });
+
+  it("shows two orders at most in the venue rail, so a long status never pushes one half out", () => {
+    const third = `.canccu-region[data-role="venue_rail"] > ${BOX} .canccu-widget__row ~ .canccu-widget__row ~ .canccu-widget__row`;
+    expect(rulesOf(third)).toMatch(/display:\s*none;/);
+  });
+
+  // #775: the cue's frame sat on the region, 4 units inside the claimed box that reaches into the
+  // QR's half, so the box showed a second line through it.
+  it("draws a cue's frame and rings round the whole box in the venue rail: one frame", () => {
+    const rail = read("rail.css").replace(/\/\*[\s\S]*?\*\//g, "");
+    const rule = /\.canccu-region--venue_rail\.canccu-cue::after,\s*\.canccu-region--venue_rail\.canccu-cue::before\s*\{([^}]*)\}/.exec(
+      rail,
+    );
+    expect(rule?.[1]).toMatch(/right:\s*calc\(-1 \* var\(--canccu-venue-seam\)\);/);
+    expect(rule?.[1]).toMatch(
+      /border-radius:\s*var\(--canccu-card-radius\) 0 0 var\(--canccu-card-radius\);/,
+    );
+  });
+
   it("draws the claim on the ticker as one row: no lead, no QR, the status shown again", () => {
     expect(rulesOf(TICKER)).toMatch(/flex-direction:\s*row;/);
     expect(rulesOf(`${TICKER} .canccu-widget__lead`)).toMatch(/display:\s*none;/);
