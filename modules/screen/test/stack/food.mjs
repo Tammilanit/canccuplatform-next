@@ -3,11 +3,12 @@
 // not a second line through it. The page measures (measureFood, run in the page) and judgeFood
 // judges, pure, so test/stack-food.test.ts holds the rules without a stack or a browser. The pizza
 // shots check the real order's box (roomReady, scripts/demo-screenshots-pizza.mjs); the screen shots hand the
-// page a long pizzeria name and a 40-character pickup note (screens.mjs, FOOD_VIEWS).
+// page a long pizzeria name and the longest pickup note pizza accepts (screens.mjs, FOOD_VIEWS).
 import { claim } from "./handed.mjs";
 
 const NAME = "Pizzeria Napoletana della Nonna Maria";
-const PICKUP = "the long table by the stage, left of bar";
+/** 80 characters: pizza's LIMITS.pickup, the most a holder can type. */
+const PICKUP = "the long table by the stage, left of the bar, under the screen by the side door.";
 /** Moments' `pizza.placed` cue, as its catalogue sends it: the frame the check measures. */
 const CUE = { name: "pop", hold_seconds: 60, fade_seconds: 10 };
 

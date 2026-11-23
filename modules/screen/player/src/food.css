@@ -109,6 +109,15 @@
     padding: 0 calc(2.4 * var(--canccu-u));
     background: var(--canccu-color-primary);
     color: var(--canccu-color-primary-text);
+    font-size: calc(3.4 * var(--canccu-u));
+  }
+
+  /* The box's wrap and fit (#775) are not the ticker's: its one line ends a long name with an
+     ellipsis, as the ticker's own text does. */
+  .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__lead,

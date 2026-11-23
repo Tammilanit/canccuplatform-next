@@ -87,4 +87,16 @@ describe("food.css", () => {
     expect(rulesOf(`${TICKER} .canccu-widget__qr`)).toMatch(/display:\s*none;/);
     expect(rulesOf(`${TICKER} .canccu-widget__meta`)).toMatch(/display:\s*inline;/);
   });
+
+  // #775 review: the box's wrap and fit are not the ticker's; its one line ends a long name with an
+  // ellipsis, and its label is the ticker's own size.
+  it("keeps the claim on the ticker one line: a long name ends with an ellipsis", () => {
+    const name = rulesOf(`${TICKER} .canccu-widget__name`);
+    expect(name).toMatch(/overflow:\s*hidden;/);
+    expect(name).toMatch(/text-overflow:\s*ellipsis;/);
+    expect(name).toMatch(/white-space:\s*nowrap;/);
+    expect(rulesOf(`${TICKER} .canccu-widget__kicker`)).toMatch(
+      /font-size:\s*calc\(3\.4 \* var\(--canccu-u\)\);/,
+    );
+  });
 });

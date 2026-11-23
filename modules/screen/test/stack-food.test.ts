@@ -62,10 +62,11 @@ describe("the food box's fit check", () => {
     expect(judgeFood(measure({ texts, frame: { ...BOX, right: 1604.2 } }))).toEqual([]);
   });
 
-  it("hands the shots a long pizzeria name and a 40-character pickup note", () => {
+  // The longest pickup note pizza accepts (its LIMITS.pickup, 80), at 1080p, portrait and 4K.
+  it("hands the shots a long pizzeria name and the longest pickup note pizza accepts", () => {
     const here = FOOD_CLAIM_OF["claim-food-long"][1].content;
     const [row] = here.orders as { pizzeria_name: string; status_text: string; pickup: string }[];
-    expect(row?.pickup).toHaveLength(40);
+    expect(row?.pickup).toHaveLength(80);
     expect(row?.status_text).toBe(`Pizza is here · collect at ${row?.pickup ?? ""}`);
     expect(row?.pizzeria_name.length).toBeGreaterThanOrEqual(36);
     const way = FOOD_CLAIM_OF["claim-food-on-the-way-long"][1].content;
