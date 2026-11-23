@@ -162,9 +162,9 @@ async function airtimeOver(ctx: Ctx, zones: string[], lengthMs: number): Promise
 }
 
 /**
- * Presets the airtime cap never defers: a moment the hall waits for, one round per order. Behind
- * the cap it came minutes late, or never, on a busy screen (#775: the cap was spent by the stories
- * shot before it, so Pizza is here did not reach the hero for 2 minutes).
+ * Presets the airtime cap never defers (SO1): a moment the hall waits for, one round per order.
+ * Behind the cap it came minutes late, or never, on a busy screen (#775: the cap was spent by the
+ * stories shot before it, so Pizza is here did not reach the hero for 2 minutes). They still yield.
  */
 const UNCAPPED = new Set(["pizza_arrived"]);
 
@@ -221,9 +221,10 @@ async function startRound(
     return skip(ctx, run, story, n, "not in quiet");
   }
   const video = story.round.steps.some(isVideo);
-  // A planned premiere is never deferred by the airtime cap, nor a test, nor an uncapped preset.
-  if (!video && !run.test && !UNCAPPED.has(story.preset ?? "")) {
-    const over = (await airtimeOver(ctx, run.zones, compiled.length_ms)) ? "airtime" : null;
+  // A planned premiere is never deferred, nor a test; an uncapped preset skips the cap alone.
+  if (!video && !run.test) {
+    const cap = !UNCAPPED.has(story.preset ?? "");
+    const over = cap && (await airtimeOver(ctx, run.zones, compiled.length_ms)) ? "airtime" : null;
     const lower = over === null ? await yieldTo(ctx, run.zones) : null;
     const why = over ?? (lower === null ? null : `yield to ${lower}`);
     if (why !== null) {
