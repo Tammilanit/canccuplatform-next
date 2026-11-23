@@ -171,8 +171,10 @@ const HERO_CARD = '.canccu-region[data-role="hero"] > .canccu-widget--title_card
  */
 export async function roomReady(page, step) {
   const card = page.locator(HERO_CARD);
+  // 120 s: the card is held 180 s, and on the full run's slower stack it came ~35 s after the
+  // order's event, past the 45 s this once waited.
   if (step === "arrived")
-    await card.filter({ hasText: "Pizza is here" }).waitFor({ timeout: 45_000 });
+    await card.filter({ hasText: "Pizza is here" }).waitFor({ timeout: 120_000 });
   else if (step === "open") await card.waitFor({ timeout: 45_000 }).catch(() => undefined);
   const box = page.locator(".canccu-widget--food_status .canccu-widget__row").first();
   for (let turn = 0; turn < 4; turn++) {
