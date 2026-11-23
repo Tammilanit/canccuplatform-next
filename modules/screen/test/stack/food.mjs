@@ -145,8 +145,15 @@ export function judgeFood(m) {
 export async function foodFits(page) {
   await page.locator(".canccu-widget--food_status .canccu-widget__row").first().waitFor();
   // The cue's pop (0.6 s) and the box's fade-in are over, and the fit (fit.ts) has measured it.
-  await page.waitForTimeout(1500);
-  const problems = judgeFood(await page.evaluate(measureFood));
+  // The rail takes turns, so the box may leave while we wait: measure as soon as it is drawn
+  // and settled, and look again for a turn that moved on, never judge a box that is not there.
+  await page.waitForTimeout(1000);
+  let m = null;
+  for (let i = 0; i < 40 && m === null; i++) {
+    m = await page.evaluate(measureFood);
+    if (m === null) await page.waitForTimeout(500);
+  }
+  const problems = judgeFood(m);
   if (problems.length > 0)
     throw new Error(`the food box does not fit its slot: ${problems.slice(0, 4).join("; ")}`);
 }
