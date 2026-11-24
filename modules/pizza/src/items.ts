@@ -213,6 +213,9 @@ export async function removeItem(
 
 /** Ticks one pizza handed out (U4, U9); the last tick makes the order done (`handed_out`). */
 export async function handOut(s: Step, item: ItemRow, handedOut: boolean): Promise<Moved | null> {
+  // Done meanwhile (the timer, or "Everyone got theirs" elsewhere): answered as it is, as handOutAll.
+  const o = await getOrder(s.c, item.order_id);
+  if (o?.state === "done") return unchanged(o);
   await lockOrder(s.c, item.order_id, ["arrived"], "hand_out");
   await s.c.query(`UPDATE pizza_items SET handed_out_at = $2 WHERE id = $1`, [
     item.id,
