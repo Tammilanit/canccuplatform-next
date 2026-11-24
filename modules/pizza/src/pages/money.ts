@@ -7,7 +7,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { AppDeps } from "../http.js";
 import { MANAGE } from "../policy.js";
 import { readerAvailable } from "../reader-key.js";
-import { back, formText, hubPage, must, pageCtx, refusal, viaApi } from "./kit.js";
+import { back, formText, hubPage, must, pageCtx, viaApi } from "./kit.js";
 import type { ApiAnswer, PageCtx } from "./kit.js";
 import { parseEuro } from "./money-format.js";
 import type { MoneyView, ReceiptView } from "./money-format.js";
