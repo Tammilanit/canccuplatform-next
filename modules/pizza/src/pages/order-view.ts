@@ -63,6 +63,8 @@ export interface OrderView {
   /** A member's own pizzas (contracts/pizza.md, Who sees what). */
   mine?: MineView[];
   payer?: { user_id: string; name: string | null } | null;
+  /** The holder's and the crew's view: the order's total once it is in. */
+  total_cents?: number | null;
   /** The caller's own money (contracts/pizza.md, Who sees what), for the people in the order. */
   my_amount_cents?: number | null;
   my_amount_estimated?: boolean;

@@ -127,10 +127,13 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     // Even is the fallback while a price is missing; tapping it again is not a choice.
     await form(w, "pena", `/hold/${id}/money/split`, { split: "even" });
     expect((await money()).split).toBeNull();
-    const salad = ((await money()).prices as { item_id: string; price_cents: number | null }[]).find(
-      (p) => p.price_cents === null,
-    );
-    await form(w, "pena", `/hold/${id}/money/price`, { item_id: salad?.item_id ?? "", price: "4.00" });
+    const salad = (
+      (await money()).prices as { item_id: string; price_cents: number | null }[]
+    ).find((p) => p.price_cents === null);
+    await form(w, "pena", `/hold/${id}/money/price`, {
+      item_id: salad?.item_id ?? "",
+      price: "4.00",
+    });
     const page = (await view(w, "pena", `/hold/${id}/money`)).body;
     expect(page).toMatch(/<button[^>]*name="split"[^>]*value="exact"[^>]*aria-pressed="true"/);
     expect((await money()).split_effective).toBe("exact");

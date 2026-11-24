@@ -246,6 +246,47 @@ function myMoney(c: FoodCtx, o: OrderView): Slot {
   </section>`;
 }
 
+/** The holder's next step on their order (D19): a form for a step taken here, else its page. */
+export function nextStep(
+  o: OrderView,
+): { label: string; href: string; method: "get" | "post" } | null {
+  const hold = `${PREFIX}hold/${o.id}`;
+  switch (o.state) {
+    case "open":
+      return { label: "mine.step_close", href: `${hold}/step/close`, method: "post" };
+    case "closed":
+      return { label: "mine.step_call", href: `${hold}/call`, method: "get" };
+    case "placed":
+      return (o.total_cents ?? null) === null
+        ? { label: "mine.step_receipt", href: `${hold}/money`, method: "get" }
+        : { label: "mine.step_here", href: `${hold}/here`, method: "get" };
+    case "arrived":
+      return { label: "mine.step_hand_out", href: `${hold}/hand-out`, method: "get" };
+    default:
+      return null;
+  }
+}
+
+/** Whenever you hold the order, not only right after opening it (#789 item 13). */
+function holderCard(c: FoodCtx, o: OrderView): Slot {
+  const next = o.you_hold === true ? nextStep(o) : null;
+  if (next === null) return "";
+  const label = c.t(next.label);
+  return html`<section class="pizza-block pizza-holder-card">
+    <p class="pizza-title">${c.t("mine.you_hold")}</p>
+    <div class="pizza-row">
+      ${
+        next.method === "post"
+          ? post(next.href, label, "canccu-button--primary")
+          : html`<a class="canccu-button canccu-button--primary" href="${next.href}">${label}</a>`
+      }
+      <a class="canccu-button canccu-button--secondary" href="${PREFIX}hold/${o.id}"
+        >${c.t("mine.holder_view")}</a
+      >
+    </div>
+  </section>`;
+}
+
 export function myOrderView(
   c: FoodCtx,
   o: OrderView,
@@ -260,11 +301,10 @@ export function myOrderView(
           kind: "ok",
           title: c.t("mine.opened", { seq: o.seq }),
           text: c.t("mine.opened_text"),
+          // The holder card below carries the holder's view and next step.
           actions: html`<a class="canccu-button canccu-button--primary" href="${orderHref(o)}/add"
-              >${c.t("mine.add_own")}</a
-            ><a class="canccu-button canccu-button--secondary" href="${PREFIX}hold/${o.id}"
-              >${c.t("mine.holder_view")}</a
-            >`,
+            >${c.t("mine.add_own")}</a
+          >`,
         })
       : "";
   const added =
@@ -287,7 +327,8 @@ export function myOrderView(
   return html`${flash(q.error)}${opened}${added}
     <div class="pizza-pair">
       <div class="pizza-pair__main">
-        ${header} ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)} ${myMoney(c, o)} ${add}
+        ${header} ${holderCard(c, o)} ${nobody ? nobodyCard(c, o) : ""} ${myPizzas(c, o)}
+        ${myMoney(c, o)} ${add}
       </div>
       <aside class="pizza-pair__aside">
         ${o.state === "done" ? "" : html`<h2 class="pizza-section">${c.t("mine.next")}</h2>`}
