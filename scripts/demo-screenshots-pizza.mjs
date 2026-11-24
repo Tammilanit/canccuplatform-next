@@ -2,10 +2,11 @@
 // 16–20): one order taken by the CI session from open to handed out, with the attendee's Food
 // page, menu and order page and the holder's page at each step, at phone and desktop width (the
 // guest's Food page too); the crew's Food page and the order's page; the money step (the total,
-// a receipt read by CI's fake reader and confirmed, paid to the holder); pizzerias, a pizzeria,
-// the menu CSV's preview and reading a menu photo; the daily record, one order's money and the
-// export; Food settings and Integrations. The group has a shard of its own, so its orders never
-// reach the screens of another group's shots (Moments' pizza stories). The order ends done.
+// a receipt read by CI's fake reader and confirmed, paid to the holder, and a member's view of
+// it); pizzerias, a pizzeria, the menu CSV's preview and reading a menu photo; the daily record,
+// one order's money and the export; Food settings and Integrations. The group has a shard of its
+// own, so its orders never reach the screens of another group's shots (Moments' pizza stories).
+// The order ends done.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
