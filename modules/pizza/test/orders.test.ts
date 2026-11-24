@@ -293,6 +293,18 @@ describe.skipIf(!DATABASE_URL)("close, call in, arrive, hand out, done, undo", (
     expect(w.events()).toHaveLength(events);
     expect(w.audit.map((a) => a.action)).not.toContain("pizza.order.done");
   });
+  it("answers a pizza's hand-out tick on a done order with the order as it is (#789)", async () => {
+    await post("pena", `orders/${id}/place`);
+    await post("pena", `orders/${id}/arrive`);
+    const first = json(await post("pena", `orders/${id}/hand-out`));
+    const events = w.events().length;
+    const items = first.items as { id: string; handed_out: boolean }[];
+    const r = await post("pena", `items/${must(items[0]).id}/hand-out`, { handed_out: false });
+    expect(r.statusCode).toBe(200);
+    expect(json(r)).toMatchObject({ state: "done", revision: first.revision });
+    expect(must((json(r).items as { handed_out: boolean }[])[0]).handed_out).toBe(true);
+    expect(w.events()).toHaveLength(events);
+  });
   it("audits the crew's Everyone got theirs on an order they do not hold", async () => {
     await post("pena", `orders/${id}/place`);
     await post("pena", `orders/${id}/arrive`);

@@ -87,7 +87,7 @@ function hero(c: PageCtx, o: OrderView, m: MoneyView, me: string): Html {
               ${m.receipts.map(
                 (r, i) =>
                   html`<li class="pizza-receipt">
-                    <a href="${photoUrl(r.id)}"
+                    <a href="${photoUrl(r.id)}" data-viewer="${c.t("money.close_photo")}"
                       ><img
                         src="${photoUrl(r.id)}"
                         alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"

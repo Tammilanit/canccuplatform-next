@@ -286,3 +286,74 @@ describe.skipIf(!DATABASE_URL)("my order", () => {
     expect(r.body).toContain("Pizzasi");
   });
 });
+
+describe.skipIf(!DATABASE_URL)("the holder's controls on my order (#789 item 13)", () => {
+  const card = async (who = "pena") => {
+    const body = (await view(w, who, `/orders/${id}`)).body;
+    const at = body.indexOf("pizza-holder-card");
+    return at < 0 ? null : body.slice(at, body.indexOf("</section>", at));
+  };
+  const addOne = async () =>
+    w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+      kind: "menu",
+      menu_item_id: await itemId(w, pz, "1"),
+    });
+
+  it("shows You hold this order with Close the order while it is open, without ?opened=1", async () => {
+    const c = await card();
+    expect(c).toContain("You hold this order");
+    expect(c).toMatch(/<form[^>]*method="post"[^>]*action="\/pizza\/hold\/[^"]+\/step\/close"/);
+    expect(c).toContain("Close the order");
+  });
+
+  it("shows Call it in once it is closed", async () => {
+    await addOne();
+    await step("close");
+    const c = await card();
+    expect(c).toContain(`href="/pizza/hold/${id}/call"`);
+    expect(c).toContain("Call it in");
+  });
+
+  it("shows Scan the receipt once it is called in without a total", async () => {
+    await addOne();
+    await step("place");
+    const c = await card();
+    expect(c).toContain(`href="/pizza/hold/${id}/money"`);
+    expect(c).toContain("Scan the receipt");
+  });
+
+  it("shows It's here once called in with its total", async () => {
+    await addOne();
+    await step("place");
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, { total_cents: 1200 });
+    const c = await card();
+    expect(c).toContain(`href="/pizza/hold/${id}/here"`);
+    expect(c).toContain("It&#39;s here");
+  });
+
+  it("shows Hand out once it has arrived", async () => {
+    await addOne();
+    await step("place");
+    await step("arrive");
+    const c = await card();
+    expect(c).toContain(`href="/pizza/hold/${id}/hand-out"`);
+    expect(c).toContain("Hand out");
+  });
+
+  it("shows no holder card to someone who does not hold the order", async () => {
+    await addOne();
+    expect(await card("anni")).toBeNull();
+  });
+
+  it("shows no holder card on a done or cancelled order", async () => {
+    await addOne();
+    await step("place");
+    await step("arrive");
+    await step("hand-out");
+    expect(await card()).toBeNull();
+    const other = json(await open(w, "pena", grill)).id as string;
+    await w.call("pena", "POST", `/api/pizza/orders/${other}/cancel`, { reason: "rain" });
+    const body = (await view(w, "pena", `/orders/${other}`)).body;
+    expect(body).not.toContain("pizza-holder-card");
+  });
+});

@@ -201,6 +201,23 @@ describe.skipIf(!DATABASE_URL)("races", () => {
     expect(types(w.events())).not.toContain("pizza.item.changed");
   });
 
+  it("answers 404 to a price write that waited behind the pizza's removal, the order untouched", async () => {
+    const id = json(await open(w, "pena", pz)).id as string;
+    const pizza = json(
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: margherita,
+      }),
+    ).id as string;
+    const revision = json(await w.call("pena", "GET", `/api/pizza/orders/${id}`)).revision;
+    const r = await whileRemoved(pizza, () =>
+      w.call("pena", "PUT", `/api/pizza/items/${pizza}/price`, { price_cents: 1200 }),
+    );
+    expect(r.statusCode).toBe(404);
+    expect(errorOf(r).code).toBe("not_found");
+    expect(json(await w.call("pena", "GET", `/api/pizza/orders/${id}`)).revision).toBe(revision);
+  });
+
   it("tells the owner once when they and the holder remove the same pizza at once", async () => {
     const id = json(await open(w, "pena", pz)).id as string;
     const pizza = json(

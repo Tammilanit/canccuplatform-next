@@ -337,3 +337,41 @@
   width: 3rem;
   text-align: center;
 }
+
+/* The photo viewer (static/viewer.js): the photo whole, over a dimmed page. */
+.pizza-viewer {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.pizza-viewer:not([open]) {
+  display: none;
+}
+.pizza-viewer::backdrop {
+  background: rgb(0 0 0 / 0.8);
+}
+.pizza-viewer__photo {
+  max-width: 100%;
+  max-height: calc(100vh - 2 * 1rem);
+  object-fit: contain;
+}
+.pizza-viewer__close {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
