@@ -81,7 +81,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform "pizza notify" "pizza screen notify" platform
+  moments moments platform "pizza notify" "pizza screen notify" platform moments
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
