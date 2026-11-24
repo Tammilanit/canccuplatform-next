@@ -61,7 +61,6 @@ export function anthropicReader(apiKey: string, o: { fetch?: typeof fetch } = {}
     text: string,
     schema: object,
   ): Promise<{ raw: unknown; usage: ReadUsage }> => {
-    const started = Date.now();
     let res: Anthropic.Message;
     try {
       res = await client.messages.create(
@@ -97,7 +96,6 @@ export function anthropicReader(apiKey: string, o: { fetch?: typeof fetch } = {}
     const usage = {
       input_tokens: res.usage.input_tokens,
       output_tokens: res.usage.output_tokens,
-      ms: Date.now() - started,
     };
     if (res.stop_reason === "refusal") throw new ReaderFailed("declined", { usage });
     // A cut-off answer is no reading: the holder types instead.

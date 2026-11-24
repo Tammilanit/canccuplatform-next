@@ -292,13 +292,11 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
           });
         }),
     );
-    await page
-      .locator("input[capture]")
-      .setInputFiles({
-        name: "big.jpg",
-        mimeType: "image/jpeg",
-        buffer: await tallJpeg(4000, 3000),
-      });
+    await page.locator("input[capture]").setInputFiles({
+      name: "big.jpg",
+      mimeType: "image/jpeg",
+      buffer: await tallJpeg(4000, 3000),
+    });
     expect(await sent).toEqual({ width: 2000, height: 1500, type: "image/jpeg", n: 1 });
     await context.close();
   });

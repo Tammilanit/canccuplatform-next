@@ -8,7 +8,7 @@ import type { MenuReading, ReadReason, ReadUsage, Reader, ReceiptReading } from 
 import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
 
 /** What a fake read "used": about a phone photo's tokens, so the read log has a cost to show. */
-export const FAKE_USAGE: ReadUsage = { input_tokens: 1600, output_tokens: 400, ms: 1200 };
+export const FAKE_USAGE: ReadUsage = { input_tokens: 1600, output_tokens: 400 };
 
 /** The reasons the model itself gives: it answered, so the read used tokens. */
 const ANSWERED: ReadonlySet<ReadReason> = new Set(["unreadable", "declined"]);

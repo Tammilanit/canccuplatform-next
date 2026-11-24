@@ -33,11 +33,10 @@ export interface MenuRead {
   items: MenuReading[];
 }
 
-/** What one read used: the read log's tokens, its cost and its time (#789 item 12). */
+/** What one read used: the read log's tokens and so its cost (#789 item 12). */
 export interface ReadUsage {
   input_tokens: number;
   output_tokens: number;
-  ms: number;
 }
 
 export interface Page {
@@ -71,6 +70,18 @@ export const timeoutFor = (pages: number): number =>
 export type ReaderFor = (apiKey: string) => Reader;
 
 export const PROVIDER = { id: "anthropic", name: "Anthropic", model: "Claude Haiku 5.5" } as const;
+
+/**
+ * The model's prices in micro-dollars per token: Claude Haiku 5.5 at $0.10 per million tokens in
+ * and $0.50 out (prompts under 100K tokens, which a few photos are). Change with the model.
+ */
+const MICRO_USD_PER_TOKEN = { input: 0.1, output: 0.5 } as const;
+
+/** What a read cost, rounded up so a paid read never shows as free. */
+export const costMicroUsd = (u: ReadUsage): number =>
+  Math.ceil(
+    u.input_tokens * MICRO_USD_PER_TOKEN.input + u.output_tokens * MICRO_USD_PER_TOKEN.output,
+  );
 
 /**
  * Why a read gave nothing (#789 item 11): each has its own words and way forward on the pages.

@@ -131,8 +131,7 @@ describe("the Anthropic reader", () => {
   it("answers the tokens the read used", async () => {
     const r = anthropicReader("k", { fetch: fakeFetch({ body: message(receiptJson()) }) });
     const { usage } = await r.receipt(PHOTO, "image/png");
-    expect(usage).toMatchObject({ input_tokens: 1234, output_tokens: 56 });
-    expect(usage.ms).toBeGreaterThanOrEqual(0);
+    expect(usage).toEqual({ input_tokens: 1234, output_tokens: 56 });
   });
 
   it("sends every page of a menu in one request, in order, with only the fixed instructions", async () => {

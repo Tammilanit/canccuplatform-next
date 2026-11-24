@@ -175,6 +175,9 @@ export const MONEY_EN = {
     "{provider}, {model}. About $0.001 a receipt, $0.002 a menu page. People see this before a photo is sent.",
   "settings.ai_reader_daily_reads": "Reads a day",
   "settings.ai_reader_daily_reads_hint": "The most photos read in one event day, to cap the cost.",
+  "settings.ai_reader_monthly_limit_usd": "Monthly spend limit ($)",
+  "settings.ai_reader_monthly_limit_usd_hint":
+    "Whole dollars, as the provider's Console sets it; 0 for none. Integrations shows the month's reads against it and warns from 80 %; the provider stops reads itself.",
   "integrations.title": "Integrations",
   "integrations.reader": "AI reader",
   "integrations.reader_text":

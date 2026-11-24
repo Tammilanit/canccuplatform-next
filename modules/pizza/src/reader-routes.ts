@@ -4,9 +4,9 @@
  * the order's money, which changes only when the holder confirms it (PATCH …/money). A menu read
  * becomes a menu CSV for the import's preview, and its photo is not kept.
  *
- * Not idempotent by key: each call is a read, counted against the event's daily reads. The call
- * to the provider runs outside a transaction, so a slow provider holds no lock, and a failed read
- * is still counted (it was paid for) and a refused key still stops the reader.
+ * Not idempotent by key: each call is a read, logged, and counted against the event's daily reads
+ * unless the provider billed nothing for it (#789 D6). The call to the provider runs outside a
+ * transaction, so a slow provider holds no lock; a refused key still stops the reader.
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { NotSignedIn } from "@canccu/kit";
@@ -19,10 +19,9 @@ import { NO_FACTS, authorize } from "./policy.js";
 import { facts } from "./present.js";
 import { matchReceipt } from "./receipt-match.js";
 import { noteRead, takeReader } from "./reader-key.js";
-import type { Taken } from "./reader-key.js";
-import type { Reader } from "./reader.js";
-
-import { ReaderKeyRejected } from "./reader.js";
+import type { ReadResult, Taken } from "./reader-key.js";
+import type { ReadUsage, Reader } from "./reader.js";
+import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
 import { getReceipt, receiptPath, receiptView } from "./receipts.js";
 import type { ReceiptRow } from "./receipts.js";
 import { cannot } from "./conflicts.js";
@@ -31,20 +30,35 @@ import type { OrderRow } from "./store.js";
 import { InvalidBody } from "./validate.js";
 import { readFile } from "node:fs/promises";
 
-/** The provider call, counted however it ends. */
-async function counted<T>(
+/**
+ * The provider call, logged however it ends: its outcome, the model's reason, the tokens and the
+ * time. A failed read changes nothing else; the crew may be told the reader stopped (`noteRead`).
+ */
+async function counted<T extends { usage: ReadUsage }>(
   deps: AppDeps,
   taken: Taken,
   call: (reader: Reader) => Promise<T>,
 ): Promise<T> {
-  let outcome: "ok" | "failed" | "rejected" = "ok";
+  const started = performance.now();
+  let result: ReadResult = { outcome: "failed", reason: null, usage: null, ms: 0 };
   try {
-    return await call(taken.reader);
+    const answer = await call(taken.reader);
+    result = { outcome: "ok", reason: null, usage: answer.usage, ms: 0 };
+    return answer;
   } catch (err) {
-    outcome = err instanceof ReaderKeyRejected ? "rejected" : "failed";
+    if (err instanceof ReaderKeyRejected) result = { ...result, outcome: "rejected" };
+    if (err instanceof ReaderFailed)
+      result = {
+        outcome: err.reason,
+        reason: err.reason === "unreadable" ? err.message : null,
+        usage: err.usage,
+        ms: 0,
+      };
     throw err;
   } finally {
-    await deps.db.tenant((c) => noteRead(c, taken, outcome, deps.now()));
+    const ms = performance.now() - started;
+    await deps.db.tenant((c) => noteRead(c, deps, taken, { ...result, ms }, deps.now()));
+    await deps.outbox.flush();
   }
 }
 

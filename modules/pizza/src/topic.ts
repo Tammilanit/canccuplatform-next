@@ -4,7 +4,7 @@
  * the personal part tells each person in an order that it is called in, here or cancelled, that
  * someone else changed their pizza, and of their share (#703: ready, changed, marked paid, one
  * reminder), and the holder and the crew what a stalled order needs (the scheduler's reminders, the
- * nudge). Notify knows the topic only from this registration, sent at every start by every
+ * nudge), and the crew that the AI reader stopped (#789 item 11). Notify knows the topic only from this registration, sent at every start by every
  * container (idempotent).
  */
 import type { Logger, ServiceIdentity } from "@canccu/kit";
@@ -238,6 +238,22 @@ export const FOOD_TOPIC = {
       "Order {data.order.seq}: {data.count} not marked paid",
       "See who still owes you",
       "/pizza/hold/{data.order.id}/money",
+    ),
+    personal(
+      "pizza.reader.stopped",
+      "data.user_ids",
+      [eq("data.reason", "key_rejected")],
+      "The AI reader stopped: its key was refused",
+      "Receipts are typed by hand until an admin sets a new key",
+      "/pizza/integrations",
+    ),
+    personal(
+      "pizza.reader.stopped",
+      "data.user_ids",
+      [eq("data.reason", "out_of_credit")],
+      "The AI reader stopped: out of credit",
+      "Add credit or raise the limit in the provider's Console; receipts are typed meanwhile",
+      "/pizza/integrations",
     ),
   ],
 };

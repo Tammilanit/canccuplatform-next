@@ -172,6 +172,30 @@ describe.skipIf(!DATABASE_URL)(
   },
 );
 
+describe.skipIf(!DATABASE_URL)("the reader's monthly limit in Food settings (#789 D23)", () => {
+  it("takes the provider account's limit in whole dollars, as its Console sets it", async () => {
+    await w.call("organiser", "PUT", "/api/pizza/reader/key", { api_key: KEY });
+    const page = (await view(w, "organiser", "/crew/settings")).body;
+    expect(page).toContain("Monthly spend limit ($)");
+    expect(page).toMatch(/<input[^>]*name="ai_reader_monthly_limit_usd"[^>]*>/);
+    await form(w, "organiser", "/crew/settings", {
+      settings_version: "1",
+      ai_reader_monthly_limit_usd: "12",
+    });
+    expect(w.adminSettings.writes.at(-1)?.values).toMatchObject({
+      ai_reader_monthly_limit_usd: 12,
+    });
+    await form(w, "organiser", "/crew/settings", {
+      settings_version: "1",
+      ai_reader_monthly_limit_usd: "5000",
+    });
+    expect(w.adminSettings.writes.at(-1)?.values).not.toHaveProperty(
+      "ai_reader_monthly_limit_usd",
+      5000,
+    );
+  });
+});
+
 describe.skipIf(!DATABASE_URL)("Admin → Integrations", () => {
   it("sets, shows by its last four, and revokes the reader's key; never shows it", async () => {
     let page = await view(w, "integrator", "/integrations");

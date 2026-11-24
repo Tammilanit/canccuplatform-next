@@ -174,6 +174,9 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "settings.ai_reader_daily_reads": "Lukuja päivässä",
   "settings.ai_reader_daily_reads_hint":
     "Enintään näin monta kuvaa tapahtumapäivässä, kulujen rajaksi.",
+  "settings.ai_reader_monthly_limit_usd": "Kuukauden kulukatto ($)",
+  "settings.ai_reader_monthly_limit_usd_hint":
+    "Kokonaisina dollareina, kuten palveluntarjoajan konsolissa; 0 = ei kattoa. Integraatiot näyttää kuukauden luvut sitä vasten ja varoittaa 80 %:sta; palvelu itse lopettaa luvut.",
   "integrations.title": "Integraatiot",
   "integrations.reader": "Tekoälylukija",
   "integrations.reader_text":
