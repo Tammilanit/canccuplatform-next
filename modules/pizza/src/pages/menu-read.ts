@@ -28,6 +28,7 @@ function pickView(c: PageCtx, id: string, error?: string): Html {
       action="${P}/${id}/read"
       enctype="multipart/form-data"
       class="pizza-part pizza-form"
+      data-shrink
     >
       ${formKey()}
       <label class="canccu-field"

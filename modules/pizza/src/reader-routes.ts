@@ -102,7 +102,8 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
         taken: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now(), "menu"),
       };
     });
-    const sent = await forProvider(await cleanPhoto(photo, type), type);
+    const clean = await cleanPhoto(photo, type);
+    const sent = await forProvider(clean.image, clean.type);
     const rows = await counted(deps, taken, (reader) => reader.menu(sent.image, sent.type));
     const csv = [
       csvLine(["pizzeria", "kind", "number", "name", "description", "price"]),

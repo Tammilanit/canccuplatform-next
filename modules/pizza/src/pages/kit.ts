@@ -138,6 +138,7 @@ export async function hubPage(
         <script src="${PREFIX}static/food.js" defer></script>
         <script src="${PREFIX}static/money.js" defer></script>
         <script src="${PREFIX}static/viewer.js" defer></script>
+        <script src="${PREFIX}static/shrink.js" defer></script>
       </body>
     </html> `;
   return send(request, reply, doc, { status: o.status ?? 200, page: "surface", nonce });
@@ -203,7 +204,8 @@ export async function organiserPage(
     ...(o.tab === undefined ? {} : { tabs: foodTabs(c, o.tab) }),
     body: html`<div lang="${c.lang}">${o.body}</div>
       <script src="${PREFIX}static/pizza.js" defer></script>
-      <script src="${PREFIX}static/viewer.js" defer></script>`,
+      <script src="${PREFIX}static/viewer.js" defer></script>
+      <script src="${PREFIX}static/shrink.js" defer></script>`,
   });
   return send(request, reply, doc, { status: o.status ?? 200, page: "admin", nonce });
 }
@@ -254,6 +256,7 @@ const TYPES: Record<string, string> = {
   "money.css": "text/css; charset=utf-8",
   "money.js": "text/javascript; charset=utf-8",
   "viewer.js": "text/javascript; charset=utf-8",
+  "shrink.js": "text/javascript; charset=utf-8",
   "wide.css": "text/css; charset=utf-8",
   "hub.css": "text/css; charset=utf-8",
 };

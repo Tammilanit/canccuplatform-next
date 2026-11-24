@@ -85,6 +85,7 @@ export interface Sent {
   height: number;
   /** Whether the bytes still carried EXIF (a location among it). */
   exif: boolean;
+  bytes: Buffer;
 }
 
 export class FakeReader {
@@ -116,6 +117,7 @@ export class FakeReader {
       width: m.width,
       height: m.height,
       exif: m.exif !== undefined,
+      bytes: image,
     });
     await this.hold;
     if (this.fail === "failed") throw new ReaderFailed();

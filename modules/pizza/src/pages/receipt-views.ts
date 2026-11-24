@@ -91,6 +91,7 @@ export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?:
       action="${base(o)}/money/scan"
       enctype="multipart/form-data"
       class="pizza-form"
+      data-shrink
       data-reading="${s.reader ? c.t("scan.reading") : ""}"
     >
       ${formKey()}

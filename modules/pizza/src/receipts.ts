@@ -89,8 +89,8 @@ export async function deleteReceiptFiles(root: string): Promise<void> {
 export function receiptRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: { id: string } }>("/api/pizza/orders/:id/receipts", async (request, reply) => {
     // Re-encoded before the order's lock is taken: it is the slow part, and holds nobody up.
-    const { photo, type } = photoOf(request.body, request.headers["content-type"]);
-    const clean = await cleanPhoto(photo, type);
+    const { photo, type: sent } = photoOf(request.body, request.headers["content-type"]);
+    const { image: clean, type } = await cleanPhoto(photo, sent);
     return write(deps, request, reply, async (c, w) => {
       const order = await getOrder(c, request.params.id, true);
       if (order === null) throw notFound();

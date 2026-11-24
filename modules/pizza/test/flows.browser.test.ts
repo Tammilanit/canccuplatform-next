@@ -12,7 +12,7 @@ import { HOSTS, serve, signedIn } from "./browser.js";
 import type { Served } from "./browser.js";
 import { launch } from "./chromium.js";
 import { SPEC_MENU } from "./fixtures.js";
-import { png } from "./images.js";
+import { png, tallJpeg } from "./images.js";
 import {
   DATABASE_URL,
   freshDatabase,
@@ -266,6 +266,40 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     });
     await page.waitForTimeout(100);
     expect(await viewer.isVisible()).toBe(true);
+    await context.close();
+  });
+
+  it("shrinks a 4000 px photo to 2000 px on the phone before it uploads", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan`);
+    // What the form posts when it is sent: Chromium does not show a request's file parts.
+    const sent = page.evaluate(
+      () =>
+        new Promise<{ width: number; height: number; type: string; n: number }>((resolve) => {
+          const form = document.querySelector("form[data-shrink]") as HTMLFormElement;
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const files = [...form.querySelectorAll("input[type=file]")].flatMap((i) => [
+              ...((i as HTMLInputElement).files ?? []),
+            ]);
+            const file = files[0] as File;
+            void createImageBitmap(file).then((b) => {
+              resolve({ width: b.width, height: b.height, type: file.type, n: files.length });
+            });
+          });
+        }),
+    );
+    await page
+      .locator("input[capture]")
+      .setInputFiles({
+        name: "big.jpg",
+        mimeType: "image/jpeg",
+        buffer: await tallJpeg(4000, 3000),
+      });
+    expect(await sent).toEqual({ width: 2000, height: 1500, type: "image/jpeg", n: 1 });
     await context.close();
   });
 
