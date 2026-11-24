@@ -75,7 +75,7 @@ export async function savePriorities(
        airtime = EXCLUDED.airtime`,
     [order, own, revision, stored],
   );
-  await reRank(c, deps.engine);
+  await reRank(c, deps.engine, deps.now());
   await deps.audit({
     tenant_id: tenant,
     actor_user_id: actorOf(session).user_id,

@@ -53,8 +53,8 @@ run("catching up after a restart", () => {
   const report = (id: string, placed: boolean) =>
     event("screen.claims.changed", {
       zone_key: "main",
-      placed: placed ? [{ override_id: id, role: "hero" }] : [],
-      unplaced: placed ? [] : [id],
+      placed: placed ? [{ override_id: `${id}.main`, role: "hero" }] : [],
+      unplaced: placed ? [] : [`${id}.main`],
       hidden: [],
     });
   const placement = async (id: string) =>
@@ -152,7 +152,7 @@ run("catching up after a restart", () => {
     );
     const late = event("screen.claims.changed", {
       zone_key: "stage",
-      placed: [{ override_id: id, role: "hero" }],
+      placed: [{ override_id: `${id}.main`, role: "hero" }],
       unplaced: [],
       hidden: [],
     });

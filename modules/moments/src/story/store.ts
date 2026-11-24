@@ -1,7 +1,7 @@
 /** The storyboards' rows (contracts/moments.md, Storyboards); every function runs in the caller's tenant transaction. */
 import type { SqlClient } from "@canccu/kit";
 import type { Actor } from "../store.js";
-import { PRESETS } from "./presets.js";
+import { PRESETS, RETIRED_PRESETS } from "./presets.js";
 import type { Story } from "./model.js";
 import { DEFAULT_TIMING } from "./timing.js";
 import type { Timing } from "./timing.js";
@@ -62,7 +62,7 @@ export async function loadStories(c: SqlClient): Promise<StoryDoc> {
       copied: false,
     };
   return {
-    stories: r.stories as Story[],
+    stories: (r.stories as Story[]).filter((s) => !RETIRED_PRESETS.has(s.preset ?? "")),
     settings: { ...DEFAULT_SETTINGS, ...(r.settings as Partial<StorySettings>) },
     event: { ...NO_EVENT, ...(r.event as Partial<EventFacts>) },
     revision: r.revision as number,

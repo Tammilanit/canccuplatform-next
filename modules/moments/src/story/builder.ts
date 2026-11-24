@@ -90,7 +90,6 @@ export interface BuilderView {
   canWrite: boolean;
   canTake: boolean;
   /** All stories' share of each zone's last 10 minutes. */
-  airtime: { zone: string; share: number }[];
   /** The step whose form is open. */
   step: number;
   /** A text with its placeholders filled from the story's next item (the preview's sample). */
@@ -150,7 +149,7 @@ export function builderView(o: BuilderView): Html {
           ${overviewCard(st, o.zones, o.zoneName)} ${roundsCard(st, d, o.cues)}
         </fieldset>
         ${roundColumns({ story: st, d, cues: o.cues, step, canWrite: o.canWrite, placeholders: sharedPlaceholders(st), sample: o.sample })}
-        ${sideColumn({ d, zones: o.zones, zoneName: o.zoneName, settings: o.settings, airtime: o.airtime, canTake: o.canTake, fullScreen: st.full_screen, steps })}
+        ${sideColumn({ d, zones: o.zones, zoneName: o.zoneName, settings: o.settings, canTake: o.canTake, fullScreen: st.full_screen, steps })}
       </form>
       ${
         o.canWrite || o.canTake

@@ -336,7 +336,7 @@ export class Engine {
     m: MomentRow,
     actor: Actor | null,
     reason: EndReason,
-    now: Date = new Date(),
+    now: Date,
   ): Promise<void> {
     const zones = await knownZones(c);
     if (m.class === "emergency") {

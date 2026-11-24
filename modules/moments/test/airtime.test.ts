@@ -10,10 +10,16 @@ import type { MomentRequest } from "../src/engine.js";
 import { applyClaims } from "../src/placements.js";
 import { tickTenant } from "../src/tick.js";
 import { lockMoment } from "../src/store.js";
-import { DATABASE_URL, T0, claims, freshDatabase, world } from "./helpers.js";
+import { DATABASE_URL, claims, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 
 const run = DATABASE_URL ? describe : describe.skip;
+
+async function mustLock(c: Parameters<typeof lockMoment>[0], id: string) {
+  const m = await lockMoment(c, id);
+  if (m === null) throw new Error(`no moment ${id}`);
+  return m;
+}
 
 const card: MomentRequest = {
   class: "finals",
@@ -29,7 +35,12 @@ const card: MomentRequest = {
 const pizza: MomentRequest = {
   class: "announcement",
   template: "announcement",
-  content: { title: "Pizza is here", body: "Order 12", level: "info", ticker_line: "Pizza is here" },
+  content: {
+    title: "Pizza is here",
+    body: "Order 12",
+    level: "info",
+    ticker_line: "Pizza is here",
+  },
   origin: "rule",
   rule_id: "pizza",
   why: "rule: pizza.order.arrived",
@@ -151,7 +162,7 @@ run("airtime (#777)", () => {
     await tick(1799);
     expect((await row(h.id))?.ended_at).toBeNull();
     await w.tx("demo", async (x) =>
-      w.engine.end(x, (await lockMoment(x, s.id))!, "source_ended", null, w.at(1799)),
+      w.engine.end(x, await mustLock(x, s.id), "source_ended", null, w.at(1799)),
     );
     expect((await row(s.id))?.end_reason).toBe("source_ended");
     await tick(1800);
@@ -188,7 +199,11 @@ run("airtime (#777)", () => {
     };
     const first = await start(standings, 10);
     const again = await w.tx("demo", (x) =>
-      w.engine.request(x, { ...standings, content: { title: "Cup", rows: [{ rank: 2 }] } }, w.at(20)),
+      w.engine.request(
+        x,
+        { ...standings, content: { title: "Cup", rows: [{ rank: 2 }] } },
+        w.at(20),
+      ),
     );
     expect(again.status).toBe("renewed");
     const { rows } = await w.tx("demo", (x) =>
@@ -207,13 +222,13 @@ run("airtime (#777)", () => {
     for (const n of [1, 2, 3, 4]) hots.push(await start(hot(n), n));
     await tick(60);
     await tick(70);
-    const round = lastOverride(`${hots[0]!.id}.main`);
+    const round = lastOverride(`${(hots[0] as { id: string }).id}.main`);
     expect(round).toMatchObject({ regions: ["hero", "rail"] });
     expect((round?.steps as Record<string, unknown>[]).map((s) => s.duration_ms)).toEqual([
       22500, 22500, 22500, 22500,
     ]);
     await tick(159);
-    expect((await row(hots[3]!.id))?.ended_at).toBeNull();
+    expect((await row((hots[3] as { id: string }).id))?.ended_at).toBeNull();
     await tick(160);
     for (const h of hots) expect((await row(h.id))?.end_reason).toBe("expired");
   });
@@ -231,7 +246,7 @@ run("airtime (#777)", () => {
   it("ending the holder frees the hero after the gap", async () => {
     const { c, p } = await cardThenPizza();
     await w.tx("demo", async (x) =>
-      w.engine.end(x, (await lockMoment(x, c.id))!, "cleared", null, w.at(20)),
+      w.engine.end(x, await mustLock(x, c.id), "cleared", null, w.at(20)),
     );
     expect(lastOverride(`${p.id}.main`)).toMatchObject({ regions: ["rail", "ticker"] });
     await tick(30);
@@ -241,7 +256,7 @@ run("airtime (#777)", () => {
   it("Extend adds to the budget of a waiting moment", async () => {
     const { p } = await cardThenPizza();
     await w.tx("demo", async (x) =>
-      w.engine.extend(x, (await lockMoment(x, p.id))!, 60, { user_id: "u", name: "Crew" }, w.at(20)),
+      w.engine.extend(x, await mustLock(x, p.id), 60, { user_id: "u", name: "Crew" }, w.at(20)),
     );
     await tick(90);
     await tick(100);
@@ -280,5 +295,3 @@ run("airtime (#777)", () => {
     expect(twice.status).toBe("refused");
   });
 });
-
-void T0;

@@ -20,7 +20,6 @@ import {
   step,
   sting,
 } from "./preset-steps.js";
-import { PIZZA_ART } from "./pizza-art.js";
 
 export const MEAL_SERVED = preset({
   key: "meal_served",
@@ -148,36 +147,6 @@ export const PIZZA_LAST_CALL = preset({
   // `pizza.order.closing` comes 10 minutes before the close: these are −10 and −2 of it.
   rounds: offsets(0, 8),
   end: { ...NO_END, until_event: { kind: "domain", type: "pizza.order.closed" } },
-});
-
-/**
- * The hall's biggest food moment takes the hero while the arrival is fresh (#775; the screen-energy
- * rule): the sting's burst with its cue's pop and ripple, then the card with the pizza, the order
- * and where to collect it, held three minutes (the long hold's most, SL2). It hands the hero back
- * then, or at once on the order's done; the food box in the venue rail keeps saying it meanwhile.
- */
-export const PIZZA_ARRIVED = preset({
-  key: "pizza_arrived",
-  name: "Pizza orders ready",
-  triggers: [domain("pizza.order.arrived")],
-  steps: [
-    sting("Pizza is here", 3, { cue: "pizza.placed" }),
-    step(
-      "title_card",
-      {
-        title: "Pizza is here",
-        subtitle: "Order {order.seq|ready} · Collect at {order.pickup|the pickup point}",
-        image_url: PIZZA_ART,
-      },
-      20,
-      { message: true },
-    ),
-  ],
-  hold_seconds: 180,
-  rounds: ONE_ROUND.rounds,
-  // An arrived order is already closed, so no close can end it: the hold does, or the order's
-  // done once everyone got theirs, whichever comes first.
-  end: { ...ONE_ROUND.end, until_event: { kind: "domain", type: "pizza.order.done" } },
 });
 
 export const ROUND_START = preset({

@@ -329,14 +329,10 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
 
 /**
  * Plays the live round on: starts its segments when due, pauses and resumes its video, decides
- * its steps' sounds. Answers how it stands: `playing`, `done` (its time is over) or `held`
+ * its steps' sounds. Answers how it stands: `playing` or `done` (its time is over)
  * (its moments gave up the region, or one owner refused it: skipped).
  */
-export async function playRound(
-  ctx: Ctx,
-  run: RunRow,
-  story: Story,
-): Promise<"playing" | "done" | "held"> {
+export async function playRound(ctx: Ctx, run: RunRow, story: Story): Promise<"playing" | "done"> {
   const round = run.round as RoundState;
   const at = ctx.now.getTime();
   for (const [i, seg] of round.segments.entries()) {
@@ -344,7 +340,7 @@ export async function playRound(
     if (seg.moment_id === null && at >= seg.from_ms - early && at < seg.until_ms) {
       // The steps before a video end where it starts: back to back, never both on screen.
       seg.moment_id = await startSegment(ctx, run, story, seg, i);
-      if (seg.moment_id === "refused") return "held";
+      if (seg.moment_id === "refused") return "done";
     }
     if (seg.moment_id === null || seg.moment_id === "refused") continue;
     if (seg.kind === "video" && at < seg.until_ms) await followPause(ctx, run, i);
@@ -359,23 +355,9 @@ export async function playRound(
   );
   const last = ids.at(-1);
   const m = last === undefined ? null : await lockMoment(ctx.c, last);
-  const over =
-    (at >= round.until_ms && round.paused_at === null) ||
-    (m?.ended_at != null && m.end_reason === "preempted");
-  if (!over) return "playing";
-  return (await neverShown(ctx.c, ids)) ? "held" : "done";
-}
-
-/** Screen said the round waited and never placed it anywhere: its region was held (SE1). */
-async function neverShown(c: SqlClient, ids: string[]): Promise<boolean> {
-  if (ids.length === 0) return false;
-  const { rows } = await c.query(
-    `SELECT bool_or(action IN ('placed', 'back')) AS shown, bool_or(action = 'queued') AS waited
-     FROM moments_history WHERE moment_id = ANY ($1::text[])`,
-    [ids],
-  );
-  const r = rows[0] as { shown: boolean | null; waited: boolean | null } | undefined;
-  return r?.waited === true && r.shown !== true;
+  // A round that waits in a queue plays late, as one unit (#777): its moment keeps its own time.
+  const over = (at >= round.until_ms && round.paused_at === null) || m?.ended_at != null;
+  return over ? "done" : "playing";
 }
 
 /** Ends the live round's moments now (an end event, the crew's stop or skip). */

@@ -39,9 +39,9 @@ export async function tickTenant(
 }
 
 /** A priority change ranks every running moment again at once and never ends one (E8). */
-export async function reRank(c: SqlClient, engine: Engine): Promise<void> {
+export async function reRank(c: SqlClient, engine: Engine, now: Date): Promise<void> {
   for (const m of await runningMoments(c, "TRUE", [], "wait")) {
-    await engine.show(c, m, null, "preempted");
+    await engine.show(c, m, null, "cleared", now);
   }
 }
 

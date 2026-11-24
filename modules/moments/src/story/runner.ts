@@ -13,7 +13,6 @@ import { runOfShow } from "../announce/store.js";
 import type { RunItem } from "../announce/store.js";
 import { emergencyOn } from "../cues/store.js";
 import { knownZones } from "../store.js";
-import { isVideo } from "./model.js";
 import type { Story } from "./model.js";
 import { CAP_MS, dueRound, plannedEnd, roundAt, roundSounds } from "./schedule.js";
 import { compileFinale, compileRound } from "./timing.js";
@@ -30,11 +29,6 @@ import {
 import type { Ctx } from "./round.js";
 import { liveRuns, loadStories, saveRun } from "./store.js";
 import type { RunRow } from "./store.js";
-
-const MINUTE = 60_000;
-const TEN_MINUTES = 10 * MINUTE;
-const YIELD_AFTER_MS = 60_000;
-const STORYBOARD_RANK = 65;
 
 /** A video step's own length, as the builder stored it from its asset. */
 export const videoMs = (step: { content: Record<string, unknown> }): number =>
@@ -142,53 +136,6 @@ async function startFinale(ctx: Ctx, run: RunRow, story: Story): Promise<void> {
   await saveRun(ctx.c, run);
 }
 
-/** Storyboards' share of the zone's last 10 minutes, were a round of `lengthMs` to start now (SO1). */
-async function airtimeOver(ctx: Ctx, zones: string[], lengthMs: number): Promise<boolean> {
-  const at = ctx.now.getTime();
-  const from = new Date(at - TEN_MINUTES + lengthMs);
-  const cap = (TEN_MINUTES * ctx.settings.airtime_percent) / 100;
-  for (const zone of zones.length > 0 ? zones : await knownZones(ctx.c)) {
-    const { rows } = await ctx.c.query(
-      `SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(COALESCE(ended_at, $2), COALESCE(expires_at, $2), $2)
-                - GREATEST(starts_at, $1))) * 1000), 0) AS used
-       FROM moments WHERE class = 'storyboard' AND template <> 'video'
-         AND starts_at < $2 AND LEAST(COALESCE(ended_at, $2), COALESCE(expires_at, $2)) > $1
-         AND (cardinality(zones) = 0 OR $3 = ANY (zones)) AND NOT ($3 = ANY (left_zones))`,
-      [from, ctx.now, zone],
-    );
-    if (Number(rows[0]?.used ?? 0) + lengthMs > cap) return true;
-  }
-  return false;
-}
-
-/**
- * Presets the airtime cap never defers (SO1): a moment the hall waits for, one round per order.
- * Behind the cap it came minutes late, or never, on a busy screen (#775: the cap was spent by the
- * stories shot before it, so Pizza is here did not reach the hero for 2 minutes). They still yield.
- */
-const UNCAPPED = new Set(["pizza_arrived"]);
-
-/** A lower moment of the hero's chain has waited 60 s for a region (the yield rule, SO1). */
-async function yieldTo(ctx: Ctx, zones: string[]): Promise<string | null> {
-  const { rows } = await ctx.c.query(
-    `SELECT m.template, m.content FROM moment_placements p
-     JOIN moments m ON m.tenant_id = p.tenant_id AND m.id = p.moment_id
-     JOIN moment_overrides o ON o.tenant_id = p.tenant_id AND o.override_id = p.override_id
-     WHERE m.ended_at IS NULL AND p.state = 'unplaced' AND NOT p.placed_once
-       AND m.class <> 'storyboard' AND (o.sent->>'rank')::int < $1
-       AND p.since <= $2::timestamptz - make_interval(secs => $3)
-       AND (cardinality($4::text[]) = 0 OR p.zone_key = ANY ($4::text[]))
-     ORDER BY p.since LIMIT 1`,
-    [STORYBOARD_RANK, ctx.now, YIELD_AFTER_MS / 1000, zones],
-  );
-  const r = rows[0] as { template: string; content: Record<string, unknown> } | undefined;
-  return r === undefined
-    ? null
-    : typeof r.content.title === "string"
-      ? r.content.title
-      : r.template;
-}
-
 async function skip(ctx: Ctx, run: RunRow, story: Story, n: number, why: string): Promise<void> {
   await history(
     ctx,
@@ -220,19 +167,7 @@ async function startRound(
     run.next_round = n + 1;
     return skip(ctx, run, story, n, "not in quiet");
   }
-  const video = story.round.steps.some(isVideo);
-  // A planned premiere is never deferred, nor a test; an uncapped preset skips the cap alone.
-  if (!video && !run.test) {
-    const cap = !UNCAPPED.has(story.preset ?? "");
-    const over = cap && (await airtimeOver(ctx, run.zones, compiled.length_ms)) ? "airtime" : null;
-    const lower = over === null ? await yieldTo(ctx, run.zones) : null;
-    const why = over ?? (lower === null ? null : `yield to ${lower}`);
-    if (why !== null) {
-      run.deferred_until = new Date(Math.floor(at / MINUTE) * MINUTE + MINUTE);
-      run.facts = { ...run.facts, "@deferred": why };
-      return;
-    }
-  }
+  // No airtime cap and no yield (#777): a round waits in the zones' queues like any moment.
   run.deferred_until = null;
   const sounds = run.test ? run.facts["@test_sound"] === "1" : roundSounds(story, n);
   run.round = await buildRound(ctx, run, story, compiled, n, false, planned, sounds, quiet);
@@ -241,8 +176,7 @@ async function startRound(
   for (const z of Object.keys(run.sounds))
     run.sounds[z] = { run: run.sounds[z]?.run ?? 0, round: 0 };
   await history(ctx, run, story, "round_started", label(run, story));
-  const state = await playRound(ctx, run, story);
-  if (state === "held") run.round = null;
+  if ((await playRound(ctx, run, story)) === "done") run.round = null;
 }
 
 /**
@@ -301,8 +235,6 @@ export async function stepRun(
   if (run.round !== null) {
     const state = await playRound(ctx, run, story);
     if (state === "playing") return saveRun(ctx.c, run);
-    if (state === "held")
-      await skip(ctx, run, story, run.round.index, "its region was held past its patience");
     const video = run.round.segments.find((s) => s.kind === "video");
     if (video !== undefined && video.moment_id !== null)
       run.uncounted_ms += video.until_ms - video.from_ms;

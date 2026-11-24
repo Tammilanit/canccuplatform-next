@@ -53,7 +53,6 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
     revision: 0,
     canWrite: true,
     canTake: true,
-    airtime: [{ zone: "main", share: 0.1 }],
     step: 0,
     sample: (text) => text.replace("{item.title}", "Demo Cup, final"),
   });
