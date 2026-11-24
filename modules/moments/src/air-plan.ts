@@ -190,7 +190,13 @@ export function planZone(
   const cut =
     holder === null
       ? undefined
-      : queue().find((s) => s.origin === "crew" && !s.shown && s.rank >= (holder as SlotIn).rank);
+      : queue().find(
+          (s) =>
+            s.origin === "crew" &&
+            s.segment === null &&
+            !s.shown &&
+            s.rank >= (holder as SlotIn).rank,
+        );
   if (holder !== null && cut !== undefined) {
     pushAside(holder);
     holder = cut;

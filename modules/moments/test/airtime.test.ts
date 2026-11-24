@@ -227,6 +227,8 @@ run("airtime (#777)", () => {
     expect((round?.steps as Record<string, unknown>[]).map((s) => s.duration_ms)).toEqual([
       22500, 22500, 22500, 22500,
     ]);
+    // Its steps start when it took the hero, not when it first waited in the rail.
+    expect(Date.parse(round?.starts_at as string) / 1000).toBeCloseTo(w.at(70).getTime() / 1000, 0);
     await tick(159);
     expect((await row((hots[3] as { id: string }).id))?.ended_at).toBeNull();
     await tick(160);
@@ -296,7 +298,29 @@ run("airtime (#777)", () => {
     await tick(10);
     const there = lastOverride(`${p.id}.stage`);
     expect(there).toMatchObject({ regions: ["hero", "rail", "ticker"], zones: ["stage"] });
-    expect(secondsLeft(`${p.id}.stage`, 10)).toBeCloseTo(175, 0);
+    expect(secondsLeft(`${p.id}.stage`, 10)).toBeCloseTo(180, 0);
+  });
+
+  it("a zone added well after the moment's start gives it the full TTL", async () => {
+    const { p } = await cardThenPizza();
+    await tick(100);
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('stage')`));
+    await tick(101);
+    expect(secondsLeft(`${p.id}.stage`, 101)).toBeCloseTo(180, 0);
+  });
+
+  it("a moment gone stale on the only zone is in that zone's stale list", async () => {
+    const c = await start({ ...card, ttl_seconds: 3600 }, 0);
+    await placed([[`${c.id}.main`, "hero"]], 0);
+    const h = await start(hot(1), 0);
+    await tick(1800);
+    expect((await row(h.id))?.end_reason).toBe("stale");
+    const { rows } = await w.tx("demo", (c) =>
+      c.query(`SELECT zone_key FROM moments_history WHERE moment_id = $1 AND outcome = 'stale'`, [
+        h.id,
+      ]),
+    );
+    expect(rows[0]).toMatchObject({ zone_key: "main" });
   });
 
   it("a moment on no known zone ends when it would have gone stale", async () => {

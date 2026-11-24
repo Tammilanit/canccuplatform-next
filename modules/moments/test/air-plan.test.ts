@@ -87,6 +87,18 @@ describe("the airtime scheduler", () => {
     );
   });
 
+  it("a crew run's later round waits for the holder's floor", () => {
+    const round = slot("round", {
+      class: "spotlight",
+      rank: 70,
+      origin: "crew",
+      segment: { round: "story:run:1:", index: 0 },
+    });
+    expect(planZone(10_000, held, [card({ rank: 70 }), round], DEFAULT_AIR).zone.holder).toBe(
+      "card",
+    );
+  });
+
   it("a lower rank waits for the holder's end", () => {
     const h = pizza({ moment_id: "card", granted: "hero", on_air_since: 0, queued_since: 0 });
     const p = planZone(100_000, held, [h, slot("final", { queued_since: 1000 })], DEFAULT_AIR);

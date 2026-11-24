@@ -325,7 +325,13 @@ export class Engine {
     m.ended_at = now;
     m.end_reason = reason;
     await saveMoment(c, m);
-    await this.history(c, m, now, { action: "ended", outcome: reason, actor });
+    // The zone it ended on, when a zone's pass ended it: On air's stale list reads it.
+    await this.history(c, m, now, {
+      action: "ended",
+      ...(zone === undefined ? {} : { zone }),
+      outcome: reason,
+      actor,
+    });
     if (m.class === "emergency") {
       await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
       return;
@@ -348,7 +354,7 @@ export class Engine {
       return;
     }
     for (const z of zones.filter((z) => covers(m, z, zones)))
-      await passZone(c, this, z, now, "wait", actor, reason);
+      await passZone(c, this, z, now, "wait", actor, reason, m.id);
   }
 
   async history(

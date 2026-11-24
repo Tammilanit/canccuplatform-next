@@ -111,6 +111,7 @@ export async function passZone(
   lock: "wait" | "skip" = "wait",
   actor: Actor | null = null,
   reason: EndReason = "cleared",
+  requested: string | null = null,
 ): Promise<void> {
   let z0 = await lockZone(c, zone, lock);
   if (z0 === null) return;
@@ -118,6 +119,7 @@ export async function passZone(
   // Ends change who is live, so the plan is made again after them; each round ends at least one.
   // A slot made in any round of this pass is new: it shows from its moment's own start.
   const fresh = new Set<string>();
+  const own = new Set<string>();
   for (let round = 0; round < 50; round += 1) {
     const moments = new Map((await momentsOn(c, zone)).map((m) => [m.id, m]));
     const slots = new Map<string, SlotRow>();
@@ -129,6 +131,9 @@ export async function passZone(
       if (!slots.has(m.id)) {
         slots.set(m.id, await newSlot(c, m.id, zone, m.starts_at, budgetOf(m)));
         fresh.add(m.id);
+        // Only a moment asked for in this very pass (or one that starts later) runs from its own
+        // start; one reaching a zone late gets its full time there (rule 2).
+        if (m.id === requested || m.starts_at.getTime() > now.getTime()) own.add(m.id);
       }
     const ins = [...slots.values()].map((s) => {
       const m = moments.get(s.moment_id) as MomentRow;
@@ -150,7 +155,7 @@ export async function passZone(
       const steps = condensedSteps(plan.slots, out, moments, air);
       if (plan.condensed?.holder === m.id && steps !== null)
         s.budget_ms = steps.reduce((t, x) => t + (x.duration_ms as number), 0);
-      apply(s, out, m, air, now, fresh.has(m.id) ? m.starts_at : now);
+      apply(s, out, m, air, now, own.has(m.id) ? m.starts_at : now);
       await send(
         c,
         engine.outbox,
@@ -161,7 +166,7 @@ export async function passZone(
         steps,
         // Shown in the pass that asked for it: from its own start, so a story's late take plays
         // from the item's time (SU3); else from now, minus what it already played (rule 2).
-        fresh.has(m.id) ? m.starts_at : new Date(now.getTime() - playedAt(s, now)),
+        own.has(m.id) ? m.starts_at : new Date(now.getTime() - playedAt(s, now)),
         actor,
         reason,
       );
@@ -277,7 +282,14 @@ async function send(
     s.override_id = null;
     return send(c, outbox, m, s, out, rank, condensed, from, actor, reason);
   }
-  const next: Sent = { id: before.id, ...base, starts_at: before.starts_at };
+  // A round newly condensed starts its steps now, not when the holder first waited in the rail.
+  const newlyCondensed =
+    (before.steps ?? null) === null && base.steps !== null && condensed !== null;
+  const next: Sent = {
+    id: before.id,
+    ...base,
+    starts_at: newlyCondensed ? from.toISOString() : before.starts_at,
+  };
   const changed = overrideChanges(before, next);
   if (!isDeepStrictEqual(before.steps ?? null, next.steps)) changed.push("steps");
   if (changed.length === 0) return;
