@@ -120,7 +120,8 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
 
   it("keeps even when the holder chose it over a stored exact while a price was missing (#789)", async () => {
     await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
-    await form(w, "pena", `/hold/${id}/money/split`, { split: "exact" });
+    // Through the API: a page tap on the exact already shown stores nothing.
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, { split: "exact" });
     expect((await money()).split).toBe("exact");
     await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
     await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`, {});
