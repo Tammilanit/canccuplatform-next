@@ -1,4 +1,4 @@
--- Airtime that is seen and nothing left out (#777). Additive: two tables and two columns.
+-- Airtime that is seen and nothing left out (#777). Additive: two tables and three columns.
 -- Moments now decides who holds each zone's hero; a moment's TTL is on-air time per zone.
 
 -- The arbiter's airtime settings (contracts/moments.md, Airtime); '{}' is every default.
@@ -7,6 +7,10 @@ ALTER TABLE moments_priorities ADD COLUMN airtime jsonb NOT NULL DEFAULT '{}';
 -- When the moment was last fresh news (its start, or a renewal with new content): stale counts
 -- from here. Null: its starts_at.
 ALTER TABLE moments ADD COLUMN fresh_at timestamptz;
+
+-- A story round's planned length: its on-air time on each zone. Null: its ttl_seconds. Kept apart
+-- from expires_at, which follows its zones' clocks (and their stale times while it waits).
+ALTER TABLE moments ADD COLUMN planned_ms bigint;
 
 -- One moment on one zone: its place in the zone's queue and its on-air clock.
 CREATE TABLE moment_slots (

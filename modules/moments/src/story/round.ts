@@ -7,6 +7,7 @@
  * an urgent moment pauses a video; it resumes where it stopped, its end and start moved on.
  */
 import type { Logger, SqlClient } from "@canccu/kit";
+import { SEGMENT_LEAD_MS } from "../air-plan.js";
 import type { Engine } from "../engine.js";
 import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
@@ -26,7 +27,7 @@ export const RUN_SOUNDS = 6;
 /** A step's sound waits this long for Screen to report where its round is placed. */
 const PLACEMENT_WAIT_MS = 3000;
 /** A video moment starts this early, so the screens have it before its planned start. */
-const VIDEO_EARLY_MS = 1000;
+const VIDEO_EARLY_MS = SEGMENT_LEAD_MS;
 
 export interface Ctx {
   c: SqlClient;

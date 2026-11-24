@@ -233,6 +233,80 @@ run("airtime (#777)", () => {
     for (const h of hots) expect((await row(h.id))?.end_reason).toBe("expired");
   });
 
+  it("a crew cut-in never takes a condensed round's moments, and they play after it", async () => {
+    const c = await start({ ...card, ttl_seconds: 60 }, 0);
+    await placed([[`${c.id}.main`, "hero"]], 0);
+    const hots = [];
+    for (const n of [1, 2, 3, 4]) hots.push(await start(hot(n), n));
+    await tick(60);
+    await tick(70);
+    const spot = await start(
+      {
+        class: "spotlight",
+        template: "title_card",
+        content: { title: "Crew pick" },
+        origin: "crew",
+        why: "crew",
+        regions: ["hero"],
+        ttl_seconds: 30,
+        actor: { user_id: "u", name: "Crew" },
+      },
+      75,
+    );
+    await tick(76);
+    expect(lastOverride(`${spot.id}.main`)).toMatchObject({ regions: ["hero"], steps: null });
+    await tick(105);
+    expect((await row(spot.id))?.end_reason).toBe("expired");
+    for (const h of hots) expect((await row(h.id))?.ended_at).toBeNull();
+    await tick(115);
+    const rounds = hots.map((h) => lastOverride(`${h.id}.main.2`) ?? lastOverride(`${h.id}.main`));
+    const round = rounds.find((o) => (o?.regions as string[] | undefined)?.[0] === "hero");
+    expect(round?.steps as unknown[]).toHaveLength(4);
+  });
+
+  it("two runs of one story each keep the hero for their own time", async () => {
+    const round = (run: string, s: number): MomentRequest => ({
+      class: "storyboard",
+      template: "title_card",
+      content: { title: `Match called ${run}` },
+      origin: "rule",
+      rule_id: "story:match_called",
+      why: "story",
+      regions: ["hero"],
+      starts_at: w.at(s),
+      expires_at: w.at(s + 20),
+      dedupe_key: `story:${run}:0:0`,
+    });
+    const a = await start(round("run_a", 0), 0);
+    await placed([[`${a.id}.main`, "hero"]], 0);
+    const b = await start(round("run_b", 2), 2);
+    await tick(3);
+    expect(ended(`${a.id}.main`)).toBe(false);
+    await tick(19);
+    expect(ended(`${a.id}.main`)).toBe(false);
+    await tick(20);
+    expect((await row(a.id))?.end_reason).toBe("expired");
+    await tick(30);
+    expect(lastOverride(`${b.id}.main`)).toMatchObject({ regions: ["hero"] });
+  });
+
+  it("a zone added while the moment waits gives it its TTL, not its stale time", async () => {
+    const { p } = await cardThenPizza();
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('stage')`));
+    await tick(10);
+    const there = lastOverride(`${p.id}.stage`);
+    expect(there).toMatchObject({ regions: ["hero", "rail", "ticker"], zones: ["stage"] });
+    expect(secondsLeft(`${p.id}.stage`, 10)).toBeCloseTo(175, 0);
+  });
+
+  it("a moment on no known zone ends when it would have gone stale", async () => {
+    const h = await start({ ...hot(1), zones: ["nowhere"] }, 0);
+    await tick(1799);
+    expect((await row(h.id))?.ended_at).toBeNull();
+    await tick(1800);
+    expect((await row(h.id))?.end_reason).toBe("stale");
+  });
+
   it("a restart keeps the holder and its played time", async () => {
     const { c } = await cardThenPizza();
     const before = w.events("demo").length;

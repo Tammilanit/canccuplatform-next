@@ -19,6 +19,8 @@ export interface SlotIn {
   chain: readonly string[];
   origin: Origin;
   rule_id: string | null;
+  /** A story round's segment: the run and round it belongs to, and its place in the round. */
+  segment: { round: string; index: number } | null;
   has_steps: boolean;
   /** Sent to this zone before: a crew moment pushed aside waits its turn, it cuts no more. */
   shown: boolean;
@@ -26,6 +28,8 @@ export interface SlotIn {
   queued_since: number;
   forward_at: number | null;
   granted: Grant;
+  /** The condensed round it plays in (granted `inside`): that round's holder. */
+  inside_of: string | null;
   /** Null while its clock is paused or it waits. */
   on_air_since: number | null;
   played_ms: number;
@@ -59,6 +63,8 @@ export interface ZonePlan {
 /** The rules whose moments are routine: a long queue of them plays as one round (rule 6). */
 export const ROUTINE_RULES: ReadonlySet<string> = new Set(["standings", "hot_game"]);
 export const CONDENSE_OVER = 3;
+/** A story's next segment (its video) is sent this early; the one before has used its time then. */
+export const SEGMENT_LEAD_MS = 1000;
 
 export const playedNow = (s: SlotIn, now: number): number =>
   s.played_ms + (s.on_air_since === null ? 0 : Math.max(0, now - s.on_air_since));
@@ -100,30 +106,41 @@ export function planZone(
     else if (!onAir(s) && now >= s.fresh_at + air.stale_after_ms[s.class])
       ends.push({ moment_id: s.moment_id, reason: "stale" });
   }
-  // A story's next segment (its video after its steps) is the same round: it takes over at once.
+  const expired = (id: string | null) =>
+    ends.some((e) => e.moment_id === id && e.reason === "expired");
+  // A story's next segment (its video after its steps) continues the same run's same round: once
+  // the holder's own segment used its time (to within the lead the next one is sent with), it
+  // takes the hero at once, before the queue.
   const was = slots.find((s) => s.moment_id === zone.holder);
-  const next = slots.find(
-    (s) =>
-      was !== undefined &&
-      s !== was &&
-      s.granted !== "hero" &&
-      claimant(s) &&
-      was.rule_id?.startsWith("story:") === true &&
-      s.rule_id === was.rule_id,
-  );
-  if (was !== undefined && next !== undefined && !ends.some((e) => e.moment_id === was.moment_id))
+  const seg = was?.segment ?? null;
+  const used =
+    was !== undefined &&
+    (expired(was.moment_id) ||
+      (was.on_air_since !== null &&
+        was.budget_ms !== null &&
+        playedNow(was, now) >= was.budget_ms - SEGMENT_LEAD_MS));
+  const next =
+    seg === null || !used
+      ? undefined
+      : slots.find(
+          (s) =>
+            claimant(s) &&
+            s.segment?.round === seg.round &&
+            s.segment.index === seg.index + 1 &&
+            !ends.some((e) => e.moment_id === s.moment_id),
+        );
+  if (was !== undefined && next !== undefined && !expired(was.moment_id))
     ends.push({ moment_id: was.moment_id, reason: "expired" });
+  // A condensed round's moments end with it when it played out: their time was its time.
+  for (const s of slots)
+    if (
+      s.granted === "inside" &&
+      expired(s.inside_of) &&
+      !ends.some((e) => e.moment_id === s.moment_id)
+    )
+      ends.push({ moment_id: s.moment_id, reason: "expired" });
   const gone = new Set(ends.map((e) => e.moment_id));
   let live = slots.filter((s) => !gone.has(s.moment_id));
-  // A condensed round's moments end with it: their time was its time.
-  const inside = live.filter((s) => s.granted === "inside");
-  for (const s of inside) {
-    if (!live.some((h) => h.moment_id === zone.holder && h.granted === "hero")) {
-      ends.push({ moment_id: s.moment_id, reason: "expired" });
-      gone.add(s.moment_id);
-    }
-  }
-  live = live.filter((s) => !gone.has(s.moment_id));
   const out = new Map<string, SlotOut>(
     live.map((s) => [
       s.moment_id,
@@ -131,7 +148,7 @@ export function planZone(
         moment_id: s.moment_id,
         granted: claimant(s) ? (s.granted === "inside" ? "inside" : null) : "pass",
         regions: claimant(s) ? null : [...s.chain],
-        inside_of: s.granted === "inside" ? zone.holder : null,
+        inside_of: s.granted === "inside" ? s.inside_of : null,
         queued_since: s.queued_since,
         tenure_from_ms: s.tenure_from_ms,
       },
@@ -139,6 +156,13 @@ export function planZone(
   );
   let holder = live.find((s) => s.moment_id === zone.holder && claimant(s)) ?? null;
   const gone_ = slots.find((s) => s.moment_id === zone.holder && gone.has(s.moment_id));
+  // Its round was pushed aside or left without playing out: the moments inside it wait again.
+  const requeue = (h: SlotIn | null) => {
+    for (const o of out.values())
+      if (o.granted === "inside" && o.inside_of !== h?.moment_id)
+        Object.assign(o, { granted: null, inside_of: null });
+  };
+  requeue(holder);
   let free_since =
     holder === null
       ? zone.holder !== null
@@ -147,7 +171,10 @@ export function planZone(
           : usedUpAt(gone_, now)
         : zone.free_since
       : null;
-  if (next !== undefined && holder === null) free_since = null;
+  if (next !== undefined && holder === null) {
+    holder = next;
+    free_since = null;
+  }
   const queue = () =>
     live
       .filter((s) => claimant(s) && s !== holder && out.get(s.moment_id)?.granted !== "inside")
@@ -197,6 +224,7 @@ export function planZone(
       }
     }
   }
+  requeue(holder);
   if (holder !== null) {
     const o = out.get(holder.moment_id);
     if (o !== undefined) {

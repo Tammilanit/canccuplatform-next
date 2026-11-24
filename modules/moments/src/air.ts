@@ -26,7 +26,7 @@ import {
 import type { SlotRow } from "./air-store.js";
 import { overrideChanges, rankOn } from "./arbiter.js";
 import type { SentOverride } from "./arbiter.js";
-import { endOverride, knownZones, liveOverrides, loadOrders, putOverride } from "./store.js";
+import { endOverride, liveOverrides, loadOrders, putOverride } from "./store.js";
 import type { Actor, MomentRow } from "./store.js";
 import type { EndReason } from "./engine.js";
 
@@ -52,14 +52,30 @@ async function momentsOn(c: SqlClient, zone: string): Promise<MomentRow[]> {
   return rows as unknown as MomentRow[];
 }
 
-/** Its on-air time on a new zone: the TTL its start and end give it (also a moment from before #777). */
+/**
+ * Its on-air time on a new zone: a story round's planned length, else its TTL. Never from
+ * `expires_at`, which `syncExpiry` moves to the stale time while it waits on another zone.
+ */
 const budgetOf = (m: MomentRow): number | null =>
-  m.expires_at === null ? null : Math.max(1000, m.expires_at.getTime() - m.starts_at.getTime());
+  m.planned_ms !== null
+    ? Math.max(1000, m.planned_ms)
+    : m.ttl_seconds === null
+      ? null
+      : m.ttl_seconds * 1000;
 
 /** When it goes stale: its class's time after it was fresh news, shortened by its own patience. */
-function staleAt(m: MomentRow, air: AirSettings): number {
+export function staleAt(m: MomentRow, air: AirSettings): number {
   const fresh = (m.fresh_at ?? m.starts_at).getTime();
   return fresh + Math.min(air.stale_after_ms[m.class], m.patience_seconds * 1000);
+}
+
+/** A story round's segment from its key, `story:<run>:<round>:<f?><segment>` (story/round.ts). */
+function segmentOf(m: MomentRow): SlotIn["segment"] {
+  const k =
+    m.rule_id?.startsWith("story:") === true
+      ? /^(story:.+:f?)(\d+)$/.exec(m.dedupe_key ?? "")
+      : null;
+  return k === null ? null : { round: k[1] as string, index: Number(k[2]) };
 }
 
 function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotIn {
@@ -70,6 +86,7 @@ function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotI
     chain: m.regions,
     origin: m.origin,
     rule_id: m.rule_id,
+    segment: segmentOf(m),
     has_steps: m.steps !== null,
     shown: s.generation > 0,
     // The planner counts stale from `fresh_at` with the class's time; a shorter own patience moves it.
@@ -77,6 +94,7 @@ function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotI
     queued_since: s.queued_since.getTime(),
     forward_at: s.forward_at?.getTime() ?? null,
     granted: s.granted,
+    inside_of: s.inside_of,
     on_air_since: s.on_air_since?.getTime() ?? null,
     played_ms: s.played_ms,
     tenure_from_ms: s.tenure_from_ms,
@@ -153,11 +171,6 @@ export async function passZone(
     await saveZone(c, zone, plan.zone);
     return;
   }
-}
-
-/** Every known zone, as the tick's turn: a zone another transaction holds waits a second. */
-export async function passAll(c: SqlClient, engine: PassEngine, now: Date): Promise<void> {
-  for (const zone of await knownZones(c)) await passZone(c, engine, zone, now, "skip");
 }
 
 /** The slot's clock and place as the plan has them (D5: the clock runs from the grant). */

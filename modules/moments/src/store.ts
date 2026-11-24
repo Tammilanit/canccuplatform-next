@@ -56,15 +56,21 @@ export interface MomentRow {
   happening: string | null;
   /** When it was last fresh news (a renewal with new content); null: its start (#777). */
   fresh_at: Date | null;
+  /** A story round's planned length (its planned end less its planned start), or null (#777). */
+  planned_ms: number | null;
   ended_at: Date | null;
   end_reason: string | null;
 }
 
 const COLUMNS = `id, class, kind, regions, template, content, zones, left_zones, origin, rule_id,
   source, why, actor_user_id, actor_name, dedupe_key, starts_at, expires_at, ttl_seconds,
-  patience_seconds, qr, binding, ended_at, end_reason, effect, steps, happening, fresh_at`;
+  patience_seconds, qr, binding, ended_at, end_reason, effect, steps, happening, fresh_at,
+  planned_ms`;
 
-const momentOf = (r: Record<string, unknown>): MomentRow => r as unknown as MomentRow;
+const momentOf = (r: Record<string, unknown>): MomentRow => ({
+  ...(r as unknown as MomentRow),
+  planned_ms: r.planned_ms == null ? null : Number(r.planned_ms),
+});
 
 export async function lockMoment(c: SqlClient, id: string): Promise<MomentRow | null> {
   const { rows } = await c.query(`SELECT ${COLUMNS} FROM moments WHERE id = $1 FOR UPDATE`, [id]);
@@ -106,7 +112,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
     `INSERT INTO moments (${COLUMNS})
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-             $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
+             $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)`,
     [
       m.id,
       m.class,
@@ -135,6 +141,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
       m.steps === null ? null : JSON.stringify(m.steps),
       m.happening,
       m.fresh_at,
+      m.planned_ms,
     ],
   );
 }

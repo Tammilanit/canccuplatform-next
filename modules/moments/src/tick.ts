@@ -11,9 +11,9 @@ import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { evaluateScenes, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
-import { runningMoments } from "./store.js";
+import { knownZones, loadOrders, runningMoments } from "./store.js";
 import { tickAnnouncements } from "./announce/follow.js";
-import { passAll } from "./air.js";
+import { passZone, staleAt } from "./air.js";
 import { tickStories } from "./story/triggers.js";
 
 export const TICK_MS = 1000;
@@ -27,15 +27,38 @@ export async function tickTenant(
   log?: Logger,
 ): Promise<void> {
   // Every zone's airtime pass (#777): what used its on-air time or went stale ends, the queue
-  // moves on. In a savepoint, as each story: one zone that throws must not undo the rest.
+  // moves on. Each in a savepoint, as each story: one zone that throws must not undo the rest. A
+  // zone another transaction holds waits a second.
+  for (const zone of await knownZones(c))
+    await isolated(
+      c,
+      () => passZone(c, engine, zone, now, "skip"),
+      (err) => log?.warn({ err, zone }, "an airtime pass failed"),
+    );
   await isolated(
     c,
-    () => passAll(c, engine, now),
-    (err) => log?.warn({ err }, "an airtime pass failed"),
+    () => endUnplaced(c, engine, now),
+    (err) => log?.warn({ err }, "ending unplaced moments failed"),
   );
   await tickAnnouncements(c, engine, now);
   await tickStories({ c, engine, now, log });
   await engine.pumpSounds(c, now);
+}
+
+/**
+ * A moment on no zone the event knows has no slot, so no pass ends it: it ends when it would have
+ * gone stale waiting, and frees its dedupe key and happening.
+ */
+async function endUnplaced(c: SqlClient, engine: Engine, now: Date): Promise<void> {
+  const { air } = await loadOrders(c);
+  const unplaced = await runningMoments(
+    c,
+    `class <> 'emergency' AND NOT EXISTS (SELECT 1 FROM moment_slots s WHERE s.moment_id = moments.id)`,
+    [],
+    "skip",
+  );
+  for (const m of unplaced)
+    if (now.getTime() >= staleAt(m, air)) await engine.end(c, m, "stale", null, now);
 }
 
 /** A priority change ranks every running moment again at once and never ends one (E8). */

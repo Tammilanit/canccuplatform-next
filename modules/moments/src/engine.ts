@@ -208,6 +208,8 @@ export class Engine {
       steps: r.steps ?? null,
       happening: r.happening ?? null,
       fresh_at: null,
+      planned_ms:
+        r.expires_at === undefined ? null : r.expires_at.getTime() - (r.starts_at ?? now).getTime(),
       ended_at: null,
       end_reason: null,
     };

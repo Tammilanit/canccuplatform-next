@@ -11,12 +11,14 @@ const slot = (id: string, over: Partial<SlotIn> = {}): SlotIn => ({
   chain: ["hero"],
   origin: "rule",
   rule_id: null,
+  segment: null,
   has_steps: false,
   shown: false,
   fresh_at: 0,
   queued_since: 0,
   forward_at: null,
   granted: null,
+  inside_of: null,
   on_air_since: null,
   played_ms: 0,
   tenure_from_ms: 0,
@@ -118,24 +120,45 @@ describe("the airtime scheduler", () => {
     expect(p.zone.holder).toBe("pizza");
   });
 
-  it("lets a story's next segment continue its round at once, ending the one before", () => {
-    const steps = card({
-      moment_id: "steps",
+  /** A story round's segment: run `run`, round `round`, segment `index`, on the hero since 0. */
+  const segment = (id: string, run: string, round: number, index: number, over = {}) =>
+    slot(id, {
       class: "storyboard",
       rank: 60,
-      rule_id: "story:film",
+      rule_id: "story:match",
+      segment: { round: `story:${run}:${String(round)}:`, index },
       has_steps: true,
+      ...over,
     });
-    const film = slot("film", {
-      class: "storyboard",
-      rank: 60,
+
+  it("lets a story's next segment continue its round once the one before used its time (to the lead)", () => {
+    const steps = segment("steps", "a", 0, 0, {
+      granted: "hero",
+      on_air_since: 0,
+      budget_ms: 14_000,
+    });
+    const film = segment("film", "a", 0, 1, {
       chain: ["full"],
-      rule_id: "story:film",
-      queued_since: 14_000,
+      has_steps: false,
+      queued_since: 12_000,
     });
-    const p = planZone(14_000, { holder: "steps", free_since: null }, [steps, film], DEFAULT_AIR);
+    const zone: ZoneIn = { holder: "steps", free_since: null };
+    expect(planZone(12_999, zone, [steps, film], DEFAULT_AIR).zone.holder).toBe("steps");
+    // Before the queue, and without the gap: the same round goes on.
+    const other = slot("other", { rank: 90, queued_since: 1000 });
+    const p = planZone(13_000, zone, [steps, film, other], DEFAULT_AIR);
     expect(p.ends).toEqual([{ moment_id: "steps", reason: "expired" }]);
     expect(p.zone).toEqual({ holder: "film", free_since: null });
+  });
+
+  it("holds the floor against another run of the same story, and the same run's next round", () => {
+    const a = segment("a", "a", 0, 0, { granted: "hero", on_air_since: 0 });
+    const zone: ZoneIn = { holder: "a", free_since: null };
+    for (const b of [segment("b", "b", 0, 0), segment("b", "a", 1, 0), segment("b", "a", 0, 2)]) {
+      const p = planZone(1000, zone, [a, { ...b, queued_since: 1000 }], DEFAULT_AIR);
+      expect(p.ends).toEqual([]);
+      expect(p.zone.holder).toBe("a");
+    }
   });
 
   it("moved forward goes first", () => {
@@ -160,6 +183,58 @@ describe("the airtime scheduler", () => {
     expect(p.zone.holder).toBe("hot1");
     expect(p.condensed).toEqual({ holder: "hot1", inside: ["hot2", "hot3", "hot4"] });
     expect(of(p, "hot3")).toMatchObject({ granted: "inside", inside_of: "hot1", regions: null });
+  });
+
+  const condensed = () => [
+    slot("hot1", {
+      class: "hot_game",
+      rank: 50,
+      rule_id: "hot_game",
+      granted: "hero",
+      on_air_since: 0,
+    }),
+    ...[2, 3, 4].map((n) =>
+      slot(`hot${String(n)}`, {
+        class: "hot_game",
+        rank: 50,
+        rule_id: "hot_game",
+        queued_since: n,
+        granted: "inside",
+        inside_of: "hot1",
+      }),
+    ),
+  ];
+
+  it("a crew cut-in puts a condensed round's moments back in the queue, never in its own", () => {
+    const zone: ZoneIn = { holder: "hot1", free_since: null };
+    const spot = slot("spot", { class: "spotlight", rank: 70, origin: "crew", queued_since: 5000 });
+    const cut = planZone(5000, zone, [...condensed(), spot], DEFAULT_AIR);
+    expect(cut.zone.holder).toBe("spot");
+    expect(cut.ends).toEqual([]);
+    for (const id of ["hot2", "hot3", "hot4"])
+      expect(of(cut, id)).toMatchObject({ granted: null, inside_of: null });
+    // The spotlight ends: the routine moments are still there, and play as a round again.
+    const back = planZone(
+      200_000,
+      { holder: null, free_since: 0 },
+      condensed().map((s) => ({ ...s, granted: null, inside_of: null, on_air_since: null })),
+      DEFAULT_AIR,
+    );
+    expect(back.ends).toEqual([]);
+    expect(back.condensed?.inside).toHaveLength(3);
+  });
+
+  it("a condensed round that leaves before it played out leaves its moments waiting", () => {
+    const zone: ZoneIn = { holder: null, free_since: 0 };
+    const p = planZone(20_000, zone, condensed().slice(1), DEFAULT_AIR);
+    expect(p.ends).toEqual([]);
+    expect(p.zone.holder).toBe("hot2");
+  });
+
+  it("a condensed round that played out takes its moments with it", () => {
+    const zone: ZoneIn = { holder: "hot1", free_since: null };
+    const done = planZone(120_000, zone, condensed(), DEFAULT_AIR);
+    expect(done.ends.map((e) => e.moment_id).sort()).toEqual(["hot1", "hot2", "hot3", "hot4"]);
   });
 
   it("three do not condense", () => {
