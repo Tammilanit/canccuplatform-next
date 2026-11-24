@@ -87,6 +87,8 @@ const LISTED = [
   ["pizza-food-other-phone", `/pizza/orders/${ORDER}/add?tab=other`, PHONE, "open"],
   ["pizza-food-added-phone", `/pizza/orders/${ORDER}?added=1`, PHONE, "open"],
   ["pizza-holder-checklist-phone", `/pizza/hold/${ORDER}`, PHONE, "open"],
+  // #789: the holder's card (also on on-the-way, which this session holds), and the photo viewer.
+  ["pizza-food-holder-card-open-phone", `/pizza/orders/${ORDER}`, PHONE, "open"],
   ["pizza-food-closed-phone", `/pizza/orders/${ORDER}`, PHONE, "closed"],
   ["pizza-holder-call-phone", `/pizza/hold/${ORDER}/call`, PHONE, "closed"],
   ["pizza-holder-called-in-phone", `/pizza/hold/${ORDER}/called-in`, PHONE, "closed"],
@@ -102,6 +104,7 @@ const LISTED = [
   ["pizza-holder-money-total-phone", `/pizza/hold/${ORDER}/money/total`, PHONE, "placed"],
   ["pizza-holder-money-check-phone", `/pizza/hold/${ORDER}/money/check?receipt=${RECEIPT}`, PHONE, "read"],
   ["pizza-holder-money-confirmed-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
+  ["pizza-holder-photo-viewer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "confirmed"],
   ["pizza-holder-money-payer-phone", `/pizza/hold/${ORDER}/money`, PHONE, "payer"],
   // The plan's "Pay me with": what a member who still owes the holder sees on their order (#769).
   ["pizza-food-pay-phone", `/pizza/orders/${ORDER}`, PHONE, "payer", PLAYERS[2][0]],
@@ -373,6 +376,13 @@ export async function pizzaShots({ shot, fail }) {
               fullPage: false,
               readable: true,
               ready: (page) => roomReady(page, step),
+            }
+          : {}),
+        ...(name.startsWith("pizza-holder-photo-viewer")
+          ? {
+              fullPage: false,
+              ready: (page) =>
+                page.locator("a[data-viewer]").first().click().then(() => page.locator("dialog.pizza-viewer img").waitFor()),
             }
           : {}),
         ...(preview

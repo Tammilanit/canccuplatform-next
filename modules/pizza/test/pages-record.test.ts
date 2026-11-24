@@ -99,6 +99,23 @@ describe.skipIf(!DATABASE_URL)("the daily record and the export (mockup 12)", ()
     );
   });
 
+  it("opens every receipt photo in the viewer, and loads the viewer (#789 item 14)", async () => {
+    await w.call("pena", "POST", `/api/pizza/orders/${one}/receipts`, undefined, {
+      raw: await png(),
+      contentType: "image/png",
+    });
+    const pages = [
+      (await view(w, "treasurer", `/crew/record/${one}`)).body,
+      (await view(w, "pena", `/hold/${one}/money`)).body,
+    ];
+    for (const page of pages) {
+      const links = page.match(/<a[^>]*href="\/api\/pizza\/receipts\/[^"]+\/photo"[^>]*>/g) ?? [];
+      expect(links.length).toBeGreaterThan(0);
+      for (const a of links) expect(a).toContain("data-viewer");
+      expect(page).toContain('src="/pizza/static/viewer.js"');
+    }
+  });
+
   it("shows one order's money: each person, the sum, who is paid and the marks", async () => {
     const r = await view(w, "treasurer", `/crew/record/${one}`);
     expect(r.body).not.toContain("pizza-card");

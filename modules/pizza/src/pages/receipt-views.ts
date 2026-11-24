@@ -186,7 +186,11 @@ export function checkView(
       ${formKey()}<input type="hidden" name="receipt_id" value="${receiptId}" />
       <div class="pizza-pair pizza-pair--lead">
         <aside class="pizza-pair__aside pizza-check__photo">
-          <a href="${photoUrl(receiptId)}" target="_blank" rel="noopener"
+          <a
+            href="${photoUrl(receiptId)}"
+            target="_blank"
+            rel="noopener"
+            data-viewer="${c.t("money.close_photo")}"
             ><img src="${photoUrl(receiptId)}" alt="${c.t("check.photo")}"
           /></a>
           <span class="pizza-muted">${c.t("check.zoom")}</span>

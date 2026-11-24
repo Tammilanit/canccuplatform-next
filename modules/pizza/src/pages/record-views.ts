@@ -183,7 +183,9 @@ export function recordOrderView(
                 ${m.receipts.map(
                   (r, i) =>
                     html`<li class="pizza-receipt">
-                      <a href="/api/pizza/receipts/${r.id}/photo"
+                      <a
+                        href="/api/pizza/receipts/${r.id}/photo"
+                        data-viewer="${c.t("money.close_photo")}"
                         ><img
                           src="/api/pizza/receipts/${r.id}/photo"
                           alt="${c.t("money.receipt", { n: i + 1, time: time(c, r.added_at) })}"
