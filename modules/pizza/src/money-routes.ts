@@ -229,11 +229,12 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
       const price = requiredPrice(body(request), "price_cents");
       const changes: Changes = {};
       if (price !== item.price_cents) {
-        await c.query(`UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1`, [
-          item.id,
-          price,
-          w.now,
-        ]);
+        // The erase path deletes pizzas without the order's lock: no row back means the pizza is gone.
+        const upd = await c.query(
+          `UPDATE pizza_items SET price_cents = $2, updated_at = $3 WHERE id = $1 RETURNING id`,
+          [item.id, price, w.now],
+        );
+        if (upd.rows.length === 0) throw notFound("pizza");
         await c.query(`UPDATE pizza_orders SET revision = revision + 1 WHERE id = $1`, [order.id]);
         changes[`price:${item.id}`] = { old: item.price_cents, new: price };
       }

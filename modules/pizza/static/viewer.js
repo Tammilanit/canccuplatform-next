@@ -28,14 +28,22 @@
       if (event.target === d) d.close();
     });
     var startY = null;
+    var startX = 0;
     d.addEventListener("touchstart", function (event) {
       startY = event.touches.length === 1 ? event.touches[0].clientY : null;
+      startX = event.touches.length === 1 ? event.touches[0].clientX : 0;
+    });
+    // A second finger (pinch) cancels the gesture.
+    d.addEventListener("touchmove", function (event) {
+      if (event.touches.length > 1) startY = null;
     });
     d.addEventListener("touchend", function (event) {
       if (startY === null) return;
       var dy = event.changedTouches[0].clientY - startY;
+      var dx = Math.abs(event.changedTouches[0].clientX - startX);
       startY = null;
-      if (dy >= SWIPE_PX) d.close();
+      // Mostly vertical, so a sideways drag is not a close.
+      if (dy >= SWIPE_PX && dy > dx) d.close();
     });
     document.body.appendChild(d);
     return d;
@@ -48,6 +56,7 @@
     if (dialog === null) dialog = make(link.getAttribute("data-viewer"));
     var img = dialog.querySelector("img");
     var inner = link.querySelector("img");
+    img.removeAttribute("src"); // the previous receipt must not show while the new one loads
     img.src = link.getAttribute("href");
     img.alt = inner ? inner.alt : "";
     dialog.showModal();

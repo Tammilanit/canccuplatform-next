@@ -168,7 +168,11 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       "GET",
       `/api/pizza/orders/${encodeURIComponent(request.params.id)}/money`,
     );
-    if (now.status === 200 && now.body.split_effective === split)
+    // Nothing would change in storage: the same split is stored, or none is and the tap is the one shown.
+    if (
+      now.status === 200 &&
+      (now.body.split === split || (now.body.split === null && now.body.split_effective === split))
+    )
       return done(reply, request.params.id, now);
     return done(reply, request.params.id, await moneyWrite(request, { split }));
   });

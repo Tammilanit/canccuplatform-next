@@ -211,12 +211,25 @@ export async function removeItem(
   return o;
 }
 
+/** The lock of a hand-out; null when taken. A finish that won the lock race leaves the order done: answered as it is. */
+async function lockOrDone(c: SqlClient, id: string): Promise<Moved | null> {
+  try {
+    await lockOrder(c, id, ["arrived"], "hand_out");
+    return null;
+  } catch (e) {
+    const o = await getOrder(c, id);
+    if (o?.state === "done") return unchanged(o);
+    throw e;
+  }
+}
+
 /** Ticks one pizza handed out (U4, U9); the last tick makes the order done (`handed_out`). */
 export async function handOut(s: Step, item: ItemRow, handedOut: boolean): Promise<Moved | null> {
   // Done meanwhile (the timer, or "Everyone got theirs" elsewhere): answered as it is, as handOutAll.
   const o = await getOrder(s.c, item.order_id);
   if (o?.state === "done") return unchanged(o);
-  await lockOrder(s.c, item.order_id, ["arrived"], "hand_out");
+  const locked = await lockOrDone(s.c, item.order_id);
+  if (locked !== null) return locked;
   await s.c.query(`UPDATE pizza_items SET handed_out_at = $2 WHERE id = $1`, [
     item.id,
     handedOut ? s.now : null,
@@ -229,7 +242,8 @@ export async function handOutAll(s: Step, orderId: string): Promise<Moved> {
   // Already done (the timer, or another press first): answered as it is, as every step is.
   const o = await getOrder(s.c, orderId);
   if (o?.state === "done") return unchanged(o);
-  await lockOrder(s.c, orderId, ["arrived"], "hand_out");
+  const locked = await lockOrDone(s.c, orderId);
+  if (locked !== null) return locked;
   await s.c.query(
     `UPDATE pizza_items SET handed_out_at = COALESCE(handed_out_at, $2) WHERE order_id = $1`,
     [orderId, s.now],

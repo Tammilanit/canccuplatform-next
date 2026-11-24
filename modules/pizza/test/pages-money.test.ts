@@ -118,6 +118,27 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     expect((await money()).split).toBeNull();
   });
 
+  it("keeps even when the holder chose it over a stored exact while a price was missing (#789)", async () => {
+    await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
+    await form(w, "pena", `/hold/${id}/money/split`, { split: "exact" });
+    expect((await money()).split).toBe("exact");
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`, {});
+    await w.call("tero", "POST", `/api/pizza/orders/${id}/items`, { kind: "text", text: "salad" });
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    expect((await money()).split_effective).toBe("even");
+    await form(w, "pena", `/hold/${id}/money/split`, { split: "even" });
+    expect((await money()).split).toBe("even");
+    const salad = (
+      (await money()).prices as { item_id: string; price_cents: number | null }[]
+    ).find((p) => p.price_cents === null);
+    await form(w, "pena", `/hold/${id}/money/price`, {
+      item_id: salad?.item_id ?? "",
+      price: "4.00",
+    });
+    expect((await money()).split_effective).toBe("even");
+  });
+
   it("turns exact once the last price is in, even after a tap on the even already shown (#789)", async () => {
     await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
     await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`, {});
