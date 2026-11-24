@@ -37,7 +37,8 @@ function failureOf(err: unknown): Error {
     if (err.status === 402 || err.type === "billing_error" || NO_CREDIT.test(message))
       return new ReaderFailed("out_of_credit");
     if (err.status === 429) {
-      const after = Number(err.headers?.get("retry-after") ?? "");
+      const headers = err.headers as Headers | undefined;
+      const after = Number(headers?.get("retry-after") ?? "");
       // A wait the provider did not name, or one past a page's patience, is a short default.
       const retryAfterS = Number.isInteger(after) && after > 0 && after <= 120 ? after : 10;
       return new ReaderFailed("rate_limited", { retryAfterS });
