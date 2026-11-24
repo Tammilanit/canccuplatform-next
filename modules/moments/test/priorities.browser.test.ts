@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import type { Page } from "playwright-core";
 import { afterAll, describe, expect, it } from "vitest";
+import { DEFAULT_AIR } from "../src/air-settings.js";
 import { DEFAULT_ORDER } from "../src/arbiter.js";
 import type { RuleView } from "../src/rules.js";
 import { prioritiesView } from "../src/settings-views.js";
@@ -50,6 +51,7 @@ async function open(width: number): Promise<Page> {
     zoneName: (z) => z,
     own: [],
     revision: 0,
+    air: DEFAULT_AIR,
     preview: null,
     rules: [RULE],
     cues: ["tournament.start"],
@@ -80,8 +82,9 @@ describe.skipIf(browser === undefined)("Priorities in Chromium", { timeout: 30_0
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press("ArrowUp");
     const now = await order(page);
-    expect(now.indexOf("tournament")).toBe(3);
-    expect(await page.textContent("[data-order-said]")).toBe("Tournament: 4 of 10");
+    expect(DEFAULT_ORDER.indexOf("tournament")).toBe(6);
+    expect(now.indexOf("tournament")).toBe(4);
+    expect(await page.textContent("[data-order-said]")).toBe("Tournament: 5 of 10");
     expect(await page.inputValue("[data-order-input]")).toBe(now.join(","));
     expect(await page.isVisible("[data-order-unsaved]")).toBe(true);
     expect(new URL(page.url()).searchParams.get("order")).toBe(now.join(","));
@@ -124,6 +127,26 @@ describe.skipIf(browser === undefined)("Priorities in Chromium", { timeout: 30_0
     const now = await order(page);
     expect(now.indexOf("reactions")).toBe(2);
     expect(now.indexOf("announcement")).toBe(3);
+  });
+
+  it("edits each class's stale time on its row, sent with the Airtime form (D13)", async () => {
+    const page = await open(390);
+    const named = (name: string) =>
+      page.evaluate(
+        (n) =>
+          (document.getElementById("moments-airtime") as HTMLFormElement).elements.namedItem(n) !==
+          null,
+        name,
+      );
+    expect(await page.inputValue('[data-class="tournament"] input[name="stale_tournament"]')).toBe(
+      "30",
+    );
+    expect(await page.locator('[data-class="emergency"] input').count()).toBe(0);
+    for (const n of ["min_on_air_seconds", "gap_seconds", "stale_tournament", "stale_ticker"])
+      expect(await named(n), n).toBe(true);
+    expect(await named("order")).toBe(false);
+    const wide = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(wide).toBeLessThanOrEqual(390);
   });
 
   it("says a rule's seconds in words as its slider moves, and fits a phone", async () => {

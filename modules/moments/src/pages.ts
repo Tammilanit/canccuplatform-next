@@ -1,6 +1,6 @@
 /** Studio → Moments (contracts/moments.md, Pages): On air, Spotlight, Priorities, History. */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { DEFAULT_ORDER, checkOrder, isClass, rankOn } from "./arbiter.js";
+import { CLASSES, DEFAULT_ORDER, checkOrder, isClass, rankOn } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
 import { announcePages } from "./announce/pages.js";
 import { cuePages } from "./cues/pages.js";
@@ -266,6 +266,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           zoneName: await zoneNames(deps, request),
           own: Object.keys(state.orders.zones),
           revision: state.orders.revision,
+          air: state.orders.air,
           preview: zone === undefined ? null : { zone, ranks, auto: request.query.preview === "1" },
           rules: state.rules,
           cues: state.cues,
@@ -282,6 +283,28 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         const f = request.body;
         const scope = f.scope ?? "";
         const orders = await deps.db.tenant((c) => loadOrders(c));
+        if (f.do === "airtime") {
+          const all = request.body as unknown as Record<string, unknown>;
+          const stale = Object.fromEntries(
+            CLASSES.filter((c) => all[`stale_${c}`] !== undefined).map((c) => [
+              c,
+              Number(all[`stale_${c}`]),
+            ]),
+          );
+          const a = await viaApi(pages, request, "PUT", "/api/moments/priorities", {
+            order: orders.order,
+            zones: Object.entries(orders.zones).map(([zone_key, o]) => ({ zone_key, order: o })),
+            airtime: {
+              min_on_air_seconds: Number(all.min_on_air_seconds),
+              gap_seconds: Number(all.gap_seconds),
+              stale_after_minutes: stale,
+            },
+            revision: Number(f.revision),
+          });
+          return a.status >= 400
+            ? back(reply, "priorities", "error", refusal(a))
+            : back(reply, "priorities", "done", "Airtime saved: live at once.");
+        }
         const order = f.do === "reset" ? [...DEFAULT_ORDER] : list(f.order);
         const zones = Object.entries(orders.zones).filter(([z]) => z !== scope);
         if (scope !== "" && f.do !== "follow") zones.push([scope, order.filter(isClass)]);

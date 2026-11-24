@@ -210,6 +210,50 @@ run("the Moments pages", () => {
     expect(rules.body).not.toContain("Save order");
   });
 
+  it("edits the airtime on Priorities: the floor, the gap and each class's stale time (D13)", async () => {
+    const page = await w.call("admin", "GET", "/priorities");
+    expect(page.body).toContain('id="moments-airtime"');
+    expect(page.body).toContain('name="min_on_air_seconds"');
+    expect(page.body).toContain('name="stale_hot_game"');
+    const save = await w.call(
+      "admin",
+      "POST",
+      "/priorities",
+      {
+        do: "airtime",
+        revision: "0",
+        min_on_air_seconds: "75",
+        gap_seconds: "5",
+        stale_hot_game: "12",
+        stale_finals: "60",
+      },
+      form,
+    );
+    expect(save.headers.location).toContain("done=");
+    const api = await w.call("reader", "GET", "/api/moments/priorities");
+    expect(JSON.parse(api.body)).toMatchObject({
+      order: [...DEFAULT_ORDER],
+      revision: 1,
+      airtime: {
+        min_on_air_seconds: 75,
+        gap_seconds: 5,
+        stale_after_minutes: { hot_game: 12, finals: 60, tournament: 30 },
+      },
+    });
+    expect((await w.call("admin", "GET", "/priorities")).body).toContain('value="12"');
+    const bad = await w.call(
+      "admin",
+      "POST",
+      "/priorities",
+      { do: "airtime", revision: "1", min_on_air_seconds: "30", gap_seconds: "5" },
+      form,
+    );
+    expect(bad.headers.location).toContain("error=");
+    const reader = await w.call("reader", "GET", "/priorities");
+    expect(reader.body).not.toContain('id="moments-airtime"');
+    expect(reader.body).toContain("Stale after 30 min");
+  });
+
   it("lists the history with its filters and the CSV export", async () => {
     await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",

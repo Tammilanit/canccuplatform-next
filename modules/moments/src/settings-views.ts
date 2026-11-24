@@ -2,6 +2,7 @@
 import type { Html } from "@canccu/ui";
 import { emptyState, html, notice } from "@canccu/ui";
 
+import type { AirSettings } from "./air-settings.js";
 import type { Class } from "./arbiter.js";
 import type { HistoryFilter, HistoryRow } from "./history.js";
 import { PREFIX } from "./page-kit.js";
@@ -18,6 +19,8 @@ export function prioritiesView(o: {
   zoneName: ZoneName;
   own: string[];
   revision: number;
+  /** The arbiter's airtime (D13): event-wide, whichever order the page shows. */
+  air: AirSettings;
   /** `auto`: the script draws it at once (a moved order's Preview reloads with the draft). */
   preview: { zone: string; ranks: Record<string, number>; auto: boolean } | null;
   rules: RuleView[];
@@ -46,6 +49,29 @@ export function prioritiesView(o: {
     return next;
   };
   const name = (c: Class) => CLASS_NAMES[c];
+  const staleMinutes = (c: Class) => o.air.stale_after_ms[c] / 60_000;
+  // Each class's stale time sits on its row (D13) and goes with the Airtime form (`form`).
+  const stale = (c: Class) =>
+    o.canWrite
+      ? html`<label class="moments-order__stale canccu-small canccu-muted"
+          >Stale after
+          <input
+            class="canccu-input moments-order__minutes"
+            type="number"
+            min="1"
+            max="240"
+            step="1"
+            required
+            name="stale_${c}"
+            value="${staleMinutes(c)}"
+            form="moments-airtime"
+            aria-label="${name(c)}: stale after, minutes"
+          />
+          min</label
+        >`
+      : html`<span class="moments-order__stale canccu-small canccu-muted"
+          >Stale after ${staleMinutes(c)} min</span
+        >`;
   // Only the order counts, so no rank numbers (the PO's note on O5). Emergency has no handle.
   const rows = o.order.map((c, i) => {
     const locked = c === "emergency";
@@ -72,7 +98,7 @@ export function prioritiesView(o: {
       ${movable ? html`<button class="moments-order__handle" type="button" data-order-handle aria-label="Move ${name(c)}" aria-describedby="order-help">⋮⋮</button>` : html`<span class="moments-order__handle" aria-hidden="true"></span>`}<span
         class="moments-order__name"
         >${name(c)}${locked ? html` <span class="canccu-small canccu-muted">locked at the top</span>` : ""}</span
-      >${arrows}
+      >${locked ? "" : stale(c)}${arrows}
     </li>`;
   });
   const scopes = [
@@ -139,7 +165,7 @@ export function prioritiesView(o: {
         <p class="moments-said" aria-live="polite" data-order-said></p>
         ${save}
       </section>
-      ${preview}
+      ${airtime(o.air, o.canWrite, o.revision)} ${preview}
     </div>
     ${rulesView(o.rules, {
       zones: o.zones,
@@ -147,6 +173,73 @@ export function prioritiesView(o: {
       cues: o.cues,
       canWrite: o.canWrite,
     })}`;
+}
+
+/** The floor and the gap (D13); each class's stale time is on its row of the order. */
+function airtime(air: AirSettings, canWrite: boolean, revision: number): Html {
+  const field = (key: string, label: string, help: string, value: number, lo: number, hi: number) =>
+    html`<div class="canccu-field">
+      <label class="canccu-field__label" for="air-${key}">${label}</label>
+      <input
+        class="canccu-input"
+        id="air-${key}"
+        type="number"
+        name="${key}"
+        min="${lo}"
+        max="${hi}"
+        step="1"
+        required
+        value="${value}"
+        aria-describedby="air-${key}-help"
+        ${canWrite ? "" : " disabled"}
+      />
+      <p class="canccu-field__hint" id="air-${key}-help">${help}</p>
+    </div>`;
+  const fields = html`<div class="canccu-form__row">
+    ${field(
+      "min_on_air_seconds",
+      "Minimum time on air (s)",
+      "A shown moment keeps the hero this long; only the emergency and a person's new action cut in. 60–120.",
+      air.min_on_air_ms / 1000,
+      60,
+      120,
+    )}${field(
+      "gap_seconds",
+      "Gap between moments (s)",
+      "The hero shows the zone's own content this long between two moments. 0–30.",
+      air.gap_ms / 1000,
+      0,
+      30,
+    )}
+  </div>`;
+  return html`<section class="canccu-card" aria-labelledby="air-title">
+    <h2 class="canccu-card__title" id="air-title">Airtime</h2>
+    <p class="canccu-small canccu-muted">
+      For the whole event. A waiting moment goes stale after its class's minutes in the order.
+    </p>
+    ${
+      canWrite
+        ? html`<form
+            method="post"
+            action="${PREFIX}priorities"
+            id="moments-airtime"
+            class="canccu-form"
+          >
+            <input type="hidden" name="do" value="airtime" /><input
+              type="hidden"
+              name="revision"
+              value="${revision}"
+            />
+            ${fields}
+            <div class="canccu-cluster">
+              <button class="canccu-button canccu-button--primary" type="submit">
+                Save airtime
+              </button>
+            </div>
+          </form>`
+        : fields
+    }
+  </section>`;
 }
 
 const ORIGINS = ["rule", "crew", "emergency", "module"];
