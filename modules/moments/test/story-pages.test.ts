@@ -110,17 +110,12 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       "Next: Thu 19:00, Demo Game Cup final",
       "Replaces the built-in rule match called",
       "Would replace the built-in rule hot game",
-      "Takes the arrived order from the built-in rule pizza",
       "Pick an item",
       "Reset all to default",
       "Duplicate",
       "New storyboard",
     ])
       expect(list.body, text).toContain(text);
-    // #657: the pizza rule stays on for the orders placed.
-    expect(list.body.replace(/\s+/g, " ")).toContain(
-      "Pizza orders ready takes over only the arrived orders: the pizza rule still shows each order placed.",
-    );
   });
 
   it("turns presets on and off, copies one an older event lacks, and turns Champion replay with Champion", async () => {

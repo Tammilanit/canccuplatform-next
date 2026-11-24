@@ -5,6 +5,7 @@
 // tournament's and pizza's streams in Valkey, as those modules send them (the kit's bus: one
 // `event` field); the Champion preset, which would show the final instead of the rule, is off
 // meanwhile. scripts/demo-stack-test runs it beside Screen's stack client in the screen container.
+import { Buffer } from "node:buffer";
 import { randomBytes, randomUUID } from "node:crypto";
 import { request } from "node:http";
 import { connect } from "node:net";
@@ -105,8 +106,7 @@ const regionsOf = (f) =>
   f.event === "state" ? (f.data.regions ?? []) : f.event === "region" ? [f.data.region] : [];
 const claimIn = (f, role) => regionsOf(f).find((r) => r?.role === role)?.claim ?? null;
 const heroIs = (template) => (f) => claimIn(f, "hero")?.template === template;
-const railSays = (text) => (f) =>
-  JSON.stringify(claimIn(f, "rail")?.content ?? {}).includes(text);
+const railSays = (text) => (f) => JSON.stringify(claimIn(f, "rail")?.content ?? {}).includes(text);
 
 const before = await moments("GET", "/api/moments/priorities");
 const stories = await moments("GET", "/api/moments/storyboards");
