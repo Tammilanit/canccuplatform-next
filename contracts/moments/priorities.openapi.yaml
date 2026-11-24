@@ -23,7 +23,8 @@
     summary: Replace the priority orders
     description: |
       Right `moments.settings.write`. Each order names every class once, `emergency` first. Every running
-      moment is ranked again at once; none ends. Audited.
+      moment is ranked again at once; none ends. Without `airtime` the stored airtime settings stay (#777).
+      Audited.
     requestBody:
       required: true
       content:
@@ -39,6 +40,8 @@
                 type: array
                 items:
                   $ref: "../moments.openapi.yaml#/components/schemas/ZoneOrder"
+              airtime:
+                $ref: "../moments.openapi.yaml#/components/schemas/AirtimeSettings"
               revision:
                 type: integer
                 minimum: 0

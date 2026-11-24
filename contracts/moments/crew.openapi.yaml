@@ -15,6 +15,11 @@
               type: object
               required: [moments, zones]
               properties:
+                queues:
+                  type: array
+                  description: Additive (#777). Each zone's hero, gap and queue, as On air shows them.
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/ZoneQueue"
                 moments:
                   type: array
                   items:
@@ -61,12 +66,48 @@
         $ref: "../common.openapi.yaml#/components/responses/NotFound"
       "409":
         $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/moments/{moment_id}/forward:
+  post:
+    tags: [moments]
+    operationId: forwardMoment
+    summary: Move a waiting moment to the front of a zone's queue
+    description: |
+      Right `moments.take` (#777). The moment goes first in `zone_key`'s queue; it still waits for the
+      holder's floor and the gap. 409 `not_running` when it is not waiting on that zone. Audited
+      (`moments.moment.moved`) and in the history (`moved`).
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/MomentId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [zone_key]
+            properties:
+              zone_key:
+                $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
 /api/moments/moments/{moment_id}/extend:
   post:
     tags: [moments]
     operationId: extendMoment
     summary: Move a moment's end on
-    description: Right `moments.take`. `expires_at` moves on by `seconds`, at most 7200 s after now. Audited.
+    description: Right `moments.take`. Its on-air time on each zone grows by `seconds`, at most 7200 s from now. Audited.
     parameters:
       - $ref: "../moments.openapi.yaml#/components/parameters/MomentId"
       - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
