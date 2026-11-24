@@ -54,6 +54,20 @@
 .moments-order__minutes {
   width: 4.5rem;
 }
+/* A narrow list (a phone) gives the stale time a line of its own under the name. */
+.moments-order {
+  container: order / inline-size;
+}
+@container order (max-width: 22rem) {
+  .moments-order__row {
+    grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  }
+  .moments-order__stale {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    padding-bottom: 0.5rem;
+  }
+}
 /* The handle is the grip a finger or the keyboard takes; 44 px square, as a touch target. */
 .moments-order__handle {
   display: grid;

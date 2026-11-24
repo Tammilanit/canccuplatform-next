@@ -39,9 +39,9 @@ const RULE: RuleView = {
 
 const ORIGIN = "http://moments.test";
 
-async function open(width: number): Promise<Page> {
+async function open(width: number, height = 900): Promise<Page> {
   if (browser === undefined) throw new Error("the suite runs only with a browser");
-  const context = await browser.newContext({ viewport: { width, height: 900 }, hasTouch: true });
+  const context = await browser.newContext({ viewport: { width, height }, hasTouch: true });
   const page = await context.newPage();
   const body = prioritiesView({
     scope: "",
@@ -112,7 +112,8 @@ describe.skipIf(browser === undefined)("Priorities in Chromium", { timeout: 30_0
   });
 
   it("drags a class with a finger on a phone", async () => {
-    const page = await open(390);
+    // Tall enough that both rows are in view: a touch lands only on what is drawn.
+    const page = await open(390, 1600);
     const from = await handle(page, "reactions").boundingBox();
     const to = await page.locator('[data-class="announcement"]').boundingBox();
     if (from === null || to === null) throw new Error("no rows drawn");
@@ -145,6 +146,13 @@ describe.skipIf(browser === undefined)("Priorities in Chromium", { timeout: 30_0
     for (const n of ["min_on_air_seconds", "gap_seconds", "stale_tournament", "stale_ticker"])
       expect(await named(n), n).toBe(true);
     expect(await named("order")).toBe(false);
+    // On a phone the field sits under the name, never over it.
+    for (const c of ["announcement", "tournament"]) {
+      const name = await page.locator(`[data-class="${c}"] .moments-order__name`).boundingBox();
+      const field = await page.locator(`[data-class="${c}"] .moments-order__stale`).boundingBox();
+      if (name === null || field === null) throw new Error(`no ${c} row drawn`);
+      expect(field.y, c).toBeGreaterThanOrEqual(name.y + name.height - 1);
+    }
     const wide = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(wide).toBeLessThanOrEqual(390);
   });
