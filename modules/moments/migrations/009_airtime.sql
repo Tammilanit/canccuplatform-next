@@ -28,6 +28,9 @@ CREATE TABLE moment_slots (
   generation integer NOT NULL DEFAULT 0,
   -- The override id it was last sent with on this zone, or null while held back.
   override_id text,
+  -- When it ends on this zone as things stand (its on-air end, else its stale time): the moment's
+  -- `expires_at` is the latest of its zones'.
+  ends_at timestamptz,
   PRIMARY KEY (tenant_id, moment_id, zone_key)
 );
 CREATE INDEX moment_slots_zone ON moment_slots (tenant_id, zone_key);

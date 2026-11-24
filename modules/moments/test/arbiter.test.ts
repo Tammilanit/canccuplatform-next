@@ -3,13 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   DEFAULT_ORDER,
-  blockedOn,
   checkOrder,
   desiredOverrides,
   overrideChanges,
   rankOf,
 } from "../src/arbiter.js";
-import type { Class, Held, MomentShape, SentOverride } from "../src/arbiter.js";
+import type { Class, MomentShape, SentOverride } from "../src/arbiter.js";
 
 const moment = (over: Partial<MomentShape> = {}): MomentShape => ({
   id: "m_1",
@@ -86,33 +85,6 @@ describe("overrides per rank", () => {
     expect(desiredOverrides(moment({ class: "emergency" }), stage, ["main", "stage"], [])).toEqual([
       { id: "m_1", zones: [], rank: 100 },
     ]);
-  });
-});
-
-describe("refusal", () => {
-  const held = (role: string, rank: number, state: Held["state"] = "placed"): Held => ({
-    override_id: `o_${role}_${rank}`,
-    role,
-    rank,
-    state,
-  });
-
-  it("is blocked when every role of the chain is held by a higher rank", () => {
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60), held("rail", 80)])).toBe(true);
-  });
-
-  it("is not blocked while a role of its chain is free or held lower: regions are shared", () => {
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60)])).toBe(false);
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60), held("rail", 20)])).toBe(false);
-  });
-
-  it("counts a higher full claim as holding every role but the overlay", () => {
-    expect(blockedOn(["hero", "rail", "ticker"], 80, [held("full", 100)])).toBe(true);
-    expect(blockedOn(["overlay"], 20, [held("full", 100)])).toBe(false);
-  });
-
-  it("ignores claims that wait: an unplaced claim holds nothing", () => {
-    expect(blockedOn(["hero"], 50, [held("hero", 60, "unplaced")])).toBe(false);
   });
 });
 

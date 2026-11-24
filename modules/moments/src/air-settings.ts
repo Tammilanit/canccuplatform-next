@@ -86,7 +86,7 @@ export function mergeAir(
     ...patch,
     stale_after_minutes: {
       ...(now.stale_after_minutes as Record<string, number>),
-      ...((patch.stale_after_minutes as Record<string, number> | undefined) ?? {}),
+      ...(patch.stale_after_minutes ?? {}),
     },
   };
 }

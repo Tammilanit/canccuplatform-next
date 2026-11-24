@@ -16,7 +16,6 @@ import { SAMPLE, fillContent } from "./fill.js";
 import type { FillContext } from "./fill.js";
 import { roundCount } from "./model.js";
 import type { Story } from "./model.js";
-import { patienceMs } from "./schedule.js";
 import type { Compiled } from "./timing.js";
 import type { EventFacts, RoundState, RunRow, Segment, StorySettings } from "./store.js";
 import { actorOfRun } from "./store.js";
@@ -195,12 +194,10 @@ async function startSegment(
       zones,
       starts_at: new Date(seg.from_ms),
       expires_at: new Date(seg.until_ms),
-      patience_seconds: Math.ceil(patienceMs(story) / 1000),
       source: { module: "moments", event_id: null, ref: run.source },
       dedupe_key: `story:${run.id}:${String(round.index)}:${round.finale ? "f" : ""}${String(i)}`,
       happening: run.facts["@happening"] ?? null,
       happening_run: run.id,
-      refuse: false,
       actor,
     },
     ctx.now,
@@ -322,12 +319,11 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
     run.uncounted_ms += d;
     // The story's later rounds move by the pause too (PV1).
     run.t = new Date(run.t.getTime() + d);
-    m.expires_at = new Date(seg.until_ms);
     // Its sound's hold too, else other sounds play over the video's last part.
     await ctx.engine.sound?.videoMoved(ctx.c, run.zones, seg.until_ms, run.id);
     m.content = { ...m.content, started_at: new Date(seg.from_ms).toISOString(), paused_at: null };
     await saveMoment(ctx.c, m);
-    await ctx.engine.show(ctx.c, m, null, "cleared");
+    await ctx.engine.endsBy(ctx.c, m, new Date(seg.until_ms), ctx.now);
   }
 }
 

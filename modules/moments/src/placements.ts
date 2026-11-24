@@ -5,6 +5,9 @@
  * container, so a report that changes nothing writes nothing.
  */
 import type { Event, SqlClient } from "@canccu/kit";
+import { passZone } from "./air.js";
+import type { PassEngine } from "./air.js";
+import { pause, resume, saveSlot, slotsOn } from "./air-store.js";
 import { titleOf, writeHistory } from "./store.js";
 import type { MomentRow } from "./store.js";
 
@@ -89,7 +92,30 @@ export async function newerClaims(
   return rows.length > 0;
 }
 
-export async function applyClaims(c: SqlClient, report: ClaimsReport, now: Date): Promise<void> {
+/**
+ * Applies a zone's report: the history, and each held moment's clock (rule 2: it stops while
+ * Screen hides it or leaves it unplaced, and runs again once placed), then the zone's pass.
+ */
+export async function applyClaims(
+  c: SqlClient,
+  report: ClaimsReport,
+  now: Date,
+  engine?: PassEngine,
+): Promise<void> {
+  await placementRows(c, report, now);
+  if (engine === undefined) return;
+  for (const slot of await slotsOn(c, report.zone_key)) {
+    if (slot.override_id === null || (slot.granted !== "hero" && slot.granted !== "pass")) continue;
+    if (report.hidden.includes(slot.override_id) || report.unplaced.includes(slot.override_id))
+      pause(slot, now);
+    else if (report.placed.some((p) => p.override_id === slot.override_id)) resume(slot, now);
+    else continue;
+    await saveSlot(c, slot);
+  }
+  await passZone(c, engine, report.zone_key, now);
+}
+
+async function placementRows(c: SqlClient, report: ClaimsReport, now: Date): Promise<void> {
   const zone = report.zone_key;
   const states = new Map<string, { state: string; role: string | null }>();
   for (const p of report.placed) states.set(p.override_id, { state: "placed", role: p.role });

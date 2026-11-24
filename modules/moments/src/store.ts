@@ -1,7 +1,7 @@
 /** The engine's rows and their SQL; every function runs inside the caller's tenant transaction. */
 import type { SqlClient } from "@canccu/kit";
 import { DEFAULT_ORDERS, isClass } from "./arbiter.js";
-import type { Class, Held, Orders, SentOverride } from "./arbiter.js";
+import type { Class, Orders, SentOverride } from "./arbiter.js";
 import type { Picture } from "./cues/service.js";
 import { DEFAULT_AIR, airOf } from "./air-settings.js";
 import type { AirSettings } from "./air-settings.js";
@@ -54,13 +54,15 @@ export interface MomentRow {
   steps: Record<string, unknown>[] | null;
   /** `type:source id` of the happening it shows (WD1), or null. */
   happening: string | null;
+  /** When it was last fresh news (a renewal with new content); null: its start (#777). */
+  fresh_at: Date | null;
   ended_at: Date | null;
   end_reason: string | null;
 }
 
 const COLUMNS = `id, class, kind, regions, template, content, zones, left_zones, origin, rule_id,
   source, why, actor_user_id, actor_name, dedupe_key, starts_at, expires_at, ttl_seconds,
-  patience_seconds, qr, binding, ended_at, end_reason, effect, steps, happening`;
+  patience_seconds, qr, binding, ended_at, end_reason, effect, steps, happening, fresh_at`;
 
 const momentOf = (r: Record<string, unknown>): MomentRow => r as unknown as MomentRow;
 
@@ -104,7 +106,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
     `INSERT INTO moments (${COLUMNS})
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-             $19, $20, $21, $22, $23, $24, $25, $26)`,
+             $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
     [
       m.id,
       m.class,
@@ -132,6 +134,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
       m.effect,
       m.steps === null ? null : JSON.stringify(m.steps),
       m.happening,
+      m.fresh_at,
     ],
   );
 }
@@ -139,14 +142,15 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
 /** Writes the fields a moment may change after its start. */
 export async function saveMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
-    `UPDATE moments SET template = $2, content = $3, left_zones = $4, expires_at = $5,
+    // `expires_at` is the airtime pass's (air-store.ts, syncExpiry), from the zones' clocks.
+    `UPDATE moments SET template = $2, content = $3, left_zones = $4, fresh_at = $5,
        ended_at = $6, end_reason = $7, steps = $8 WHERE id = $1`,
     [
       m.id,
       m.template,
       m.content,
       m.left_zones,
-      m.expires_at,
+      m.fresh_at,
       m.ended_at,
       m.end_reason,
       m.steps === null ? null : JSON.stringify(m.steps),
@@ -248,18 +252,6 @@ export async function loadOrders(
   };
 }
 
-/** The claims on `zones` as Screen last placed them, with the rank each was sent with. */
-export async function heldOn(c: SqlClient, zones: string[]): Promise<(Held & { zone: string })[]> {
-  const { rows } = await c.query(
-    `SELECT p.zone_key AS zone, p.override_id, p.role, p.state, (o.sent->>'rank')::int AS rank
-     FROM moment_placements p
-     JOIN moment_overrides o ON o.tenant_id = p.tenant_id AND o.override_id = p.override_id
-     WHERE p.zone_key = ANY($1::text[]) AND NOT o.ended`,
-    [zones],
-  );
-  return rows as unknown as (Held & { zone: string })[];
-}
-
 export interface HistoryEntry {
   at: Date;
   zone_key: string | null;
@@ -275,7 +267,8 @@ export interface HistoryEntry {
     | "round_started"
     | "round_skipped"
     | "loop_ended"
-    | "not_fired";
+    | "not_fired"
+    | "moved";
   moment_id: string | null;
   class: Class;
   origin: Origin;

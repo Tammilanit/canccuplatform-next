@@ -1,7 +1,7 @@
 /**
  * The server-side tick (E2): every container visits the events in `moments_tenants` once a
- * second and ends what is due from the stored times: moments past `expires_at`, and waiting
- * moments past their patience on a zone. Rows are taken `FOR UPDATE SKIP LOCKED`, so two
+ * second and runs each zone's airtime pass (air.ts): what used its on-air time or went stale
+ * ends, from the stored clocks. Rows are taken `FOR UPDATE SKIP LOCKED`, so two
  * containers never end the same moment twice, and a restart resumes from the rows alone.
  */
 import type { Logger, SqlClient } from "@canccu/kit";
@@ -11,9 +11,9 @@ import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { evaluateScenes, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
-import { lockMoment, runningMoments } from "./store.js";
+import { runningMoments } from "./store.js";
 import { tickAnnouncements } from "./announce/follow.js";
-import { retryRules } from "./rule-retries.js";
+import { passAll } from "./air.js";
 import { tickStories } from "./story/triggers.js";
 
 export const TICK_MS = 1000;
@@ -26,27 +26,12 @@ export async function tickTenant(
   now: Date,
   log?: Logger,
 ): Promise<void> {
-  for (const m of await runningMoments(c, "expires_at <= $1", [now], "skip")) {
-    await engine.end(c, m, "expired", null, now);
-  }
-  const { rows } = await c.query(
-    `SELECT p.moment_id, p.zone_key FROM moment_placements p
-     JOIN moments m ON m.tenant_id = p.tenant_id AND m.id = p.moment_id
-     WHERE m.ended_at IS NULL AND p.state = 'unplaced' AND NOT p.placed_once
-       AND p.since + make_interval(secs => m.patience_seconds) <= $1
-     ORDER BY p.since`,
-    [now],
-  );
-  for (const r of rows as { moment_id: string; zone_key: string }[]) {
-    const m = await lockMoment(c, r.moment_id);
-    if (m === null || m.ended_at !== null) continue;
-    await engine.end(c, m, "preempted", null, now, r.zone_key);
-  }
-  // In a savepoint, as each story: one retry that throws must not undo this second's expiries.
+  // Every zone's airtime pass (#777): what used its on-air time or went stale ends, the queue
+  // moves on. In a savepoint, as each story: one zone that throws must not undo the rest.
   await isolated(
     c,
-    () => retryRules(c, engine, now),
-    (err) => log?.warn({ err }, "a rule's retry failed"),
+    () => passAll(c, engine, now),
+    (err) => log?.warn({ err }, "an airtime pass failed"),
   );
   await tickAnnouncements(c, engine, now);
   await tickStories({ c, engine, now, log });
@@ -65,7 +50,6 @@ export async function endAll(c: SqlClient, engine: Engine, now: Date): Promise<v
   for (const m of await runningMoments(c, "TRUE", [], "wait")) {
     await engine.end(c, m, "source_ended", null, now);
   }
-  await c.query(`DELETE FROM moments_rule_retries`, []);
 }
 
 /** The event is archived (E10): every moment ends, and its writes answer 409 from now on. */
