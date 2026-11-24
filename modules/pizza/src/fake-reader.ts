@@ -23,6 +23,8 @@ export const DEMO_RECEIPT: ReceiptReading = {
       quantity: 2,
       amount_cents: 1900,
       kind: "item",
+      // A partly read receipt (#789 item 11): the check page's shot shows the line marked.
+      unsure: true,
     },
     {
       text: "3 x 4 Margherita 24.00",
