@@ -61,6 +61,12 @@ export const CONDENSE_OVER = 3;
 export const playedNow = (s: SlotIn, now: number): number =>
   s.played_ms + (s.on_air_since === null ? 0 : Math.max(0, now - s.on_air_since));
 
+/** When its on-air time ran out: a pass that comes late still counts the gap from here. */
+export const usedUpAt = (s: SlotIn, now: number): number =>
+  s.on_air_since === null || s.budget_ms === null
+    ? now
+    : Math.min(now, s.on_air_since + s.budget_ms - s.played_ms);
+
 const claimant = (s: SlotIn) => s.chain.includes("hero") || s.chain.includes("full");
 const onAir = (s: SlotIn) => s.granted === "hero" || s.granted === "pass" || s.granted === "inside";
 const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id);
@@ -92,6 +98,19 @@ export function planZone(
     else if (!onAir(s) && now >= s.fresh_at + air.stale_after_ms[s.class])
       ends.push({ moment_id: s.moment_id, reason: "stale" });
   }
+  // A story's next segment (its video after its steps) is the same round: it takes over at once.
+  const was = slots.find((s) => s.moment_id === zone.holder);
+  const next = slots.find(
+    (s) =>
+      was !== undefined &&
+      s !== was &&
+      s.granted !== "hero" &&
+      claimant(s) &&
+      was.rule_id?.startsWith("story:") === true &&
+      s.rule_id === was.rule_id,
+  );
+  if (was !== undefined && next !== undefined && !ends.some((e) => e.moment_id === was.moment_id))
+    ends.push({ moment_id: was.moment_id, reason: "expired" });
   const gone = new Set(ends.map((e) => e.moment_id));
   let live = slots.filter((s) => !gone.has(s.moment_id));
   // A condensed round's moments end with it: their time was its time.
@@ -117,7 +136,16 @@ export function planZone(
     ]),
   );
   let holder = live.find((s) => s.moment_id === zone.holder && claimant(s)) ?? null;
-  let free_since = holder === null ? (zone.holder !== null ? now : zone.free_since) : null;
+  const gone_ = slots.find((s) => s.moment_id === zone.holder && gone.has(s.moment_id));
+  let free_since =
+    holder === null
+      ? zone.holder !== null
+        ? gone_ === undefined
+          ? now
+          : usedUpAt(gone_, now)
+        : zone.free_since
+      : null;
+  if (next !== undefined && holder === null) free_since = null;
   const queue = () =>
     live
       .filter((s) => claimant(s) && s !== holder && out.get(s.moment_id)?.granted !== "inside")
@@ -164,7 +192,11 @@ export function planZone(
   }
   if (holder !== null) {
     const o = out.get(holder.moment_id);
-    if (o !== undefined) Object.assign(o, { granted: "hero", regions: [...holder.chain] });
+    if (o !== undefined) {
+      Object.assign(o, { granted: "hero", regions: [...holder.chain] });
+      // A hold that begins now: its floor counts from here.
+      if (holder.granted !== "hero") o.tenure_from_ms = holder.played_ms;
+    }
   }
   const room = queue().find((s) => s.chain.includes("rail") && !s.has_steps);
   if (room !== undefined) {

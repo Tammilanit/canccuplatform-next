@@ -61,7 +61,7 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
   });
   beforeEach(async () => {
     await pool.query(
-      `TRUNCATE moments, moment_overrides, moment_placements, moments_zones, moments_history,
+      `TRUNCATE moments, moment_overrides, moment_placements, moment_slots, moments_zone_air, moments_zones, moments_history,
         moments_outbox, moments_announcements, moments_sources, moments_sound_zones,
         moments_sound_log, moments_tenants, moments_cues`,
     );
@@ -156,7 +156,8 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     const a = await send();
     const b = await send({ title_text: "Lost and found", body_text: "", variables: {} });
     expect([a.status, b.status]).toEqual(["live", "live"]);
-    expect(overrides(w.events("demo"), "moments.override.started")).toHaveLength(2);
+    // One override per moment and zone (#777): two cards on main and entrance.
+    expect(overrides(w.events("demo"), "moments.override.started")).toHaveLength(4);
   });
 
   it("an edit changes card and line in place, with Updated for 60 s and no new sound", async () => {
@@ -215,7 +216,7 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
       ),
     );
     const after = w.events("demo").slice(before);
-    expect(after.filter((e) => e.type === "moments.override.ended")).toHaveLength(2);
+    expect(after.filter((e) => e.type === "moments.override.ended")).toHaveLength(4);
     expect(after.some((e) => e.type === "moments.sound.played")).toBe(false);
     expect(after.find((e) => e.type === "moments.announcement.withdrawn")?.data).toMatchObject({
       id: a.id,

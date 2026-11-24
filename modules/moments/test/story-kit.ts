@@ -12,7 +12,7 @@ import type { StorySettings } from "../src/story/store.js";
 import { claims } from "./helpers.js";
 import type { World } from "./helpers.js";
 
-export const TABLES = `moments, moment_overrides, moment_placements, moments_zones, moments_history,
+export const TABLES = `moments, moment_overrides, moment_placements, moment_slots, moments_zone_air, moments_zones, moments_history,
   moments_outbox, moments_sources, moments_sound_zones, moments_sound_log, moments_sound_sources,
   moments_tenants, moments_stories, moments_story_runs, moments_story_marks, moments_scene_zones,
   moments_rules`;

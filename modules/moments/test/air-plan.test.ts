@@ -105,6 +105,31 @@ describe("the airtime scheduler", () => {
     expect(p.zone).toEqual({ holder: null, free_since: 20_000 });
   });
 
+  it("counts the gap from the holder's real end, not from the pass that noticed it", () => {
+    const p = planZone(200_000, held, [card({ budget_ms: 20_000 }), pizza()], DEFAULT_AIR);
+    expect(p.zone.holder).toBe("pizza");
+  });
+
+  it("lets a story's next segment continue its round at once, ending the one before", () => {
+    const steps = card({
+      moment_id: "steps",
+      class: "storyboard",
+      rank: 60,
+      rule_id: "story:film",
+      has_steps: true,
+    });
+    const film = slot("film", {
+      class: "storyboard",
+      rank: 60,
+      chain: ["full"],
+      rule_id: "story:film",
+      queued_since: 14_000,
+    });
+    const p = planZone(14_000, { holder: "steps", free_since: null }, [steps, film], DEFAULT_AIR);
+    expect(p.ends).toEqual([{ moment_id: "steps", reason: "expired" }]);
+    expect(p.zone).toEqual({ holder: "film", free_since: null });
+  });
+
   it("moved forward goes first", () => {
     const free: ZoneIn = { holder: null, free_since: null };
     const low = slot("low", { class: "hot_game", rank: 50, forward_at: 3000, queued_since: 2000 });

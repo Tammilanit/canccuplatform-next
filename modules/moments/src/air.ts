@@ -93,10 +93,12 @@ export async function passZone(
   actor: Actor | null = null,
   reason: EndReason = "cleared",
 ): Promise<void> {
-  const z0 = await lockZone(c, zone, lock);
+  let z0 = await lockZone(c, zone, lock);
   if (z0 === null) return;
   const { air, ...orders } = await loadOrders(c);
   // Ends change who is live, so the plan is made again after them; each round ends at least one.
+  // A slot made in any round of this pass is new: it shows from its moment's own start.
+  const fresh = new Set<string>();
   for (let round = 0; round < 50; round += 1) {
     const moments = new Map((await momentsOn(c, zone)).map((m) => [m.id, m]));
     const slots = new Map<string, SlotRow>();
@@ -105,13 +107,18 @@ export async function passZone(
       else await withdraw(c, engine.outbox, s, reason, actor, true);
     }
     for (const m of moments.values())
-      if (!slots.has(m.id)) slots.set(m.id, await newSlot(c, m.id, zone, m.starts_at, budgetOf(m)));
+      if (!slots.has(m.id)) {
+        slots.set(m.id, await newSlot(c, m.id, zone, m.starts_at, budgetOf(m)));
+        fresh.add(m.id);
+      }
     const ins = [...slots.values()].map((s) => {
       const m = moments.get(s.moment_id) as MomentRow;
       return slotIn(s, m, rankOn(orders, zone, m.class), air);
     });
     const plan = planZone(now.getTime(), z0, ins, air);
     if (plan.ends.length > 0) {
+      // As the plan has it: the gap from when the holder's time ran out, or its next segment.
+      z0 = plan.zone;
       for (const e of plan.ends) {
         const m = moments.get(e.moment_id);
         if (m !== undefined) await engine.endHere(c, m, e.reason, now, zone);
@@ -124,7 +131,7 @@ export async function passZone(
       const steps = condensedSteps(plan.slots, out, moments, air);
       if (plan.condensed?.holder === m.id && steps !== null)
         s.budget_ms = steps.reduce((t, x) => t + (x.duration_ms as number), 0);
-      apply(s, out, m, air, now);
+      apply(s, out, m, air, now, fresh.has(m.id) ? m.starts_at : now);
       await send(
         c,
         engine.outbox,
@@ -133,7 +140,9 @@ export async function passZone(
         out,
         rankOn(orders, zone, m.class),
         steps,
-        now,
+        // Shown in the pass that asked for it: from its own start, so a story's late take plays
+        // from the item's time (SU3); else from now, minus what it already played (rule 2).
+        fresh.has(m.id) ? m.starts_at : new Date(now.getTime() - playedAt(s, now)),
         actor,
         reason,
       );
@@ -151,11 +160,19 @@ export async function passAll(c: SqlClient, engine: PassEngine, now: Date): Prom
 }
 
 /** The slot's clock and place as the plan has them (D5: the clock runs from the grant). */
-function apply(s: SlotRow, out: SlotOut, m: MomentRow, air: AirSettings, now: Date): void {
+/** `from`: when its clock starts if it goes on air now; a new moment's own start (a story's plan). */
+function apply(
+  s: SlotRow,
+  out: SlotOut,
+  m: MomentRow,
+  air: AirSettings,
+  now: Date,
+  from: Date,
+): void {
   const was = onAir(s.granted);
   const is = onAir(out.granted);
   if (was && !is) pause(s, now);
-  if (!was && is) resume(s, now);
+  if (!was && is) resume(s, from);
   s.granted = out.granted;
   s.inside_of = out.inside_of;
   s.queued_since = new Date(out.queued_since);
@@ -202,7 +219,7 @@ async function send(
   out: SlotOut,
   rank: number,
   condensed: Record<string, unknown>[] | null,
-  now: Date,
+  from: Date,
   actor: Actor | null,
   reason: EndReason,
 ): Promise<void> {
@@ -228,7 +245,7 @@ async function send(
     const next: Sent = {
       id,
       ...base,
-      starts_at: new Date(now.getTime() - playedAt(s, now)).toISOString(),
+      starts_at: from.toISOString(),
     };
     s.override_id = id;
     await putOverride(c, m.id, next);
@@ -244,7 +261,7 @@ async function send(
     ?.sent as Sent | undefined;
   if (before === undefined) {
     s.override_id = null;
-    return send(c, outbox, m, s, out, rank, condensed, now, actor, reason);
+    return send(c, outbox, m, s, out, rank, condensed, from, actor, reason);
   }
   const next: Sent = { id: before.id, ...base, starts_at: before.starts_at };
   const changed = overrideChanges(before, next);

@@ -59,7 +59,7 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
       const o = k.started().at(-1) as Record<string, unknown>;
       expect(o).toMatchObject({
         template: "sting",
-        rank: 65,
+        rank: 60,
         regions: ["hero", "rail"],
         starts_at: w.at(at).toISOString(),
       });
@@ -242,16 +242,14 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
     ]);
   });
 
-  it("skips a round whose region is held past its patience, and one due during an emergency", async () => {
+  it("never skips a round for a held region (#777), and skips one due during an emergency", async () => {
     await k.setup([preset("starting_soon")]);
     await k.agenda([ITEM]);
     await k.tick(w.at(T - 900));
     const id = k.started()[0]?.id as string;
     await k.place("main", [], w.at(T - 900), [id]);
     await k.tick(w.at(T - 900 + 47));
-    expect(rounds(await k.history()).at(-1)).toBe(
-      "round_skipped round 1 of 3 skipped: its region was held past its patience",
-    );
+    expect(rounds(await k.history()).at(-1)).toBe("round_started round 1 of 3");
     await k.tx((c) =>
       w.engine.request(
         c,
@@ -280,7 +278,8 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
     await k.tick(w.at(T - 290));
     const h = rounds(await k.history());
     expect(h).toEqual(["round_started round 1 of 3", "round_started round 2 of 3"]);
-    const m = await k.tx((c) => lockMoment(c, k.started()[1]?.id as string));
+    const id = String(k.started()[1]?.id).replace(/\.main$/, "");
+    const m = await k.tx((c) => lockMoment(c, id));
     expect(m?.starts_at.toISOString()).toBe(w.at(T - 300).toISOString());
   });
 

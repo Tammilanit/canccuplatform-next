@@ -38,7 +38,7 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
   });
   beforeEach(async () => {
     await pool.query(
-      `TRUNCATE moments, moment_overrides, moment_placements, moments_zones, moments_history,
+      `TRUNCATE moments, moment_overrides, moment_placements, moment_slots, moments_zone_air, moments_zones, moments_history,
         moments_outbox, moments_announcements, moments_announcement_templates, moments_sources,
         moments_idempotency, moments_sound_zones, moments_sound_log, moments_tenants`,
     );
