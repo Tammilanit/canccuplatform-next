@@ -160,6 +160,16 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
 
   app.post<{ Params: Params }>("/hold/:id/money/split", async (request, reply) => {
     const split = formText(request, "split");
+    // A tap on the split already shown is not a choice: storing it would pin the even fallback of
+    // a missing price, and the order would stay even once every pizza has its price (#789).
+    const now = await viaApi(
+      app,
+      request,
+      "GET",
+      `/api/pizza/orders/${encodeURIComponent(request.params.id)}/money`,
+    );
+    if (now.status === 200 && now.body.split_effective === split)
+      return done(reply, request.params.id, now);
     return done(reply, request.params.id, await moneyWrite(request, { split }));
   });
 

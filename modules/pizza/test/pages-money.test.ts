@@ -111,6 +111,31 @@ describe.skipIf(!DATABASE_URL)("the order's money, for the holder (mockups 18 A,
     expect((await money()).split).toBe("even");
   });
 
+  it("shows exact for an all-priced order and stores no split until the holder picks one (#789)", async () => {
+    await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
+    const page = (await view(w, "pena", `/hold/${id}/money`)).body;
+    expect(page).toMatch(/<button[^>]*name="split"[^>]*value="exact"[^>]*aria-pressed="true"/);
+    expect((await money()).split).toBeNull();
+  });
+
+  it("turns exact once the last price is in, even after a tap on the even already shown (#789)", async () => {
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`, {});
+    await w.call("tero", "POST", `/api/pizza/orders/${id}/items`, { kind: "text", text: "salad" });
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    await form(w, "pena", `/hold/${id}/money/total`, { total: "40.00" });
+    // Even is the fallback while a price is missing; tapping it again is not a choice.
+    await form(w, "pena", `/hold/${id}/money/split`, { split: "even" });
+    expect((await money()).split).toBeNull();
+    const salad = ((await money()).prices as { item_id: string; price_cents: number | null }[]).find(
+      (p) => p.price_cents === null,
+    );
+    await form(w, "pena", `/hold/${id}/money/price`, { item_id: salad?.item_id ?? "", price: "4.00" });
+    const page = (await view(w, "pena", `/hold/${id}/money`)).body;
+    expect(page).toMatch(/<button[^>]*name="split"[^>]*value="exact"[^>]*aria-pressed="true"/);
+    expect((await money()).split_effective).toBe("exact");
+  });
+
   it("gives anonymised people no pizza breakdown of another's (their rows cannot be told apart)", async () => {
     // Two people with no user id, as after a retention run on rows that kept no pseudonym.
     await pool.query(
