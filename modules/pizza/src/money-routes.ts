@@ -219,9 +219,12 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
 
   app.put<{ Params: Params }>("/api/pizza/items/:id/price", (request, reply) =>
     write(deps, request, reply, async (c, w) => {
-      const item = await getItem(c, request.params.id);
+      const found = await getItem(c, request.params.id);
+      if (found === null) throw notFound("pizza");
+      const { order, as } = await forMoney(c, w, found.order_id, "money.edit");
+      // Read again under the order's lock: a removal that held it first has taken the pizza (#789).
+      const item = await getItem(c, found.id);
       if (item === null) throw notFound("pizza");
-      const { order, as } = await forMoney(c, w, item.order_id, "money.edit");
       const before = { order, as, amounts: await amountsOf(c, order) };
       const price = requiredPrice(body(request), "price_cents");
       const changes: Changes = {};
