@@ -287,7 +287,7 @@ async function pizzaIsHere(
   const o = obj(e.data.order);
   const id = str(o.id) ?? "";
   if (id === "") return;
-  const key = `pizza:${id}:arrived`;
+  const key = `order-arrived:${id}`;
   if (e.type === "pizza.order.done" || e.type === "pizza.order.cancelled") {
     const m = await lockRunningByKey(c, key);
     if (m !== null) await engine.end(c, m, "source_ended", null, now);
