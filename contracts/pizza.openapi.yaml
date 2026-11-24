@@ -91,6 +91,8 @@ paths:
     $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1menu~1read"
   /api/pizza/reader/key:
     $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1reader~1key"
+  /api/pizza/reader/reads:
+    $ref: "pizza/receipts.openapi.yaml#/~1api~1pizza~1reader~1reads"
   /api/pizza/pizzerias:
     $ref: "pizza/menus.openapi.yaml#/~1api~1pizza~1pizzerias"
   /api/pizza/pizzerias/{pizzeria_id}:
@@ -235,7 +237,7 @@ components:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     TooLarge:
-      description: "`file_too_large`: a photo over 10 MB."
+      description: "`file_too_large`: a photo over 30 MB."
       content:
         application/json:
           schema:
@@ -248,13 +250,18 @@ components:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     ReaderFailed:
       description: |
-        `reader_failed`: the provider failed, refused the photo or took over 20 s; or
-        `reader_key_rejected`: the provider refused the key, and the reader stops until a key is set again.
-        Typing the numbers still works.
+        `reader_failed`: the read gave nothing, and `reason` says why (#789): `timeout` (past
+        `timeoutFor(pages)`: 50 s for a page and 10 s for each further one, at most 100 s),
+        `service_down` (the provider failed or is overloaded), `rate_limited` (with `retry_after_s`),
+        `out_of_credit` (the provider account's balance or spend limit is used up; the crew is told),
+        `declined` (the model would not read it), `unreadable` (not a receipt or a menu, or not
+        readable: `message` is the model's own reason) or `failed` (any other). Or
+        `reader_key_rejected`: the provider refused the key, and the reader stops until a key is set
+        again (the crew is told). A failed read changes no price, total or menu; typing still works.
       content:
         application/json:
           schema:
-            $ref: "common.openapi.yaml#/components/schemas/Error"
+            $ref: "#/components/schemas/ReaderError"
     SecretsUnavailable:
       description: "`secrets_unavailable`: the platform has no secrets key, so no API key can be kept."
       content:
@@ -771,6 +778,9 @@ components:
             type: object
             required: [text, number, name, quantity, amount_cents, kind]
             properties:
+              unsure:
+                type: boolean
+                description: The photo did not make the line clear (a partly read receipt, #789); absent on older reads.
               text:
                 type: string
               number:
@@ -830,6 +840,79 @@ components:
           description: The menu numbers the read was unsure of.
           items:
             type: string
+    ReaderError:
+      description: The shared error body, with why a read gave nothing (#789, additive).
+      allOf:
+        - $ref: "common.openapi.yaml#/components/schemas/Error"
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  enum: [timeout, service_down, rate_limited, out_of_credit, declined, unreadable, failed]
+                retry_after_s:
+                  type: integer
+                  minimum: 1
+                  maximum: 120
+                  description: With `rate_limited`, the wait the provider asked for.
+    ReadLog:
+      type: object
+      description: |
+        One month's reads by event day, newest first (at most 500 listed; the totals count every
+        read), and the month's totals against the account's monthly limit (#789 item 12).
+      required: [month, reads, totals]
+      properties:
+        month:
+          type: string
+          pattern: "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        reads:
+          type: array
+          items:
+            type: object
+            required: [at, kind, pages, outcome, reason, input_tokens, output_tokens, cost_micro_usd, ms]
+            properties:
+              at:
+                type: string
+                format: date-time
+              kind:
+                type: string
+                enum: [receipt, menu]
+              pages:
+                type: integer
+                minimum: 1
+                maximum: 6
+              outcome:
+                type: string
+                description: "`ok`, `rejected` (a refused key), or a `reason` of `ReaderError`."
+                enum:
+                  [ok, rejected, timeout, service_down, rate_limited, out_of_credit, declined, unreadable, failed]
+              reason:
+                type: [string, "null"]
+                maxLength: 200
+                description: The model's own words for an unreadable photo.
+              input_tokens:
+                type: [integer, "null"]
+              output_tokens:
+                type: [integer, "null"]
+              cost_micro_usd:
+                type: integer
+                minimum: 0
+                description: The tokens at the model's prices, rounded up; 0 when the provider billed nothing.
+              ms:
+                type: [integer, "null"]
+        totals:
+          type: object
+          required: [reads, cost_micro_usd, limit_micro_usd]
+          properties:
+            reads:
+              type: integer
+            cost_micro_usd:
+              type: integer
+            limit_micro_usd:
+              type: [integer, "null"]
+              description: "`ai_reader_monthly_limit_usd` in micro-dollars; null when it is 0 (none set)."
     ReaderKey:
       type: object
       required: [provider, model, set, last4, set_by, set_at, last_used_at, rejected, reads_this_month]
