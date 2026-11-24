@@ -442,6 +442,53 @@ run("the moments API", () => {
     expect(rows[0]).toMatchObject({ actor_name: null, why: "A person · spotlight" });
   });
 
+  it("lists each zone's queue and moves a waiting moment forward, audited, once per key (#777)", async () => {
+    const first = idOf(
+      await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title: "First" }),
+    );
+    await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title: "Second" });
+    const list = json(await w.call("reader", "GET", "/api/moments/moments"));
+    const main = (list.queues as Record<string, unknown>[]).find((q) => q.zone_key === "main");
+    expect(main?.waiting).toMatchObject([{ moment_id: first, title: "First", in_rail: false }]);
+    const key = "k-forward-777";
+    const fwd = await w.call(
+      "crew",
+      "POST",
+      `/api/moments/moments/${first}/forward`,
+      { zone_key: "main" },
+      { key },
+    );
+    expect(fwd.statusCode).toBe(200);
+    const again = await w.call(
+      "crew",
+      "POST",
+      `/api/moments/moments/${first}/forward`,
+      { zone_key: "main" },
+      { key },
+    );
+    expect(again.statusCode).toBe(200);
+    expect(w.audit.filter((a) => a.action === "moments.moment.moved")).toHaveLength(1);
+    const { rows } = await w.tx("demo", (c) =>
+      c.query(`SELECT action FROM moments_history WHERE moment_id = $1 AND action = 'moved'`, [
+        first,
+      ]),
+    );
+    expect(rows).toHaveLength(1);
+    const holder = (
+      json(await w.call("reader", "GET", "/api/moments/moments")).queues as Record<
+        string,
+        unknown
+      >[]
+    )[0]?.holder;
+    const notWaiting = await w.call(
+      "crew",
+      "POST",
+      `/api/moments/moments/${String(holder)}/forward`,
+      { zone_key: "main" },
+    );
+    expect(notWaiting.statusCode).toBe(409);
+  });
+
   it("lists what runs with where Screen placed it", async () => {
     const spot = await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",

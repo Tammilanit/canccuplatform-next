@@ -66,7 +66,7 @@ const show = async (n, waitMs) => {
   });
   if (r.status !== 201) throw new Error(`spotlight: HTTP ${r.status} ${JSON.stringify(r.body)}`);
   try {
-    await sse.next(claimed(r.body.id), waitMs);
+    await sse.next(claimed(`${r.body.id}.main`), waitMs);
     return performance.now() - started;
   } finally {
     await moments("POST", `/api/moments/moments/${r.body.id}/end`, {});
