@@ -30,7 +30,9 @@
     var startY = null;
     var startX = 0;
     d.addEventListener("touchstart", function (event) {
-      startY = event.touches.length === 1 ? event.touches[0].clientY : null;
+      // On a pinch-zoomed page a drag pans the photo; closing then would lose the zoom.
+      var zoomed = window.visualViewport && window.visualViewport.scale > 1;
+      startY = event.touches.length === 1 && !zoomed ? event.touches[0].clientY : null;
       startX = event.touches.length === 1 ? event.touches[0].clientX : 0;
     });
     // A second finger (pinch) cancels the gesture.
@@ -52,6 +54,9 @@
   document.addEventListener("click", function (event) {
     var link = event.target.closest && event.target.closest("a[data-viewer]");
     if (!link || typeof HTMLDialogElement === "undefined") return;
+    // A new tab or window (Ctrl, Cmd, Shift, a middle click) is the browser's to open.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+      return;
     event.preventDefault();
     if (dialog === null) dialog = make(link.getAttribute("data-viewer"));
     var img = dialog.querySelector("img");

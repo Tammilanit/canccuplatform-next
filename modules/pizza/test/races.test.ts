@@ -324,4 +324,51 @@ describe.skipIf(!DATABASE_URL)("races", () => {
     expect(d.state).toBe("closed");
     expect(d.pizza_count).toBe(added);
   });
+  /** An order brought to "arrived" with Anni's pizza, then made done by the timer while `write` waits on its row. */
+  async function whileDone(
+    write: (id: string, pizza: string) => ReturnType<World["call"]>,
+  ): Promise<{ id: string; res: Awaited<ReturnType<World["call"]>>; revision: number }> {
+    const id = json(await open(w, "pena", pz)).id as string;
+    const pizza = json(
+      await w.call("anni", "POST", `/api/pizza/orders/${id}/items`, {
+        kind: "menu",
+        menu_item_id: margherita,
+      }),
+    ).id as string;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/arrive`, { pickup: "Info desk" });
+    const other = await pool.connect();
+    try {
+      await other.query("BEGIN");
+      await other.query("SELECT 1 FROM pizza_orders WHERE id = $1 FOR UPDATE", [id]);
+      const waiting = write(id, pizza);
+      await waitForLockWaiter(other);
+      const { rows } = await other.query(
+        `UPDATE pizza_orders SET state = 'done', done_at = now(), done_reason = 'timer', revision = revision + 1
+         WHERE id = $1 RETURNING revision`,
+        [id],
+      );
+      await other.query("COMMIT");
+      return { id, res: await waiting, revision: (rows[0] as { revision: number }).revision };
+    } finally {
+      other.release();
+    }
+  }
+
+  it("answers a pizza's hand-out tick that waited while the order turned done with the order as it is", async () => {
+    const { id, res, revision } = await whileDone((_id, pizza) =>
+      w.call("anni", "POST", `/api/pizza/items/${pizza}/hand-out`, { handed_out: true }),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(json(res)).toMatchObject({ state: "done", revision });
+    expect(json(await w.call("pena", "GET", `/api/pizza/orders/${id}`)).revision).toBe(revision);
+  });
+
+  it('answers "Everyone got theirs" that waited while the order turned done with the order as it is', async () => {
+    const { res, revision } = await whileDone((id) =>
+      w.call("pena", "POST", `/api/pizza/orders/${id}/hand-out`, {}),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(json(res)).toMatchObject({ state: "done", revision });
+  });
 });

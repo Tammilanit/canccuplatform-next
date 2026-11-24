@@ -224,6 +224,51 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     await context.close();
   });
 
+  it("keeps the viewer open on a swipe while the page is zoomed, and leaves a modifier click to the browser", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/receipts`, undefined, {
+      raw: await png(),
+      contentType: "image/png",
+    });
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, { total_cents: 3000 });
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money`);
+    const viewer = page.locator("dialog.pizza-viewer");
+    const link = page.locator("a[data-viewer]").first();
+
+    // Ctrl or Shift asks for a new tab or window: the browser's, not the viewer's.
+    const popup = context.waitForEvent("page");
+    await link.click({ modifiers: ["Shift"] });
+    await (await popup).close();
+    expect(await viewer.count()).toBe(0);
+
+    await link.click();
+    await viewer.waitFor({ state: "visible" });
+    // A pinch-zoomed page: a drag down pans the photo, it does not close it.
+    await page.evaluate(() =>
+      Object.defineProperty(window.visualViewport, "scale", { configurable: true, get: () => 2 }),
+    );
+    await viewer.evaluate((d) => {
+      const at = (y: number) => [new Touch({ identifier: 1, target: d, clientX: 195, clientY: y })];
+      const fire = (type: string, y: number) =>
+        d.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            touches: type === "touchend" ? [] : at(y),
+            changedTouches: at(y),
+          }),
+        );
+      fire("touchstart", 300);
+      fire("touchmove", 420);
+      fire("touchend", 420);
+    });
+    await page.waitForTimeout(100);
+    expect(await viewer.isVisible()).toBe(true);
+    await context.close();
+  });
+
   it("offers the camera on a phone and, on a PC, a file to attach that it sends from (H2)", async () => {
     if (browser === undefined) return;
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
