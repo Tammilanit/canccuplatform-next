@@ -60,6 +60,7 @@
 }
 @container order (max-width: 22rem) {
   .moments-order__row {
+    /* canccu-grid: fixed row — lays out one queue item's own parts: handle, name and action */
     grid-template-columns: 2.75rem minmax(0, 1fr) auto;
   }
   .moments-order__stale {
