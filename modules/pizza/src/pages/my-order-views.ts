@@ -10,6 +10,7 @@ import { flash, post, time } from "./order-view.js";
 import type { OrderView } from "./order-view.js";
 import { orderHref, orderName, wayIn } from "./food-views.js";
 import type { FoodCtx } from "./food-views.js";
+import type { MessageKey } from "./messages.js";
 import { euro } from "./money-format.js";
 
 const holderName = (c: FoodCtx, o: OrderView) => o.holder?.name ?? c.t("food.the_holder");
@@ -249,7 +250,7 @@ function myMoney(c: FoodCtx, o: OrderView): Slot {
 /** The holder's next step on their order (D19): a form for a step taken here, else its page. */
 export function nextStep(
   o: OrderView,
-): { label: string; href: string; method: "get" | "post" } | null {
+): { label: MessageKey; href: string; method: "get" | "post" } | null {
   const hold = `${PREFIX}hold/${o.id}`;
   switch (o.state) {
     case "open":
