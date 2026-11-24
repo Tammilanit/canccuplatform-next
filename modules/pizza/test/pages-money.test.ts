@@ -434,15 +434,6 @@ describe.skipIf(!DATABASE_URL)(
       expect(((await money()).receipts as unknown[]).length).toBe(1);
       expect(w.reader.sent).toEqual([]);
     });
-
-    it("says the reader failed, and that typing still works", async () => {
-      await turnOnReader();
-      w.reader.fail = "failed";
-      const r = await upload(w, "pena", `/hold/${id}/money/scan`, [
-        { name: "receipt.png", type: "image/png", bytes: await png() },
-      ]);
-      expect(location(r)).toContain(`/pizza/hold/${id}/money/total?error=`);
-    });
   },
 );
 

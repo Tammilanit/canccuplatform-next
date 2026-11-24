@@ -13,6 +13,7 @@ import type { PageCtx } from "./kit.js";
 import { euro } from "./money-format.js";
 import { outsideNotice } from "./money-views.js";
 import { base, flash } from "./order-view.js";
+import type { Slot } from "@canccu/ui";
 import type { OrderView } from "./order-view.js";
 
 const plain = (cents: number | null) =>
@@ -83,8 +84,12 @@ const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
  * touch laptop with a mouse is a PC. Neither field is required, as only one is filled: the form
  * sends whichever photo it has.
  */
-export function scanView(c: PageCtx, o: OrderView, s: { reader: boolean; error?: string }): Html {
-  return html`${flash(s.error)}
+export function scanView(
+  c: PageCtx,
+  o: OrderView,
+  s: { reader: boolean; error?: string; failure?: Slot },
+): Html {
+  return html`${flash(s.error)} ${s.failure ?? ""}
     ${s.reader ? outsideNotice(c, c.t("money.outside_text", { provider: PROVIDER.name })) : ""}
     <form
       method="post"
@@ -154,12 +159,19 @@ export function checkView(
       ? c.t("check.menu_said", { price: euro(c, p.price_cents) })
       : c.t("check.as_menu", { price: euro(c, p.price_cents) });
   };
-  const problem = (p: ReceiptMatch["pizzas"][number]) => p.differs || p.line === null;
+  // A line the reader was unsure of (a partly read receipt) is checked on the photo first.
+  const unsure = (p: ReceiptMatch["pizzas"][number]) =>
+    p.line !== null && r.lines[p.line]?.unsure === true;
+  const problem = (p: ReceiptMatch["pizzas"][number]) => p.differs || p.line === null || unsure(p);
   const pizzaRow = (p: ReceiptMatch["pizzas"][number]) =>
-    html`<li class="pizza-person${problem(p) ? " pizza-person--warn" : ""}">
+    html`<li
+      class="pizza-person${problem(p) ? " pizza-person--warn" : ""}${unsure(p) ? " pizza-unsure" : ""}"
+    >
       <span class="pizza-person__text"
         ><span class="pizza-person__name">${p.label}</span
-        ><span class="pizza-person__what">${why(p)}</span></span
+        ><span class="pizza-person__what"
+          >${unsure(p) ? `${c.t("check.unsure")} · ${why(p)}` : why(p)}</span
+        ></span
       >
       ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
     </li>`;

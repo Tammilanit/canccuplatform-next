@@ -16,12 +16,20 @@ import { PREFIX, back, formKey, must, organiserPage, pageCtx, viaApi } from "./k
 import type { PageCtx } from "./kit.js";
 import { outsideNotice } from "./money-views.js";
 import { flash } from "./order-view.js";
+import { failureOf, failureQuery, readErrorView } from "./read-errors.js";
 import { photosOf } from "./uploads.js";
 
 const P = `${PREFIX}crew/pizzerias`;
 
-function pickView(c: PageCtx, id: string, error?: string): Html {
-  return html`${flash(error)}
+function pickView(c: PageCtx, id: string, q: Record<string, string | undefined>): Html {
+  const failure = failureOf(q);
+  // A menu's photos are not kept: the form below is the way to try again.
+  return html`${flash(q.error)}
+    ${
+      failure === null
+        ? ""
+        : readErrorView(c, failure, { type: `${P}/${id}`, typeLabel: c.t("readerr.type_menu") })
+    }
     ${outsideNotice(c, c.t("read.outside_text", { provider: PROVIDER.name }))}
     <form
       method="post"
@@ -98,7 +106,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
     return c;
   };
 
-  app.get<{ Params: { id: string }; Querystring: { error?: string } }>(
+  app.get<{ Params: { id: string }; Querystring: Record<string, string | undefined> }>(
     "/crew/pizzerias/:id/read",
     async (request, reply) => {
       const c = await writer(request);
@@ -106,7 +114,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
         title: c.t("read.title"),
         crumb: { href: `${P}/${request.params.id}`, label: c.t("tab.pizzerias") },
         narrow: true,
-        body: pickView(c, request.params.id, request.query.error),
+        body: pickView(c, request.params.id, request.query),
       });
     },
   );
@@ -128,7 +136,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
         photo,
         n,
       );
-      if (a.status >= 400) return back(reply, `crew/pizzerias/${id}/read`, a);
+      if (a.status >= 400) return reply.redirect(`${P}/${id}/read?${failureQuery(a)}`, 303);
       const r = must(a) as unknown as Read;
       const [head = "", ...lines] = r.csv.split("\n");
       header = head;

@@ -24,7 +24,10 @@ export async function photosOf(request: FastifyRequest): Promise<Photo[]> {
   const photos: Photo[] = [];
   for await (const part of request.parts()) {
     if (part.type === "file") {
-      const bytes = await part.toBuffer();
+      // Over the limit is refused as it arrives: with the contract's code, not Fastify's own.
+      const bytes = await part.toBuffer().catch((err: unknown) => {
+        throw (err as { code?: unknown }).code === "FST_REQ_FILE_TOO_LARGE" ? tooLarge() : err;
+      });
       if (part.file.truncated) throw tooLarge();
       if (bytes.length > 0) photos.push({ bytes, type: part.mimetype });
     } else if (typeof part.value === "string") fields[part.fieldname] = part.value;
