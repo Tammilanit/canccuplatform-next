@@ -30,6 +30,7 @@ export const MONEY_EN = {
   "money.confirmed": "Total {amount} confirmed",
   "money.confirmed_by": "by {name} at {time}",
   "money.receipt": "Receipt {n} · {time}",
+  "money.close_photo": "Close",
   "money.receipt_who": "Seen by you, the crew and the organiser only",
   "money.another": "Add another receipt",
   "money.change_total": "Change the total",

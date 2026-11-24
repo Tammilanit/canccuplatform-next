@@ -28,6 +28,7 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "money.confirmed": "Summa {amount} vahvistettu",
   "money.confirmed_by": "{name} klo {time}",
   "money.receipt": "Kuitti {n} · {time}",
+  "money.close_photo": "Sulje",
   "money.receipt_who": "Näkyy vain sinulle, crew'lle ja järjestäjälle",
   "money.another": "Lisää toinen kuitti",
   "money.change_total": "Muuta summaa",

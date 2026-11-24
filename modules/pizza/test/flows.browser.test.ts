@@ -174,6 +174,56 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     await context.close();
   });
 
+  it("shows a receipt photo in a viewer that closes on ✕, Esc, a tap outside and a swipe down", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/receipts`, undefined, {
+      raw: await png(),
+      contentType: "image/png",
+    });
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, { total_cents: 3000 });
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money`);
+    const viewer = page.locator("dialog.pizza-viewer");
+    const openIt = async () => {
+      await page.locator("a[data-viewer]").first().click();
+      await viewer.waitFor({ state: "visible" });
+      expect(page.url()).toContain(`/pizza/hold/${id}/money`);
+    };
+    const closed = () => viewer.waitFor({ state: "hidden" });
+
+    await openIt();
+    await page.getByRole("button", { name: "Close" }).click();
+    await closed();
+
+    await openIt();
+    await page.keyboard.press("Escape");
+    await closed();
+
+    await openIt();
+    await page.mouse.click(5, 5);
+    await closed();
+
+    await openIt();
+    await viewer.evaluate((d) => {
+      const at = (y: number) => [new Touch({ identifier: 1, target: d, clientX: 195, clientY: y })];
+      const fire = (type: string, y: number) =>
+        d.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            touches: type === "touchend" ? [] : at(y),
+            changedTouches: at(y),
+          }),
+        );
+      fire("touchstart", 300);
+      fire("touchmove", 420);
+      fire("touchend", 420);
+    });
+    await closed();
+    await context.close();
+  });
+
   it("offers the camera on a phone and, on a PC, a file to attach that it sends from (H2)", async () => {
     if (browser === undefined) return;
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
