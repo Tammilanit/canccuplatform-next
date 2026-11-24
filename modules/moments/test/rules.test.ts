@@ -54,6 +54,9 @@ run("the built-in rules", () => {
     if (pool !== undefined) await pool.end();
     pool = await freshDatabase();
     w = world(pool);
+    // One override per moment and zone (#777): a moment shows on the zones Moments knows.
+    if (!expect.getState().currentTestName?.includes("learns the event's zones"))
+      await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
   });
   afterAll(async () => {
     await pool?.end();
@@ -91,97 +94,13 @@ run("the built-in rules", () => {
     expect(overrides().map((o) => o.template)).toEqual(["title_card"]);
   });
 
-  // #611, contracts/moments.md "the rule waits 30 s before asking again": and then asks.
-  it("asks again 30 s after a refusal, and holds the rule's own re-asks until then", async () => {
-    await presetsOff();
-    const top = await w.tx("demo", async (c) => {
-      await c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`);
-      return w.engine.request(
-        c,
-        {
-          class: "spotlight",
-          kind: "takeover",
-          regions: ["full"],
-          template: "announcement",
-          content: { title: "Doors", body: "", level: "info", starts_at: null },
-          origin: "crew",
-          why: "test",
-          ttl_seconds: 5,
-        },
-        w.at(0),
-      );
-    });
-    if (top.status === "refused") throw new Error("refused");
-    await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
-    const called = () => overrides().filter((o) => o.template === "match_called");
-    const tick = (s: number) => w.tx("demo", (c) => tickTenant(c, w.engine, w.at(s)));
-    await deliver(FIXTURES.called());
-    expect(called()).toEqual([]);
-    await tick(5);
-    expect((await w.tx("demo", (c) => lockMoment(c, top.moment.id)))?.ended_at).not.toBeNull();
-    // The same match called again before its 30 s is held back, not asked at once.
-    w.now = w.at(10);
-    await deliver(FIXTURES.called());
-    await tick(29);
-    expect(called()).toEqual([]);
-    await tick(30);
-    expect(called()).toHaveLength(1);
-    expect(called()[0]).toMatchObject({
-      type: "moments.override.started",
-      source: { ref: "tm_1" },
-    });
-    await tick(61);
-    expect(called()).toHaveLength(1);
-  });
-
-  it("never asks again for a rule the crew turned off after the refusal (#611)", async () => {
-    await presetsOff();
-    const top = await w.tx("demo", async (c) => {
-      await c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`);
-      return w.engine.request(
-        c,
-        {
-          class: "spotlight",
-          kind: "takeover",
-          regions: ["full"],
-          template: "announcement",
-          content: { title: "Doors", body: "", level: "info", starts_at: null },
-          origin: "crew",
-          why: "test",
-          ttl_seconds: 5,
-        },
-        w.at(0),
-      );
-    });
-    if (top.status === "refused") throw new Error("refused");
-    await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
-    await deliver(FIXTURES.called());
-    const stored = () =>
-      w.tx("demo", async (c) => (await c.query(`SELECT 1 FROM moments_rule_retries`, [])).rows);
-    expect(await stored()).toHaveLength(1);
-    await w.tx("demo", async (c) => {
-      const r = (await loadRules(c)).find((x) => x.rule_id === "match_called");
-      const { revision, template, class: cls, regions, ttl_seconds, zones, cue } = r as RuleView;
-      const settings = { template, class: cls, regions, ttl_seconds, zones, cue };
-      await c.query(
-        `INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('match_called', $1, $2)
-         ON CONFLICT (tenant_id, rule_id) DO UPDATE SET settings = EXCLUDED.settings`,
-        [{ ...settings, enabled: false }, revision + 1],
-      );
-    });
-    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(5)));
-    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(30)));
-    expect(overrides().filter((o) => o.template === "match_called")).toEqual([]);
-    expect(await stored()).toEqual([]);
-  });
-
   it("calls a match into the hero, and ends it when the match starts (E5)", async () => {
     await presetsOff();
     await deliver(FIXTURES.called());
     expect(overrides()[0]).toMatchObject({
       type: "moments.override.started",
       template: "match_called",
-      rank: 60,
+      rank: 55,
       regions: ["hero", "rail"],
       source: { module: "tournament", ref: "tm_1" },
       content: {
@@ -201,7 +120,7 @@ run("the built-in rules", () => {
     await deliver(FIXTURES.finished(true));
     expect(overrides()[0]).toMatchObject({
       template: "winner_card",
-      rank: 55,
+      rank: 65,
       content: { title: "Demo Game: champion", names: ["Demo Player 2"], points: 38 },
     });
   });
@@ -212,18 +131,41 @@ run("the built-in rules", () => {
     await presetsOff(["pizza_arrived"]);
     await deliver(FIXTURES.placed());
     await deliver(FIXTURES.arrived());
-    const [started, changed] = overrides();
-    expect(started).toMatchObject({
-      template: "pizza_placed",
+    const box = overrides().filter((o) => o.template === "pizza_placed");
+    expect(box[0]).toMatchObject({
+      type: "moments.override.started",
       rank: 80,
       regions: ["venue_rail", "ticker"],
     });
-    expect(changed).toMatchObject({
+    expect(box.at(-1)).toMatchObject({
       type: "moments.override.changed",
       content: { state: "arrived" },
     });
     await deliver(FIXTURES.cancelled());
-    expect(w.events("demo").at(-1)?.data).toMatchObject({ reason: "source_ended" });
+    const ended = w.events("demo").filter((e) => e.type === "moments.override.ended");
+    expect(ended.map((e) => e.data.reason)).toEqual(["source_ended", "source_ended"]);
+  });
+
+  // #777: Pizza is here is the rule's announcement on the hero, ending on the order's done.
+  it("says Pizza is here on the hero, then the rail and the ticker, until the order is done", async () => {
+    await deliver(FIXTURES.placed());
+    await deliver(FIXTURES.arrived());
+    const here = overrides().find((o) => o.template === "announcement");
+    expect(here).toMatchObject({
+      type: "moments.override.started",
+      rank: 80,
+      regions: ["hero", "rail", "ticker"],
+      expires_at: new Date(w.now.getTime() + 180_000).toISOString(),
+      content: { title: "Pizza is here", level: "info" },
+    });
+    const content = here?.content as { body: string; ticker_line: string };
+    expect(content.body).toMatch(/^Order \d+ · Collect at /);
+    expect(content.ticker_line).toBe(`Pizza is here · ${content.body}`);
+    await deliver({ ...FIXTURES.arrived(), type: "pizza.order.done" });
+    expect(w.events("demo").at(-1)?.data).toMatchObject({
+      override_id: `${String(here?.id).replace(/\.main$/, "")}.main`,
+      reason: "source_ended",
+    });
   });
 
   it("shows a hot game until its surge ends", async () => {
@@ -257,7 +199,9 @@ run("the built-in rules", () => {
   });
 
   it("plays each rule's cue when its moment starts, and a new photo's cue, sound only", async () => {
-    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
+    await w.tx("demo", (c) =>
+      c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main') ON CONFLICT DO NOTHING`),
+    );
     await deliver(FIXTURES.placed());
     // After the pizza's sound: one sound at a time on a zone.
     w.now = w.at(10);
@@ -310,6 +254,8 @@ run("the built-in rules", () => {
     });
     const zones = await w.tx("demo", (c) => c.query(`SELECT zone_key FROM moments_zones`));
     expect(zones.rows).toEqual([{ zone_key: "main" }]);
+    // The tick passes every zone it knows (#777), so the replayed zone gets the moment.
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.now));
     expect(w.events("demo").map((e) => e.type)).toEqual(["moments.override.started"]);
   });
 

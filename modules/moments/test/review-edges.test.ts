@@ -1,18 +1,15 @@
 /**
  * Edge cases step 4's reviews found (#654): an archived event's photo, a clone after the first
  * tick, an agenda read that failed, a presence count with a bad time, a removed zone's claims
- * mark, a tenants module that never answers, a refused video round, a retry that throws, and a
- * retry with the rule's settings changed since its refusal.
+ * mark, a tenants module that never answers, and a refused video round.
  */
 import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Event } from "@canccu/kit";
 import { handleTenantEvent } from "../src/consumer.js";
-import type { Engine, MomentRequest } from "../src/engine.js";
-import { applyClaims } from "../src/placements.js";
 import { lockMoment } from "../src/store.js";
 import { ensureStories, loadStories, writeStories, DEFAULT_SETTINGS } from "../src/story/store.js";
-import { SceneTicker, StatusTicker, tickAll, tickTenant } from "../src/tick.js";
+import { SceneTicker, StatusTicker, tickAll } from "../src/tick.js";
 import { event } from "./fixtures.js";
 import { DATABASE_URL, claims, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
@@ -238,94 +235,5 @@ describe.skipIf(!DATABASE_URL)("edge cases from step 4's reviews", () => {
     );
     expect((await k.soundLog()).at(-1)).toMatchObject({ cue: "announce.attention" });
     expect((await k.soundLog()).at(-1)?.reason).not.toBe("video");
-  });
-
-  describe("a refused rule moment asked again", () => {
-    const TTL = 300;
-    const pizza = (o: Partial<MomentRequest> = {}) => ({
-      class: "announcement",
-      template: "pizza_placed",
-      regions: ["rail", "ticker"],
-      content: { state: "placed", seq: 1 },
-      origin: "rule",
-      rule_id: "pizza",
-      why: "rule: pizza.order.placed",
-      source: { module: "pizza", event_id: null, ref: "o1" },
-      dedupe_key: "pizza:o1",
-      ttl_seconds: TTL,
-      cue: "pizza.placed",
-      ...o,
-    });
-    const keep = (request: object) =>
-      w.tx("demo", (c) =>
-        c.query(
-          `INSERT INTO moments_rule_retries (dedupe_key, rule_id, request, retry_at, give_up_at)
-           VALUES ('pizza:o1', 'pizza', $1, $2, $3)`,
-          [JSON.stringify(request), w.at(0), w.at(TTL)],
-        ),
-      );
-    const rule = (o: object) =>
-      w.tx("demo", (c) =>
-        c.query(`INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('pizza', $1, 1)`, [
-          {
-            enabled: true,
-            template: "pizza_placed",
-            class: "announcement",
-            regions: ["rail", "ticker"],
-            ttl_seconds: TTL,
-            zones: [],
-            cue: "pizza.placed",
-            ...o,
-          },
-        ]),
-      );
-    const tick = (at: Date, engine: Engine = w.engine) =>
-      w.tx("demo", (c) => tickTenant(c, engine, at));
-
-    it("lets the rest of the tick go on when the retry throws", async () => {
-      const r = await crewMoment(5);
-      if (r.status === "refused") throw new Error("refused");
-      await keep(pizza());
-      const failing = Object.create(w.engine) as Engine;
-      failing.request = () => Promise.reject(new Error("boom"));
-      await tick(w.at(6), failing);
-      expect((await w.tx("demo", (c) => lockMoment(c, r.moment.id)))?.end_reason).toBe("expired");
-    });
-
-    it("plays the cue the rule has now, not the one it had at the refusal", async () => {
-      await keep(pizza());
-      await rule({ cue: null });
-      await tick(w.at(1));
-      expect(w.events("demo").map((e) => e.type)).toContain("moments.override.started");
-      expect(await rows(`SELECT 1 FROM moments_sound_log`)).toEqual([]);
-    });
-
-    it("gives up the rule's TTL after its last ask, as the TTL is now", async () => {
-      const top = await w.tx("demo", (c) =>
-        w.engine.request(
-          c,
-          {
-            // Above announcements, where the pizza rule's moments rank.
-            class: "stream",
-            kind: "takeover",
-            regions: ["full"],
-            template: "announcement",
-            content: { title: "Doors", body: "", level: "info", starts_at: null },
-            origin: "crew",
-            why: "test",
-            ttl_seconds: 600,
-          },
-          w.at(0),
-        ),
-      );
-      if (top.status === "refused") throw new Error("refused");
-      await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
-      await keep(pizza());
-      await rule({ ttl_seconds: 60 });
-      await tick(w.at(1));
-      expect(await rows(`SELECT give_up_at FROM moments_rule_retries`)).toEqual([
-        { give_up_at: w.at(60) },
-      ]);
-    });
   });
 });

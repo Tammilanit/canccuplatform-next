@@ -26,6 +26,8 @@ run("the moments API", () => {
     }
     pool = await freshDatabase();
     w = await appWorld(pool);
+    // One override per moment and zone (#777): a moment shows on the zones Moments knows.
+    await w.tx("demo", (c) => addZone(c, "main"));
   });
   afterAll(async () => {
     await w.app.close();
@@ -200,8 +202,9 @@ run("the moments API", () => {
     });
     expect(end.statusCode).toBe(200);
     expect(w.events("demo").at(-1)?.data).toMatchObject({
+      override_id: `${id}.main`,
       zones: ["main"],
-      final: false,
+      final: true,
       reason: "cleared",
     });
     const spot = await w.call("crew", "POST", "/api/moments/spotlight", {
@@ -215,7 +218,9 @@ run("the moments API", () => {
   });
 
   it("refuses to end a moment on a zone it does not cover, and never narrows on an unknown zone", async () => {
-    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
+    await w.tx("demo", (c) =>
+      c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main') ON CONFLICT DO NOTHING`),
+    );
     const some = await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",
       title: "Main only",
@@ -252,7 +257,7 @@ run("the moments API", () => {
     expect(both.map((r) => r.statusCode).sort()).toEqual([200, 409]);
   });
 
-  it("refuses a module's moment with a 30 s retry when its regions are held, and needs the service identity", async () => {
+  it("queues a module's moment when its regions are held, and needs the service identity", async () => {
     const top = await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",
       title: "Top",
@@ -282,12 +287,8 @@ run("the moments API", () => {
       },
       payload: body,
     });
-    expect(r.statusCode).toBe(409);
-    expect(errorOf(r)).toMatchObject({
-      code: "moment_refused",
-      retry_after_seconds: 30,
-      held_by: "Top (rank 70)",
-    });
+    // It waits in the queue instead of a refusal (#777).
+    expect(r.statusCode).toBe(201);
   });
 
   it("re-ranks what runs when the order is saved, refuses a bad or stale order, and audits it", async () => {
@@ -449,7 +450,7 @@ run("the moments API", () => {
     // Screen saves a zone before it reports on it: a report alone adds no zone (#642).
     await w.tx("demo", async (c) => {
       await addZone(c, "main");
-      await applyClaims(c, claims("main", [[idOf(spot), "hero"]]), w.now);
+      await applyClaims(c, claims("main", [[`${idOf(spot)}.main`, "hero"]]), w.now);
     });
     const list = json(await w.call("reader", "GET", "/api/moments/moments"));
     expect(list.zones).toEqual(["main"]);
