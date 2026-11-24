@@ -3,6 +3,8 @@ import type { SqlClient } from "@canccu/kit";
 import { DEFAULT_ORDERS, isClass } from "./arbiter.js";
 import type { Class, Held, Orders, SentOverride } from "./arbiter.js";
 import type { Picture } from "./cues/service.js";
+import { DEFAULT_AIR, airOf } from "./air-settings.js";
+import type { AirSettings } from "./air-settings.js";
 
 export type Origin = "rule" | "crew" | "emergency" | "module";
 export type Kind = "takeover" | "block" | "overlay";
@@ -228,18 +230,21 @@ export async function lockSettings(c: SqlClient, name: string): Promise<void> {
   );
 }
 
-export async function loadOrders(c: SqlClient): Promise<Orders & { revision: number }> {
+export async function loadOrders(
+  c: SqlClient,
+): Promise<Orders & { revision: number; air: AirSettings }> {
   const { rows } = await c.query(
-    `SELECT event_order, zone_orders, revision FROM moments_priorities`,
+    `SELECT event_order, zone_orders, revision, airtime FROM moments_priorities`,
     [],
   );
   const row = rows[0];
-  if (row === undefined) return { ...DEFAULT_ORDERS, revision: 0 };
+  if (row === undefined) return { ...DEFAULT_ORDERS, revision: 0, air: DEFAULT_AIR };
   const order = (row.event_order as unknown[]).filter(isClass);
   return {
     order,
     zones: row.zone_orders as Record<string, Class[]>,
     revision: row.revision as number,
+    air: airOf(row.airtime),
   };
 }
 

@@ -42,6 +42,8 @@ const TABLES = [
   "moments_story_marks",
   "moments_rule_retries",
   "moments_claims_marks",
+  "moment_slots",
+  "moments_zone_air",
   "moments_outbox_tenants",
   "moments_tenants",
   "moments_migrations",

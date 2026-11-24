@@ -326,6 +326,66 @@ run("the moments API", () => {
     });
   });
 
+  it("carries the airtime settings, checks them and keeps them when a save leaves them out (#777)", async () => {
+    const order = [...DEFAULT_ORDER];
+    const first = json(await w.call("reader", "GET", "/api/moments/priorities"));
+    const every30 = Object.fromEntries(order.map((c) => [c, 30]));
+    expect(first.airtime).toEqual({
+      min_on_air_seconds: 90,
+      gap_seconds: 10,
+      stale_after_minutes: every30,
+    });
+    const low = await w.call("admin", "PUT", "/api/moments/priorities", {
+      order,
+      zones: [],
+      airtime: { min_on_air_seconds: 59 },
+      revision: 0,
+    });
+    expect(low.statusCode).toBe(400);
+    const ok = await w.call("admin", "PUT", "/api/moments/priorities", {
+      order,
+      zones: [],
+      airtime: { min_on_air_seconds: 120, gap_seconds: 0, stale_after_minutes: { hot_game: 5 } },
+      revision: 0,
+    });
+    expect(ok.statusCode).toBe(200);
+    const saved = {
+      min_on_air_seconds: 120,
+      gap_seconds: 0,
+      stale_after_minutes: { ...every30, hot_game: 5 },
+    };
+    expect(json(ok).airtime).toEqual(saved);
+    expect(w.audit.at(-1)).toMatchObject({
+      action: "moments.priorities.changed",
+      changes: { airtime: { new: saved } },
+    });
+    const kept = await w.call("admin", "PUT", "/api/moments/priorities", {
+      order,
+      zones: [],
+      revision: 1,
+    });
+    expect(json(kept).airtime).toEqual(saved);
+  });
+
+  it("keeps an event's saved order when the default changes (#777)", async () => {
+    const old = [
+      "emergency",
+      "stream",
+      "announcement",
+      "spotlight",
+      "storyboard",
+      "tournament",
+      "finals",
+      "hot_game",
+      "reactions",
+      "ticker",
+    ];
+    await w.call("admin", "PUT", "/api/moments/priorities", { order: old, zones: [], revision: 0 });
+    const got = json(await w.call("reader", "GET", "/api/moments/priorities"));
+    expect(got.order).toEqual(old);
+    expect(got.ranks).toMatchObject({ storyboard: 65, finals: 55 });
+  });
+
   it("changes a rule's settings with its revision, audited with what changed", async () => {
     const { rules } = json(await w.call("reader", "GET", "/api/moments/rules")) as unknown as {
       rules: Record<string, unknown>[];

@@ -21,7 +21,19 @@ export type Class = (typeof CLASSES)[number];
 
 /** The ranks of the places in an order, highest first: a moved class takes its place's rank. */
 const PLACE_RANKS = [100, 90, 80, 70, 65, 60, 55, 50, 20, 10] as const;
-export const DEFAULT_ORDER: readonly Class[] = CLASSES;
+/** The default order (#777: finals above stories and the tournament); a saved order keeps its own. */
+export const DEFAULT_ORDER: readonly Class[] = [
+  "emergency",
+  "stream",
+  "announcement",
+  "spotlight",
+  "finals",
+  "storyboard",
+  "tournament",
+  "hot_game",
+  "reactions",
+  "ticker",
+];
 
 export const isClass = (v: unknown): v is Class => CLASSES.includes(v as Class);
 

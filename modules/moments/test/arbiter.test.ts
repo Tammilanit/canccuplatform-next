@@ -20,10 +20,13 @@ const moment = (over: Partial<MomentShape> = {}): MomentShape => ({
 });
 
 describe("the priority order", () => {
-  it("ranks the default order as the plan draws it, emergency first", () => {
+  it("ranks the default order as #777 agreed: finals above stories and the tournament", () => {
     expect(DEFAULT_ORDER[0]).toBe("emergency");
+    expect(rankOf(DEFAULT_ORDER, "finals")).toBe(65);
+    expect(rankOf(DEFAULT_ORDER, "storyboard")).toBe(60);
+    expect(rankOf(DEFAULT_ORDER, "tournament")).toBe(55);
     expect(CLASSES.map((c) => rankOf(DEFAULT_ORDER, c))).toEqual([
-      100, 90, 80, 70, 65, 60, 55, 50, 20, 10,
+      100, 90, 80, 70, 60, 55, 65, 50, 20, 10,
     ]);
   });
 
