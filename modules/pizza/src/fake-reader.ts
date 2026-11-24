@@ -4,8 +4,14 @@
  * it was sent, so a test sees that only a shrunk photo left the module.
  */
 import sharp from "sharp";
-import type { MenuReading, Reader, ReceiptReading } from "./reader.js";
+import type { MenuReading, ReadReason, ReadUsage, Reader, ReceiptReading } from "./reader.js";
 import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
+
+/** What a fake read "used": about a phone photo's tokens, so the read log has a cost to show. */
+export const FAKE_USAGE: ReadUsage = { input_tokens: 1600, output_tokens: 400, ms: 1200 };
+
+/** The reasons the model itself gives: it answered, so the read used tokens. */
+const ANSWERED: ReadonlySet<ReadReason> = new Set(["unreadable", "declined"]);
 
 export const DEMO_RECEIPT: ReceiptReading = {
   total_cents: 5450,
@@ -91,7 +97,11 @@ export interface Sent {
 export class FakeReader {
   receipt: ReceiptReading = DEMO_RECEIPT;
   menu: MenuReading[] = DEMO_MENU;
-  fail: "failed" | "rejected" | null = null;
+  fail: ReadReason | "rejected" | null = null;
+  /** The wait a `rate_limited` failure names. */
+  retryAfterS = 5;
+  /** The words of an `unreadable` failure, as the model would give them. */
+  unreadableReason = "The photo is blurred: hold the phone still and take it again.";
   readonly sent: Sent[] = [];
   /** A test holds the provider's answer back until this settles (a slow provider). */
   hold: Promise<void> | null = null;
@@ -100,11 +110,11 @@ export class FakeReader {
   for = (key: string): Reader => ({
     receipt: async (image, type) => {
       await this.note("receipt", key, image, type);
-      return this.receipt;
+      return { reading: this.receipt, usage: FAKE_USAGE };
     },
-    menu: async (image, type) => {
-      await this.note("menu", key, image, type);
-      return this.menu;
+    menu: async (pages) => {
+      for (const p of pages) await this.note("menu", key, p.image, p.type);
+      return { reading: { items: this.menu }, usage: FAKE_USAGE };
     },
   });
 
@@ -120,7 +130,13 @@ export class FakeReader {
       bytes: image,
     });
     await this.hold;
-    if (this.fail === "failed") throw new ReaderFailed();
-    if (this.fail === "rejected") throw new ReaderKeyRejected();
+    const fail = this.fail;
+    if (fail === null) return;
+    if (fail === "rejected") throw new ReaderKeyRejected();
+    throw new ReaderFailed(fail, {
+      ...(fail === "rate_limited" ? { retryAfterS: this.retryAfterS } : {}),
+      ...(fail === "unreadable" ? { message: this.unreadableReason } : {}),
+      ...(ANSWERED.has(fail) ? { usage: FAKE_USAGE } : {}),
+    });
   }
 }

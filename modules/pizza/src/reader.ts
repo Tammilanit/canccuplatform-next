@@ -4,6 +4,7 @@
  * `FakeReader` and never calls one.
  */
 import { KitError } from "@canccu/kit";
+import type { ErrorBody } from "@canccu/kit";
 
 /** One line of a receipt as read: a menu item or an extra (a delivery fee, a discount). */
 export interface ReceiptLine {
@@ -15,11 +16,33 @@ export interface ReceiptLine {
   /** The line's amount; negative for a discount. */
   amount_cents: number;
   kind: "item" | "extra";
+  /**
+   * The photo did not make the line clear: the check page marks it (a partly read receipt).
+   * Reads kept before #789 have none.
+   */
+  unsure?: boolean;
 }
 
 export interface ReceiptReading {
   total_cents: number | null;
   lines: ReceiptLine[];
+}
+
+/** A menu read of one or more pages, as one menu. */
+export interface MenuRead {
+  items: MenuReading[];
+}
+
+/** What one read used: the read log's tokens, its cost and its time (#789 item 12). */
+export interface ReadUsage {
+  input_tokens: number;
+  output_tokens: number;
+  ms: number;
+}
+
+export interface Page {
+  image: Buffer;
+  type: string;
 }
 
 /** One menu item as read; `unsure` when the photo did not settle its price or number. */
@@ -32,19 +55,72 @@ export interface MenuReading {
 }
 
 export interface Reader {
-  receipt(image: Buffer, type: string): Promise<ReceiptReading>;
-  menu(image: Buffer, type: string): Promise<MenuReading[]>;
+  receipt(image: Buffer, type: string): Promise<{ reading: ReceiptReading; usage: ReadUsage }>;
+  /** Every page in one call, in order, so a category running on keeps its price (#789 item 15). */
+  menu(pages: Page[]): Promise<{ reading: MenuRead; usage: ReadUsage }>;
 }
+
+/**
+ * How long the provider may take: 50 s for one page and 10 s for each further one, at most 100 s
+ * (#789 D4); the pages give up a little after it.
+ */
+export const timeoutFor = (pages: number): number =>
+  Math.min(100_000, 50_000 + 10_000 * (Math.max(1, pages) - 1));
 
 /** A reader for the event's provider key. */
 export type ReaderFor = (apiKey: string) => Reader;
 
 export const PROVIDER = { id: "anthropic", name: "Anthropic", model: "Claude Haiku 5.5" } as const;
 
-/** The provider failed or took too long: the page says so and typing still works. */
+/**
+ * Why a read gave nothing (#789 item 11): each has its own words and way forward on the pages.
+ * `unreadable` and `declined` are the model's answers; the rest are the provider's or the network's.
+ */
+export type ReadReason =
+  | "timeout"
+  | "service_down"
+  | "rate_limited"
+  | "out_of_credit"
+  | "declined"
+  | "unreadable"
+  | "failed";
+
+const MESSAGES: Record<ReadReason, string> = {
+  timeout: "The reader took too long. Try again, or type the numbers instead.",
+  service_down: "The reader's service is down. Try again, or type the numbers instead.",
+  rate_limited: "The reader is busy. It tries again shortly.",
+  out_of_credit:
+    "The reader's account is out of credit or over its limit. Type the numbers instead.",
+  declined: "The reader would not read this photo. Type the numbers instead.",
+  unreadable: "The reader could not read this photo. Take it again, or type the numbers instead.",
+  failed: "The reader did not answer. Type the numbers instead.",
+};
+
+/**
+ * The read gave nothing: 502 `reader_failed` as before, its body naming the `reason` (and, when
+ * rate limited, `retry_after_s`), so a client that only knows the code keeps working (D1).
+ */
 export class ReaderFailed extends KitError {
-  constructor(message = "The reader did not answer. Type the numbers instead.") {
-    super(message, { status: 502, code: "reader_failed" });
+  readonly reason: ReadReason;
+  readonly retryAfterS: number | null;
+  /** What the model used before it gave nothing; null when the provider never answered. */
+  readonly usage: ReadUsage | null;
+
+  constructor(
+    reason: ReadReason = "failed",
+    o: { message?: string; retryAfterS?: number; usage?: ReadUsage } = {},
+  ) {
+    super(o.message ?? MESSAGES[reason], { status: 502, code: "reader_failed" });
+    this.reason = reason;
+    this.retryAfterS = o.retryAfterS ?? null;
+    this.usage = o.usage ?? null;
+  }
+
+  override toBody(): ErrorBody {
+    const error = { ...super.toBody().error, reason: this.reason };
+    return {
+      error: this.retryAfterS === null ? error : { ...error, retry_after_s: this.retryAfterS },
+    } as ErrorBody;
   }
 }
 

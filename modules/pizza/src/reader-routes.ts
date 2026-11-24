@@ -74,7 +74,7 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
     });
     const stored = await readFile(receiptPath(deps.filesRoot, receipt.file));
     const { image, type } = await forProvider(stored, receipt.type);
-    const reading = await counted(deps, taken, (reader) => reader.receipt(image, type));
+    const { reading } = await counted(deps, taken, (reader) => reader.receipt(image, type));
     // The match names each pizza's person, and the provider may take long: match against the
     // items as they are when the write happens, so a person deleted meanwhile (`anon_…`, no name)
     // is never stored again.
@@ -104,7 +104,9 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
     });
     const clean = await cleanPhoto(photo, type);
     const sent = await forProvider(clean.image, clean.type);
-    const rows = await counted(deps, taken, (reader) => reader.menu(sent.image, sent.type));
+    const rows = (
+      await counted(deps, taken, (reader) => reader.menu([{ image: sent.image, type: sent.type }]))
+    ).reading.items;
     const csv = [
       csvLine(["pizzeria", "kind", "number", "name", "description", "price"]),
       ...rows.map((r) =>
