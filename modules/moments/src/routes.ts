@@ -1,5 +1,6 @@
 /** The moments API: the running moments and the crew's actions (contracts/moments.md). */
 import type { FastifyInstance } from "fastify";
+import { zoneQueues } from "./queue-data.js";
 import { requireRight } from "@canccu/kit/fastify";
 import type { SqlClient } from "@canccu/kit";
 import { allClearRequest, emergencyRequest, invalid, spotlightRequest } from "./content.js";
@@ -87,7 +88,11 @@ export function momentRoutes(app: FastifyInstance, deps: AppDeps): void {
       const running = await runningMoments(c);
       const views = await momentViews(c, running);
       views.sort((a, b) => (b.rank as number) - (a.rank as number));
-      return { moments: views, zones: await knownZones(c) };
+      return {
+        moments: views,
+        zones: await knownZones(c),
+        queues: await zoneQueues(c, deps.now()),
+      };
     }),
   );
 
@@ -122,6 +127,29 @@ export function momentRoutes(app: FastifyInstance, deps: AppDeps): void {
             zone_key: { old: null, new: zone ?? null },
             title: { old: titleOf(m), new: null },
           },
+        });
+        return { status: 200, body: (await momentViews(c, [m]))[0] };
+      }),
+  );
+
+  app.post<{ Params: { moment_id: string } }>(
+    "/api/moments/moments/:moment_id/forward",
+    take,
+    (request, reply) =>
+      crewAction(deps, request, reply, async (c, actor, now) => {
+        const zone = bodyOf(request.body).zone_key;
+        if (typeof zone !== "string" || !/^[a-z0-9_-]{2,32}$/.test(zone))
+          throw invalid("`zone_key` is a zone key.");
+        const m = await lockMoment(c, request.params.moment_id);
+        if (m === null) return failure(404, "not_found", "No such moment.");
+        if (m.ended_at !== null || !(await deps.engine.forward(c, m, zone, actor, now)))
+          throw notRunning();
+        await deps.audit({
+          tenant_id: tenantOf(request).tenant_id,
+          actor_user_id: actor.user_id,
+          action: "moments.moment.moved",
+          target: { type: "moment", id: m.id },
+          changes: { zone_key: { old: null, new: zone }, title: { old: null, new: titleOf(m) } },
         });
         return { status: 200, body: (await momentViews(c, [m]))[0] };
       }),

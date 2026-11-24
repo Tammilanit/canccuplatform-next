@@ -40,7 +40,7 @@ run("the Moments pages", () => {
   });
 
   it("draws On air per zone with what is placed, what waits and why, and the crew's actions", async () => {
-    const top = await w.call("crew", "POST", "/api/moments/spotlight", {
+    await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",
       title: "Pizza is here",
     });
@@ -50,14 +50,15 @@ run("the Moments pages", () => {
     });
     await w.tx("demo", async (c) => {
       await addZone(c, "main");
-      await applyClaims(c, claims("main", [[idOf(top), "hero"]], [idOf(low)]), w.now);
+      await applyClaims(c, claims("main", [[`${idOf(low)}.main`, "hero"]]), w.now, w.engine);
     });
     const page = await w.call("crew", "GET", "/on-air");
     expect(page.statusCode).toBe(200);
     expect(page.headers["content-security-policy"]).toContain("frame-src 'self'");
     expect(page.body).toContain("Pizza is here");
-    expect(page.body).toContain("Queued");
-    expect(page.body).toContain("no region of its chain is free");
+    // The newer spotlight cut the first, which waits in the zone's queue (#777).
+    expect(page.body).toContain("Waiting");
+    expect(page.body).toContain("Move forward");
     expect(page.body).toContain("End in zone");
     expect(page.body).toContain("Spotlight…");
     expect(page.body).not.toContain("Press and hold 2 s");
@@ -93,9 +94,10 @@ run("the Moments pages", () => {
     });
     expect(r.statusCode).toBe(303);
     expect(r.headers.location).toBe("/moments/on-air?done=Spotlight%20on%20air.");
-    const [e] = w.events("demo");
+    const [e, f] = w.events("demo");
+    expect(f?.data.override).toMatchObject({ zones: ["stage"] });
     expect(e?.data.override).toMatchObject({
-      zones: ["main", "stage"],
+      zones: ["main"],
       content: { title: "Doors open", from_crew: true },
     });
     expect(e?.data.override).toMatchObject({
@@ -172,7 +174,7 @@ run("the Moments pages", () => {
     );
     expect(page.body).toContain("Not saved yet");
     expect(page.body).toContain('src="/screen/zones/main"');
-    expect(page.body).toContain(`${idOf(spot)}&quot;:90`);
+    expect(page.body).toContain(`${idOf(spot)}.main&quot;:90`);
     const save = await w.call(
       "admin",
       "POST",

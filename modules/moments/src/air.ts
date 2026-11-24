@@ -71,6 +71,7 @@ function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotI
     origin: m.origin,
     rule_id: m.rule_id,
     has_steps: m.steps !== null,
+    shown: s.generation > 0,
     // The planner counts stale from `fresh_at` with the class's time; a shorter own patience moves it.
     fresh_at: staleAt(m, air) - air.stale_after_ms[m.class],
     queued_since: s.queued_since.getTime(),

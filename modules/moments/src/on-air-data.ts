@@ -12,8 +12,12 @@ import { crewButtons, onAirScenes } from "./scene-views.js";
 import type { ZoneSceneView } from "./scene-views.js";
 import { knownZones, loadOrders, runningMoments, titleOf } from "./store.js";
 import type { MomentView } from "./views.js";
+import { zoneQueues } from "./queue-data.js";
+import type { ZoneQueue } from "./queue-data.js";
 
-export async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: string[] }> {
+export async function onAir(
+  deps: AppDeps,
+): Promise<{ moments: MomentView[]; zones: string[]; queues: ZoneQueue[] }> {
   return deps.db.tenant(async (c) => {
     const running = await runningMoments(c);
     const orders = await loadOrders(c);
@@ -51,7 +55,7 @@ export async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zon
       .sort((a, b) => b.rank - a.rank);
     // Screen's order, by key as the Studio lists them (amendment 3): a zone never moves on the page.
     const zones = (await knownZones(c)).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    return { moments, zones };
+    return { moments, zones, queues: await zoneQueues(c, deps.now()) };
   });
 }
 

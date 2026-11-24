@@ -12,6 +12,7 @@ const slot = (id: string, over: Partial<SlotIn> = {}): SlotIn => ({
   origin: "rule",
   rule_id: null,
   has_steps: false,
+  shown: false,
   fresh_at: 0,
   queued_since: 0,
   forward_at: null,
@@ -73,6 +74,13 @@ describe("the airtime scheduler", () => {
     const p = planZone(10_000, held, [card(), spot], DEFAULT_AIR);
     expect(p.zone.holder).toBe("spot");
     expect(of(p, "card")).toMatchObject({ granted: null, queued_since: 10_000 });
+  });
+
+  it("a crew moment shown before waits its turn instead of cutting in again", () => {
+    const spot = slot("spot", { class: "spotlight", rank: 70, origin: "crew", shown: true });
+    expect(planZone(10_000, held, [card({ rank: 70 }), spot], DEFAULT_AIR).zone.holder).toBe(
+      "card",
+    );
   });
 
   it("a lower rank waits for the holder's end", () => {

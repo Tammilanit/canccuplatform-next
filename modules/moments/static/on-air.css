@@ -149,3 +149,21 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/* A zone's queue (#777): one row per waiting moment, its actions wrapping under it on a phone. */
+.moments-queue__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--canccu-space-2, 0.5rem);
+}
+.moments-queue__what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.moments-queue__title {
+  margin: var(--canccu-space-3, 0.75rem) 0 var(--canccu-space-1, 0.25rem);
+}

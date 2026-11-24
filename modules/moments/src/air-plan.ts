@@ -20,6 +20,8 @@ export interface SlotIn {
   origin: Origin;
   rule_id: string | null;
   has_steps: boolean;
+  /** Sent to this zone before: a crew moment pushed aside waits its turn, it cuts no more. */
+  shown: boolean;
   fresh_at: number;
   queued_since: number;
   forward_at: number | null;
@@ -157,14 +159,19 @@ export function planZone(
     live = live.map((s) => (s.moment_id === h.moment_id ? h : s));
   };
   const head = queue()[0];
-  if (holder !== null && head !== undefined) {
+  // A person's action cuts in once, when it is new (rule 1).
+  const cut =
+    holder === null
+      ? undefined
+      : queue().find((s) => s.origin === "crew" && !s.shown && s.rank >= (holder as SlotIn).rank);
+  if (holder !== null && cut !== undefined) {
+    pushAside(holder);
+    holder = cut;
+    free_since = null;
+  } else if (holder !== null && head !== undefined) {
     const floor = Math.min(air.min_on_air_ms, holder.budget_ms ?? Infinity);
     const floorDone = playedNow(holder, now) - holder.tenure_from_ms >= floor;
-    if (head.origin === "crew" && head.rank >= holder.rank) {
-      pushAside(holder);
-      holder = null;
-      free_since = null;
-    } else if (floorDone && head.rank > holder.rank) {
+    if (floorDone && head.rank > holder.rank) {
       pushAside(holder);
       holder = null;
       free_since = now;
@@ -174,7 +181,7 @@ export function planZone(
   if (holder === null) {
     const next = queue()[0];
     const gapOver = free_since === null || now - free_since >= air.gap_ms;
-    if (next !== undefined && (gapOver || next.origin === "crew")) {
+    if (next !== undefined && (gapOver || (next.origin === "crew" && !next.shown))) {
       holder = next;
       free_since = null;
       const o = out.get(next.moment_id);
