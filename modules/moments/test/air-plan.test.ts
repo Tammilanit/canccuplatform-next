@@ -1,8 +1,10 @@
 /** The airtime scheduler (#777, contracts/moments.md, The arbiter's rules): pure, times in ms. */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { planZone } from "../src/air-plan.js";
 import type { SlotIn, ZoneIn, ZonePlan } from "../src/air-plan.js";
 import { DEFAULT_AIR } from "../src/air-settings.js";
+import { END_REASONS } from "../src/engine.js";
 
 const slot = (id: string, over: Partial<SlotIn> = {}): SlotIn => ({
   moment_id: id,
@@ -276,5 +278,14 @@ describe("the airtime scheduler", () => {
       granted: "pass",
       regions: ["ticker"],
     });
+  });
+});
+
+describe("the end reasons", () => {
+  it("are each in the catalog's `moments.override.ended`", () => {
+    const catalog = readFileSync(new URL("../../../contracts/events.md", import.meta.url), "utf8");
+    const row = catalog.split("\n").find((l) => l.startsWith("| `moments.override.ended`")) ?? "";
+    const reasons = /`reason` \(string: (.*?), `final`/.exec(row)?.[1] ?? "";
+    for (const r of END_REASONS) expect(reasons).toContain(`\`${r}\``);
   });
 });

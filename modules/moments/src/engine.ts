@@ -30,7 +30,9 @@ export const MAX_TTL_SECONDS = 7200;
 /** The only refusal left is one owner per happening (WD1); its answer still names a retry. */
 export const REFUSAL_RETRY_SECONDS = 30;
 
-export type EndReason = "expired" | "cleared" | "preempted" | "source_ended" | "stale";
+/** Each as `moments.override.ended` carries it (contracts/events.md). */
+export const END_REASONS = ["expired", "cleared", "preempted", "source_ended", "stale"] as const;
+export type EndReason = (typeof END_REASONS)[number];
 
 export interface MomentRequest {
   class: Class;
