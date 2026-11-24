@@ -159,24 +159,33 @@ export async function foodFits(page) {
     throw new Error(`the food box does not fit its slot: ${problems.slice(0, 4).join("; ")}`);
 }
 
-/** A storyboard's message card on air in the hero (Moments' pizza stories). */
+/** A storyboard's message card on air in the hero (Moments' Pizza order open story). */
 const HERO_CARD = '.canccu-region[data-role="hero"] > .canccu-widget--title_card.canccu-is-claim';
+/** Pizza is here: the `pizza` rule's announcement (#777), once it holds the hero. */
+const HERO_HERE = '.canccu-region[data-role="hero"] > .canccu-widget--announcement.canccu-is-claim';
 
 /**
- * The room's screen at the order's `step` (the pizza shots), ready for its shot. The story's card
- * in the hero first: Pizza is here must be on air (#775); Moments puts the open order's 20 s card
- * on air some 20–30 s after the order opens (its round starts on a tick), so that shot has it when
- * it comes within that time and goes without it if not. Then the box: the rail takes turns (venue
- * info, the food box), so it is shot once the box has faded in, again from its next turn when the
- * rail moved on meanwhile, and checked to fit.
+ * The room's screen at the order's `step` (the pizza shots), ready for its shot. The hero first:
+ * at `arrived`, Pizza is here must be on air in it (#775; since #777 the `pizza` rule's
+ * announcement, which may wait in the rail behind what holds the hero); Moments puts the open
+ * order's 20 s card on air some 20–30 s after the order opens (its round starts on a tick), so
+ * that shot has it when it comes within that time and goes without it if not. Then the box: the
+ * rail takes turns (venue info, the food box), so it is shot once the box has faded in, again
+ * from its next turn when the rail moved on meanwhile, and checked to fit.
  */
 export async function roomReady(page, step) {
-  const card = page.locator(HERO_CARD);
-  // 120 s: the card is held 180 s, and on the full run's slower stack it came ~35 s after the
-  // order's event, past the 45 s this once waited.
+  // 150 s: it may wait out the holder's floor (90 s) and the gap (10 s), and on the full run's
+  // slower stack the hero came ~35 s after the order's event.
   if (step === "arrived")
-    await card.filter({ hasText: "Pizza is here" }).waitFor({ timeout: 120_000 });
-  else if (step === "open") await card.waitFor({ timeout: 45_000 }).catch(() => undefined);
+    await page
+      .locator(HERO_HERE)
+      .filter({ hasText: "Pizza is here" })
+      .waitFor({ timeout: 150_000 });
+  else if (step === "open")
+    await page
+      .locator(HERO_CARD)
+      .waitFor({ timeout: 45_000 })
+      .catch(() => undefined);
   const box = page.locator(".canccu-widget--food_status .canccu-widget__row").first();
   for (let turn = 0; turn < 4; turn++) {
     await box.waitFor({ timeout: 60_000 });

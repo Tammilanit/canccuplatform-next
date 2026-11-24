@@ -1,7 +1,7 @@
 // Studio → Moments → Storyboards shots of scripts/demo-screenshots.mjs (group `moments`; step 4
 // storyboards mockups 18, 20, 21 and 22, #114 and #602), on the screens' fixture: the preset
 // picker and the builder of Starting soon with its preview drawn in the real player, on a desk and
-// a phone; each of the 24 presets test-fired as one round on the main hall (silent) and shot at
+// a phone; each of the 23 presets test-fired as one round on the main hall (silent) and shot at
 // its message step (O3), with a run-of-show item of the fixture where it has an item trigger;
 // Premiere on the demo event (a "premiere" item, the demo film uploaded to Screen) with its
 // builder and its three steps on the main hall; and On air on a phone with Doors open's loop live
@@ -132,7 +132,6 @@ const PRESET_SHOTS = [
   ["venue_info", shows("Venue info")],
   ["stage_break", shows("Back at"), "tournament"],
   ["pizza_last_call", shows("Last call: pizza order")],
-  ["pizza_arrived", shows("Collect at")],
   ["round_start", shows("starts now")],
   ["champion_replay", shows("Our champion")],
 ];
