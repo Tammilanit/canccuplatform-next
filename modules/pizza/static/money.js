@@ -42,15 +42,4 @@
       });
     });
   }
-  // Say that the receipt is being read while the page waits for the reader.
-  if (scan && scan.getAttribute("data-reading")) {
-    scan.addEventListener("submit", function () {
-      var note = document.createElement("p");
-      note.className = "canccu-notice canccu-notice--info";
-      note.setAttribute("role", "status");
-      note.textContent = scan.getAttribute("data-reading");
-      scan.querySelector("button[type=submit]").disabled = true;
-      scan.appendChild(note);
-    });
-  }
 })();

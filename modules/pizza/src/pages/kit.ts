@@ -122,6 +122,7 @@ export async function hubPage(
         <link rel="stylesheet" href="${PREFIX}static/money.css" />
         <link rel="stylesheet" href="${PREFIX}static/wide.css" />
         <link rel="stylesheet" href="${PREFIX}static/hub.css" />
+        <link rel="stylesheet" href="${PREFIX}static/reads.css" />
       </head>
       <body
         class="canccu-page canccu-surface canccu-surface--hub pizza-hub pizza-hub--${o.layout ?? "column"}"
@@ -139,6 +140,7 @@ export async function hubPage(
         <script src="${PREFIX}static/money.js" defer></script>
         <script src="${PREFIX}static/viewer.js" defer></script>
         <script src="${PREFIX}static/shrink.js" defer></script>
+        <script src="${PREFIX}static/progress.js" defer></script>
       </body>
     </html> `;
   return send(request, reply, doc, { status: o.status ?? 200, page: "surface", nonce });
@@ -193,7 +195,10 @@ export async function organiserPage(
     head: html`<link rel="stylesheet" href="${PREFIX}static/pizza.css" /><link
         rel="stylesheet"
         href="${PREFIX}static/crew.css"
-      /><link rel="stylesheet" href="${PREFIX}static/money.css" />`,
+      /><link rel="stylesheet" href="${PREFIX}static/money.css" /><link
+        rel="stylesheet"
+        href="${PREFIX}static/reads.css"
+      />`,
     event: await eventOf(request, deps),
     session: { userName: c.session.userName, rights: c.session.rights },
     current: o.current ?? "food",
@@ -257,6 +262,8 @@ const TYPES: Record<string, string> = {
   "money.js": "text/javascript; charset=utf-8",
   "viewer.js": "text/javascript; charset=utf-8",
   "shrink.js": "text/javascript; charset=utf-8",
+  "progress.js": "text/javascript; charset=utf-8",
+  "reads.css": "text/css; charset=utf-8",
   "wide.css": "text/css; charset=utf-8",
   "hub.css": "text/css; charset=utf-8",
 };
@@ -361,10 +368,15 @@ export const refusal = (a: ApiAnswer): string =>
 
 /** Back to a page after a form, with a notice for it to show (`?done=` or `?error=`). */
 export function back(reply: FastifyReply, path: string, a?: ApiAnswer): FastifyReply {
+  return reply.redirect(backTo(path, a), 303);
+}
+
+/** Where `back` goes: the page, with the API's refusal as its notice. */
+export function backTo(path: string, a?: ApiAnswer): string {
   const sep = path.includes("?") ? "&" : "?";
   const tail =
     a === undefined || a.status < 400 ? "" : `${sep}error=${encodeURIComponent(refusal(a))}`;
-  return reply.redirect(`${PREFIX}${path}${tail}`, 303);
+  return `${PREFIX}${path}${tail}`;
 }
 
 /** A form's text field, or null. */

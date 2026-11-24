@@ -6,7 +6,8 @@
  * taken from it, and the words are the page's own, except the reader's reason for an unreadable
  * photo, which is shown as text.
  */
-import { html } from "@canccu/ui";
+import { attrs, html } from "@canccu/ui";
+import { timeoutFor } from "../reader.js";
 import type { Html } from "@canccu/ui";
 import { SETTINGS_WRITE, formKey } from "./kit.js";
 import type { ApiAnswer, PageCtx } from "./kit.js";
@@ -43,6 +44,21 @@ export interface ReadFailure {
   after: number | null;
   why: string | null;
   tries: number;
+}
+
+/**
+ * What static/progress.js says while a receipt is sent and read, and how long the page waits:
+ * the reader's own limit for one page and 10 s more (D4).
+ */
+export function progressAttrs(c: PageCtx): Record<string, string> {
+  return {
+    "data-progress": "",
+    "data-sending": c.t("progress.sending"),
+    "data-reading": c.t("progress.reading", { s: "{s}" }),
+    "data-checking": c.t("progress.checking"),
+    "data-lost": c.t("progress.lost"),
+    "data-timeout": String(timeoutFor(1) + 10_000),
+  };
 }
 
 /** The address's part for a failed API answer: the case, and what Try again needs. */
@@ -91,13 +107,14 @@ export function readErrorView(
     f.failed === "rate_limited" && f.after !== null && f.tries < AUTO_TRIES ? f.after : null;
   const retry =
     ways.retry !== undefined && f.receipt !== null && RETRY.has(f.failed)
-      ? html`<form
-          method="post"
-          action="${ways.retry}"
-          class="pizza-inline"
-          ${countdown === null ? "" : html`data-countdown="${countdown}"`}
-          data-countdown-text="${c.t("readerr.countdown", { n: "{n}" })}"
-        >
+      ? html`<form${attrs({
+          method: "post",
+          action: ways.retry,
+          class: "pizza-inline",
+          "data-countdown": countdown === null ? undefined : String(countdown),
+          "data-countdown-text": c.t("readerr.countdown", { n: "{n}" }),
+          ...progressAttrs(c),
+        })}>
           ${formKey()}<input type="hidden" name="receipt_id" value="${f.receipt}" /><input
             type="hidden"
             name="tries"

@@ -86,7 +86,6 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "scan.saved": "Käytä tallennettua kuvaa",
   "scan.read": "Lue kuitti",
   "scan.keep": "Säilytä kuva",
-  "scan.reading": "Luetaan kuittia… Yleensä muutama sekunti.",
   "scan.cancel": "Peru",
   "check.title": "Tarkista luettu",
   "check.total": "Kuitin summa",

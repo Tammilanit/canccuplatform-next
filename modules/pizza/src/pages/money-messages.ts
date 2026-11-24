@@ -88,7 +88,6 @@ export const MONEY_EN = {
   "scan.saved": "Use a saved photo",
   "scan.read": "Read the receipt",
   "scan.keep": "Keep the photo",
-  "scan.reading": "Reading the receipt… Usually a few seconds.",
   "scan.cancel": "Cancel",
   "check.title": "Check the read",
   "check.total": "Total on the receipt",

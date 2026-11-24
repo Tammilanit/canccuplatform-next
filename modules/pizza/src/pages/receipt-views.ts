@@ -9,6 +9,7 @@ import type { Html } from "@canccu/ui";
 import { PROVIDER } from "../reader.js";
 import type { ReceiptMatch } from "../receipt-match.js";
 import { formKey } from "./kit.js";
+import { progressAttrs } from "./read-errors.js";
 import type { PageCtx } from "./kit.js";
 import { euro } from "./money-format.js";
 import { outsideNotice } from "./money-views.js";
@@ -91,14 +92,14 @@ export function scanView(
 ): Html {
   return html`${flash(s.error)} ${s.failure ?? ""}
     ${s.reader ? outsideNotice(c, c.t("money.outside_text", { provider: PROVIDER.name })) : ""}
-    <form
-      method="post"
-      action="${base(o)}/money/scan"
-      enctype="multipart/form-data"
-      class="pizza-form"
-      data-shrink
-      data-reading="${s.reader ? c.t("scan.reading") : ""}"
-    >
+    <form${attrs({
+      method: "post",
+      action: `${base(o)}/money/scan`,
+      enctype: "multipart/form-data",
+      class: "pizza-form",
+      "data-shrink": "",
+      ...progressAttrs(c),
+    })}>
       ${formKey()}
       <div class="pizza-only-touch pizza-form">
         <label class="pizza-camera">

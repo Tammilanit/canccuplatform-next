@@ -7,7 +7,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { AppDeps } from "../http.js";
 import { MANAGE } from "../policy.js";
 import { readerAvailable } from "../reader-key.js";
-import { back, formText, hubPage, must, pageCtx, viaApi } from "./kit.js";
+import { back, backTo, formText, hubPage, must, pageCtx, viaApi } from "./kit.js";
 import type { ApiAnswer, PageCtx } from "./kit.js";
 import { parseEuro } from "./money-format.js";
 import type { MoneyView, ReceiptView } from "./money-format.js";
@@ -15,6 +15,8 @@ import { moneyPageView } from "./money-views.js";
 import type { OrderView } from "./order-view.js";
 import { failureOf, failureQuery, readErrorView } from "./read-errors.js";
 import { checkView, padView, scanView } from "./receipt-views.js";
+import { stepsFor } from "./steps.js";
+import type { Steps } from "./steps.js";
 import { photosOf } from "./uploads.js";
 
 type Params = { id: string };
@@ -27,6 +29,8 @@ type Q = {
   tries?: string;
 };
 const MONEY_STATES = new Set(["placed", "arrived", "done"]);
+/** What the page says a receipt's read takes; the reader's own limit is timeoutFor(1). */
+const RECEIPT_SECONDS = 10;
 
 /** A failed read or upload the address names: why, and its ways on (#789 item 11). */
 function failed(c: PageCtx, id: string, q: Q) {
@@ -251,11 +255,12 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
   /** Reads a kept receipt: the check when it worked, else why and the way on. */
   const readReceipt = async (
     request: FastifyRequest<{ Params: Params }>,
-    reply: FastifyReply,
+    steps: Steps,
     receipt: string,
     tries: number,
   ) => {
     const id = request.params.id;
+    steps.phase({ phase: "reading", seconds: RECEIPT_SECONDS });
     const read = await viaApi(
       app,
       request,
@@ -265,52 +270,70 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       1 + tries,
     );
     if (read.status >= 400)
-      return reply.redirect(
-        `/pizza/hold/${id}/money/scan?${failureQuery(read, { receipt, tries })}`,
-        303,
-      );
-    return reply.redirect(
-      `/pizza/hold/${id}/money/check?receipt=${encodeURIComponent(receipt)}`,
-      303,
-    );
+      return steps.go(`/pizza/hold/${id}/money/scan?${failureQuery(read, { receipt, tries })}`);
+    steps.phase({ phase: "checking" });
+    return steps.go(`/pizza/hold/${id}/money/check?receipt=${encodeURIComponent(receipt)}`);
   };
 
+  /** The script's stream must end with somewhere to go, also when the page itself failed. */
+  const streamed =
+    (fn: (request: FastifyRequest<{ Params: Params }>, steps: Steps) => Promise<FastifyReply>) =>
+    async (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) => {
+      const steps = stepsFor(request, reply);
+      try {
+        return await fn(request, steps);
+      } catch (err) {
+        if (!steps.streamed) throw err;
+        request.log.error({ err }, "a receipt read's page failed");
+        return steps.go(`/pizza/hold/${request.params.id}/money/scan?failed=failed`);
+      }
+    };
+
   /** The photo: kept with the order, then read when the reader is on (after its notice). */
-  app.post<{ Params: Params }>("/hold/:id/money/scan", async (request, reply) => {
-    const { id } = request.params;
-    let photo;
-    try {
-      [photo] = await photosOf(request);
-    } catch (err) {
-      // A photo over the limit is refused while it arrives: said on the page, not as an error page.
-      if ((err as { code?: unknown }).code !== "file_too_large") throw err;
-      return reply.redirect(`/pizza/hold/${id}/money/scan?failed=file_too_large`, 303);
-    }
-    if (photo === undefined) return back(reply, `hold/${id}/money/scan`);
-    const added = await viaApi(
-      app,
-      request,
-      "POST",
-      `/api/pizza/orders/${encodeURIComponent(id)}/receipts`,
-      photo,
-      0,
-    );
-    if (added.status === 409 || added.status === 403)
-      return back(reply, `hold/${id}/money/scan`, added);
-    if (added.status >= 400)
-      return reply.redirect(`/pizza/hold/${id}/money/scan?${failureQuery(added)}`, 303);
-    const c = await pageCtx(deps, request);
-    if (!(await readerAvailable(deps, c.tenant))) return back(reply, `hold/${id}/money/total`);
-    return readReceipt(request, reply, String(added.body.id), 0);
-  });
+  app.post<{ Params: Params }>(
+    "/hold/:id/money/scan",
+    streamed(async (request, steps) => {
+      const { id } = request.params;
+      let photo;
+      try {
+        [photo] = await photosOf(request);
+      } catch (err) {
+        // Over the limit is refused as it arrives: said on the page, not as an error page.
+        if ((err as { code?: unknown }).code !== "file_too_large") throw err;
+        return steps.go(`/pizza/hold/${id}/money/scan?failed=file_too_large`);
+      }
+      if (photo === undefined) return steps.go(backTo(`hold/${id}/money/scan`));
+      const added = await viaApi(
+        app,
+        request,
+        "POST",
+        `/api/pizza/orders/${encodeURIComponent(id)}/receipts`,
+        photo,
+        0,
+      );
+      if (added.status === 409 || added.status === 403)
+        return steps.go(backTo(`hold/${id}/money/scan`, added));
+      if (added.status >= 400)
+        return steps.go(`/pizza/hold/${id}/money/scan?${failureQuery(added)}`);
+      const c = await pageCtx(deps, request);
+      if (!(await readerAvailable(deps, c.tenant)))
+        return steps.go(backTo(`hold/${id}/money/total`));
+      return readReceipt(request, steps, String(added.body.id), 0);
+    }),
+  );
 
   /** Try again: the kept photo read once more (a busy reader's countdown sends it by itself). */
-  app.post<{ Params: Params }>("/hold/:id/money/read", async (request, reply) => {
-    const receipt = formText(request, "receipt_id");
-    if (receipt === null) return back(reply, `hold/${request.params.id}/money/scan`);
-    const tries = Math.min(Number(formText(request, "tries") ?? "1") || 1, 10);
-    return readReceipt(request, reply, receipt, tries);
-  });
+  app.post<{ Params: Params }>(
+    "/hold/:id/money/read",
+    streamed(async (request, steps) => {
+      // The page's script sends the form as multipart (FormData): its fields are read the same.
+      await photosOf(request);
+      const receipt = formText(request, "receipt_id");
+      if (receipt === null) return steps.go(backTo(`hold/${request.params.id}/money/scan`));
+      const tries = Math.min(Number(formText(request, "tries") ?? "1") || 1, 10);
+      return readReceipt(request, steps, receipt, tries);
+    }),
+  );
 
   /** Confirm: the total, every price and the receipt they came from, in one write. */
   app.post<{ Params: Params }>("/hold/:id/money/check", async (request, reply) => {
