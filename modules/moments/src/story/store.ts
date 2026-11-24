@@ -87,8 +87,13 @@ export async function writeStories(
   revision: number,
 ): Promise<void> {
   await ensureStories(c);
+  // The stored copies of retired presets stay, unseen (RETIRED_PRESETS): a revert brings them back.
+  const { rows } = await c.query(`SELECT stories FROM moments_stories`, []);
+  const retired = ((rows[0]?.stories ?? []) as Story[]).filter(
+    (s) => RETIRED_PRESETS.has(s.preset ?? "") && !stories.some((x) => x.key === s.key),
+  );
   await c.query(`UPDATE moments_stories SET stories = $1, settings = $2, revision = $3`, [
-    JSON.stringify(stories),
+    JSON.stringify([...stories, ...retired]),
     JSON.stringify(settings),
     revision,
   ]);
