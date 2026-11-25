@@ -22,7 +22,17 @@ export const RECEIPT_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["text", "number", "name", "quantity", "amount_cents", "kind", "unsure"],
+        required: [
+          "text",
+          "number",
+          "name",
+          "quantity",
+          "amount_cents",
+          "kind",
+          "unsure",
+          "group",
+          "unit_cents",
+        ],
         properties: {
           text: { type: "string" },
           number: nullable("string"),
@@ -31,6 +41,8 @@ export const RECEIPT_SCHEMA = {
           amount_cents: { type: "integer" },
           kind: { type: "string", enum: ["item", "extra"] },
           unsure: { type: "boolean" },
+          group: { type: "boolean" },
+          unit_cents: nullable("integer"),
         },
       },
     },
@@ -98,6 +110,7 @@ const READABLE = `If the photo is not of this kind, or is too blurred, dark or c
 
 export const RECEIPT_TEXT = `This is a photo of a receipt from a pizzeria or a restaurant.
 Read every line that was paid for. For each line give its text as printed, the menu number when the line shows one (else null), the item's name, the quantity, the line's amount in euro cents (a discount is negative), and kind: "item" for food or drink, "extra" for a delivery fee, a service fee or a discount. Set unsure to true when the photo does not make the line's amount or number clear.
+A line that counts pizzas without naming them ("15 x pizza 195,00", "15 kpl pizzaa") has group true; otherwise group is false. When a line shows the price of one ("à €13,00", "a 13,00"), give it in unit_cents; otherwise unit_cents is null.
 Give total_cents, the total paid in euro cents, or null when the photo does not show it.
 Use only what the photo shows. Leave out card numbers, names and anything that is not a paid line.
 ${READABLE}`;
@@ -143,6 +156,8 @@ export function receiptOf(raw: unknown): ReceiptReading {
           amount_cents: amount,
           kind: x.kind === "extra" ? ("extra" as const) : ("item" as const),
           unsure: x.unsure === true,
+          group: x.group === true,
+          unit_cents: cents(x.unit_cents, 0, 99_999),
         },
       ];
     });
