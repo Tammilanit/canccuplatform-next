@@ -31,7 +31,7 @@ describe("the chain", () => {
     // An urgent one in the rail keeps the chain it always had, for stored rows and old clients.
     ["urgent", "rail", ["rail", "hero", "ticker"], null, false],
     ["info", "hero", ["hero", "rail", "ticker"], null, false],
-    ["important", "hero", ["hero", "full", "rail", "ticker"], 0.35, false],
+    ["important", "hero", ["hero", "full", "rail", "ticker"], 0.35, true],
     ["urgent", "hero", ["hero", "full", "rail", "ticker"], 0.35, false],
     ["info", "full", ["full", "hero", "rail", "ticker"], null, true],
     ["important", "full", ["full", "hero", "rail", "ticker"], null, true],
@@ -55,7 +55,7 @@ describe("the hints on the wire", () => {
   it("follow the card's level and chain, for a composed one and a rule's alike", () => {
     expect(overrideHints(card("important", ["hero", "full", "rail", "ticker"]))).toEqual({
       hero_min_share: 0.35,
-      keep_ticker: false,
+      keep_ticker: true,
     });
     expect(overrideHints(card("info", ["full", "hero", "rail", "ticker"]))).toEqual({
       hero_min_share: null,

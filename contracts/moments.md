@@ -176,7 +176,8 @@ One form makes an announcement for every channel: the screen card, the ticker li
 |---|---|---|---|
 | `rail` | `["rail", "ticker"]`; urgent `["rail", "hero", "ticker"]`, the chain it had before #780 | null | false |
 | `hero`, info | `["hero", "rail", "ticker"]` | null | false |
-| `hero`, important or urgent | `["hero", "full", "rail", "ticker"]` | 0.35 | false |
+| `hero`, important | `["hero", "full", "rail", "ticker"]` | 0.35 | true (applies only if it falls to the full screen) |
+| `hero`, urgent | `["hero", "full", "rail", "ticker"]` | 0.35 | false |
 | `full` | `["full", "hero", "rail", "ticker"]` | null | true for info and important, false for urgent |
 
   A layout without a rail sends a rail chain on to the ticker; a hero smaller than about a third of the screen that cannot grow sends important on to the full screen (Screen's grow rule, `hero_min_share`); the ticker keeps running under a full-screen info or important (`keep_ticker`), while under urgent and the emergency the card carries its instruction in the ticker's place.

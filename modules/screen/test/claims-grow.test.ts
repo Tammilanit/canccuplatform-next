@@ -188,6 +188,15 @@ describe("the ticker under a full screen", () => {
     expect(regionOf(view, "_full")?.claim?.keep_ticker).toBe(true);
   });
 
+  it("keeps the ticker when an Important falls from the hero to the full screen", () => {
+    const fallen = important({ keep_ticker: true });
+    const view = placeZone(drawnDashboard(), [fallen, line()], false);
+    expect(roleOf(view, "ov_imp")).toBe("full");
+    expect(roleOf(view, "ov_line")).toBe("ticker");
+    expect(view.hidden).not.toContain("ov_line");
+    expect(regionOf(view, "_full")?.claim?.keep_ticker).toBe(true);
+  });
+
   it("hides the ticker under the emergency, which covers the whole screen", () => {
     const emergency = override("ov_em", {
       kind: "takeover",

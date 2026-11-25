@@ -98,6 +98,13 @@ describe("nearby content", () => {
     expect(aside?.view.empty).toBe(false);
   });
 
+  it("survives the stored row: stringified and parsed again, it still knows its source", () => {
+    const stored = overrideOf(JSON.parse(JSON.stringify(card("important", ["full"]))));
+    if (stored === null) throw new Error("stored override does not parse");
+    const view = placeZone(input([ORDER]), [stored], true);
+    expect(claimIn(view, "_full")?.aside?.widget).toBe("food_status");
+  });
+
   it("is now and next while the food box is empty", () => {
     const view = placeZone(input([]), [card("important", ["full"])], true);
     const aside = claimIn(view, "_full")?.aside;

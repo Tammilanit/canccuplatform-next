@@ -72,7 +72,7 @@ function hintsOf(level: Level, regions: readonly string[]): Omit<Chain, "regions
   return {
     hero_min_share: level !== "info" && regions[0] === "hero" ? HERO_MIN_SHARE : null,
     // The ticker keeps running under a full screen, except where the card carries an instruction.
-    keep_ticker: level !== "urgent" && regions[0] === "full",
+    keep_ticker: level !== "urgent" && regions.includes("full"),
   };
 }
 
