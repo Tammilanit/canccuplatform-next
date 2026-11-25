@@ -15,6 +15,7 @@ import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
+import { LIVING_STRIPS, LIVING_THEMES, livingStrip, withLiving } from "./living.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import { withFoodClaim } from "./food.mjs";
 import {
@@ -134,6 +135,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
+      // #787's strips, in this theme while it is published.
+      if (LIVING_THEMES.includes(theme))
+        for (const size of HD)
+          for (const { view } of LIVING_STRIPS)
+            await attempt(nameOf(theme, view, size), () =>
+              handed(theme, view, size, withLiving(view)),
+            );
     }
     for (const size of HD) {
       await attempt(nameOf("default", "photo", size), () =>
@@ -334,7 +342,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       else if (view === "claim-hero-emergency") await emergencyIsRed(page, "hero");
       else if (view === "stage-surge")
         return await surgeStrip(page, theme, view, size, close, race);
-      else if (view.startsWith("director-") || view === "choreographer") {
+      else if (view.startsWith("living-")) {
+        await settle(page);
+        await livingStrip(page, view, (f) => shot(`${nameOf(theme, view, size)}-${f}`, page));
+        return await close();
+      } else if (view.startsWith("director-") || view === "choreographer") {
         await settle(page);
         await directorStrip(page, view, (f) => shot(`${nameOf(theme, view, size)}-${f}`, page));
         return await close();

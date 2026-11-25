@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { ServiceIdentity } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { httpSources } from "../src/compose/sources.js";
-import { laterOf } from "../src/compose/widgets.js";
+import { laterOf } from "../src/compose/agenda-rows.js";
 import type { AgendaItem } from "../src/compose/widgets.js";
 
 const KEY = "sources-test-service-key-0123456789";

@@ -9,6 +9,7 @@ import { editorShots } from "./editor-shots.mjs";
 import { saveZone } from "./fixture.mjs";
 import { pairedShots } from "./paired-shots.mjs";
 import { previewShots } from "./preview-shots.mjs";
+import { studioReady } from "./studio-ready.mjs";
 
 const DESK = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
@@ -100,7 +101,17 @@ const editWall = async (page) => {
   await page.selectOption('section[data-region="hero"] [name=photo_order]', "shuffle");
   await studioReady(page);
 };
+/** Sheet 06 (#787 D3, D4): the hero's items with one switched off, and its turn set to 60 s. */
+const editRotation = async (page) => {
+  await page.click('[data-pick="hero"]');
+  await page.click('section[data-region="hero"] [data-widgets] li:nth-child(3) [data-widget-on]');
+  await page.click('section[data-region="hero"] [data-dwell-chip="60"]');
+  await page.locator('section[data-region="hero"] [data-widgets]').scrollIntoViewIfNeeded();
+  await studioReady(page);
+};
 export const LAYOUT_PAGES = [
+  ["screen-zone-rotation", "/admin/screen/zones/main", DESK, { ready: editRotation }],
+  ["screen-zone-rotation-phone", "/admin/screen/zones/main", PHONE, { ready: editRotation }],
   ["screen-zone-screen-name", "/admin/screen/zones/main", DESK, { ready: pickHeader }],
   ["screen-zone-photo-wall", "/admin/screen/zones/main", DESK, { ready: editWall }],
   ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes(2) }],
@@ -270,29 +281,6 @@ async function removeSchedule(demo, made) {
     await demo.call("DELETE", `/api/screen/schedules/${id}`).catch(() => undefined);
   for (const id of made.playlists)
     await demo.call("DELETE", `/api/screen/playlists/${id}`).catch(() => undefined);
-}
-
-// Live views keep their streams open, so there is no network idle: each view the page has loaded
-// must draw the run of show, then a second lets the entry motion end. Through the iframe element:
-// page.frames() gave the page's own document for an iframe the server drew with `src`.
-const drawn = (frame) =>
-  frame.locator(".canccu-widget--agenda_now").first().waitFor({ timeout: 30_000 });
-async function studioReady(page) {
-  // A full-page shot of a page taller than the window resizes the window while it captures, and
-  // studio.js then lets go of the live views and loads them again: they were blank in the shot.
-  // So the window takes the page's height first, and the capture changes nothing.
-  const { width, height } = page.viewportSize();
-  const full = await page.evaluate(() => document.documentElement.scrollHeight);
-  if (full > height) await page.setViewportSize({ width, height: full });
-  await page
-    .locator("[data-zone-preview]")
-    .click({ timeout: 1000 })
-    .catch(() => undefined);
-  await page.waitForTimeout(500);
-  const views = page.locator(".canccu-studio-thumb iframe[src]");
-  const count = await views.count();
-  for (let i = 0; i < count; i++) await drawn(views.nth(i).contentFrame());
-  await page.waitForTimeout(1500);
 }
 
 /** A paired screen playing in its own context, in `contexts` at once: closed also if a wait fails. */

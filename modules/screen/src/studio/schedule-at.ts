@@ -9,7 +9,7 @@
  * script and holds no time-zone arithmetic in the browser. The view is schedule-at-view.ts.
  */
 import type { AgendaItem } from "../compose/widgets.js";
-import { railAt } from "../compose/widgets.js";
+import { railAt } from "../compose/agenda-rows.js";
 import type { Layout, Role } from "../compose/layouts.js";
 import { BUILT_IN_LAYOUTS, roleOf } from "../compose/layouts.js";
 import type { Sources } from "../compose/sources.js";

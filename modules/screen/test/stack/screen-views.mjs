@@ -2,6 +2,7 @@
 // name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
 import { STAGE_VIEWS } from "./handed.mjs";
+import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
 export const HD = [
@@ -75,6 +76,10 @@ export function planned(check = false) {
     for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
+    if (LIVING_THEMES.includes(theme))
+      for (const size of HD)
+        for (const { view, frames } of LIVING_STRIPS)
+          out.push(...stripNames(nameOf(theme, view, size), frames));
   }
   for (const [view] of DEFAULT_LAYOUT_VIEWS) out.push(nameOf("default", view, HD[0]));
   for (const size of HD)

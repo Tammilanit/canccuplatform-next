@@ -9,7 +9,7 @@ import { withTenant } from "@canccu/kit";
 import { html } from "@canccu/ui";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { applyAgendaEvent, loadAgendaChoices } from "../src/content/agenda.js";
-import { railAt } from "../src/compose/widgets.js";
+import { railAt } from "../src/compose/agenda-rows.js";
 import type { AgendaItem } from "../src/compose/widgets.js";
 import { translator } from "../src/studio/messages.js";
 import { editorView } from "../src/studio/schedule-editor.js";
