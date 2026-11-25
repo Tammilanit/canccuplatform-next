@@ -13,7 +13,7 @@ import { parseEuro } from "./money-format.js";
 import type { MoneyView, ReceiptView } from "./money-format.js";
 import { moneyPageView } from "./money-views.js";
 import type { OrderView } from "./order-view.js";
-import { failureOf, failureQuery, readErrorView } from "./read-errors.js";
+import { failedTo, failureOf, readErrorView } from "./read-errors.js";
 import { checkView, padView, scanView } from "./receipt-views.js";
 import { stepsFor } from "./steps.js";
 import type { Steps } from "./steps.js";
@@ -43,14 +43,22 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
   const api = (request: FastifyRequest, path: string) =>
     viaApi(app, request, "GET", `/api/pizza/${path}`);
 
-  /** The order and its money, for its holder and the crew; anyone else back to the order. */
-  const load = async (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) => {
+  /**
+   * The order and its money, for its holder and the crew; anyone else back to the order, and so is
+   * an order that left the money step meanwhile, with the refusal that said so (a read's 409).
+   */
+  const load = async (
+    request: FastifyRequest<{ Params: Params; Querystring: Q }>,
+    reply: FastifyReply,
+  ) => {
     const c = await pageCtx(deps, request);
     const id = encodeURIComponent(request.params.id);
     const o = must(await api(request, `orders/${id}`)) as unknown as OrderView;
     const mine = o.you_hold === true || (o.items !== undefined && c.session.rights.has(MANAGE));
     if (!mine || !MONEY_STATES.has(o.state)) {
-      void reply.redirect(`/pizza/hold/${o.id}`, 303);
+      const error = request.query.error;
+      const tail = error === undefined ? "" : `?error=${encodeURIComponent(error)}`;
+      void reply.redirect(`/pizza/hold/${o.id}${tail}`, 303);
       return null;
     }
     const m = must(await api(request, `orders/${id}/money`)) as unknown as MoneyView;
@@ -270,7 +278,7 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
       1 + tries,
     );
     if (read.status >= 400)
-      return steps.go(`/pizza/hold/${id}/money/scan?${failureQuery(read, { receipt, tries })}`);
+      return steps.go(failedTo(`hold/${id}/money/scan`, read, { receipt, tries }));
     steps.phase({ phase: "checking" });
     return steps.go(`/pizza/hold/${id}/money/check?receipt=${encodeURIComponent(receipt)}`);
   };
@@ -311,10 +319,7 @@ export function moneyPages(app: FastifyInstance, deps: AppDeps): void {
         photo,
         0,
       );
-      if (added.status === 409 || added.status === 403)
-        return steps.go(backTo(`hold/${id}/money/scan`, added));
-      if (added.status >= 400)
-        return steps.go(`/pizza/hold/${id}/money/scan?${failureQuery(added)}`);
+      if (added.status >= 400) return steps.go(failedTo(`hold/${id}/money/scan`, added));
       const c = await pageCtx(deps, request);
       if (!(await readerAvailable(deps, c.tenant)))
         return steps.go(backTo(`hold/${id}/money/total`));

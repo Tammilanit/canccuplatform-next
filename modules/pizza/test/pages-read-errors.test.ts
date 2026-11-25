@@ -167,6 +167,23 @@ describe.skipIf(!DATABASE_URL)("a failed receipt read on the holder's pages", ()
     expect(body).toContain(typeLink());
   });
 
+  it("gives a read's other refusal in its own words, not as a photo that did not arrive", async () => {
+    const { url } = await failing("service_down");
+    const receipt = new URL(url, "http://x").searchParams.get("receipt") ?? "";
+    w.reader.fail = null;
+    // The order moved on meanwhile: called in no more, so the read answers 409 `not_placed`.
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/undo`, {});
+    const r = await form(w, "pena", `/hold/${id}/money/read`, { receipt_id: receipt });
+    const said = encodeURIComponent("The order is not called in yet.");
+    expect(location(r)).toBe(`/pizza/hold/${id}/money/scan?error=${said}`);
+    // The scan page is no longer the order's step: it hands the refusal on to the order.
+    const on = await view(w, "pena", location(r).replace(/^\/pizza/, ""));
+    expect(location(on)).toBe(`/pizza/hold/${id}?error=${said}`);
+    const body = await page(location(on));
+    expect(body).toContain("The order is not called in yet.");
+    expect(body).not.toContain("did not arrive");
+  });
+
   it("says a photo over 30 MB is too large, and offers the camera again", async () => {
     const r = await scan(await bigJpeg(31 * 1024 * 1024), "image/jpeg");
     expect(location(r)).toContain("failed=file_too_large");

@@ -16,7 +16,7 @@ import { PREFIX, back, formKey, must, organiserPage, pageCtx, viaApi } from "./k
 import type { PageCtx } from "./kit.js";
 import { outsideNotice } from "./money-views.js";
 import { flash } from "./order-view.js";
-import { failureOf, failureQuery, readErrorView } from "./read-errors.js";
+import { failedTo, failureOf, readErrorView } from "./read-errors.js";
 import { photosOf } from "./uploads.js";
 
 const P = `${PREFIX}crew/pizzerias`;
@@ -136,7 +136,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
         photo,
         n,
       );
-      if (a.status >= 400) return reply.redirect(`${P}/${id}/read?${failureQuery(a)}`, 303);
+      if (a.status >= 400) return reply.redirect(failedTo(`crew/pizzerias/${id}/read`, a), 303);
       const r = must(a) as unknown as Read;
       const [head = "", ...lines] = r.csv.split("\n");
       header = head;

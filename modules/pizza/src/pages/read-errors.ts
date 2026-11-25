@@ -9,7 +9,7 @@
 import { attrs, html } from "@canccu/ui";
 import { timeoutFor } from "../reader.js";
 import type { Html } from "@canccu/ui";
-import { SETTINGS_WRITE, formKey } from "./kit.js";
+import { SETTINGS_WRITE, backTo, formKey } from "./kit.js";
 import type { ApiAnswer, PageCtx } from "./kit.js";
 import type { MessageKey } from "./messages.js";
 
@@ -61,8 +61,21 @@ export function progressAttrs(c: PageCtx): Record<string, string> {
   };
 }
 
-/** The address's part for a failed API answer: the case, and what Try again needs. */
-export function failureQuery(a: ApiAnswer, o: { receipt?: string; tries?: number } = {}): string {
+/**
+ * Where a failed API answer sends the page: back to `path` with the case and what Try again needs,
+ * when it is a read failure the page knows; any other refusal (the order moved on, the event was
+ * archived, no right) in the API's own words, since "Try again" would only fail the same way.
+ */
+export function failedTo(
+  path: string,
+  a: ApiAnswer,
+  o: { receipt?: string; tries?: number } = {},
+): string {
+  const q = failureQuery(a, o);
+  return q === null ? backTo(path, a) : backTo(`${path}?${q}`);
+}
+
+function failureQuery(a: ApiAnswer, o: { receipt?: string; tries?: number }): string | null {
   const e = (a.body.error ?? {}) as {
     code?: string;
     reason?: string;
@@ -70,7 +83,8 @@ export function failureQuery(a: ApiAnswer, o: { receipt?: string; tries?: number
     retry_after_s?: number;
   };
   const named = e.code === "reader_failed" ? e.reason : e.code;
-  const failed: Case = isCase(named) ? named : a.status >= 500 ? "failed" : "upload_failed";
+  const failed = isCase(named) ? named : a.status >= 500 ? "failed" : null;
+  if (failed === null) return null;
   const q = new URLSearchParams({ failed });
   if (o.receipt !== undefined) q.set("receipt", o.receipt);
   if (typeof e.retry_after_s === "number") q.set("after", String(e.retry_after_s));
