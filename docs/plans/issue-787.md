@@ -1,0 +1,118 @@
+# Plan: issue #787: a living screen
+
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans, task by task in this session (the dispatcher's flow; no subagents). Steps use checkbox (`- [ ]`) syntax. No code before the PO accepts this pack and plan.
+
+**Goal:** The hall screen is never still or empty. When no moment holds the hero, the hero plays an idle rotation built from what the event has, with smooth transitions. New things take the hero first and then fall back to a smaller box. Food changes are hero moments. The background lives and changes over the day. A hype curve makes the screen quieter far from anything and loudest while the big item is live.
+
+**Status:** design first (the issue's Scope). This PR is the key-sheet pack and the build plan for the PO's accept (`manual`). After the accept, the lead splits the build into the packages below.
+
+**Spec:** [issue #787](https://github.com/Tammilanit/canccuplatform-next/issues/787) (the PO's design of 2026-11-23, points 1–6, and its acceptance criteria), on top of [#777](https://github.com/Tammilanit/canccuplatform-next/issues/777) (merged as #791: the floor, the paused clock, the queue, the rail as waiting room) and next to [#780](https://github.com/Tammilanit/canccuplatform-next/issues/780) (open: announcement levels; "Pizza is here" is Important). Contracts as on main at 5b8f13e: [screen.md](../../contracts/screen.md), [theming.md](../../contracts/theming.md), [moments.md](../../contracts/moments.md), [pizza.md](../../contracts/pizza.md). Binding: the [design guideline](../design/README.md) and its amendments (amendment 1: the pace never changes with the energy level).
+
+**Tech stack:** TypeScript (Node, Fastify), the player bundle (`modules/screen/player`), Postgres under RLS, vitest, Playwright for the CI shots and frame strips (`modules/screen/test/stack/`), SVG key sheets built by a script and read as one page with `scripts/pack-page`.
+
+## Why a pack and a plan first
+1. **The issue asks for it:** a key-sheet pack for the PO (`manual-accept`) before the build, and the lead splits the build into packages after #777.
+2. **Size and risk.** The build touches Screen's player and compose, Moments' arbiter and rules, the pizza rule's moments, the theming contract's motion vocabulary and the stage. The estimate below is about 8,000 changed lines, twice the package limit, all high risk (the issue says so).
+3. **Questions the design leaves open** touch settings other modules own (pizza's last call), presets (#777 retired one the same way) and amendment 1 (Q1–Q7 below).
+
+## What is there today (main at 5b8f13e)
+| PO point | Already built | Missing |
+|---|---|---|
+| 1 Idle rotation | The hero's `rotation: director` (screen.md, The Director): the zone's hero widgets in the Director's type order (`bracket`, `leaderboard`, `countdown`, `playlist`, `photo`, `hot_game`, `today_numbers`), `skip_empty`, queue jumps, the turn indicator, the choreographer (one notable change per 3 s). `dwell_seconds` 5–3600, default the layout's `rotate_seconds`, else 15 s. Studio's zone editor: the region's widget list with up, down and remove (`studio/region-views.ts`). Widgets `countdown`, `agenda_now` (with `later`), `food_status`, `leaderboard`, `bracket`, `stats` (with `*_trend`), `photo`, `now_playing`, `voice_rooms` | A timeline of the coming hours; food, standings with the next match and stats as hero items; the built-in hero list made of the PO's seven items; the organiser's order winning over the type order; an item switched off but kept in its place; 30–60 s turns; drag and drop |
+| 1 Transitions | Two slots, "load then fade" (`screen.ts` `enter()`): 600 ms at `moderate`, 1.5 s at `calm`, **0 ms (a cut) at `none`**. Claim steps' named transitions `cut`, `fade`, `rise`, `slide`, `flash` | A rotation turn in the motion pack's shape; never a cut, also at `none` |
+| 2 Moments take over | Claims take the first free role of their chain by rank; `on_end: resume` puts the rotation back where the clock has it; #777's arbiter gives the hero to one claimant per zone | Tests that the rotation fills only free regions (AC 3) |
+| 3 Hero first, then a smaller box | #777: a holder keeps the hero for the floor (`min_on_air_seconds`, 60–120 s, default 90), then yields only to a higher rank; the rail is the waiting room for the next claimant | A holder steps down to the next role of its chain after its hero time, even with nothing waiting |
+| 4 Food | `food_status` in the venue rail (`status_text`, `big_label`, `big_text`, `closes_at`, `estimate_at`, `pickup`) with times, not live countdowns; the `pizza` rule's `pizza_placed` (venue rail → ticker) and Pizza is here (hero → rail → ticker); storyboard presets `pizza_order_open` and `pizza_last_call`; cues `pizza.open`, `pizza.closed`, `pizza.placed`; `pizza.order.closing` at `last_call_minutes` (10) | An open-order hero moment with the QR and a live countdown; last call at 5 min with its own sound; the ETA as a big countdown |
+| 5 Gentle life | The stage's six layers (`__art`, `__glow`, `__kind`, `__phase`, `__tint`, `__scrim`), drift at 120, 45 and 20 s a turn for calm, lively and party, still at `none`; scenes (palette, stage mood, heartbeat, `hero_off`); number roll and split-flap; the game's blurred art only for a 60 s surge | Particles; the current game's art as a steady layer; a look by time of day; a soft glow on what just changed |
+| 6 Hype curve | Designed for stories only (step 7 brief, L12: a rail tile, then a bigger panel, then the hero while live); not built | A per-zone curve that drives background energy, effects within the level and how prominent stories are |
+
+## The design (each decision is the reviewer's to check against the sheets)
+| # | Decision | Sheet | Reason |
+|---|---|---|---|
+| D1 | **The idle rotation is the Director, given the PO's items.** The built-in layouts' hero list becomes, in this order: now and next (`countdown`, the Pulse hero form), the coming hours (new `agenda_timeline`), food orders (`food_status`, hero form), standings and the next match (`leaderboard`, with an added `next_match`), playing and in voice (`now_playing`), photos and clips (`photo`), numbers with trends (`stats`). Tonight's highlight, `playlist`, `hot_game`, `bracket` and `today_numbers` stay where a zone has them | 01 | One rotation, one clock, one turn indicator: the queue jumps, `skip_empty`, `hero_off` and the choreographer keep working as they are |
+| D2 | **Built from what the event has:** an item whose source has nothing (no open order, no bot, no photos, no tournament) is `empty` and skipped, as `skip_empty` does today; the rotation never shows an empty item, and with every item empty the region's `idle` applies (`next` on the `main` zone) | 01 | "Built automatically from what the event has" with no new mechanism |
+| D3 | **The organiser's order wins:** when a zone sets the hero's `widgets`, `director` plays them in that order (today the Director's type order wins). An entry may carry `enabled: false` (added): kept in its place, skipped like an empty one | 06 | Point 1, "reorder or switch items off per zone"; a switched-off item keeps its place for when it is switched on again |
+| D4 | **30–60 s a turn:** the built-in layouts' hero `rotate_seconds` becomes 45. Studio offers 30, 45 and 60 s as chips for the hero (the contract's 5–3600 stays for other regions and saved zones) | 01, 06 | Point 1; chips, not a typed number (mockup rules) |
+| D5 | **Never a hard cut:** a rotation turn, a claim taking the hero and the hero handed back are a crossfade with a short move in the theme's motion pack (`standard`: rise; `broadcast`: slide; `arcade`: scale), about 1.2 s at calm and lively. At `none` and under reduced motion it is an opacity crossfade of 400 ms with no move (today 0 ms). A story step that its author set to `cut` stays a cut (an author's choice inside one moment) | 01 | Point 1; a fade is not motion in the reduced-motion sense, a cut is what the PO called dull |
+| D6 | **Moments take over** only the regions they are placed in; the rotation keeps its clock underneath and fades back in where the clock has it (`on_end: resume`). Nothing new: tested (AC 3) | 01, 05 | Point 2, #777 |
+| D7 | **Hero first, then a smaller box:** a hero holder whose chain goes on after `hero` (`hero → rail → ticker`) steps down to its next free role once it has been on air its hero time: the event's floor (`min_on_air_seconds`, 60–120 s, default 90), or its own budget if shorter. It keeps the rest of its budget there, with the paused clock of #777. The waiting room (#777 rule 4) comes first in the rail, so a stepped-down moment that finds the rail taken goes on to the ticker. Exempt, as today: the emergency, `stream`, a crew action (spotlight, take), story rounds and condensed rounds: they keep the hero until they end | 05 | Point 3 ("after 1–2 minutes" is the floor's 60–120 s); one rule for every class |
+| D8 | **Food as hero moments** (the `pizza` rule): on `pizza.order.opened` a moment "Pizza order open" (class `announcement`, chain hero → venue rail → ticker, the order's QR and a live countdown to `closes_at`, cue `pizza.open`), ending at `.closed`/`.cancelled`; on `pizza.order.closing` "Last call" (hero 60 s with the new cue `pizza.last_call`, then the venue rail); on `pizza.order.placed` "On the way" (the ETA as a big countdown to `estimate_at`, updated in place by `pizza.order.changed`, `dedupe_key` per order); on `.arrived` Pizza is here as today, in #780's Important look when that lands. Each steps down to the food box (D7) | 02 | Point 4; the food box stays the steady place |
+| D9 | **Live countdowns:** the food box and the food hero moments count down on the screen's clock (the server's, via the heartbeat offset) to `closes_at` or `estimate_at`; a new estimate rolls the digits and glows (D11) | 02 | Point 4, "counting down" |
+| D10 | **The background lives:** a seventh stage layer, `__particles` (count and brightness from the hype, D12); the current game's blurred art as a steady layer while the hype is building or live (today only a 60 s surge); a time-of-day look (`daylight`: morning cool and light, evening the scene's, late night deep and dim) blended over the theme's base, under the scene's palette. Drift as today. At `none` and under reduced motion: the same colours, still, no particles | 03 | Point 5; layers the stage already has, plus one |
+| D11 | **A soft glow on what just changed:** a box whose content changed gets a soft glow on its frame that holds for the event's cue hold time (60–120 s) and fades over 10 s, at every level except `none` (where it is a still outline); numbers roll as today | 02, 04 | Point 5; the "Changes since v7" hold rule. Amends amendment 1's calm row (Q4) |
+| D12 | **The hype curve:** Moments computes per zone, in its scene pass, a level from 0 to 1 and a phase (`quiet`, `building`, `live`, `after`) from the zone's next and current big item: a public scheduled item of kind `tournament` or `ceremony` (the kinds tonight's highlight and the day's peak already use), and a live final. It builds over the hour before, holds while the item runs, and falls over 20 min after. Moments sends it with the zone's scene; Screen composes it as `display.hype` | 04 | Point 6; Moments already owns scenes and reads the agenda for them |
+| D13 | **What the hype drives:** background energy (particles, glow brightness, the game's art); effects within the venue's level (quiet: numbers roll; building: plus a sweep; live: plus pop and the ring burst, only where the level allows them); how prominent stories are (quiet: their chain starts at the rail; building: the rail, grown where the layout has a showcase; live: the hero). The pace never changes: turns stay 30–60 s, and the venue's motion level is the ceiling | 04 | Point 6 and amendment 1 |
+
+## Contract and data changes (all additive)
+- **screen.md:** the widget `agenda_timeline` (`from`, `to`, `now`, `items` with `name`, `kind`, `starts_at`, `ends_at`, `place`; `marks` with `label`, `at`, for a food close); `food_status` adds `join_url` per order (the QR); `leaderboard` adds `next_match` (`teams`, `starts_at`, `place`), empty until a source has it; a widget entry's `enabled`; the Director's order rule (D3); the built-in hero lists and `rotate_seconds` (D1, D4); `display.hype` (`level`, `phase`, `item`); the stage's `__particles` and `daylight`; the never-a-cut rule (D5).
+- **theming.md:** the motion vocabulary adds the rotation turn per pack and the change glow; the stage's seventh layer.
+- **moments.md:** the step-down rule (D7); the `pizza` rule's new moments (D8); the hype in the scene pass (D12, D13); the cue `pizza.last_call`.
+- **pizza.md:** nothing, unless Q1 picks (a) (a default changes: `last_call_minutes` 10 → 5; saved settings keep theirs).
+- **Migrations:** none planned. Zone regions are `jsonb` (`002_zones.sql`); the hype is computed, not stored.
+- Nothing is removed or renamed. Retiring the two storyboard presets (Q2) follows #777's `pizza_arrived` path: hidden from the picker, an event's stored copy ignored, never deleted.
+
+## Every mockup
+Key sheets only, drawn by a script in the shipped look (Demo night) and rendered once in Chromium before the push. The CI shots and strips of the build show both themes and portrait (AC 2).
+
+| Sheet | What it shows |
+|---|---|
+| [01 · The idle rotation](issue-787/01-idle-rotation.svg) | Four frames across four minutes (now and next, the coming hours, an open food order, standings and the next match), the rotation's lane with its crossfades, and what is skipped and why |
+| [02 · Food as hero moments](issue-787/02-food-moments.svg) | Order open with the QR and a countdown, last call at 5 min with a sound, on the way with the ETA countdown, Pizza is here; one order's lanes from 18:15 to 19:00 (hero, food box, ticker, sound) |
+| [03 · The background over a day](issue-787/03-background-over-the-day.svg) | Morning, the peak of the evening and late night in quiet hours, and a table of what changes |
+| [04 · The hype curve](issue-787/04-hype-low-and-high.svg) | Low hype (18:10) and the final live (22:40), the Main hall's curve from 17:00 to midnight, and what the curve moves |
+| [05 · Hero, then rail](issue-787/05-hero-then-rail.svg) | A match result in the hero, stepped down to the rail with a glow, then a ticker line; its lanes minute by minute |
+| [06 · The organiser](issue-787/06-organiser-rotation.svg) | Screen studio, zone Main hall: the items in drag-and-drop order with switches, 30/45/60 s chips and a live preview, at 1280 px and 390 px |
+
+## Questions for the PO
+Each has a recommendation; the PO's answer goes into this file before the build starts.
+- **Q1 · Last call at 5 minutes.** Pizza's `last_call_minutes` is 10 by default and also drives the phone notice. (a) Change the default to 5; events that saved a value keep it. (b) Keep 10 for the phone, and let the screen's last call fire at 5 on its own timer. *Recommended: (a): one last call, everywhere at once.*
+- **Q2 · The storyboard presets `pizza_order_open` and `pizza_last_call`.** With D8 they would show the same order twice. (a) Retire both as #777 retired `pizza_arrived` (hidden, stored copies ignored, never deleted). (b) Keep them for events that want a story. *Recommended: (a).*
+- **Q3 · Reduced motion.** (a) A 400 ms opacity crossfade, no move (D5). (b) An instant change. *Recommended: (a): never a hard cut, and a fade is not motion.*
+- **Q4 · The change glow at calm.** Amendment 1's calm row says "numbers roll only". (a) Add the soft glow at calm too (D11), as a still frame glow with no movement. (b) Glow from lively up. *Recommended: (a): the PO asked for constant gentle life.*
+- **Q5 · What counts as big for the hype.** (a) Items of kind `tournament` or `ceremony` and a live final (D12), the kinds tonight's highlight already uses. (b) A "big item" switch per agenda item (an agenda contract change). *Recommended: (a) now; (b) as a Roadmap note if organisers ask.*
+- **Q6 · Step-down exemptions.** (a) As D7: the emergency, streams, crew actions and story rounds keep the hero until they end. (b) Crew spotlights step down too. *Recommended: (a): a person chose to put it there.*
+- **Q7 · "Both themes" in the CI shots.** (a) Demo night (`default`) and Level up (`level-up`), at 1080p and portrait; Terminal keeps its per-theme shots. *Recommended: (a).*
+
+## The build: proposed packages (the lead splits)
+| Package | Content | Estimate | Risk | Order |
+|---|---|---|---|---|
+| A `pkg-787-rotation` | D1–D6: the items and their view-models (`agenda_timeline`, `food_status` hero form with `join_url` and a live countdown, `leaderboard.next_match`), the Director's order and `enabled`, 45 s turns, the transitions, Studio's list with drag and drop, switches and chips at 1280 and 390 px; tests and strips for sheets 01 and 06 | ≈ 3,200 | high | first |
+| B `pkg-787-moments` | D7–D9: the step-down rule in Moments' arbiter, the `pizza` rule's food moments, the cue `pizza.last_call`, Q1 and Q2; tests and strips for sheets 02 and 05 | ≈ 2,400 | high | after A (its hero moments draw with A's food hero form) |
+| C `pkg-787-stage` | D10–D13: particles, the steady game art, daylight, the change glow, the hype in Moments' scene pass and in `display.hype`, stories by hype; tests and strips for sheets 03 and 04 | ≈ 2,600 | high | after A; parallel with B (B touches `air-*.ts` and `rules.ts`, C `scene-*.ts` and the stage) |
+
+Each package carries its contract additions (0029), its CI shots at 1080p and portrait in both themes (Q7), and frame strips in the pattern of `modules/screen/test/stack/director.mjs` (named `-f1…fN`): the short video of AC 2 as strips, since CI has no video capture today.
+
+### Package A: tasks
+- [ ] **A1 · Tests first:** player tests that (1) a rotation turn, a claim taking the hero and the hero handed back each add a crossfade of more than 0 ms at every level, `none` included (`screen.ts` `enter()`); (2) the rotation draws only regions no claim holds, and comes back where the clock has it (`turns.ts`); (3) the turn and fade lengths follow the level and reduced motion; compose tests for the Director's zone order and `enabled: false`; Studio tests for the list, the switches and the chips. Push.
+- [ ] **A2 · View-models:** `agenda_timeline` (from the agenda read compose already does), `food_status.join_url` and the hero form, `leaderboard.next_match`, and their contract rows; themes' templates for the three hero items in `default`, `level-up` and `terminal`.
+- [ ] **A3 · The Director:** zone order, `enabled`, the built-in hero lists and 45 s (`compose/layouts.ts`, `compose/director.ts`, `player/src/director.ts`, `rotation.ts`), each kept in step with its twin as today.
+- [ ] **A4 · Transitions:** the turn per motion pack and the 400 ms opacity fade at `none` (`screen.ts`, `display.ts`, `motion.css`, theming.md).
+- [ ] **A5 · Studio:** the hero's list as drag and drop with switches and the 30/45/60 s chips, at 1280 and 390 px (`studio/region-views.ts` and its script).
+- [ ] **A6 · Shots and strips:** a strip of the rotation's four turns, the organiser page at 1280 and 390 px, in both themes and portrait; the screenshot groups map if a path is new.
+- [ ] **A7 · Checks:** the screen module's check command, `scripts/check-naming`, `scripts/check-event-names`, `scripts/check-file-size`; split any file past 400 lines (`screen.ts` is at 386 now).
+
+### Package B: tasks
+- [ ] **B1 · Tests first:** Moments arbiter tests: a holder with `rail` after `hero` steps down at the floor and keeps its remaining budget; the waiting room keeps the rail and sends the stepped-down one on to the ticker; the exempt classes and crew actions keep the hero; the `pizza` rule's four moments start, update (`dedupe_key`) and end on their events. Push.
+- [ ] **B2 · Step-down** in `air-plan.ts` (a new grant from hero to the next role), with the history line "moved to the rail".
+- [ ] **B3 · Food moments** in `rules.ts` (split into a `rules-pizza.ts` if it passes 400 lines), the templates' countdown fields, the cue `pizza.last_call` in `cues/catalog.ts` with a sound from the library; Q1 and Q2 as answered.
+- [ ] **B4 · Shots and strips** of sheet 02's four moments and sheet 05's step-down, both themes, 1080p and portrait.
+- [ ] **B5 · Checks** of moments, screen and, with Q1 (a), pizza.
+
+### Package C: tasks
+- [ ] **C1 · Tests first:** the hype from an agenda (quiet far away, building in the hour before, live while it runs, falling after) against a shared case file in the style of `contracts/moments/follow-the-day.json`, checked by both Moments and Screen; the stage layers at each level, `none` and reduced motion (no particles, no drift); the change glow's hold. Push.
+- [ ] **C2 · Hype** in Moments' scene pass, sent with the scene; composed as `display.hype`; stories' chain start by hype.
+- [ ] **C3 · Stage:** `__particles`, the steady game art, `daylight`, the change glow (`stage.ts`, `stage.css`, `motion.ts`, `motion.css`; `motion.ts` is at 211 lines, so the glow goes in its own file).
+- [ ] **C4 · Shots and strips:** sheet 03's three times of day and sheet 04's low and high, both themes, 1080p and portrait.
+- [ ] **C5 · Checks** of moments and screen.
+
+## Global constraints
+- Names: `canccu_` and `canccu-` prefixes in CSS and SQL, `CANCCU_` env vars (`scripts/check-naming`).
+- About 400 lines at most per source file; no new size exemption.
+- The comment rule: the why, never the what.
+- No event names: the demo event only (Demo Event, Demo Pizzeria, Demo Cup, Team Aurora and the other demo teams).
+- Every effect follows the venue's motion level and reduced motion; the pace of the rotation never changes (amendment 1).
+
+## Out of scope
+- The Important announcement's look and placement choices: #780.
+- Photos and clips as a source (step 7) and the bot's now playing and voice: their items are listed and skipped while empty.
+- Video capture in CI: frame strips stand in for the short video (AC 2 allows them).
