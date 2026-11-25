@@ -144,16 +144,32 @@ run("the built-in rules", () => {
   });
 
   // #777: Pizza is here is the rule's announcement on the hero, ending on the order's done.
-  it("says Pizza is here on the hero, then the rail and the ticker, until the order is done", async () => {
+  // #780: an Important, with the food art, the pickup place as its second beat and a QR to the order.
+  it("says Pizza is here as an Important on the hero, the full screen, the rail, the ticker, until done", async () => {
     await deliver(FIXTURES.placed());
     await deliver(FIXTURES.arrived());
     const here = overrides().find((o) => o.template === "announcement");
+    const order = FIXTURES.arrived().data.order as { id: string };
     expect(here).toMatchObject({
       type: "moments.override.started",
       rank: 80,
-      regions: ["hero", "rail", "ticker"],
+      regions: ["hero", "full", "rail", "ticker"],
+      hero_min_share: 0.35,
+      keep_ticker: false,
+      source: { module: "pizza" },
       expires_at: new Date(w.now.getTime() + 180_000).toISOString(),
-      content: { title: "Pizza is here", level: "info" },
+      content: {
+        title: "Pizza is here",
+        level: "important",
+        placement: "hero",
+        icon: "food",
+        art: { kind: "food", url: null },
+        // The fixture names no pickup place: the body's own fallback.
+        second_line: "Collect at the pickup point",
+        qr: { url: `/pizza/orders/${order.id}`, label: "Your order" },
+        countdown_at: null,
+        expires_at: new Date(w.now.getTime() + 180_000).toISOString(),
+      },
     });
     const content = here?.content as { body: string; ticker_line: string };
     expect(content.body).toMatch(/^Order \d+ · Collect at /);

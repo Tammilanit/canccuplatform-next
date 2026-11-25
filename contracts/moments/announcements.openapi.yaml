@@ -73,7 +73,7 @@
                 announcements:
                   type: array
                   items:
-                    $ref: "../moments.openapi.yaml#/components/schemas/LiveAnnouncement"
+                    $ref: "announcement-look.openapi.yaml#/LiveAnnouncement"
       "403":
         $ref: "../common.openapi.yaml#/components/responses/Forbidden"
 /api/moments/announcements/preview:

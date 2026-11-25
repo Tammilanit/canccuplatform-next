@@ -1,0 +1,53 @@
+# Part of moments.openapi.yaml: the schemas of an announcement's look (#780), referenced from its
+# components and paths and linted through it (contracts/README.md, Shared components). Kept apart
+# so moments.openapi.yaml stays within its size.
+AnnouncementPlacement:
+  type: string
+  enum: [rail, hero, full]
+  description: |
+    Where the card shows (additive, #780): the rail, the hero or the whole screen. The level sets the default
+    (info `rail`, important `hero`, urgent `full`); the chain and Screen's placement hints follow it
+    (moments.md, Levels, placement and the full screen).
+AnnouncementIcon:
+  type: string
+  enum: [info, wifi, food, trophy, clock, door, search, megaphone]
+  description: The card's icon (additive, #780).
+AnnouncementArt:
+  type: [object, "null"]
+  required: [kind, url]
+  description: The source's art behind the card (additive, #780); null for none.
+  properties:
+    kind:
+      type: string
+      enum: [food, game]
+    url:
+      type: [string, "null"]
+      description: The game's cover; null draws the kind's own art.
+LiveAnnouncement:
+  type: object
+  required: [id, level, title, body, icon, art, sent_at, expires_at, zones]
+  description: A live announcement as the hub reads it (additive, #780); nothing about who sent it.
+  properties:
+    id:
+      type: string
+    level:
+      $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementLevel"
+    title:
+      type: string
+    body:
+      type: string
+    icon:
+      $ref: "#/AnnouncementIcon"
+    art:
+      $ref: "#/AnnouncementArt"
+    sent_at:
+      type: string
+      format: date-time
+    expires_at:
+      type: string
+      format: date-time
+    zones:
+      type: array
+      items:
+        $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+      description: Empty for every zone.

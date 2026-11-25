@@ -7,7 +7,10 @@ import { invalid, zonesOf } from "../content.js";
 import { ANNOUNCE, crewAction, failure, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { knownZones } from "../store.js";
-import { chainOf, compose, editAnnouncement, filled, withdrawAnnouncement } from "./service.js";
+import { compose, editAnnouncement, filled, withdrawAnnouncement } from "./service.js";
+import { ICONS, LEVELS, PLACEMENTS, chainOf, oneOf, placementOf } from "./chain.js";
+import type { Level } from "./chain.js";
+import { liveRoute } from "./live.js";
 import type { Draft } from "./service.js";
 import { canSee, listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, Channels, RunItem, When } from "./store.js";
@@ -81,16 +84,24 @@ async function draftOf(
   now: Date,
   rights: ReadonlySet<string>,
 ): Promise<{ draft: Draft; item: RunItem | null }> {
-  if (b.level !== "info" && b.level !== "urgent")
-    throw invalid("`level` is info or urgent; an emergency starts from Emergency.");
+  if (!LEVELS.includes(b.level as Level))
+    throw invalid("`level` is info, important or urgent; an emergency starts from Emergency.");
+  const level = b.level as Level;
+  const placement = placementOf(
+    level,
+    oneOf(b.placement, PLACEMENTS, "placement"),
+    b.full_screen === undefined ? undefined : bool(b.full_screen, "full_screen", false),
+  );
   const itemId =
     b.item_id === undefined || b.item_id === null ? null : str(b.item_id, "item_id", 64, true);
   const duration = b.duration_seconds ?? 300;
   if (!Number.isInteger(duration) || (duration as number) < 60 || (duration as number) > 7200)
     throw invalid("`duration_seconds` is 60 to 7200.");
   const draft: Draft = {
-    level: b.level,
-    full_screen: bool(b.full_screen, "full_screen", false),
+    level,
+    placement,
+    icon: oneOf(b.icon, ICONS, "icon") ?? "info",
+    full_screen: placement === "full",
     title_text: str(b.title, "title", 200, true),
     body_text: str(b.body, "body", 400, false),
     variables: variablesOf(b.variables),
@@ -152,6 +163,8 @@ export function announcementView(a: AnnouncementRow): Body {
     id: a.id,
     status: a.status,
     level: a.level,
+    placement: a.placement,
+    icon: a.icon,
     full_screen: a.full_screen,
     title_text: a.title_text,
     body_text: a.body_text,
@@ -186,7 +199,7 @@ export async function previewOf(
   return {
     title: text.title,
     body: text.body,
-    regions: d.channels.screen ? chainOf(d.level, d.full_screen) : [],
+    regions: d.channels.screen ? chainOf(d.level, d.placement).regions : [],
     line: d.channels.ticker ? text.line : null,
     push: d.channels.push
       ? { title: text.title, body: text.body, urgent: d.level === "urgent" }
@@ -217,6 +230,7 @@ async function eventOf(deps: AppDeps, request: FastifyRequest) {
 
 export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
   const announce = { preHandler: requireRight(deps.rights, ANNOUNCE) };
+  liveRoute(app, deps);
 
   app.get("/api/moments/announcements", announce, async () =>
     deps.db.tenant(async (c) => ({

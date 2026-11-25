@@ -5,6 +5,7 @@
  * override for that zone (`<id>.<zone>`, then `.2`, … after it was held back) as the plan wants
  * it. Every write and event goes in the caller's transaction (the kit's Outbox).
  */
+import { overrideHints } from "./announce/chain.js";
 import { isDeepStrictEqual } from "node:util";
 import type { Outbox, SqlClient } from "@canccu/kit";
 import { adoptionOf, endOld, slotsEverywhere } from "./air-adopt.js";
@@ -379,6 +380,8 @@ function wire(m: MomentRow, s: Sent): Record<string, unknown> {
     template: s.template,
     content: s.content,
     regions: s.regions,
+    // From the chain this zone is granted: one held in the rail asks for no hero share.
+    ...overrideHints({ template: s.template, content: s.content, regions: s.regions }),
     expires_at: s.expires_at,
     source: m.source,
     effect: m.effect,

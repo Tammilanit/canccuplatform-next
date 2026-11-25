@@ -109,7 +109,8 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
     expect(json(r)).toEqual({
       title: "Pizza is here",
       body: "Pick up at the café",
-      regions: ["rail", "hero", "ticker"],
+      // #780: an urgent one sent with neither placement nor full_screen goes full screen.
+      regions: ["full", "hero", "rail", "ticker"],
       line: "Pizza is here · Pick up at the café",
       push: { title: "Pizza is here", body: "Pick up at the café", urgent: true },
       discord: { text: "Pizza is here\nPick up at the café" },
