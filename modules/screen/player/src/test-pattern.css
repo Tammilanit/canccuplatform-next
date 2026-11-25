@@ -63,6 +63,7 @@
   inset: auto 10vmin 10vmin;
   height: 6vmin;
   display: grid;
+  /* canccu-grid: fixed row — the six colour bars of the test pattern, always six */
   grid-template-columns: repeat(6, 1fr);
 }
 
