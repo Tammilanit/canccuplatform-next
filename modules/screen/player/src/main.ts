@@ -89,6 +89,8 @@ if (body.dataset.page === "zone") {
     },
     root: body,
     bundle,
+    // The pairing and device cookies are `Secure`: plain http (not localhost) can never keep them.
+    secure: () => isSecureContext,
     offline,
   });
   void player.start();

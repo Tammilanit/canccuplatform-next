@@ -68,7 +68,7 @@ export interface PlayerEnv {
   /** `<body>`: frames replace its content. */
   root: HTMLElement;
   bundle: string;
-  /** Whether the page is a secure context, where `Secure` cookies stick; default `isSecureContext`. */
+  /** Whether the page is a secure context, where `Secure` cookies stick (main.ts asks the browser). */
   secure?: () => boolean;
   /** Whether the browser asks for reduced motion; the default reads `prefers-reduced-motion`. */
   reducedMotion?: () => boolean;
@@ -282,7 +282,7 @@ export class Player {
       if (typeof zone === "string") this.timeZone = zone;
     }
     const event = this.eventName ?? null;
-    if (!(this.env.secure?.() ?? globalThis.isSecureContext !== false)) {
+    if (this.env.secure?.() === false) {
       const address = `${this.env.nav.origin().replace(/^http:/, "https:")}/screen/`;
       this.show({ kind: "insecure", event, where: SETUP, ...insecure(address) });
       return;
