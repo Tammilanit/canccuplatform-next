@@ -92,6 +92,8 @@ const MAP = [
   ["modules/agenda/src/canccu_agenda/dev_seed.py", ["agenda", "dev-seed"]],
   ["modules/pizza/src/dev-seed*", ["pizza", "dev-seed"]],
   ["modules/moments/src/dev-seed*", ["moments", "dev-seed"]],
+  ["modules/screen/src/dev-seed*", ["screens", "dev-seed"]],
+  ["modules/tenants/src/canccu_tenants/dev_seed.py", ["admin", "dev-seed"]],
   ["modules/admin/*", ["admin"]],
   // People and the sign-in page's events come from tenants.
   ["modules/tenants/*", ["admin"]],

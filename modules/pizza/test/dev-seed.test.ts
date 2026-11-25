@@ -1,25 +1,33 @@
 /**
- * The demo event's food on the dev server (#715): the profile's `pizza` section applied and one
- * open demo order with several people, some marked paid; dev mode only, idempotent, never over
- * menus or orders made by hand, and `force` as the reset.
+ * The demo event's food on the dev server (#715): the profile's `pizza` section applied, one
+ * open demo order with several people, some marked paid, and (#788) a called-in takeaway order
+ * that moves a stage each hour; dev mode only, idempotent, never over menus or orders made by
+ * hand, and `force` as the reset.
  */
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import type { SqlClient } from "@canccu/kit";
 import {
+  ARRIVED_TAKEAWAY,
+  CALLED_IN_TAKEAWAY,
   HAND_MADE_MENUS,
+  HAND_MADE_TAKEAWAY,
   LOADED_MENUS,
+  NEXT_TAKEAWAY,
   NO_PIZZERIA,
+  NO_TRATTORIA,
   OPENED_ORDER,
   ORDER_LIVE,
+  OTHER_CALLED_IN,
   Refused,
+  TAKEAWAY_WAITS,
   UP_TO_DATE_MENUS,
   demoPizzerias,
   seedDemoFood,
 } from "../src/dev-seed.js";
 import type { SeedDeps } from "../src/dev-seed.js";
-import { DATABASE_URL, freshDatabase, json, types, world } from "./helpers.js";
+import { DATABASE_URL, freshDatabase, json, open, types, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 
 const PROFILE = fileURLToPath(new URL("../../../events/demo/", import.meta.url));
@@ -64,8 +72,10 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
     w.tx("demo", async (c: SqlClient) => (await c.query(sql, args)).rows as T[]);
   const orders = () =>
     q<{ id: string; state: string; pizzeria_name: string; settle_to: string; payer_name: string }>(
-      `SELECT id, state, pizzeria_name, settle_to, payer_name FROM pizza_orders ORDER BY opened_at`,
+      `SELECT id, state, pizzeria_name, settle_to, payer_name FROM pizza_orders
+       ORDER BY opened_at, pizzeria_name`,
     );
+  const states = async () => (await orders()).map((o) => `${o.pizzeria_name}: ${o.state}`);
 
   it("reads the demo profile's two pizzerias", () => {
     expect((pizzerias as { name: string }[]).map((p) => p.name)).toEqual([
@@ -80,7 +90,7 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
   });
 
   it("applies the profile's pizzerias and menus, and opens one demo order", async () => {
-    expect(await seed()).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    expect(await seed()).toEqual([LOADED_MENUS, OPENED_ORDER, CALLED_IN_TAKEAWAY]);
     const list = json(await w.call("u_alice", "GET", "/api/pizza/pizzerias")).pizzerias as {
       id: string;
       name: string;
@@ -92,7 +102,7 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
     expect(menu.items.map((i) => i.number)).toEqual(["1", "3", "12", "20"]);
 
     const [order, ...more] = await orders();
-    expect(more).toEqual([]);
+    expect(more.map((o) => o.pizzeria_name)).toEqual(["Demo Trattoria"]);
     expect(order).toMatchObject({ state: "open", pizzeria_name: "Demo Pizzeria" });
     // Several people, settling to the holder, some of them marked paid (#704's demo order).
     const people = await q<{ name: string }>(
@@ -106,7 +116,83 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
     expect(paid.length).toBeLessThan(people.length - 1);
     // Screens and the hub hear of it as of any order.
     expect(types(w.events())).toContain("pizza.order.opened");
-    expect(types(w.events()).filter((t) => t === "pizza.item.added").length).toBe(people.length);
+    expect(types(w.events()).filter((t) => t === "pizza.item.added").length).toBeGreaterThanOrEqual(
+      people.length,
+    );
+  });
+
+  it("calls in a second order, a takeaway at Demo Trattoria, so food shows two stages", async () => {
+    await seed();
+    const [row, ...more] = await q<{
+      state: string;
+      holder_name: string;
+      placed_at: Date;
+      estimate_at: Date;
+    }>(`SELECT state, holder_name, placed_at, estimate_at FROM pizza_orders
+        WHERE pizzeria_name = 'Demo Trattoria'`);
+    expect(more).toEqual([]);
+    expect(row).toMatchObject({ state: "placed", holder_name: "Robin" });
+    expect(row?.placed_at.toISOString()).toBe(w.now.toISOString());
+    expect((row?.estimate_at.getTime() ?? 0) - w.now.getTime()).toBe(40 * 60_000);
+    expect(types(w.events())).toContain("pizza.order.placed");
+  });
+
+  it("the takeaway order moves a stage each hourly run: here, then done with a fresh one", async () => {
+    await seed();
+    w.advance(60);
+    expect((await seed())[2]).toBe(ARRIVED_TAKEAWAY);
+    const [here] = await q<{ state: string; pickup: string }>(
+      `SELECT state, pickup FROM pizza_orders WHERE pizzeria_name = 'Demo Trattoria'`,
+    );
+    expect(here).toEqual({ state: "arrived", pickup: "Entrance table" });
+    w.advance(60);
+    expect((await seed())[2]).toBe(NEXT_TAKEAWAY);
+    expect(await states()).toEqual([
+      "Demo Pizzeria: open",
+      "Demo Trattoria: done",
+      "Demo Trattoria: placed",
+    ]);
+  });
+
+  it("an hourly run sooner than a stage's 45 minutes leaves the takeaway order as it is", async () => {
+    await seed();
+    w.advance(30);
+    expect((await seed())[2]).toBe(TAKEAWAY_WAITS);
+    expect(await states()).toEqual(["Demo Pizzeria: open", "Demo Trattoria: placed"]);
+  });
+
+  it("never moves a takeaway order someone changed", async () => {
+    await seed();
+    const [b] = await q<{ id: string }>(
+      `SELECT id FROM pizza_orders WHERE pizzeria_name = 'Demo Trattoria'`,
+    );
+    const undo = await w.call("crew", "POST", `/api/pizza/orders/${b?.id ?? ""}/undo`, {});
+    expect(undo.statusCode).toBe(200);
+    w.advance(60);
+    expect((await seed())[2]).toBe(HAND_MADE_TAKEAWAY);
+    expect(await states()).toEqual(["Demo Pizzeria: open", "Demo Trattoria: closed"]);
+  });
+
+  it("calls in no takeaway order while another order is called in", async () => {
+    await seed();
+    const [b] = await q<{ id: string }>(
+      `SELECT id FROM pizza_orders WHERE pizzeria_name = 'Demo Trattoria'`,
+    );
+    const cancel = await w.call("crew", "POST", `/api/pizza/orders/${b?.id ?? ""}/cancel`, {
+      reason: "demo over",
+    });
+    expect(cancel.statusCode).toBe(200);
+    const [a] = await q<{ id: string }>(
+      `SELECT id FROM pizza_orders WHERE pizzeria_name = 'Demo Pizzeria'`,
+    );
+    await q(`UPDATE pizza_orders SET state = 'placed', placed_at = now() WHERE id = $1`, [a?.id]);
+    w.advance(5);
+    expect((await seed())[2]).toBe(OTHER_CALLED_IN);
+  });
+
+  it("without Demo Trattoria there is no takeaway order", async () => {
+    const one = (pizzerias as { name: string }[]).filter((p) => p.name === "Demo Pizzeria");
+    expect(await seed({ pizzerias: one })).toEqual([LOADED_MENUS, OPENED_ORDER, NO_TRATTORIA]);
   });
 
   it("the order stays open through the event day", async () => {
@@ -119,9 +205,9 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
   it("a second run changes nothing", async () => {
     await seed();
     const before = w.events().length;
-    expect(await seed()).toEqual([UP_TO_DATE_MENUS, ORDER_LIVE]);
+    expect(await seed()).toEqual([UP_TO_DATE_MENUS, ORDER_LIVE, TAKEAWAY_WAITS]);
     expect(w.events().length).toBe(before);
-    expect((await orders()).length).toBe(1);
+    expect((await orders()).length).toBe(2);
   });
 
   it("follows a changed profile while the menus are the seed's", async () => {
@@ -159,7 +245,7 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
   it("menus made by hand before any seed keep it out", async () => {
     const add = await w.call("menus", "POST", "/api/pizza/pizzerias", { name: "Corner Grill" });
     expect(add.statusCode).toBe(201);
-    expect(await seed()).toEqual([HAND_MADE_MENUS, NO_PIZZERIA]);
+    expect(await seed()).toEqual([HAND_MADE_MENUS, NO_PIZZERIA, NO_TRATTORIA]);
     expect((await q<{ name: string }>(`SELECT name FROM pizza_pizzerias`)).length).toBe(1);
   });
 
@@ -170,10 +256,25 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
       reason: "demo over",
     });
     expect(cancel.statusCode).toBe(200);
+    // An order someone opened keeps the demo order out; the seed's own takeaway order does not.
+    const [pz] = await q<{ id: string }>(
+      `SELECT id FROM pizza_pizzerias WHERE name = 'Demo Pizzeria'`,
+    );
+    const theirs = await open(w, "crew", pz?.id ?? "");
+    expect(theirs.statusCode).toBe(201);
+    w.advance(5);
+    expect((await seed())[1]).toBe(ORDER_LIVE);
+    await w.call("crew", "POST", `/api/pizza/orders/${json(theirs).id as string}/cancel`, {
+      reason: "not now",
+    });
     w.advance(5);
     expect((await seed())[1]).toBe(OPENED_ORDER);
-    const after = await orders();
-    expect(after.map((o) => o.state)).toEqual(["cancelled", "open"]);
+    expect((await states()).sort()).toEqual([
+      "Demo Pizzeria: cancelled",
+      "Demo Pizzeria: cancelled",
+      "Demo Pizzeria: open",
+      "Demo Trattoria: placed",
+    ]);
   });
 
   it("force re-applies the menus over hand changes and opens a fresh demo order", async () => {
@@ -185,18 +286,27 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
       items: [{ number: "4", name: "Margherita", price: 990 }],
     });
     w.advance(1);
-    expect(await seed({ force: true })).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    expect(await seed({ force: true })).toEqual([LOADED_MENUS, OPENED_ORDER, CALLED_IN_TAKEAWAY]);
     const [m] = await q<{ price_cents: number }>(
       `SELECT price_cents FROM pizza_menu_entries WHERE pizzeria_id = $1 AND number = '4'
          AND hidden_at IS NULL`,
       [pz?.id],
     );
     expect(m?.price_cents).toBe(800);
-    expect((await orders()).map((o) => o.state)).toEqual(["cancelled", "open"]);
+    expect(await states()).toEqual([
+      "Demo Pizzeria: cancelled",
+      "Demo Trattoria: cancelled",
+      "Demo Pizzeria: open",
+      "Demo Trattoria: placed",
+    ]);
   });
 
   it("settles to the payer, with Paid ticks, only while the event's setting is on", async () => {
-    expect(await seed({ settleToPayer: false })).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    expect(await seed({ settleToPayer: false })).toEqual([
+      LOADED_MENUS,
+      OPENED_ORDER,
+      CALLED_IN_TAKEAWAY,
+    ]);
     const [order] = await orders();
     expect(order).toMatchObject({ state: "open", settle_to: "organiser" });
     expect(await q(`SELECT user_id FROM pizza_paid`)).toEqual([]);
@@ -206,13 +316,16 @@ describe.skipIf(!DATABASE_URL)("the dev seed's food", () => {
     await seed();
     await q(`UPDATE pizza_pizzerias SET hidden_at = now() WHERE name = 'Demo Pizzeria'`);
     w.advance(1);
-    expect(await seed({ force: true })).toEqual([LOADED_MENUS, OPENED_ORDER]);
+    expect((await seed({ force: true })).slice(0, 2)).toEqual([LOADED_MENUS, OPENED_ORDER]);
     const rows = await q<{ hidden_at: Date | null }>(
       `SELECT hidden_at FROM pizza_pizzerias WHERE name = 'Demo Pizzeria'`,
     );
     expect(rows.length).toBe(1);
     expect(rows[0]?.hidden_at).toBeNull();
-    expect((await orders()).map((o) => o.state)).toEqual(["cancelled", "open"]);
+    expect((await states()).filter((o) => o.startsWith("Demo Pizzeria"))).toEqual([
+      "Demo Pizzeria: cancelled",
+      "Demo Pizzeria: open",
+    ]);
   });
 
   it("other events are untouched", async () => {

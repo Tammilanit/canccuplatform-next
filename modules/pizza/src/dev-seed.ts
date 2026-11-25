@@ -12,8 +12,10 @@
  *   beside the event's other pizza files);
  * - the demo order opens only while the event has no order under way, so an order someone took on
  *   is never touched; once it is done or cancelled, the next run opens a fresh one.
+ * Beside it a second order, a takeaway called in, moves a stage each hourly run (#788,
+ * dev-seed-takeaway.ts), so the food shows two orders at different stages all day.
  * `force` (resetting the demo event, docs/operations/dev-server.md) cancels the orders under way,
- * applies the menus over any change and opens a fresh demo order.
+ * applies the menus over any change, opens a fresh demo order and calls in a fresh takeaway one.
  */
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -22,6 +24,17 @@ import { parse } from "yaml";
 import { DEMO_TENANT, withTenant } from "@canccu/kit";
 import type { Outbox, SqlClient } from "@canccu/kit";
 import type { Db } from "./db.js";
+import { stepTakeaway } from "./dev-seed-takeaway.js";
+import type { Takeaway } from "./dev-seed-takeaway.js";
+export {
+  ARRIVED_TAKEAWAY,
+  CALLED_IN_TAKEAWAY,
+  HAND_MADE_TAKEAWAY,
+  NEXT_TAKEAWAY,
+  NO_TRATTORIA,
+  OTHER_CALLED_IN,
+  TAKEAWAY_WAITS,
+} from "./dev-seed-takeaway.js";
 import { addItem, openOrder } from "./items.js";
 import { cancel } from "./lifecycle.js";
 import type { Step } from "./lifecycle.js";
@@ -145,9 +158,16 @@ async function applyPizzerias(c: SqlClient, list: Pizzeria[], now: Date): Promis
   }
 }
 
-async function readMark(file: string): Promise<{ profile: string; menus: string } | null> {
+/** What the seed left: the profile and menus it applied, and its takeaway order. */
+interface Mark {
+  profile: string | null;
+  menus: string | null;
+  takeaway?: Takeaway | null;
+}
+
+async function readMark(file: string): Promise<Mark | null> {
   const text = await readFile(file, "utf8").catch(() => null);
-  return text === null ? null : (JSON.parse(text) as { profile: string; menus: string });
+  return text === null ? null : (JSON.parse(text) as Mark);
 }
 
 const LIVE: readonly OrderState[] = ["open", "closed", "placed", "arrived"];
@@ -232,16 +252,30 @@ export async function seedDemoFood(
       if (o.force)
         for (const order of live)
           await cancel(step(c), order.id, LIVE, "cancelled", "Demo event reset");
-      if (!o.force && live.length > 0) said.push(ORDER_LIVE);
+      // The seed's own takeaway order is no order someone took on.
+      const theirs = live.filter((r) => r.id !== mark?.takeaway?.id);
+      if (!o.force && theirs.length > 0) said.push(ORDER_LIVE);
       else {
         said.push(await openDemoOrder(step(c), o.timeZone, o.settleToPayer));
       }
-      return { said, menus: said[0] === LOADED_MENUS ? await menuState(c) : null };
+      const takeaway = await stepTakeaway(step(c), mark?.takeaway ?? null, o.timeZone);
+      said.push(takeaway.said);
+      return {
+        said,
+        menus: said[0] === LOADED_MENUS ? await menuState(c) : null,
+        takeaway: takeaway.mark,
+      };
     });
     await d.outbox.flush();
-    if (out.menus !== null) {
+    const next: Mark = {
+      profile: out.menus !== null ? want : (mark?.profile ?? null),
+      menus: out.menus ?? mark?.menus ?? null,
+      takeaway: out.takeaway,
+    };
+    const moved = JSON.stringify(out.takeaway) !== JSON.stringify(mark?.takeaway ?? null);
+    if (out.menus !== null || moved) {
       await mkdir(join(d.filesRoot, DEMO_TENANT, "pizza"), { recursive: true });
-      await writeFile(markFile, JSON.stringify({ profile: want, menus: out.menus }) + "\n");
+      await writeFile(markFile, JSON.stringify(next) + "\n");
     }
     return out.said;
   });

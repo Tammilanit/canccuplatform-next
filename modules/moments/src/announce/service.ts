@@ -72,6 +72,27 @@ export const joined = (title: string, body: string): Filled => ({
   line: body === "" ? title : `${title} · ${body}`,
 });
 
+/** A new announcement's row, scheduled, not yet stored; `actor` null is the module's own. */
+export const draftRow = (d: Draft, actor: Actor | null, now: Date): AnnouncementRow => ({
+  ...d,
+  id: `an_${randomUUID()}`,
+  status: "scheduled",
+  title: null,
+  body: null,
+  fire_at: null,
+  card_moment_id: null,
+  line_moment_id: null,
+  sent_at: null,
+  expires_at: null,
+  updated_until: null,
+  ended_at: null,
+  end_reason: null,
+  why: null,
+  actor_user_id: actor?.user_id ?? null,
+  actor_name: actor?.name ?? null,
+  created_at: now,
+});
+
 /** Composes one: sends it now, or keeps it scheduled for the tick. */
 export async function compose(
   c: SqlClient,
@@ -80,25 +101,7 @@ export async function compose(
   actor: Actor,
   now: Date,
 ): Promise<AnnouncementRow> {
-  const a: AnnouncementRow = {
-    ...d,
-    id: `an_${randomUUID()}`,
-    status: "scheduled",
-    title: null,
-    body: null,
-    fire_at: null,
-    card_moment_id: null,
-    line_moment_id: null,
-    sent_at: null,
-    expires_at: null,
-    updated_until: null,
-    ended_at: null,
-    end_reason: null,
-    why: null,
-    actor_user_id: actor.user_id,
-    actor_name: actor.name,
-    created_at: now,
-  };
+  const a = draftRow(d, actor, now);
   const items = await runOfShow(c);
   a.fire_at = fireAt(a, items, now);
   await insertAnnouncement(c, a);
