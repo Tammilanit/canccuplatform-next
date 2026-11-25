@@ -34,8 +34,8 @@ STUDIO_PAGES.push(
 
 /**
  * The guided pairing (#783): Devices opened on a screen just paired, once on (the hall screen,
- * playing) and once still waiting (a screen paired that never connects), and the pair dialog
- * saying a wrong code in its own words. `<hall>` and `<new>` are those screens' ids.
+ * playing), once still waiting and once a minute later (a screen paired that never connects), and
+ * the pair dialog saying a wrong code in its own words. `<hall>` and `<new>` are those screens' ids.
  */
 export const PAIRED_PAGES = [
   ["screen-devices-paired", "/admin/screen/devices?paired=<hall>", DESK],
@@ -43,7 +43,11 @@ export const PAIRED_PAGES = [
   ["screen-devices-waiting", "/admin/screen/devices?paired=<new>", DESK],
   ["screen-devices-waiting-phone", "/admin/screen/devices?paired=<new>", PHONE],
   ["screen-pair-error-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
+  ["screen-devices-late", "/admin/screen/devices?paired=<new>", DESK],
+  ["screen-devices-late-phone", "/admin/screen/devices?paired=<new>", PHONE],
 ];
+/** A screen paired this long ago and never seen "has not connected" (src/studio/help.ts). */
+const LATE_AFTER_MS = 62_000;
 
 /** The pair dialog after Pair with a code no screen shows. */
 async function wrongCode(page) {
@@ -55,8 +59,12 @@ async function wrongCode(page) {
 
 async function pairedShots(demo, shot, hall) {
   const fresh = await demo.pair("New screen", null);
+  const pairedAt = Date.now();
   try {
     for (const [name, path, viewport] of PAIRED_PAGES) {
+      // The late shots wait out the minute a kiosk gets to connect.
+      if (name.startsWith("screen-devices-late"))
+        await new Promise((r) => setTimeout(r, Math.max(0, pairedAt + LATE_AFTER_MS - Date.now())));
       const url = path.replace("<hall>", hall.id).replace("<new>", fresh.id);
       await shot(name, url, viewport, {
         ready: name.endsWith("error-phone") ? wrongCode : studioReady,
