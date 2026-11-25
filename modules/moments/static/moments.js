@@ -3,6 +3,12 @@
 // (sound-desk.js). Each page works without it (contracts/moments.md, Pages).
 "use strict";
 (function () {
+  // The player previews draw a 1920 × 1080 screen, scaled to their box's width (organiser.css).
+  const scaled = new ResizeObserver((entries) => {
+    for (const { target } of entries)
+      target.style.setProperty("--canccu-preview-scale", String(target.clientWidth / 1920));
+  });
+  for (const box of document.querySelectorAll(".moments-preview__frame")) scaled.observe(box);
   // Emergency (mockup 07): only a 2-second hold sends; a click or a short press does nothing.
   for (const form of document.querySelectorAll("form[data-hold-to-start]")) {
     const button = form.querySelector("[data-hold-ms]");
