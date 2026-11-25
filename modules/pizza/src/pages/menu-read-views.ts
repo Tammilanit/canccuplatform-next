@@ -102,7 +102,7 @@ export function pickView(
         />
       </label>
       <ol
-        class="pizza-thumbs"
+        class="canccu-grid canccu-grid--tile pizza-thumbs"
         data-thumbs
         hidden
         aria-label="${c.t("menuread.pages")}"
