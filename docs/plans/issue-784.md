@@ -10,7 +10,7 @@
 
 **Spec:** [issue #784](https://github.com/Tammilanit/canccuplatform-next/issues/784) (Scope 1–5 and its acceptance criteria), [contracts/theming.md](../../contracts/theming.md), [contracts/theme.schema.json](../../contracts/theme.schema.json), the [design guideline](../design/README.md) (amendments 3 and 5), and the [briefs' mockup rules](../briefs/README.md#outline-of-a-research-pack). Linked: #785 (the Themes step designs the 5–10 presets this studio shows) and #725 (studio rows of the view audit; see Roadmap notes).
 
-**Status:** waiting for the lead to answer Q1–Q5 and accept this plan. No code before that.
+**Status:** accepted by the lead on 2026-11-25, Q1–Q5 as recommended (Q4: the pack shows all 14 pairs and the PO keeps 10–15). Part 0, the pack, is built in the plan's own PR (branch `784-feat-theming-the-theme`, not `pkg-784-pack`). The lead releases each later part after the one before it merges, and Part 1 only after the PO accepts the pack.
 
 ## Why a plan first
 1. **The issue says design first.** A script-built pack goes to the PO for a `manual-accept` before any build. Part 0 below is that pack.
