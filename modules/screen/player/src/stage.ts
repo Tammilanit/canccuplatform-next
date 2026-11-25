@@ -1,6 +1,6 @@
 /**
  * The stage behind a screen's boxes (contracts/theming.md, The two backgrounds; contracts/screen.md,
- * The stage): one `canccu-stage` element, the first child of `<body>`, with its six layers. The
+ * The stage): one `canccu-stage` element, the first child of `<body>`, with its seven layers. The
  * server says what it shows; this keeps it current every tick, so a box's tint ends at its `until`
  * on the screen's own clock, also offline. What each layer looks like is stage.css's.
  */
@@ -15,7 +15,27 @@ export interface StageView {
   } | null;
 }
 
-const LAYERS = ["art", "glow", "kind", "phase", "tint", "scrim"] as const;
+/** The theme's own picture, as theming answers it (`ScreenState.theme.backdrop`). */
+export interface BackdropView {
+  image_url?: unknown;
+  scrim?: unknown;
+  [field: string]: unknown;
+}
+
+const LAYERS = ["backdrop", "art", "glow", "kind", "phase", "tint", "scrim"] as const;
+/** A picture the theme serves: a revision's file, or the draft's under its preview key. */
+const PICTURE_URL =
+  /^\/theming\/(a|preview\/[A-Za-z0-9_-]{1,128})\/[0-9a-f]{64}\.(png|jpg|webp|svg)$/;
+
+/** The theme's own picture and its scrim (0.55–1), or null: it replaces the background's cycle. */
+export function pictureOf(
+  backdrop: BackdropView | undefined,
+): { url: string; scrim: number } | null {
+  const url = backdrop?.image_url;
+  const scrim = backdrop?.scrim;
+  if (typeof url !== "string" || !PICTURE_URL.test(url) || typeof scrim !== "number") return null;
+  return { url, scrim: Math.min(1, Math.max(0.55, scrim)) };
+}
 /** What may follow `--kind-` and `--phase-` in a class: an agenda key is lowercase already. */
 const KEY = /^[a-z][a-z0-9_-]{0,63}$/;
 /** The server's art path, or a picture handed in as data (the demo shots). */
@@ -66,23 +86,33 @@ export function mountBehindStage(
   return true;
 }
 
+function setImage(layer: HTMLElement, url: string): void {
+  const image = `url("${url}")`;
+  if (layer.style.backgroundImage !== image) layer.style.backgroundImage = image;
+}
+
 export class StageLayer {
   private el: HTMLElement | null = null;
 
   constructor(private readonly body: HTMLElement) {}
 
-  apply(stage: StageView | undefined, level: Level, now: number): void {
+  apply(stage: StageView | undefined, level: Level, now: number, backdrop?: BackdropView): void {
     const el = this.element();
     const { classes, art } = stageLook(stage, level, now);
+    const picture = pictureOf(backdrop);
+    // At every level: the picture is the theme's ground, as the glows are, not a moment's tint.
+    if (picture !== null) classes.push("canccu-stage--backdrop");
     const name = classes.join(" ");
     if (el.className !== name) el.className = name;
-    const layer = el.firstElementChild as HTMLElement;
+    const layerOf = (part: string): HTMLElement =>
+      el.querySelector(`.canccu-stage__${part}`) as HTMLElement;
     // The art stays drawn while it fades out (stage.css), so it only changes, never clears.
-    if (art !== null) {
-      const image = `url("${art.url}")`;
-      if (layer.style.backgroundImage !== image) layer.style.backgroundImage = image;
-      el.style.setProperty("--canccu-stage-scrim", String(art.scrim));
-    }
+    if (art !== null) setImage(layerOf("art"), art.url);
+    if (picture !== null) setImage(layerOf("backdrop"), picture.url);
+    // One scrim over both: the larger one keeps the text readable on each.
+    const scrims = [art?.scrim, picture?.scrim].filter((v) => v !== undefined);
+    if (scrims.length > 0)
+      el.style.setProperty("--canccu-stage-scrim", String(Math.max(...scrims)));
   }
 
   private element(): HTMLElement {

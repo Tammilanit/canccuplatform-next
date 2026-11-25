@@ -59,6 +59,7 @@ describe("manifestCss", () => {
     expect(out).toContain("  --canccu-logo-plate: #f7f7f8;\n");
     expect(out).toContain("  --canccu-logo-plate-radius: 50%;\n");
     expect(out).toContain("  --canccu-logo-plate-padding: 0.25;\n");
+    expect(out).toContain("  --canccu-logo-plate-aspect: 1;\n");
   });
 
   it("draws the dark plate and the medium padding", () => {
@@ -66,6 +67,7 @@ describe("manifestCss", () => {
     expect(out).toContain("--canccu-logo-plate: #121317;");
     expect(out).toContain("--canccu-logo-plate-radius: var(--canccu-radius);");
     expect(out).toContain("--canccu-logo-plate-padding: 0.15;");
+    expect(out).not.toContain("--canccu-logo-plate-aspect");
   });
 
   it("draws no plate for none, and the same CSS as before for a theme without choices", () => {

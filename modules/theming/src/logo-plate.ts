@@ -52,6 +52,8 @@ export function plateVars(plate: LogoPlate | undefined): string[] {
     `  --canccu-logo-plate: ${color};`,
     `  --canccu-logo-plate-radius: ${plate.shape === "circle" ? "50%" : "var(--canccu-radius)"};`,
     `  --canccu-logo-plate-padding: ${PLATE_PADDING[plate.padding]};`,
+    // A circle is square around the logo, which keeps its proportions inside (object-fit).
+    ...(plate.shape === "circle" ? ["  --canccu-logo-plate-aspect: 1;"] : []),
   ];
 }
 
