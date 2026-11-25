@@ -377,8 +377,8 @@ describe("the page description (#782)", () => {
   });
 
   it("needs none on a plain error page", () => {
-    expect(s(shellPage({ title: "Not found", plain: true, body: "x" }))).not.toContain(
-      "canccu-pagehead__desc",
-    );
+    expect(
+      s(shellPage({ title: "Not found", plain: true, description: "", body: "x" })),
+    ).not.toContain("canccu-pagehead__desc");
   });
 });

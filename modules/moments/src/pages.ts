@@ -128,6 +128,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         if (request.body.held !== "yes") {
           return page(request, reply, deps, {
             title: "Start the emergency?",
+            description: "The emergency takes over every screen until you end it. Check it before you confirm.",
             body: confirmEmergency(request.body.idempotency_key ?? ""),
           });
         }

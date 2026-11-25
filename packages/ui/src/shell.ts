@@ -203,12 +203,14 @@ interface ShellBase extends DocumentOptions {
   /** `narrow` (40rem) for forms; `wide` (120rem) for a collection, a board or a master–detail
    * editor (amendment 3); other workspaces keep the 64rem default. */
   width?: "narrow" | "wide";
+  /** What the page is for, in one or two sentences under the title (#782, docs/design/README.md
+   * decision 8): required, and only a `plain` page may leave it empty. */
+  description: Slot;
+  /** An error page has no title row of its own: its view is the title. */
+  plain?: boolean;
 }
 
-/** Every organiser and crew page says in one or two sentences what it is for (#782,
- * docs/design/README.md); an error page has no title row of its own: its view is the title. */
-export type ShellOptions = ShellBase &
-  ({ plain: true; description?: Slot } | { plain?: false; description: Slot });
+export type ShellOptions = ShellBase;
 
 /** Admin's script for the shell: it registers the service worker, which shows the offline page
  * when a signed-in phone loses its connection (#440), and keeps the menu's Health note from

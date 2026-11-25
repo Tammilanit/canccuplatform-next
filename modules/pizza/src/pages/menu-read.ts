@@ -76,6 +76,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
   ) =>
     organiserPage(request, reply, deps, c, {
       title: c.t("read.title"),
+      description: c.t("about.read"),
       crumb: { href: `${P}/${encodeURIComponent(request.params.id)}`, label: c.t("tab.pizzerias") },
       narrow,
       body,

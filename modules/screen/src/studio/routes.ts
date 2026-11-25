@@ -122,6 +122,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         }),
         status: pageErr.status,
         plain: true,
+        description: "",
       });
     });
 
@@ -237,6 +238,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return page(request, reply, c, {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
+          description: c.t("zone.about"),
           wide: true,
           body: zoneEditorView(c, zone, layouts, all, zones, layoutId),
           own: "studio-zone",

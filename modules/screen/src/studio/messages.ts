@@ -158,6 +158,7 @@ const EN = {
   "zones.empty_text": "Add a zone, then assign screens to it in Devices.",
 
   "zone.back": "All zones",
+  "zone.about": "What this zone's screens show and when. A change reaches its screens when you save it.",
   "zone.name": "Name",
   "zone.header": "Header",
   "zone.header_default": "As the layout says",

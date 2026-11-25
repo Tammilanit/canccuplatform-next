@@ -210,6 +210,7 @@ export function integrationsPages(app: FastifyInstance, deps: AppDeps): void {
     ) as unknown as ReadLog;
     return organiserPage(request, reply, deps, c, {
       title: c.t("integrations.title"),
+      description: c.t("about.integrations"),
       current: "integrations",
       narrow: true,
       body: view(c, k, log, request.query.error),

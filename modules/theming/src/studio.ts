@@ -36,7 +36,7 @@ async function studioPage(
     title: string;
     tab?: string;
     body: Slot;
-    description?: Slot;
+    description: Slot;
     actions?: Slot;
     status?: number;
     plain?: boolean;
@@ -54,7 +54,7 @@ async function studioPage(
     session: request.session ?? undefined,
     current: "theme",
     plain: o.plain ?? false,
-    ...(o.description === undefined ? {} : { description: o.description }),
+    description: o.description,
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.tab === undefined
       ? {}
@@ -139,6 +139,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         body: view,
         status: pageErr.status,
         plain: true,
+        description: "",
       });
     });
     const reader = { preHandler: pageNeeds(deps.rights, WRITE) };
@@ -151,6 +152,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "",
+        description: "The event's look: its colours, fonts and logo on every page and screen.",
         ...brandKitView(state, embedsAllowed, request.session?.userId),
       });
     });
@@ -176,6 +178,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return studioPage(request, reply, deps, {
           title: "Theme studio",
           tab: "history",
+          description: "Every look published for this event, newest first.",
           body: historyView(list, HISTORY_PAGE, before),
         });
       },

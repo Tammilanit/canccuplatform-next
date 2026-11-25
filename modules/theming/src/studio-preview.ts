@@ -192,6 +192,7 @@ function discordCard(look: Look, event: string): Html {
 function organiserPage(nonce: string, event: EventInfo | undefined, look: Look): Html {
   return shellPage({
     title: "Run of show",
+    description: "Everything that happens at the event, in time order.",
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
