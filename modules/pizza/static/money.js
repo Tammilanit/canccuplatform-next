@@ -34,7 +34,8 @@
   }
 
   // Scanning: a photo taken or picked is sent at once; without a script the form's button sends it.
-  var scan = document.querySelector("form[data-reading]");
+  // Marked by its own attribute: a failed read's Try again form above it also shows progress.
+  var scan = document.querySelector("form[data-scan]");
   if (scan) {
     scan.querySelectorAll("input[data-auto-send]").forEach(function (input) {
       input.addEventListener("change", function () {

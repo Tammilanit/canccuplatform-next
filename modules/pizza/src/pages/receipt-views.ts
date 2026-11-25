@@ -98,6 +98,7 @@ export function scanView(
       enctype: "multipart/form-data",
       class: "pizza-form",
       "data-shrink": "",
+      "data-scan": "",
       ...progressAttrs(c),
     })}>
       ${formKey()}

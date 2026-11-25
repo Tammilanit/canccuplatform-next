@@ -174,6 +174,30 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     await context.close();
   });
 
+  it("sends a new camera photo at once also under a failed read's Try again", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan?failed=timeout&receipt=pr_kept1`);
+    // Try again also shows progress, and comes before the scan form on the page.
+    await page.getByRole("button", { name: "Try again" }).waitFor();
+    await page.locator("input[capture]").setInputFiles({
+      name: "receipt.png",
+      mimeType: "image/png",
+      buffer: await png(),
+    });
+    await page.waitForURL(`**/pizza/hold/${id}/money/total`);
+    expect(
+      (
+        json(await w.call("pena", "GET", `/api/pizza/orders/${id}/money`)) as {
+          receipts: unknown[];
+        }
+      ).receipts.length,
+    ).toBe(1);
+    await context.close();
+  });
+
   it("shows a receipt photo in a viewer that closes on ✕, Esc, a tap outside and a swipe down", async () => {
     if (browser === undefined) return;
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
