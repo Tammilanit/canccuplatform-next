@@ -107,7 +107,9 @@ describe.skipIf(browser === undefined)("reading a menu in Chromium", { timeout: 
     // The page's limit is the reader's 50 s and 10 s more; shortened here to keep the test short.
     await page
       .locator("form[data-pages]")
-      .evaluate((f) => f.setAttribute("data-timeouts", "1500,1500,1500,1500,1500,1500"));
+      .evaluate((f) => {
+        f.setAttribute("data-timeouts", "1500,1500,1500,1500,1500,1500");
+      });
     await page.getByRole("button", { name: "Read the photos" }).click();
     await page.getByText("The read is taking too long. Try again, or type the menu.").waitFor();
     await page.getByRole("button", { name: "Try again" }).waitFor();
