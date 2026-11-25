@@ -23,6 +23,19 @@ export interface SeenDevice {
   };
 }
 
+/** A screen paired this long ago and never seen has not connected (#783): its kiosk polls every 2 s. */
+export const CONNECT_WITHIN_MS = 60_000;
+
+/** Paired, never seen, and past the time a kiosk needs to collect its token and connect. */
+export function notConnected(device: SeenDevice, nowMs: number): boolean {
+  const paired = Date.parse(device.paired_at ?? "");
+  return (
+    (device.health?.last_seen_at ?? null) === null &&
+    Number.isFinite(paired) &&
+    nowMs - paired >= CONNECT_WITHIN_MS
+  );
+}
+
 /** Screens that all went quiet within this of each other dropped together (E2). */
 export const UPLINK_WINDOW_MS = 60_000;
 
@@ -60,9 +73,19 @@ export interface Problem {
  * only while another screen is online: one screen alone, or all of them down but not together,
  * prove nothing about it.
  */
-export function problemsOf(device: SeenDevice, all: readonly SeenDevice[]): Problem[] {
+export function problemsOf(
+  device: SeenDevice,
+  all: readonly SeenDevice[],
+  nowMs = Date.now(),
+): Problem[] {
   const h = device.health;
   const problems: Problem[] = [];
+  if (notConnected(device, nowMs)) {
+    problems.push({
+      title: "help.not_connected",
+      steps: ["help.not_connected.on", "help.not_connected.again"],
+    });
+  }
   const uplink = uplinkDown(all);
   const otherOnline = all.some((o) => o.id !== device.id && o.health?.online === true);
   if (h !== undefined && !h.online && h.last_seen_at !== null) {

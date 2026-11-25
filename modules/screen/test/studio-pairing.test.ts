@@ -51,7 +51,11 @@ describe.skipIf(!DATABASE_URL)("studio pairing", () => {
 
   it("says in plain words what to do when the screen has not connected after a minute", async () => {
     const { id } = await pairDevice(h, "alpha.test", "Stage left");
-    h.clock.now += 61_000;
+    // Paired 61 s ago on the harness's clock (the row's own time is the database's).
+    await h.pool.query("UPDATE screen_assignments SET paired_at = $2 WHERE device_id = $1", [
+      id,
+      new Date(h.clock.now - 61_000),
+    ]);
     const body = (await page(`/admin/screen/devices?paired=${id}`)).body;
     const part = panel(body);
     expect(part).toContain("Stage left has not connected");

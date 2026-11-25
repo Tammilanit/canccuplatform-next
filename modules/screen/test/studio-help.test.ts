@@ -86,6 +86,25 @@ describe("problemsOf", () => {
     const unassigned = device("b", undefined, null);
     expect(problemsOf(unassigned, [unassigned]).map((p) => p.title)).toEqual(["help.unassigned"]);
   });
+
+  it("says a paired screen has not connected once a minute passed without it (#783)", () => {
+    const fresh: SeenDevice = {
+      ...device("new", { online: false, last_seen_at: null, flags: [] }),
+      paired_at: at(0),
+    };
+    const titles = (nowS: number) =>
+      problemsOf(fresh, [fresh], Date.parse(at(nowS))).map((p) => p.title);
+    expect(titles(59)).toEqual([]);
+    expect(titles(60)).toEqual(["help.not_connected"]);
+    expect(problemsOf(fresh, [fresh], Date.parse(at(60)))[0]?.steps).toEqual([
+      "help.not_connected.on",
+      "help.not_connected.again",
+    ]);
+    // Seen once: then it is offline, with the offline steps, not this.
+    expect(problemsOf(offline("old", 0), [], Date.parse(at(600))).map((p) => p.title)).toEqual([
+      "help.offline",
+    ]);
+  });
 });
 
 describe("shownZone", () => {
