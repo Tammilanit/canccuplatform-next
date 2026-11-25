@@ -1,5 +1,7 @@
 # Setting up a screen kiosk
 
+Organisers start with [Set up a screen](operations/screen-setup.md), the step-by-step guide; this page explains every flag and the check page.
+
 A venue screen is a computer with a Chromium-based browser (Chrome, Chromium or Edge) showing `https://<event hostname>/screen/` full screen. This guide sets one up so it never shows a black or silent screen, survives a reboot and keeps playing when the venue's uplink drops. The screen contract is [contracts/screen.md](../contracts/screen.md); the player is `modules/screen/player/`.
 
 ## Before the doors open: the check page

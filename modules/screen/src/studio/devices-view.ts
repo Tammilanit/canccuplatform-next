@@ -10,6 +10,7 @@ import type { SeenDevice } from "./help.js";
 import { counted } from "./messages.js";
 import type { MessageKey } from "./messages.js";
 import { nowShowing } from "./now-line.js";
+import { commandButton, pairedPanel, setupGuide } from "./paired-view.js";
 import { ago, clockDay, clockTime, online, since, thumb } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
 import type { ZoneRecord } from "../push/store.js";
@@ -98,7 +99,7 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet): Html {
         ? ""
         : t("device.up_to_date"),
   ].filter(Boolean);
-  const problems = problemsOf(d, fleet.all);
+  const problems = problemsOf(d, fleet.all, c.nowMs);
   const help =
     problems.length === 0
       ? ""
@@ -129,8 +130,6 @@ function deviceActions(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): Sl
   const { t } = c;
   if (!c.rights.has("screen.devices.write")) return "";
   const api = `/api/screen/devices/${encodeURIComponent(d.id)}`;
-  const command = (name: "identify" | "reload", done: string) =>
-    html`<button${attrs({ class: "canccu-button canccu-button--secondary canccu-button--sm", type: "button", "data-call": "POST", "data-url": `${api}/commands`, "data-body": JSON.stringify({ command: name }), "data-done": done, "data-stay": true })}>${t(name === "identify" ? "device.identify" : "device.reload")}</button>`;
   const current =
     d.zone_key !== null
       ? `zone:${d.zone_key}`
@@ -154,10 +153,14 @@ function deviceActions(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): Sl
   ];
   const unassigned = current === "";
   const id = `canccu-studio-${d.id}`;
-  return html`<div class="canccu-card__foot canccu-studio-device__actions">${command("identify", t("device.identified"))}${command("reload", t("device.reloaded"))}<details class="canccu-studio-assign"><summary class="canccu-button canccu-button--${unassigned ? "primary" : "secondary"} canccu-button--sm">${t(unassigned ? "device.assign" : "device.edit")}</summary><form class="canccu-form"${attrs({ "data-device": d.id, "data-done": t("device.saved") })}><div class="canccu-field"><label class="canccu-field__label" for="${id}-name">${t("device.name")}</label><input${attrs({ class: "canccu-input", id: `${id}-name`, name: "name", value: d.name, required: true, maxlength: 80 })}></div><div class="canccu-field"><label class="canccu-field__label" for="${id}-shows">${t("device.shows")}</label><select class="canccu-input" id="${id}-shows" name="shows">${shows}</select></div><div class="canccu-cluster"><button class="canccu-button canccu-button--primary" type="submit">${t("device.save")}</button><button${attrs({ class: "canccu-button canccu-button--danger-ghost", type: "button", "data-call": "POST", "data-url": `${api}/revoke`, "data-confirm": t("device.revoke_confirm", { device: d.name }) })}>${t("device.revoke")}</button></div></form></details></div>`;
+  return html`<div class="canccu-card__foot canccu-studio-device__actions">${commandButton(c, d, "identify")}${commandButton(c, d, "test_pattern")}${commandButton(c, d, "reload")}<details class="canccu-studio-assign"><summary class="canccu-button canccu-button--${unassigned ? "primary" : "secondary"} canccu-button--sm">${t(unassigned ? "device.assign" : "device.edit")}</summary><form class="canccu-form"${attrs({ "data-device": d.id, "data-done": t("device.saved") })}><div class="canccu-field"><label class="canccu-field__label" for="${id}-name">${t("device.name")}</label><input${attrs({ class: "canccu-input", id: `${id}-name`, name: "name", value: d.name, required: true, maxlength: 80 })}></div><div class="canccu-field"><label class="canccu-field__label" for="${id}-shows">${t("device.shows")}</label><select class="canccu-input" id="${id}-shows" name="shows">${shows}</select></div><div class="canccu-cluster"><button class="canccu-button canccu-button--primary" type="submit">${t("device.save")}</button><button${attrs({ class: "canccu-button canccu-button--danger-ghost", type: "button", "data-call": "POST", "data-url": `${api}/revoke`, "data-confirm": t("device.revoke_confirm", { device: d.name }) })}>${t("device.revoke")}</button></div></form></details></div>`;
 }
 
-function pairDialog(c: ViewContext, zones: readonly ZoneSummary[]): Slot {
+/** Over plain http the kiosk cannot keep its cookies: the page script shows this (#783). */
+export const insecureNotice = (c: ViewContext): Html =>
+  html`<div data-insecure hidden>${notice({ kind: "warn", title: c.t("pair.insecure") })}</div>`;
+
+function pairDialog(c: ViewContext, zones: readonly ZoneSummary[], venueOnly: boolean): Slot {
   const { t } = c;
   if (!c.rights.has("screen.devices.pair")) return "";
   const zoneOptions = [
@@ -172,6 +175,7 @@ function pairDialog(c: ViewContext, zones: readonly ZoneSummary[]): Slot {
   return html`<dialog class="canccu-studio-dialog" id="canccu-studio-pair">
     <form class="canccu-form" data-pair method="dialog">
       <h2 class="canccu-card__title">${t("pair.title")}</h2>
+      ${insecureNotice(c)}${venueOnly ? html`<p class="canccu-field__hint">${t("pair.restricted")}</p>` : ""}
       ${field("code", t("pair.code"), html`<input class="canccu-input canccu-studio-code" id="canccu-studio-pair-code" name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" aria-describedby="canccu-studio-pair-code-hint" />`, t("pair.code_hint"))}
       ${field("name", t("pair.name"), html`<input class="canccu-input" id="canccu-studio-pair-name" name="name" required maxlength="80" aria-describedby="canccu-studio-pair-name-hint" />`, t("pair.name_hint"))}
       ${field(
@@ -181,6 +185,7 @@ function pairDialog(c: ViewContext, zones: readonly ZoneSummary[]): Slot {
           ${zoneOptions}
         </select>`,
       )}
+      <p class="canccu-field__error" data-pair-error role="alert" hidden></p>
       <div class="canccu-cluster">
         <button class="canccu-button canccu-button--primary" type="submit">
           ${t("pair.submit")}</button
@@ -266,6 +271,8 @@ export function devicesView(
   zones: readonly ZoneSummary[],
   devices: readonly SeenDevice[],
   states: ZoneStates,
+  /** `paired`: the screen just paired (#783); `venueOnly`: the event's `screen_access` is restricted. */
+  o: { paired?: string | undefined; venueOnly?: boolean } = {},
 ): Html {
   const { t } = c;
   const uplink = uplinkDown(devices);
@@ -297,7 +304,7 @@ export function devicesView(
       : html`<div class="canccu-grid canccu-studio-devices">${cards}</div>`;
   // Amendment 3 (docs/design/grids/04-devices.svg): the summary, the screens, then Recent in the
   // panel band under them at every width, never a column beside them.
-  return html`${summary} ${list}
-    <div class="canccu-band">${recentPanel(c, devices)}</div>
-    ${pairDialog(c, zones)}`;
+  return html`${insecureNotice(c)}${pairedPanel(c, o.paired, devices)}${summary} ${list}
+    <div class="canccu-band">${setupGuide(c)}${recentPanel(c, devices)}</div>
+    ${pairDialog(c, zones, o.venueOnly === true)}`;
 }

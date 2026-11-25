@@ -41,6 +41,7 @@ import {
   FROZEN_PAGES,
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
+import { PAIRED_PAGES } from "../modules/screen/test/stack/paired-shots.mjs";
 import { PREVIEW_PAGES } from "../modules/screen/test/stack/preview-shots.mjs";
 import { EDITOR_PAGES } from "../modules/screen/test/stack/editor-shots.mjs";
 import {
@@ -146,6 +147,7 @@ if (opts["dry-run"]) {
   }
   const studioLists = [
     [STUDIO_PAGES, "while two screens play"],
+    [PAIRED_PAGES, "a screen just paired, and a wrong code"],
     [PREVIEW_PAGES, "while a preview on a screen runs"],
     [FROZEN_PAGES, "while frozen"],
     [PLAYLIST_PAGES, "with a playlist and its push"],

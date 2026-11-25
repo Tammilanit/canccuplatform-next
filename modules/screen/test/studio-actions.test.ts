@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { HTMLButtonElement, HTMLElement, HTMLInputElement, Window } from "happy-dom";
+import type { HTMLButtonElement, HTMLElement, Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const win = globalThis as unknown as Window;
@@ -88,37 +88,19 @@ describe("a Studio button", () => {
   });
 });
 
-describe("the pair dialog", () => {
-  const dialog = `<dialog id="canccu-studio-pair"><form>
-      <input name="code"><input name="name"><button type="button" data-close></button>
-    </form></dialog>`;
-
-  it("opens with a code carried through sign-in, once", () => {
-    win.sessionStorage.setItem("canccu-studio-pair", "AB12CD34");
-    load(dialog);
-    const pair = win.document.getElementById("canccu-studio-pair") as unknown as {
-      open: boolean;
-    };
-    expect(pair.open).toBe(true);
-    const code = win.document.querySelector("[name=code]") as unknown as HTMLInputElement;
-    expect(code.value).toBe("AB12CD34");
-    expect(win.sessionStorage.getItem("canccu-studio-pair")).toBeNull();
-  });
-
-  it("stays shut without a carried code", () => {
-    load(dialog);
-    const pair = win.document.getElementById("canccu-studio-pair") as unknown as {
-      open: boolean;
-    };
-    expect(pair.open).toBe(false);
-  });
-});
+// The pair dialog's own script is static/studio-devices.js now (#783): studio-devices-script.test.ts.
 
 describe("the way to sign in from Devices", () => {
+  const secure = (value: boolean) => {
+    Object.defineProperty(win, "isSecureContext", { value, configurable: true });
+  };
+  const notice = `<p data-insecure hidden>This address can't pair screens</p>`;
+
   it("keeps a scanned code for after sign-in, then goes to sign in", () => {
+    secure(true);
     const replace = vi.spyOn(win.location, "replace").mockImplementation(() => undefined);
     win.history.replaceState(null, "", "/admin/screen/devices#pair=ab12-cd34");
-    win.document.body.innerHTML = `<a href="/admin/sign-in?next=%2Fadmin%2Fscreen%2Fdevices" data-sign-in>Sign in</a>`;
+    win.document.body.innerHTML = `<a href="/admin/sign-in?next=%2Fadmin%2Fscreen%2Fdevices" data-sign-in>Sign in</a>${notice}`;
     win.eval(SIGNIN_JS);
     expect(win.sessionStorage.getItem("canccu-studio-pair")).toBe("AB12CD34");
     expect(replace).toHaveBeenCalledWith(
@@ -127,10 +109,23 @@ describe("the way to sign in from Devices", () => {
   });
 
   it("keeps nothing without a code", () => {
+    secure(true);
     vi.spyOn(win.location, "replace").mockImplementation(() => undefined);
     win.history.replaceState(null, "", "/admin/screen/devices");
-    win.document.body.innerHTML = `<a href="/admin/sign-in" data-sign-in>Sign in</a>`;
+    win.document.body.innerHTML = `<a href="/admin/sign-in" data-sign-in>Sign in</a>${notice}`;
     win.eval(SIGNIN_JS);
     expect(win.sessionStorage.getItem("canccu-studio-pair")).toBeNull();
+  });
+
+  it("over plain http, keeps the code and says to open https instead of a sign-in that loops (#783)", () => {
+    secure(false);
+    const replace = vi.spyOn(win.location, "replace").mockImplementation(() => undefined);
+    win.history.replaceState(null, "", "/admin/screen/devices#pair=ab12-cd34");
+    win.document.body.innerHTML = `<a href="/admin/sign-in" data-sign-in>Sign in</a>${notice}`;
+    win.eval(SIGNIN_JS);
+    expect(win.sessionStorage.getItem("canccu-studio-pair")).toBe("AB12CD34");
+    expect(replace).not.toHaveBeenCalled();
+    const shown = win.document.querySelector("[data-insecure]") as unknown as { hidden: boolean };
+    expect(shown.hidden).toBe(false);
   });
 });

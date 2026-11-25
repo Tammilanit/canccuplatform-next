@@ -30,6 +30,7 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio-motion.js": "text/javascript; charset=utf-8",
   "studio-ends.js": "text/javascript; charset=utf-8",
   "studio-signin.js": "text/javascript; charset=utf-8",
+  "studio-devices.js": "text/javascript; charset=utf-8",
 };
 
 const staticFiles = new Map<string, Promise<Buffer>>();

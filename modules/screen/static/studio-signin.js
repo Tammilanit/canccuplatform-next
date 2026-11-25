@@ -10,5 +10,10 @@
     const code = decodeURIComponent(location.hash.slice(6)).replace(/[^A-Za-z0-9]/g, "");
     if (code) sessionStorage.setItem("canccu-studio-pair", code.toUpperCase());
   }
+  // Sign-in's cookie is `Secure`, so over plain http it would loop: say what to do instead (#783).
+  if (!window.isSecureContext) {
+    document.querySelector("[data-insecure]").hidden = false;
+    return;
+  }
   location.replace(document.querySelector("a[data-sign-in]").href);
 })();

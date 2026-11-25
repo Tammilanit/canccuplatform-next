@@ -8,7 +8,6 @@
 
 (() => {
   const NOTICE_KEY = "canccu-studio-notice";
-  const PAIR_KEY = "canccu-studio-pair";
   const text = JSON.parse(document.getElementById("canccu-studio-text")?.textContent || "{}");
   const notice = document.querySelector(".canccu-studio-notice");
   const say = (key, values = {}) =>
@@ -147,42 +146,6 @@
         }
       }
     }, 2_000);
-  }
-
-  // Pairing: by the button, or by the kiosk's QR, whose code rides in the fragment. The fragment is
-  // cleared once read, so the code stays out of the history (contracts/screen.md, Pairing). A
-  // signed-out scan went through sign-in, which drops the fragment: studio-signin.js kept the code.
-  const pair = document.getElementById("canccu-studio-pair");
-  const kept = sessionStorage.getItem(PAIR_KEY);
-  sessionStorage.removeItem(PAIR_KEY);
-  if (pair) {
-    const open = (code) => {
-      pair.querySelector("[name=code]").value = code;
-      pair.showModal();
-      pair.querySelector(code ? "[name=name]" : "[name=code]").focus();
-    };
-    document.querySelector("[data-open-pair]")?.addEventListener("click", () => open(""));
-    pair.querySelector("[data-close]").addEventListener("click", () => pair.close());
-    if (location.hash.startsWith("#pair=")) {
-      const code = decodeURIComponent(location.hash.slice(6)).replace(/[^A-Za-z0-9]/g, "");
-      history.replaceState(null, "", location.pathname + location.search);
-      open(code.toUpperCase());
-    } else if (kept) open(kept);
-    pair.querySelector("form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const f = new FormData(event.target);
-      const name = String(f.get("name")).trim();
-      const body = {
-        code: String(f.get("code"))
-          .replace(/[^A-Za-z0-9]/g, "")
-          .toUpperCase(),
-        name,
-        ...(f.get("zone_key") ? { zone_key: f.get("zone_key") } : {}),
-      };
-      const r = await api("POST", "/api/screen/devices", body);
-      if (!r.ok) return show(failure(r));
-      reloadWith(say("pair.done", { device: name }));
-    });
   }
 
   // A device's name and what it shows: a rename and an assignment, each only when it changed.

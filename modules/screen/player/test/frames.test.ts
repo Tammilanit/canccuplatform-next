@@ -57,6 +57,7 @@ describe("the device-state frames", () => {
     expect(text()).toContain("Demo EventScreen setup");
     expect(text()).toContain("K7Q4 9WXP");
     expect(text()).toContain("Code expires in 9:41");
+    expect(text()).toContain("Waiting for an organiser…");
     await settle(2000);
     expect(api.calls).toContain("GET /api/screen/pairing/pr_1");
     claimed = true;
@@ -106,7 +107,9 @@ describe("the device-state frames", () => {
     await player.start();
     expect(shown()).toBe("refused");
     expect(text()).toContain("Not at the venue");
-    expect(text()).toContain("emergency switch");
+    // The venue check is the event's choice: the frame says who turns it off (#783).
+    expect(text()).toContain("only on the venue's network");
+    expect(text()).toContain("Event access");
     await settle(RETRY_MS);
     expect(api.calls.filter((c) => c === "GET /api/screen/device/state")).toHaveLength(2);
   });

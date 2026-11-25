@@ -144,6 +144,7 @@ class FakeTenants:
     while `full` (an event admin asks), else the public fields; `refuse` answers the next PATCH."""
 
     admin_access: str = "internet"
+    screen_access: str = "internet"
     revision: int = 3
     full: bool = True
     refuse: tuple[int, str] | None = None
@@ -152,7 +153,11 @@ class FakeTenants:
     def body(self) -> dict[str, object]:
         body: dict[str, object] = {"id": "demo", "name": "Demo Event", "status": "live"}
         if self.full:
-            body |= {"revision": self.revision, "admin_access": self.admin_access}
+            body |= {
+                "revision": self.revision,
+                "admin_access": self.admin_access,
+                "screen_access": self.screen_access,
+            }
         return body
 
     def handler(self, request: httpx.Request) -> httpx.Response:
@@ -166,7 +171,9 @@ class FakeTenants:
         if patch["revision"] != self.revision:
             error = {"code": "version_conflict", "message": "the event changed meanwhile"}
             return httpx.Response(409, json={"error": error})
-        self.admin_access, self.revision = patch["admin_access"], self.revision + 1
+        self.admin_access = patch.get("admin_access", self.admin_access)
+        self.screen_access = patch.get("screen_access", self.screen_access)
+        self.revision += 1
         return httpx.Response(200, json=self.body())
 
 

@@ -15,8 +15,8 @@ export const UHD = [
 // The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
 export const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
 /** The frames that differ by theme; the others are drawn before any theme reaches the page. */
-export const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
-export const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
+export const THEMED = ["pulse", "identify", "test-pattern", "offline", "unassigned", "archived"];
+export const UNTHEMED = ["pairing", "insecure", "refused", "moved", "unreachable", "check"];
 export const CLAIMS = [
   "claim-rail",
   "claim-hero",

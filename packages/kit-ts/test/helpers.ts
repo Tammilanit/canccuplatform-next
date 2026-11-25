@@ -60,6 +60,7 @@ export function tenantContext(overrides: Partial<TenantContext> = {}): TenantCon
     info_page_mode: "public",
     membership: "open",
     admin_access: "restricted",
+    screen_access: "restricted",
     venue: { id: "v1", name: "Demo Hall", addresses: ["192.0.2.0/24", "2001:db8:1::/48"] },
     venue_ip_check: { enabled: true, disabled_until: null, reason: null },
     flags_version: 0,

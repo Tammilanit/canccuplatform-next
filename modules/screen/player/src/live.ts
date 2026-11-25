@@ -11,6 +11,7 @@ import { Heartbeat } from "./heartbeat.js";
 import { applyPatch, isState } from "./state.js";
 import type { ScreenState } from "./state.js";
 import { SoundPlayer } from "./sound.js";
+import { testPattern } from "./test-pattern.js";
 import type { SoundState } from "./sound.js";
 import { STREAM_PATH, StreamClient } from "./stream.js";
 import type { SseMessage } from "./sse.js";
@@ -29,7 +30,7 @@ export interface LiveHost {
   paths?: { state: string; stream: string; heartbeat: boolean };
   /** The stream is open, or said something: the page is online now (for the offline store). */
   seen?(): void;
-  /** `<body>`: it carries `canccu-is-offline`, the offline mark and the identify card. */
+  /** `<body>`: it carries `canccu-is-offline`, the offline mark and the identify card or test pattern. */
   root: HTMLElement;
   bundle: string;
   reload(): void;
@@ -57,7 +58,7 @@ export class Live {
   private streamOpen = false;
   private offlineTimer: ReturnType<typeof setTimeout> | undefined;
   private pollTimer: ReturnType<typeof setInterval> | undefined;
-  private identify: HTMLElement | null = null;
+  private overlay: HTMLElement | null = null;
   private lastTime = "";
   private readonly paths: NonNullable<LiveHost["paths"]>;
   private readonly refuses: (status: number) => boolean;
@@ -192,23 +193,28 @@ export class Live {
     const expires = Date.parse(data.expires_at ?? "");
     if (!Number.isNaN(expires) && expires < this.heartbeat.serverNow()) return;
     if (data.command === "reload") this.host.reload();
-    else if (data.command === "identify" && this.state !== null) this.showIdentify(this.state);
+    else if (data.command === "identify" && this.state !== null) {
+      const s = this.state;
+      this.showCard(identifyCard(s.device.name, s.zone?.name ?? null, this.host.bundle));
+    } else if (data.command === "test_pattern" && this.state !== null) {
+      this.showCard(testPattern(this.state.device.name, innerWidth, innerHeight));
+    }
   }
 
-  private showIdentify(state: ScreenState): void {
-    this.identify?.remove();
-    const card = identifyCard(state.device.name, state.zone?.name ?? null, this.host.bundle);
+  /** Identify's card or the test pattern, over the page for 15 s; a new one replaces it. */
+  private showCard(card: HTMLElement): void {
+    this.overlay?.remove();
     const until = this.host.now() + IDENTIFY_MS;
-    this.identify = card;
+    this.overlay = card;
     this.host.root.append(card);
     keepSafetyLast(this.host.root);
-    const left = card.querySelector(".canccu-identify__left");
+    const left = card.querySelector(".canccu-identify__left, .canccu-test-pattern__left");
     const step = (): void => {
       const ms = until - this.host.now();
-      if (ms <= 0 || this.identify !== card) {
+      if (ms <= 0 || this.overlay !== card) {
         clearInterval(timer);
         card.remove();
-        if (this.identify === card) this.identify = null;
+        if (this.overlay === card) this.overlay = null;
         return;
       }
       if (left !== null) left.textContent = `${Math.ceil(ms / 1000)} s left`;
