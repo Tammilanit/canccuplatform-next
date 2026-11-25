@@ -683,6 +683,9 @@ components:
         widget:
           type: string
           pattern: "^[a-z][a-z0-9_]{0,39}$"
+        enabled:
+          type: boolean
+          description: "A zone's entry only (#787 D3): `false` keeps it in its place, skipped as an empty one is."
         template:
           type: string
         embed:
@@ -855,6 +858,10 @@ components:
           type: integer
         stale_after_seconds:
           type: [integer, "null"]
+        enabled:
+          type: boolean
+          const: false
+          description: Present only when the zone switched the entry off (#787 D3); such a widget is never in `order`.
         view:
           type: object
           description: The widget type's fields plus `qr`, `stale`, `empty` and, for some types, `card_art`.
