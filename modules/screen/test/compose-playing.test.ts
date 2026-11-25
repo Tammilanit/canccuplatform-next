@@ -216,3 +216,15 @@ describe("playlistNow", () => {
     expect(now).toBeNull();
   });
 });
+
+// #787 D6a: the playlist's turn in the idle rotation is one run, so the view says how long one is.
+describe("the playlist's run", () => {
+  it("is the playlist once through: the sum of its frames", () => {
+    expect(playlistNow(input({ state: playing() }), T0 + 4_250)?.view.run_seconds).toBe(30);
+  });
+
+  it("is unknown for a pushed asset, which loops alone", () => {
+    const pushed = playing({ source: "push", pushId: "u1", playlistId: null, assetId: "img" });
+    expect(playlistNow(input({ state: pushed }), T0 + 1_000)?.view.run_seconds).toBeNull();
+  });
+});

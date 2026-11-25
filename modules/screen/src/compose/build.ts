@@ -119,6 +119,15 @@ export function shownAt(
   return null;
 }
 
+/** The longest run of the slideshow the hero plays in one turn (#787 D6a). */
+const RUN_MAX_S = 300;
+
+/** The slideshow's turn in the hero: one run, at most 5 minutes; undefined while unknown. */
+const runDwell = (widget: string, facts: BuildInput["facts"]): number | undefined => {
+  const run = widget === "playlist" ? facts.playlist?.run_seconds : null;
+  return typeof run === "number" ? Math.min(RUN_MAX_S, Math.max(5, Math.ceil(run))) : undefined;
+};
+
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
@@ -178,6 +187,7 @@ function region(
       embed: entry.embed ?? null,
       dwell_seconds:
         clampDwell(props.dwell_seconds) ??
+        (role === "hero" ? runDwell(entry.widget, input.facts) : undefined) ??
         zoneDwell ??
         clampDwell(source.rotate_seconds) ??
         DEFAULT_DWELL_S,

@@ -243,3 +243,33 @@ describe("the food item in the hero (D1, D9)", () => {
     expect(view.countdown_at).toBe("2026-03-14T18:45:00Z");
   });
 });
+
+describe("the slideshow's turn (D6a)", () => {
+  const playlist = (run: number | null) => ({
+    item: {
+      kind: "image" as const,
+      url: "/api/screen/files/a.png",
+      slide_urls: [],
+      started_at: "2026-03-14T18:09:00Z",
+      offset_seconds: 0,
+      duration_seconds: 10,
+      muted: true,
+    },
+    next_item: null,
+    run_seconds: run,
+  });
+  const dwellOf = (run: number | null) =>
+    buildRegions({ ...input(), facts: facts({ playlist: playlist(run) }) })
+      .regions.find((r) => r.id === "hero")
+      ?.widgets.find((w) => w.widget === "playlist")?.dwell_seconds;
+
+  it("lasts one run of the playlist in the hero, at most 5 minutes", () => {
+    expect(dwellOf(200)).toBe(200);
+    expect(dwellOf(900)).toBe(300);
+    expect(dwellOf(3)).toBe(5);
+  });
+
+  it("takes the hero's turn while the run is unknown", () => {
+    expect(dwellOf(null)).toBe(45);
+  });
+});

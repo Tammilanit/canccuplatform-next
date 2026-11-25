@@ -30,8 +30,9 @@ const ITEM = {
 
 describe("content widgets", () => {
   it("playlist: the tick's item and the next one", () => {
-    const view = viewOf("playlist", {}, facts({ playlist: { item: ITEM, next_item: null } }));
-    expect(view).toEqual({ item: ITEM, next_item: null, qr: null, stale: false, empty: false });
+    const playlist = { item: ITEM, next_item: null, run_seconds: 40 };
+    const view = viewOf("playlist", {}, facts({ playlist }));
+    expect(view).toEqual({ ...playlist, qr: null, stale: false, empty: false });
   });
 
   it("playlist: empty while nothing plays", () => {
