@@ -150,8 +150,22 @@
   /*
    * The parts split the rail's columns evenly (contracts/screen.md, Header and hub QR), each a card
    * of its own with the layout's gap between them (#779): drawn as one card joined at a seam, they
-   * read as a box in a box once a theme framed each, and the food box touched the QR.
+   * read as a box in a box once a theme framed each, and the food box touched the QR. The QR's card
+   * needs only the code's width, so the seam moves both regions, not their widgets: each card
+   * still fills its region, and a cue's frame on the region goes round the box.
    */
+  .canccu-region--venue_rail {
+    margin-right: calc(-1 * var(--canccu-venue-seam));
+  }
+
+  .canccu-region--venue_rail-2 {
+    margin-left: var(--canccu-venue-seam);
+  }
+
+  .canccu-region--venue_rail,
+  .canccu-region--venue_rail-2 {
+    --canccu-venue-seam: calc(4 * var(--canccu-u));
+  }
 
   .canccu-widget--qr .canccu-widget__qr,
   .canccu-widget--checkin_qr .canccu-widget__qr {

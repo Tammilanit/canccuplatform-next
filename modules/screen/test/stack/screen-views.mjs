@@ -43,7 +43,9 @@ export const DEFAULT_LAYOUT_VIEWS = [
   ["ambient-online", "ambient"],
   ["ambient-showcase", "ambient"],
 ];
-export const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
+// Level-up's 4K is the Pulse's and the frames' only: its other layouts set fixed sizes in rem.
+export const landscapeOf = (theme, check) =>
+  (theme === "level-up" ? HD : sizesOf(theme, check)).filter(([w, h]) => w > h);
 
 /** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
 export const NEW_VIEWS = {

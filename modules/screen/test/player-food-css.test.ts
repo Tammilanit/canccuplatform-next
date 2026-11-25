@@ -72,7 +72,14 @@ describe("food.css", () => {
   // on the region is the box's.
   it("draws the venue rail's parts as cards of their own, the box its region: one frame", () => {
     const rail = read("rail.css").replace(/\/\*[\s\S]*?\*\//g, "");
-    expect(rail).not.toMatch(/venue-seam|\.canccu-region--venue_rail(-2)? > \.canccu-widget/);
+    expect(rail).not.toMatch(/\.canccu-region--venue_rail(-2)? > \.canccu-widget|\.canccu-cue/);
+    // The seam moves the regions themselves, the gap between them kept.
+    expect(rail).toMatch(
+      /\.canccu-region--venue_rail \{\s*margin-right: calc\(-1 \* var\(--canccu-venue-seam\)\);\s*\}/,
+    );
+    expect(rail).toMatch(
+      /\.canccu-region--venue_rail-2 \{\s*margin-left: var\(--canccu-venue-seam\);\s*\}/,
+    );
   });
 
   it("draws the claim on the ticker as one row: no lead, no QR, the status shown again", () => {

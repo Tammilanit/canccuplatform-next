@@ -5,8 +5,8 @@ import { FOOD_CLAIM_OF, judgeFood } from "./stack/food.mjs";
 import type { FoodMeasure } from "./stack/food.mjs";
 
 /** The venue rail's food box at 1080p and the QR's card beside it, the layout's gap between. */
-const BOX = { left: 1275, top: 631, right: 1566, bottom: 948 };
-const QR = { left: 1581, top: 631, right: 1872, bottom: 948 };
+const BOX = { left: 1275, top: 631, right: 1609, bottom: 948 };
+const QR = { left: 1624, top: 631, right: 1872, bottom: 948 };
 
 function measure(over: Partial<FoodMeasure> = {}): FoodMeasure {
   return {
@@ -27,7 +27,7 @@ describe("the food box's fit check", () => {
 
   // #779: the box and the QR touched, read as one box in another: the layout's gap between them.
   it("fails a box that touches the hub QR's card", () => {
-    const problems = judgeFood(measure({ box: { ...BOX, right: 1581 } }));
+    const problems = judgeFood(measure({ box: { ...BOX, right: 1624 } }));
     expect(problems).toEqual([
       "the food box is 0 px from the hub QR's card, under the layout's gap of 15 px",
     ]);
@@ -40,7 +40,7 @@ describe("the food box's fit check", () => {
   // #775: "On the way · about" and "collect at Entrance table" ran into the QR's half.
   it("fails text that runs past the box's edge, under the QR", () => {
     const texts = [
-      { text: "collect at Entrance table", left: 1304, top: 820, right: 1600, bottom: 860 },
+      { text: "collect at Entrance table", left: 1304, top: 820, right: 1640, bottom: 860 },
     ];
     const problems = judgeFood(measure({ texts }));
     expect(problems).toContain('"collect at Entrance table" runs past the box\'s right edge');
@@ -60,16 +60,16 @@ describe("the food box's fit check", () => {
 
   // #775: the cue's frame was drawn on the region, 39 px inside the claimed box's own frame.
   it("fails a cue frame drawn apart from the box: two frames", () => {
-    const frame = { ...BOX, right: 1527 };
+    const frame = { ...BOX, right: 1570 };
     expect(judgeFood(measure({ frame }))).toEqual([
-      "the cue's frame is drawn apart from the box (right edge 1527 px, the box's 1566 px): two frames",
+      "the cue's frame is drawn apart from the box (right edge 1570 px, the box's 1609 px): two frames",
     ]);
   });
 
   it("allows a pixel of rounding", () => {
-    const texts = [{ text: "Demo Pizzeria", left: 1274.5, top: 860, right: 1566.6, bottom: 948.4 }];
-    const box = { ...BOX, right: 1566.6 };
-    expect(judgeFood(measure({ texts, box, frame: { ...BOX, right: 1565.8 } }))).toEqual([]);
+    const texts = [{ text: "Demo Pizzeria", left: 1274.5, top: 860, right: 1609.6, bottom: 948.4 }];
+    const box = { ...BOX, right: 1609.6 };
+    expect(judgeFood(measure({ texts, box, frame: { ...BOX, right: 1608.8 } }))).toEqual([]);
   });
 
   // The longest pickup note pizza accepts (its LIMITS.pickup, 80), at 1080p, portrait and 4K.
