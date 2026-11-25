@@ -98,6 +98,8 @@ paths:
     $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1pack~1{file}"
   /api/moments/announcements:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements"
+  /api/moments/announcements/live:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1live"
   /api/moments/announcements/preview:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1preview"
   /api/moments/announcements/{announcement_id}:
@@ -1215,8 +1217,58 @@ components:
           type: [string, "null"]
     AnnouncementLevel:
       type: string
-      enum: [info, urgent]
-      description: Emergency is not a level here; it is Emergency's own flow.
+      enum: [info, important, urgent]
+      description: Emergency is not a level here; it is Emergency's own flow. `important` is additive (#780).
+    AnnouncementPlacement:
+      type: string
+      enum: [rail, hero, full]
+      description: |
+        Where the card shows (additive, #780): the rail, the hero or the whole screen. The level sets the default
+        (info `rail`, important `hero`, urgent `full`); the chain and Screen's placement hints follow it
+        (moments.md, Levels, placement and the full screen).
+    AnnouncementIcon:
+      type: string
+      enum: [info, wifi, food, trophy, clock, door, search, megaphone]
+      description: The card's icon (additive, #780).
+    AnnouncementArt:
+      type: [object, "null"]
+      required: [kind, url]
+      description: The source's art behind the card (additive, #780); null for none.
+      properties:
+        kind:
+          type: string
+          enum: [food, game]
+        url:
+          type: [string, "null"]
+          description: The game's cover; null draws the kind's own art.
+    LiveAnnouncement:
+      type: object
+      required: [id, level, title, body, icon, art, sent_at, expires_at, zones]
+      description: A live announcement as the hub reads it (additive, #780); nothing about who sent it.
+      properties:
+        id:
+          type: string
+        level:
+          $ref: "#/components/schemas/AnnouncementLevel"
+        title:
+          type: string
+        body:
+          type: string
+        icon:
+          $ref: "#/components/schemas/AnnouncementIcon"
+        art:
+          $ref: "#/components/schemas/AnnouncementArt"
+        sent_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+          description: Empty for every zone.
     AnnouncementChannels:
       type: object
       properties:
@@ -1269,9 +1321,20 @@ components:
           description: With placeholders; at most 140 characters once filled.
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        placement:
+          oneOf:
+            - $ref: "#/components/schemas/AnnouncementPlacement"
+            - type: "null"
+          description: Null or absent for the level's default, unless `full_screen` is sent; it wins over `full_screen`.
+        icon:
+          oneOf:
+            - $ref: "#/components/schemas/AnnouncementIcon"
+            - type: "null"
+          description: Null or absent for `info`.
         full_screen:
           type: boolean
-          default: false
+          deprecated: true
+          description: Use `placement`. Alone, `true` means `full` and `false` means `rail` (the chain before #780).
         channels:
           $ref: "#/components/schemas/AnnouncementChannels"
         zones:
@@ -1316,7 +1379,7 @@ components:
             maxLength: 60
     Announcement:
       type: object
-      required: [id, status, level, full_screen, title_text, body_text, variables, item_id, title, body, channels,
+      required: [id, status, level, placement, icon, full_screen, title_text, body_text, variables, item_id, title, body, channels,
         zones, duration_seconds, when, fire_at, sent_at, expires_at, updated_until, ended_at, end_reason, why,
         actor, moments]
       properties:
@@ -1327,8 +1390,14 @@ components:
           enum: [scheduled, live, ended, withdrawn]
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        placement:
+          $ref: "#/components/schemas/AnnouncementPlacement"
+        icon:
+          $ref: "#/components/schemas/AnnouncementIcon"
         full_screen:
           type: boolean
+          deprecated: true
+          description: True exactly when `placement` is `full`.
         title_text:
           type: string
         body_text:
@@ -1446,12 +1515,17 @@ components:
           default: ""
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        icon:
+          oneOf:
+            - $ref: "#/components/schemas/AnnouncementIcon"
+            - type: "null"
+          description: Additive (#780); null or absent for `info`.
         revision:
           type: integer
           minimum: 0
     AnnouncementTemplate:
       type: object
-      required: [key, name, title, body, level, builtin, variables, revision]
+      required: [key, name, title, body, level, icon, builtin, variables, revision]
       properties:
         key:
           type: string
@@ -1463,6 +1537,8 @@ components:
           type: string
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        icon:
+          $ref: "#/components/schemas/AnnouncementIcon"
         builtin:
           type: boolean
         variables:
