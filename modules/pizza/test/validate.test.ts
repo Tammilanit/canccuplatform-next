@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { MenuEntry } from "../src/model.js";
 import {
   InvalidBody,
+  ownPizzaPrice,
   parseItemBody,
   parseMenuBody,
   parsePrice,
@@ -33,14 +34,22 @@ const base = entry({ id: "mb_1", kind: "base", name: "Oma pizza", price_cents: 7
 const ctx = { items, base, toppings };
 
 describe("parseItemBody", () => {
-  it("accepts an own pizza with 1 and 4 toppings and refuses 5", () => {
+  it("accepts an own pizza with 1 and 6 toppings and refuses 7 (#789, Q3)", () => {
     expect(parseItemBody({ kind: "custom", toppings: ["kinkku"] }, ctx).toppings).toEqual([
       "kinkku",
     ]);
-    const four = ["kinkku", "ananas", "sipuli", "salami"];
-    expect(parseItemBody({ kind: "custom", toppings: four }, ctx).toppings).toHaveLength(4);
-    expect(() => parseItemBody({ kind: "custom", toppings: [...four, "jalapeno"] }, ctx)).toThrow(
-      InvalidBody,
+    const six = [...toppings.map((t) => t.name), "tonnikala"];
+    const wide = {
+      ...ctx,
+      toppings: [
+        ...toppings,
+        entry({ id: "mt_9", kind: "topping", name: "tonnikala" }),
+        entry({ id: "mt_10", kind: "topping", name: "oliivi" }),
+      ],
+    };
+    expect(parseItemBody({ kind: "custom", toppings: six }, wide).toppings).toHaveLength(6);
+    expect(() => parseItemBody({ kind: "custom", toppings: [...six, "oliivi"] }, wide)).toThrow(
+      /1 to 6 toppings/,
     );
   });
   it("refuses a topping of another pizzeria, duplicates, and an own pizza without a base", () => {
@@ -109,6 +118,28 @@ describe("snapshotOf (D15: a row keeps what was ordered, its price included)", (
       unpriced,
     );
     expect(t.price_cents).toBeNull();
+  });
+  it("prices a Fantasia own pizza by its included toppings (#789 item 6)", () => {
+    const fantasia = {
+      ...ctx,
+      base: entry({ ...base, price_cents: 1000, included_toppings: 3, extra_topping_cents: 150 }),
+      toppings: [
+        ...toppings,
+        entry({
+          id: "ms_1",
+          kind: "topping",
+          name: "prosciutto",
+          price_cents: 250,
+          tier: "special",
+        }),
+      ],
+    };
+    const priced = (names: string[]) =>
+      snapshotOf(parseItemBody({ kind: "custom", toppings: names }, fantasia), fantasia)
+        .price_cents;
+    expect(priced(["kinkku", "ananas", "sipuli"])).toBe(1000);
+    expect(priced(["kinkku", "ananas", "sipuli", "salami", "jalapeno"])).toBe(1300);
+    expect(priced(["kinkku", "ananas", "prosciutto"])).toBe(1250);
   });
   it("leaves Other without a price", () => {
     const s = snapshotOf(parseItemBody({ kind: "text", text: "XL family" }, ctx), ctx);
@@ -196,5 +227,39 @@ describe("parseTime (RFC 3339: a time names its offset)", () => {
     ]) {
       expect(() => parseTime(v, "at"), v).toThrow(InvalidBody);
     }
+  });
+});
+
+describe("ownPizzaPrice (#789 item 6: the Fantasia own pizza)", () => {
+  const fantasia = { price_cents: 1000, included_toppings: 3, extra_topping_cents: 150 };
+  const normal = (price_cents: number | null = 100) => ({ price_cents, tier: "normal" as const });
+  const special = (price_cents: number | null = 250) => ({ price_cents, tier: "special" as const });
+  it("three normal toppings cost the base", () => {
+    expect(ownPizzaPrice(fantasia, [normal(), normal(), normal()])).toBe(1000);
+  });
+  it("five normal toppings cost two extras", () => {
+    expect(ownPizzaPrice(fantasia, [normal(), normal(), normal(), normal(), normal()])).toBe(1300);
+  });
+  it("two normal and one special cost the base plus the special", () => {
+    expect(ownPizzaPrice(fantasia, [normal(), normal(), special()])).toBe(1250);
+  });
+  it("a special topping never uses up an included one", () => {
+    expect(ownPizzaPrice(fantasia, [normal(), normal(), normal(), special()])).toBe(1250);
+  });
+  it("normal toppings' own prices do not count while the base includes toppings", () => {
+    expect(ownPizzaPrice(fantasia, [normal(null), normal(900)])).toBe(1000);
+  });
+  it("no included_toppings prices as before: the base plus each topping's price", () => {
+    const plain = { price_cents: 700, included_toppings: null, extra_topping_cents: null };
+    expect(ownPizzaPrice(plain, [normal(100), special(250)])).toBe(1050);
+    expect(ownPizzaPrice(plain, [normal(null)])).toBeNull();
+  });
+  it("a missing price makes the own pizza unpriced", () => {
+    expect(ownPizzaPrice({ ...fantasia, price_cents: null }, [normal()])).toBeNull();
+    expect(ownPizzaPrice(fantasia, [normal(), special(null)])).toBeNull();
+    // Past the included ones without an extra price.
+    const noExtra = { ...fantasia, extra_topping_cents: null };
+    expect(ownPizzaPrice(noExtra, [normal(), normal(), normal()])).toBe(1000);
+    expect(ownPizzaPrice(noExtra, [normal(), normal(), normal(), normal()])).toBeNull();
   });
 });

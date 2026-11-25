@@ -23,15 +23,17 @@ export { pizzaListed } from "./demo-screenshots-pizza-list.mjs";
 
 /** The demo pizzerias, when the stack has not loaded the event profile that holds them. */
 const DEMO_MENU = [
-  "pizzeria,phone,website,service,kind,number,name,description,price",
-  'Demo Pizzeria,+000 000 0000,https://pizzeria.example,delivery,item,1,Margherita,"tomato, mozzarella",8.00',
-  'Demo Pizzeria,,,,item,3,Pepperoni,"tomato, mozzarella, pepperoni",9.00',
-  'Demo Pizzeria,,,,item,12,Kebab,"kebab, onion, chili",9.50',
-  'Demo Pizzeria,,,,base,,Own pizza,"tomato, mozzarella",7.00',
-  "Demo Pizzeria,,,,topping,,Ham,,1.00",
-  "Demo Pizzeria,,,,topping,,Pineapple,,1.00",
-  'Demo Trattoria,+000 000 0001,https://trattoria.example,takeaway,item,4,Margherita,"tomato, mozzarella",8.00',
-  'Demo Trattoria,,,,item,7,Funghi,"mushroom, mozzarella",8.50',
+  "pizzeria,phone,website,service,kind,number,name,description,price,included_toppings,extra_topping_price,tier",
+  'Demo Pizzeria,+000 000 0000,https://pizzeria.example,delivery,item,1,Margherita,"tomato, mozzarella",8.00,,,',
+  'Demo Pizzeria,,,,item,3,Pepperoni,"tomato, mozzarella, pepperoni",9.00,,,',
+  'Demo Pizzeria,,,,item,12,Kebab,"kebab, onion, chili",9.50,,,',
+  'Demo Pizzeria,,,,base,,Fantasia,"tomato, mozzarella",10.00,3,1.50,',
+  "Demo Pizzeria,,,,topping,,Ham,,1.00,,,",
+  "Demo Pizzeria,,,,topping,,Pineapple,,1.00,,,",
+  "Demo Pizzeria,,,,topping,,Prosciutto,,2.50,,,special",
+  'Demo Trattoria,+000 000 0001,https://trattoria.example,takeaway,item,4,Margherita,"tomato, mozzarella",8.00,,,',
+  'Demo Trattoria,,,,item,7,Funghi,"mushroom, mozzarella",8.50,,,',
+  'Demo Trattoria,,,,item,21,Tartufo,"truffle, mushroom, mozzarella",18.90,,,',
   "",
 ].join("\n");
 
