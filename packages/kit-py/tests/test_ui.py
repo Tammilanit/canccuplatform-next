@@ -191,7 +191,7 @@ def test_no_access_never_shows_the_right() -> None:
     ("status", "code", "title"),
     [
         (404, "not_found", "Not found"),
-        (403, "admin_access_restricted", "Not at the venue"),
+        (403, "admin_access_restricted", "Venue network only"),
         (409, "event_archived", "Event archived"),
         (503, "tenants_unavailable", "Something went wrong"),
     ],
@@ -330,6 +330,14 @@ def test_a_failure_after_a_form_post_offers_the_way_back_not_a_retry() -> None:
     assert "Try again</a>" not in view and 'href="/agenda/">Back to the run of show' in view
     _, view = error_view(failed, retry="/agenda/?day=x", back=("/agenda/", "Back"))
     assert 'href="/agenda/?day=x">' in view and ">Back</a>" not in view
+
+
+def test_off_the_venue_network_says_the_organiser_chose_it_without_wifi_or_vpn() -> None:
+    # #778: the restriction is an organiser's choice; there may be no venue Wi-Fi and no VPN.
+    _, view = error_view(KitError("x", status=403, code="admin_access_restricted"))
+    assert "This event&#x27;s organiser pages open only from the venue&#x27;s network." in view
+    assert "Ask an organiser if you need in." in view
+    assert "VPN" not in view and "Wi-Fi" not in view
 
 
 def test_off_the_venue_after_a_form_post_offers_the_way_back() -> None:

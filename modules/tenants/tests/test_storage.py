@@ -206,6 +206,7 @@ async def test_the_usage_read_follows_restricted_admin_access(env: Env) -> None:
     await make_tenant(env.db, "alpha", "alpha.example.org", admins=("u_admin",))
     async with env.db.platform() as conn:
         await conn.execute("UPDATE venues SET addresses = '{192.0.2.0/24}'")
+        await conn.execute("UPDATE tenants SET admin_access = 'restricted'")  # an organiser's choice
     async with env.client("alpha.example.org") as c:
         admin = await c.get("/api/tenants/current/storage", headers=env.rights.sign_in("u_admin"))
         member = await c.get(
