@@ -184,6 +184,17 @@ export const MONEY_FI: Record<keyof typeof MONEY_EN, string> = {
   "settings.ai_reader_monthly_limit_usd_hint":
     "Kokonaisina dollareina, kuten palveluntarjoajan konsolissa; 0 = ei kattoa. Integraatiot näyttää kuukauden luvut sitä vasten ja varoittaa 80 %:sta; palvelu itse lopettaa luvut.",
   "integrations.title": "Integraatiot",
+  "howto.title": "Näin saat avaimen",
+  "howto.step1": "Luo Anthropic Console -tili osoitteessa console.anthropic.com.",
+  "howto.step2": "Ota laskutus käyttöön Consolessa: lisää kortti ja osta saldoa.",
+  "howto.step3": "Luo API-avain Consolen API keys -sivulla.",
+  "howto.step4": "Liitä se tähän ja tallenna. Se säilytetään salattuna eikä sitä näytetä enää.",
+  "howto.step5": "Aseta Consolen rajoituksiin kuukausittainen kulutusraja; 5 $ riittää hyvin.",
+  "howto.cost":
+    "Claude Haiku 5.5 lukee kuitin noin 0,06 sentillä; 50 kuittia maksaa noin 3 senttiä.",
+  "howto.subscription":
+    "Claude-tilausta ei voi käyttää: lukija tarvitsee Consolen API-laskutuksen.",
+  "howto.link": "Avaa Consolen API keys -sivu",
   "integrations.reader": "Tekoälylukija",
   "integrations.reader_text":
     "Lukee kuitit ja menut kuvista Ruoka-sivuille; ihminen vahvistaa jokaisen luennan.",

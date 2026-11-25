@@ -84,7 +84,8 @@ export function editorPages(pages: FastifyInstance, deps: AppDeps): void {
     return page(request, reply, deps, {
       title: editorTitle(cue?.name ?? null),
       tab: "cues",
-      description: "A cue: the sound it plays, on which zones and how loud. Test it before it goes live.",
+      description:
+        "A cue: the sound it plays, on which zones and how loud. Test it before it goes live.",
       body: cueEditor({
         cue,
         library: sounds.body.sounds as LibraryView[],

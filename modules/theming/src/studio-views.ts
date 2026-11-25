@@ -5,7 +5,7 @@
  * markup holds no script and no `style`.
  */
 import type { SqlClient } from "@canccu/kit";
-import { COLOR_TOKENS, attrs, html, icon, notice } from "@canccu/ui";
+import { attrs, COLOR_TOKENS, html, icon, notice, statusChip } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { generateColors } from "./brand.js";
 import type { Brand } from "./brand.js";
@@ -187,8 +187,8 @@ export function status(state: StudioState, viewerId: string | undefined): Html {
     d.updated_by === null
       ? ""
       : ` · last changed by ${d.updated_by === viewerId ? "you" : "another organiser"}`;
-  return html`<span class="canccu-badge canccu-badge--plain">Draft</span>
-    ${published ? "Changes to the published theme, not published yet" : "Nothing published yet"}${who}`;
+  return html`${statusChip("plain", "Draft", "Your changes are kept here until you publish them.")}
+  ${published ? "Changes to the published theme, not published yet" : "Nothing published yet"}${who}`;
 }
 
 /** A problem in words: its message, after the file it is in when that is not theme.yaml. */

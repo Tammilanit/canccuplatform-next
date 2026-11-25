@@ -349,3 +349,13 @@
   background: var(--canccu-tint);
   color: var(--canccu-ink-muted);
 }
+
+/* How to get the AI reader's key (#782 item 6). */
+.pizza-howto summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.pizza-howto ol {
+  margin: 0.5rem 0;
+  padding-inline-start: 1.25rem;
+}
