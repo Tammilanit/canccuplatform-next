@@ -49,7 +49,7 @@
    * On a portrait layout the header's half is narrow and two rows high: the zone goes under the
    * event's name, beside the logo, so the name is not cut short.
    */
-  @container (aspect-ratio < 1) {
+  @container canccu-layout (aspect-ratio < 1) {
     .canccu-region[data-role="header"] > .canccu-widget--logo {
       display: grid;
       /* canccu-grid: fixed screen — the player's or a layout's own grid: the photo beside the name and zone */

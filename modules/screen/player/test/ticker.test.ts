@@ -160,6 +160,26 @@ describe("the ticker's line", () => {
     expect(lineOf(root).dataset.fit).toBe("crawl");
   });
 
+  // Fix-check on #779: a new pace timed a line not laid out over a 0-wide track, a 1 s loop that
+  // was never timed again.
+  it("keeps a new pace for a crawling line until it is laid out again", () => {
+    layOutLines(1600, 2400);
+    const root = document.createElement("main");
+    root.innerHTML =
+      '<div class="canccu-widget canccu-widget--ticker"><p class="canccu-widget__line"></p></div>';
+    lineOf(root).textContent = TEXT;
+    document.body.append(root);
+    fitTickers(root, "moderate", 0, 180);
+    const seconds = lineOf(root).style.getPropertyValue("--canccu-crawl-seconds");
+    root.remove();
+    fitTickers(root, "moderate", 0, 400);
+    expect(lineOf(root).dataset.speed).toBe("180");
+    expect(lineOf(root).style.getPropertyValue("--canccu-crawl-seconds")).toBe(seconds);
+    document.body.append(root);
+    fitTickers(root, "moderate", 0, 400);
+    expect(lineOf(root).dataset.speed).toBe("400");
+  });
+
   it("is fitted by the screen on its first tick on the page", () => {
     layOutLines(1600, 5000);
     const screen = new Screen({ serverNow: () => 0, reducedMotion: () => false });

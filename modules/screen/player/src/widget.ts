@@ -218,11 +218,6 @@ export function countdownText(ms: number): string {
   return `${two(Math.floor(s / 3600))}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}`;
 }
 
-/**
- * A `<time datetime>` that a template leaves empty shows the time left to it, counted here: a
- * view-model carries only the target (`countdown.target_at`), and the device keeps counting, also
- * offline. One that holds text is the template's own and is left alone.
- */
 /** Time left in hours and whole minutes, rounded up: "4 h 54 min", "2 h", "45 min". */
 export function chipText(leftMs: number): string {
   const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
@@ -231,6 +226,11 @@ export function chipText(leftMs: number): string {
   return m === 0 ? `${String(h)} h` : `${String(h)} h ${String(m)} min`;
 }
 
+/**
+ * A `<time datetime>` that a template leaves empty shows the time left to it, counted here: a
+ * view-model carries only the target (`countdown.target_at`), and the device keeps counting, also
+ * offline. One that holds text is the template's own and is left alone.
+ */
 export function fillCountdowns(root: ParentNode, nowMs: number): void {
   for (const el of root.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
     // A bar's end is data for the bar, not a countdown of its own.

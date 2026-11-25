@@ -94,6 +94,49 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
         });
   });
 
+  // Fix-check on #779: the header band became a size container, and the portrait rule's unnamed
+  // query asked the band, not the layout, so the name and zone shared a row and the name ended "…".
+  it("puts the zone under the event's name in a portrait header, so the name is not cut", async () => {
+    const page = await open([1080, 1920], stateOf("portrait"));
+    const logo = await page.evaluate(() => {
+      const w = document.querySelector<HTMLElement>(
+        '.canccu-region[data-role="header"] > .canccu-widget--logo',
+      );
+      const name = w?.querySelector<HTMLElement>(".canccu-widget__name");
+      return {
+        display: w ? getComputedStyle(w).display : null,
+        cut: name ? name.scrollWidth > name.clientWidth : null,
+      };
+    });
+    expect(logo).toEqual({ display: "grid", cut: false });
+    await page.close();
+  });
+
+  // Fix-check on #779: a clip, unlike `hidden`, keeps a flex item's whole line as its minimum, so
+  // a long name ran past its card with no "…" and pushed its status off.
+  it("ends a long pizzeria name on the ticker in '…' inside its card", async () => {
+    const page = await open([1920, 1080], stateOf("landscape"));
+    const fit = await page.evaluate(() => {
+      const w = document.createElement("div");
+      w.className = "canccu-widget canccu-widget--food_status";
+      w.innerHTML =
+        '<p class="canccu-widget__row"><strong class="canccu-widget__name"></strong>' +
+        '<span class="canccu-widget__meta">on the way</span></p>';
+      const name = w.querySelector<HTMLElement>(".canccu-widget__name");
+      const meta = w.querySelector<HTMLElement>(".canccu-widget__meta");
+      document.querySelector('.canccu-region[data-role="ticker"]')?.append(w);
+      if (name === null || meta === null || !w.isConnected) return null;
+      name.textContent = "Pizzeria Napoletana ".repeat(20);
+      const right = w.getBoundingClientRect().right + 1;
+      return {
+        ellipsis: name.scrollWidth > name.clientWidth && getComputedStyle(name).textOverflow,
+        inside: [name, meta].every((el) => el.getBoundingClientRect().right <= right),
+      };
+    });
+    expect(fit).toEqual({ ellipsis: "ellipsis", inside: true });
+    await page.close();
+  });
+
   it("finds a descender its box cuts, so the check above is real", async () => {
     const page = await open([1920, 1080], stateOf("landscape"));
     await page.evaluate(() => {

@@ -74,14 +74,19 @@ describe("food.css", () => {
     const rail = read("rail.css").replace(/\/\*[\s\S]*?\*\//g, "");
     expect(rail).not.toMatch(/\.canccu-region--venue_rail(-2)? > \.canccu-widget|\.canccu-cue/);
     // The seam moves the regions themselves, the gap between them kept; a rail that is not split
-    // keeps to its column.
+    // keeps to its column. Both edges hang on one condition, so they move together in any order.
+    const split = String.raw`\.canccu-layout:has\(> \.canccu-region--venue_rail-2:not\(\[hidden\]\)\) > `;
     expect(rail).toMatch(
-      /\.canccu-region--venue_rail:has\(~ \.canccu-region--venue_rail-2:not\(\[hidden\]\)\) \{\s*margin-right: calc\(-1 \* var\(--canccu-venue-seam\)\);\s*\}/,
+      new RegExp(
+        String.raw`${split}\.canccu-region--venue_rail \{\s*margin-right: calc\(-1 \* var\(--canccu-venue-seam\)\);\s*\}`,
+      ),
     );
-    expect(rail).not.toMatch(/\.canccu-region--venue_rail \{\s*margin-right/);
     expect(rail).toMatch(
-      /\.canccu-region--venue_rail-2 \{\s*margin-left: var\(--canccu-venue-seam\);\s*\}/,
+      new RegExp(
+        String.raw`${split}\.canccu-region--venue_rail-2 \{\s*margin-left: var\(--canccu-venue-seam\);\s*\}`,
+      ),
     );
+    expect(rail).not.toMatch(/^\s*\.canccu-region--venue_rail(-2)?(:has\([^)]*\))? \{\s*margin/m);
   });
 
   it("draws the claim on the ticker as one row: no lead, no QR, the status shown again", () => {

@@ -115,6 +115,7 @@
   /* The box's wrap and fit (#775) are not the ticker's: its one line ends a long name with an
      ellipsis, as the ticker's own text does. */
   .canccu-region[data-role="ticker"] > .canccu-widget--food_status .canccu-widget__name {
+    min-width: 0;
     overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;

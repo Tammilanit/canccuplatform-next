@@ -57,6 +57,7 @@
       .canccu-region:not([data-role="header"], [data-role="ticker"])
       > .canccu-widget--logo
       .canccu-widget__name {
+      min-width: 0;
       overflow: clip;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -93,6 +94,7 @@
       .canccu-region:not([data-role="header"], [data-role="ticker"])
       .canccu-widget__name {
       display: block;
+      min-width: 0;
       overflow: clip;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -147,6 +149,7 @@
       .canccu-widget__headline {
       grid-area: headline;
       display: block;
+      min-width: 0;
       overflow: clip;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -160,6 +163,7 @@
       .canccu-widget__when {
       grid-area: when;
       flex-wrap: nowrap;
+      min-width: 0;
       overflow: clip;
       white-space: nowrap;
     }

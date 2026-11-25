@@ -37,6 +37,11 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number, speed: number): v
   const text = line.dataset.text ?? line.textContent;
   const fitted = line.dataset.fit as Fit | undefined;
   const moving = motion === "none" ? "step" : "crawl";
+  // A line off the page (a new layout's `<main>` before the player mounts it) or not laid out
+  // (a collapsed region, a hidden preview) measures 0 wide: unfitted it would pass as fitting for
+  // good, and a crawl timed now would loop its 0-wide track in a second. It waits for a tick on
+  // the page.
+  if (!line.isConnected || line.clientWidth === 0) return;
   // Measured once per text and motion: a redraw with new data brings a fresh line element. A new
   // pace builds the crawl again: new timings on a running animation keep its start, so the loop
   // would go on from this screen's own time instead of the server's clock.
@@ -45,9 +50,6 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number, speed: number): v
     if (fitted === "crawl" && line.dataset.speed !== String(speed)) crawl(line, text, nowMs, speed);
     return;
   }
-  // A line off the page (a new layout's `<main>` before the player mounts it) or not laid out yet
-  // measures 0 wide and would pass as fitting for good: it waits unfitted for a tick on the page.
-  if (!line.isConnected || line.clientWidth === 0) return;
   line.replaceChildren(text);
   line.style.removeProperty("--canccu-crawl-seconds");
   line.style.removeProperty("--canccu-crawl-delay");

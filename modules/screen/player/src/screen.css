@@ -37,6 +37,7 @@
     display: grid;
     gap: var(--canccu-gap);
     padding: var(--canccu-safe-inset);
+    container-name: canccu-layout;
     container-type: size;
     overflow: hidden;
     /* Burn-in drift: a unit vector from the player, a quarter of the safe inset long. */
@@ -162,6 +163,7 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    min-width: 0;
     overflow: clip;
     font-family: var(--canccu-font-display);
     font-size: calc(9.3 * var(--canccu-u));
@@ -176,7 +178,9 @@
    * choose (`system-ui`) a box that clipped its text cut its g, j, p and y. The text boxes that end
    * a long text (an ellipsis, a clamp) clip with `overflow: clip`, so their ink may paint this far
    * past them without moving anything: enough for the fonts measured (the system fonts, the demo
-   * themes') from a line height of 1, and short of the next line's ascenders under a clamp.
+   * themes') from a line height of 1, and short of the next line's ascenders under a clamp. Each
+   * of those boxes also sets `min-width: 0`: a clip, unlike `hidden`, makes no scroll container, so
+   * a flex or grid item's minimum stays its whole line, which then runs past its card with no "…".
    */
   .canccu-widget
     :is(

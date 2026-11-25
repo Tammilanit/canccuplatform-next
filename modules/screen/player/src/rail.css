@@ -98,6 +98,7 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    min-width: 0;
     overflow: clip;
     font-size: calc(4 * var(--canccu-u));
     font-weight: 600;
@@ -138,6 +139,7 @@
 
   .canccu-widget--venue_info .canccu-widget__name,
   .canccu-widget--venue_info .canccu-widget__password {
+    min-width: 0;
     overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -153,14 +155,15 @@
    * read as a box in a box once a theme framed each, and the food box touched the QR. The QR's card
    * needs only the code's width, so the seam moves both regions, not their widgets: each card
    * still fills its region, and a cue's frame on the region goes round the box. Only a split rail
-   * moves: alone (`hub_qr: rotate`) its card keeps to its column. `~`, not `+`: a region that comes
-   * back is appended at the end of the screen.
+   * moves: alone (`hub_qr: rotate`) its card keeps to its column. Both margins hang on the one
+   * condition, the second part shown, so the seam moves both edges or neither, in any DOM order (a
+   * region that comes back is appended at the end of the screen).
    */
-  .canccu-region--venue_rail:has(~ .canccu-region--venue_rail-2:not([hidden])) {
+  .canccu-layout:has(> .canccu-region--venue_rail-2:not([hidden])) > .canccu-region--venue_rail {
     margin-right: calc(-1 * var(--canccu-venue-seam));
   }
 
-  .canccu-region--venue_rail-2 {
+  .canccu-layout:has(> .canccu-region--venue_rail-2:not([hidden])) > .canccu-region--venue_rail-2 {
     margin-left: var(--canccu-venue-seam);
   }
 
