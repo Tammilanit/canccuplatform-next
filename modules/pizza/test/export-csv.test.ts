@@ -18,6 +18,7 @@ const order = (o: Partial<ExportOrder>): ExportOrder => ({
   payer_name: "Player Two",
   total_cents: 3800,
   split: null,
+  even_limit_cents: null,
   settle_to: "organiser",
   rows: [],
   ...o,
@@ -122,5 +123,54 @@ describe("buildExport", () => {
       csv: "order_id,ordered_at,pizzeria,payer_nick,order_total,settle_to,nick,discord_id,units,amount\n",
       left_out: [],
     });
+  });
+});
+
+describe("even shares with a pizza over the limit (#789 item 8)", () => {
+  it("gives every row its amount, as the payment system cannot work it out from units", () => {
+    const { csv } = buildExport(
+      [
+        order({
+          total_cents: 4000,
+          split: "even",
+          even_limit_cents: 1560,
+          rows: rows([
+            ["Anni", [1000]],
+            ["Kim", [2000]],
+            ["Pena", [1000]],
+          ]),
+        }),
+      ],
+      "Europe/Helsinki",
+    );
+    const amounts = csv
+      .trim()
+      .split("\n")
+      .slice(1)
+      .map((l) => l.split(",").at(-1));
+    expect(amounts).toEqual(["11.87", "16.27", "11.86"]);
+  });
+  it("leaves plain even shares to units, as before", () => {
+    const { csv } = buildExport(
+      [
+        order({
+          total_cents: 4000,
+          split: "even",
+          even_limit_cents: 2500,
+          rows: rows([
+            ["Anni", [1000]],
+            ["Kim", [2000]],
+          ]),
+        }),
+      ],
+      "Europe/Helsinki",
+    );
+    expect(
+      csv
+        .trim()
+        .split("\n")
+        .slice(1)
+        .map((l) => l.split(",").at(-1)),
+    ).toEqual(["", ""]);
   });
 });

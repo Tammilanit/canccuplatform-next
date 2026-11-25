@@ -100,9 +100,8 @@ export function orderView(
   if (seen === "guest") return base;
   const mine = items.filter((i) => caller !== null && i.user_id === caller.user_id);
   const money = mine.length > 0 || seen === "manager" ? amounts(o, items) : null;
-  const myAmount =
-    money?.people.find((p) => caller !== null && p.user_id === caller.user_id)?.amount_cents ??
-    null;
+  const me = money?.people.find((p) => caller !== null && p.user_id === caller.user_id);
+  const myAmount = me?.amount_cents ?? null;
   const member = {
     ...base,
     holder: o.holder_user_id === null ? null : { user_id: o.holder_user_id, name: o.holder_name },
@@ -113,6 +112,8 @@ export function orderView(
     my_amount_cents: myAmount,
     /** From the menu's prices while the order has no total: the receipt confirms it. */
     my_amount_estimated: myAmount !== null && o.total_cents === null,
+    /** Even shares: the part of my amount for my pizzas above the even-share limit (#789). */
+    my_over_limit_cents: myAmount === null ? null : (me?.over_limit_cents ?? 0),
   };
   // Each person in the order: whom they pay and their own mark, never anyone else's (U12 A).
   if (mine.length > 0 || seen === "manager") {

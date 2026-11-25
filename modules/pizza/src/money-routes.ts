@@ -175,10 +175,7 @@ export function moneyRoutes(app: FastifyInstance, deps: AppDeps): void {
         // After `prices`: a confirmed read may be what makes exact possible.
         if (b.split !== null && b.split !== "exact" && b.split !== "even")
           bad("split", "exact, even or null");
-        if (
-          b.split === "exact" &&
-          !amounts({ total_cents: order.total_cents, split: "exact" }, items).exact_possible
-        ) {
+        if (b.split === "exact" && !amounts({ ...order, split: "exact" }, items).exact_possible) {
           throw new Conflict("prices_missing", "Exact needs a price on every pizza.");
         }
         set("split", b.split, order.split);

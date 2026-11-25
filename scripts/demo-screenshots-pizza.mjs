@@ -17,7 +17,7 @@ import {
 } from "../modules/screen/test/stack/client.mjs";
 import { roomReady } from "../modules/screen/test/stack/food.mjs";
 import { PHONE, firstLine } from "./demo-screenshots-shot.mjs";
-import { BOX, ORDER, PAID, PIZZERIA, PLAYERS, RECEIPT, SHOTS } from "./demo-screenshots-pizza-list.mjs";
+import { BOX, EVEN, ORDER, PAID, PIZZERIA, PLAYERS, RECEIPT, SHOTS } from "./demo-screenshots-pizza-list.mjs";
 
 export { pizzaListed } from "./demo-screenshots-pizza-list.mjs";
 
@@ -176,6 +176,7 @@ export async function pizzaShots({ shot, fail }) {
   let pz;
   let order;
   let receipt = "";
+  let even = "";
   try {
     await orderingOpen();
     await readerOn();
@@ -259,6 +260,30 @@ export async function pizzaShots({ shot, fail }) {
     arrived: () =>
       api("POST", `/api/pizza/orders/${order}/arrive`, { pickup: "Entrance table" }),
     done: () => api("POST", `/api/pizza/orders/${order}/hand-out`),
+    // #789 item 8: at Demo Trattoria the Tartufo is over the menu's even-share limit; called in
+    // (which fixes the limit) and split evenly, its holder pays the part above it.
+    even: async () => {
+      const listed = expect(await api("GET", "/api/pizza/pizzerias"), 200, "pizzerias");
+      const tz = listed.body.pizzerias.find((p) => p.name === "Demo Trattoria").id;
+      const menu = expect(await api("GET", `/api/pizza/pizzerias/${tz}`), 200, "the menu");
+      const closes = new Date(Date.now() + 45 * 60_000).toISOString();
+      even = expect(await openOrder({ pizzeria_id: tz, closes_at: closes }), 201, "opening")
+        .body.id;
+      for (const [cookie, number] of [
+        [SESSION, "21"],
+        [PLAYERS[0][0], "4"],
+        [PLAYERS[1][0], "7"],
+      ]) {
+        const item = menu.body.menu.items.find((i) => i.number === number);
+        expect(
+          await api("POST", `/api/pizza/orders/${even}/items`, { kind: "menu", menu_item_id: item.id }, cookie),
+          201,
+          "adding a pizza",
+        );
+      }
+      expect(await api("POST", `/api/pizza/orders/${even}/place`, {}), 200, "calling it in");
+      return api("PATCH", `/api/pizza/orders/${even}/money`, { total_cents: 3600, split: "even" });
+    },
   };
   let at = "open";
   for (const [name, path, viewport, step, cookie = SESSION] of SHOTS) {
@@ -274,7 +299,7 @@ export async function pizzaShots({ shot, fail }) {
     const preview = name.startsWith("pizza-import-preview");
     await shot(
       name,
-      path.replace(ORDER, order).replace(PIZZERIA, pz).replace(RECEIPT, receipt),
+      path.replace(ORDER, order).replace(PIZZERIA, pz).replace(RECEIPT, receipt).replace(EVEN, even),
       viewport,
       cookie,
       {

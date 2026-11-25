@@ -7,6 +7,8 @@ export interface MoneyPerson {
   name: string | null;
   units: number;
   amount_cents: number | null;
+  /** Even shares: the part above the even-share limit, in the amount (#789). */
+  over_limit_cents: number;
   /** Null where there is no mark: settled through the organiser, or the payer themselves. */
   paid: boolean | null;
 }
@@ -39,6 +41,7 @@ export interface MoneyView {
   exact_possible: boolean;
   estimated: boolean;
   extras_cents: number | null;
+  even_limit_cents: number | null;
   settle_to: "organiser" | "payer";
   total_effective_cents: number | null;
   people: MoneyPerson[];
