@@ -15,7 +15,7 @@ import os
 import secrets
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from .errors import KitError
 
@@ -42,6 +42,9 @@ class TenantContext(TypedDict):
     info_page_mode: Literal["public", "venue_only", "sign_in"]
     membership: Literal["open", "closed"]
     admin_access: Literal["restricted", "internet"]
+    # Where a paired screen plays (contracts/tenants.md, Screen access): `internet` by default.
+    # Not required here only so a context without it fails closed, as `restricted`.
+    screen_access: NotRequired[Literal["restricted", "internet"]]
     venue: Venue | None
     venue_ip_check: VenueIpCheck
     flags_version: int
@@ -154,9 +157,13 @@ def check_screen_access(
     client_ip: str | None,
     now: datetime | None = None,
 ) -> None:
-    """A screen needs its device token and, unless the switch is off, its event's venue address."""
+    """A screen needs its device token; with `screen_access: restricted`, also its event's venue
+    address unless the emergency switch is off. Pairing is the trust (#783): by default the token
+    alone serves."""
     if not device_token_valid:
         raise DeviceUnknown()
+    if ctx.get("screen_access") == "internet":
+        return
     if venue_ip_check_active(ctx, now) and not _from_venue(ctx, client_ip):
         raise VenueIpRefused(VENUE_REFUSED_MESSAGE)
 

@@ -16,6 +16,11 @@ export interface TenantContext {
   info_page_mode: "public" | "venue_only" | "sign_in";
   membership: "open" | "closed";
   admin_access: "restricted" | "internet";
+  /**
+   * Where a paired screen plays (contracts/tenants.md, Screen access): `internet` by default.
+   * Optional here only so a context without it fails closed, as `restricted`.
+   */
+  screen_access?: "restricted" | "internet";
   venue: { id: string; name: string; addresses: string[] } | null;
   venue_ip_check: { enabled: boolean; disabled_until: string | null; reason: string | null };
   flags_version: number;
@@ -119,12 +124,17 @@ export function venueIpCheckActive(ctx: TenantContext, now: Date = new Date()): 
   return Number.isNaN(until) || now.getTime() >= until;
 }
 
-/** A screen needs its device token and, unless the switch is off, its event's venue address. */
+/**
+ * A screen needs its device token; with `screen_access: restricted`, also its event's venue
+ * address unless the emergency switch is off. Pairing is the trust (#783): by default the token
+ * alone serves.
+ */
 export function checkScreenAccess(
   ctx: TenantContext,
   request: { deviceTokenValid: boolean; clientIp: string | undefined; now?: Date },
 ): void {
   if (!request.deviceTokenValid) throw new DeviceUnknown();
+  if (ctx.screen_access === "internet") return;
   if (venueIpCheckActive(ctx, request.now) && !fromVenue(ctx, request.clientIp)) {
     throw new VenueIpRefused(VENUE_REFUSED_MESSAGE);
   }

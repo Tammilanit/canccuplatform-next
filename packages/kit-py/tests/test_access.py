@@ -220,3 +220,33 @@ def test_parse_time_reads_z_and_a_time_without_a_zone_as_utc() -> None:
     assert parse_time("2026-11-14T17:00:00Z") == datetime(2026, 11, 14, 17, tzinfo=UTC)
     assert parse_time("2026-11-14T17:00:00") == datetime(2026, 11, 14, 17, tzinfo=UTC)
     assert parse_time("2026-11-14T19:00:00+02:00") == datetime(2026, 11, 14, 17, tzinfo=UTC)
+
+
+def test_screen_access_internet_lets_a_paired_screen_play_from_anywhere() -> None:
+    open_ = tenant_context(screen_access="internet")
+    check_screen_access(open_, device_token_valid=True, client_ip=ELSEWHERE, now=NOW)
+    check_screen_access(open_, device_token_valid=True, client_ip=None, now=NOW)
+    # No venue is no reason to refuse here: the pairing is the trust.
+    no_venue = tenant_context(screen_access="internet", venue=None)
+    check_screen_access(no_venue, device_token_valid=True, client_ip=ELSEWHERE, now=NOW)
+    with pytest.raises(DeviceUnknown):
+        check_screen_access(open_, device_token_valid=False, client_ip=VENUE_V4, now=NOW)
+
+
+def test_screen_access_restricted_or_missing_keeps_the_venue_check() -> None:
+    with pytest.raises(VenueIpRefused):
+        check_screen_access(
+            tenant_context(screen_access="restricted"),
+            device_token_valid=True,
+            client_ip=ELSEWHERE,
+            now=NOW,
+        )
+    missing = dict(tenant_context())
+    missing.pop("screen_access", None)
+    with pytest.raises(VenueIpRefused):
+        check_screen_access(
+            missing,  # type: ignore[arg-type]
+            device_token_valid=True,
+            client_ip=ELSEWHERE,
+            now=NOW,
+        )

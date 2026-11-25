@@ -342,6 +342,14 @@ components:
         venue's addresses or the platform's Tailscale prefixes (contracts/tenants.md, Admin access).
       enum: [restricted, internet]
       default: internet
+    ScreenAccess:
+      type: string
+      description: |
+        Where the event's paired screens play: `internet` (the default) anywhere, on the device token
+        alone, since pairing proves the screen is the event's; `restricted` only from the venue's
+        addresses, unless the emergency switch is off (contracts/tenants.md, Screen access).
+      enum: [restricted, internet]
+      default: internet
     TimeZone:
       type: string
       description: An IANA time zone name.
@@ -403,7 +411,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/PublicTenant"
         - type: object
-          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, personal_anonymise_at, cloned_from, created_at, revision, storage_quota_bytes]
+          required: [series_id, admin_access, screen_access, venue_ip_check, archived_at, presence_delete_at, personal_anonymise_at, cloned_from, created_at, revision, storage_quota_bytes]
           properties:
             series_id:
               type: [string, "null"]
@@ -411,6 +419,8 @@ components:
               $ref: "#/components/schemas/StorageQuota"
             admin_access:
               $ref: "#/components/schemas/AdminAccess"
+            screen_access:
+              $ref: "#/components/schemas/ScreenAccess"
             venue_ip_check:
               $ref: "#/components/schemas/VenueIpCheck"
             archived_at:
@@ -459,6 +469,8 @@ components:
           $ref: "#/components/schemas/Membership"
         admin_access:
           $ref: "#/components/schemas/AdminAccess"
+        screen_access:
+          $ref: "#/components/schemas/ScreenAccess"
     RegistryPatch:
       description: As `TenantPatch`, plus the venue and the series (`null` removes them).
       allOf:
@@ -1032,7 +1044,7 @@ components:
     TenantContext:
       type: object
       description: What the kit needs to serve a request for this tenant.
-      required: [tenant_id, status, primary_hostname, time_zone, info_page_mode, membership, admin_access, venue, venue_ip_check, flags_version, flags]
+      required: [tenant_id, status, primary_hostname, time_zone, info_page_mode, membership, admin_access, screen_access, venue, venue_ip_check, flags_version, flags]
       properties:
         tenant_id:
           $ref: "#/components/schemas/TenantId"
@@ -1051,6 +1063,8 @@ components:
           $ref: "#/components/schemas/Membership"
         admin_access:
           $ref: "#/components/schemas/AdminAccess"
+        screen_access:
+          $ref: "#/components/schemas/ScreenAccess"
         venue:
           oneOf:
             - $ref: "#/components/schemas/VenueRef"

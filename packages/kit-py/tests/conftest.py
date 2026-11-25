@@ -54,6 +54,7 @@ def tenant_context(**overrides: Any) -> TenantContext:
         "info_page_mode": "public",
         "membership": "open",
         "admin_access": "restricted",
+        "screen_access": "restricted",
         "venue": {
             "id": "v1",
             "name": "Demo Hall",

@@ -137,6 +137,41 @@ describe("screens: venue IP plus device token", () => {
   });
 });
 
+describe("screens: screen_access", () => {
+  it("lets a paired screen play from anywhere by default (internet)", () => {
+    const open = tenantContext({ screen_access: "internet" });
+    expect(() => {
+      checkScreenAccess(open, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
+    }).not.toThrow();
+    expect(() => {
+      checkScreenAccess(open, { deviceTokenValid: true, clientIp: undefined, now: NOW });
+    }).not.toThrow();
+    // No venue is no reason to refuse here: the pairing is the trust.
+    const noVenue = tenantContext({ screen_access: "internet", venue: null });
+    expect(() => {
+      checkScreenAccess(noVenue, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
+    }).not.toThrow();
+  });
+
+  it("still needs the token with internet", () => {
+    const open = tenantContext({ screen_access: "internet" });
+    expect(() => {
+      checkScreenAccess(open, { deviceTokenValid: false, clientIp: VENUE_V4, now: NOW });
+    }).toThrow(DeviceUnknown);
+  });
+
+  it("keeps the venue check with restricted, and when the value is missing", () => {
+    const restricted = tenantContext({ screen_access: "restricted" });
+    expect(() => {
+      checkScreenAccess(restricted, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
+    }).toThrow(VenueIpRefused);
+    const { screen_access: _, ...missing } = tenantContext();
+    expect(() => {
+      checkScreenAccess(missing, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
+    }).toThrow(VenueIpRefused);
+  });
+});
+
 describe("device tokens", () => {
   it("stores only a hash and compares in constant time", () => {
     const token = newDeviceToken();
