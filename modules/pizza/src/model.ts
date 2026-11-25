@@ -11,13 +11,28 @@ export interface MenuEntry {
   name: string;
   description: string | null;
   price_cents: number | null;
+  /** Items only: the menu's heading the item is under (#789 item 4). */
+  category: string | null;
+  /** The base only: the toppings its price includes; null prices every topping (#789 item 6). */
+  included_toppings: number | null;
+  /** The base only: each topping's price past the included ones. */
+  extra_topping_cents: number | null;
+  /** Toppings only: `special` costs extra even within the included count; null is normal. */
+  tier: Tier | null;
 }
 
-/** A menu as the API, the CSV and the profile give it: no ids, prices in cents. */
+export type Tier = "normal" | "special";
+
+type Line = { name: string; description: string | null; price_cents: number | null };
+
+/**
+ * A menu as the API, the CSV and the profile give it: no ids, prices in cents. The fields of #789
+ * are there only when set, so an old menu reads as before.
+ */
 export interface MenuInput {
-  items: { number: string; name: string; description: string | null; price_cents: number | null }[];
-  base: { name: string; description: string | null; price_cents: number | null } | null;
-  toppings: { name: string; description: string | null; price_cents: number | null }[];
+  items: (Line & { number: string; category?: string })[];
+  base: (Line & { included_toppings?: number; extra_topping_cents?: number }) | null;
+  toppings: (Line & { tier?: "special" })[];
 }
 
 export type Service = "delivery" | "takeaway";

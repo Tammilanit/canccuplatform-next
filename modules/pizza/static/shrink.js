@@ -77,9 +77,13 @@
           // A photo the browser cannot redraw goes as it is: the server shrinks it.
         })
         .then(function () {
-          form.setAttribute("data-shrunk", "1");
-          if (submitter && submitter.form === form) form.requestSubmit(submitter);
-          else form.requestSubmit();
+          // A task later, not a microtask: with no photo to redraw this runs while the first
+          // submit event is still being dispatched, and the browser drops a submit from there.
+          setTimeout(function () {
+            form.setAttribute("data-shrunk", "1");
+            if (submitter && submitter.form === form) form.requestSubmit(submitter);
+            else form.requestSubmit();
+          }, 0);
         });
     },
     true,

@@ -21,6 +21,22 @@ beforeEach(() => {
   ({ pool, w, pz, id, items } = r);
 });
 
+/** A menu read of several pages: multipart, one `page` part per photo, in order. */
+function pages(photos: Buffer[]): { raw: Buffer; contentType: string } {
+  const boundary = "----menuPagesBoundary";
+  const parts = photos.flatMap((bytes, i) => [
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="page"; filename="page${i + 1}.png"\r\nContent-Type: image/png\r\n\r\n`,
+    ),
+    bytes,
+    Buffer.from("\r\n"),
+  ]);
+  return {
+    raw: Buffer.concat([...parts, Buffer.from(`--${boundary}--\r\n`)]),
+    contentType: `multipart/form-data; boundary=${boundary}`,
+  };
+}
+
 describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
   it("gives a menu CSV for the import's preview, and keeps no photo", async () => {
     await setKey();
@@ -30,10 +46,13 @@ describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
     });
     expect(res.statusCode).toBe(200);
     const r = json(res);
-    expect(r).toMatchObject({ items: 3, unsure: ["12"] });
+    // One page: the synthetic menu's first page, its items 1–3 and 21–26.
+    expect(r).toMatchObject({ items: 9, unsure: ["26"], pages: 1 });
     const csv = r.csv as string;
-    expect(csv.split("\n")[0]).toBe("pizzeria,kind,number,name,description,price");
-    expect(csv).toContain('Demo Pizzeria,item,4,Margherita,"tomato, mozzarella",8.00');
+    expect(csv.split("\n")[0]).toBe(
+      "pizzeria,kind,number,name,description,price,category,category_price,included_toppings,extra_topping_price,tier",
+    );
+    expect(csv).toContain('Demo Pizzeria,item,1,Demo Margherita,"tomaatti, juusto",9.00,Classics');
     const preview = await w.call("menus", "POST", "/api/pizza/menu/import/preview", undefined, {
       raw: csv,
       contentType: "text/csv",
@@ -44,6 +63,63 @@ describe.skipIf(!DATABASE_URL)("reading a menu photo", () => {
     });
     const { rows } = await pool.query("SELECT count(*)::int AS n FROM pizza_receipts");
     expect(rows[0]).toEqual({ n: 0 });
+  });
+
+  it("sends three pages to the reader in one call, in order, and reads them as one menu", async () => {
+    await setKey();
+    const res = await w.call(
+      "menus",
+      "POST",
+      `/api/pizza/menu/read?pizzeria_id=${pz}`,
+      undefined,
+      pages([await png(410, 300), await png(420, 300), await png(430, 300)]),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(w.reader.menuCalls).toEqual([3]);
+    expect(w.reader.sent.map((s) => s.width)).toEqual([410, 420, 430]);
+    const r = json(res);
+    expect(r).toMatchObject({ pages: 3, items: 11, cost_estimate_micro_usd: 4500 });
+    // The category's price runs onto page 2; the campaign and the lunch price are notes only.
+    const rows = r.rows as { number: string | null; page: number; price_cents: number | null }[];
+    expect(rows.find((x) => x.number === "27")).toMatchObject({
+      page: 2,
+      price_cents: 1390,
+      price_from_category: true,
+    });
+    expect((r.notes as { kind: string }[]).map((n) => n.kind)).toEqual(["campaign", "lunch"]);
+    expect(rows.some((x) => x.price_cents === 1190)).toBe(false);
+    const { rows: logged } = await pool.query("SELECT pages FROM pizza_reads");
+    expect(logged).toEqual([{ pages: 3 }]);
+  });
+
+  it("refuses a seventh page before anything is read", async () => {
+    await setKey();
+    const seven = await Promise.all(Array.from({ length: 7 }, () => png()));
+    const res = await w.call(
+      "menus",
+      "POST",
+      `/api/pizza/menu/read?pizzeria_id=${pz}`,
+      undefined,
+      pages(seven),
+    );
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res)).toMatchObject({ code: "invalid_request" });
+    expect(errorOf(res).message).toContain("at most 6 pages");
+    expect(w.reader.sent).toHaveLength(0);
+    expect((await pool.query("SELECT 1 FROM pizza_reads")).rowCount).toBe(0);
+  });
+
+  it("refuses a multipart read without a page", async () => {
+    await setKey();
+    const res = await w.call(
+      "menus",
+      "POST",
+      `/api/pizza/menu/read?pizzeria_id=${pz}`,
+      undefined,
+      pages([]),
+    );
+    expect(res.statusCode).toBe(400);
+    expect(w.reader.sent).toHaveLength(0);
   });
 
   it("needs pizza.menu.write", async () => {

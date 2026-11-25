@@ -223,6 +223,39 @@ describe.skipIf(!DATABASE_URL)("retention and the tenants events", () => {
 });
 
 describe.skipIf(!DATABASE_URL)("clone with an event", () => {
+  it("copies each item's category, the base's included toppings and the topping tiers (#789)", async () => {
+    const demo = json(await w.call("pena", "GET", "/api/pizza/pizzerias")).pizzerias as {
+      id: string;
+      name: string;
+    }[];
+    const pz = must(demo.find((p) => p.name === "Demo Pizzeria")).id;
+    await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      items: [{ number: "21", name: "Demo Kebab", price: 1390, category: "Kebab pizzas" }],
+      base: { name: "Demo Fantasia", price: 1000, included_toppings: 3, extra_topping_price: 150 },
+      toppings: [{ name: "Katkarapu", price: 250, tier: "special" }],
+    });
+    await asTenant(
+      event(
+        "tenants.tenant.cloned",
+        { source_tenant_id: "demo", shift_seconds: 0, actor_user_id: "u_admin" },
+        "two",
+      ),
+    );
+    const list = json(
+      await w.call("pena", "GET", "/api/pizza/pizzerias", undefined, { host: "two.test" }),
+    ).pizzerias as { id: string; name: string }[];
+    const copy = json(
+      await w.call("pena", "GET", `/api/pizza/pizzerias/${must(list[1]).id}`, undefined, {
+        host: "two.test",
+      }),
+    ).menu as Record<string, unknown>;
+    expect(copy).toMatchObject({
+      items: [{ number: "21", category: "Kebab pizzas" }],
+      base: { included_toppings: 3, extra_topping_cents: 150 },
+      toppings: [{ name: "Katkarapu", tier: "special" }],
+    });
+  });
+
   it("copies the source's pizzerias and menus into an event that has none, once", async () => {
     const clone = event(
       "tenants.tenant.cloned",

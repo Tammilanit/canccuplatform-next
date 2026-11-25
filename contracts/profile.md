@@ -38,9 +38,9 @@ Admin applies `agenda` and `notify` through those modules' own APIs, with the ri
 | `name` | yes | The pizzeria's name, up to 80 characters; unique in the event in any case |
 | `phone`, `website` | no | Its phone number; its web page, an `http` or `https` URL |
 | `service` | no | `delivery` (when absent) or `takeaway` |
-| `items` | no | Menu items: `number` (up to 8 characters, unique in the pizzeria), `name` (80), `description` (300) and `price` (euro cents, 0 to 99999) |
-| `base` | no | The own pizza's base: `name`, `description`, `price`; without one the pizzeria offers no own pizza |
-| `toppings` | no | The own pizza's toppings: `name`, `description`, `price` (the extra price) |
+| `items` | no | Menu items: `number` (up to 8 characters, unique in the pizzeria), `name` (80), `description` (300), `price` (euro cents, 0 to 99999) and `category` (60, the menu's heading the item is under) |
+| `base` | no | The own pizza's base: `name`, `description`, `price`, `included_toppings` (0 to 10, how many toppings the price includes) and `extra_topping_price` (euro cents, each topping past those); without one the pizzeria offers no own pizza |
+| `toppings` | no | The own pizza's toppings: `name`, `description`, `price` (the extra price) and `tier` (`normal`, when absent, or `special`) |
 
 Admin applies it through the pizza API with `pizza.menu.write`: a pizzeria matched by name is edited (`PATCH /api/pizza/pizzerias/{pizzeria_id}`), one not there is added (`POST /api/pizza/pizzerias`), and its menu is replaced (`PUT /api/pizza/pizzerias/{pizzeria_id}/menu`); pizzerias the profile does not name stay as they are. Admin exports it from `GET /api/pizza/pizzerias` and each `GET /api/pizza/pizzerias/{pizzeria_id}`. Orders are live data and never in a profile.
 

@@ -118,7 +118,7 @@ export function anthropicReader(apiKey: string, o: { fetch?: typeof fetch } = {}
     },
     menu: async (pages) => {
       const { raw, usage } = await ask(pages, MENU_TEXT, MENU_SCHEMA);
-      return { reading: menuOf(raw), usage };
+      return { reading: menuOf(raw, pages.length), usage };
     },
   };
 }

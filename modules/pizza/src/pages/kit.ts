@@ -210,7 +210,10 @@ export async function organiserPage(
     body: html`<div lang="${c.lang}">${o.body}</div>
       <script src="${PREFIX}static/pizza.js" defer></script>
       <script src="${PREFIX}static/viewer.js" defer></script>
-      <script src="${PREFIX}static/shrink.js" defer></script>`,
+      <script src="${PREFIX}static/shrink.js" defer></script>
+      <script src="${PREFIX}static/progress.js" defer></script>
+      <script src="${PREFIX}static/menu-photos.js" defer></script>
+      <script src="${PREFIX}static/menu-table.js" defer></script>`,
   });
   return send(request, reply, doc, { status: o.status ?? 200, page: "admin", nonce });
 }
@@ -263,6 +266,8 @@ const TYPES: Record<string, string> = {
   "viewer.js": "text/javascript; charset=utf-8",
   "shrink.js": "text/javascript; charset=utf-8",
   "progress.js": "text/javascript; charset=utf-8",
+  "menu-photos.js": "text/javascript; charset=utf-8",
+  "menu-table.js": "text/javascript; charset=utf-8",
   "reads.css": "text/css; charset=utf-8",
   "wide.css": "text/css; charset=utf-8",
   "hub.css": "text/css; charset=utf-8",

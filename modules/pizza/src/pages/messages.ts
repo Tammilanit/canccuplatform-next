@@ -6,6 +6,7 @@
 import { FOOD_EN } from "./food-messages.js";
 import { MONEY_EN } from "./money-messages.js";
 import { READ_EN } from "./read-messages.js";
+import { MENU_READ_EN } from "./menu-read-messages.js";
 import { SETTINGS_EN } from "./settings-messages.js";
 import { FI } from "./messages-fi.js";
 
@@ -237,6 +238,7 @@ export const EN = {
   ...FOOD_EN,
   ...MONEY_EN,
   ...READ_EN,
+  ...MENU_READ_EN,
   ...SETTINGS_EN,
 } as const;
 

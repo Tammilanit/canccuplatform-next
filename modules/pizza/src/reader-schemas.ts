@@ -5,7 +5,7 @@
  * itself when a photo is not a receipt or a menu, or cannot be read (`readable`, `reason`), and
  * marks what it is unsure of, so a partly read photo is checked, not refused.
  */
-import type { MenuRead, ReceiptLine, ReceiptReading } from "./reader.js";
+import type { MenuNote, MenuRead, MenuRow, ReceiptLine, ReceiptReading } from "./reader.js";
 
 const nullable = (type: "integer" | "string") => ({ anyOf: [{ type }, { type: "null" }] });
 
@@ -37,25 +37,57 @@ export const RECEIPT_SCHEMA = {
   },
 };
 
+const MENU_ROW = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "page",
+    "kind",
+    "number",
+    "name",
+    "description",
+    "price_cents",
+    "category",
+    "category_price_cents",
+    "included_toppings",
+    "extra_topping_cents",
+    "tier",
+    "unsure",
+  ],
+  properties: {
+    page: { type: "integer" },
+    kind: { type: "string", enum: ["item", "base", "topping"] },
+    number: nullable("string"),
+    name: { type: "string" },
+    description: nullable("string"),
+    price_cents: nullable("integer"),
+    category: nullable("string"),
+    category_price_cents: nullable("integer"),
+    included_toppings: nullable("integer"),
+    extra_topping_cents: nullable("integer"),
+    tier: { anyOf: [{ type: "string", enum: ["normal", "special"] }, { type: "null" }] },
+    unsure: { type: "boolean" },
+  },
+};
+
 export const MENU_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["readable", "reason", "items"],
+  required: ["readable", "reason", "rows", "notes"],
   properties: {
     readable: { type: "boolean" },
     reason: nullable("string"),
-    items: {
+    rows: { type: "array", items: MENU_ROW },
+    notes: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["number", "name", "description", "price_cents", "unsure"],
+        required: ["kind", "text", "page"],
         properties: {
-          number: { type: "string" },
-          name: { type: "string" },
-          description: nullable("string"),
-          price_cents: nullable("integer"),
-          unsure: { type: "boolean" },
+          kind: { type: "string", enum: ["campaign", "lunch"] },
+          text: { type: "string" },
+          page: { type: "integer" },
         },
       },
     },
@@ -70,9 +102,13 @@ Give total_cents, the total paid in euro cents, or null when the photo does not 
 Use only what the photo shows. Leave out card numbers, names and anything that is not a paid line.
 ${READABLE}`;
 
-export const MENU_TEXT = `These are photos of the pages of a pizzeria's or a restaurant's menu, in order, one menu.
-List every item that has a menu number: the number as printed, the name, the ingredients or description (null when none), and the price in euro cents (null when none is shown).
-Set unsure to true when the photos do not make the number, the name or the price clear.
+export const MENU_TEXT = `These are photos of the pages of a pizzeria's or a restaurant's menu, in order, one menu. Page 1 is the first photo.
+Read each page in reading order: a page in two columns is the left column from top to bottom, then the right column; then the next page.
+List every item that has a menu number as a row of kind "item": its page, the number as printed, the name, the ingredients or description (null when none), and the price in euro cents (null when the item shows no price of its own).
+A heading can name a category of items and give them one price ("Kebab pizzas 13,90€"). Give every item the category it is under (null when none), and the heading's price in category_price_cents on the items right under the heading (else null). A category runs on until the next heading, also into the next column and onto the next page.
+An own pizza ("Fantasia", "choose 3 toppings") is one row of kind "base": its name, its price, included_toppings (how many toppings its price includes, null when it does not say) and extra_topping_cents (the price of each further topping, null when not shown). Each topping listed for it is a row of kind "topping" with its extra price; tier is "special" for toppings that cost extra (a line such as "Special toppings 2,50€", whose price each of them takes) and "normal" otherwise. For items and bases tier is null; for items and toppings included_toppings and extra_topping_cents are null.
+A dated campaign ("Campaign 14.6–15.9: all pizzas 11,90€") and lunch prices are never prices of the menu: list each in notes with kind "campaign" or "lunch", its text as printed and its page, and leave them out of the rows.
+Set unsure to true when the photos do not make a row's number, name or price clear.
 Use only what the photos show.
 ${READABLE}`;
 
@@ -113,24 +149,43 @@ export function receiptOf(raw: unknown): ReceiptReading {
   return { total_cents: cents(r.total_cents, 0, 500_000), lines };
 }
 
-export function menuOf(raw: unknown): MenuRead {
-  const items = ((raw ?? {}) as { items?: unknown }).items;
-  return {
-    items: (Array.isArray(items) ? items : []).slice(0, 300).flatMap((i) => {
-      const x = (i ?? {}) as Record<string, unknown>;
-      const number = cut(x.number, 8);
-      const name = cut(x.name, 80);
-      if (number === "" || name === "") return [];
-      const description = cut(x.description, 300);
-      return [
-        {
-          number,
-          name,
-          description: description === "" ? null : description,
-          price_cents: cents(x.price_cents, 0, 99_999),
-          unsure: x.unsure === true,
-        },
-      ];
-    }),
-  };
+const KINDS = ["item", "base", "topping"] as const;
+const page = (v: unknown, pages: number): number =>
+  Math.min(Math.max(cents(v, 1, 1000) ?? 1, 1), Math.max(1, pages));
+const orNull = (v: string): string | null => (v === "" ? null : v);
+
+/** The model's menu, checked: a row it gives without what its kind needs is left out. */
+export function menuOf(raw: unknown, pages: number): MenuRead {
+  const r = (raw ?? {}) as { rows?: unknown; notes?: unknown };
+  const rows: MenuRow[] = (Array.isArray(r.rows) ? r.rows : []).slice(0, 300).flatMap((i) => {
+    const x = (i ?? {}) as Record<string, unknown>;
+    const kind = KINDS.find((k) => k === x.kind) ?? "item";
+    const number = kind === "item" ? orNull(cut(x.number, 8)) : null;
+    const name = cut(x.name, 80);
+    if (name === "" || (kind === "item" && number === null)) return [];
+    const base = kind === "base";
+    return [
+      {
+        page: page(x.page, pages),
+        kind,
+        number,
+        name,
+        description: orNull(cut(x.description, 300)),
+        price_cents: cents(x.price_cents, 0, 99_999),
+        category: kind === "item" ? orNull(cut(x.category, 60)) : null,
+        category_price_cents: kind === "item" ? cents(x.category_price_cents, 0, 99_999) : null,
+        included_toppings: base ? cents(x.included_toppings, 0, 10) : null,
+        extra_topping_cents: base ? cents(x.extra_topping_cents, 0, 99_999) : null,
+        tier: kind === "topping" && (x.tier === "normal" || x.tier === "special") ? x.tier : null,
+        unsure: x.unsure === true,
+      },
+    ];
+  });
+  const notes: MenuNote[] = (Array.isArray(r.notes) ? r.notes : []).slice(0, 20).flatMap((n) => {
+    const x = (n ?? {}) as Record<string, unknown>;
+    const text = cut(x.text, 200);
+    if ((x.kind !== "campaign" && x.kind !== "lunch") || text === "") return [];
+    return [{ kind: x.kind, text, page: page(x.page, pages) }];
+  });
+  return { rows, notes };
 }

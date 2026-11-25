@@ -2,7 +2,7 @@
  * Reading a receipt or a menu photo (#644, M3, D10). The provider gets the photo and fixed
  * instructions, nothing else; its answer is kept as a suggestion on the receipt and never touches
  * the order's money, which changes only when the holder confirms it (PATCH …/money). A menu read
- * becomes a menu CSV for the import's preview, and its photo is not kept.
+ * (`menu-read-route.ts`) becomes a table and a menu CSV for the import's preview.
  *
  * Not idempotent by key: each call is a read, logged, and counted against the event's daily reads
  * unless the provider billed nothing for it (#789 D6). The call to the provider runs outside a
@@ -10,12 +10,11 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { NotSignedIn } from "@canccu/kit";
-import { csvLine, euros } from "./csv.js";
 import { eventArchived, notFound, tenantOf, whoIs } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { CALLED_IN } from "./model.js";
-import { cleanPhoto, forProvider, photoOf } from "./photos.js";
-import { NO_FACTS, authorize } from "./policy.js";
+import { forProvider } from "./photos.js";
+import { authorize } from "./policy.js";
 import { facts } from "./present.js";
 import { matchReceipt } from "./receipt-match.js";
 import { noteRead, takeReader } from "./reader-key.js";
@@ -25,16 +24,15 @@ import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
 import { getReceipt, receiptPath, receiptView } from "./receipts.js";
 import type { ReceiptRow } from "./receipts.js";
 import { cannot } from "./conflicts.js";
-import { getOrder, getPizzeria, itemsOf } from "./store.js";
+import { getOrder, itemsOf } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { InvalidBody } from "./validate.js";
 import { readFile } from "node:fs/promises";
 
 /**
  * The provider call, logged however it ends: its outcome, the model's reason, the tokens and the
  * time. A failed read changes nothing else; the crew may be told the reader stopped (`noteRead`).
  */
-async function counted<T extends { usage: ReadUsage }>(
+export async function counted<T extends { usage: ReadUsage }>(
   deps: AppDeps,
   taken: Taken,
   call: (reader: Reader) => Promise<T>,
@@ -62,7 +60,7 @@ async function counted<T extends { usage: ReadUsage }>(
   }
 }
 
-async function signedIn(deps: AppDeps, request: FastifyRequest) {
+export async function signedIn(deps: AppDeps, request: FastifyRequest) {
   const ctx = tenantOf(request);
   const { caller } = await whoIs(deps, request);
   if (caller === null) throw new NotSignedIn("sign in first");
@@ -100,46 +98,5 @@ export function readerRoutes(app: FastifyInstance, deps: AppDeps): void {
       ]);
     });
     return receiptView(rows[0] as unknown as ReceiptRow);
-  });
-
-  app.post<{ Querystring: { pizzeria_id?: string } }>("/api/pizza/menu/read", async (request) => {
-    const { ctx, caller } = await signedIn(deps, request);
-    authorize("menu.read_photo", caller, NO_FACTS);
-    const { photo, type } = photoOf(request.body, request.headers["content-type"]);
-    const id = request.query.pizzeria_id;
-    if (typeof id !== "string") throw new InvalidBody("pizzeria_id", "the pizzeria the menu is of");
-    const { pizzeria, taken } = await deps.db.tenant(async (c) => {
-      const pizzeria = await getPizzeria(c, id);
-      if (pizzeria === null) throw notFound("pizzeria");
-      return {
-        pizzeria,
-        taken: await takeReader(c, deps, ctx.tenant_id, ctx.time_zone, deps.now(), "menu"),
-      };
-    });
-    const clean = await cleanPhoto(photo, type);
-    const sent = await forProvider(clean.image, clean.type);
-    const rows = (
-      await counted(deps, taken, (reader) => reader.menu([{ image: sent.image, type: sent.type }]))
-    ).reading.items;
-    const csv = [
-      csvLine(["pizzeria", "kind", "number", "name", "description", "price"]),
-      ...rows.map((r) =>
-        csvLine([
-          pizzeria.name,
-          "item",
-          r.number,
-          r.name,
-          r.description ?? "",
-          r.price_cents === null ? "" : euros(r.price_cents),
-        ]),
-      ),
-      "",
-    ].join("\n");
-    return {
-      pizzeria_id: pizzeria.id,
-      csv,
-      items: rows.length,
-      unsure: rows.filter((r) => r.unsure).map((r) => r.number),
-    };
   });
 }

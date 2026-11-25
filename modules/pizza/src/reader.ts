@@ -28,9 +28,44 @@ export interface ReceiptReading {
   lines: ReceiptLine[];
 }
 
+/**
+ * One row of a menu as read (#789 items 3–6, 15): an item, the own pizza's base or a topping, with
+ * the page it was on and its category. A heading's price (`category_price_cents`) is given to its
+ * items without one after the read (`applyCategories`); `unsure` marks what the photo left unclear.
+ */
+export interface MenuRow {
+  page: number;
+  kind: "item" | "base" | "topping";
+  number: string | null;
+  name: string;
+  description: string | null;
+  price_cents: number | null;
+  category: string | null;
+  category_price_cents: number | null;
+  /** The base only: how many toppings its price includes ("choose 3 toppings"). */
+  included_toppings: number | null;
+  /** The base only: the price of each topping past the included ones. */
+  extra_topping_cents: number | null;
+  /** A topping only: `special` ones cost extra even within the included count. */
+  tier: "normal" | "special" | null;
+  unsure: boolean;
+  /** The price is the category's, not the item's own. */
+  price_from_category?: boolean;
+  /** Gathered from the pizzas' ingredients, for the crew to confirm (`gatherToppings`). */
+  gathered?: boolean;
+}
+
+/** A dated campaign or a lunch price: shown above the table, never a price (#789 item 5). */
+export interface MenuNote {
+  kind: "campaign" | "lunch";
+  text: string;
+  page: number;
+}
+
 /** A menu read of one or more pages, as one menu. */
 export interface MenuRead {
-  items: MenuReading[];
+  rows: MenuRow[];
+  notes: MenuNote[];
 }
 
 /** What one read used: the read log's tokens and so its cost (#789 item 12). */
@@ -44,14 +79,11 @@ export interface Page {
   type: string;
 }
 
-/** One menu item as read; `unsure` when the photo did not settle its price or number. */
-export interface MenuReading {
-  number: string;
-  name: string;
-  description: string | null;
-  price_cents: number | null;
-  unsure: boolean;
-}
+/** At most this many pages go to the reader in one menu read (#789 item 15). */
+export const MAX_PAGES = 6;
+
+/** About what one menu page costs to read, for the estimate shown before the read (#789 item 15). */
+export const PAGE_COST_MICRO_USD = 1500;
 
 export interface Reader {
   receipt(image: Buffer, type: string): Promise<{ reading: ReceiptReading; usage: ReadUsage }>;

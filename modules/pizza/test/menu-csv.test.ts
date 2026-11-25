@@ -166,3 +166,117 @@ describe("writeMenuCsv", () => {
     expect(text.split("\n")[1]).toBe('"Demo ""Best"", Pizza",,,delivery,item,1,A,"line');
   });
 });
+
+describe("categories and the own pizza's fields (#789 items 4 and 6)", () => {
+  const FULL =
+    "pizzeria,kind,number,name,description,price,category,category_price,included_toppings,extra_topping_price,tier";
+  const full = (...lines: string[]) => [FULL, ...lines, ""].join("\n");
+  const MENU = full(
+    "Demo,item,1,Demo Margherita,,9.00,Classics,,,,",
+    "Demo,item,21,Demo Kebab,,,Kebab pizzas,13.90,,,",
+    "Demo,item,22,Demo Kana,,14.50,Kebab pizzas,13.90,,,",
+    "Demo,base,,Demo Fantasia,choose 3,10.00,,,3,1.50,",
+    "Demo,topping,,Kinkku,,1.50,,,,,normal",
+    "Demo,topping,,Katkarapu,,2.50,,,,,special",
+    "Demo,topping,,Ananas,,1.50,,,,,",
+  );
+
+  it("import: an item keeps its category, and one without a price takes the category's", () => {
+    const r = parseMenuCsv(MENU);
+    expect(r.errors).toEqual([]);
+    const m = must(r.pizzerias[0]).menu;
+    expect(m.items).toEqual([
+      {
+        number: "1",
+        name: "Demo Margherita",
+        description: null,
+        price_cents: 900,
+        category: "Classics",
+      },
+      {
+        number: "21",
+        name: "Demo Kebab",
+        description: null,
+        price_cents: 1390,
+        category: "Kebab pizzas",
+      },
+      {
+        number: "22",
+        name: "Demo Kana",
+        description: null,
+        price_cents: 1450,
+        category: "Kebab pizzas",
+      },
+    ]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("import: the base's included toppings and extra price, and each topping's tier", () => {
+    const m = must(parseMenuCsv(MENU).pizzerias[0]).menu;
+    expect(m.base).toEqual({
+      name: "Demo Fantasia",
+      description: "choose 3",
+      price_cents: 1000,
+      included_toppings: 3,
+      extra_topping_cents: 150,
+    });
+    expect(m.toppings.map((t) => [t.name, t.tier ?? "normal"])).toEqual([
+      ["Kinkku", "normal"],
+      ["Katkarapu", "special"],
+      ["Ananas", "normal"],
+    ]);
+  });
+
+  it("export: writes the columns back when the menu uses them", () => {
+    expect(writeMenuCsv(parseMenuCsv(MENU).pizzerias)).toBe(
+      full(
+        "Demo,,,,item,1,Demo Margherita,,9.00,Classics,,,,",
+        "Demo,,,,item,21,Demo Kebab,,13.90,Kebab pizzas,,,,",
+        "Demo,,,,item,22,Demo Kana,,14.50,Kebab pizzas,,,,",
+        "Demo,,,,base,,Demo Fantasia,choose 3,10.00,,,3,1.50,",
+        "Demo,,,,topping,,Kinkku,,1.50,,,,,",
+        "Demo,,,,topping,,Katkarapu,,2.50,,,,,special",
+        "Demo,,,,topping,,Ananas,,1.50,,,,,",
+      ).replace(FULL, `pizzeria,phone,website,service,${FULL.slice("pizzeria,".length)}`),
+    );
+  });
+
+  it("tier must be normal or special, and only on a topping", () => {
+    expect(errorsOf(full("Demo,topping,,Kinkku,,1.50,,,,,gold"))[0]).toMatchObject({
+      row: 2,
+      column: "tier",
+    });
+    expect(errorsOf(full("Demo,item,1,A,,1.00,,,,,special"))[0]).toMatchObject({ column: "tier" });
+  });
+
+  it("included toppings (0 to 10) and the extra price only on a base", () => {
+    expect(errorsOf(full("Demo,item,1,A,,1.00,,,3,,"))[0]).toMatchObject({
+      column: "included_toppings",
+    });
+    expect(errorsOf(full("Demo,base,,Own,,7.00,,,11,,"))[0]).toMatchObject({
+      column: "included_toppings",
+    });
+    expect(errorsOf(full("Demo,topping,,Olives,,1.00,,,,1.00,"))[0]).toMatchObject({
+      column: "extra_topping_price",
+    });
+  });
+
+  it("a category and its price only on an item, the price as a price", () => {
+    expect(errorsOf(full("Demo,base,,Own,,7.00,Pizzas,,,,"))[0]).toMatchObject({
+      column: "category",
+    });
+    expect(errorsOf(full("Demo,item,1,A,,,Pizzas,13,90,,,"))[0]).toMatchObject({ row: 2 });
+    expect(errorsOf(full("Demo,item,1,A,,,Pizzas,x,,,"))[0]).toMatchObject({
+      column: "category_price",
+    });
+    expect(errorsOf(full(`Demo,item,1,A,,,${"c".repeat(61)},,,,`))[0]).toMatchObject({
+      column: "category",
+    });
+  });
+
+  it("old CSVs without the new columns import and export as before", () => {
+    const r = parseMenuCsv(SPEC_MENU);
+    expect(r.warnings.map((w) => w.column)).toEqual(["price"]);
+    expect(writeMenuCsv(r.pizzerias)).toBe(SPEC_MENU);
+  });
+});

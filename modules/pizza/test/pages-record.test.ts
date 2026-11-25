@@ -231,8 +231,9 @@ describe.skipIf(!DATABASE_URL)("reading a menu photo (mockup 11 D)", () => {
       { name: "page2.png", type: "image/png", bytes: await png() },
     ]);
     expect(r.statusCode).toBe(200);
-    expect(r.body).toContain("Read 6 items · check them first");
-    expect(r.body).toContain("unsure: check it");
+    // Both pages in one read, as one menu (#789 item 15), shown as a table to check.
+    expect(r.body).toContain("Read 11 items · check them first");
+    expect(r.body).toContain('class="pizza-unsure"');
     expect(r.body).toContain("Use as import");
     expect(r.body).toContain('action="/pizza/crew/pizzerias/import"');
     expect(r.body.match(/pizzeria,kind,number/g)?.length).toBe(1);
