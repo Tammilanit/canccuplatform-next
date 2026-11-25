@@ -1,0 +1,1334 @@
+{
+ "landscape": {
+  "state_version": 8,
+  "time": "2026-11-25T11:17:07.730Z",
+  "tenant": {
+   "id": "demo",
+   "name": "Demo Event",
+   "time_zone": "UTC",
+   "status": "live"
+  },
+  "device": {
+   "id": "mirror",
+   "name": "Main",
+   "mirror": true
+  },
+  "zone": {
+   "key": "main",
+   "name": "Main",
+   "epoch": "o3c3l2DE",
+   "show_name": false
+  },
+  "theme": {
+   "revision": 0,
+   "tokens_css_url": null,
+   "css_url": null,
+   "logo_url": null,
+   "templates": []
+  },
+  "layout": {
+   "id": "pulse",
+   "name": "Pulse",
+   "aspect": "16:9",
+   "grid": {
+    "columns": 12,
+    "rows": 12
+   },
+   "regions": [
+    {
+     "id": "header",
+     "area": {
+      "column": 1,
+      "row": 1,
+      "columns": 12,
+      "rows": 1
+     },
+     "widgets": [
+      {
+       "widget": "logo"
+      },
+      {
+       "widget": "clock"
+      }
+     ]
+    },
+    {
+     "id": "hero",
+     "area": {
+      "column": 1,
+      "row": 2,
+      "columns": 8,
+      "rows": 10
+     },
+     "widgets": [
+      {
+       "widget": "playlist"
+      },
+      {
+       "widget": "hot_game"
+      },
+      {
+       "widget": "bracket"
+      },
+      {
+       "widget": "photo"
+      },
+      {
+       "widget": "countdown",
+       "props": {
+        "highlight": true
+       }
+      },
+      {
+       "widget": "today_numbers"
+      }
+     ]
+    },
+    {
+     "id": "rail",
+     "area": {
+      "column": 9,
+      "row": 2,
+      "columns": 4,
+      "rows": 6
+     },
+     "widgets": [
+      {
+       "widget": "agenda_now"
+      },
+      {
+       "widget": "countdown"
+      }
+     ]
+    },
+    {
+     "id": "venue_rail",
+     "area": {
+      "column": 9,
+      "row": 8,
+      "columns": 4,
+      "rows": 4
+     },
+     "widgets": [
+      {
+       "widget": "qr",
+       "props": {
+        "url": "/notify/",
+        "label": "The event hub"
+       }
+      },
+      {
+       "widget": "venue_info"
+      },
+      {
+       "widget": "food_status"
+      }
+     ]
+    },
+    {
+     "id": "ticker",
+     "area": {
+      "column": 1,
+      "row": 12,
+      "columns": 12,
+      "rows": 1
+     },
+     "layer": 1,
+     "widgets": [
+      {
+       "widget": "ticker"
+      }
+     ]
+    }
+   ]
+  },
+  "regions": [
+   {
+    "id": "header",
+    "role": "header",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 6,
+     "rows": 1
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "logo",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "url": null,
+       "name": "Demo Event",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "header-2",
+    "role": "header",
+    "area": {
+     "column": 7,
+     "row": 1,
+     "columns": 6,
+     "rows": 1
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "clock",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "iso": "2026-11-25T11:17:07.523Z",
+       "time": "11:17",
+       "date": "Wed 25 Nov",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "hero",
+    "role": "hero",
+    "area": {
+     "column": 1,
+     "row": 2,
+     "columns": 8,
+     "rows": 10
+    },
+    "layer": 0,
+    "rotation": "director",
+    "order": [
+     4
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "next",
+    "idle_view": {
+     "widget": "countdown",
+     "view": {
+      "label": "Doors open",
+      "target_at": "2026-11-25T16:00:00Z",
+      "ends_text": null,
+      "kind": "doors",
+      "description": null,
+      "game": null,
+      "chip": null,
+      "qr": null,
+      "stale": false,
+      "empty": false
+     }
+    },
+    "widgets": [
+     {
+      "widget": "playlist",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "hot_game",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "bracket",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "photo",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "countdown",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "label": "Tournament: group stage",
+       "target_at": "2026-11-25T17:00:00Z",
+       "ends_text": "19:00",
+       "kind": "tournament",
+       "description": null,
+       "game": null,
+       "chip": {
+        "label": "Doors open",
+        "target_at": "2026-11-25T16:00:00Z"
+       },
+       "highlight": true,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "today_numbers",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "rail",
+    "role": "rail",
+    "area": {
+     "column": 9,
+     "row": 2,
+     "columns": 4,
+     "rows": 6
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0,
+     1
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "agenda_now",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "title": "Now and next",
+       "items": [
+        {
+         "id": "it_3351ab459c7613f1",
+         "name": "Doors open",
+         "state": "next",
+         "starts_text": "16:00",
+         "ends_text": null,
+         "starts_at": "2026-11-25T16:00:00Z",
+         "ends_at": null,
+         "delay_minutes": 0,
+         "location": "Main entrance",
+         "kind": "doors"
+        }
+       ],
+       "later": [
+        {
+         "id": "it_37ffd8c6856cd4d7",
+         "name": "Tournament: group stage",
+         "state": "next",
+         "starts_text": "17:00",
+         "ends_text": "19:00",
+         "starts_at": "2026-11-25T17:00:00Z",
+         "ends_at": "2026-11-25T19:00:00Z",
+         "delay_minutes": 0,
+         "location": "Main hall",
+         "kind": "tournament"
+        },
+        {
+         "id": "it_fd020e231a493092",
+         "name": "Pizza order",
+         "state": "next",
+         "starts_text": "18:00",
+         "ends_text": "18:30",
+         "starts_at": "2026-11-25T18:00:00Z",
+         "ends_at": "2026-11-25T18:30:00Z",
+         "delay_minutes": 0,
+         "location": "Food table",
+         "kind": "meal"
+        }
+       ],
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "countdown",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "label": "Doors open",
+       "target_at": "2026-11-25T16:00:00Z",
+       "ends_text": null,
+       "kind": "doors",
+       "description": null,
+       "game": null,
+       "chip": null,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "venue_rail",
+    "role": "venue_rail",
+    "area": {
+     "column": 9,
+     "row": 8,
+     "columns": 2,
+     "rows": 4
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0,
+     1
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "venue_info",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "wifi": [
+        {
+         "ssid": "demo-guest",
+         "password": null,
+         "note": null
+        }
+       ],
+       "has_floor_plan": false,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "food_status",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "title": "Food",
+       "big_label": "Open · closes",
+       "big_text": "05:00",
+       "state": "open",
+       "seq": 1,
+       "pizzeria_name": "Demo Pizzeria",
+       "target_at": "2026-11-26T05:00:00.000Z",
+       "pizza_count": 5,
+       "people_count": 5,
+       "holder_name": "Alex",
+       "orders": [
+        {
+         "state": "open",
+         "seq": 1,
+         "pizzeria_name": "Demo Pizzeria",
+         "target_at": "2026-11-26T05:00:00.000Z",
+         "closes_at": "2026-11-26T05:00:00.000Z",
+         "estimate_at": null,
+         "pickup": null,
+         "pizza_count": 5,
+         "people_count": 5,
+         "holder_name": "Alex",
+         "status_text": "Open · closes 05:00 · 5 pizzas"
+        }
+       ],
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "venue_rail-2",
+    "role": null,
+    "area": {
+     "column": 11,
+     "row": 8,
+     "columns": 2,
+     "rows": 4
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "qr",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "url": "/notify/",
+       "label": "The event hub",
+       "image_url": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22%3E%3Crect width=%221%22 height=%221%22/%3E%3C/svg%3E",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "ticker",
+    "role": "ticker",
+    "area": {
+     "column": 1,
+     "row": 12,
+     "columns": 12,
+     "rows": 1
+    },
+    "layer": 1,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "ticker",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "text": "Pizza orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight",
+       "until": null,
+       "source": "admin",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "_full",
+    "role": "full",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 12,
+     "rows": 12
+    },
+    "layer": 10,
+    "rotation": "sequence",
+    "order": [],
+    "cycle_started_at": "2026-11-25T11:17:07.000Z",
+    "indicator": "off",
+    "idle": "blank",
+    "idle_view": null,
+    "widgets": [],
+    "claim": null
+   },
+   {
+    "id": "_overlay",
+    "role": "overlay",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 12,
+     "rows": 12
+    },
+    "layer": 11,
+    "rotation": "sequence",
+    "order": [],
+    "cycle_started_at": "2026-11-25T11:17:07.000Z",
+    "indicator": "off",
+    "idle": "blank",
+    "idle_view": null,
+    "widgets": [],
+    "claim": null
+   }
+  ],
+  "ticker": {
+   "text": "Pizza orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight",
+   "until": null,
+   "source": "admin",
+   "appearance": "default"
+  },
+  "display": {
+   "motion_level": "lively",
+   "motion_style": {
+    "speed": "normal",
+    "intensity": "normal",
+    "spotlight": "glow_and_trace",
+    "pack": "standard"
+   },
+   "motion": "moderate",
+   "drift": false
+  }
+ },
+ "portrait": {
+  "state_version": 8,
+  "time": "2026-11-25T11:17:07.795Z",
+  "tenant": {
+   "id": "demo",
+   "name": "Demo Event",
+   "time_zone": "UTC",
+   "status": "live"
+  },
+  "device": {
+   "id": "mirror",
+   "name": "Main",
+   "mirror": true
+  },
+  "zone": {
+   "key": "main",
+   "name": "Main",
+   "epoch": "o3c3l2DE",
+   "show_name": false
+  },
+  "theme": {
+   "revision": 0,
+   "tokens_css_url": null,
+   "css_url": null,
+   "logo_url": null,
+   "templates": []
+  },
+  "layout": {
+   "id": "pulse_portrait",
+   "name": "Portrait",
+   "aspect": "9:16",
+   "grid": {
+    "columns": 6,
+    "rows": 16
+   },
+   "regions": [
+    {
+     "id": "header",
+     "area": {
+      "column": 1,
+      "row": 1,
+      "columns": 6,
+      "rows": 2
+     },
+     "widgets": [
+      {
+       "widget": "logo"
+      },
+      {
+       "widget": "clock"
+      }
+     ]
+    },
+    {
+     "id": "hero",
+     "area": {
+      "column": 1,
+      "row": 3,
+      "columns": 6,
+      "rows": 6
+     },
+     "widgets": [
+      {
+       "widget": "playlist"
+      },
+      {
+       "widget": "hot_game"
+      },
+      {
+       "widget": "bracket"
+      },
+      {
+       "widget": "photo"
+      },
+      {
+       "widget": "countdown",
+       "props": {
+        "highlight": true
+       }
+      },
+      {
+       "widget": "today_numbers"
+      }
+     ]
+    },
+    {
+     "id": "rail",
+     "area": {
+      "column": 1,
+      "row": 9,
+      "columns": 6,
+      "rows": 3
+     },
+     "widgets": [
+      {
+       "widget": "agenda_now"
+      },
+      {
+       "widget": "countdown"
+      }
+     ]
+    },
+    {
+     "id": "right_now",
+     "area": {
+      "column": 1,
+      "row": 12,
+      "columns": 6,
+      "rows": 2
+     },
+     "widgets": [
+      {
+       "widget": "stats"
+      }
+     ]
+    },
+    {
+     "id": "venue_rail",
+     "area": {
+      "column": 1,
+      "row": 14,
+      "columns": 6,
+      "rows": 2
+     },
+     "widgets": [
+      {
+       "widget": "qr",
+       "props": {
+        "url": "/notify/",
+        "label": "The event hub"
+       }
+      },
+      {
+       "widget": "venue_info"
+      },
+      {
+       "widget": "food_status"
+      }
+     ]
+    },
+    {
+     "id": "ticker",
+     "area": {
+      "column": 1,
+      "row": 16,
+      "columns": 6,
+      "rows": 1
+     },
+     "widgets": [
+      {
+       "widget": "ticker"
+      }
+     ]
+    }
+   ]
+  },
+  "regions": [
+   {
+    "id": "header",
+    "role": "header",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 3,
+     "rows": 2
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "logo",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "url": null,
+       "name": "Demo Event",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "header-2",
+    "role": "header",
+    "area": {
+     "column": 4,
+     "row": 1,
+     "columns": 3,
+     "rows": 2
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "clock",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "iso": "2026-11-25T11:17:07.746Z",
+       "time": "11:17",
+       "date": "Wed 25 Nov",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "hero",
+    "role": "hero",
+    "area": {
+     "column": 1,
+     "row": 3,
+     "columns": 6,
+     "rows": 6
+    },
+    "layer": 0,
+    "rotation": "director",
+    "order": [
+     4
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "next",
+    "idle_view": {
+     "widget": "countdown",
+     "view": {
+      "label": "Doors open",
+      "target_at": "2026-11-25T16:00:00Z",
+      "ends_text": null,
+      "kind": "doors",
+      "description": null,
+      "game": null,
+      "chip": null,
+      "qr": null,
+      "stale": false,
+      "empty": false
+     }
+    },
+    "widgets": [
+     {
+      "widget": "playlist",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "hot_game",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "bracket",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "photo",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     },
+     {
+      "widget": "countdown",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "label": "Tournament: group stage",
+       "target_at": "2026-11-25T17:00:00Z",
+       "ends_text": "19:00",
+       "kind": "tournament",
+       "description": null,
+       "game": null,
+       "chip": {
+        "label": "Doors open",
+        "target_at": "2026-11-25T16:00:00Z"
+       },
+       "highlight": true,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "today_numbers",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "qr": null,
+       "stale": false,
+       "empty": true
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "rail",
+    "role": "rail",
+    "area": {
+     "column": 1,
+     "row": 9,
+     "columns": 6,
+     "rows": 3
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0,
+     1
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "agenda_now",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "title": "Now and next",
+       "items": [
+        {
+         "id": "it_3351ab459c7613f1",
+         "name": "Doors open",
+         "state": "next",
+         "starts_text": "16:00",
+         "ends_text": null,
+         "starts_at": "2026-11-25T16:00:00Z",
+         "ends_at": null,
+         "delay_minutes": 0,
+         "location": "Main entrance",
+         "kind": "doors"
+        }
+       ],
+       "later": [
+        {
+         "id": "it_37ffd8c6856cd4d7",
+         "name": "Tournament: group stage",
+         "state": "next",
+         "starts_text": "17:00",
+         "ends_text": "19:00",
+         "starts_at": "2026-11-25T17:00:00Z",
+         "ends_at": "2026-11-25T19:00:00Z",
+         "delay_minutes": 0,
+         "location": "Main hall",
+         "kind": "tournament"
+        },
+        {
+         "id": "it_fd020e231a493092",
+         "name": "Pizza order",
+         "state": "next",
+         "starts_text": "18:00",
+         "ends_text": "18:30",
+         "starts_at": "2026-11-25T18:00:00Z",
+         "ends_at": "2026-11-25T18:30:00Z",
+         "delay_minutes": 0,
+         "location": "Food table",
+         "kind": "meal"
+        }
+       ],
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "countdown",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "label": "Doors open",
+       "target_at": "2026-11-25T16:00:00Z",
+       "ends_text": null,
+       "kind": "doors",
+       "description": null,
+       "game": null,
+       "chip": null,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "right_now",
+    "role": null,
+    "area": {
+     "column": 1,
+     "row": 12,
+     "columns": 6,
+     "rows": 2
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "stats",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "checked_in": 0,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "venue_rail",
+    "role": "venue_rail",
+    "area": {
+     "column": 1,
+     "row": 14,
+     "columns": 3,
+     "rows": 2
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0,
+     1
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "venue_info",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "wifi": [
+        {
+         "ssid": "demo-guest",
+         "password": null,
+         "note": null
+        }
+       ],
+       "has_floor_plan": false,
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     },
+     {
+      "widget": "food_status",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "title": "Food",
+       "big_label": "Open · closes",
+       "big_text": "05:00",
+       "state": "open",
+       "seq": 1,
+       "pizzeria_name": "Demo Pizzeria",
+       "target_at": "2026-11-26T05:00:00.000Z",
+       "pizza_count": 5,
+       "people_count": 5,
+       "holder_name": "Alex",
+       "orders": [
+        {
+         "state": "open",
+         "seq": 1,
+         "pizzeria_name": "Demo Pizzeria",
+         "target_at": "2026-11-26T05:00:00.000Z",
+         "closes_at": "2026-11-26T05:00:00.000Z",
+         "estimate_at": null,
+         "pickup": null,
+         "pizza_count": 5,
+         "people_count": 5,
+         "holder_name": "Alex",
+         "status_text": "Open · closes 05:00 · 5 pizzas"
+        }
+       ],
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "venue_rail-2",
+    "role": null,
+    "area": {
+     "column": 4,
+     "row": 14,
+     "columns": 3,
+     "rows": 2
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "qr",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "url": "/notify/",
+       "label": "The event hub",
+       "image_url": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22%3E%3Crect width=%221%22 height=%221%22/%3E%3C/svg%3E",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "ticker",
+    "role": "ticker",
+    "area": {
+     "column": 1,
+     "row": 16,
+     "columns": 6,
+     "rows": 1
+    },
+    "layer": 0,
+    "rotation": "sequence",
+    "order": [
+     0
+    ],
+    "cycle_started_at": "2026-11-25T11:17:00.000Z",
+    "indicator": "line",
+    "idle": "logo",
+    "idle_view": null,
+    "widgets": [
+     {
+      "widget": "ticker",
+      "template": null,
+      "embed": null,
+      "dwell_seconds": 15,
+      "stale_after_seconds": null,
+      "view": {
+       "text": "Pizza orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight",
+       "until": null,
+       "source": "admin",
+       "qr": null,
+       "stale": false,
+       "empty": false
+      }
+     }
+    ],
+    "claim": null
+   },
+   {
+    "id": "_full",
+    "role": "full",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 6,
+     "rows": 16
+    },
+    "layer": 10,
+    "rotation": "sequence",
+    "order": [],
+    "cycle_started_at": "2026-11-25T11:17:07.000Z",
+    "indicator": "off",
+    "idle": "blank",
+    "idle_view": null,
+    "widgets": [],
+    "claim": null
+   },
+   {
+    "id": "_overlay",
+    "role": "overlay",
+    "area": {
+     "column": 1,
+     "row": 1,
+     "columns": 6,
+     "rows": 16
+    },
+    "layer": 11,
+    "rotation": "sequence",
+    "order": [],
+    "cycle_started_at": "2026-11-25T11:17:07.000Z",
+    "indicator": "off",
+    "idle": "blank",
+    "idle_view": null,
+    "widgets": [],
+    "claim": null
+   }
+  ],
+  "ticker": {
+   "text": "Pizza orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight",
+   "until": null,
+   "source": "admin",
+   "appearance": "default"
+  },
+  "display": {
+   "motion_level": "lively",
+   "motion_style": {
+    "speed": "normal",
+    "intensity": "normal",
+    "spotlight": "glow_and_trace",
+    "pack": "standard"
+   },
+   "motion": "moderate",
+   "drift": false
+  }
+ }
+}

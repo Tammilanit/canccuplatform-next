@@ -66,6 +66,21 @@ describe("what ticks on the device", () => {
     fillCountdowns(box, at + 1000);
     expect(left?.textContent).toBe("00:47:29");
   });
+
+  // #779: the hero's chip says when an earlier item starts, in words, so the card keeps one clock.
+  it("says a chip's time in hours and minutes, never as a second ticking clock", () => {
+    const chip = (left: number) => {
+      const box = document.createElement("div");
+      const target = new Date(at + left).toISOString();
+      box.innerHTML = `<time class="canccu-widget__chip-time" datetime="${target}"></time>`;
+      fillCountdowns(box, at);
+      return box.textContent;
+    };
+    expect(chip(4 * 3600_000 + 53 * 60_000 + 59_000)).toBe("4 h 54 min");
+    expect(chip(2 * 3600_000)).toBe("2 h");
+    expect(chip(45 * 60_000)).toBe("45 min");
+    expect(chip(20_000)).toBe("1 min");
+  });
 });
 
 describe("how the screen moves", () => {

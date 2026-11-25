@@ -57,6 +57,11 @@ def test_screen_declaration_matches_the_contract() -> None:
     appearances = ("default", "high_contrast", "minimal", "broadcast")
     assert screen["ticker_appearance"].choices == appearances
     assert screen["ticker_appearance"].default == "default"
+    # The ticker's pace (#779): a choice, or pixels a second of a 1080p screen, which wins when set.
+    assert screen["ticker_speed"].choices == ("slow", "normal", "fast")
+    assert screen["ticker_speed"].default == "normal"
+    pixels = screen["ticker_pixels_per_second"]
+    assert (pixels.type, pixels.min, pixels.max, pixels.default) == ("integer", 0, 2000, 0)
     assert screen["ready_fallback_asset_id"].default == ""
     assert (screen["burn_in_drift"].type, screen["burn_in_drift"].default) == ("boolean", False)
     # The energy level and Follow the day (contracts/screen.md, Motion and burn-in drift).
@@ -72,6 +77,8 @@ def test_screen_declaration_matches_the_contract() -> None:
         "web_allowlist",
         "progress_bars",
         "ticker_appearance",
+        "ticker_speed",
+        "ticker_pixels_per_second",
         "ready_fallback_asset_id",
         "burn_in_drift",
         "motion_level",

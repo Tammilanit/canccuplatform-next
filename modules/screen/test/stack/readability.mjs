@@ -7,9 +7,13 @@
 // - contrast (the theming contract's rules, WCAG 2.2 ratio): text in the theme's primary, accent
 //   or a status colour at least 3:1 on its ground, any other text 4.5:1, on every ground under it
 //   (each stop of a gradient, see-through grounds laid over what is below);
-// - clipping: no text cut by the box around it (a card's edge through its last line). Text a box
-//   ends on purpose is fine: an ellipsis or a line clamp cuts inside the text's own box, and a
-//   marquee's text runs through its box while an endless animation moves it.
+// - clipping: no text cut by the box around it (a card's edge through its last line), and no
+//   letter's ink cut by a box that clips it, its own too (#779: a descender under a line box shorter
+//   than the font, which the line's box alone never shows). The ink is the font's own measure of
+//   the text, so it holds for whatever font the device draws. Text a box ends on purpose is fine:
+//   an ellipsis or a line clamp cuts inside the text's own box, a line a clamp or a stepping ticker
+//   hides is out of its box altogether, and a marquee's text runs sideways through its box while an
+//   endless animation moves it, but never past its top or foot.
 
 // The colour functions a computed value may hold. Chrome resolves named colours, hsl() and hwb()
 // to rgb(), but keeps oklab(), oklch(), lab(), lch() and color() as written (CSS Color 4), so one
@@ -207,6 +211,49 @@ export function collectSamples() {
     }
     return box;
   };
+  const canvas = document.createElement("canvas").getContext("2d");
+  /**
+   * Whether a letter of `el`'s own text has its ink cut at the top or foot of a box that clips it,
+   * its own box first: each line's ink from the font's measure (canvas), placed on the line's
+   * baseline, against each clipping box's inside (within its borders). A line whose middle is out
+   * of a box is one the box hides on purpose; a run beside it (a crawl's) is not judged by it.
+   */
+  const inkCut = (el, nodes) => {
+    const style = getComputedStyle(el);
+    canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const boxes = [];
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const s = n === el ? style : getComputedStyle(n);
+      if (s.overflowX === "visible" && s.overflowY === "visible") continue;
+      const c = n.getBoundingClientRect();
+      boxes.push({
+        left: c.left,
+        right: c.right,
+        top: c.top + parseFloat(s.borderTopWidth),
+        bottom: c.bottom - parseFloat(s.borderBottomWidth),
+      });
+    }
+    for (const node of nodes) {
+      const raw = node.textContent;
+      const text = style.textTransform === "uppercase" ? raw.toUpperCase() : raw;
+      const m = canvas.measureText(text.trim());
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const line of range.getClientRects()) {
+        if (line.width < 1 || line.height < 1) continue;
+        const baseline = line.bottom - m.fontBoundingBoxDescent;
+        const top = baseline - m.actualBoundingBoxAscent;
+        const bottom = baseline + m.actualBoundingBoxDescent;
+        const middle = (line.top + line.bottom) / 2;
+        for (const b of boxes) {
+          if (middle < b.top || middle > b.bottom || line.right <= b.left || line.left >= b.right)
+            break;
+          if (top < b.top - 0.5 || bottom > b.bottom + 0.5) return true;
+        }
+      }
+    }
+    return false;
+  };
   const shown = (r, box) =>
     r.width >= 1 &&
     r.height >= 1 &&
@@ -232,8 +279,10 @@ export function collectSamples() {
   };
   const samples = [];
   for (const el of document.body.querySelectorAll("*")) {
-    const own = [...el.childNodes]
-      .filter((n) => n.nodeType === Node.TEXT_NODE)
+    const nodes = [...el.childNodes].filter(
+      (n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim() !== "",
+    );
+    const own = nodes
       .map((n) => n.textContent)
       .join("")
       .trim();
@@ -253,7 +302,7 @@ export function collectSamples() {
       text: own.slice(0, 60),
       where: where(el),
       fontPx: parseFloat(style.fontSize),
-      clipped: cut(rect, box) && !moving(el),
+      clipped: (cut(rect, box) && !moving(el)) || inkCut(el, nodes),
       color: style.color,
       layers,
     });
