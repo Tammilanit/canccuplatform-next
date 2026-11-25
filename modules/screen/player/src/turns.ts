@@ -5,6 +5,7 @@
  */
 import { agendaOf, heroCountdownOf, joinHeroAndRail } from "./hero-rail.js";
 import { idleOf, zoneNameOf } from "./idle.js";
+import { lowerThirdAt } from "./lower-third.js";
 import type { Shown } from "./idle.js";
 import type { Region, ScreenState } from "./state.js";
 import { dimsOffline, identity, liveView, shownView } from "./widget.js";
@@ -86,23 +87,21 @@ function onePlace(
 ): Choice[] {
   const h = regions.findIndex((r) => r.role === "hero");
   const hero = choices[h];
-  if (
-    h === -1 ||
-    typeof hero !== "object" ||
-    hero === null ||
-    turnIndexOf(hero) === null ||
-    !ONE_SOURCE.has(hero.type)
-  ) {
+  if (h === -1 || typeof hero !== "object" || hero === null || turnIndexOf(hero) === null) {
     return [...choices];
   }
+  // The slideshow's band says the food for its 15 s, so the food box leaves meanwhile (D6a).
+  const band = hero.type === "playlist" ? lowerThirdAt(regions[h] as Region, state, now) : null;
+  const shows = band?.kind.startsWith("food_") === true ? "food_status" : hero.type;
+  if (!ONE_SOURCE.has(shows)) return [...choices];
   return choices.map((c, i) => {
     const r = regions[i];
     const at = turnIndexOf(c);
-    if (i === h || r === undefined || at === null || typeof c !== "object" || c?.type !== hero.type)
+    if (i === h || r === undefined || at === null || typeof c !== "object" || c?.type !== shows)
       return c;
     const from = r.order.indexOf(at);
     const rest = [...r.order.slice(from + 1), ...r.order.slice(0, from)];
-    const other = rest.find((j) => r.widgets[j]?.widget !== hero.type);
+    const other = rest.find((j) => r.widgets[j]?.widget !== shows);
     return (other === undefined ? undefined : turnShown(r, other, state, now)) ?? idleOf(r, state);
   });
 }

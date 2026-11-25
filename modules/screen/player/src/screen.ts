@@ -16,6 +16,7 @@ import { StageLayer } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
+import { lowerThirdAt, syncLowerThird } from "./lower-third.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers, speedOf } from "./ticker.js";
@@ -221,6 +222,8 @@ export class Screen {
       applyCue(drawn.el, (typeof next === "object" ? next?.cue : undefined) ?? drawn.claim, now);
       const zone = state.zone?.key ?? "";
       drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
+      if (drawn.state.role === "hero")
+        syncLowerThird(drawn.el, takeover ? null : lowerThirdAt(drawn.state, state, now));
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
@@ -371,7 +374,9 @@ export class Screen {
       incoming.getBoundingClientRect(); // Lay out the invisible start, so the fade runs from it.
       incoming.classList.remove("canccu-slot--in");
       for (const old of [...region.children]) {
-        if (old === incoming || !(old instanceof HTMLElement) || old === drawn.marks) continue;
+        // Only widgets leave: the marks and the slideshow's band (lower-third.ts) are the box's.
+        if (old === incoming || !(old instanceof HTMLElement)) continue;
+        if (!old.classList.contains("canccu-widget")) continue;
         if (cut) {
           old.remove();
           continue;
