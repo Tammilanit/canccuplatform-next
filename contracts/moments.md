@@ -174,7 +174,7 @@ One form makes an announcement for every channel: the screen card, the ticker li
 
 | Placement | Chain (`regions`) | `hero_min_share` | `keep_ticker` |
 |---|---|---|---|
-| `rail` | `["rail", "ticker"]` | null | false |
+| `rail` | `["rail", "ticker"]`; urgent `["rail", "hero", "ticker"]`, the chain it had before #780 | null | false |
 | `hero`, info | `["hero", "rail", "ticker"]` | null | false |
 | `hero`, important or urgent | `["hero", "full", "rail", "ticker"]` | 0.35 | false |
 | `full` | `["full", "hero", "rail", "ticker"]` | null | true for info and important, false for urgent |
