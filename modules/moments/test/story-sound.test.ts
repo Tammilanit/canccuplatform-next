@@ -160,11 +160,11 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
     });
     await emergency(w.at(30));
     await k.tick(w.at(31));
-    const paused = await k.tx((c) => lockMoment(c, video.id as string));
+    const paused = await k.tx((c) => lockMoment(c, String(video.id).replace(/\.main$/, "")));
     expect(paused?.content.paused_at).toBe(w.at(31).toISOString());
     await endAll(w.at(60), "emergency");
     await k.tick(w.at(61));
-    const resumed = await k.tx((c) => lockMoment(c, video.id as string));
+    const resumed = await k.tx((c) => lockMoment(c, String(video.id).replace(/\.main$/, "")));
     expect(resumed?.content).toMatchObject({ started_at: w.at(45).toISOString(), paused_at: null });
     expect(resumed?.expires_at?.toISOString()).toBe(w.at(165).toISOString());
     // #605: the zone's video hold moves with the pause too, so no other sound plays over its end.
@@ -180,10 +180,10 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
       reason: "video",
     });
     await k.tick(w.at(165));
-    expect(k.started().filter((o) => o.rank === 65)[2]?.starts_at).toBe(w.at(165).toISOString());
+    expect(k.started().filter((o) => o.rank === 60)[2]?.starts_at).toBe(w.at(165).toISOString());
   });
 
-  it("defers a round over the airtime cap, then skips it when its time runs out (SO1)", async () => {
+  it("plays a round a deprecated airtime cap would have deferred: no cap (#777)", async () => {
     const long = {
       steps: [1, 2, 3, 4, 5].map((i) =>
         step({ content: { title: `Card ${String(i)}` }, message: i === 1 }),
@@ -207,12 +207,9 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
     );
     await take("long", w.at(0));
     await take("short", w.at(110));
-    expect(k.started()).toHaveLength(1);
     for (const at of [120, 180, 240]) await k.tick(w.at(at));
-    expect(k.started()).toHaveLength(1);
-    expect(rounds(await k.history()).filter((r) => r.includes("skipped"))).toEqual([
-      "round_skipped round 1 of 1 skipped: airtime",
-    ]);
+    expect(k.started()).toHaveLength(2);
+    expect(rounds(await k.history()).filter((r) => r.includes("skipped"))).toEqual([]);
   });
 
   it("plays calm and silent in a quiet scene, and a `quiet: skip` story does not fire there (E11)", async () => {
@@ -293,7 +290,7 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
     // Events come at least once: a second delivery changes nothing.
     await w.tx("demo", () => handleTenantEvent(deps, called));
     const started = k.started();
-    expect(started.map((o) => o.rank)).toEqual([65]);
+    expect(started.map((o) => o.rank)).toEqual([60]);
     await k.place("main", [[started[0]?.id as string, "hero"]], w.at(0));
     await k.tick(w.at(1));
     expect((await k.soundLog()).filter((s) => s.outcome === "played").map((s) => s.cue)).toEqual([

@@ -1,7 +1,7 @@
 /**
- * The arbiter on Postgres: the legacy directive rules ported (TTL, re-post extends, refusal with
- * a 30 s retry, revert), made regional (regions shared, patience, narrowing), a priority change
- * that re-ranks live, archiving, and a takeover that reverts on time across a restart.
+ * The arbiter on Postgres: the legacy directive rules ported (TTL, re-post extends, revert), one
+ * override per moment and zone (#777; the queue, floor and clock are airtime.test.ts's), a
+ * priority change that re-ranks live, archiving, and a takeover that ends on time across a restart.
  */
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
@@ -79,10 +79,13 @@ run("the arbiter", () => {
   it("starts a moment on every zone with the default TTL of 120 s", async () => {
     const r = await start(hotGame());
     expect(r.status).toBe("started");
-    const [started] = w.events("demo");
+    const [started, stage] = w.events("demo");
     expect(started?.type).toBe("moments.override.started");
+    expect(stage?.data.override).toMatchObject({
+      id: `${r.status === "started" ? r.moment.id : ""}.stage`,
+    });
     expect(started?.data.override).toMatchObject({
-      zones: [],
+      zones: ["main"],
       rank: 50,
       kind: "block",
       regions: ["hero", "rail"],
@@ -120,7 +123,11 @@ run("the arbiter", () => {
     const long = await start({ ...hotGame(), dedupe_key: "hot_game:g_2", ttl_seconds: 3600 }, 0);
     if (long.status === "refused") throw new Error("refused");
     await start({ ...hotGame(), dedupe_key: "hot_game:g_2" }, 100);
-    expect(await expiresAt(long.moment.id)).toBe(w.at(3700).toISOString());
+    // It waits behind the first (#777): its on-air time, not a wall-clock end, is what stays.
+    const { rows } = await w.tx("demo", (c) =>
+      c.query(`SELECT budget_ms FROM moment_slots WHERE moment_id = $1`, [long.moment.id]),
+    );
+    expect(rows.map((x) => Number(x.budget_ms))).toEqual([3_600_000, 3_600_000]);
   });
 
   it("updates the content in place when the same rule posts something new", async () => {
@@ -131,40 +138,18 @@ run("the arbiter", () => {
     expect((await history()).map((h) => h.action)).toContain("changed");
   });
 
-  it("refuses a lower rule moment with a 30 s retry when every region it may take is held", async () => {
-    const top = await start({ ...standings, regions: ["hero"] });
-    const rail = await start({ ...takeover, regions: ["rail"], kind: "block" });
-    if (top.status === "refused" || rail.status === "refused") throw new Error("refused");
-    for (const zone of ["main", "stage"]) {
-      await report(
-        claims(zone, [
-          [top.moment.id, "hero"],
-          [rail.moment.id, "rail"],
-        ]),
-      );
-    }
-    const r = await start(hotGame(), 5);
-    expect(r).toEqual({
-      status: "refused",
-      retry_after_seconds: 30,
-      held_by: "Demo takeover (rank 70)",
-    });
-    const refused = (await history()).at(-1);
-    expect(refused).toMatchObject({ action: "refused", outcome: "refused, retry in 30 s" });
-  });
-
   it("shares regions: a lower moment is accepted where a region of its chain is free", async () => {
     const top = await start({ ...standings, regions: ["hero"] });
     if (top.status === "refused") throw new Error("refused");
-    await report(claims("main", [[top.moment.id, "hero"]]));
-    await report(claims("stage", [[top.moment.id, "hero"]]));
+    await report(claims("main", [[`${top.moment.id}.main`, "hero"]]));
+    await report(claims("stage", [[`${top.moment.id}.stage`, "hero"]]));
     const r = await start(hotGame());
     expect(r.status).toBe("started");
     if (r.status === "refused") return;
     await report(
       claims("main", [
-        [top.moment.id, "hero"],
-        [r.moment.id, "rail"],
+        [`${top.moment.id}.main`, "hero"],
+        [`${r.moment.id}.main`, "rail"],
       ]),
     );
     const placed = (await history()).filter((h) => h.action === "placed");
@@ -180,38 +165,58 @@ run("the arbiter", () => {
     expect(r.status).toBe("started");
   });
 
-  it("brings the moment it held aside back when a takeover ends (revert)", async () => {
+  it("brings the moment a crew takeover pushed aside back after it, with its time left", async () => {
     const low = await start(hotGame());
-    const top = await start(takeover);
+    const top = await start(takeover, 10);
     if (low.status === "refused" || top.status === "refused") throw new Error("refused");
-    await report(claims("main", [[low.moment.id, "hero"]]));
-    await report(claims("main", [[top.moment.id, "full"]], [], [low.moment.id]), 1);
-    await tick(61);
-    const ended = w.events("demo").at(-1);
-    expect(ended).toMatchObject({
-      type: "moments.override.ended",
-      data: { override_id: top.moment.id, zones: [], reason: "expired", final: true },
+    // Its chain has the rail: it waits there while the crew's takeover holds the screen (rule 4).
+    const aside = w
+      .events("demo")
+      .filter(
+        (e) => (e.data.override as { id?: string } | undefined)?.id === `${low.moment.id}.main`,
+      );
+    expect(aside.at(-1)?.data.override).toMatchObject({ regions: ["rail"] });
+    await tick(70);
+    expect(
+      w
+        .events("demo")
+        .some(
+          (e) =>
+            e.type === "moments.override.ended" && e.data.override_id === `${top.moment.id}.main`,
+        ),
+    ).toBe(true);
+    await tick(80);
+    const back = w
+      .events("demo")
+      .filter(
+        (e) => (e.data.override as { id?: string } | undefined)?.id === `${low.moment.id}.main`,
+      );
+    expect(back.at(-1)?.data.override).toMatchObject({
+      regions: ["hero", "rail"],
+      expires_at: w.at(190).toISOString(),
     });
-    await report(claims("main", [[low.moment.id, "hero"]]), 62);
-    expect((await history()).filter((h) => h.zone_key === "main").map((h) => h.action)).toEqual([
-      "placed",
-      "placed",
-      "hidden",
-      "back",
-    ]);
   });
 
-  it("reverts a takeover on time across a restart (E2)", async () => {
+  it("ends a crew takeover on time across a restart (E2)", async () => {
     const low = await start(hotGame());
     const top = await start(takeover);
     if (low.status === "refused" || top.status === "refused") throw new Error("refused");
-    await report(claims("main", [[top.moment.id, "full"]], [], [low.moment.id]));
     w.restart();
     await tick(59);
-    expect(types(w.events("demo")).filter((t) => t.endsWith(".ended"))).toEqual([]);
+    const ends = () =>
+      w
+        .events("demo")
+        .filter(
+          (e) =>
+            e.type === "moments.override.ended" &&
+            String(e.data.override_id).startsWith(top.moment.id),
+        );
+    expect(ends()).toEqual([]);
     await tick(60);
-    const ended = w.events("demo").filter((e) => e.type === "moments.override.ended");
-    expect(ended.map((e) => e.data.override_id)).toEqual([top.moment.id]);
+    expect(ends().map((e) => e.data.override_id)).toEqual([
+      `${top.moment.id}.main`,
+      `${top.moment.id}.stage`,
+    ]);
     const lowNow = await w.tx("demo", (c) => lockMoment(c, low.moment.id));
     expect(lowNow?.ended_at).toBeNull();
   });
@@ -227,7 +232,7 @@ run("the arbiter", () => {
         `INSERT INTO moments_priorities (event_order, zone_orders, revision) VALUES ($1, '{}', 1)`,
         [order],
       );
-      await reRank(c, w.engine);
+      await reRank(c, w.engine, w.at(5));
     });
     const last = w.events("demo").at(-1);
     expect(last).toMatchObject({ type: "moments.override.changed", data: { changed: ["rank"] } });
@@ -235,7 +240,7 @@ run("the arbiter", () => {
     expect(types(w.events("demo"))).not.toContain("moments.override.ended");
   });
 
-  it("splits a zone with its own order into its own override: narrowing, then final: false", async () => {
+  it("gives a zone with its own order its own rank on its override", async () => {
     const r = await start(hotGame());
     if (r.status === "refused") throw new Error("refused");
     const stage = ["emergency", ...DEFAULT_ORDER.slice(1).reverse()];
@@ -244,31 +249,13 @@ run("the arbiter", () => {
         `INSERT INTO moments_priorities (event_order, zone_orders, revision) VALUES ($1, $2, 1)`,
         [DEFAULT_ORDER, { stage }],
       );
-      await reRank(c, w.engine);
+      await reRank(c, w.engine, w.at(5));
     });
-    const after = w.events("demo").slice(1);
-    expect(
-      after.map((e) => [e.type, e.data.override_id ?? (e.data.override as { id: string }).id]),
-    ).toEqual([
-      ["moments.override.started", `${r.moment.id}.stage`],
-      ["moments.override.changed", r.moment.id],
-      ["moments.override.ended", r.moment.id],
+    const after = w.events("demo").slice(2);
+    expect(after.map((e) => [e.type, (e.data.override as { id: string }).id])).toEqual([
+      ["moments.override.changed", `${r.moment.id}.stage`],
     ]);
-    expect(after[1]?.data).toMatchObject({ changed: ["zones"], override: { zones: ["main"] } });
-    expect(after[2]?.data).toMatchObject({ zones: ["stage"], final: false });
-  });
-
-  it("gives a zone up after its patience while it never had a place there", async () => {
-    const r = await start({ ...hotGame(), patience_seconds: 120, ttl_seconds: 600 });
-    if (r.status === "refused") throw new Error("refused");
-    await report(claims("main", [], [r.moment.id]));
-    await report(claims("stage", [[r.moment.id, "hero"]]));
-    await tick(119);
-    expect(w.events("demo")).toHaveLength(1);
-    await tick(120);
-    const [, narrowed, ended] = w.events("demo");
-    expect(narrowed?.data).toMatchObject({ changed: ["zones"], override: { zones: ["stage"] } });
-    expect(ended?.data).toMatchObject({ zones: ["main"], reason: "preempted", final: false });
+    expect(after[0]?.data).toMatchObject({ changed: ["rank"], override: { rank: 70 } });
   });
 
   it("ends a moment on one zone only (End in zone), and on a removed zone (E9)", async () => {
@@ -279,10 +266,14 @@ run("the arbiter", () => {
       if (m)
         await w.engine.end(c, m, "cleared", { user_id: "u_1", name: "Demo Crew" }, w.at(5), "main");
     });
-    expect(w.events("demo").at(-1)?.data).toMatchObject({ zones: ["main"], final: false });
+    expect(w.events("demo").at(-1)?.data).toMatchObject({
+      override_id: `${r.moment.id}.main`,
+      zones: ["main"],
+      final: true,
+    });
     await w.tx("demo", (c) => zoneRemoved(c, w.engine, "stage", w.at(6)));
     expect(w.events("demo").at(-1)?.data).toMatchObject({
-      override_id: r.moment.id,
+      override_id: `${r.moment.id}.stage`,
       zones: ["stage"],
       reason: "source_ended",
       final: true,
@@ -294,7 +285,11 @@ run("the arbiter", () => {
     await start({ ...takeover, class: "emergency", origin: "emergency", ttl_seconds: null });
     await w.tx("demo", (c) => endAll(c, w.engine, w.at(10)));
     const ended = w.events("demo").filter((e) => e.type === "moments.override.ended");
-    expect(ended.map((e) => e.data.reason)).toEqual(["source_ended", "source_ended"]);
+    expect(ended.map((e) => e.data.reason)).toEqual([
+      "source_ended",
+      "source_ended",
+      "source_ended",
+    ]);
     expect(ended.every((e) => e.data.final === true)).toBe(true);
   });
 });

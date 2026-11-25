@@ -89,6 +89,7 @@ function settingsOf(v: unknown, before: StorySettings): StorySettings {
   if (!(FACTORS as readonly number[]).includes(s.factor))
     throw invalid("The busy venue factor is 1, 1.5 or 2.");
   if (!int(s.min_card_seconds, 6, 60)) throw invalid("The minimum card time is 6 to 60 s.");
+  // Deprecated (#777): kept and returned, caps nothing.
   if (!int(s.airtime_percent, 20, 80)) throw invalid("The airtime cap is 20 to 80 %.");
   if (!int(s.handover_seconds, 0, 120)) throw invalid("The hand-over is 0 to 120 s.");
   return {

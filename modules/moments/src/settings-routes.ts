@@ -6,6 +6,8 @@ import { requireRight } from "@canccu/kit/fastify";
 import { CLASSES, checkOrder, rankOf } from "./arbiter.js";
 import type { Class, Orders } from "./arbiter.js";
 import { forgetUser } from "./consumer.js";
+import { airOf, airView, checkAir, mergeAir } from "./air-settings.js";
+import type { AirSettings } from "./air-settings.js";
 import { invalid } from "./content.js";
 import { filterOf, historyCsv, historyRows } from "./history.js";
 import { READ, SETTINGS, actorOf, archivedError, tenantOf } from "./http.js";
@@ -22,11 +24,12 @@ const conflict = () =>
     code: "version_conflict",
   });
 
-export function prioritiesView(o: Orders & { revision: number }): Body {
+export function prioritiesView(o: Orders & { revision: number; air: AirSettings }): Body {
   return {
     order: o.order,
     zones: Object.entries(o.zones).map(([zone_key, order]) => ({ zone_key, order })),
     ranks: Object.fromEntries(CLASSES.map((c) => [c, rankOf(o.order, c)])),
+    airtime: airView(o.air),
     revision: o.revision,
   };
 }
@@ -54,17 +57,25 @@ export async function savePriorities(
     if (why !== null) throw invalid(`${z.zone_key}: ${why}`);
     own[z.zone_key] = z.order as Class[];
   }
+  if (body.airtime !== undefined) {
+    const why = checkAir(body.airtime);
+    if (why !== null) throw invalid(why);
+  }
   await lockSettings(c, "priorities");
   const before = await loadOrders(c);
   if (body.revision !== before.revision) throw conflict();
   const revision = before.revision + 1;
+  const stored = mergeAir(before.air, (body.airtime ?? {}) as Body);
+  const air = airOf(stored);
   await c.query(
-    `INSERT INTO moments_priorities (event_order, zone_orders, revision) VALUES ($1, $2, $3)
+    `INSERT INTO moments_priorities (event_order, zone_orders, revision, airtime)
+     VALUES ($1, $2, $3, $4)
      ON CONFLICT (tenant_id) DO UPDATE SET event_order = EXCLUDED.event_order,
-       zone_orders = EXCLUDED.zone_orders, revision = EXCLUDED.revision`,
-    [order, own, revision],
+       zone_orders = EXCLUDED.zone_orders, revision = EXCLUDED.revision,
+       airtime = EXCLUDED.airtime`,
+    [order, own, revision, stored],
   );
-  await reRank(c, deps.engine);
+  await reRank(c, deps.engine, deps.now());
   await deps.audit({
     tenant_id: tenant,
     actor_user_id: actorOf(session).user_id,
@@ -73,9 +84,10 @@ export async function savePriorities(
     changes: {
       order: { old: before.order, new: order },
       zones: { old: before.zones, new: own },
+      airtime: { old: airView(before.air), new: airView(air) },
     },
   });
-  return prioritiesView({ order: order as Class[], zones: own, revision });
+  return prioritiesView({ order: order as Class[], zones: own, revision, air });
 }
 
 /** Saves one rule's settings; audited with the old and new values. */

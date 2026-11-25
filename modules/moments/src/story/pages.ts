@@ -31,8 +31,6 @@ import type { ItemChoice, RunView } from "./views.js";
 type Raw = Record<string, string | string[] | undefined>;
 type Q = { Querystring: { edit?: string; step?: string; done?: string; error?: string } };
 
-const TEN_MINUTES = 600_000;
-
 async function state(deps: AppDeps, request: FastifyRequest) {
   const a = await viaApi(request.server, request, "GET", "/api/moments/storyboards", {});
   const agenda = (await deps.db.tenant((c) => runOfShow(c))) ?? [];
@@ -65,23 +63,6 @@ export async function storyCard(deps: AppDeps, request: FastifyRequest): Promise
   const canTake =
     request.session?.rights.has(TAKE) === true && tenantOf(request).status !== "archived";
   return crewStories({ ...s, canTake, back: "on-air" });
-}
-
-/** All stories' share of each zone's last 10 minutes, as the airtime cap counts it (SO1). */
-async function airtime(deps: AppDeps, now: Date): Promise<{ zone: string; share: number }[]> {
-  return deps.db.tenant(async (c) => {
-    const out = [];
-    for (const zone of await knownZones(c)) {
-      const { rows } = await c.query(
-        `SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (LEAST(COALESCE(ended_at, $1), COALESCE(expires_at, $1), $1) - GREATEST(starts_at, $2))) * 1000), 0) AS used
-         FROM moments WHERE class = 'storyboard' AND starts_at < $1 AND LEAST(COALESCE(ended_at, $1), COALESCE(expires_at, $1)) > $2
-           AND (cardinality(zones) = 0 OR $3 = ANY (zones))`,
-        [now, new Date(now.getTime() - TEN_MINUTES), zone],
-      );
-      out.push({ zone, share: Number(rows[0]?.used ?? 0) / TEN_MINUTES });
-    }
-    return out;
-  });
 }
 
 export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
@@ -173,7 +154,6 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         revision: s.revision,
         canWrite: has(request, SETTINGS),
         canTake: has(request, TAKE),
-        airtime: await airtime(deps, deps.now()),
         step: Number(request.query.step ?? 0) || 0,
         sample: (text) => fillText(text, fill),
         done: request.query.done,

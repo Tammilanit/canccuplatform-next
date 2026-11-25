@@ -110,13 +110,6 @@ describe("a preset's status", () => {
     expect(statusOf(preset("hot_game"), at())).toContain(
       "Would replace the built-in rule hot game",
     );
-    expect(statusOf(preset("pizza_arrived"), at())).toContain(
-      "Takes the arrived order from the built-in rule pizza",
-    );
-    // #608: off, it only would, as the other presets say.
-    expect(statusOf({ ...preset("pizza_arrived"), enabled: false }, at())).toContain(
-      "Would take the arrived order from the built-in rule pizza",
-    );
     const copy = { ...preset("hot_game"), key: "hot_game_copy", preset: null };
     expect(statusOf(copy, at()).join(" ")).not.toMatch(/rule/);
   });

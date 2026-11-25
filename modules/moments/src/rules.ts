@@ -8,7 +8,6 @@ import type { Event, SqlClient } from "@canccu/kit";
 import { isClass } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
 import type { Engine } from "./engine.js";
-import { askForRule, dropRetry } from "./rule-retries.js";
 import { leaderboardView } from "./sources.js";
 import { lockRunningByKey } from "./store.js";
 import type { Binding } from "./store.js";
@@ -227,11 +226,13 @@ export function checkRule(id: string, s: Data): string | null {
   return null;
 }
 
-/** Runs every rule an event fires or ends; a refused request asks again 30 s later (rule-retries.ts). */
+/** Runs every rule an event fires or ends; what finds the hero held waits in the queue (#777). */
 export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Date): Promise<void> {
   const rules = await loadRules(c);
   // A preset on for the event shows the same happening: its rule is off (SD6, WD2).
   const shownByPreset = rulesOff((await loadStories(c)).stories, e.type);
+  const pizza = rules.find((r) => r.rule_id === "pizza");
+  if (pizza !== undefined) await pizzaIsHere(c, engine, e, now, pizza);
   for (const def of RULES) {
     const s = rules.find((r) => r.rule_id === def.id);
     if (s === undefined) continue;
@@ -241,14 +242,12 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
     if (def.ends.includes(e.type) || takenOver) {
       const m = await lockRunningByKey(c, `${def.id}:${def.ref(e.data)}`);
       if (m !== null) await engine.end(c, m, "source_ended", null, now);
-      await dropRetry(c, `${def.id}:${def.ref(e.data)}`);
     }
     if (!s.enabled || takenOver || !def.on.includes(e.type)) continue;
     if (def.applies?.(e.data) === false) continue;
     const ref = def.ref(e.data);
-    await askForRule(
+    await engine.request(
       c,
-      engine,
       {
         class: s.class,
         template: s.template,
@@ -268,4 +267,58 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
       now,
     );
   }
+}
+
+/** Pizza is here's on-air time: #775's hold of the hero. */
+const PIZZA_HERE_TTL_SECONDS = 180;
+
+/**
+ * Pizza is here (#777, contracts/moments.md, Built-in rules): the `pizza` rule's arrival is an
+ * announcement that takes the hero, waits in the rail while the hero is held, and degrades to
+ * the ticker; the food box keeps the order's state. It ends on the order's done or cancel.
+ */
+async function pizzaIsHere(
+  c: SqlClient,
+  engine: Engine,
+  e: Event,
+  now: Date,
+  s: RuleSettings,
+): Promise<void> {
+  const o = obj(e.data.order);
+  const id = str(o.id) ?? "";
+  if (id === "") return;
+  const key = `order-arrived:${id}`;
+  if (e.type === "pizza.order.done" || e.type === "pizza.order.cancelled") {
+    const m = await lockRunningByKey(c, key);
+    if (m !== null) await engine.end(c, m, "source_ended", null, now);
+    return;
+  }
+  if (e.type !== "pizza.order.arrived" || !s.enabled) return;
+  const seq = typeof o.seq === "number" ? String(o.seq) : "ready";
+  const body = `Order ${seq} · Collect at ${str(o.pickup) ?? "the pickup point"}`;
+  await engine.request(
+    c,
+    {
+      class: "announcement",
+      template: "announcement",
+      content: {
+        title: "Pizza is here",
+        body,
+        level: "info",
+        starts_at: now.toISOString(),
+        ticker_line: `Pizza is here · ${body}`,
+      },
+      origin: "rule",
+      rule_id: "pizza",
+      why: `rule: ${e.type}`,
+      regions: ["hero", "rail", "ticker"],
+      ttl_seconds: PIZZA_HERE_TTL_SECONDS,
+      zones: s.zones,
+      source: { module: e.source, event_id: e.id, ref: id },
+      dedupe_key: key,
+      cue: s.cue,
+      happening: `${e.type}:${id}`,
+    },
+    now,
+  );
 }

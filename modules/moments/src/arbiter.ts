@@ -21,7 +21,19 @@ export type Class = (typeof CLASSES)[number];
 
 /** The ranks of the places in an order, highest first: a moved class takes its place's rank. */
 const PLACE_RANKS = [100, 90, 80, 70, 65, 60, 55, 50, 20, 10] as const;
-export const DEFAULT_ORDER: readonly Class[] = CLASSES;
+/** The default order (#777: finals above stories and the tournament); a saved order keeps its own. */
+export const DEFAULT_ORDER: readonly Class[] = [
+  "emergency",
+  "stream",
+  "announcement",
+  "spotlight",
+  "finals",
+  "storyboard",
+  "tournament",
+  "hot_game",
+  "reactions",
+  "ticker",
+];
 
 export const isClass = (v: unknown): v is Class => CLASSES.includes(v as Class);
 
@@ -96,30 +108,6 @@ export function desiredOverrides(
     wanted.push({ id: `${moment.id}.${z}`, zones: [z], rank: rankOn(orders, z, moment.class) });
   }
   return wanted;
-}
-
-/** One claim on a zone as Screen last reported it, with the rank its override was sent with. */
-export interface Held {
-  override_id: string;
-  role: string | null;
-  rank: number;
-  state: "placed" | "hidden" | "unplaced" | "left";
-}
-
-/**
- * Whether every role of `chain` is held on a zone by a higher rank (the legacy refusal, made
- * regional). A higher `full` claim holds every role but `overlay`; a waiting claim holds nothing.
- */
-export function blockedOn(chain: readonly string[], rank: number, held: readonly Held[]): boolean {
-  const higher = held.filter(
-    (h) => h.rank > rank && (h.state === "placed" || h.state === "hidden"),
-  );
-  const full = higher.some((h) => h.role === "full");
-  return chain.every((role) =>
-    role === "overlay"
-      ? higher.some((h) => h.role === "overlay")
-      : full || higher.some((h) => h.role === role || (role === "full" && h.role !== "overlay")),
-  );
 }
 
 /** The fields of an override that Moments changes after its start, as Screen stores them. */

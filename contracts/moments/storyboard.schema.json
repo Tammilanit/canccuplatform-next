@@ -197,11 +197,11 @@
       "description": "The event's storyboard settings.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["factor", "min_card_seconds", "airtime_percent", "handover_seconds"],
+      "required": ["factor", "min_card_seconds", "handover_seconds"],
       "properties": {
         "factor": { "description": "The busy venue factor (SL1).", "enum": [1, 1.5, 2] },
         "min_card_seconds": { "type": "integer", "minimum": 6, "maximum": 60 },
-        "airtime_percent": { "description": "Storyboards hold a zone at most this share of any 10 minutes (SO1).", "type": "integer", "minimum": 20, "maximum": 80 },
+        "airtime_percent": { "description": "Deprecated (#777): kept and returned, caps nothing.", "deprecated": true, "type": "integer", "minimum": 20, "maximum": 80 },
         "handover_seconds": { "description": "A phase waits at most this long for a story's round (SD9).", "type": "integer", "minimum": 0, "maximum": 120 }
       }
     }

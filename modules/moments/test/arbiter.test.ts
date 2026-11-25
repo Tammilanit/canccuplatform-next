@@ -3,13 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   DEFAULT_ORDER,
-  blockedOn,
   checkOrder,
   desiredOverrides,
   overrideChanges,
   rankOf,
 } from "../src/arbiter.js";
-import type { Class, Held, MomentShape, SentOverride } from "../src/arbiter.js";
+import type { Class, MomentShape, SentOverride } from "../src/arbiter.js";
 
 const moment = (over: Partial<MomentShape> = {}): MomentShape => ({
   id: "m_1",
@@ -20,10 +19,13 @@ const moment = (over: Partial<MomentShape> = {}): MomentShape => ({
 });
 
 describe("the priority order", () => {
-  it("ranks the default order as the plan draws it, emergency first", () => {
+  it("ranks the default order as #777 agreed: finals above stories and the tournament", () => {
     expect(DEFAULT_ORDER[0]).toBe("emergency");
+    expect(rankOf(DEFAULT_ORDER, "finals")).toBe(65);
+    expect(rankOf(DEFAULT_ORDER, "storyboard")).toBe(60);
+    expect(rankOf(DEFAULT_ORDER, "tournament")).toBe(55);
     expect(CLASSES.map((c) => rankOf(DEFAULT_ORDER, c))).toEqual([
-      100, 90, 80, 70, 65, 60, 55, 50, 20, 10,
+      100, 90, 80, 70, 60, 55, 65, 50, 20, 10,
     ]);
   });
 
@@ -83,33 +85,6 @@ describe("overrides per rank", () => {
     expect(desiredOverrides(moment({ class: "emergency" }), stage, ["main", "stage"], [])).toEqual([
       { id: "m_1", zones: [], rank: 100 },
     ]);
-  });
-});
-
-describe("refusal", () => {
-  const held = (role: string, rank: number, state: Held["state"] = "placed"): Held => ({
-    override_id: `o_${role}_${rank}`,
-    role,
-    rank,
-    state,
-  });
-
-  it("is blocked when every role of the chain is held by a higher rank", () => {
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60), held("rail", 80)])).toBe(true);
-  });
-
-  it("is not blocked while a role of its chain is free or held lower: regions are shared", () => {
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60)])).toBe(false);
-    expect(blockedOn(["hero", "rail"], 50, [held("hero", 60), held("rail", 20)])).toBe(false);
-  });
-
-  it("counts a higher full claim as holding every role but the overlay", () => {
-    expect(blockedOn(["hero", "rail", "ticker"], 80, [held("full", 100)])).toBe(true);
-    expect(blockedOn(["overlay"], 20, [held("full", 100)])).toBe(false);
-  });
-
-  it("ignores claims that wait: an unplaced claim holds nothing", () => {
-    expect(blockedOn(["hero"], 50, [held("hero", 60, "unplaced")])).toBe(false);
   });
 });
 

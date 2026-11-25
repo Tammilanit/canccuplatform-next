@@ -42,6 +42,8 @@ paths:
     $ref: "moments/crew.openapi.yaml#/~1api~1moments~1moments"
   /api/moments/moments/{moment_id}/end:
     $ref: "moments/crew.openapi.yaml#/~1api~1moments~1moments~1{moment_id}~1end"
+  /api/moments/moments/{moment_id}/forward:
+    $ref: "moments/crew.openapi.yaml#/~1api~1moments~1moments~1{moment_id}~1forward"
   /api/moments/moments/{moment_id}/extend:
     $ref: "moments/crew.openapi.yaml#/~1api~1moments~1moments~1{moment_id}~1extend"
   /api/moments/spotlight:
@@ -123,7 +125,8 @@ paths:
       summary: A module requests a moment
       description: |
         The kit's service identity (`x-canccu-service`), no session. The request runs through the same arbiter
-        as a rule's: 201 started, 200 renewed, 409 `moment_refused` with a retry.
+        as a rule's: 201 started (it may wait in a zone's queue), 200 renewed, 409 `moment_refused` only for one
+        owner per happening.
       security:
         - {}
       parameters:
@@ -387,7 +390,7 @@ components:
       enum: [rule, crew, emergency, module]
     HistoryAction:
       type: string
-      enum: [started, refused, placed, hidden, queued, back, changed, ended, round_started, round_skipped, loop_ended, not_fired]
+      enum: [started, refused, placed, hidden, queued, back, changed, ended, moved, round_started, round_skipped, loop_ended, not_fired]
     Order:
       type: array
       description: Every class once, highest first, `emergency` first.
@@ -404,6 +407,73 @@ components:
           $ref: "#/components/schemas/ZoneKey"
         order:
           $ref: "#/components/schemas/Order"
+    AirtimeSettings:
+      type: object
+      additionalProperties: false
+      description: The arbiter's airtime (#777). Each field is optional on `PUT`; a missing one keeps its stored value.
+      properties:
+        min_on_air_seconds:
+          type: integer
+          minimum: 60
+          maximum: 120
+          description: The floor a shown moment holds the hero against all but the emergency and a person's action. Default 90.
+        gap_seconds:
+          type: integer
+          minimum: 0
+          maximum: 30
+          description: The breathing gap the hero stays free between two moments. Default 10.
+        stale_after_minutes:
+          type: object
+          description: Per class, how long a waiting moment may wait before it ends `stale`. Default 30 each.
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 240
+    ZoneQueue:
+      type: object
+      required: [zone_key, holder, free_until, waiting, stale]
+      properties:
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        holder:
+          type: [string, "null"]
+          description: The moment that holds the hero, or null.
+        free_until:
+          type: [string, "null"]
+          format: date-time
+          description: The breathing gap's end, while it runs.
+        waiting:
+          type: array
+          description: In queue order.
+          items:
+            type: object
+            required: [moment_id, title, class, since, in_rail]
+            properties:
+              moment_id:
+                type: string
+              title:
+                type: string
+              class:
+                $ref: "#/components/schemas/Class"
+              since:
+                type: string
+                format: date-time
+              in_rail:
+                type: boolean
+        stale:
+          type: array
+          description: The last hour's, newest first, at most 10.
+          items:
+            type: object
+            required: [title, class, at]
+            properties:
+              title:
+                type: string
+              class:
+                $ref: "#/components/schemas/Class"
+              at:
+                type: string
+                format: date-time
     PriorityOrders:
       type: object
       required: [order, zones, ranks, revision]
@@ -419,6 +489,8 @@ components:
           description: Each class's rank in the event's order.
           additionalProperties:
             type: integer
+        airtime:
+          $ref: "#/components/schemas/AirtimeSettings"
         revision:
           type: integer
     Qr:
@@ -495,6 +567,8 @@ components:
           type: integer
           minimum: 0
           maximum: 7200
+          deprecated: true
+          description: Deprecated (#777). May shorten, never lengthen, the moment's `stale_after`.
         qr:
           $ref: "#/components/schemas/Qr"
         binding:
@@ -553,6 +627,8 @@ components:
           format: date-time
         patience_seconds:
           type: integer
+          deprecated: true
+          description: Deprecated (#777). How long after its start, or its last new content, it may still wait for a place before it ends `stale`.
         qr:
           oneOf:
             - $ref: "#/components/schemas/Qr"
@@ -570,7 +646,8 @@ components:
           format: date-time
         end_reason:
           type: [string, "null"]
-          enum: [expired, cleared, preempted, source_ended, null]
+          description: "`stale`: it waited past its class's `stale_after` (#777). `preempted` is deprecated and no longer sent."
+          enum: [expired, cleared, preempted, source_ended, stale, null]
     SpotlightRequest:
       type: object
       additionalProperties: false

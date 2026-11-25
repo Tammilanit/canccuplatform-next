@@ -20,7 +20,7 @@ live("the cues and sound API", () => {
   });
   beforeEach(async () => {
     await pool.query(
-      `TRUNCATE moments, moment_overrides, moment_placements, moments_history, moments_zones,
+      `TRUNCATE moments, moment_overrides, moment_placements, moment_slots, moments_zone_air, moments_history, moments_zones,
         moments_outbox, moments_idempotency,
         moments_cues, moments_sound_settings, moments_sound_zones, moments_sound_sources,
         moments_sound_log, moments_sounds`,

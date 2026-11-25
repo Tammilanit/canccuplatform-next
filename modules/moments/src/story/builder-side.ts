@@ -152,7 +152,6 @@ export const checkCount = (d: Described): { ok: number; look: number } => ({
 
 function checks(o: Side): Html {
   const { d } = o;
-  const cap = o.settings.airtime_percent / 100;
   const where = o.fullScreen ? "the full screen" : "the hero";
   return html`<section class="canccu-card moments-builder__checks" data-tab="preview" id="checks">
     <h2 class="canccu-card__title">Before you save</h2>
@@ -162,17 +161,17 @@ function checks(o: Side): Html {
         : meter(
             `Airtime on ${where}`,
             d.loop_share,
-            `${String(Math.round(d.loop_share * 100))} % of its loop · cap for all stories ${String(o.settings.airtime_percent)} % of any 10 min`,
-            cap,
+            `${String(Math.round(d.loop_share * 100))} % of its loop; the floor and the gap pace the hero`,
           )
     }
-    ${o.airtime.map((a) => html`<p class="canccu-small canccu-muted">All stories on ${o.zoneName(a.zone)}: ${String(Math.round(a.share * 100))} % of the last 10 min</p>`)}
     ${meter(
       "Sounds per run, per zone",
       d.sounds_per_run / RUN_SOUNDS,
       `${String(d.sounds_per_run)} of ${String(RUN_SOUNDS)} · at most 2 a round`,
     )}
-    <p class="canccu-small canccu-muted">Patience a round: ${String(d.patience_s)} s, then skip.</p>
+    <p class="canccu-small canccu-muted">
+      A round waits its turn when the hero is held, and plays late rather than never.
+    </p>
     <ul class="moments-storychecks">
       ${d.checks.map(
         (c) =>
@@ -193,7 +192,6 @@ export interface Side {
   zones: string[];
   zoneName: ZoneName;
   settings: StorySettings;
-  airtime: { zone: string; share: number }[];
   canTake: boolean;
   fullScreen: boolean;
   /** The round's steps as the player takes them, their texts filled with the sample. */

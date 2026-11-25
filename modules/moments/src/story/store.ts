@@ -1,7 +1,7 @@
 /** The storyboards' rows (contracts/moments.md, Storyboards); every function runs in the caller's tenant transaction. */
 import type { SqlClient } from "@canccu/kit";
 import type { Actor } from "../store.js";
-import { PRESETS } from "./presets.js";
+import { PRESETS, RETIRED_PRESETS } from "./presets.js";
 import type { Story } from "./model.js";
 import { DEFAULT_TIMING } from "./timing.js";
 import type { Timing } from "./timing.js";
@@ -62,7 +62,7 @@ export async function loadStories(c: SqlClient): Promise<StoryDoc> {
       copied: false,
     };
   return {
-    stories: r.stories as Story[],
+    stories: (r.stories as Story[]).filter((s) => !RETIRED_PRESETS.has(s.preset ?? "")),
     settings: { ...DEFAULT_SETTINGS, ...(r.settings as Partial<StorySettings>) },
     event: { ...NO_EVENT, ...(r.event as Partial<EventFacts>) },
     revision: r.revision as number,
@@ -87,8 +87,13 @@ export async function writeStories(
   revision: number,
 ): Promise<void> {
   await ensureStories(c);
+  // The stored copies of retired presets stay, unseen (RETIRED_PRESETS): a revert brings them back.
+  const { rows } = await c.query(`SELECT stories FROM moments_stories`, []);
+  const retired = ((rows[0]?.stories ?? []) as Story[]).filter(
+    (s) => RETIRED_PRESETS.has(s.preset ?? "") && !stories.some((x) => x.key === s.key),
+  );
   await c.query(`UPDATE moments_stories SET stories = $1, settings = $2, revision = $3`, [
-    JSON.stringify(stories),
+    JSON.stringify([...stories, ...retired]),
     JSON.stringify(settings),
     revision,
   ]);

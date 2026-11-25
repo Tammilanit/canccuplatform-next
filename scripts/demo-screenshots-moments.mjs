@@ -83,6 +83,20 @@ export async function placed(id, zones) {
   );
 }
 
+/** The moment `id` waits in `zone`'s queue (#777): another holds its hero. */
+export async function waiting(id, zone) {
+  const until = Date.now() + PLACED_MS;
+  while (Date.now() < until) {
+    const r = await moments("GET", "/api/moments/moments");
+    const q = r.body?.queues?.find((x) => x.zone_key === zone);
+    if (q?.waiting?.some((w) => w.moment_id === id)) return;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(
+    `${id} did not wait in ${zone}'s queue within ${PLACED_MS / 1000} s`,
+  );
+}
+
 const shows = (text) => async (page) => {
   await page.getByText(text).first().waitFor({ timeout: 20_000 });
   await page.waitForTimeout(1500);
@@ -258,8 +272,10 @@ export async function momentsShots({ demo, shot, fail }) {
         qr: { path: "/notify/", label: "Scan for the hub" },
       }),
     );
-    await placed(ids[0], ["main"]);
+    // The second crew spotlight is a person's new action: it cuts in on main (#777, rule 1),
+    // and the first waits in main's queue, which On air lists.
     await placed(ids[1], ["main", "entrance"]);
+    await waiting(ids[0], "main");
     images.push((await image(demo)).id);
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);

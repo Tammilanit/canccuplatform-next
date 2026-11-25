@@ -26,6 +26,7 @@ run("a moment's and an event's life", () => {
     }
     pool = await freshDatabase();
     w = await appWorld(pool);
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
   });
   afterAll(async () => {
     await w.app.close();

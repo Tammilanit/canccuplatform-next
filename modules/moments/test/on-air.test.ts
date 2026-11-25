@@ -52,7 +52,7 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     expect(at("moments-firepanel")).toBeLessThan(at("moments-onair__scenes"));
   });
 
-  it("lists the zones in Screen's order, by key, and at most four moments a zone, then +n more", async () => {
+  it("lists the zones in Screen's order, by key, and a zone's queue as a list in its order (#777)", async () => {
     w.zoneNames.set("bar", "Bar").set("stage", "Stage");
     await w.tx("demo", async (c) => {
       await addZone(c, "stage");
@@ -71,10 +71,12 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     ].map((m) => m[1]);
     expect(names).toEqual(["Bar", "Entrance", "Main hall", "Stage"]);
     const bar = page.slice(page.indexOf(">Bar</h2>"), page.indexOf(">Entrance</h2>"));
-    expect(bar.match(/class="moments-item /g)).toHaveLength(6);
-    const shown = bar.slice(0, bar.indexOf("moments-more"));
-    expect(shown.match(/class="moments-item /g)).toHaveLength(4);
-    expect(bar).toMatch(/<summary class="canccu-small">\+2 more<\/summary>/);
+    // Each crew spotlight cuts the one before (a person's action), which waits in the queue.
+    expect(bar.match(/class="moments-item /g)).toHaveLength(1);
+    expect(bar.match(/moments-queue__item/g)).toHaveLength(5);
+    expect(bar.indexOf("Note 1")).toBeGreaterThan(-1);
+    expect(bar).toContain("Move forward");
+    expect(bar).toMatch(/>\s*Skip\s*</);
   });
 
   it("draws a zone by its name and a moment without its rank", async () => {
@@ -168,21 +170,19 @@ describe.skipIf(!DATABASE_URL)("On air and the zones' names", () => {
     );
   });
 
-  it("counts hidden moments apart from the waiting ones in a zone's summary", async () => {
+  it("counts what is on air and what waits in a zone's summary (#777)", async () => {
     const ids = [];
     for (const title of ["On now", "Under the full screen", "In the queue"])
       ids.push(
         idOf(await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title })),
       );
-    const [on, hidden, queued] = ids as [string, string, string];
+    const on = (ids as [string, string, string])[2];
     await w.tx("demo", (c) =>
-      applyClaims(c, claims("main", [[on, "hero"]], [queued], [hidden]), w.now),
+      applyClaims(c, claims("main", [[`${on}.main`, "hero"]]), w.now, w.engine),
     );
     const page = (await w.call("crew", "GET", "/on-air")).body;
     const main = page.slice(page.indexOf(">Main hall</h2>"));
-    expect(main).toMatch(
-      /<p class="canccu-small canccu-muted">\s*1 on air · 1 hidden · 1 waiting\s*<\/p>/,
-    );
+    expect(main).toMatch(/<p class="canccu-small canccu-muted">\s*1 on air · 2 waiting\s*<\/p>/);
   });
 
   it("says a story fired on no item is on now, by the take's own clock", async () => {

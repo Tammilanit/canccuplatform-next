@@ -27,8 +27,9 @@ export const BOX = "/screen/zones/main";
  * walks the flow: the Food page, the menu, my order at each step.
  */
 const LISTED = [
-  // The hall's screen first at each step that has a story (#775): Moments' Pizza order open plays
-  // its card for 20 s, and Pizza is here holds the hero three minutes, from the order's event.
+  // The hall's screen first at each step Moments shows (#775): Pizza order open plays its card for
+  // 20 s, and Pizza is here, the `pizza` rule's announcement (#777), holds the hero three minutes
+  // from the order's event, after any moment that holds it has had its floor.
   ["pizza-screen-food-open", BOX, HALL, "open"],
   ["pizza-food-phone", "/pizza/", PHONE, "open"],
   ["pizza-food-guest-phone", "/pizza/", PHONE, "open", GUEST],

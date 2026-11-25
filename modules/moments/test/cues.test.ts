@@ -26,7 +26,7 @@ live("cues", () => {
   });
   beforeEach(async () => {
     await pool.query(
-      `TRUNCATE moments, moment_overrides, moment_placements, moments_zones, moments_history,
+      `TRUNCATE moments, moment_overrides, moment_placements, moment_slots, moments_zone_air, moments_zones, moments_history,
         moments_outbox, moments_cues, moments_sound_settings, moments_sound_zones,
         moments_sound_sources, moments_sound_log, moments_sounds`,
     );

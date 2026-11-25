@@ -73,6 +73,7 @@ TESTS=(
   "Notify offers the Food topic pizza registers at start"
   "a pizza order shows in the main zone's food box and its arrival reaches a subscribed member's phone"
   "an upgrade from a stack older than a module's rights brings up this commit's CI session stub"
+  "a final's card holds the hero its floor while Pizza is here waits in the rail, then comes back with its time left"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -80,7 +81,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform "pizza notify" "pizza screen notify" platform
+  moments moments platform "pizza notify" "pizza screen notify" platform moments
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -339,29 +340,28 @@ if want agenda notify; then
 fi
 
 if want moments; then
-  # Moments to the screens (step 4 plan O2): from a crew spotlight's POST to Moments until its claim
-  # is on a paired screen's stream, beside Screen's stack client in the screen container.
-  # shellcheck disable=SC2329
-  moment_latency() {
+  # Moments' checks beside Screen's stack client in the screen container: from a crew spotlight's
+  # POST to a paired screen's stream (step 4 plan O2), two screens of a zone starting a sound
+  # together (#113, D14), and airtime: the floor, the rail as the waiting room, the paused clock (#777).
+  screen_check() {
     code=
     "${COMPOSE[@]}" cp modules/screen/test/stack/. screen:/tmp/canccu-stack >/dev/null &&
-      "${COMPOSE[@]}" cp modules/moments/ci/moment-latency.mjs screen:/tmp/canccu-stack/ >/dev/null &&
+      "${COMPOSE[@]}" cp "modules/moments/ci/$1" screen:/tmp/canccu-stack/ >/dev/null &&
       "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
-        node moment-latency.mjs > "$TMP/body" 2>&1
+        node "$1" > "$TMP/body" 2>&1
   }
+  # shellcheck disable=SC2329
+  moment_latency() { screen_check moment-latency.mjs; }
+  # shellcheck disable=SC2329
+  sound_sync() { screen_check sound-sync.mjs; }
+  # shellcheck disable=SC2329
+  airtime() { screen_check airtime.mjs; }
   check "${TESTS[31]}" moment_latency
   sed -n 's/^moment latency: /     /p' "$TMP/body"
-  # Sync (#113, D14): two screens of one zone get a sound check's play_at and start together.
-  # shellcheck disable=SC2329
-  sound_sync() {
-    code=
-    "${COMPOSE[@]}" cp modules/screen/test/stack/. screen:/tmp/canccu-stack >/dev/null &&
-      "${COMPOSE[@]}" cp modules/moments/ci/sound-sync.mjs screen:/tmp/canccu-stack/ >/dev/null &&
-      "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
-        node sound-sync.mjs > "$TMP/body" 2>&1
-  }
   check "${TESTS[32]}" sound_sync
   sed -n 's/^sound sync: /     /p' "$TMP/body"
+  check "${TESTS[37]}" airtime
+  sed -n 's/^airtime: /     /p' "$TMP/body"
 fi
 
 # An idle stack's health checks cost almost no CPU (#612): Docker probes every start_interval only

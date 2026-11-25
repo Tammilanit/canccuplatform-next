@@ -1,4 +1,6 @@
 /** On air, the emergency and the spotlight form (mockups 03, 04, 07): server-drawn, phone-first, `packages/ui` classes. */
+import type { ZoneQueue } from "./queue-data.js";
+import { queueView } from "./queue-views.js";
 import type { Html } from "@canccu/ui";
 import { html, notice } from "@canccu/ui";
 import type { Class } from "./arbiter.js";
@@ -61,7 +63,7 @@ function momentRow(m: MomentView, zone: string, now: Date, canAct: boolean): Htm
   const state = p === undefined ? "starting" : p.state;
   const waits =
     state === "unplaced"
-      ? `no region of its chain is free; waits up to ${Math.round(m.patience_seconds / 60)} min, then drops`
+      ? "no region of its chain is free; it waits its turn"
       : state === "hidden"
         ? "under a full-screen moment; back when it ends"
         : state === "starting"
@@ -93,7 +95,12 @@ function momentRow(m: MomentView, zone: string, now: Date, canAct: boolean): Htm
   </li>`;
 }
 
-function actionForm(action: "end" | "extend", id: string, zone: string, label: string): Html {
+export function actionForm(
+  action: "end" | "extend" | "forward",
+  id: string,
+  zone: string,
+  label: string,
+): Html {
   return html`<form method="post" action="${PREFIX}on-air/${action}">
     ${formKey()}<input type="hidden" name="moment_id" value="${id}" /><input
       type="hidden"
@@ -119,6 +126,7 @@ export const ZONE_ROWS = 4;
  */
 export function onAirView(o: {
   moments: MomentView[];
+  queues?: ZoneQueue[];
   zones: string[];
   zoneName: ZoneName;
   now: Date;
@@ -141,8 +149,14 @@ export function onAirView(o: {
       : "";
   const zones = o.zones.length === 0 ? ["—"] : o.zones;
   const cards = zones.map((zone) => {
+    const queue = o.queues?.find((q) => q.zone_key === zone);
+    const waits = new Set(queue?.waiting.map((w) => w.moment_id));
+    // What waits in the queue is listed there, in its order (rule 7), not among what shows.
     const here = o.moments.filter(
-      (m) => (m.zones.length === 0 || m.zones.includes(zone)) && !m.left.includes(zone),
+      (m) =>
+        (m.zones.length === 0 || m.zones.includes(zone)) &&
+        !m.left.includes(zone) &&
+        !waits.has(m.id),
     );
     const count = (state: string) =>
       here.filter((m) => m.placements.some((p) => p.zone_key === zone && p.state === state)).length;
@@ -152,7 +166,7 @@ export function onAirView(o: {
     const summary = [
       [placed, "on air"],
       [hidden, "hidden"],
-      [here.length - placed - hidden, "waiting"],
+      [here.length - placed - hidden + waits.size, "waiting"],
     ]
       .filter(([n]) => n !== 0)
       .map(([n, what]) => `${String(n)} ${String(what)}`)
@@ -181,6 +195,7 @@ export function onAirView(o: {
               </ul>
             </details>`
       }
+      ${zone === "—" ? "" : queueView(queue, zone, o.now, o.canTake && !o.archived)}
     </li>`;
   });
   const crew =

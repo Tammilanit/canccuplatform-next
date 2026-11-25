@@ -7,11 +7,11 @@
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import type { Outbox, SqlClient } from "@canccu/kit";
-import { blockedOn, desiredOverrides, rankOn } from "./arbiter.js";
-import type { Class, Orders } from "./arbiter.js";
+import type { Class } from "./arbiter.js";
+import { passZone, withdraw, withdrawAll } from "./air.js";
+import { saveSlot, slotsOf } from "./air-store.js";
 import { reconcile } from "./reconcile.js";
 import {
-  heldOn,
   insertMoment,
   knownZones,
   loadOrders,
@@ -20,20 +20,19 @@ import {
   saveMoment,
   titleOf,
   writeHistory,
-  splitZones,
 } from "./store.js";
 import type { Actor, Binding, Kind, MomentRow, Origin, Qr, Source } from "./store.js";
 import type { CueTrigger, Cues, ZoneOutcome } from "./cues/service.js";
+import { playedAt } from "./air-store.js";
 
 export const DEFAULT_TTL_SECONDS = 120;
 export const MAX_TTL_SECONDS = 7200;
+/** The only refusal left is one owner per happening (WD1); its answer still names a retry. */
 export const REFUSAL_RETRY_SECONDS = 30;
-/** A rule's moment waits this long for its first place on a zone (mockup 03: "waits 2 min"). */
-export const RULE_PATIENCE_SECONDS = 120;
-/** "Never gives up": people's moments and the emergency wait their whole life. */
-const FOREVER = 2_147_483_647;
 
-export type EndReason = "expired" | "cleared" | "preempted" | "source_ended";
+/** Each as `moments.override.ended` carries it (contracts/events.md). */
+export const END_REASONS = ["expired", "cleared", "preempted", "source_ended", "stale"] as const;
+export type EndReason = (typeof END_REASONS)[number];
 
 export interface MomentRequest {
   class: Class;
@@ -46,6 +45,7 @@ export interface MomentRequest {
   regions?: string[];
   /** Null: no end of its own (only the emergency). */
   ttl_seconds?: number | null;
+  /** Deprecated (#777): may shorten its class's `stale_after`, never lengthen it. */
   patience_seconds?: number;
   qr?: Qr | null;
   binding?: Binding | null;
@@ -61,8 +61,6 @@ export interface MomentRequest {
   happening?: string | null;
   /** The story run that asks: its own live moments never count as another owner. */
   happening_run?: string | null;
-  /** False: a rule's moment that waits its patience instead of being refused (a story's round). */
-  refuse?: boolean;
   /** A story's round starts at its planned time, so its steps and an on-the-dot step land on it. */
   starts_at?: Date;
   /** The start of what it is about (its run-of-show item): its cue's window measures from it. */
@@ -129,22 +127,27 @@ export class Engine {
     const key = r.dedupe_key ?? null;
     const running = key === null ? null : await lockRunningByKey(c, key);
     if (running !== null) {
-      const same = running.template === r.template && isDeepStrictEqual(running.content, r.content);
-      // A re-post extends and never shortens (contracts/moments.md, E4): the crew's Extend holds,
-      // and a request without a TTL keeps the moment's own.
+      // An update replaces the queued or shown one (rule 5, E4): new content is fresh news again,
+      // its queue place stays, and its on-air time never shortens.
+      const same =
+        running.template === r.template &&
+        isDeepStrictEqual(running.content, r.content) &&
+        (r.steps === undefined || isDeepStrictEqual(running.steps, r.steps));
       const renewTtl = r.ttl_seconds === undefined ? running.ttl_seconds : r.ttl_seconds;
-      if (renewTtl === null || running.expires_at === null) running.expires_at = null;
-      else {
-        const end = Math.max(running.expires_at.getTime(), now.getTime() + renewTtl * 1000);
-        running.expires_at = new Date(end);
+      for (const slot of await slotsOf(c, running.id)) {
+        if (renewTtl === null || slot.budget_ms === null) slot.budget_ms = null;
+        else slot.budget_ms = Math.max(slot.budget_ms, playedAt(slot, now) + renewTtl * 1000);
+        await saveSlot(c, slot);
       }
       if (!same) {
         running.template = r.template;
         running.content = r.content;
+        if (r.steps !== undefined) running.steps = r.steps;
+        running.fresh_at = now;
         await this.history(c, running, now, { action: "changed", actor: r.actor ?? null });
       }
       await saveMoment(c, running);
-      await this.show(c, running, r.actor ?? null, "cleared");
+      await this.show(c, running, r.actor ?? null, "cleared", now);
       return { status: "renewed", moment: running };
     }
     const defaults = CLASS_DEFAULTS[r.class];
@@ -177,14 +180,7 @@ export class Engine {
         `${owner.title} already owns ${r.happening ?? ""}`,
         owner.id,
       );
-    const orders = await loadOrders(c);
-    const zones = await knownZones(c);
-    if ((r.origin === "rule" || r.origin === "module") && r.refuse !== false) {
-      const heldBy = await this.refusal(c, r.class, regions, r.zones ?? [], orders, zones);
-      if (heldBy !== null)
-        return refused(`refused, retry in ${REFUSAL_RETRY_SECONDS} s`, `held by ${heldBy}`, heldBy);
-    }
-    const people = r.origin === "crew" || r.origin === "emergency";
+    const { air } = await loadOrders(c);
     const moment: MomentRow = {
       id: `mo_${randomUUID()}`,
       class: r.class,
@@ -204,20 +200,24 @@ export class Engine {
       starts_at: r.starts_at ?? now,
       expires_at: r.expires_at ?? (ttl === null ? null : new Date(now.getTime() + ttl * 1000)),
       ttl_seconds: ttl,
-      patience_seconds:
-        r.patience_seconds ??
-        (people ? (ttl ?? FOREVER) : Math.min(RULE_PATIENCE_SECONDS, FOREVER)),
+      patience_seconds: Math.min(
+        air.stale_after_ms[r.class] / 1000,
+        r.patience_seconds ?? Number.POSITIVE_INFINITY,
+      ),
       qr: r.qr ?? null,
       binding: r.binding ?? null,
       effect: r.cue == null || this.cues === undefined ? null : await this.cues.picture(c, r.cue),
       steps: r.steps ?? null,
       happening: r.happening ?? null,
+      fresh_at: null,
+      planned_ms:
+        r.expires_at === undefined ? null : r.expires_at.getTime() - (r.starts_at ?? now).getTime(),
       ended_at: null,
       end_reason: null,
     };
     await insertMoment(c, moment);
     await this.history(c, moment, now, { action: "started", actor: r.actor ?? null });
-    await reconcile(this.outbox, c, moment, r.actor ?? null, "cleared", orders, zones);
+    await this.show(c, moment, r.actor ?? null, "cleared", now);
     if (r.cue != null) await this.cues?.started(c, moment, r.cue, now, r.source_starts_at ?? null);
     return { status: "started", moment };
   }
@@ -234,17 +234,47 @@ export class Engine {
     m.content = next;
     await saveMoment(c, m);
     await this.history(c, m, now, { action: "changed", actor: null });
-    await this.show(c, m, null, "cleared");
+    await this.show(c, m, null, "cleared", now);
   }
 
-  /** Moves the end on by `seconds`, at most the longest TTL after now. */
+  /** Adds `seconds` of on-air time on each zone, at most 7200 s from now. */
   async extend(c: SqlClient, m: MomentRow, seconds: number, actor: Actor, now: Date) {
-    const from = Math.max(m.expires_at?.getTime() ?? now.getTime(), now.getTime());
-    m.expires_at = new Date(
-      Math.min(from + seconds * 1000, now.getTime() + MAX_TTL_SECONDS * 1000),
-    );
-    await saveMoment(c, m);
-    await this.show(c, m, actor, "cleared");
+    for (const slot of await slotsOf(c, m.id)) {
+      if (slot.budget_ms === null) continue;
+      const played = playedAt(slot, now);
+      const left = Math.min(slot.budget_ms - played + seconds * 1000, MAX_TTL_SECONDS * 1000);
+      slot.budget_ms = played + left;
+      await saveSlot(c, slot);
+    }
+    await this.show(c, m, actor, "cleared", now);
+    const { rows } = await c.query(`SELECT expires_at FROM moments WHERE id = $1`, [m.id]);
+    m.expires_at = (rows[0]?.expires_at as Date | null | undefined) ?? m.expires_at;
+  }
+
+  /** Its remaining on-air time on each zone becomes the time until `at` (a story's paused video). */
+  async endsBy(c: SqlClient, m: MomentRow, at: Date, now: Date): Promise<void> {
+    for (const slot of await slotsOf(c, m.id)) {
+      slot.budget_ms = playedAt(slot, now) + Math.max(0, at.getTime() - now.getTime());
+      await saveSlot(c, slot);
+    }
+    await this.show(c, m, null, "cleared", now);
+  }
+
+  /** Moves a waiting moment to the front of a zone's queue (rule 7); false when it is not waiting there. */
+  async forward(
+    c: SqlClient,
+    m: MomentRow,
+    zone: string,
+    actor: Actor,
+    now: Date,
+  ): Promise<boolean> {
+    const slot = (await slotsOf(c, m.id)).find((s) => s.zone_key === zone);
+    if (slot === undefined || slot.granted === "hero" || slot.granted === "pass") return false;
+    slot.forward_at = now;
+    await saveSlot(c, slot);
+    await this.history(c, m, now, { action: "moved", zone, actor });
+    await passZone(c, this, zone, now, "wait", actor);
+    return true;
   }
 
   /** Ends a moment everywhere, or on one zone only (it then stays on the rest, D3). */
@@ -256,61 +286,75 @@ export class Engine {
     now: Date,
     zone?: string,
   ): Promise<void> {
+    await this.ending(c, m, reason, actor, now, zone, true);
+  }
+
+  /** An end on one zone from inside that zone's pass (air.ts), which plans the zone again itself. */
+  async endHere(c: SqlClient, m: MomentRow, reason: EndReason, now: Date, zone: string) {
+    await this.ending(c, m, reason, null, now, zone, false);
+  }
+
+  private async ending(
+    c: SqlClient,
+    m: MomentRow,
+    reason: EndReason,
+    actor: Actor | null,
+    now: Date,
+    zone: string | undefined,
+    pass: boolean,
+  ): Promise<void> {
     if (m.ended_at !== null) return;
     const zones = await knownZones(c);
     if (zone !== undefined) {
       // A zone it never covered would narrow it for nothing: one of every zone to the rest.
       if (!covers(m, zone, zones)) return;
       m.left_zones = [...m.left_zones, zone];
-      const orders = await loadOrders(c);
-      const split = await splitZones(c, m.id);
-      if (desiredOverrides(m, orders, zones, split).length > 0) {
+      if (zones.some((z) => covers(m, z, zones))) {
         await saveMoment(c, m);
         await this.history(c, m, now, { action: "ended", zone, outcome: reason, actor });
-        await reconcile(this.outbox, c, m, actor, reason, orders, zones);
+        if (m.class === "emergency") {
+          await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
+          return;
+        }
+        const slot = (await slotsOf(c, m.id)).find((s) => s.zone_key === zone);
+        if (slot !== undefined) await withdraw(c, this.outbox, slot, reason, actor, true);
+        if (pass) await passZone(c, this, zone, now, "wait", actor, reason);
         return;
       }
     }
     m.ended_at = now;
     m.end_reason = reason;
     await saveMoment(c, m);
-    await this.history(c, m, now, { action: "ended", outcome: reason, actor });
-    await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
-  }
-
-  /** Shows a moment again as its row now says: content, end, rank and zones (E8). */
-  async show(c: SqlClient, m: MomentRow, actor: Actor | null, reason: EndReason): Promise<void> {
-    await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), await knownZones(c));
-  }
-
-  /** Who holds every region the request may take on every zone it names, or null. */
-  private async refusal(
-    c: SqlClient,
-    cls: Class,
-    regions: string[],
-    wanted: string[],
-    orders: Orders,
-    known: string[],
-  ): Promise<string | null> {
-    const zones = wanted.length > 0 ? wanted : known;
-    if (zones.length === 0) return null;
-    const held = await heldOn(c, zones);
-    let top: { rank: number; id: string } | null = null;
-    for (const zone of zones) {
-      const here = held.filter((h) => h.zone === zone);
-      if (!blockedOn(regions, rankOn(orders, zone, cls), here)) return null;
-      for (const h of here)
-        if (top === null || h.rank > top.rank) top = { rank: h.rank, id: h.override_id };
+    // The zone it ended on, when a zone's pass ended it: On air's stale list reads it.
+    await this.history(c, m, now, {
+      action: "ended",
+      ...(zone === undefined ? {} : { zone }),
+      outcome: reason,
+      actor,
+    });
+    if (m.class === "emergency") {
+      await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
+      return;
     }
-    if (top === null) return null;
-    const { rows } = await c.query(
-      `SELECT m.content, m.template FROM moment_overrides o
-       JOIN moments m ON m.tenant_id = o.tenant_id AND m.id = o.moment_id
-       WHERE o.override_id = $1`,
-      [top.id],
-    );
-    const row = rows[0] as Pick<MomentRow, "content" | "template"> | undefined;
-    return `${row === undefined ? top.id : titleOf(row)} (rank ${top.rank})`;
+    const held = await withdrawAll(c, this.outbox, m, reason, actor);
+    if (pass) for (const z of held) await passZone(c, this, z, now, "wait", actor, reason);
+  }
+
+  /** Shows a moment again as its row now says (E8): the emergency by its override, the rest by each zone's pass. */
+  async show(
+    c: SqlClient,
+    m: MomentRow,
+    actor: Actor | null,
+    reason: EndReason,
+    now: Date,
+  ): Promise<void> {
+    const zones = await knownZones(c);
+    if (m.class === "emergency") {
+      await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
+      return;
+    }
+    for (const z of zones.filter((z) => covers(m, z, zones)))
+      await passZone(c, this, z, now, "wait", actor, reason, m.id);
   }
 
   async history(
@@ -318,7 +362,7 @@ export class Engine {
     m: MomentRow,
     at: Date,
     e: {
-      action: "started" | "changed" | "ended";
+      action: "started" | "changed" | "ended" | "moved";
       zone?: string;
       outcome?: string;
       actor: Actor | null;

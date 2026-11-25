@@ -196,6 +196,28 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     expect(midnight).toMatchObject({ name: "Midnight", enabled: true });
   });
 
+  it("keeps an event's stored copy of a retired preset through a save, so a revert brings it back", async () => {
+    const doc = await list();
+    expect((await put(doc.stories, 0)).statusCode).toBe(200);
+    const retired = {
+      ...doc.stories[0],
+      key: "pizza_arrived",
+      preset: "pizza_arrived",
+      name: "Our pizza call",
+    };
+    await w.tx("demo", (c) =>
+      c.query(`UPDATE moments_stories SET stories = stories || $1::jsonb`, [
+        JSON.stringify([retired]),
+      ]),
+    );
+    const shown = await list();
+    expect(shown.stories.map((s) => s.key)).not.toContain("pizza_arrived");
+    expect((await put(shown.stories, shown.revision)).statusCode).toBe(200);
+    const { rows } = await w.tx("demo", (c) => c.query(`SELECT stories FROM moments_stories`));
+    const raw = rows[0]?.stories as Record<string, unknown>[];
+    expect(raw.filter((s) => s.key === "pizza_arrived")).toEqual([retired]);
+  });
+
   it("fires a story with its item, stops its loop without a finale, and skips another to its finale", async () => {
     w.now = new Date("2026-01-01T18:40:00Z");
     const noItem = await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {});

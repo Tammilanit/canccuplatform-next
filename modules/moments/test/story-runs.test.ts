@@ -4,6 +4,7 @@
  * window; each end and the finale; Midnight's sting on 00:00:00; a long hold; a late take; a
  * held region, an emergency and a restart mid-loop.
  */
+import { readFileSync } from "node:fs";
 import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { lockMoment } from "../src/store.js";
@@ -17,6 +18,7 @@ import { ITEM, TABLES, kit, preset, rounds, step, story } from "./story-kit.js";
 const CREW = { user_id: "u_crew", name: "Demo Crew" };
 /** 19:00, the item's start: T0 is 18:00. */
 const T = 3600;
+const CONTRACT = readFileSync(new URL("../../../contracts/moments.md", import.meta.url), "utf8");
 
 describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
   let pool: pg.Pool;
@@ -59,7 +61,7 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
       const o = k.started().at(-1) as Record<string, unknown>;
       expect(o).toMatchObject({
         template: "sting",
-        rank: 65,
+        rank: 60,
         regions: ["hero", "rail"],
         starts_at: w.at(at).toISOString(),
       });
@@ -132,6 +134,18 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
       "round_started finale",
       "loop_ended ended: after its last round",
     ]);
+    // Each round its own key, as the contract describes it (Storyboards, A round is one moment).
+    expect(CONTRACT).toContain(
+      "`dedupe_key` `story:<run id>:<round>:<segment>`, with `f` before the segment in the finale",
+    );
+    const { rows } = await k.tx((c) =>
+      c.query(`SELECT dedupe_key FROM moments ORDER BY starts_at`),
+    );
+    const keys = rows.map((r) => r.dedupe_key as string);
+    expect(keys).toHaveLength(4);
+    for (const key of keys) expect(key).toMatch(/^story:[^:]+:\d+:f?\d+$/);
+    expect(new Set(keys.map((key) => key.replace(/:f?\d+$/, ""))).size).toBe(4);
+    expect(keys.at(-1)).toMatch(/:f0$/);
   });
 
   it("fires `clock every` aligned to its window, one run per fire", async () => {
@@ -242,16 +256,14 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
     ]);
   });
 
-  it("skips a round whose region is held past its patience, and one due during an emergency", async () => {
+  it("never skips a round for a held region (#777), and skips one due during an emergency", async () => {
     await k.setup([preset("starting_soon")]);
     await k.agenda([ITEM]);
     await k.tick(w.at(T - 900));
     const id = k.started()[0]?.id as string;
     await k.place("main", [], w.at(T - 900), [id]);
     await k.tick(w.at(T - 900 + 47));
-    expect(rounds(await k.history()).at(-1)).toBe(
-      "round_skipped round 1 of 3 skipped: its region was held past its patience",
-    );
+    expect(rounds(await k.history()).at(-1)).toBe("round_started round 1 of 3");
     await k.tx((c) =>
       w.engine.request(
         c,
@@ -280,7 +292,8 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
     await k.tick(w.at(T - 290));
     const h = rounds(await k.history());
     expect(h).toEqual(["round_started round 1 of 3", "round_started round 2 of 3"]);
-    const m = await k.tx((c) => lockMoment(c, k.started()[1]?.id as string));
+    const id = String(k.started()[1]?.id).replace(/\.main$/, "");
+    const m = await k.tx((c) => lockMoment(c, id));
     expect(m?.starts_at.toISOString()).toBe(w.at(T - 300).toISOString());
   });
 

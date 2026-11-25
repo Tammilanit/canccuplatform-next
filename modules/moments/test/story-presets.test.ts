@@ -37,20 +37,19 @@ const KEYS = [
   "venue_info",
   "stage_break",
   "pizza_last_call",
-  "pizza_arrived",
   "round_start",
   "premiere",
   "champion_replay",
 ];
 /** The catalogue's "some venues; off" rows: 12–19 and 23. */
-const SOME_VENUES = [12, 13, 14, 15, 16, 17, 18, 19, 23];
+const SOME_VENUES = [12, 13, 14, 15, 16, 17, 18, 19, 22];
 
 const preset = (key: string): Story => presetOf(key) as Story;
 const cuesOf = (s: Story) =>
   [...s.round.steps, ...(s.finale ?? [])].map((x) => x.cue).filter((c) => c !== null);
 
 describe("the preset catalogue", () => {
-  it("is the 24 built-ins in the catalogue's order, each valid, together within the event's limit", () => {
+  it("is the 23 built-ins (Pizza orders ready retired by #777) in the catalogue's order, each valid, together within the event's limit", () => {
     expect(PRESETS.map((p) => p.key)).toEqual(KEYS);
     for (const [i, p] of PRESETS.entries()) {
       expect(checkStory(p, DEFAULT_TIMING), p.key).toBeNull();
@@ -117,10 +116,6 @@ describe("the preset catalogue", () => {
       });
     // An arrived order is already closed: its end is its one round, held three minutes while the
     // arrival is fresh, or the order's done (#643, #775).
-    expect(preset("pizza_arrived")).toMatchObject({
-      round: { hold_seconds: 180 },
-      end: { rounds: 1, until_event: { kind: "domain", type: "pizza.order.done" } },
-    });
     expect(preset("round_start").conditions.once).toBe("source");
     expect(preset("hot_game").conditions.cooldown_minutes).toBe(30);
     expect(preset("record_crowd").conditions.once).toBe("day");
@@ -257,8 +252,6 @@ describe("a preset and a rule (SD6, WD2)", () => {
     expect(rulesOff(on(["match_called", "champion", "hot_game"]), "games.surge.started")).toEqual(
       new Set(["match_called", "finals_result", "hot_game"]),
     );
-    expect(rulesOff(on(["pizza_arrived"]), "pizza.order.arrived")).toEqual(new Set(["pizza"]));
-    expect(rulesOff(on(["pizza_arrived"]), "pizza.order.placed")).toEqual(new Set());
     // A duplicate is the event's own story: it takes over no rule.
     const copy = { ...preset("hot_game"), key: "hot_game_copy", preset: null };
     expect(rulesOff([copy], "games.surge.started")).toEqual(new Set());

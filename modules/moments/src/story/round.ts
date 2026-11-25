@@ -7,6 +7,7 @@
  * an urgent moment pauses a video; it resumes where it stopped, its end and start moved on.
  */
 import type { Logger, SqlClient } from "@canccu/kit";
+import { SEGMENT_LEAD_MS } from "../air-plan.js";
 import type { Engine } from "../engine.js";
 import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
@@ -16,7 +17,6 @@ import { SAMPLE, fillContent } from "./fill.js";
 import type { FillContext } from "./fill.js";
 import { roundCount } from "./model.js";
 import type { Story } from "./model.js";
-import { patienceMs } from "./schedule.js";
 import type { Compiled } from "./timing.js";
 import type { EventFacts, RoundState, RunRow, Segment, StorySettings } from "./store.js";
 import { actorOfRun } from "./store.js";
@@ -27,7 +27,7 @@ export const RUN_SOUNDS = 6;
 /** A step's sound waits this long for Screen to report where its round is placed. */
 const PLACEMENT_WAIT_MS = 3000;
 /** A video moment starts this early, so the screens have it before its planned start. */
-const VIDEO_EARLY_MS = 1000;
+const VIDEO_EARLY_MS = SEGMENT_LEAD_MS;
 
 export interface Ctx {
   c: SqlClient;
@@ -195,12 +195,10 @@ async function startSegment(
       zones,
       starts_at: new Date(seg.from_ms),
       expires_at: new Date(seg.until_ms),
-      patience_seconds: Math.ceil(patienceMs(story) / 1000),
       source: { module: "moments", event_id: null, ref: run.source },
       dedupe_key: `story:${run.id}:${String(round.index)}:${round.finale ? "f" : ""}${String(i)}`,
       happening: run.facts["@happening"] ?? null,
       happening_run: run.id,
-      refuse: false,
       actor,
     },
     ctx.now,
@@ -322,25 +320,20 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
     run.uncounted_ms += d;
     // The story's later rounds move by the pause too (PV1).
     run.t = new Date(run.t.getTime() + d);
-    m.expires_at = new Date(seg.until_ms);
     // Its sound's hold too, else other sounds play over the video's last part.
     await ctx.engine.sound?.videoMoved(ctx.c, run.zones, seg.until_ms, run.id);
     m.content = { ...m.content, started_at: new Date(seg.from_ms).toISOString(), paused_at: null };
     await saveMoment(ctx.c, m);
-    await ctx.engine.show(ctx.c, m, null, "cleared");
+    await ctx.engine.endsBy(ctx.c, m, new Date(seg.until_ms), ctx.now);
   }
 }
 
 /**
  * Plays the live round on: starts its segments when due, pauses and resumes its video, decides
- * its steps' sounds. Answers how it stands: `playing`, `done` (its time is over) or `held`
+ * its steps' sounds. Answers how it stands: `playing` or `done` (its time is over)
  * (its moments gave up the region, or one owner refused it: skipped).
  */
-export async function playRound(
-  ctx: Ctx,
-  run: RunRow,
-  story: Story,
-): Promise<"playing" | "done" | "held"> {
+export async function playRound(ctx: Ctx, run: RunRow, story: Story): Promise<"playing" | "done"> {
   const round = run.round as RoundState;
   const at = ctx.now.getTime();
   for (const [i, seg] of round.segments.entries()) {
@@ -348,7 +341,7 @@ export async function playRound(
     if (seg.moment_id === null && at >= seg.from_ms - early && at < seg.until_ms) {
       // The steps before a video end where it starts: back to back, never both on screen.
       seg.moment_id = await startSegment(ctx, run, story, seg, i);
-      if (seg.moment_id === "refused") return "held";
+      if (seg.moment_id === "refused") return "done";
     }
     if (seg.moment_id === null || seg.moment_id === "refused") continue;
     if (seg.kind === "video" && at < seg.until_ms) await followPause(ctx, run, i);
@@ -363,23 +356,9 @@ export async function playRound(
   );
   const last = ids.at(-1);
   const m = last === undefined ? null : await lockMoment(ctx.c, last);
-  const over =
-    (at >= round.until_ms && round.paused_at === null) ||
-    (m?.ended_at != null && m.end_reason === "preempted");
-  if (!over) return "playing";
-  return (await neverShown(ctx.c, ids)) ? "held" : "done";
-}
-
-/** Screen said the round waited and never placed it anywhere: its region was held (SE1). */
-async function neverShown(c: SqlClient, ids: string[]): Promise<boolean> {
-  if (ids.length === 0) return false;
-  const { rows } = await c.query(
-    `SELECT bool_or(action IN ('placed', 'back')) AS shown, bool_or(action = 'queued') AS waited
-     FROM moments_history WHERE moment_id = ANY ($1::text[])`,
-    [ids],
-  );
-  const r = rows[0] as { shown: boolean | null; waited: boolean | null } | undefined;
-  return r?.waited === true && r.shown !== true;
+  // A round that waits in a queue plays late, as one unit (#777): its moment keeps its own time.
+  const over = (at >= round.until_ms && round.paused_at === null) || m?.ended_at != null;
+  return over ? "done" : "playing";
 }
 
 /** Ends the live round's moments now (an end event, the crew's stop or skip). */

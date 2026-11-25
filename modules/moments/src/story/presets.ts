@@ -12,7 +12,6 @@ import {
   CLOSING_TIME,
   GOOD_MORNING,
   MEAL_SERVED,
-  PIZZA_ARRIVED,
   PIZZA_LAST_CALL,
   PIZZA_ORDER_OPEN,
   QUIET_HOURS_SOON,
@@ -48,7 +47,6 @@ export const PRESETS: readonly Story[] = [
   VENUE_INFO,
   STAGE_BREAK,
   PIZZA_LAST_CALL,
-  PIZZA_ARRIVED,
   ROUND_START,
   PREMIERE,
   CHAMPION_REPLAY,
@@ -64,15 +62,20 @@ export const PRESET_INFO: Readonly<Record<string, { number: number; group: Prese
 
 /**
  * Presets whose built-in rule shows the same happening (SD6, WD2): while one is on, its rule is
- * off for the event, for the events listed (all the rule's when none are). The `pizza` rule
- * keeps its placed order and gives the arrived one to Pizza orders ready.
+ * off for the event, for the events listed (all the rule's when none are).
  */
 export const RULE_OF_PRESET: Readonly<Record<string, { rule: string; on?: readonly string[] }>> = {
   match_called: { rule: "match_called" },
   champion: { rule: "finals_result" },
   hot_game: { rule: "hot_game" },
-  pizza_arrived: { rule: "pizza", on: ["pizza.order.arrived"] },
 };
+
+/**
+ * Presets the platform no longer has: an event's stored copy is ignored (never deleted, so a
+ * revert brings it back). Pizza orders ready went with #777: Pizza is here is the `pizza` rule's
+ * announcement, one path for the hall's biggest food moment.
+ */
+export const RETIRED_PRESETS: ReadonlySet<string> = new Set(["pizza_arrived"]);
 
 /** The rules the event's presets that are on take over for an event of this type. */
 export function rulesOff(stories: readonly Story[], type: string): Set<string> {

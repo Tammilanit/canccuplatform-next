@@ -9,6 +9,7 @@ import { CREW_CUES } from "./cues/catalog.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { applyClaims, claimsReportOf, newerClaims } from "./placements.js";
+import { passZone } from "./air.js";
 import { applyRules } from "./rules.js";
 import { evaluateScenes, recordFact, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
@@ -75,9 +76,11 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     if (e.type === "screen.claims.changed") {
       const report = claimsReportOf(e.data);
       if (report !== null && (await newerClaims(c, report.zone_key, e, false)))
-        await applyClaims(c, report, now);
+        await applyClaims(c, report, now, deps.engine);
     } else if (e.type === "screen.zone.saved" && typeof e.data.zone_key === "string") {
       await addZone(c, e.data.zone_key);
+      // A new zone gets every moment that names all zones (contracts/moments.md, #777).
+      await passZone(c, deps.engine, e.data.zone_key, now);
       scenes = true;
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
@@ -132,7 +135,8 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
     const report = claimsReportOf(e.data);
     if (report === null) return;
     await deps.db.tenant(async (c) => {
-      if (await newerClaims(c, zone, e, true)) await applyClaims(c, report, deps.now());
+      if (await newerClaims(c, zone, e, true))
+        await applyClaims(c, report, deps.now(), deps.engine);
     });
     await deps.flush();
   } else if (e.type === "screen.zone.saved") {

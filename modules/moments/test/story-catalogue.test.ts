@@ -6,9 +6,7 @@
  */
 import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { handleTenantEvent } from "../src/consumer.js";
 import { evaluateScenes } from "../src/scene-store.js";
-import { FIXTURES } from "./fixtures.js";
 import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 import { TABLES, kit, preset, rounds } from "./story-kit.js";
@@ -30,57 +28,6 @@ describe.skipIf(!DATABASE_URL)("the preset catalogue among the other moments", (
     await pool.query(`TRUNCATE ${TABLES}, moments_scenes`);
     w = world(pool);
     k = kit(w);
-  });
-
-  it("shows and sounds one pizza order once with the pizza rule, Pizza orders ready and the widget on (WD1)", async () => {
-    await k.setup([preset("pizza_arrived")]);
-    const deps = (s: number) => ({
-      db: w.db,
-      engine: w.engine,
-      flush: () => w.outbox.flush(),
-      now: () => w.at(s),
-    });
-    // The rule keeps its placed order (WD2): its moment shows it.
-    await w.tx("demo", () => handleTenantEvent(deps(0), FIXTURES.placed()));
-    const placed = k.started();
-    expect(placed.map((o) => [o.rank, o.template])).toEqual([[80, "pizza_placed"]]);
-    await k.place("main", [[placed[0]?.id as string, "rail"]], w.at(0));
-    // The arrived order is the preset's: one round, and the rule's older voice steps aside.
-    const arrived = FIXTURES.arrived();
-    await w.tx("demo", () => handleTenantEvent(deps(60), arrived));
-    // Events come at least once: a second delivery changes nothing.
-    await w.tx("demo", () => handleTenantEvent(deps(61), arrived));
-    const started = k.started().slice(1);
-    expect(started.map((o) => [o.rank, o.template])).toEqual([[65, "sting"]]);
-    const ended = w
-      .events("demo")
-      .filter((e) => e.type === "moments.override.ended")
-      .map((e) => [e.data.override_id, e.data.reason]);
-    expect(ended).toEqual([[placed[0]?.id, "source_ended"]]);
-    await k.place("main", [[started[0]?.id as string, "hero"]], w.at(60));
-    await k.tick(w.at(61));
-    // The safety net: a second voice for the arrived order is refused while the round plays.
-    const second = await k.tx((c) =>
-      w.engine.request(
-        c,
-        {
-          class: "announcement",
-          template: "pizza_placed",
-          content: {},
-          origin: "rule",
-          why: "test",
-          happening: "pizza.order.arrived:po_1",
-        },
-        w.at(62),
-      ),
-    );
-    expect(second.status).toBe("refused");
-    await k.tick(w.at(90));
-    const played = (await k.soundLog()).filter((s) => s.outcome === "played").map((s) => s.cue);
-    // The placed order's sound, then the arrived one's: each once.
-    expect(played).toEqual(["pizza.placed", "pizza.placed"]);
-    const steps = (started[0]?.steps ?? []) as { content: Record<string, unknown> }[];
-    expect(steps[1]?.content).toMatchObject({ subtitle: "Order 1 · Collect at the pickup point" });
   });
 
   it("plays Quiet hours soon's finale calm and silent as quiet hours start, then the quiet scene within the hand-over (SD9)", async () => {

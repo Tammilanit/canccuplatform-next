@@ -1,6 +1,6 @@
 /** Studio → Moments (contracts/moments.md, Pages): On air, Spotlight, Priorities, History. */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.js";
+import { CLASSES, DEFAULT_ORDER, checkOrder, isClass, rankOn } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
 import { announcePages } from "./announce/pages.js";
 import { cuePages } from "./cues/pages.js";
@@ -21,7 +21,7 @@ import {
 } from "./page-kit.js";
 import { loadRules } from "./rules.js";
 import { loadCues } from "./cues/store.js";
-import { knownZones, loadOrders, runningMoments, splitZones } from "./store.js";
+import { knownZones, loadOrders, runningMoments } from "./store.js";
 import { historyView, prioritiesView } from "./settings-views.js";
 import { onAir, sceneCard } from "./on-air-data.js";
 import { confirmEmergency, onAirView, spotlightView } from "./views.js";
@@ -94,7 +94,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       { preHandler: pageNeeds(deps, TAKE) },
       async (request, reply) => {
         const action = (request.params as { action: string }).action;
-        if (action !== "end" && action !== "extend")
+        if (action !== "end" && action !== "extend" && action !== "forward")
           return back(reply, "on-air", "error", "No such action.");
         const f = request.body;
         const id = encodeURIComponent(f.moment_id ?? "");
@@ -104,14 +104,18 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           request,
           "POST",
           `/api/moments/moments/${id}/${action}`,
-          action === "end" ? zone : { seconds: 300 },
+          action === "extend" ? { seconds: 300 } : zone,
         );
         if (a.status >= 400) return back(reply, "on-air", "error", refusal(a));
         return back(
           reply,
           "on-air",
           "done",
-          action === "end" ? "Ended on that zone." : "Extended by 5 minutes.",
+          action === "end"
+            ? "Ended on that zone."
+            : action === "forward"
+              ? "Moved to the front of the queue."
+              : "Extended by 5 minutes.",
         );
       },
     );
@@ -223,9 +227,12 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         zones: await knownZones(c),
         rules: await loadRules(c),
         cues: (await loadCues(c)).map((q) => q.name),
-        running: await Promise.all(
-          (await runningMoments(c)).map(async (m) => ({ m, split: await splitZones(c, m.id) })),
-        ),
+        running: await runningMoments(c),
+        sent: (
+          await c.query(
+            `SELECT moment_id, zone_key, override_id FROM moment_slots WHERE override_id IS NOT NULL`,
+          )
+        ).rows as { moment_id: string; zone_key: string; override_id: string }[],
       }));
       const saved =
         scope === "" ? state.orders.order : (state.orders.zones[scope] ?? state.orders.order);
@@ -239,9 +246,12 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       const zone = scope !== "" ? scope : state.zones[0];
       const ranks: Record<string, number> = {};
       if (zone !== undefined) {
-        // A zone split off keeps its own override (`<id>.<zone>`) whatever the draft ranks it.
-        for (const { m, split } of state.running)
-          for (const w of desiredOverrides(m, orders, state.zones, split)) ranks[w.id] = w.rank;
+        // A moment's override on a zone is `<id>.<zone>` (#777); the emergency's is its id.
+        for (const m of state.running) {
+          if (m.class === "emergency") ranks[m.id] = 100;
+          const sent = state.sent.find((x) => x.moment_id === m.id && x.zone_key === zone);
+          if (sent !== undefined) ranks[sent.override_id] = rankOn(orders, zone, m.class);
+        }
       }
       return page(request, reply, deps, {
         title: "Moments",
@@ -256,6 +266,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           zoneName: await zoneNames(deps, request),
           own: Object.keys(state.orders.zones),
           revision: state.orders.revision,
+          air: state.orders.air,
           preview: zone === undefined ? null : { zone, ranks, auto: request.query.preview === "1" },
           rules: state.rules,
           cues: state.cues,
@@ -272,6 +283,28 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         const f = request.body;
         const scope = f.scope ?? "";
         const orders = await deps.db.tenant((c) => loadOrders(c));
+        if (f.do === "airtime") {
+          const all = request.body as unknown as Record<string, unknown>;
+          const stale = Object.fromEntries(
+            CLASSES.filter((c) => all[`stale_${c}`] !== undefined).map((c) => [
+              c,
+              Number(all[`stale_${c}`]),
+            ]),
+          );
+          const a = await viaApi(pages, request, "PUT", "/api/moments/priorities", {
+            order: orders.order,
+            zones: Object.entries(orders.zones).map(([zone_key, o]) => ({ zone_key, order: o })),
+            airtime: {
+              min_on_air_seconds: Number(all.min_on_air_seconds),
+              gap_seconds: Number(all.gap_seconds),
+              stale_after_minutes: stale,
+            },
+            revision: Number(f.revision),
+          });
+          return a.status >= 400
+            ? back(reply, "priorities", "error", refusal(a))
+            : back(reply, "priorities", "done", "Airtime saved: live at once.");
+        }
         const order = f.do === "reset" ? [...DEFAULT_ORDER] : list(f.order);
         const zones = Object.entries(orders.zones).filter(([z]) => z !== scope);
         if (scope !== "" && f.do !== "follow") zones.push([scope, order.filter(isClass)]);
