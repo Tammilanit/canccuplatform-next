@@ -10,7 +10,7 @@ import type { SeenDevice } from "./help.js";
 import { counted } from "./messages.js";
 import type { MessageKey } from "./messages.js";
 import { nowShowing } from "./now-line.js";
-import { commandButton, pairedPanel } from "./paired-view.js";
+import { commandButton, pairedPanel, setupGuide } from "./paired-view.js";
 import { ago, clockDay, clockTime, online, since, thumb } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
 import type { ZoneRecord } from "../push/store.js";
@@ -305,6 +305,6 @@ export function devicesView(
   // Amendment 3 (docs/design/grids/04-devices.svg): the summary, the screens, then Recent in the
   // panel band under them at every width, never a column beside them.
   return html`${insecureNotice(c)}${pairedPanel(c, o.paired, devices)}${summary} ${list}
-    <div class="canccu-band">${recentPanel(c, devices)}</div>
+    <div class="canccu-band">${setupGuide(c)}${recentPanel(c, devices)}</div>
     ${pairDialog(c, zones, o.venueOnly === true)}`;
 }

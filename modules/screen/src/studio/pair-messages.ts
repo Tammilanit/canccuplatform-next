@@ -41,6 +41,20 @@ export const PAIR_EN = {
   "help.not_connected": "{device} has not connected since it was paired.",
   "help.not_connected.on": "Check that the screen is on and its browser still shows its code.",
   "help.not_connected.again": "If it shows a new code, remove this screen and pair it again.",
+  "setup.title": "Set up a screen",
+  "setup.desc": "A computer with Chrome, Chromium or Edge and a TV or monitor, one per screen.",
+  "setup.kiosk":
+    "Kiosk mode: start the browser with --kiosk {url} --autoplay-policy=no-user-gesture-required, and its own profile folder (--user-data-dir), never guest or incognito.",
+  "setup.kiosk_plain":
+    "Kiosk mode: start the browser with --kiosk, the event's address ending in /screen/, and --autoplay-policy=no-user-gesture-required, with its own profile folder (--user-data-dir).",
+  "setup.autostart":
+    "Autostart: let the computer log in by itself and start the browser at login, so the screen starts by itself after a power cut. Turn off sleep and the screen saver.",
+  "setup.sound":
+    "Sound: connect the speakers to that computer. One screen per zone plays sound: choose it in the zone's settings.",
+  "setup.portrait":
+    "Portrait: turn the picture in the computer's display settings. The screen then draws its zone's portrait layout by itself.",
+  "setup.pair":
+    "Pair: scan the code the screen shows with your phone, sign in, name it and choose its zone. Then send a Test pattern to check its edges.",
 } as const;
 
 /** The keys the Devices page's script shows (static/studio-devices.js). */

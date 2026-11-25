@@ -101,4 +101,15 @@ describe.skipIf(!DATABASE_URL)("studio pairing", () => {
     expect(body).toMatch(/data-insecure[^>]*hidden/);
     expect(body).toContain("open it with https");
   });
+
+  it("carries the organiser's Set up a screen guide: kiosk mode, autostart, sound, portrait", async () => {
+    const body = (await page("/admin/screen/devices")).body;
+    const guide = body.slice(body.indexOf("data-setup-guide"));
+    expect(guide).toContain("Set up a screen");
+    expect(guide).toContain("https://alpha.test/screen/");
+    expect(guide).toContain("--kiosk");
+    expect(guide).toContain("--autoplay-policy=no-user-gesture-required");
+    expect(guide).toMatch(/autostart|starts by itself/i);
+    expect(guide).toMatch(/portrait/i);
+  });
 });

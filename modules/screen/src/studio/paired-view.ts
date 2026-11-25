@@ -81,3 +81,24 @@ export function pairedPanel(
     ${fast ? html`<span data-live-fast hidden></span>` : ""}${said}${actions}
   </section>`;
 }
+
+/** The organiser's guide to a new screen (#783; docs/operations/screen-setup.md has it in full). */
+export function setupGuide(c: ViewContext): Html {
+  const { t } = c;
+  const kiosk =
+    c.startUrl === null ? t("setup.kiosk_plain") : t("setup.kiosk", { url: c.startUrl });
+  const steps = [
+    kiosk,
+    t("setup.autostart"),
+    t("setup.sound"),
+    t("setup.portrait"),
+    t("setup.pair"),
+  ];
+  return html`<details class="canccu-card canccu-studio-help" data-setup-guide>
+    <summary class="canccu-card__title">${t("setup.title")}</summary>
+    <p class="canccu-card__desc">${t("setup.desc")}</p>
+    <ol>
+      ${steps.map((step) => html`<li>${step}</li>`)}
+    </ol>
+  </details>`;
+}
