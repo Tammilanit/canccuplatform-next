@@ -87,6 +87,17 @@ describe.skipIf(!DATABASE_URL)("receipts", () => {
     expect(errorOf(await upload("pena", Buffer.from("not a picture"))).code).toBe("image_invalid");
   });
 
+  it("refuses a PNG declaring more pixels than the cap (400 image_invalid), without decoding it", async () => {
+    const bomb = await sharp(Buffer.alloc(15000 * 15000), {
+      raw: { width: 15000, height: 15000, channels: 1 },
+    })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+    const res = await upload("pena", bomb, "image/png");
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res).code).toBe("image_invalid");
+  });
+
   it("takes a 25 MB photo, as a phone's full-size one can be", async () => {
     await place();
     const res = await upload("pena", await bigJpeg(25 * 1024 * 1024));

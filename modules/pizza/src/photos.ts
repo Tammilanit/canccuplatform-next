@@ -104,15 +104,17 @@ export async function cleanPhoto(
   if (want === undefined) throw invalid();
   let meta: Metadata;
   try {
-    meta = await sharp(input).metadata();
+    meta = await sharp(input, { limitInputPixels: false }).metadata();
   } catch {
     throw invalid();
   }
   if (meta.format !== want.format) throw invalid();
+  // An explicit cap, not sharp's guard switched off: a small PNG can declare a huge canvas.
+  if (meta.width * meta.height > MAX_INPUT_PIXELS) throw invalid();
   // EXIF orientations 5–8 turn the photo a quarter: its upright height is the stored width.
   const turned = (meta.orientation ?? 1) >= 5;
   const edge = turned ? edgeFor(meta.height, meta.width) : edgeFor(meta.width, meta.height);
-  const pipeline = sharp(input, { limitInputPixels: false })
+  const pipeline = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
     .rotate()
     .resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true });
   if (want.format === "webp")
@@ -122,6 +124,9 @@ export async function cleanPhoto(
     type: "image/jpeg",
   };
 }
+
+/** Pixels a photo may declare; fits large phone photos, refuses decompression bombs. */
+export const MAX_INPUT_PIXELS = 200_000_000;
 
 /** The provider's per-image limit is 5 MB of base64; this keeps the bytes under it with room. */
 export const PROVIDER_MAX_BYTES = 3 * 1024 * 1024;
