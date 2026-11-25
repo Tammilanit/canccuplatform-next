@@ -63,6 +63,7 @@
     min-width: 0;
     min-height: 0;
     display: grid;
+    /* canccu-grid: fixed screen — one cell that every widget of the region shares */
     grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   }
 
