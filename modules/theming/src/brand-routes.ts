@@ -12,6 +12,7 @@ import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
 import { draftBody, editDraft, loadDraft } from "./drafts.js";
+import { FONT_PAIRS } from "./font-pairs.js";
 import { WRITE, actorOf, assertWritable, invalidRequest, needs, versionConflict } from "./http.js";
 import { draftEmbedNames, removeDraftFolders } from "./package-files.js";
 import { brandInputError, modeSwitchError } from "./schema.js";
@@ -24,6 +25,18 @@ export interface BrandDeps extends DraftDeps {
 }
 
 const EMBEDS = "theming.embeds.write";
+
+/** What the brand keeps of the input: all but the version and the images, which go to `images`. */
+const BRAND_FIELDS = [
+  "primary",
+  "accent",
+  "scheme",
+  "embed_color",
+  "logo_plate",
+  "font_pair",
+  "roundness",
+  "backdrop",
+] as const;
 
 /** The folders of advanced files, which the switch back to simple removes with the embeds. */
 const ADVANCED_FOLDERS = ["css", "fonts", "templates"] as const;
@@ -105,17 +118,23 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     const why = brandInputError(request.body);
     if (why !== undefined) throw invalidRequest(why);
     const input = request.body as BrandEdit;
-    const brand: Brand = {
-      primary: input.primary,
-      accent: input.accent,
-      scheme: input.scheme,
-      ...(input.embed_color === undefined ? {} : { embed_color: input.embed_color }),
-    };
+    // The Studio offers only the platform's pairs; a manifest from elsewhere may name a newer one
+    // and only gets a warning (checks.ts), but this editor never stores a pair it cannot draw.
+    if (input.font_pair !== undefined && !FONT_PAIRS.has(input.font_pair)) {
+      throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
+    }
+    const brand = Object.fromEntries(
+      BRAND_FIELDS.filter((k) => input[k] !== undefined).map((k) => [k, input[k]]),
+    ) as unknown as Brand;
     const { adjusted } = generateColors(brand);
     const row = await deps.db.tenant((c) =>
-      editDraft(c, input.draft_version, actorOf(request), async (m) => {
-        for (const role of ["logo", "icon"] as const) {
-          const path = input[role];
+      editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
+        const picture = {
+          logo: input.logo,
+          icon: input.icon,
+          "backdrop.image": brand.backdrop?.image,
+        };
+        for (const [role, path] of Object.entries(picture)) {
           if (path !== undefined && !(await isDraftImage(c, path))) {
             throw invalidRequest(`${role} must name an image already in the draft.`);
           }
@@ -156,7 +175,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
       let removed: string[] = [];
       let unused: Unused[] = [];
       let embeds: string[] = [];
-      const row = await editDraft(c, version, actor, async (m) => {
+      const row = await editDraft(c, deps.files, version, actor, async (m) => {
         const brand = brandOf(m);
         if (brand === undefined) throw brandMissing();
         embeds = await embedsOf(c, m);

@@ -23,7 +23,7 @@ import { zipOf } from "./package-routes.js";
 import type { ProfileSource } from "./profile.js";
 import { WRITE, needs, noDraft, notFound, pageNeeds } from "./http.js";
 import { resolvedRevision, revisionZero } from "./theme.js";
-import { adminTokens, fillTokens, themeTokens, tokensCss } from "./tokens.js";
+import { adminTokens, fillTokens, manifestCss, manifestTokens } from "./tokens.js";
 import { STARTERS, STUDIO, draftFileUrl } from "./studio-views.js";
 
 const THEMES = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
@@ -305,9 +305,9 @@ export function draftCssRoutes(app: FastifyInstance, deps: StudioDeps): void {
     const text = await deps.db.tenant(async (c) => {
       const draft = await loadDraft(c);
       if (draft === undefined) throw noDraft();
-      const tokens = themeTokens(draft.manifest.tokens);
-      if (name === "tokens.css") return tokensCss(tokens);
-      if (name === "admin-tokens.css") return tokensCss(adminTokens(tokens));
+      const tokens = manifestTokens(draft.manifest);
+      if (name === "tokens.css") return manifestCss(draft.manifest, tokens);
+      if (name === "admin-tokens.css") return manifestCss(draft.manifest, adminTokens(tokens));
       try {
         const compiled = await compiledCss(
           c,

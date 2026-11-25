@@ -178,13 +178,14 @@ describe.skipIf(!DATABASE_URL)("the brand's choices", () => {
 
   it("gives each value one source: an advanced radius or font clears the brand's choice", async () => {
     const version = await withLogo();
-    let res = await putBrand({
+    const set = await putBrand({
       draft_version: version,
       ...DARK,
       font_pair: "space-inter",
       roundness: "round",
     });
-    res = await send(t.h, "PATCH", "/api/theming/draft/tokens", {
+    expect(set.statusCode).toBe(200);
+    let res = await send(t.h, "PATCH", "/api/theming/draft/tokens", {
       draft_version: version + 1,
       tokens: { motion: "calm" },
     });

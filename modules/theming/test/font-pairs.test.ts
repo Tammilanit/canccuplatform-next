@@ -73,15 +73,18 @@ describe.skipIf(!DATABASE_URL)("the font pairs over HTTP", () => {
     expect(res.rawPayload.subarray(0, 4).toString("latin1")).toBe("wOF2");
   });
 
-  it("answers 404 for a file no pair lists, its licence and a pair it does not hold", async () => {
+  it("serves no file a pair does not list: not its licence, another folder's, or another pair's", async () => {
     for (const path of [
       "/theming/fonts/space-inter/LICENSE.txt",
       "/theming/fonts/space-inter/pair.json",
-      "/theming/fonts/space-inter/..%2Fbarlow%2Fbarlow-400.woff2",
+      "/theming/fonts/space-inter/barlow-400.woff2",
       "/theming/fonts/no-such-pair/inter-400.woff2",
     ]) {
       expect((await get(t.h, path)).statusCode, path).toBe(404);
     }
+    // An encoded `..` never reaches the route: the router refuses the path itself.
+    const climb = await get(t.h, "/theming/fonts/space-inter/..%2Fbarlow%2Fbarlow-400.woff2");
+    expect([400, 404]).toContain(climb.statusCode);
   });
 
   it("lists the pairs for the Studio with the address of each face", async () => {
@@ -122,7 +125,7 @@ describe.skipIf(!DATABASE_URL)("the font pairs over HTTP", () => {
     const res = await send(t.h, "POST", "/api/theming/draft/publish", {
       draft_version: draft.draft_version,
     });
-    expect(res.statusCode).toBe(200);
+    expect(res.statusCode).toBe(201);
     const current = (await get(t.h, "/api/theming/current")).json<{
       tokens: { fonts: Record<string, string> };
     }>();

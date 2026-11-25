@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { requireTenant } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
 import type { ProfileSource } from "./profile.js";
+import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { Db } from "./db.js";
 import { createDraft, draftBody, editDraft, loadDraft, lockDraft, removeDraft } from "./drafts.js";
@@ -67,7 +68,25 @@ function mergeTokens(manifest: Manifest, edit: TokensEdit["tokens"]): Manifest {
   const styling = (["colors", "fonts", "sizes"] as const).some((g) =>
     Object.values(edit[g] ?? {}).some((v) => v !== null),
   );
-  return { ...manifest, tokens: merged, ...(styling ? { mode: "advanced" } : {}) };
+  return {
+    ...manifest,
+    ...withoutReplacedChoices(manifest, edit),
+    tokens: merged,
+    ...(styling ? { mode: "advanced" } : {}),
+  };
+}
+
+/**
+ * Each value has one source (plan issue-784 D7): a radius set here replaces the brand's roundness
+ * and a font set here its font pair, or a later brand save would silently undo the advanced choice.
+ */
+function withoutReplacedChoices(manifest: Manifest, edit: TokensEdit["tokens"]): Manifest {
+  if (!isObject(manifest.brand)) return {};
+  const brand = { ...manifest.brand };
+  const radius = edit.sizes?.radius;
+  if (radius !== undefined && radius !== null) delete brand.roundness;
+  if (Object.values(edit.fonts ?? {}).some((v) => v !== null)) delete brand.font_pair;
+  return { brand };
 }
 
 function layoutsOf(manifest: Manifest): Record<string, unknown>[] {
@@ -87,7 +106,9 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
     assertWritable(request);
     const source = draftSource(request.body);
     const profile = source.from === "current" ? await deps.profile(requireTenant()) : undefined;
-    const row = await deps.db.tenant((c) => createDraft(c, source, actorOf(request), profile));
+    const row = await deps.db.tenant((c) =>
+      createDraft(c, deps.files, source, actorOf(request), profile),
+    );
     return reply.status(201).send(draftBody(row));
   });
 
@@ -113,7 +134,9 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
     if (why !== undefined) throw invalidRequest(why);
     const edit = request.body as TokensEdit;
     const row = await deps.db.tenant((c) =>
-      editDraft(c, edit.draft_version, actorOf(request), (m) => mergeTokens(m, edit.tokens)),
+      editDraft(c, deps.files, edit.draft_version, actorOf(request), (m) =>
+        mergeTokens(m, edit.tokens),
+      ),
     );
     return draftBody(row);
   });
@@ -130,7 +153,7 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
       if (layout.id !== request.params.id)
         throw invalidRequest("The layout's id must equal the path's.");
       const row = await deps.db.tenant((c) =>
-        editDraft(c, version, actorOf(request), (m) => {
+        editDraft(c, deps.files, version, actorOf(request), (m) => {
           const layouts = layoutsOf(m);
           const at = layouts.findIndex((l) => l.id === layout.id);
           return { ...m, layouts: at < 0 ? [...layouts, layout] : layouts.with(at, layout) };
@@ -147,7 +170,7 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
       assertWritable(request);
       const version = requiredVersion(request.query.draft_version);
       const row = await deps.db.tenant((c) =>
-        editDraft(c, version, actorOf(request), (m) => {
+        editDraft(c, deps.files, version, actorOf(request), (m) => {
           const layouts = layoutsOf(m);
           if (!layouts.some((l) => l.id === request.params.id)) throw notFound();
           return { ...m, layouts: layouts.filter((l) => l.id !== request.params.id) };

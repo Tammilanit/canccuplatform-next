@@ -5,12 +5,49 @@
  */
 import { COLOR_TOKENS } from "@canccu/ui";
 import { contrastRatio } from "./contrast.js";
+import { FONT_PAIRS, pairFonts } from "./font-pairs.js";
+import type { LogoPlate } from "./logo-plate.js";
+
+/** The radius each roundness generates (plan issue-784 D7); `soft` is the platform's default. */
+export const ROUNDNESS = { square: "0", soft: "0.5rem", round: "1rem" } as const;
+
+/** The looks of the screen's background cycle (plan issue-784 D8, #787's D10). */
+export const LOOKS = ["glows", "gradient", "particles", "waves"] as const;
+
+export interface Backdrop {
+  looks?: (typeof LOOKS)[number][];
+  game_art?: boolean;
+  daylight?: boolean;
+  hype?: boolean;
+  image?: string;
+}
 
 export interface Brand {
   primary: string;
   accent: string;
   scheme: "dark" | "light";
   embed_color?: string;
+  logo_plate?: LogoPlate;
+  font_pair?: string;
+  roundness?: keyof typeof ROUNDNESS;
+  backdrop?: Backdrop;
+}
+
+/**
+ * The tokens a brand's choices generate besides the colours: the pair's families and the radius.
+ * A pair this platform does not hold generates nothing, so its text falls back to the system font
+ * (the draft warns, checks.ts). Never stored as tokens: a simple theme keeps no font or size tokens.
+ */
+export function brandTokens(brand: Partial<Brand>): {
+  fonts?: Record<string, string>;
+  sizes?: Record<string, string>;
+} {
+  const pair = brand.font_pair === undefined ? undefined : FONT_PAIRS.get(brand.font_pair);
+  const radius = brand.roundness === undefined ? undefined : ROUNDNESS[brand.roundness];
+  return {
+    ...(pair === undefined ? {} : { fonts: pairFonts(pair) }),
+    ...(radius === undefined ? {} : { sizes: { radius } }),
+  };
 }
 
 export type Colors = Record<keyof typeof COLOR_TOKENS, string>;
@@ -112,6 +149,19 @@ function hexAt(L: number, a: number, b: number): string {
 
 const opaque = (hex: string): string => hex.slice(0, 7).toLowerCase();
 
+/** `#rrggbb` → OKLCH: lightness, chroma and the hue in degrees (0–360). */
+export function oklch(hex: string): [number, number, number] {
+  const [L, a, b] = oklab(opaque(hex));
+  return [L, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360];
+}
+
+/** `hex` with its OKLCH hue turned by `degrees`, its lightness kept and its chroma where sRGB allows. */
+export function turnHue(hex: string, degrees: number): string {
+  const [L, C, h] = oklch(hex);
+  const at = ((h + degrees) * Math.PI) / 180;
+  return hexAt(L, C * Math.cos(at), C * Math.sin(at));
+}
+
 /**
  * The first shade of `hex` that `ok` accepts, moving its lightness in fixed steps towards white
  * (`dir` 1) or black (-1); `hex` itself when it passes, undefined when no shade does.
@@ -126,6 +176,18 @@ function shade(hex: string, ok: (c: string) => boolean, dir: 1 | -1): string | u
     if (ok(c)) return c;
     if (at === 0 || at === 1) return undefined;
   }
+}
+
+/**
+ * The first shade of `hex` that reads as a fill on `background` (3:1), moving away from it as the
+ * generation shades a failing colour: the matches the Studio suggests always pass the rules.
+ */
+export function fillOn(hex: string, background: string): string {
+  const dir = contrastRatio(background, WHITE) < contrastRatio(background, BLACK) ? -1 : 1;
+  return found(
+    shade(hex, (c) => contrastRatio(c, background) >= 3, dir),
+    hex,
+  );
 }
 
 /** Lighter or darker than `ref`, whichever moves away from it. */
