@@ -321,7 +321,7 @@ function kindOf(err: PageError): Kind {
 const TITLES: Record<Kind, string> = {
   no_access: "No access",
   not_found: "Not found",
-  not_at_venue: "Not at the venue",
+  not_at_venue: "Venue network only",
   archived: "Event archived",
   failed: "Something went wrong",
   refused: "Couldn't do that",
@@ -366,8 +366,8 @@ export function errorView(err: PageError, c: ErrorContext): Html {
     ],
     not_at_venue: [
       "pin",
-      "Organiser pages open only on the venue's network or through the crew's VPN.",
-      "Join the venue Wi-Fi and try again. No VPN, or not sure what that is? Ask an organiser: they can let you in.",
+      "This event's organiser pages open only from the venue's network.",
+      "Ask an organiser if you need in.",
       retry,
     ],
     archived: [

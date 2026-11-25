@@ -1,6 +1,6 @@
 # 0022. The product vision
 
-- **Status:** Accepted; amended by [0027](0027-product-decisions-2026-11-07-08.md)
+- **Status:** Accepted; amended by [0027](0027-product-decisions-2026-11-07-08.md), and on 2026-11-23 by the product owner (event admin open from the internet by default, #778)
 - **Date:** 2026-11-06
 
 ## Context
@@ -27,6 +27,7 @@
   - a PWA only, no store app;
   - guests get event-wide notifications without signing in;
   - event admin is reachable from the internet with sign-in, behind a "venue or Tailscale only" switch that is on by default; the superadmin is reachable over Tailscale only;
+    - *amended 2026-11-23 (PO, #778):* the switch is **off** by default: organiser and crew pages open from anywhere, protected by the Discord sign-in and each person's rights, because there may be no venue Wi-Fi while setting up, or at all, and the crew has no VPN. "Only from the venue's network" stays as an option an organiser turns on; Tailscale stays in the allowed prefixes as the developer's way in, never mentioned to crew. The superadmin's rule is unchanged;
   - no CDN proxy at the start;
   - raw presence data is deleted 30 days after an event is archived; memories are opt-in;
   - it opens to the public only after a go-public checklist.

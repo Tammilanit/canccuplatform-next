@@ -26,6 +26,7 @@ from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Re
 from starlette.routing import Route
 
 from . import profile as prof
+from .access_pages import TenantsApi, access_routes, access_row
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
 from .forms import from_form, typed
@@ -79,9 +80,10 @@ def create_app(
     *,
     identity: ServiceIdentity,
     viewer: Viewer | None = None,
+    tenants_api: TenantsApi | None = None,
 ) -> Starlette:
     """`viewer` reads a cookie's session as the kit does, for pages that need no right; without
-    it, admin's own sessions."""
+    it, admin's own sessions. `tenants_api` reads and saves Event access as the person."""
 
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
@@ -219,7 +221,7 @@ def create_app(
         # A loaded profile can set a module that declares nothing (pizza): it still has a name.
         parts = [*service.declarations, *(c.module for c in recent)]
         groups = {m: part_name(m, settings=True) for m in parts}
-        rows = []
+        rows = [access_row(request.state.tenant)]
         for m, declared in service.declarations.items():
             _, values = await service.store.get_settings(m)
             about, values_now = glance(m, declared, values)
@@ -374,6 +376,7 @@ def create_app(
             *profile_routes(service, auth, need),
             *auth_routes(auth, authorize, on_event, viewer),
             *people_routes(auth, need, on_event),
+            *access_routes(need, tenants_api),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,

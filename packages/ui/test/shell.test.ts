@@ -217,13 +217,21 @@ describe("errorView", () => {
   });
   it.each([
     [404, "not_found", "Not found"],
-    [403, "admin_access_restricted", "Not at the venue"],
+    [403, "admin_access_restricted", "Venue network only"],
     [409, "event_archived", "Event archived"],
     [503, "tenants_unavailable", "Something went wrong"],
   ])("%i %s is %s", (status, code, title) => {
     const view = s(errorView({ status, code, message: "raw detail" }, { session: ORGANISER }));
     expect(view).toContain(title);
     expect(view).not.toContain("raw detail");
+  });
+  it("says off the venue network that the organiser chose it, without Wi-Fi or a VPN (#778)", () => {
+    const view = s(errorView({ status: 403, code: "admin_access_restricted", message: "x" }, {}));
+    expect(view).toContain(
+      "This event&#39;s organiser pages open only from the venue&#39;s network.",
+    );
+    expect(view).toContain("Ask an organiser if you need in.");
+    expect(view).not.toMatch(/VPN|Wi-Fi/);
   });
   it("offers the way back on a not-found page without a session", () => {
     const back = { href: "/theming/studio/", label: "Back to the Theme studio" };
