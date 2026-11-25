@@ -234,24 +234,39 @@ body.canccu-surface--screen {
 
 .canccu-frame--pairing .canccu-frame__bottom {
   align-self: start;
+  flex-direction: row;
+  gap: 3vmin;
+}
+
+/* The lines beside the QR, which their last one points to (mockup 05, sheet 1). */
+.canccu-frame__words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2vmin;
+  /* Two balanced lines just fit: a wider box keeps the width its text no longer fills. */
+  max-width: 68vmin;
+  text-align: start;
 }
 
 /*
- * The QR of Studio's pair dialog (#783), under the code and above the words. Dark modules on white
- * with a quiet zone whatever the theme, or a phone's camera may not read it. Kept small: the lines
- * under it must still end above the expiry at 1080p (the stack shots check it).
+ * The QR of Studio's pair dialog (#783), on the right of the words: under them or above them, it
+ * made the block taller than the space between the code and the expiry at 1080p (the stack shots
+ * check it). Dark modules on white with a quiet zone whatever the theme, or a phone's camera may
+ * not read it.
  */
 .canccu-frame__qr {
+  flex: none;
   margin: 0;
-  padding: 0.8vmin;
+  padding: 1vmin;
   border-radius: var(--canccu-radius);
   background: #fff;
   line-height: 0;
 }
 
 .canccu-frame__qr-img {
-  width: 12vmin;
-  height: 12vmin;
+  width: 18vmin;
+  height: 18vmin;
 }
 
 /* The code's expiry: the last line, under the instruction (mockup 05, sheet 9). */

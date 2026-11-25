@@ -84,8 +84,18 @@ export function frame(kind: FrameKind, text: FrameText): HTMLElement {
 /**
  * The QR of Studio's pair dialog (contracts/screen.md, Pairing): a phone that scans it opens the
  * dialog with the code filled in. Drawn in the browser; the URL is kept on the element for checks.
+ * It sits beside the frame's lines, on their right (mockup 05, sheet 1): above them, it pushed the
+ * lines past the expiry, which must stay the frame's last line.
  */
-export function pairQr(url: string): HTMLElement {
+export function pairQr(root: HTMLElement, url: string): void {
+  const bottom = root.querySelector(".canccu-frame__bottom");
+  if (bottom === null) return;
+  const words = el("div", "canccu-frame__words");
+  words.append(...bottom.childNodes);
+  bottom.append(words, qrFigure(url));
+}
+
+function qrFigure(url: string): HTMLElement {
   const code = qrcode(0, "M");
   code.addData(url);
   code.make();

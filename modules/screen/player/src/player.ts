@@ -318,7 +318,7 @@ export class Player {
     const until = this.now() + left;
     const node = this.show({ kind: "pairing", event, where: SETUP, ...PAIRING }, code);
     const studio = `${this.env.nav.origin()}/admin/screen/devices#pair=${encodeURIComponent(code)}`;
-    node.querySelector(".canccu-frame__bottom")?.prepend(pairQr(studio));
+    pairQr(node, studio);
     this.tick = () => {
       setFoot(
         node,

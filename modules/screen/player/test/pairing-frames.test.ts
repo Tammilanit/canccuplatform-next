@@ -60,6 +60,10 @@ describe("the guided pairing on the kiosk", () => {
     const img = qr?.querySelector("img");
     expect(img?.getAttribute("src")).toMatch(/^data:image\/svg\+xml,/);
     expect(img?.getAttribute("alt")).toBe("");
+    // Beside the lines, on their right, not above them: above, it pushed them past the expiry.
+    expect(qr?.parentElement?.className).toBe("canccu-frame__bottom");
+    expect(qr?.previousElementSibling?.className).toBe("canccu-frame__words");
+    expect(qr?.previousElementSibling?.textContent).toContain("Waiting for an organiser");
     expect(text()).toContain("Scan the QR code with a phone");
     // Typing stays the fallback, and says where.
     expect(text()).toContain("Screen studio → Devices");
