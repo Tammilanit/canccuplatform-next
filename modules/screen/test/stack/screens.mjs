@@ -214,6 +214,16 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       );
       await page.waitForSelector(".canccu-identify");
       await shot(nameOf(theme, "identify", size), page);
+      // The test pattern Studio sends after a pairing (#783) takes identify's place over the page.
+      expect(
+        await demo.call("POST", `/api/screen/devices/${main.id}/commands`, {
+          body: { command: "test_pattern" },
+        }),
+        202,
+        "the test_pattern command",
+      );
+      await page.waitForSelector(".canccu-test-pattern");
+      await shot(nameOf(theme, "test-pattern", size), page);
       // The uplink drops: a stream that cannot connect. Going offline in the browser would leave
       // the stream already open connected, and the page would never miss it.
       await page.route("**/api/screen/device/stream", (route) => route.abort());
@@ -365,7 +375,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           204,
           "clearing open pairing codes",
         );
-      const { page, close } = await open(size, view === "pairing" ? null : main.cookie);
+      const fresh = view === "pairing" || view === "insecure";
+      const { page, close } = await open(size, fresh ? null : main.cookie);
+      // Plain http, as the browser reports it there (#783): the stack itself is a secure context.
+      if (view === "insecure")
+        await page.addInitScript(() =>
+          Object.defineProperty(window, "isSecureContext", { get: () => false }),
+        );
       if (view in answers) {
         const [status, json] = answers[view];
         await page.route("**/api/screen/device/state", (route) => route.fulfill({ status, json }));
