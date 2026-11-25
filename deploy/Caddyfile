@@ -10,7 +10,9 @@
 	auto_https off
 	admin off
 	servers :8480 {
-		trusted_proxies static private_ranges
+		# Not private_ranges: it includes fd00::/8, which covers Tailscale's fd7a:115c:a1e0::/48, so a
+		# tailnet client on IPv6 would be skipped as a proxy and seen as the gateway.
+		trusted_proxies static 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1/128
 		# The last address the proxy did not add itself, never a first one a client wrote.
 		trusted_proxies_strict
 	}

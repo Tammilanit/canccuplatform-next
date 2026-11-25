@@ -98,6 +98,15 @@ out=$(ask https 8480 "$PUBLIC_HOST" /api/hello/health "X-Forwarded-For: 198.51.1
 if grep -qF "xff=[$CLIENT]" <<<"$out"; then pass "the front takes the rightmost untrusted address"
 else bad "the front takes the rightmost untrusted address" "$out"; fi
 
+out=$(ask https 8480 "$PUBLIC_HOST" /api/hello/health "X-Forwarded-For: fd7a:115c:a1e0::7")
+if grep -qF "xff=[fd7a:115c:a1e0::7]" <<<"$out"; then pass "the front forwards a tailnet IPv6 client unchanged"
+else bad "the front forwards a tailnet IPv6 client unchanged" "$out"; fi
+
+# Internal peers (screen's cover reads) must not meet the https redirect: they use the front.
+if awk '/^  screen:/{s=1;next} /^  [a-z-]+:/{s=0} s' "$(dirname "$0")/compose.yml" | grep -qF 'CANCCU_EDGE_URL: http://caddy:8480'
+then pass "screen reads through the front, not the redirecting port 80"
+else bad "screen reads through the front, not the redirecting port 80" "CANCCU_EDGE_URL missing on screen in compose.yml"; fi
+
 out=$(ask https 80 "$PUBLIC_HOST" "/admin/sign-in?next=%2Fpizza%2F")
 if grep -qE 'HTTP/1\.1 308' <<<"$out" && grep -qiF "Location: https://$PUBLIC_HOST/admin/sign-in?next=%2Fpizza%2F" <<<"$out"
 then pass "plain http on the public URL's host redirects to https, path and query kept"

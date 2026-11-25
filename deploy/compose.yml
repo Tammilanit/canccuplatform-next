@@ -158,6 +158,9 @@ services:
       CANCCU_MODULE: screen
       CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       CANCCU_TENANTS_URL: http://tenants:8080
+      # Cover reads go through the front, which never redirects to https; port 80 would answer 308
+      # for the event's hostname on the dev server and every card would lose its art.
+      CANCCU_EDGE_URL: http://caddy:8480
       CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
       CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
       # The demo tenant on the host's IP address; honoured only while CANCCU_VERSION is dev.
