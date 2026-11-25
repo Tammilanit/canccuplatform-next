@@ -12,6 +12,7 @@ import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 import { MOTION_CLIENT_KEYS, MOTION_EN } from "./motion-view.js";
 import { PINS_EN } from "./pins-messages.js";
 import { PAIR_CLIENT_KEYS, PAIR_EN } from "./pair-messages.js";
+import { ROTATION_CLIENT_KEYS, ROTATION_EN } from "./rotation-messages.js";
 
 const EN = {
   ...CONTENT_EN,
@@ -23,6 +24,7 @@ const EN = {
   ...MOTION_EN,
   ...PINS_EN,
   ...PAIR_EN,
+  ...ROTATION_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
@@ -385,4 +387,5 @@ export const CLIENT_KEYS = [
   ...PREVIEW_CLIENT_KEYS,
   ...MOTION_CLIENT_KEYS,
   ...PAIR_CLIENT_KEYS,
+  ...ROTATION_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

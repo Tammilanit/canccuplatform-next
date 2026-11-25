@@ -27,6 +27,11 @@ type Entry = Record<string, unknown>;
 export const WIDGETS = [
   "playlist",
   "photo",
+  "agenda_timeline",
+  "food_status",
+  "leaderboard",
+  "now_playing",
+  "stats",
   "agenda_now",
   "countdown",
   "clock",
@@ -44,7 +49,10 @@ const ownDwell = (entry: Entry): number | undefined => {
   return typeof seconds === "number" ? seconds : undefined;
 };
 
-/** One widget: a drag handle, its name in words, its seconds, and move and remove buttons. */
+/**
+ * One widget: a drag handle, its name in words, its seconds, a switch that keeps it in its place
+ * while it is off (#787 D3), and move and remove buttons.
+ */
 export function widgetRow(c: ViewContext, entry: Entry, regionDwell: number): Html {
   const { t } = c;
   const name = typeof entry.widget === "string" ? entry.widget : "";
@@ -59,8 +67,9 @@ export function widgetRow(c: ViewContext, entry: Entry, regionDwell: number): Ht
     >
       <span class="canccu-i canccu-i--${iconName}" aria-hidden="true"></span>
     </button>`;
+  const on = entry.enabled !== false;
   return html`<li
-    class="canccu-studio-widget"
+    class="canccu-studio-widget${on ? "" : " canccu-studio-widget--off"}"
     draggable="true"
     ${attrs({ "data-entry": JSON.stringify(entry), "data-own-dwell": own })}
   >
@@ -68,8 +77,38 @@ export function widgetRow(c: ViewContext, entry: Entry, regionDwell: number): Ht
     ><span class="canccu-studio-widget__name">${nameOf(t, "widget", name)}</span
     ><span class="canccu-studio-widget__meta canccu-small canccu-muted"
       >${t("zone.widget_dwell", { seconds: ownDwell(entry) ?? regionDwell })}</span
-    >${button("up", "left", t("zone.up"))}${button("down", "right", t("zone.down"))}${button("remove", "close", t("zone.remove"))}
+    ><input
+      class="canccu-switch"
+      type="checkbox"
+      data-widget-on
+      ${attrs({ checked: on, "aria-label": t("zone.widget_on"), title: t("zone.widget_on") })}
+    />${button("up", "left", t("zone.up"))}${button("down", "right", t("zone.down"))}${button("remove", "close", t("zone.remove"))}
   </li>`;
+}
+
+/** The hero's turn, 30–60 s (#787 D4): chips, not a typed number; the field keeps the choice. */
+const HERO_DWELLS = [30, 45, 60];
+
+function heroDwellPart(c: ViewContext, f: string, dwell: number | undefined, layoutDwell: number) {
+  const { t } = c;
+  const picked = dwell ?? layoutDwell;
+  return html`<div class="canccu-field">
+    <label class="canccu-field__label" for="${f}-dwell">${t("zone.hero_dwell")}</label>
+    <input type="hidden" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell })} />
+    <div class="canccu-chips" role="group" aria-label="${t("zone.hero_dwell")}">
+      ${HERO_DWELLS.map(
+        (s) =>
+          html`<button
+            class="canccu-chip"
+            type="button"
+            ${attrs({ "data-dwell-chip": s, "aria-pressed": String(s === picked) })}
+          >
+            ${t("zone.dwell_chip", { seconds: s })}
+          </button>`,
+      )}
+    </div>
+    <p class="canccu-field__hint">${t("zone.hero_dwell_hint", { seconds: layoutDwell })}</p>
+  </div>`;
 }
 
 export interface RegionInfo extends BoxInfo {
@@ -179,7 +218,7 @@ export function regionPart(
       </button>
     </div>
     <div class="canccu-studio-row">
-      ${rotationPart(c, f, r.settings, hero)}${labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
+      ${rotationPart(c, f, r.settings, hero)}${hero ? heroDwellPart(c, f, dwell, r.layoutDwell) : labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
         `${f}-idle`,
         t("zone.idle"),
         select(`${f}-idle`, "idle", str(r.settings.idle), [

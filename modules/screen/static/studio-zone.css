@@ -201,6 +201,31 @@
   font-weight: 600;
 }
 
+/* An item switched off keeps its place, muted and struck through (#787 D3, sheet 06). */
+.canccu-studio-widget--off .canccu-studio-widget__name,
+.canccu-studio-widget--off .canccu-studio-widget__meta {
+  color: var(--canccu-ink-muted);
+  text-decoration: line-through;
+}
+
+.canccu-studio-widget .canccu-switch {
+  flex: none;
+  margin: 0 0.25rem;
+}
+
+/* At phone width the row's name and seconds wrap under the handle, the controls stay one line. */
+@media (max-width: 30rem) {
+  .canccu-studio-widget {
+    flex-wrap: wrap;
+    padding-block: 0.25rem;
+  }
+
+  .canccu-studio-widget__meta {
+    flex-basis: 100%;
+    order: 1;
+  }
+}
+
 .canccu-studio-widget__meta {
   flex: 1;
 }
