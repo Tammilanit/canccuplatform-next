@@ -1,46 +1,68 @@
 # IP mode: plain http on port 80, no certificates (the TLS option follows #5).
 # Routing: machine endpoints under /api/<module>/, module pages under /<module>/.
 # handle_path strips the prefix, so each module keeps its own paths (/health, ...).
+#
+# The https front (#786): a host's own https proxy (Tailscale serve on the dev server,
+# docs/operations/dev-server.md) sends to port 8480, which compose publishes on the host's
+# loopback only. It arrives there through Docker's gateway, so that listener trusts private
+# peers' X-Forwarded-For and -Proto; port 80 trusts no one, so a client's own header never counts.
 {
 	auto_https off
 	admin off
+	servers :8480 {
+		# Not private_ranges: it includes fd00::/8, which covers Tailscale's fd7a:115c:a1e0::/48, so a
+		# tailnet client on IPv6 would be skipped as a proxy and seen as the gateway.
+		trusted_proxies static 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 ::1/128
+		# The last address the proxy did not add itself, never a first one a client wrote.
+		trusted_proxies_strict
+	}
 }
 
-:80 {
+# Every module gets one X-Forwarded-For, the client: the modules trust only Caddy's hop, so they
+# read the last address (Fastify's trustProxy, uvicorn's forwarded_allow_ips). From a trusted peer,
+# reverse_proxy would add that peer after the client and the modules would see the gateway.
+(proxy) {
+	reverse_proxy {args[0]} {
+		header_up X-Forwarded-For {client_ip}
+	}
+}
+
+# Every route, served on both listeners below (a snippet must come before its imports).
+(routes) {
 	handle_path /api/hello/* {
-		reverse_proxy hello:8080
+		import proxy hello:8080
 	}
 
 	# Admin's API paths are part of its contract (/api/admin/...), so they are not stripped;
 	# only its health endpoint is mapped to the shared /health.
 	handle /api/admin/health {
 		rewrite * /health
-		reverse_proxy admin:8080
+		import proxy admin:8080
 	}
 
 	handle /api/admin/* {
-		reverse_proxy admin:8080
+		import proxy admin:8080
 	}
 
 	# The tenants contract's paths are /api/tenants/... too; /internal/tenants/ is never routed
 	# here, so it stays on the stack's network.
 	handle /api/tenants/health {
 		rewrite * /health
-		reverse_proxy tenants:8080
+		import proxy tenants:8080
 	}
 
 	handle /api/tenants/* {
-		reverse_proxy tenants:8080
+		import proxy tenants:8080
 	}
 
 	# The screen contract's paths are /api/screen/... too, so they are not stripped either.
 	handle /api/screen/health {
 		rewrite * /health
-		reverse_proxy screen:8080
+		import proxy screen:8080
 	}
 
 	handle /api/screen/* {
-		reverse_proxy screen:8080
+		import proxy screen:8080
 	}
 
 	# The kiosk's page and its bundle (/screen/, /screen/b/<version>/): screen's own paths, not
@@ -50,32 +72,32 @@
 	}
 
 	handle /screen/* {
-		reverse_proxy screen:8080
+		import proxy screen:8080
 	}
 
 	# The theming contract's paths are /api/theming/... and /theming/... (its served files), so
 	# neither is stripped; /internal/theming/ is never routed here.
 	handle /api/theming/health {
 		rewrite * /health
-		reverse_proxy theming:8080
+		import proxy theming:8080
 	}
 
 	handle /api/theming/* {
-		reverse_proxy theming:8080
+		import proxy theming:8080
 	}
 
 	handle /theming/* {
-		reverse_proxy theming:8080
+		import proxy theming:8080
 	}
 
 	# The agenda contract's paths are /api/agenda/... too.
 	handle /api/agenda/health {
 		rewrite * /health
-		reverse_proxy agenda:8080
+		import proxy agenda:8080
 	}
 
 	handle /api/agenda/* {
-		reverse_proxy agenda:8080
+		import proxy agenda:8080
 	}
 
 	# The run-of-show pages, in one named-matcher block, as every module's pages below: Caddy
@@ -100,18 +122,18 @@
 
 		handle {
 			uri strip_prefix /agenda
-			reverse_proxy agenda:8080
+			import proxy agenda:8080
 		}
 	}
 
 	# The notify contract's paths are /api/notify/... too; /internal/notify/ is never routed.
 	handle /api/notify/health {
 		rewrite * /health
-		reverse_proxy notify:8080
+		import proxy notify:8080
 	}
 
 	handle /api/notify/* {
-		reverse_proxy notify:8080
+		import proxy notify:8080
 	}
 
 	# The notification pages under admin's "Event" menu and the check-in page a scanned QR
@@ -133,18 +155,23 @@
 
 		handle {
 			uri strip_prefix /notify
-			reverse_proxy notify:8080
+			import proxy notify:8080
 		}
 	}
 
 	# The pizza contract's paths are /api/pizza/...; its pages are under /pizza/.
-	handle /api/pizza/health {
-		rewrite * /health
-		reverse_proxy pizza:8080
-	}
-
+	# One block with the health rewrite inside: as two top-level handles, Caddy's sort put
+	# /api/pizza/* ahead of /api/pizza/health on the :80 server, and pizza answered 404.
 	handle /api/pizza/* {
-		reverse_proxy pizza:8080
+		@pizza-health path /api/pizza/health
+		handle @pizza-health {
+			rewrite * /health
+			import proxy pizza:8080
+		}
+
+		handle {
+			import proxy pizza:8080
+		}
 	}
 
 	# The Food pages: the holder's (/pizza/hold/) and the crew's (/pizza/crew/), in one block as
@@ -165,18 +192,18 @@
 
 		handle {
 			uri strip_prefix /pizza
-			reverse_proxy pizza:8080
+			import proxy pizza:8080
 		}
 	}
 
 	# The moments contract's paths are /api/moments/... too; /internal/moments/ is never routed.
 	handle /api/moments/health {
 		rewrite * /health
-		reverse_proxy moments:8080
+		import proxy moments:8080
 	}
 
 	handle /api/moments/* {
-		reverse_proxy moments:8080
+		import proxy moments:8080
 	}
 
 	# Studio → Moments (the Screen studio's Moments tab), in one block as for agenda; the module's
@@ -197,7 +224,7 @@
 
 		handle {
 			uri strip_prefix /moments
-			reverse_proxy moments:8080
+			import proxy moments:8080
 		}
 	}
 
@@ -209,7 +236,7 @@
 		@screen-studio path /screen/*
 		handle @screen-studio {
 			rewrite * /admin{path}
-			reverse_proxy screen:8080
+			import proxy screen:8080
 		}
 
 		handle /screen {
@@ -217,7 +244,7 @@
 		}
 
 		handle {
-			reverse_proxy admin:8080
+			import proxy admin:8080
 		}
 	}
 
@@ -225,10 +252,22 @@
 	# bare address only, so every other path no route takes stays "not found".
 	@front-door path /
 	handle @front-door {
-		reverse_proxy notify:8080
+		import proxy notify:8080
 	}
 
 	handle {
 		respond "not found" 404
 	}
+}
+
+# Plain http on the public URL's host goes to https once CANCCU_PUBLIC_URL is https; every other
+# name (a LAN name, an IP, the stack's own health checks) stays on plain http.
+:80 {
+	@to-https expression `{env.CANCCU_PUBLIC_URL} == "https://" + {http.request.host}`
+	redir @to-https https://{host}{uri} 308
+	import routes
+}
+
+:8480 {
+	import routes
 }

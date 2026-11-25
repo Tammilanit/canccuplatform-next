@@ -12,6 +12,7 @@ from canccu_kit.access import tailscale_cidrs
 from . import dev_seed, seed
 from .core import Files
 from .db import Db
+from .deps import load_flags
 from .main import env
 
 
@@ -28,14 +29,23 @@ async def dev_hostnames(db: Db, hosts: list[str]) -> str:
         if changed
         else "the demo event's dev hostnames are in place; nothing changed"
     )
-    # In the same command, so the deploy's dev seed needs no step of its own (issue #733).
+    # In the same command, so the deploy's dev seed needs no step of its own (issues #733, #788).
     try:
         added = await dev_seed.dev_venue(db, bus, config.version, tailscale_cidrs())
+        venue = (
+            "the demo venue's addresses: added " + ", ".join(added)
+            if added
+            else "the demo venue's addresses are in place; nothing changed"
+        )
     except dev_seed.LeftAlone as exc:
-        return f"{said}\nthe demo venue's addresses: left alone: {exc}"
-    if not added:
-        return f"{said}\nthe demo venue's addresses are in place; nothing changed"
-    return f"{said}\nthe demo venue's addresses: added " + ", ".join(added)
+        venue = f"the demo venue's addresses: left alone: {exc}"
+    turned = await dev_seed.dev_event(db, bus, config.version, load_flags(e.flags_file))
+    event = (
+        "the demo event's photo wall and Wi-Fi: set " + ", ".join(turned)
+        if turned
+        else "the demo event's photo wall and Wi-Fi are in place or set by hand; nothing changed"
+    )
+    return f"{said}\n{venue}\n{event}"
 
 
 async def run(args: argparse.Namespace) -> str:
