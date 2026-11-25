@@ -2,13 +2,12 @@
 // Pizza is here arrives and shows in the rail at once, takes the hero only after the card's floor
 // (set to 60 s, the range's least, to keep CI short) and the 10 s gap, and when the order is done
 // the card comes back with the on-air time it had left. The domain events go straight onto the
-// tournament's and pizza's streams in Valkey, as those modules send them (the kit's bus: one
-// `event` field); the Champion preset, which would show the final instead of the rule, is off
-// meanwhile. scripts/demo-stack-test runs it beside Screen's stack client in the screen container.
-import { Buffer } from "node:buffer";
-import { randomBytes, randomUUID } from "node:crypto";
+// tournament's and pizza's streams in Valkey, as those modules send them (bus.mjs); the Champion
+// preset, which would show the final instead of the rule, is off meanwhile. scripts/demo-stack-test
+// runs it beside Screen's stack client in the screen container.
+import { randomBytes } from "node:crypto";
 import { request } from "node:http";
-import { connect } from "node:net";
+import { xadd } from "./bus.mjs";
 import { DEMO_HOST, SESSION, event } from "./client.mjs";
 
 const TENANT = "demo";
@@ -44,30 +43,6 @@ function moments(method, path, body) {
     );
     req.on("error", reject);
     req.end(payload);
-  });
-}
-
-/** XADD in RESP, so the check needs no client library. */
-function xadd(module, type, data) {
-  const e = {
-    id: randomUUID(),
-    type,
-    version: 1,
-    time: new Date().toISOString(),
-    source: module,
-    tenant: TENANT,
-    data,
-  };
-  const args = ["XADD", `t:${TENANT}:events:${module}`, "*", "event", JSON.stringify(e)];
-  const cmd = `*${args.length}\r\n${args.map((a) => `$${Buffer.byteLength(a)}\r\n${a}\r\n`).join("")}`;
-  return new Promise((resolve, reject) => {
-    const s = connect(6379, "valkey", () => s.write(cmd));
-    s.once("data", (d) => {
-      s.end();
-      if (d.toString().startsWith("-")) reject(new Error(`XADD: ${d}`));
-      else resolve();
-    });
-    s.on("error", reject);
   });
 }
 
@@ -137,7 +112,7 @@ try {
   if (off.status !== 200) throw new Error(`Champion off: HTTP ${off.status}`);
   storyRev = off.body.revision;
   await sse.opened;
-  await xadd("tournament", "tournament.match.finished", {
+  await xadd(TENANT, "tournament", "tournament.match.finished", {
     session,
     match: { id: `tm_${run}`, session_id: session.id, label: "Final", teams: [] },
     results: [{ rank: 1, people: [person("u_air", "Airtime Champion")], points: 9 }],
@@ -146,13 +121,13 @@ try {
   await sse.next(heroIs("winner_card"), 30_000);
   const t0 = Date.now();
   await new Promise((r) => setTimeout(r, 5000));
-  await xadd("pizza", "pizza.order.arrived", { order: order("arrived"), user_ids: [], people: [] });
+  await xadd(TENANT, "pizza", "pizza.order.arrived", { order: order("arrived"), user_ids: [], people: [] });
   await sse.next(railSays("Pizza is here"), 10_000);
   const inRail = (Date.now() - t0) / 1000;
   await sse.next(heroIs("announcement"), (FLOOR_S + GAP_S + 20) * 1000);
   const held = (Date.now() - t0) / 1000;
   if (held < FLOOR_S - 2) throw new Error(`the card held the hero only ${held} s`);
-  await xadd("pizza", "pizza.order.done", {
+  await xadd(TENANT, "pizza", "pizza.order.done", {
     order: order("done"),
     reason: "handed_out",
     actor_user_id: null,
