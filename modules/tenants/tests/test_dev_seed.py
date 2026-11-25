@@ -5,10 +5,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 import yaml
-from canccu_kit.access import VenueIpRefused, check_screen_access
+from canccu_kit.access import TenantContext, VenueIpRefused, check_screen_access
 from conftest import Env, make_tenant
 
 from canccu_tenants import dev_seed, seed
@@ -159,8 +160,10 @@ async def a_screen_over_tailscale_passes(env: Env) -> bool:
     async with env.module("screen") as c:
         r = await c.get("/internal/tenants/tenants/demo")
     assert r.status_code == 200, r.text
+    # The venue's addresses matter only where an event lets screens play only there (#783).
+    ctx = cast(TenantContext, {**r.json(), "screen_access": "restricted"})
     try:
-        check_screen_access(r.json(), device_token_valid=True, client_ip=TAILNET_PC)
+        check_screen_access(ctx, device_token_valid=True, client_ip=TAILNET_PC)
     except VenueIpRefused:
         return False
     return True

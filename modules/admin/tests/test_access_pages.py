@@ -120,3 +120,55 @@ async def test_settings_lists_event_access_with_its_value(
     r = await world.browser(owner).get("/admin/settings")
     assert 'href="/admin/access"' in r.text and ">Event access</p>" in r.text
     assert ANYWHERE in r.text
+
+
+SCREENS_ANYWHERE = "Anywhere, once paired"
+SCREENS_VENUE = "Only on the venue&#x27;s network"
+
+
+def screens_checked(page: str) -> list[str]:
+    return re.findall(r'type=radio name=screen_access value="(\w+)" checked', page)
+
+
+async def test_screens_play_anywhere_once_paired_by_default(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    r = await world.browser(owner).get("/admin/access")
+    assert SCREENS_ANYWHERE in r.text and SCREENS_VENUE in r.text
+    assert re.search(rf"{SCREENS_ANYWHERE}</label>.*?Default", r.text, re.S)
+    assert screens_checked(r.text) == ["internet"]
+
+
+async def test_an_organiser_turns_the_screens_venue_check_on(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    browser = world.browser(owner)
+    r = await browser.post(
+        "/admin/access",
+        data={"admin_access": "internet", "screen_access": "restricted", "revision": "3"},
+        headers={"origin": "https://admin.example.test"},
+    )
+    assert r.status_code == 303
+    assert (
+        world.tenants.seen[-1].read()
+        == b'{"revision":3,"admin_access":"internet","screen_access":"restricted"}'
+    )
+    after = await browser.get("/admin/access?saved=1")
+    assert screens_checked(after.text) == ["restricted"]
+    bad = await browser.post(
+        "/admin/access",
+        data={"admin_access": "internet", "screen_access": "venue", "revision": "4"},
+        headers={"origin": "https://admin.example.test"},
+    )
+    assert bad.status_code == 400
+
+
+async def test_the_read_only_page_says_where_screens_play(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.tenants.full = False
+    r = await world.browser(owner).get("/admin/access")
+    assert SCREENS_ANYWHERE in r.text and "name=screen_access" not in r.text

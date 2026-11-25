@@ -21,7 +21,7 @@ TENANT_SQL = (
 )
 RETENTION = timedelta(days=30)
 EVENT_FIELDS = {"name", "time_zone", "starts_at", "ends_at"}
-ACCESS_FIELDS = {"info_page_mode", "membership", "admin_access"}
+ACCESS_FIELDS = {"info_page_mode", "membership", "admin_access", "screen_access"}
 
 
 def now() -> datetime:
@@ -207,6 +207,10 @@ def _patch_values(body: Mapping[str, Any]) -> dict[str, Any]:
     if "admin_access" in body:
         out["admin_access"] = model.check_choice(
             body["admin_access"], model.ADMIN_ACCESS, "admin_access"
+        )
+    if "screen_access" in body:
+        out["screen_access"] = model.check_choice(
+            body["screen_access"], model.SCREEN_ACCESS, "screen_access"
         )
     if "venue_id" in body:
         out["venue_id"] = (

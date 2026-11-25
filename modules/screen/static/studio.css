@@ -199,6 +199,32 @@
   padding-left: 1.25rem;
 }
 
+/* The screen just paired (#783): its state and what to do, above the fleet. */
+.canccu-studio-paired {
+  display: grid;
+  gap: var(--canccu-gap);
+  margin-bottom: var(--canccu-gap);
+}
+
+.canccu-studio-paired .canccu-card__title {
+  margin: 0;
+}
+
+/* Set up a screen (#783): closed until asked for, beside Recent. */
+.canccu-studio-setup summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.canccu-studio-setup ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
 .canccu-studio-dialog {
   border: var(--canccu-border-width) solid var(--canccu-color-border);
   border-radius: var(--canccu-radius);

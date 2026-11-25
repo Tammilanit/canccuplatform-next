@@ -16,6 +16,11 @@ export interface TenantContext {
   info_page_mode: "public" | "venue_only" | "sign_in";
   membership: "open" | "closed";
   admin_access: "restricted" | "internet";
+  /**
+   * Where a paired screen plays (contracts/tenants.md, Screen access): `internet` by default.
+   * Optional here only so a context without it fails closed, as `restricted`.
+   */
+  screen_access?: "restricted" | "internet";
   venue: { id: string; name: string; addresses: string[] } | null;
   venue_ip_check: { enabled: boolean; disabled_until: string | null; reason: string | null };
   flags_version: number;
@@ -36,11 +41,13 @@ export class VenueIpRefused extends KitError {
 
 /**
  * Shown on a refused kiosk, so it names the crew's next step: the address alone is never enough,
- * and only the venue's addresses or the audited emergency switch let a screen in.
+ * and only the venue's addresses, the event's choice to let screens play anywhere (`screen_access`)
+ * or the audited emergency switch let a screen in.
  */
 export const VENUE_REFUSED_MESSAGE =
-  "This screen is not on this event's venue network. Ask an event admin to check the venue's " +
-  "addresses, or to turn the venue IP check off for a while with the emergency switch.";
+  "This screen is not on this event's venue network, and the event lets screens play only there. " +
+  "Ask an event admin to check the venue's addresses, to let screens play anywhere (Event " +
+  "access), or to turn the venue IP check off for a while with the emergency switch.";
 
 export class InfoPagesClosed extends KitError {
   static override defaultStatus = 403;
@@ -119,12 +126,17 @@ export function venueIpCheckActive(ctx: TenantContext, now: Date = new Date()): 
   return Number.isNaN(until) || now.getTime() >= until;
 }
 
-/** A screen needs its device token and, unless the switch is off, its event's venue address. */
+/**
+ * A screen needs its device token; with `screen_access: restricted`, also its event's venue
+ * address unless the emergency switch is off. Pairing is the trust (#783): by default the token
+ * alone serves.
+ */
 export function checkScreenAccess(
   ctx: TenantContext,
   request: { deviceTokenValid: boolean; clientIp: string | undefined; now?: Date },
 ): void {
   if (!request.deviceTokenValid) throw new DeviceUnknown();
+  if (ctx.screen_access === "internet") return;
   if (venueIpCheckActive(ctx, request.now) && !fromVenue(ctx, request.clientIp)) {
     throw new VenueIpRefused(VENUE_REFUSED_MESSAGE);
   }

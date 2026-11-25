@@ -11,6 +11,7 @@ import { PREVIEW_CLIENT_KEYS, PREVIEW_EN } from "./preview-messages.js";
 import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 import { MOTION_CLIENT_KEYS, MOTION_EN } from "./motion-view.js";
 import { PINS_EN } from "./pins-messages.js";
+import { PAIR_CLIENT_KEYS, PAIR_EN } from "./pair-messages.js";
 import { TIPS_EN } from "./tips-messages.js";
 
 const EN = {
@@ -23,6 +24,7 @@ const EN = {
   ...PREVIEW_EN,
   ...MOTION_EN,
   ...PINS_EN,
+  ...PAIR_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
@@ -133,17 +135,6 @@ const EN = {
   "help.behind.fix": "Reload it. If it stays behind, check its network.",
   "help.unassigned": "It shows only its name.",
   "help.unassigned.fix": "Choose a zone for it with Assign to a zone.",
-
-  "pair.title": "Pair a screen",
-  "pair.code": "Code",
-  "pair.code_hint": "The 8 characters the screen shows.",
-  "pair.name": "Name",
-  "pair.name_hint": "Where it is, such as Hall left.",
-  "pair.zone": "Zone",
-  "pair.no_zone": "Choose later",
-  "pair.submit": "Pair",
-  "pair.cancel": "Cancel",
-  "pair.done": "{device} is paired.",
 
   "zones.desc": "Each zone is a group of screens that show the same thing.",
   "zones.screens": "{count} screens",
@@ -331,7 +322,6 @@ export const CLIENT_KEYS = [
   "device.reloaded",
   "device.saved",
   "devices.cleared",
-  "pair.done",
   "zone.saved",
   "zone.undo",
   "zone.undone",
@@ -396,4 +386,5 @@ export const CLIENT_KEYS = [
   ...SCHEDULE_CLIENT_KEYS,
   ...PREVIEW_CLIENT_KEYS,
   ...MOTION_CLIENT_KEYS,
+  ...PAIR_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

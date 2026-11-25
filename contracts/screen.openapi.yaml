@@ -574,7 +574,7 @@ components:
       properties:
         command:
           type: string
-          enum: [reload, identify]
+          enum: [reload, identify, test_pattern]
     RegistryDevice:
       type: object
       required: [id, name, venue_id, current_tenant_id, created_at, revoked_at]
@@ -1550,7 +1550,7 @@ components:
           type: object
         command:
           type: string
-          enum: [reload, identify]
+          enum: [reload, identify, test_pattern]
         expires_at:
           $ref: "#/components/schemas/Time"
         time:

@@ -7,6 +7,7 @@ import { expect } from "./client.mjs";
 import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
 import { editorShots } from "./editor-shots.mjs";
 import { saveZone } from "./fixture.mjs";
+import { pairedShots } from "./paired-shots.mjs";
 import { previewShots } from "./preview-shots.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -342,6 +343,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
+    await pairedShots({ demo, shot, hall, ready: studioReady });
     await previewShots({ demo, shot, hall, ready: studioReady });
     lists = await seedPlaylist(demo, assets);
     for (const [name, path, viewport] of PLAYLIST_PAGES) await shot(name, path, viewport);

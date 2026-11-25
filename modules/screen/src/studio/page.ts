@@ -39,6 +39,7 @@ export function signInStep(request: FastifyRequest, reply: FastifyReply, t: Tran
       </head>
       <body>
         <a href="${next}" data-sign-in>${t("signin.go")}</a>
+        <p data-insecure hidden>${t("pair.insecure")}</p>
         <script src="${STUDIO}static/studio-signin.js"></script>
       </body>
     </html>`;

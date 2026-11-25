@@ -19,6 +19,7 @@ import "./stage.css";
 import "./scene.css";
 import "./director.css";
 import "./hero.css";
+import "./test-pattern.css";
 import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";
 import { OfflineStore } from "./offline.js";
@@ -88,6 +89,8 @@ if (body.dataset.page === "zone") {
     },
     root: body,
     bundle,
+    // The pairing and device cookies are `Secure`: plain http (not localhost) can never keep them.
+    secure: () => isSecureContext,
     offline,
   });
   void player.start();

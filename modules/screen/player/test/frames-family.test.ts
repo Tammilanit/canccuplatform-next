@@ -56,12 +56,13 @@ describe("the device frames as one family", () => {
     holdsAsSafety("canccu-pairing-code");
   });
 
-  it("sends no one to a page that does not exist yet: no pair dialog QR, no Screen studio", async () => {
+  it("sends the organiser to Screen studio's pair dialog, which exists now (#190, #783)", async () => {
     await setup(pairing()).start();
     await settle();
-    expect(document.querySelector(".canccu-qr")).toBeNull();
-    expect(document.body.textContent).not.toContain("Screen studio");
-    expect(document.body.textContent).toContain("Ask an organiser to pair it with this code.");
+    const qr = document.querySelector<HTMLElement>(".canccu-frame__qr");
+    expect(qr?.dataset.url).toMatch(/\/admin\/screen\/devices#pair=[A-Z2-9]{8}$/);
+    expect(document.body.textContent).toContain("Screen studio → Devices");
+    expect(document.body.textContent).toContain("Waiting for an organiser…");
   });
 
   it("heads a frame as the Pulse does: the event, where, the date and the clock", async () => {

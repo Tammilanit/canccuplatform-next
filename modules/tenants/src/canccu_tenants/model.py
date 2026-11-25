@@ -19,6 +19,8 @@ ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 INFO_MODES = ("public", "venue_only", "sign_in")
 MEMBERSHIP = ("open", "closed")
 ADMIN_ACCESS = ("restricted", "internet")
+# Where a paired screen plays (#783): the same two values as `admin_access`.
+SCREEN_ACCESS = ("restricted", "internet")
 TRANSITIONS = {("draft", "live"), ("live", "archived"), ("draft", "archived")}
 
 
@@ -209,6 +211,7 @@ def tenant(row: Mapping[str, Any], primary: str | None, now: datetime) -> dict[s
         "series_id": row["series_id"],
         "storage_quota_bytes": row["storage_quota_bytes"],
         "admin_access": row["admin_access"],
+        "screen_access": row["screen_access"],
         "venue_ip_check": ip_check(row, now),
         "archived_at": iso(row["archived_at"]),
         "presence_delete_at": iso(row["presence_delete_at"]),
@@ -236,6 +239,7 @@ def context(
         "info_page_mode": row["info_page_mode"],
         "membership": row["membership"],
         "admin_access": row["admin_access"],
+        "screen_access": row["screen_access"],
         "venue": venue_,  # type: ignore[typeddict-item]
         "venue_ip_check": ip_check(row, now),  # type: ignore[typeddict-item]
         "flags_version": row["flags_version"],

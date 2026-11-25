@@ -25,8 +25,8 @@
     operationId: updateCurrentTenant
     summary: Change the event's own fields
     description: |
-      Name, time zone and dates need right `tenants.event.write`; `info_page_mode`, `membership` and
-      `admin_access` need `tenants.access.write` (held only through the event-admin role). A request that
+      Name, time zone and dates need right `tenants.event.write`; `info_page_mode`, `membership`,
+      `admin_access` and `screen_access` need `tenants.access.write` (held only through the event-admin role). A request that
       changes both kinds needs both. Audited. Emits `tenants.tenant.changed`.
     security:
       - session: []
@@ -158,7 +158,7 @@
     summary: Copy the tenants part of a previous event of the series
     description: |
       Needs the event-admin role (not a granted right) here and on the source; both in one series. Only on
-      a `draft` event not cloned before. Copies flags, `info_page_mode`, `membership` and `admin_access`,
+      a `draft` event not cloned before. Copies flags, `info_page_mode`, `membership`, `admin_access` and `screen_access`,
       adds the source's event admins to those already here (never removing any), and shifts the dates.
       Audited. Emits `tenants.tenant.cloned`.
     security:

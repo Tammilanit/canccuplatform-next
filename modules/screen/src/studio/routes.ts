@@ -185,13 +185,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const states = new Map(
           await Promise.all(keys.map(async (k) => [k, await deps.zones.read(k)] as const)),
         );
+        const { paired } = request.query as { paired?: unknown };
         return page(request, reply, c, {
           title: "",
           tab: "devices",
           wide: true,
           description: c.t("devices.desc"),
           actions: devicesActions(c),
-          body: devicesView(c, zones, all, states),
+          body: devicesView(c, zones, all, states, {
+            paired: typeof paired === "string" ? paired : undefined,
+            venueOnly: tenantOf(request).screen_access !== "internet",
+          }),
+          own: "studio-devices",
+          module: true,
         });
       },
     );
