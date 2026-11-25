@@ -67,7 +67,7 @@ TESTS=(
   "one page of each module answers a signed-in organiser"
   "Notify offers the Schedule topic the agenda registers at start"
   "a reminder, an announced delay and an announcement each reach a subscribed phone's deliveries"
-  "Moments brings a crew spotlight to a paired screen's stream within a second (p95 of 20)"
+  "Moments brings a crew spotlight and a domain event to a paired screen's stream within a second (p95 of 20 each)"
   "the screens of a zone start Moments' sound within 200 ms of each other; only its sound screen plays"
   "every health check probes every 2 s only while its container starts, then every 30 s"
   "Notify offers the Food topic pizza registers at start"
@@ -341,12 +341,12 @@ fi
 
 if want moments; then
   # Moments' checks beside Screen's stack client in the screen container: from a crew spotlight's
-  # POST to a paired screen's stream (step 4 plan O2), two screens of a zone starting a sound
+  # POST and a domain event's XADD to a paired screen's stream (O2, #803), two screens starting a sound
   # together (#113, D14), and airtime: the floor, the rail as the waiting room, the paused clock (#777).
   screen_check() {
     code=
     "${COMPOSE[@]}" cp modules/screen/test/stack/. screen:/tmp/canccu-stack >/dev/null &&
-      "${COMPOSE[@]}" cp "modules/moments/ci/$1" screen:/tmp/canccu-stack/ >/dev/null &&
+      "${COMPOSE[@]}" cp modules/moments/ci/. screen:/tmp/canccu-stack/ >/dev/null &&
       "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
         node "$1" > "$TMP/body" 2>&1
   }
