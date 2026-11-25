@@ -184,7 +184,8 @@ PHOTOS = "screen.photos"
 
 async def dev_event(db: Db, bus: Bus, version: str, declared: Mapping[str, bool]) -> list[str]:
     """Turns the demo event's photo wall on while nobody set its flag, and gives the demo event
-    a public Wi-Fi while it has none. Returns what it changed (`screen.photos`, `wifi`)."""
+    a public Wi-Fi while its venue info was never edited. Returns what it changed
+    (`screen.photos`, `wifi`)."""
     _dev_mode(version)
     changed: list[str] = []
     async with db.tenant(DEMO_TENANT) as conn:
@@ -211,7 +212,9 @@ async def dev_event(db: Db, bus: Bus, version: str, declared: Mapping[str, bool]
             changed.append(PHOTOS)
         await conn.execute("INSERT INTO venue_info DEFAULT VALUES ON CONFLICT DO NOTHING")
         info = await conn.fetchrow("SELECT * FROM venue_info FOR UPDATE")
-        if not model.wifi_of(info):
+        # The demo seed's venue copy leaves revision 1 (no row: 0); every edit, such as an organiser
+        # clearing the Wi-Fi, goes above it, so an empty Wi-Fi at 2 or more was someone's choice.
+        if info["revision"] <= 1 and not model.wifi_of(info):
             await conn.execute(
                 "UPDATE venue_info SET wifi = $1, revision = revision + 1", json.dumps(DEMO_WIFI)
             )

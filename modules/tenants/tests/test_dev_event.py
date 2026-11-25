@@ -76,6 +76,17 @@ async def test_a_flag_or_wifi_someone_set_is_left_alone(env: Env) -> None:
     assert env.events() == []
 
 
+async def test_a_wifi_cleared_by_hand_stays_empty(env: Env) -> None:
+    await demo(env)
+    await run(env)
+    async with env.db.tenant("demo") as conn:
+        await conn.execute("UPDATE venue_info SET wifi = '[]', revision = revision + 1")
+    events = len(env.events())
+    assert await run(env) == []
+    assert await wifi(env) == []
+    assert len(env.events()) == events
+
+
 async def test_it_does_nothing_outside_dev_mode(env: Env) -> None:
     await demo(env)
     with pytest.raises(dev_seed.Refused):

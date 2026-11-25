@@ -111,6 +111,21 @@ describe.skipIf(!DATABASE_URL)("the dev seed's announcements", () => {
     expect((await list()).length).toBe(4);
   });
 
+  it("withdraws the scheduled ones of items the agenda seed replaced", async () => {
+    await seed();
+    // The next day's agenda seed: the same finals and raffle, under new ids.
+    const moved = [
+      item("n_group", "Tournament: group stage", "2026-01-01T19:00:00Z"),
+      item("n_raffle", "Raffle", "2026-01-01T21:00:00Z"),
+    ];
+    await seed({ items: moved });
+    const all = await list();
+    const old = all.filter((a) => a.status === "withdrawn");
+    expect(old.length).toBe(4);
+    expect(old.every((a) => a.why === "The demo run of show moved.")).toBe(true);
+    expect(all.filter((a) => a.status === "scheduled").length).toBe(2);
+  });
+
   it("never brings back one withdrawn by hand", async () => {
     await seed();
     await pool.query(

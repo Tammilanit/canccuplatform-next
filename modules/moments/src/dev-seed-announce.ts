@@ -102,14 +102,19 @@ function draftOf(p: Planned, o: { timeZone: string; eventName: string }): Draft 
 }
 
 /** The seed's own that have not gone out; they have no moments yet, so nothing else ends. */
-async function withdrawScheduled(c: SqlClient, mark: Mark, now: Date): Promise<void> {
-  for (const id of Object.values(mark)) {
+async function withdrawScheduled(
+  c: SqlClient,
+  ids: readonly string[],
+  now: Date,
+  why: string,
+): Promise<void> {
+  for (const id of ids) {
     const a = await readAnnouncement(c, id);
     if (a === null || a.status !== "scheduled") continue;
     a.status = "withdrawn";
     a.ended_at = now;
     a.end_reason = "withdrawn";
-    a.why = "The demo event was reset.";
+    a.why = why;
     await saveAnnouncement(c, a);
   }
 }
@@ -131,7 +136,8 @@ export async function seedDemoAnnouncements(
   return withTenant(DEMO_TENANT, () =>
     d.db.tenant(async (c) => {
       const before = (await readMark<Mark>(c, MARK)) ?? {};
-      if (o.force) await withdrawScheduled(c, before, now);
+      if (o.force)
+        await withdrawScheduled(c, Object.values(before), now, "The demo event was reset.");
       const mark: Mark = o.force ? {} : { ...before };
       let added = 0;
       for (const p of planned) {
@@ -142,10 +148,18 @@ export async function seedDemoAnnouncements(
         mark[p.item_id] = a.id;
         added++;
       }
-      // Only the run of show's items: the agenda seed moves the demo days, which leaves old ids.
-      const kept = Object.fromEntries(
-        Object.entries(mark).filter(([item]) => (o.items ?? []).some((i) => i.id === item)),
+      // Only the run of show's items: the agenda seed moves the demo days and replaces the ids.
+      // An announcement is at a time, not bound to its item, so Moments never withdraws one for a
+      // removed item: withdraw it here, or it would still go out for an item that is gone.
+      const known = (item: string) => (o.items ?? []).some((i) => i.id === item);
+      const gone = Object.entries(mark).filter(([item]) => !known(item));
+      await withdrawScheduled(
+        c,
+        gone.map(([, id]) => id),
+        now,
+        "The demo run of show moved.",
       );
+      const kept = Object.fromEntries(Object.entries(mark).filter(([item]) => known(item)));
       if (JSON.stringify(kept) !== JSON.stringify(before)) await writeMark(c, MARK, kept);
       if (added > 0) return scheduled(added);
       return planned.length === 0 ? NOTHING_AHEAD : UP_TO_DATE;
