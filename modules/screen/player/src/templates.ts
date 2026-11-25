@@ -4,13 +4,9 @@
  * (plan S5). They read only the fields the screen contract documents for each type.
  */
 import type { TreeNode } from "./tree.js";
+import { LIVING_TEMPLATES } from "./templates-living.js";
 import { el, f, img, not, sec, t, title } from "./tree-build.js";
 
-const STATUS = el("span", "meta", [f("status_text")]);
-const LEAD = [
-  sec("big_label", el("span", "label", [f("big_label")])),
-  el("strong", "big", [f("big_text")]),
-];
 /** A QR widget's own code: the view-model is the QR itself. */
 const OWN_QR: TreeNode[] = [
   el("figure", "qr", [img("image_url", "code"), el("figcaption", "caption", [f("label")])]),
@@ -285,14 +281,6 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     ]),
     el("p", "line", [f("text")]),
   ],
-  // The lead, then a row per order (D2), in the server's words; never the API's state (#771).
-  food_status: [
-    sec("title", el("p", "kicker", [f("title")])),
-    sec("big_text", el("p", "lead", LEAD)),
-    sec("orders", el("p", "row", [el("strong", "name", [f("pizzeria_name")]), STATUS])),
-    not("orders", el("p", "title", [f("pizzeria_name")])),
-    QR,
-  ],
   qr: OWN_QR,
   checkin_qr: [...OWN_QR, CODE_BAR],
   venue_info: [
@@ -365,6 +353,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el("p", "name", [f("name")]),
     sec("zone_name", el("p", "zone", [f("zone_name")])),
   ],
+  ...LIVING_TEMPLATES,
 };
 
 interface ThemeTemplate {

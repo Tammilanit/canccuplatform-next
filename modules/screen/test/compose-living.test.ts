@@ -191,7 +191,11 @@ describe("the coming hours (`agenda_timeline`)", () => {
       ends_at: "2026-03-14T21:00:00Z",
       place: "Main stage",
       starts_text: "19:30",
+      col: 10,
+      cols: 9,
     });
+    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 3 });
+    expect([view.from_text, view.to_text]).toEqual(["18:00", "21:00"]);
   });
 
   it("marks an open food order's close on the line", () => {
@@ -201,7 +205,7 @@ describe("the coming hours (`agenda_timeline`)", () => {
       facts({ timeline: day, food: { orders: [order()], names: false } }),
     );
     expect(view.marks).toEqual([
-      { label: "Pizza order closes", at: "2026-03-14T18:30:00Z", at_text: "18:30" },
+      { label: "Pizza order closes", at: "2026-03-14T18:30:00Z", at_text: "18:30", col: 4 },
     ]);
   });
 

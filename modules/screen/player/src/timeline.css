@@ -1,0 +1,297 @@
+/*
+ * The coming hours (`agenda_timeline`, #787 D1, sheet 01): three hours on one line, ten minutes a
+ * column (src/compose/timeline.ts), each item a bar in its row from its start for its length, an
+ * open order's close as a mark, and the now line moving along the track (widget.ts,
+ * fillCountdowns). In `canccu-base` like widgets.css, so a theme restyles any of it.
+ */
+@layer canccu-base {
+  .canccu-widget--agenda_timeline .canccu-widget__track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(18, minmax(0, 1fr));
+    grid-auto-rows: min-content;
+    row-gap: calc(1 * var(--canccu-u));
+    margin-top: calc(1.6 * var(--canccu-u));
+    padding-top: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__hours {
+    position: absolute;
+    inset: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    color: var(--canccu-color-text-muted, currentColor);
+    font-size: calc(2.8 * var(--canccu-u));
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__span {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 calc(1.2 * var(--canccu-u));
+    min-width: 0;
+    padding: calc(1 * var(--canccu-u)) calc(1.4 * var(--canccu-u));
+    border-left: calc(0.6 * var(--canccu-u)) solid var(--canccu-color-accent);
+    border-radius: var(--canccu-card-radius);
+    background: color-mix(in srgb, var(--canccu-color-accent) 14%, transparent);
+    font-size: calc(3.4 * var(--canccu-u));
+    overflow: hidden;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__starts,
+  .canccu-widget--agenda_timeline .canccu-widget__where {
+    font-size: calc(2.8 * var(--canccu-u));
+    opacity: 0.8;
+  }
+
+  .canccu-widget__span--col-1 {
+    grid-column-start: 1;
+  }
+
+  .canccu-widget__span--col-2 {
+    grid-column-start: 2;
+  }
+
+  .canccu-widget__span--col-3 {
+    grid-column-start: 3;
+  }
+
+  .canccu-widget__span--col-4 {
+    grid-column-start: 4;
+  }
+
+  .canccu-widget__span--col-5 {
+    grid-column-start: 5;
+  }
+
+  .canccu-widget__span--col-6 {
+    grid-column-start: 6;
+  }
+
+  .canccu-widget__span--col-7 {
+    grid-column-start: 7;
+  }
+
+  .canccu-widget__span--col-8 {
+    grid-column-start: 8;
+  }
+
+  .canccu-widget__span--col-9 {
+    grid-column-start: 9;
+  }
+
+  .canccu-widget__span--col-10 {
+    grid-column-start: 10;
+  }
+
+  .canccu-widget__span--col-11 {
+    grid-column-start: 11;
+  }
+
+  .canccu-widget__span--col-12 {
+    grid-column-start: 12;
+  }
+
+  .canccu-widget__span--col-13 {
+    grid-column-start: 13;
+  }
+
+  .canccu-widget__span--col-14 {
+    grid-column-start: 14;
+  }
+
+  .canccu-widget__span--col-15 {
+    grid-column-start: 15;
+  }
+
+  .canccu-widget__span--col-16 {
+    grid-column-start: 16;
+  }
+
+  .canccu-widget__span--col-17 {
+    grid-column-start: 17;
+  }
+
+  .canccu-widget__span--col-18 {
+    grid-column-start: 18;
+  }
+
+  .canccu-widget__span--cols-1 {
+    grid-column-end: span 1;
+  }
+
+  .canccu-widget__span--cols-2 {
+    grid-column-end: span 2;
+  }
+
+  .canccu-widget__span--cols-3 {
+    grid-column-end: span 3;
+  }
+
+  .canccu-widget__span--cols-4 {
+    grid-column-end: span 4;
+  }
+
+  .canccu-widget__span--cols-5 {
+    grid-column-end: span 5;
+  }
+
+  .canccu-widget__span--cols-6 {
+    grid-column-end: span 6;
+  }
+
+  .canccu-widget__span--cols-7 {
+    grid-column-end: span 7;
+  }
+
+  .canccu-widget__span--cols-8 {
+    grid-column-end: span 8;
+  }
+
+  .canccu-widget__span--cols-9 {
+    grid-column-end: span 9;
+  }
+
+  .canccu-widget__span--cols-10 {
+    grid-column-end: span 10;
+  }
+
+  .canccu-widget__span--cols-11 {
+    grid-column-end: span 11;
+  }
+
+  .canccu-widget__span--cols-12 {
+    grid-column-end: span 12;
+  }
+
+  .canccu-widget__span--cols-13 {
+    grid-column-end: span 13;
+  }
+
+  .canccu-widget__span--cols-14 {
+    grid-column-end: span 14;
+  }
+
+  .canccu-widget__span--cols-15 {
+    grid-column-end: span 15;
+  }
+
+  .canccu-widget__span--cols-16 {
+    grid-column-end: span 16;
+  }
+
+  .canccu-widget__span--cols-17 {
+    grid-column-end: span 17;
+  }
+
+  .canccu-widget__span--cols-18 {
+    grid-column-end: span 18;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark {
+    position: absolute;
+    top: calc(4.4 * var(--canccu-u));
+    bottom: 0;
+    margin: 0;
+    padding-left: calc(0.8 * var(--canccu-u));
+    border-left: calc(0.3 * var(--canccu-u)) dashed var(--canccu-color-accent);
+    font-size: calc(2.8 * var(--canccu-u));
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark-time {
+    margin-left: calc(0.8 * var(--canccu-u));
+    font-weight: 700;
+  }
+
+  .canccu-widget__mark--col-1 {
+    left: 0%;
+  }
+
+  .canccu-widget__mark--col-2 {
+    left: 5.556%;
+  }
+
+  .canccu-widget__mark--col-3 {
+    left: 11.111%;
+  }
+
+  .canccu-widget__mark--col-4 {
+    left: 16.667%;
+  }
+
+  .canccu-widget__mark--col-5 {
+    left: 22.222%;
+  }
+
+  .canccu-widget__mark--col-6 {
+    left: 27.778%;
+  }
+
+  .canccu-widget__mark--col-7 {
+    left: 33.333%;
+  }
+
+  .canccu-widget__mark--col-8 {
+    left: 38.889%;
+  }
+
+  .canccu-widget__mark--col-9 {
+    left: 44.444%;
+  }
+
+  .canccu-widget__mark--col-10 {
+    left: 50%;
+  }
+
+  .canccu-widget__mark--col-11 {
+    left: 55.556%;
+  }
+
+  .canccu-widget__mark--col-12 {
+    left: 61.111%;
+  }
+
+  .canccu-widget__mark--col-13 {
+    left: 66.667%;
+  }
+
+  .canccu-widget__mark--col-14 {
+    left: 72.222%;
+  }
+
+  .canccu-widget__mark--col-15 {
+    left: 77.778%;
+  }
+
+  .canccu-widget__mark--col-16 {
+    left: 83.333%;
+  }
+
+  .canccu-widget__mark--col-17 {
+    left: 88.889%;
+  }
+
+  .canccu-widget__mark--col-18 {
+    left: 94.444%;
+  }
+
+  /* The now line: where the clock is along the three hours. */
+  .canccu-widget--agenda_timeline .canccu-widget__now {
+    position: absolute;
+    top: calc(4.4 * var(--canccu-u));
+    bottom: 0;
+    left: calc(var(--canccu-progress, 0) * 100%);
+    width: calc(0.4 * var(--canccu-u));
+    margin: 0;
+    background: var(--canccu-color-accent);
+    box-shadow: 0 0 calc(1.5 * var(--canccu-u)) var(--canccu-color-accent);
+  }
+}

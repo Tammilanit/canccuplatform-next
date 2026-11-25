@@ -9,6 +9,14 @@ import type { AgendaItem } from "./widgets.js";
 
 const STEP_MS = 30 * 60_000;
 const SPAN_MS = 3 * 3600_000;
+/** The line's columns, ten minutes each: a template cannot compute, so places travel as classes. */
+const COLUMN_MS = 10 * 60_000;
+const COLUMNS = SPAN_MS / COLUMN_MS;
+
+const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
+/** The 1-based column a time falls in on the line from `from`. */
+const columnOf = (atMs: number, from: number): number =>
+  clamp(Math.floor((atMs - from) / COLUMN_MS) + 1, 1, COLUMNS);
 
 export function timelineFields(
   items: readonly AgendaItem[],
@@ -42,20 +50,32 @@ export function timelineFields(
       label: "Pizza order closes",
       at: x.closes_at,
       at_text: o.time(x.closes_at as string),
+      col: columnOf(Date.parse(x.closes_at as string), from),
     }));
   return {
     title: "The coming hours",
     from: new Date(from).toISOString(),
     to: new Date(to).toISOString(),
     now: new Date(o.nowMs).toISOString(),
-    items: shown.map((i) => ({
-      name: i.title,
-      kind: i.kind,
-      starts_at: i.starts_at,
-      ends_at: i.ends_at,
-      place: i.location,
-      starts_text: o.time(i.starts_at),
-    })),
+    from_text: o.time(new Date(from).toISOString()),
+    to_text: o.time(new Date(to).toISOString()),
+    items: shown.map((i) => {
+      const start = Date.parse(i.starts_at);
+      const col = columnOf(start, from);
+      // An item with no end takes one column; one that runs on past the line ends at its edge.
+      const end = i.ends_at === null ? start + COLUMN_MS : Date.parse(i.ends_at);
+      const last = clamp(Math.ceil((end - from) / COLUMN_MS), col, COLUMNS);
+      return {
+        name: i.title,
+        kind: i.kind,
+        starts_at: i.starts_at,
+        ends_at: i.ends_at,
+        place: i.location,
+        starts_text: o.time(i.starts_at),
+        col,
+        cols: last - col + 1,
+      };
+    }),
     marks,
   };
 }
