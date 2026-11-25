@@ -12,19 +12,33 @@ const BUTTON = /<(button|a)\b([^>]*)>([\s\S]*?)<\/\1>/g;
 const TIP_OPEN = '<span class="canccu-tip">';
 const MAX_DESCRIPTION = 240;
 
+// Python's html.unescape knows every HTML5 name; the twin decodes every number and the names the
+// platform's markup writes, and leaves any other as written.
 const ENTITIES: Record<string, string> = {
   amp: "&",
   lt: "<",
   gt: ">",
   quot: '"',
-  "#39": "'",
-  "#x27": "'",
-  minus: "−",
+  apos: "'",
+  nbsp: "\u00a0",
+  minus: "\u2212",
+  ndash: "\u2013",
+  mdash: "\u2014",
+  middot: "\u00b7",
+  hellip: "\u2026",
 };
+const decode = (m: string, e: string): string => {
+  const n = /^#x([0-9a-f]+)$/i.exec(e)?.[1] ?? /^#(\d+)$/.exec(e)?.[1];
+  if (n === undefined) return ENTITIES[e] ?? m;
+  const code = Number.parseInt(n, e[1]?.toLowerCase() === "x" ? 16 : 10);
+  return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "\ufffd";
+};
+// A status chip in a description: its tooltip is shown on demand, not read as the description.
+const TIP_TEXT = /<span\b[^>]*class="canccu-tip__text"[^>]*>[\s\S]*?<\/span>/g;
 const text = (markup: string): string =>
   markup
     .replace(/<[^>]+>/g, "")
-    .replace(/&(#?\w+);/g, (m, e: string) => ENTITIES[e] ?? m)
+    .replace(/&(#?\w+);/g, decode)
     .trim();
 
 /** Each missing description, untipped chip or unlabelled icon button, in words. */
@@ -32,7 +46,7 @@ export function pageProblems(doc: string): string[] {
   const main = MAIN.exec(doc)?.[0] ?? doc;
   const problems: string[] = [];
   if (main.includes('class="canccu-pagehead"')) {
-    const desc = text(DESC.exec(main)?.[1] ?? "");
+    const desc = text((DESC.exec(main)?.[1] ?? "").replace(TIP_TEXT, ""));
     if (desc === "") problems.push("no page description");
     else if (desc.length > MAX_DESCRIPTION || (desc.match(/[.!?](?=\s|$)/g) ?? []).length > 2)
       problems.push(`page description longer than two sentences: ${desc}`);

@@ -166,10 +166,11 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
     if required(s) and not (s.choices or s.choices_from):
         why = html.escape(_error(s))
         error = f'<p class="canccu-field__error" data-canccu-error="{why}" hidden>{why}</p>'
+    head = f'<label class="canccu-field__label" for={fid}>{html.escape(label)}</label>'
+    if tip := label_tip(s):
+        head = f'<div class="canccu-field__labelrow">{head}{tip}</div>'
     return (
-        f'<div class="canccu-field"><label class="canccu-field__label" for={fid}>'
-        f"{html.escape(label)}</label>{label_tip(s)}{control}{after}{error}{was_html}"
-        f"{_help(s, hint)}</div>"
+        f'<div class="canccu-field">{head}{control}{after}{error}{was_html}{_help(s, hint)}</div>'
     )
 
 

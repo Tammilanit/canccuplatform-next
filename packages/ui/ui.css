@@ -1423,6 +1423,13 @@
     pointer-events: none;
     transition: opacity 120ms ease;
   }
+  /* shell.js fixes a shown tooltip on the screen, inside its edges and below its trigger when
+     there is no room above, so a card that clips its overflow never cuts it. */
+  .canccu-tip__text.canccu-tip__text--placed {
+    position: fixed;
+    inset: auto;
+    transform: none;
+  }
   .canccu-tip:hover > .canccu-tip__text,
   .canccu-tip:has(:focus-visible) > .canccu-tip__text,
   .canccu-tip.canccu-tip--open > .canccu-tip__text {
@@ -1473,6 +1480,15 @@
   .canccu-field__label {
     font-weight: 600;
     font-size: var(--canccu-text-sm);
+  }
+  /* A label and its "i" on one line; the button's height does not widen the line. */
+  .canccu-field__labelrow {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .canccu-field__labelrow > .canccu-tip {
+    margin-block: -0.375rem;
   }
   .canccu-field--check .canccu-field__label {
     flex: 1 1 0;

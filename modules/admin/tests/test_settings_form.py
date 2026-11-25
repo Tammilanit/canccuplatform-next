@@ -43,7 +43,10 @@ async def test_fields_come_in_their_groups_with_a_save_bar(
     network = text[text.index("When the network is slow") : text.index(">Web pages<")]
     assert "name=heartbeat_seconds" in network and "name=offline_after_seconds" in network
     # Two numbers share a row, as the sheet pairs them.
-    assert '<div class="canccu-form__row"><div class="canccu-field"><label' in network
+    assert (
+        '<div class="canccu-form__row"><div class="canccu-field">'
+        '<div class="canccu-field__labelrow"><label' in network
+    )
     # The saved value is on the control; "Was" waits hidden until the control differs.
     offline = field_of(text, "offline_after_seconds")
     assert 'value="45" data-canccu-was="45"' in offline

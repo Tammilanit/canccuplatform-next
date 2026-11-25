@@ -14,6 +14,8 @@ _DESC = re.compile(r'<p class="canccu-pagehead__desc">(.*?)</p>', re.S)
 _BADGE = re.compile(r'<span class="canccu-badge[^"]*"([^>]*)>(.*?)</span>', re.S)
 _BUTTON = re.compile(r"<(button|a)\b([^>]*)>(.*?)</\1>", re.S)
 _TAG = re.compile(r"<[^>]+>")
+# A status chip in a description: its tooltip is shown on demand, not read as the description.
+_TIP_TEXT = re.compile(r'<span\b[^>]*class="canccu-tip__text"[^>]*>.*?</span>', re.S)
 _SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 TIP_OPEN = '<span class="canccu-tip">'
 MAX_DESCRIPTION = 240
@@ -31,7 +33,7 @@ def page_problems(doc: str) -> list[str]:
     problems: list[str] = []
     if 'class="canccu-pagehead"' in main:
         desc = _DESC.search(main)
-        text = _text(desc.group(1)) if desc else ""
+        text = _text(_TIP_TEXT.sub("", desc.group(1))) if desc else ""
         if not text:
             problems.append("no page description")
         elif len(text) > MAX_DESCRIPTION or len(_SENTENCE_END.findall(text)) > 2:

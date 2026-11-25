@@ -28,10 +28,6 @@ export const cookieOn = (pair) => {
 };
 
 /**
- * `shot(name, path, viewport, cookie, options)`: one page in a fresh context, written to
- * `out/<name>.png` unless `check`. A failure is handed to `fail`, never thrown, so the run goes on.
- */
-/**
  * The page rule of the organiser pages (#782, docs/design/README.md decision 8): a page with a
  * title row says what it is for in one or two sentences, at most 240 characters. `seen` is what
  * the page shows: whether it has a title row and its description's text. Null when it passes.
@@ -45,6 +41,10 @@ export function descriptionProblem(path, seen) {
   return null;
 }
 
+/**
+ * `shot(name, path, viewport, cookie, options)`: one page in a fresh context, written to
+ * `out/<name>.png` unless `check`. A failure is handed to `fail`, never thrown, so the run goes on.
+ */
 export function shooter({ browser, at, out, check, fail, ok }) {
   return async function shot(
     name,

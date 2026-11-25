@@ -61,9 +61,17 @@ def chips(
         f"{' checked' if c in value else ''}>{html.escape(words(c))}</label>"
         for c in s.choices
     )
+    legend = f'<legend class="canccu-field__label">{html.escape(label)}</legend>'
+    if tip:
+        # The "i" sits in the legend, beside the label; the group's name stays the label alone.
+        lid = f"canccu-legend-{name}"
+        legend = (
+            f'<legend class="canccu-field__label canccu-field__labelrow">'
+            f'<span id="{lid}">{html.escape(label)}</span>{tip}</legend>'
+        )
+        marks = f'{marks} aria-labelledby="{lid}"'
     return (
-        f'<fieldset class="canccu-field"{marks} data-canccu-chips>'
-        f'<legend class="canccu-field__label">{html.escape(label)}</legend>{tip}'
+        f'<fieldset class="canccu-field"{marks} data-canccu-chips>{legend}'
         f'<div class="canccu-chips">{items}</div>{rest}</fieldset>'
     )
 

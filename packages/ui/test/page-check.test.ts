@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { pageProblems } from "../src/page-check.js";
 import { shellPage } from "../src/shell.js";
 import { iconButton, statusChip } from "../src/tip.js";
-import { html } from "../src/html.js";
+import { html, raw } from "../src/html.js";
 
 describe("pageProblems (#782)", () => {
   it("names what a page lacks", () => {
@@ -24,5 +24,26 @@ describe("pageProblems (#782)", () => {
     expect(
       pageProblems(String(shellPage({ title: "X", description: "One. Two. Three.", body: "" }))),
     ).toEqual(["page description longer than two sentences: One. Two. Three."]);
+  });
+
+  it("counts entities as the characters they stand for, as the Python twin does", () => {
+    const coded = shellPage({
+      title: "X",
+      description: raw("One&#46; Two&#x2e; Three&#46;"),
+      body: "",
+    });
+    expect(pageProblems(String(coded))).toEqual([
+      "page description longer than two sentences: One. Two. Three.",
+    ]);
+  });
+
+  it("leaves a chip's tooltip out of the description", () => {
+    const chip = statusChip("plain", "Draft", "Kept here. Not published. Yours.");
+    const page = shellPage({
+      title: "X",
+      description: html`${chip} Nothing published yet.`,
+      body: "",
+    });
+    expect(pageProblems(String(page))).toEqual([]);
   });
 });

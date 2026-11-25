@@ -7,7 +7,8 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "playwright-core";
 import { afterAll, describe, expect, it } from "vitest";
-import { html } from "../src/html.js";
+import { html, raw } from "../src/html.js";
+import type { Html } from "../src/html.js";
 import { shellPage } from "../src/shell.js";
 import { iconButton, infoTip } from "../src/tip.js";
 import { launch } from "./chromium.js";
@@ -19,10 +20,10 @@ const shellJs = readFileSync(
   "utf8",
 );
 
-async function render(width: number, touch: boolean): Promise<Page> {
+async function render(width: number, touch: boolean, extra: Html | string = ""): Promise<Page> {
   if (browser === undefined) throw new Error("the suite runs only with a browser");
   const body = html`<p style="margin-top:6rem">Health ${infoTip("Checks every part every 10 seconds.")}</p>
-    <p>${iconButton({ icon: "close", label: "Remove the zone" })}</p><p id="away">Elsewhere</p>`;
+    <p>${iconButton({ icon: "close", label: "Remove the zone" })}</p><p id="away">Elsewhere</p>${extra}`;
   const doc = String(
     shellPage({
       title: "Tips",
@@ -99,6 +100,82 @@ describe.skipIf(browser === undefined)("tooltips (#782)", () => {
     });
     expect(await shown(page, ".canccu-button--icon")).toBe("visible");
     expect(await page.evaluate(() => (window as unknown as { acted: number }).acted)).toBe(1);
+    await page.close();
+  });
+
+  // A touch press on `sel`, held 600 ms after moving `drift` px; `after` ms later, a click.
+  const press = (page: Page, sel: string, drift: number, after?: number): Promise<void> =>
+    page.locator(sel).evaluate(
+      async (b, [d, wait]) => {
+        const at = (x: number) => ({
+          pointerType: "touch",
+          bubbles: true,
+          clientX: x,
+          clientY: 100,
+        });
+        b.dispatchEvent(new PointerEvent("pointerdown", at(100)));
+        b.dispatchEvent(new PointerEvent("pointermove", at(100 + d)));
+        await new Promise((r) => setTimeout(r, 600));
+        b.dispatchEvent(new PointerEvent("pointerup", at(100 + d)));
+        if (wait === undefined) return;
+        await new Promise((r) => setTimeout(r, wait));
+        (b as HTMLElement).click();
+      },
+      [drift, after] as const,
+    );
+  const acted = (page: Page): Promise<number> =>
+    page.evaluate(() => (window as unknown as { acted: number }).acted);
+
+  it("keep a long press that drifts a few pixels and drop one that moves on", async () => {
+    const page = await render(390, true);
+    await press(page, ".canccu-button--icon", 30);
+    expect(await shown(page, ".canccu-button--icon")).toBe("hidden");
+    await press(page, ".canccu-button--icon", 5);
+    expect(await shown(page, ".canccu-button--icon")).toBe("visible");
+    await page.close();
+  });
+
+  it("swallow only the click that ends a long press, not a later one", async () => {
+    const page = await render(390, true);
+    await press(page, ".canccu-button--icon", 0, 800);
+    expect(await acted(page)).toBe(1);
+    await page.close();
+  });
+
+  it("show a stepper button's tooltip on a long press", async () => {
+    const stepper = raw(
+      '<span class="canccu-tip"><button type="button" class="canccu-stepper__button" aria-label="More">+</button>' +
+        '<span role="tooltip" class="canccu-tip__text" aria-hidden="true">More</span></span>',
+    );
+    const page = await render(390, true, stepper);
+    await press(page, ".canccu-stepper__button", 0);
+    expect(await shown(page, ".canccu-stepper__button")).toBe("visible");
+    await page.close();
+  });
+
+  it("keep a tooltip on the screen and out of a flush card's clip, below when there is no room above", async () => {
+    const corner = html`<div class="canccu-card canccu-card--flush" id="corner"
+      style="position:absolute;top:0;right:0;width:3rem;height:2.5rem">
+      ${infoTip("A long explanation that is far wider than the small card it sits in.")}
+    </div>`;
+    const page = await render(390, true, corner);
+    await page.locator("#corner .canccu-tip__info").tap();
+    expect(await shown(page, "#corner .canccu-tip__info")).toBe("visible");
+    const box = await page.locator("#corner .canccu-tip__info").evaluate((b) => {
+      const text = b.parentElement?.querySelector(".canccu-tip__text") as HTMLElement;
+      const r = text.getBoundingClientRect();
+      return {
+        left: r.left,
+        right: r.right,
+        top: r.top,
+        below: b.getBoundingClientRect().bottom,
+        position: getComputedStyle(text).position,
+      };
+    });
+    expect(box.position).toBe("fixed");
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(390);
+    expect(box.top).toBeGreaterThanOrEqual(box.below);
     await page.close();
   });
 });

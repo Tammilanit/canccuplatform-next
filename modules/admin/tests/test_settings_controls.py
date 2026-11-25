@@ -127,9 +127,12 @@ def test_a_list_from_choices_is_a_row_of_chips() -> None:
         type="list", label="Channels", choices=["screen", "discord_dm", "push"], default=["screen"]
     )
     html = field_html(channels, ["push", "screen"])
+    # The "i" sits in the legend beside the label; the group is still named by the label alone.
     assert (
-        '<fieldset class="canccu-field" data-canccu-was="screen, push" data-canccu-chips>'
-        '<legend class="canccu-field__label">Channels</legend><span class="canccu-tip">'
+        '<fieldset class="canccu-field" data-canccu-was="screen, push"'
+        ' aria-labelledby="canccu-legend-k" data-canccu-chips>'
+        '<legend class="canccu-field__label canccu-field__labelrow">'
+        '<span id="canccu-legend-k">Channels</span><span class="canccu-tip">'
     ) in html
     assert (
         '<label class="canccu-chip">'
@@ -302,6 +305,15 @@ def test_every_declared_setting_s_label_has_a_tooltip() -> None:
             field = field_html(s, None)
             assert 'class="canccu-tip__info"' in field, f"{module}.{s.key}"
             assert s.help in _tip_of(field), f"{module}.{s.key}"
+
+
+def test_a_field_s_info_button_sits_beside_its_label() -> None:
+    s = one(type="string", label="Name", help="What attendees see.", default="")
+    assert re.search(
+        r'<div class="canccu-field__labelrow"><label class="canccu-field__label" for=[^>]+>Name'
+        r'</label><span class="canccu-tip"><button type="button" class="canccu-tip__info"',
+        field_html(s, None),
+    )
 
 
 def test_a_number_s_tooltip_says_its_default_and_range() -> None:

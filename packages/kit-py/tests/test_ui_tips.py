@@ -33,6 +33,8 @@ def test_info_tip_and_icon_button_and_status_chip() -> None:
     chip = status_chip("down", "Down", "The part does not answer.")
     assert 'class="canccu-badge canccu-badge--down" tabindex="0"' in chip
     assert f'aria-describedby="{_tip_id(chip)}"' in chip
+    inside_a_link = status_chip("plain", "Crew only", "Only crew see it.", focusable=False)
+    assert "tabindex" not in inside_a_link and "aria-describedby=" in inside_a_link
 
 
 def test_page_problems_names_what_a_page_lacks() -> None:
@@ -60,3 +62,11 @@ def test_page_problems_names_what_a_page_lacks() -> None:
     assert page_problems(good) == []
     long = shell_page("X", "", description_html="One. Two. Three.")
     assert page_problems(long) == ["page description longer than two sentences: 'One. Two. Three.'"]
+    # Entities count as the characters they stand for; a chip's tooltip is not part of the count.
+    coded = shell_page("X", "", description_html="One&#46; Two&#x2e; Three&#46;")
+    assert page_problems(coded) == [
+        "page description longer than two sentences: 'One. Two. Three.'"
+    ]
+    chip = status_chip("plain", "Draft", "Kept here. Not published. Yours.")
+    tipped = shell_page("X", "", description_html=f"{chip} Nothing published yet.")
+    assert page_problems(tipped) == []
