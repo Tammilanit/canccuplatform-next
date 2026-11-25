@@ -24,9 +24,13 @@ def _text(tip_id: str, words: str, hidden: bool = False) -> str:
     return f'<span role="tooltip" id="{tip_id}" class="canccu-tip__text"{aria}>{esc(words)}</span>'
 
 
-def tooltip(trigger_html: str, words: str) -> str:
-    """Wraps a focusable trigger (its markup starts with its own tag) with a tooltip."""
+def tooltip(trigger_html: str, words: str, *, repeats_label: bool = False) -> str:
+    """Wraps a focusable trigger (its markup starts with its own tag) with a tooltip. A tooltip
+    that only repeats the trigger's `aria-label` is hidden from screen readers instead of naming
+    the trigger twice."""
     tip_id = _id()
+    if repeats_label:
+        return f'<span class="canccu-tip">{trigger_html}{_text(tip_id, words, hidden=True)}</span>'
     named = _FIRST_TAG.sub(rf'<\1 aria-describedby="{tip_id}"', trigger_html, count=1)
     return f'<span class="canccu-tip">{named}{_text(tip_id, words)}</span>'
 

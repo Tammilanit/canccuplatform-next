@@ -121,6 +121,7 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
             current="profile",
             narrow=True,
             crumb=(f"{BASE}/profile", "Event profile"),
+            description_html="Check what a load or an upload replaces before anything changes.",
         )
 
     async def profile_page(request: Request) -> Response:

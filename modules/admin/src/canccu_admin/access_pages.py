@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 from canccu_kit import KitError, TenantContext
-from canccu_kit.ui import esc, notice
+from canccu_kit.ui import esc, notice, status_chip
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
@@ -79,7 +79,11 @@ def access_row(ctx: TenantContext | None) -> tuple[str, str, str, str, str, str]
 
 def _option(value: str, label: str, help_text: str, current: str) -> str:
     fid = f"access-{value}"
-    default = ' <span class="canccu-badge">Default</span>' if value == DEFAULT else ""
+    default = (
+        " " + status_chip("plain", "Default", "A new event starts with this choice.")
+        if value == DEFAULT
+        else ""
+    )
     return (
         f'<div class="canccu-field canccu-field--check"><input class="canccu-check" '
         f'type=radio name=admin_access value="{value}"{" checked" if value == current else ""}'
