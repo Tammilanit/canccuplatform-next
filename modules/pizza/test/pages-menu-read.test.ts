@@ -190,6 +190,24 @@ describe.skipIf(!DATABASE_URL)("the read as a table (items 3–6)", () => {
     expect(body).toContain("A page read again gave another price: check the marked prices.");
   });
 
+  it("keeps the posted table when Add more pages gets a seventh photo, and says why", async () => {
+    const fields = tableFields({ rows: read(), notes: [], conflicts: [] });
+    const seven = await Promise.all(Array.from({ length: 7 }, (_, i) => photo(`p${i}.png`)));
+    const r = await upload(w, "organiser", table(), seven, { ...fields, do: "more" });
+    const body = text(r.body);
+    expect(rowCount(body)).toBe(read().length);
+    expect(body).toContain("A menu read takes at most 6 pages.");
+    expect(w.reader.menuCalls).toEqual([]);
+  });
+
+  it("reads 5 pages sent with the two empty file parts of the unused inputs", async () => {
+    const five = await Promise.all(Array.from({ length: 5 }, (_, i) => photo(`p${i}.png`)));
+    const empty = { name: "", type: "application/octet-stream", bytes: Buffer.alloc(0) };
+    const r = await upload(w, "organiser", page(), [...five, empty, empty]);
+    expect(r.statusCode).toBe(200);
+    expect(w.reader.menuCalls).toEqual([5]);
+  });
+
   it("posts the table as a menu CSV to the import's preview, which changes nothing", async () => {
     const fields = tableFields({ rows: read(), notes: [], conflicts: [] });
     const r = text((await form(w, "organiser", table(), { ...fields, do: "check" })).body);
