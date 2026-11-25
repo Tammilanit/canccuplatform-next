@@ -47,6 +47,7 @@ export function upload(
   files: { name: string; type: string; bytes: Buffer }[],
   fields: Record<string, string> = {},
   field = "photo",
+  headers: Record<string, string> = {},
 ) {
   uploads += 1;
   const boundary = `----pizzaTestBoundary${uploads}`;
@@ -74,6 +75,7 @@ export function upload(
       host: "demo.test",
       "content-type": `multipart/form-data; boundary=${boundary}`,
       ...(who === null ? {} : { cookie: `canccu_session=${who}` }),
+      ...headers,
     },
     payload: Buffer.concat(parts),
   });

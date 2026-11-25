@@ -2,6 +2,7 @@
 import { FOOD_FI } from "./food-messages.js";
 import { MONEY_FI } from "./money-messages-fi.js";
 import { READ_FI } from "./read-messages.js";
+import { MENU_READ_FI } from "./menu-read-messages.js";
 import { SETTINGS_FI } from "./settings-messages.js";
 import type { MessageKey } from "./messages.js";
 
@@ -235,5 +236,6 @@ export const FI: Record<MessageKey, string> = {
   ...FOOD_FI,
   ...MONEY_FI,
   ...READ_FI,
+  ...MENU_READ_FI,
   ...SETTINGS_FI,
 };

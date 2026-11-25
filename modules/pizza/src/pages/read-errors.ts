@@ -28,6 +28,7 @@ const CASES = [
   "unsupported_media_type",
   "image_invalid",
   "upload_failed",
+  "too_many_pages",
 ] as const;
 type Case = (typeof CASES)[number];
 const isCase = (v: unknown): v is Case => CASES.includes(v as Case);
@@ -91,6 +92,12 @@ function failureQuery(a: ApiAnswer, o: { receipt?: string; tries?: number }): st
   if (failed === "unreadable" && typeof e.message === "string") q.set("why", e.message);
   if (o.tries !== undefined && o.tries > 0) q.set("tries", String(o.tries));
   return q.toString();
+}
+
+/** The failure a failed API answer is, for a page that shows it without a redirect; or null. */
+export function failureFrom(a: ApiAnswer): ReadFailure | null {
+  const q = failureQuery(a, {});
+  return q === null ? null : failureOf(Object.fromEntries(new URLSearchParams(q)));
 }
 
 /** The failure a page's address names, or null. */

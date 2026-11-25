@@ -3,18 +3,56 @@
  * reads and writes through the API, the menu CSV's preview included, so the import's rules and
  * audit are the API's own.
  */
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
 import type { AppDeps } from "../http.js";
 import { parseMenuCsv } from "../menu-csv.js";
 import { MENU_WRITE } from "../policy.js";
 import { readerAvailable } from "../reader-key.js";
 import { PREFIX, back, formText, must, organiserPage, pageCtx, viaApi } from "./kit.js";
+import type { PageCtx } from "./kit.js";
 import { changesOf, importView, pizzeriaView, pizzeriasView, previewView } from "./menus-views.js";
 import type { PizzeriaView } from "./menus-views.js";
 
 type Q = { error?: string };
 const P = `${PREFIX}crew/pizzerias`;
+
+const pizzeriaOf = async (app: FastifyInstance, request: FastifyRequest, id: string) =>
+  must(
+    await viaApi(app, request, "GET", `/api/pizza/pizzerias/${encodeURIComponent(id)}?hidden=true`),
+  ) as unknown as PizzeriaView;
+
+async function allPizzerias(app: FastifyInstance, request: FastifyRequest) {
+  const list = must(await viaApi(app, request, "GET", "/api/pizza/pizzerias"))
+    .pizzerias as PizzeriaView[];
+  return Promise.all(list.map((p) => pizzeriaOf(app, request, p.id)));
+}
+
+/**
+ * The import's preview of a menu CSV: the API's answer (errors, warnings) and the changes item by
+ * item against the menus as they are now; nothing is applied until its Apply. Also where a menu
+ * read's "Check the import" lands (#789 item 3).
+ */
+export async function previewPage(
+  app: FastifyInstance,
+  deps: AppDeps,
+  request: FastifyRequest,
+  reply: FastifyReply,
+  c: PageCtx,
+  csv: string,
+  failedTo: string,
+): Promise<FastifyReply> {
+  const a = await viaApi(app, request, "POST", "/api/pizza/menu/import/preview", csv);
+  if (a.status >= 400) return back(reply, failedTo, a);
+  const file = parseMenuCsv(csv);
+  const current = new Map((await allPizzerias(app, request)).map((p) => [p.name.toLowerCase(), p]));
+  const rows = csv.split(/\r?\n/).filter((l) => l.trim() !== "").length - 1;
+  return organiserPage(request, reply, deps, c, {
+    title: c.t("import.title"),
+    crumb: { href: `${P}/import`, label: c.t("import.back") },
+    body: previewView(c, csv, file, changesOf(c, file, current), Math.max(rows, 0)),
+  });
+}
 
 export function menuPages(app: FastifyInstance, deps: AppDeps): void {
   const writer = async (request: FastifyRequest) => {
@@ -23,20 +61,8 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
       throw new KitError(`needs right ${MENU_WRITE}`, { status: 403, code: "missing_right" });
     return c;
   };
-  const one = async (request: FastifyRequest, id: string) =>
-    must(
-      await viaApi(
-        app,
-        request,
-        "GET",
-        `/api/pizza/pizzerias/${encodeURIComponent(id)}?hidden=true`,
-      ),
-    ) as unknown as PizzeriaView;
-  const all = async (request: FastifyRequest) => {
-    const list = must(await viaApi(app, request, "GET", "/api/pizza/pizzerias"))
-      .pizzerias as PizzeriaView[];
-    return Promise.all(list.map((p) => one(request, p.id)));
-  };
+  const one = (request: FastifyRequest, id: string) => pizzeriaOf(app, request, id);
+  const all = (request: FastifyRequest) => allPizzerias(app, request);
 
   app.get<{ Querystring: Q }>("/crew/pizzerias", async (request, reply) => {
     const c = await writer(request);
@@ -70,16 +96,7 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
   app.post("/crew/pizzerias/import", async (request, reply) => {
     const c = await writer(request);
     const csv = formText(request, "csv") ?? "";
-    const a = await viaApi(app, request, "POST", "/api/pizza/menu/import/preview", csv);
-    if (a.status >= 400) return back(reply, "crew/pizzerias/import", a);
-    const file = parseMenuCsv(csv);
-    const current = new Map((await all(request)).map((p) => [p.name.toLowerCase(), p]));
-    const rows = csv.split(/\r?\n/).filter((l) => l.trim() !== "").length - 1;
-    return organiserPage(request, reply, deps, c, {
-      title: c.t("import.title"),
-      crumb: { href: `${P}/import`, label: c.t("import.back") },
-      body: previewView(c, csv, file, changesOf(c, file, current), Math.max(rows, 0)),
-    });
+    return previewPage(app, deps, request, reply, c, csv, "crew/pizzerias/import");
   });
 
   app.post("/crew/pizzerias/import/apply", async (request, reply) => {
