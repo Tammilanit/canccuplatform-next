@@ -71,3 +71,11 @@ describe("widgets.css, a logo in the ticker band", () => {
     expect(row?.[2]).toMatch(/flex-direction: row;/);
   });
 });
+
+describe("claims.css, a takeover that keeps the ticker running (#780)", () => {
+  it("shows the ticker regions again under it, after the rule that hides every region", () => {
+    const keep = '.canccu-layout[data-takeover="ticker"] > .canccu-region[data-role="ticker"]';
+    expect(rulesOf(keep)).toMatch(/visibility:\s*visible;/);
+    expect(rules.indexOf(keep)).toBeGreaterThan(rules.indexOf(".canccu-layout[data-takeover]"));
+  });
+});

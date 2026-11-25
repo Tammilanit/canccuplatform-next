@@ -961,6 +961,10 @@ components:
           description: The override's `expires_at` (else `starts_at` plus `ttl_seconds`); the screen ends the claim then, also offline. Renewals move it; `starts_at` never moves.
         effect:
           $ref: "#/components/schemas/CueEffect"
+        keep_ticker:
+          type: boolean
+          enum: [true]
+          description: On a placed `full` claim whose override keeps the ticker running (additive, #780); absent otherwise.
         aside:
           type: object
           description: |

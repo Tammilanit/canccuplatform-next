@@ -44,6 +44,12 @@ export interface Override {
   on_end: "resume" | "next";
   /** Moments' cue picture for the claim's box (contracts/screen.md, Cue effects), or null. */
   effect: Effect | null;
+  /** The grow rule (#780): the hero counts only at this share of the grid or more; null: any. */
+  hero_min_share: number | null;
+  /** The ticker keeps running under it at full screen (#780). */
+  keep_ticker: boolean;
+  /** `source.module`: a pizza-sourced announcement shows the food box beside it (#780). */
+  source_module: string | null;
 }
 
 export interface Effect {
@@ -68,6 +74,10 @@ export interface Claim {
   expires_at: string | null;
   /** Only when the override has one, so a claim without stays as it was. */
   effect?: Effect;
+  /** Only when true (#780): the player leaves the ticker drawn under this takeover. */
+  keep_ticker?: true;
+  /** A full-screen announcement's nearby content (#780, zone-claims.ts); absent otherwise. */
+  aside?: { widget: string; view: Record<string, unknown> };
 }
 
 const KINDS = ["takeover", "block", "overlay"] as const;
@@ -167,7 +177,9 @@ export function overrideOf(v: unknown): Override | null {
     !nullable(v.ttl_seconds, (x) => Number.isInteger(x) && (x as number) > 0) ||
     !nullable(v.expires_at, isTime) ||
     !nullable(v.steps, Array.isArray) ||
-    !(v.on_end === undefined || v.on_end === "resume" || v.on_end === "next")
+    !(v.on_end === undefined || v.on_end === "resume" || v.on_end === "next") ||
+    !nullable(v.hero_min_share, (x) => typeof x === "number" && x >= 0 && x <= 1) ||
+    !(v.keep_ticker === undefined || typeof v.keep_ticker === "boolean")
   ) {
     return null;
   }
@@ -195,6 +207,10 @@ export function overrideOf(v: unknown): Override | null {
     steps: steps as Step[] | null,
     on_end: v.on_end === "next" ? "next" : "resume",
     effect,
+    hero_min_share: (v.hero_min_share as number | null | undefined) ?? null,
+    keep_ticker: v.keep_ticker === true,
+    source_module:
+      isObject(v.source) && typeof v.source.module === "string" ? v.source.module : null,
   };
 }
 
@@ -232,11 +248,16 @@ export function claimEndAt(o: Override): number | null {
   return ends.length === 0 ? null : Math.min(...ends);
 }
 
-/** The regions with their claims, by the contract's placement rule. */
+/**
+ * The regions with their claims, by the contract's placement rule. `heroShare` is the hero's share
+ * of the grid as a showcase would draw it (zone-claims.ts); unsaid, every claim may take the hero.
+ */
 export function placeClaims(
   regions: readonly RegionView[],
   overrides: readonly Override[],
+  opts: { heroShare?: number } = {},
 ): Placement {
+  const heroShare = opts.heroShare ?? Number.POSITIVE_INFINITY;
   // A role's claim is drawn once, in the first region of the role (a split region's first part).
   const regionOf = new Map<Role, number>();
   regions.forEach((r, i) => {
@@ -246,20 +267,28 @@ export function placeClaims(
   const placed: { o: Override; role: Role; hidden: boolean }[] = [];
   const unplaced: string[] = [];
   let full = false;
+  let keepTicker = false;
   for (const o of [...overrides].sort(byRank)) {
     const chain = (o.regions ?? DEFAULT_CHAIN[o.kind]).filter((r): r is Role => CLAIMABLE.has(r));
     const role = chain.find((r) => {
       if (!regionOf.has(r) || held.has(r)) return false;
-      // `full` waits for every higher claim but an overlay; the others ignore `full` claims.
-      return r !== "full" || [...held].every((h) => h === "overlay");
+      if (r === "hero" && o.hero_min_share !== null && o.hero_min_share > heroShare) return false;
+      // `full` waits for every higher claim but an overlay (and the ticker it keeps running); the
+      // others ignore `full` claims.
+      return (
+        r !== "full" || [...held].every((h) => h === "overlay" || (o.keep_ticker && h === "ticker"))
+      );
     });
     if (role === undefined) {
       unplaced.push(o.id);
       continue;
     }
     held.add(role);
-    placed.push({ o, role, hidden: full && role !== "full" });
-    if (role === "full") full = true;
+    placed.push({ o, role, hidden: full && role !== "full" && !(keepTicker && role === "ticker") });
+    if (role === "full") {
+      full = true;
+      keepTicker = o.keep_ticker;
+    }
   }
   const out = regions.map((r) => ({ ...r }));
   for (const { o, role, hidden } of placed) {
@@ -289,5 +318,6 @@ function claimOf(o: Override, role: Role, hidden: boolean): Claim {
     ends_at: o.ends_at,
     expires_at: o.expires_at,
     ...(o.effect === null ? {} : { effect: o.effect }),
+    ...(role === "full" && o.keep_ticker ? { keep_ticker: true as const } : {}),
   };
 }
