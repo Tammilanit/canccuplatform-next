@@ -77,6 +77,14 @@ const LISTED = [
   ["pizza-pizzeria-phone", `/pizza/crew/pizzerias/${PIZZERIA}`, PHONE, "done"],
   ["pizza-import-preview-phone", "/pizza/crew/pizzerias/import", PHONE, "done"],
   ["pizza-menu-read-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
+  // #789 items 1–5 and 15: three pages as thumbnails with the cost; the photos on their way; the
+  // read of two pages as the table (categories, notes, the own pizza, gathered toppings); and two
+  // reads that gave nothing, each with its way on.
+  ["pizza-menu-read-pages-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
+  ["pizza-menu-read-progress-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
+  ["pizza-menu-read-table-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read`, PHONE, "done"],
+  ["pizza-menu-read-unreadable-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read?failed=unreadable&why=${encodeURIComponent("This is not a menu: it shows a receipt.")}`, PHONE, "done"],
+  ["pizza-menu-read-too-many-phone", `/pizza/crew/pizzerias/${PIZZERIA}/read?failed=too_many_pages`, PHONE, "done"],
   ["pizza-settings-phone", "/pizza/crew/settings", PHONE, "done"],
   // Mockup 12: the daily record, one order's money and the export; mockup 20: Integrations.
   ["pizza-record-phone", "/pizza/crew/record", PHONE, "done"],

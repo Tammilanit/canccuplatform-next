@@ -86,7 +86,8 @@ export function tableView(
   const { rows, notes, conflicts } = o.table;
   const action = `${PREFIX}crew/pizzerias/${encodeURIComponent(o.pizzeriaId)}/read/table`;
   const items = rows.flatMap((r, i) => (r.kind === "item" ? [i] : []));
-  const own = rows.flatMap((r, i) => (r.kind !== "item" && r.gathered !== true ? [i] : []));
+  const bases = rows.flatMap((r, i) => (r.kind === "base" ? [i] : []));
+  const toppings = rows.flatMap((r, i) => (r.kind === "topping" && r.gathered !== true ? [i] : []));
   const gathered = rows.flatMap((r, i) => (r.gathered === true ? [i] : []));
   const csv = rowsToCsv(o.pizzeria, rows);
   const price = (r: MenuRow, i: number | string) =>
@@ -114,7 +115,9 @@ export function tableView(
       ${field(c, i, "name", "menuread.name", r.name)}
       ${field(c, i, "description", "menuread.toppings", r.description ?? "")}
       ${price(r, i)}
-      ${field(c, i, "category", "menuread.category", r.category ?? "")}
+      ${field(c, i, "category", "menuread.category", r.category ?? "", {
+        class: "canccu-input pizza-table__category",
+      })}
       ${field(c, i, "page", "menuread.page", String(r.page), {
         class: "canccu-input pizza-table__page",
         inputmode: "numeric",
@@ -151,15 +154,20 @@ export function tableView(
       ${rowEnd(c, i, k === 0 ? undefined : list[k - 1], hidden(r, i, visible, conflicts.includes(i)))}
     </tr>`;
   };
-  const ownTable = (list: number[]) =>
+  /** The base's table names its included toppings and extra price; a toppings table its kind. */
+  const ownTable = (list: number[], base: boolean) =>
     html`<div class="pizza-table-wrap">
       <table class="pizza-table pizza-menu-table">
         <thead>
           <tr>
             <th>${c.t("menuread.name")}</th>
             <th>${c.t("menuread.price")}</th>
-            <th>${c.t("menuread.included")}</th>
-            <th>${c.t("menuread.extra")}</th>
+            ${
+              base
+                ? html`<th>${c.t("menuread.included")}</th>
+                    <th>${c.t("menuread.extra")}</th>`
+                : html`<th colspan="2">${c.t("menuread.tier")}</th>`
+            }
             <th></th>
           </tr>
         </thead>
@@ -231,16 +239,17 @@ export function tableView(
         <template data-row-template>${itemRow(BLANK, "__i__", undefined)}</template>
       </div>
       ${
-        own.length === 0
+        bases.length + toppings.length === 0
           ? ""
           : html`<h2 class="pizza-subtitle">${c.t("menuread.own")}</h2>
-              ${ownTable(own)}`
+              ${bases.length === 0 ? "" : ownTable(bases, true)}
+              ${toppings.length === 0 ? "" : ownTable(toppings, false)}`
       }
       ${
         gathered.length === 0
           ? ""
           : html`<p class="pizza-badge pizza-badge--warn">${c.t("menuread.gathered")}</p>
-              ${ownTable(gathered)}`
+              ${ownTable(gathered, false)}`
       }
       <div class="canccu-cluster">
         <button class="canccu-button canccu-button--secondary" type="submit" name="do" value="add" data-plain>

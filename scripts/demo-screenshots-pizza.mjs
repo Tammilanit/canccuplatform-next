@@ -309,6 +309,34 @@ export async function pizzaShots({ shot, fail }) {
               },
             }
           : {}),
+        // A menu's pages (#789 items 1, 2 and 15): chosen as a phone or a PC chooses them; the
+        // photos on their way are held at the network, as the receipt's are.
+        ...(name.startsWith("pizza-menu-read-pages") ||
+        name.startsWith("pizza-menu-read-progress") ||
+        name.startsWith("pizza-menu-read-table")
+          ? {
+              ...(name.startsWith("pizza-menu-read-progress") ? { fullPage: false } : {}),
+              ready: async (page) => {
+                const table = name.startsWith("pizza-menu-read-table");
+                const n = table ? 2 : 3;
+                const files = Array.from({ length: n }, (_, i) => ({
+                  name: `page${i + 1}.png`,
+                  mimeType: "image/png",
+                  buffer: RECEIPT_PNG,
+                }));
+                await page
+                  .locator(viewport === PHONE ? ".pizza-saved input" : "input.pizza-drop__input")
+                  .setInputFiles(files);
+                await page.locator("[data-thumbs] li").nth(n - 1).waitFor();
+                if (name.startsWith("pizza-menu-read-pages")) return;
+                if (!table) await page.route("**/read", () => new Promise(() => {}));
+                await page.getByRole("button", { name: "Read the photos" }).click();
+                await (table
+                  ? page.getByText("check them first").waitFor()
+                  : page.locator(".pizza-progress").waitFor());
+              },
+            }
+          : {}),
         ...(name.startsWith("pizza-holder-photo-viewer")
           ? {
               fullPage: false,

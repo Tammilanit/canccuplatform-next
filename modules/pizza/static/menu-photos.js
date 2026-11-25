@@ -63,11 +63,14 @@
     return canvas;
   }
 
-  function button(text, onClick) {
+  // A small icon button, named in words for a screen reader and on hover.
+  function button(text, mark, onClick) {
     var b = document.createElement("button");
     b.type = "button";
-    b.className = "canccu-button canccu-button--ghost";
-    b.textContent = text;
+    b.className = "canccu-button canccu-button--ghost pizza-thumbs__button";
+    b.textContent = mark;
+    b.setAttribute("aria-label", text);
+    b.title = text;
     b.addEventListener("click", onClick);
     return b;
   }
@@ -99,18 +102,18 @@
       tools.className = "pizza-thumbs__tools";
       if (i > 0)
         tools.appendChild(
-          button(thumbs.getAttribute("data-up"), function () {
+          button(thumbs.getAttribute("data-up"), "↑", function () {
             move(i, -1);
           }),
         );
       if (i < pages.length - 1)
         tools.appendChild(
-          button(thumbs.getAttribute("data-down"), function () {
+          button(thumbs.getAttribute("data-down"), "↓", function () {
             move(i, 1);
           }),
         );
       tools.appendChild(
-        button(thumbs.getAttribute("data-remove"), function () {
+        button(thumbs.getAttribute("data-remove"), "✕", function () {
           pages.splice(i, 1);
           render();
         }),
