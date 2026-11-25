@@ -30,6 +30,8 @@ const tooManyPages = () =>
     code: "too_many_pages",
   });
 
+const asError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)));
+
 /**
  * The form's photos, its fields moved to `request.body`. The body is set even when a photo is
  * refused: the menu read's table lives only in the form, and the page needs it to draw it again.
@@ -38,7 +40,7 @@ export async function photosOf(request: FastifyRequest): Promise<Photo[]> {
   if (!request.isMultipart()) return [];
   const fields: Record<string, string> = {};
   const photos: Photo[] = [];
-  let refused: unknown;
+  let refused: Error | undefined;
   try {
     for await (const part of request.parts()) {
       if (part.type === "file") {
@@ -50,12 +52,15 @@ export async function photosOf(request: FastifyRequest): Promise<Photo[]> {
           else if (bytes.length > 0) photos.push({ bytes, type: part.mimetype });
         } catch (err) {
           refused ??=
-            (err as { code?: unknown }).code === "FST_REQ_FILE_TOO_LARGE" ? tooLarge() : err;
+            (err as { code?: unknown }).code === "FST_REQ_FILE_TOO_LARGE"
+              ? tooLarge()
+              : asError(err);
         }
       } else if (typeof part.value === "string") fields[part.fieldname] = part.value;
     }
   } catch (err) {
-    refused ??= (err as { code?: unknown }).code === "FST_FILES_LIMIT" ? tooManyPages() : err;
+    refused ??=
+      (err as { code?: unknown }).code === "FST_FILES_LIMIT" ? tooManyPages() : asError(err);
   }
   request.body = fields;
   if (refused === undefined && photos.length > MAX_PAGES) refused = tooManyPages();
