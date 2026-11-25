@@ -3,6 +3,7 @@ import type { SqlClient } from "@canccu/kit";
 import { DEFAULT_ORDERS, isClass } from "./arbiter.js";
 import type { Class, Orders, SentOverride } from "./arbiter.js";
 import type { Picture } from "./cues/service.js";
+import { lockZone } from "./air-store.js";
 import { DEFAULT_AIR, airOf } from "./air-settings.js";
 import type { AirSettings } from "./air-settings.js";
 
@@ -72,7 +73,17 @@ const momentOf = (r: Record<string, unknown>): MomentRow => ({
   planned_ms: r.planned_ms == null ? null : Number(r.planned_ms),
 });
 
+/**
+ * Locks a moment for a crew action. The zones it sits on are locked first, in key order: a zone's
+ * pass takes its zone row and then the moment and slot rows, so an end that took the moment first
+ * and the zone after deadlocked with the pass and failed with a 500 (#777).
+ */
 export async function lockMoment(c: SqlClient, id: string): Promise<MomentRow | null> {
+  const zones = await c.query(
+    `SELECT DISTINCT zone_key FROM moment_slots WHERE moment_id = $1 ORDER BY zone_key`,
+    [id],
+  );
+  for (const z of zones.rows) await lockZone(c, z.zone_key as string, "wait");
   const { rows } = await c.query(`SELECT ${COLUMNS} FROM moments WHERE id = $1 FOR UPDATE`, [id]);
   return rows[0] ? momentOf(rows[0]) : null;
 }
