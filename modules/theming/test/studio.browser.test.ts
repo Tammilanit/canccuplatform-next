@@ -53,7 +53,7 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     // The reload after publishing loads its previews unheld.
     await page.unroute("**/theming/studio/preview/**");
     await act(page, '.canccu-pagehead [data-action="publish"]');
-    expect(await page.textContent(".canccu-pagehead__desc")).toContain(
+    expect(await page.textContent(".canccu-studio-status")).toContain(
       "Screens show the published theme",
     );
   });

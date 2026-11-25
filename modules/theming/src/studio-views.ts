@@ -77,7 +77,6 @@ export interface ScreenTheme {
 /** A page's body and what goes in the shell's title row. */
 export interface StudioView {
   body: Html;
-  description?: Slot;
   actions?: Slot;
 }
 
@@ -172,23 +171,30 @@ export const actionButton = (
 export const root = (state: { draft?: DraftRow | undefined }, body: Slot): Html =>
   html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version })}>${body}</div>`;
 
-/** Where the draft stands, in words: no versions, ids or modes (UX audit C2). */
+/**
+ * Where the draft stands, in words: no versions, ids or modes (UX audit C2). A line of the body,
+ * not the page description, which says what the page is for (docs/design, decision 8).
+ */
 export function status(state: StudioState, viewerId: string | undefined): Html {
   const published = state.current > 0;
   const d = state.draft;
   if (d === undefined) {
-    return html`${
-      published
-        ? "No draft. Screens show the published theme."
-        : "No draft. Nothing published yet: screens show the event profile's look."
-    }`;
+    return html`<p class="canccu-studio-status">
+      ${
+        published
+          ? "No draft. Screens show the published theme."
+          : "No draft. Nothing published yet: screens show the event profile's look."
+      }
+    </p>`;
   }
   const who =
     d.updated_by === null
       ? ""
       : ` · last changed by ${d.updated_by === viewerId ? "you" : "another organiser"}`;
-  return html`${statusChip("plain", "Draft", "Your changes are kept here until you publish them.")}
-  ${published ? "Changes to the published theme, not published yet" : "Nothing published yet"}${who}`;
+  return html`<p class="canccu-studio-status">
+    ${statusChip("plain", "Draft", "Your changes are kept here until you publish them.")}
+    ${published ? "Changes to the published theme, not published yet" : "Nothing published yet"}${who}
+  </p>`;
 }
 
 /** A problem in words: its message, after the file it is in when that is not theme.yaml. */

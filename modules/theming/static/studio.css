@@ -291,3 +291,7 @@
 .canccu-studio-screen-notice[hidden] {
   display: none;
 }
+.canccu-studio-status {
+  margin: 0 0 var(--canccu-gap);
+  color: var(--canccu-ink-muted);
+}

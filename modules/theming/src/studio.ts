@@ -162,8 +162,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "advanced",
-        description: status(state, request.session?.userId),
-        body: advancedView(state),
+        description:
+          "The theme beyond the brand kit: upload a whole theme package, or set each colour, font and size by hand.",
+        body: html`${status(state, request.session?.userId)}${advancedView(state)}`,
       });
     });
 

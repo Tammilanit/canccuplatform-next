@@ -253,15 +253,13 @@ export function brandKitView(
   viewerId: string | undefined,
 ): StudioView {
   const d = state.draft;
-  const description = status(state, viewerId);
+  const where = status(state, viewerId);
   if (d === undefined) {
     return {
-      description,
       body: root(
         state,
-        html`<div class="canccu-studio-kit">
-          ${startView(embedsAllowed)}${previewsView(state)}
-        </div>`,
+        html`${where}
+          <div class="canccu-studio-kit">${startView(embedsAllowed)}${previewsView(state)}</div>`,
       ),
     };
   }
@@ -279,11 +277,10 @@ export function brandKitView(
   // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
   const actions = html`${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${screenButton}${actionButton("Publish", { "data-action": light ? "light-ask" : "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`;
   return {
-    description,
     actions,
     body: root(
       state,
-      html`${screenNotice}${advanced}
+      html`${where}${screenNotice}${advanced}
         <div class="canccu-studio-kit">
           <div class="canccu-studio-side">${brandForm(state, d, colors)}${discardView(state)}</div>
           ${previewsView(state)}
