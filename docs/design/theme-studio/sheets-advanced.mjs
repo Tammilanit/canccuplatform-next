@@ -57,23 +57,25 @@ function editor() {
 /** Sheet 4: Advanced on Level up · Sunset, with two tooltips open and an error in the CSS. */
 export function advanced(w) {
   const groups = ["Colours", "Type", "Shapes and spacing", "Screen", "Motion", "Box looks", "Your CSS"];
-  const looks = [["Countdown", "Big digits", "Your look"], ["Now on", "Platform look", ""], ["Ticker", "Platform look", ""], ["Food", "Pizza slice", "Your look"]]
+  const looks = [["Countdown", "Big digits · spotlight: glow and trace", "Your look"], ["Now on", "Platform look", ""], ["Ticker", "Platform look", ""], ["Food", "Pizza slice", "Your look"]]
     .map(([box, look, mine]) => `<tr><td><b>${box}</b></td><td>${look}${mine ? ` <span class="canccu-badge">${mine}</span>` : ""}</td><td><a class="canccu-button canccu-button--ghost" href="#">Change</a></td></tr>`).join("");
   const body = `<div class="studio"><div>
-  <div class="canccu-notice canccu-notice--info" role="status">${icon("info")}<div class="canccu-notice__body"><p class="canccu-notice__title">Everything, one control each</p><p>Tap the ${icon("info")} beside a setting to read what it changes. Reset to the preset brings the look's own values back.</p></div></div>
+  <div class="canccu-notice canccu-notice--info" role="status">${icon("info")}<div class="canccu-notice__body"><p class="canccu-notice__title">Everything, one control each</p><p>Tap the ${icon("info")} beside a setting to read what it changes. Reset to Level up · Sunset brings the look's own values back.</p></div></div>
   <nav class="row groups" aria-label="Groups">${groups.map((g, i) => `<a class="pill" href="#" aria-pressed="${i === 0}">${g}</a>`).join("")}</nav>
   <section class="sec"><h2>Colours</h2><p class="hint">For the screens, the hub and the organiser pages.</p><div class="toks">${COLOURS.map((c) => colourRow(c, c[0] === "text_muted" ? `Times, places and other second lines. It reads at ${contrast(K.text_muted, K.background).toFixed(1)}:1 on the background; text needs at least 4.5:1.` : null)).join("")}</div></section>
   <section class="sec"><h2>Type</h2><div class="toks">${font("Headings", "Chakra Petch", "Titles on every page")}${font("Text", "Exo 2", "Everything else")}${font("Big screen numbers", "Chakra Petch", "Countdowns and scores")}
   <div class="tok"><div><b>Your own font</b><br><small>A WOFF2 file and its licence</small></div><a class="canccu-button canccu-button--secondary" href="#">${icon("plus")}Add a font</a></div></div></section>
   <section class="sec"><h2>Shapes and spacing</h2><div class="toks">${slider("Corner roundness", 0, 24, 14, "px", "Boxes, buttons and pictures")}${slider("Line width", 0, 4, 2, "px", "Edges of boxes")}${slider("Space between boxes", 8, 32, 16, "px", "On every page")}</div></section>
   <section class="sec"><h2>Screen</h2><div class="toks">${slider("Edge margin on screens", 24, 96, 48, "px", "Keeps text off the TV's edge", "Some TVs cut off the outer edge of the picture. Raise this if text touches the edge on yours.")}
-  ${pills("Background", ["Glows", "Gradient", "Your picture", "Your video", "Game art"], "Your picture")}
+  ${pills("Behind the boxes", ["The looks cycle", "Your picture", "Your video"], "Your picture")}
   <div class="tok"><span class="bgpic" style="background:repeating-linear-gradient(115deg, ${K.accent}88 0 14px, ${K.primary}66 14px 30px, ${K.surface} 30px 50px)"></span><div><b>Arena lights</b><br><small>Picture · dimmed so text stays readable</small></div><a class="canccu-button canccu-button--ghost" href="#">Replace</a></div>
-  <p class="cap">A video plays muted and looping (one per theme, up to 20 MB). On calm screens and for people who ask for less motion, its still picture shows.</p></div></section>
-  <section class="sec"><h2>Motion</h2><div class="toks">${pills("Most movement", ["Still", "Calm", "Lively"], "Lively")}${pills("Speed", ["Slower", "Normal", "Faster"], "Normal")}${pills("Strength", ["Subtle", "Normal", "Strong"], "Strong")}${pills("Countdown spotlight", ["Glow and trace", "Glow", "Trace"], "Glow and trace")}${pills("Style", ["Standard", "Broadcast", "Arcade"], "Arcade")}</div></section>
+  <p class="cap">Your own picture or video replaces the cycle of looks (one per theme; a video plays muted and looping, up to 20 MB, and its still picture shows on calm screens and for people who ask for less motion). The cycle, the game's art, the time of day and the hype are set in <a href="#">Make it yours</a>.</p></div></section>
+  <section class="sec"><h2>Motion</h2><div class="toks">${pills("Motion style", ["Standard", "Broadcast", "Arcade"], "Arcade")}</div>
+  <p class="cap--note">${icon("info")}<span>How much the screens move (still, calm, lively, party) is set for each screen zone in <a href="#">Screen settings</a>. A screen rises from calm toward that level as the event gets busy; quiet hours keep it calm. The countdown's spotlight is part of the countdown's box look, below.</span></p></section>
   <section class="sec"><h2>Box looks</h2><p class="hint">Each box on the screen can use the platform's look or one of yours.</p><table class="canccu-table">${looks}</table>
   <div class="foot" style="margin-top:.75rem"><a class="canccu-button canccu-button--secondary" href="#">${icon("plus")}New look for a box</a></div></section>
   <section class="sec"><h2>Your CSS</h2><p class="hint">For the last details. Checked as you type; nothing unsafe can reach your pages.</p>${editor()}</section>
+  <div class="foot"><a class="canccu-button canccu-button--ghost" href="#">${icon("refresh")}Reset to Level up · Sunset</a><span class="grow"></span><a class="canccu-button canccu-button--secondary" href="#">Save as my look</a></div>
   </div>${previewColumn(K, { width: pvWidth(w), phone: w < 700, fonts: LEVEL_UP.fonts, radius: LEVEL_UP.radius, backdrop: "image", logo: { plate: "light" } })}</div>`;
   return shell({ tab: "Advanced", body, k: PRESETS[0].schemes[0].colors });
 }
@@ -83,13 +85,13 @@ const btn = (label, kind = "secondary") => `<a class="canccu-button canccu-butto
 
 /** Sheet 5: the actions every depth shares, and the states of saving, conflicts and the preview. */
 export function actionsAndStates() {
-  const k = PRESETS[0].schemes[0].colors;
+  const k = K;
   const tiles = [
     ["Save as my look", dialog("Save as my look", "Saved looks show under Your looks, here and in the next event of your series.", btn("Cancel", "ghost") + btn("Save look", "primary"), `<label class="canccu-field"><span class="canccu-field__label">Name</span><input class="canccu-input" value="Spring look"></label>`)],
     ["Import", dialog("Import a theme", null, btn("Cancel", "ghost"), `<div class="drop">${icon("download")}<b>Drop a theme file here</b><span>or <a href="#">choose one</a>. It replaces this draft; your published look stays until you publish.</span></div>`)],
     ["After an import", dialog("Imported “Level up · Sunset”", "Two things to look at before you publish:", btn("Show me", "primary"), `<ul class="problems"><li class="problems--warn">${icon("warn")}<span>The font “Bungee” is not on this platform yet, so the system font shows.</span></li><li class="problems--warn">${icon("warn")}<span>The Food box uses a look made for another box.</span></li></ul>`)],
     ["Export", dialog("Export", "A file with everything in this look: colours, fonts, pictures, box looks and CSS. Import it into another event or keep it as a copy.", btn("Download the published look") + btn("Download this draft", "primary"))],
-    ["Reset to the preset", dialog("Reset to Level up · Sunset?", "Colours, fonts, corners, the background and motion go back to the look's own. Your logo and its plate stay.", btn("Cancel", "ghost") + btn("Reset", "primary"))],
+    ["Reset to the preset", dialog("Reset to Level up · Sunset?", "Colours, fonts, corners, the background and the motion style go back to the look's own. Your logo and its plate stay.", btn("Cancel", "ghost") + btn("Reset", "primary"))],
     ["Using a look over your own changes", dialog("Use Terminal · Amber?", "This replaces your own CSS, fonts and box looks. Your logo and its plate stay. Export first to keep a copy.", btn("Export first", "ghost") + btn("Cancel") + btn("Use this look", "primary"))],
   ].map(([cap, d]) => `<figure class="state">${d}<figcaption>${cap}</figcaption></figure>`).join("");
   const savestates = [["clock", "Saving…"], ["check", "Saved"], ["warn", "Not saved: you are offline. Trying again…"]]

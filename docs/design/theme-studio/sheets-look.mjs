@@ -1,7 +1,7 @@
 // Sheets 1–3 of the pack (#784): Pick a look, Make it yours with the logo on a plate, and the
 // black logo on a plate in each preset. Each returns the <body> of one sheet at one width.
 import { FONT_PAIRS, PRESETS, contrast } from "./data.mjs";
-import { LOGO_BLACK, esc, hubPage, icon, logo, phone, previewColumn, screen, shell, thumb, vars } from "./parts.mjs";
+import { LOGO_BLACK, esc, hubPage, icon, logo, phone, previewColumn, screen, shell, stageLook, thumb, vars } from "./parts.mjs";
 
 const DEFAULT = PRESETS[0];
 const NIGHT = DEFAULT.schemes[0].colors;
@@ -32,13 +32,12 @@ const sw = (hex, pressed) => `<span class="swatch" style="background:${hex}" ari
 export function makeItYours(w) {
   const k = NIGHT;
   const ratio = contrast("#000000", k.background).toFixed(1);
-  const pairs = [`<button class="pair" type="button" aria-pressed="false"><b style="font-family:system-ui">Platform font</b><span>The font of the device it shows on</span><em>The default</em></button>`]
-    .concat(FONT_PAIRS.map((p, i) => `<button class="pair" type="button" aria-pressed="${i === 2}"><b style="font-family:'${p.heading}';font-weight:${p.hw}">Tournament final</b><span style="font-family:'${p.body}';font-weight:${p.bw}">Doors open at 19:50 in the main hall</span><em>${p.mood} · ${p.heading} and ${p.body}</em></button>`))
+  const pairs = [`<button class="pair" type="button" aria-pressed="false"><b style="font-family:system-ui">Platform font</b><span style="font-family:system-ui">The device's own</span></button>`]
+    .concat(FONT_PAIRS.map((p, i) => `<button class="pair" type="button" aria-pressed="${i === 2}"><b style="font-family:'${p.heading}';font-weight:${p.hw}">${p.mood}</b><span style="font-family:'${p.body}';font-weight:${p.bw}">${p.heading} · ${p.body}</span></button>`))
     .join("");
-  const bg = (label, kind, pressed) => {
-    const s = kind === "glows" ? `radial-gradient(circle at 25% 30%, ${k.primary}55, transparent 55%), ${k.background}` : kind === "gradient" ? `linear-gradient(135deg, ${k.primary}77, ${k.background} 55%, ${k.accent}77)` : kind === "image" ? `repeating-linear-gradient(115deg, ${k.accent}66 0 12px, ${k.primary}55 12px 26px, ${k.surface} 26px 44px)` : `radial-gradient(circle at 30% 40%, #8a4bd9, #1b3a6b 55%, #0b0d1a)`;
-    return `<button class="opt" type="button" aria-pressed="${pressed}"><span class="tile" style="background:${s}"></span>${label}</button>`;
-  };
+  // One look of the cycle: a tile drawn the way the stage draws it, ticked when it is in the cycle.
+  const look = (label, kind, on) => `<button class="opt opt--multi" type="button" aria-pressed="${on}"><span class="tile tile--wide" style="${stageLook(k, kind)}"></span><span class="tick">${icon("check")}</span>${label}</button>`;
+  const toggle = (label, hint, on = true) => `<label class="sw"><input class="canccu-switch" type="checkbox"${on ? " checked" : ""}><b>${label}</b><small>${hint}</small></label>`;
   const body = `<div class="studio"><div>
   <section class="sec"><h2>Logo</h2><p class="hint">Shown on the screens, the hub, the organiser pages and in Discord.</p>
     <div class="logobox"><span class="logobox__ground" style="background:${k.background}"><img src="${LOGO_BLACK}" alt="" style="height:44px"></span>
@@ -55,10 +54,12 @@ export function makeItYours(w) {
     <span class="lbl">Light or dark</span><div class="row">${pill("Dark", true)}${pill("Light", false)}</div></section>
   <section class="sec"><h2>Fonts</h2><p class="hint">Headings and text as a matched pair. All are free fonts served from your own event.</p><div class="pairs">${pairs}</div></section>
   <section class="sec"><h2>Corners</h2><div class="row">${pill("Square", false)}${pill("Soft", true)}${pill("Round", false)}</div></section>
-  <section class="sec"><h2>Screen background</h2><p class="hint">What sits behind the boxes on the screens.</p><div class="row">${bg("Glows", "glows", true)}${bg("Gradient", "gradient", false)}${bg("Your picture", "image", false)}${bg("Game art", "art", false)}</div></section>
-  <section class="sec"><h2>Motion</h2><p class="hint">How much the screens move. Screens follow the quiet hours on their own.</p><div class="row">${pill("Still", false)}${pill("Calm", false)}${pill("Lively", true)}</div></section>
+  <section class="sec"><h2>Screen background</h2><p class="hint">Alive, never busy: it changes slowly between the looks you leave on, at random, with a long fade every few minutes.</p>
+    <span class="lbl">Looks in the cycle</span><div class="row">${look("Glows", "glows", true)}${look("Gradient", "gradient", true)}${look("Particles", "particles", true)}</div>
+    <div style="margin-top:1.1rem">${toggle("Show the game's art when a game is on", "Its art replaces the cycle while a game is building or live, then the cycle comes back.")}${toggle("Follow the time of day", "Warmer light in the morning, darker late at night.")}${toggle("More life when something big is near", "Particles and glow grow with the hype, and settle after.")}</div>
+    <p class="cap--note">${icon("info")}<span>How much the screens move is set for each screen zone in Screen settings, not here. A screen starts calm and rises toward that level as the event gets busy (quiet, building, live), and quiet hours keep it calm. Try it with the chips in the preview.</span></p></section>
   <div class="foot"><a class="canccu-button canccu-button--ghost" href="#">${icon("refresh")}Reset to Default · Night</a><span class="grow"></span><a class="canccu-button canccu-button--secondary" href="#">Save as my look</a></div>
-  </div>${previewColumn(k, { width: pvWidth(w), phone: w < 700, fonts: { heading: "Space Grotesk", body: "Inter" }, radius: 8, logo: { plate: "light" } })}</div>`;
+  </div>${previewColumn(k, { width: pvWidth(w), phone: w < 700, fonts: { heading: "Space Grotesk", body: "Inter" }, radius: 8, scene: "live", backdrop: "particles", logo: { plate: "light" } })}</div>`;
   return shell({ tab: "Make it yours", body, k });
 }
 

@@ -17,6 +17,7 @@ import { vars } from "./parts.mjs";
 import { SHEET_CSS } from "./style.mjs";
 import { makeItYours, pickALook, platesEverywhere } from "./sheets-look.mjs";
 import { actionsAndStates, advanced } from "./sheets-advanced.mjs";
+import { backgroundAlive } from "./sheets-alive.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +28,11 @@ export const SHEETS = [
   { file: "03-logo-plates", widths: [1280], body: platesEverywhere },
   { file: "04-advanced", widths: [1280, 1920, 390], body: advanced },
   { file: "05-actions-and-states", widths: [1280], body: actionsAndStates },
+  { file: "06-background-alive", widths: [1280], body: backgroundAlive },
 ];
+
+/** Sheets that also get a viewport shot scrolled to the end: it shows the sticky preview column beside the last controls. */
+const SCROLLED = new Set(["02-make-it-yours-1280"]);
 
 /** The faces the sheets draw: every pair's heading and body, and the presets' own fonts. */
 function faces() {
@@ -99,7 +104,12 @@ async function render(htmlDir) {
       const wide = await pg.evaluate(() => document.documentElement.scrollWidth);
       if (wide > w) clipped.push(`the page is ${wide} px wide`);
       if (clipped.length) console.warn(`${name}: ${clipped.slice(0, 8).join(", ")}`);
-      await pg.screenshot({ path: join(HERE, name.replace(/\.html$/, ".png")), fullPage: true });
+      const png = name.replace(/\.html$/, "");
+      await pg.screenshot({ path: join(HERE, `${png}.png`), fullPage: true });
+      if (SCROLLED.has(png)) {
+        await pg.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        await pg.screenshot({ path: join(HERE, `${png}-scrolled.png`) });
+      }
       await pg.close();
     }
   } finally {

@@ -31,13 +31,31 @@ export function logo(k, { plate = "none", shape = "rounded", pad = 0.15, h = 32,
   return `<span class="plate" style="background:${plateColor(plate, k)};padding:${p}px;border-radius:${radius};${w}"><img src="${src}" alt="" style="height:${shape === "circle" ? h * 0.6 : h}px"></span>`;
 }
 
-/** Stage backgrounds (D8) as a CSS background over the scheme's own. */
-function stage(k, backdrop) {
-  if (backdrop === "gradient") return `background:linear-gradient(135deg, ${k.primary}55, ${k.background} 45%, ${k.background} 60%, ${k.accent}55)`;
-  if (backdrop === "image") return `background:linear-gradient(${k.background}cc, ${k.background}cc), repeating-linear-gradient(115deg, ${k.accent}66 0 30px, ${k.primary}55 30px 70px, ${k.surface} 70px 130px)`;
-  if (backdrop === "art") return `background:linear-gradient(${k.background}bb, ${k.background}dd), radial-gradient(circle at 30% 40%, #8a4bd9, #1b3a6b 50%, #0b0d1a)`;
-  return `background:radial-gradient(circle at 18% 22%, ${k.primary}33, transparent 42%), radial-gradient(circle at 85% 80%, ${k.accent}2e, transparent 45%), ${k.background}`;
+/** A colour with an alpha in 0..1, as #rrggbbaa. */
+const al = (hex, f) => hex + Math.round(Math.min(1, f) * 255).toString(16).padStart(2, "0");
+
+/**
+ * The screen's living background (D8, #787's stage) as a CSS background over the scheme's own: one
+ * look of the cycle (glows, gradient, particles), its strength set by the hype (scene) and a tint
+ * set by the time of day. Game art and a picture of one's own replace the cycle (see the plan).
+ */
+function stage(k, o = {}) {
+  const look = o.backdrop ?? "glows";
+  const gain = { quiet: 0.55, building: 1, live: 1.7 }[o.scene ?? "building"];
+  const part = (size, f) => `radial-gradient(circle, ${al(k.text, 0.9 * f)} 2.2px, transparent 3px) 0 0 / ${size}px ${size}px, radial-gradient(circle, ${al(k.accent, 0.95 * f)} 3.4px, transparent 4.4px) ${size / 2}px ${size / 3}px / ${Math.round(size * 1.7)}px ${Math.round(size * 1.7)}px`;
+  const glow = (f) => `radial-gradient(circle at 18% 22%, ${al(k.primary, 0.4 * gain * f)}, transparent ${Math.round(34 + 10 * gain)}%), radial-gradient(circle at 85% 80%, ${al(k.accent, 0.36 * gain * f)}, transparent ${Math.round(36 + 10 * gain)}%)`;
+  let base;
+  if (look === "gradient") base = `linear-gradient(135deg, ${al(k.primary, 0.5 * gain)}, ${k.background} 45%, ${k.background} 60%, ${al(k.accent, 0.5 * gain)})`;
+  else if (look === "particles") base = `${part({ quiet: 120, building: 70, live: 38 }[o.scene ?? "building"], gain > 1 ? 1 : 0.8)}, ${glow(0.8)}`;
+  else if (look === "image") base = `linear-gradient(${k.background}cc, ${k.background}cc), repeating-linear-gradient(115deg, ${k.accent}66 0 30px, ${k.primary}55 30px 70px, ${k.surface} 70px 130px)`;
+  else if (look === "art") base = `linear-gradient(${k.background}66, ${k.background}aa), radial-gradient(circle at 30% 40%, #8a4bd9, #1b3a6b 50%, #0b0d1a)`;
+  else base = glow(1);
+  const tint = o.daypart === "morning" ? "linear-gradient(180deg, #ffc27a47, #ffc27a10 65%, transparent), " : o.daypart === "late" ? "linear-gradient(#04050dcc, #04050dcc), " : "";
+  return `background:${tint}${base}, ${k.background}`;
 }
+
+/** The same look as a tile's background (a swatch of the cycle), at the building scene. */
+export const stageLook = (k, look) => stage(k, { backdrop: look, scene: "building" });
 
 /** The hall screen at 960×540 design units, scaled to `width`: header, hero, rail, venue rail, ticker. */
 export function screen(k, o = {}) {
@@ -46,7 +64,7 @@ export function screen(k, o = {}) {
   const head = o.fonts?.heading ? `"${o.fonts.heading}",system-ui` : "system-ui";
   const body = o.fonts?.body ? `"${o.fonts.body}",system-ui` : "system-ui";
   const r = o.radius ?? 8;
-  return `<div class="frame" style="width:${width}px;height:${Math.round(540 * s)}px"><div class="scr" style="transform:scale(${s});${stage(k, o.backdrop)};color:${k.text};font-family:${body}">
+  return `<div class="frame" style="width:${width}px;height:${Math.round(540 * s)}px"><div class="scr" style="transform:scale(${s});${stage(k, o)};color:${k.text};font-family:${body}">
   <div class="scr__head">${logo(k, { ...o.logo, h: 34 })}<b style="font-family:${head}">Demo Event</b><span class="scr__clock" style="font-family:${head}">19:42</span></div>
   <div class="scr__hero" style="background:${k.surface}e6;border:2px solid ${k.border};border-radius:${r * 1.5}px">
     <p class="kick" style="color:${k.primary}">Next up</p><p class="big" style="font-family:${head}">Tournament final</p>
@@ -88,18 +106,28 @@ export function hubPage(k, o = {}) {
 </div></div>`;
 }
 
+/** Chips that set what the preview shows: how busy the event is and the time of day (#787's states). */
+function stateChips(o = {}) {
+  const chip = (t, on) => `<button class="pill pill--sm" type="button" aria-pressed="${on}">${t}</button>`;
+  const scene = o.scene ?? "building";
+  const part = o.daypart ?? "day";
+  return `<div class="pv__states" role="group" aria-label="What the preview shows"><div class="row"><span class="pv__lbl">How busy</span>${[["quiet", "Quiet"], ["building", "Building"], ["live", "Live"]].map(([v, t]) => chip(t, v === scene)).join("")}</div>
+  <div class="row"><span class="pv__lbl">Time of day</span>${[["morning", "Morning"], ["day", "Day"], ["late", "Late night"]].map(([v, t]) => chip(t, v === part)).join("")}</div></div>`;
+}
+
 /** The preview column of plan D2: the screen on top, the phone and a hub page side by side. */
 export function previewColumn(k, o = {}) {
   const w = o.width ?? 500;
   if (o.phone)
     // A phone (D2): the preview first, one frame at a time behind a switch.
     return `<aside class="pv" style="width:${w}px"><div class="row">${["Screen", "Phone", "Hub page"].map((t, i) => `<button class="pill" type="button" aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
-  <figure>${screen(k, { ...o, width: w })}<figcaption>Screen · Main hall · tap to open full size</figcaption></figure></aside>`;
+  <figure>${screen(k, { ...o, width: w })}<figcaption>Screen · Main hall · tap to open full size</figcaption></figure>${stateChips(o)}</aside>`;
   const phoneW = Math.round(w * 0.3);
   const hubW = w - phoneW - 16;
   return `<aside class="pv" style="width:${w}px">
-  <div class="pv__head"><span class="canccu-overline">Live preview</span><span class="pv__state">${icon("check")}Shows your changes as you make them</span></div>
+  <div class="pv__head"><span class="canccu-overline">Live preview</span><span class="pv__state">${icon("check")}Follows your changes live</span></div>
   <figure>${screen(k, { ...o, width: w })}<figcaption>Screen · Main hall</figcaption></figure>
+  ${stateChips(o)}
   <div class="pv__row"><figure>${phone(k, { ...o, width: phoneW })}<figcaption>Phone</figcaption></figure><figure>${hubPage(k, { ...o, width: hubW })}<figcaption>Hub page</figcaption></figure></div>
   <div class="pv__foot"><a class="canccu-button canccu-button--secondary" href="#">${icon("monitor")}Preview on a screen</a></div>
 </aside>`;

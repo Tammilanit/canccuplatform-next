@@ -14,6 +14,7 @@ body { margin: 0; }
 .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .opt { display: inline-flex; flex-direction: column; align-items: center; gap: .4rem; padding: .6rem .7rem; border: 1px solid var(--canccu-color-border); border-radius: var(--canccu-radius); background: var(--canccu-color-surface); color: var(--canccu-color-text); font: inherit; font-size: var(--canccu-text-sm); min-width: 5.4rem; }
 .opt[aria-pressed="true"] { border-color: var(--canccu-color-primary); box-shadow: 0 0 0 2px var(--canccu-color-primary); }
+.opt .tile.tile--wide { width: 5.6rem; }
 .opt .tile { width: 4.4rem; height: 2.5rem; border-radius: calc(var(--canccu-radius) * .75); display: grid; place-items: center; }
 .pill { display: inline-flex; gap: .35rem; align-items: center; padding: .45rem .85rem; border: 1px solid var(--canccu-color-border); border-radius: 999px; background: var(--canccu-color-surface); color: var(--canccu-color-text); font: inherit; font-size: var(--canccu-text-sm); }
 .pill[aria-pressed="true"] { background: var(--canccu-color-primary); color: var(--canccu-color-primary-text); border-color: var(--canccu-color-primary); font-weight: 600; }
@@ -28,12 +29,11 @@ body { margin: 0; }
 .swatch[aria-pressed="true"] { outline: 3px solid var(--canccu-color-primary); outline-offset: 2px; }
 .colour { display: grid; grid-template-columns: auto 1fr; gap: .25rem 1rem; align-items: center; margin-bottom: 1rem; }
 .colour small { color: var(--canccu-ink-muted); }
-.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: .5rem; }
-.pair { text-align: left; padding: .7rem .85rem; border: 1px solid var(--canccu-color-border); border-radius: var(--canccu-radius); background: var(--canccu-color-surface); color: var(--canccu-color-text); }
+.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.6rem, 1fr)); gap: .4rem; }
+.pair { text-align: left; padding: .45rem .6rem; border: 1px solid var(--canccu-color-border); border-radius: var(--canccu-radius); background: var(--canccu-color-surface); color: var(--canccu-color-text); }
 .pair[aria-pressed="true"] { border-color: var(--canccu-color-primary); box-shadow: 0 0 0 2px var(--canccu-color-primary); }
-.pair b { display: block; font-size: 1.35rem; line-height: 1.15; }
-.pair span { display: block; font-size: .9rem; color: var(--canccu-ink-muted); margin-top: .2rem; }
-.pair em { display: block; font-style: normal; font-size: var(--canccu-text-xs); color: var(--canccu-ink-muted); margin-top: .35rem; font-family: system-ui; }
+.pair b { display: block; font-size: 1.05rem; line-height: 1.2; }
+.pair span { display: block; font-size: .72rem; color: var(--canccu-ink-muted); margin-top: .1rem; }
 .foot { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
 .foot .grow { flex: 1; }
 .preset { margin-bottom: 1.75rem; }
@@ -52,6 +52,10 @@ body { margin: 0; }
 .pv__state { display: inline-flex; gap: .3rem; align-items: center; color: var(--canccu-ink-muted); font-size: var(--canccu-text-xs); }
 .pv figure { margin: 0; }
 .pv figcaption { font-size: var(--canccu-text-xs); color: var(--canccu-ink-muted); margin-top: .3rem; }
+.pv__states { display: grid; gap: .35rem; }
+.pv__states .row { gap: .3rem; }
+.pv__lbl { font-size: var(--canccu-text-xs); color: var(--canccu-ink-muted); width: 5.2rem; flex: none; }
+.pill--sm { padding: .25rem .65rem; font-size: var(--canccu-text-xs); }
 .pv__row { display: flex; gap: 16px; align-items: flex-start; }
 .frame { position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--canccu-color-border); box-shadow: var(--canccu-shadow); }
 .mini { border-radius: 8px; border: 1px solid var(--canccu-color-border); box-shadow: var(--canccu-shadow); }
@@ -119,6 +123,20 @@ body { margin: 0; }
 .dlg .canccu-field { margin-bottom: 1rem; }
 .drop { display: flex; flex-direction: column; align-items: center; gap: .4rem; text-align: center; padding: 1.5rem 1rem; border: 2px dashed var(--canccu-color-border); border-radius: var(--canccu-radius); margin-bottom: 1rem; color: var(--canccu-ink-muted); }
 .drop b { color: var(--canccu-color-text); }
+.sw { display: grid; grid-template-columns: auto 1fr; gap: .15rem .75rem; align-items: start; margin: 0 0 .75rem; }
+.sw .canccu-switch { grid-row: span 2; margin-top: .15rem; }
+.sw small { color: var(--canccu-ink-muted); }
+.cap--note { display: flex; gap: .5rem; align-items: flex-start; color: var(--canccu-ink-muted); font-size: var(--canccu-text-sm); margin: 1rem 0 0; }
+.opt--multi { position: relative; }
+.opt--multi .tick { position: absolute; top: .3rem; right: .3rem; width: 1.15rem; height: 1.15rem; border-radius: 4px; background: var(--canccu-color-primary); color: var(--canccu-color-primary-text); display: grid; place-items: center; font-size: .7rem; }
+.opt--multi[aria-pressed="false"] .tick { background: var(--canccu-color-surface); border: 1px solid var(--canccu-color-border); color: transparent; }
+.lane { margin-bottom: 1.75rem; }
+.lane h2 { font-size: var(--canccu-text-lg); margin: 0 0 .15rem; }
+.lane > p { color: var(--canccu-ink-muted); margin: 0 0 .75rem; font-size: var(--canccu-text-sm); max-width: 60rem; }
+.lane__row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.lane__row figure { margin: 0; }
+.lane__row figcaption { font-size: var(--canccu-text-xs); color: var(--canccu-ink-muted); margin-top: .3rem; }
+.lane__arrow { color: var(--canccu-ink-muted); flex: none; }
 .h2 { font-size: var(--canccu-text-lg); margin: 2rem 0 .75rem; }
 @media (max-width: 700px) {
   /* A full-page shot would paint the fixed bar over the middle of the page: here it closes the page. */
@@ -127,7 +145,7 @@ body { margin: 0; }
   .studio { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
   .studio > .pv { order: -1; position: static; }
   .canccu-pagehead .canccu-cluster .canccu-button--secondary { display: none; }
-  .pairs { grid-template-columns: minmax(0, 1fr); }
+  .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ed__line { white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 `;
