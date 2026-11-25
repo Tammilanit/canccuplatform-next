@@ -35,6 +35,12 @@ from .web import BASE, button, check, esc, hidden, notice, page, page_writer, re
 CHIPS = (5, 10, 15, 30)
 
 
+DELAY_ABOUT = (
+    "Move the item later or earlier by some minutes. Check what moves with it and who is told "
+    "before you confirm."
+)
+
+
 async def _plans(
     d: Deps, row: Any, minutes: int, options: list[bool], now: datetime
 ) -> tuple[dict[bool, Any], int, Any]:
@@ -291,7 +297,7 @@ async def delay_page(request: Request) -> Response:
         + f'<div class="canccu-agenda-confirm-choices">{drawn.choices}</div>{drawn.body}'
         "</section></form>"
     )
-    return page(request, f"Delay {row['title']}", body)
+    return page(request, f"Delay {row['title']}", body, description=DELAY_ABOUT)
 
 
 def as_int(value: Any) -> Any:

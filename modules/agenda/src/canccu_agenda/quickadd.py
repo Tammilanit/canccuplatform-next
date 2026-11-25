@@ -38,6 +38,9 @@ WHEN = (("now", "Now"), ("in30", "In 30 min"), ("at", "At"))
 LENGTHS = (("15", "15 min"), ("30", "30 min"), ("60", "1 h"), ("other", "Other…"))
 
 
+QUICK_ABOUT = "Add an item in a few taps from a template. Change its details later on its own page."
+
+
 def _chip(minutes: str) -> str:
     """The Length chip of a number of minutes: its own, or Other…"""
     return minutes if minutes in {v for v, _ in LENGTHS} else "other"
@@ -168,7 +171,12 @@ async def quick_page(request: Request) -> Response:
         if session.has(ANNOUNCE)
         else ""
     )
-    return page(request, "Quick add", announce + _form(_from_gap(request), what, day, days, auto))
+    return page(
+        request,
+        "Quick add",
+        announce + _form(_from_gap(request), what, day, days, auto),
+        description=QUICK_ABOUT,
+    )
 
 
 def _from_gap(request: Request) -> dict[str, str]:
@@ -269,7 +277,7 @@ async def quick_add(request: Request) -> Response:
         days = event_days(request, today, posted)
         auto = str(form.get("day_auto") or "") or None
         body = notice(exc.message, "error") + _form(dict(form), what, posted, days, auto)
-        return page(request, "Quick add", body, status=400)
+        return page(request, "Quick add", body, status=400, description=QUICK_ABOUT)
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
     done = "added_next_day" if night else "added"
     path = f"/?day={added_day.date().isoformat()}&done={done}"
