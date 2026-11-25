@@ -43,6 +43,39 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
     expect((await start("eps.test", OUTSIDE_IP)).statusCode).toBe(201);
   });
 
+  it("pairs and plays from anywhere while the event lets paired screens play anywhere", async () => {
+    const res = await start("open.test", OUTSIDE_IP);
+    expect(res.statusCode).toBe(201);
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const claim = await call(h, "POST", "/api/screen/devices", {
+      host: "open.test",
+      session: "admin",
+      body: { code: shown, name: "On the 4G router" },
+    });
+    expect(claim.statusCode).toBe(201);
+    const collected = await call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+      host: "open.test",
+      ip: OUTSIDE_IP,
+      cookies: { canccu_pairing: setCookie(res, "canccu_pairing") ?? "" },
+    });
+    expect(collected.json()).toMatchObject({ status: "paired" });
+    const token = setCookie(collected, "canccu_device") ?? "";
+    const plays = (ip: string) =>
+      call(h, "GET", "/api/screen/device/state", {
+        host: "open.test",
+        ip,
+        cookies: { canccu_device: token },
+      });
+    expect((await plays(OUTSIDE_IP)).statusCode).toBe(200);
+    expect((await plays("198.51.100.20")).statusCode).toBe(200);
+    // The token is still the trust: none, and nothing plays.
+    const none = await call(h, "GET", "/api/screen/device/state", {
+      host: "open.test",
+      ip: OUTSIDE_IP,
+    });
+    expect(code(none)).toBe("device_unknown");
+  });
+
   it("refuses archived events and events without a venue", async () => {
     expect(code(await start("gamma.test"))).toBe("event_archived");
     expect(code(await start("delta.test"))).toBe("no_venue");

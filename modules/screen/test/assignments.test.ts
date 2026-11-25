@@ -239,6 +239,17 @@ describe.skipIf(!DATABASE_URL)("assignments", () => {
     });
   });
 
+  it("queues a test pattern like identify (#783)", async () => {
+    const { id } = await pairDevice(h, "alpha.test", "Patterned");
+    const sent = await call(h, "POST", `/api/screen/devices/${id}/commands`, {
+      session: "admin",
+      body: { command: "test_pattern" },
+    });
+    expect(sent.statusCode).toBe(202);
+    const queued = await withTenant("alpha", () => takeCommands(h.kv, id, h.clock.now));
+    expect(queued.map((c) => c.command)).toEqual(["test_pattern"]);
+  });
+
   it("queues reload and identify for the push channel, for 60 seconds", async () => {
     const { id } = await pairDevice(h, "alpha.test", "Commanded");
     const send = (body: unknown, session = "admin") =>

@@ -7,14 +7,24 @@
  */
 import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
-import { frame, keepSafetyLast, minutesLeft, safetyCode, setClock, setFoot } from "./frames.js";
+import {
+  frame,
+  keepSafetyLast,
+  minutesLeft,
+  pairQr,
+  safetyCode,
+  setClock,
+  setFoot,
+} from "./frames.js";
 import { previewMark } from "./preview-mark.js";
 import {
   archived,
   CONNECTING,
+  insecure,
   MOVED,
   MOVED_HELP,
   NO_VENUE,
+  PAIRING,
   PARKED,
   REFUSED,
   SETUP,
@@ -58,6 +68,8 @@ export interface PlayerEnv {
   /** `<body>`: frames replace its content. */
   root: HTMLElement;
   bundle: string;
+  /** Whether the page is a secure context, where `Secure` cookies stick; default `isSecureContext`. */
+  secure?: () => boolean;
   /** Whether the browser asks for reduced motion; the default reads `prefers-reduced-motion`. */
   reducedMotion?: () => boolean;
   now?: () => number;
@@ -191,7 +203,8 @@ export class Player {
   private mount(node: HTMLElement, safety: HTMLElement[] = []): void {
     this.drawn = true;
     // The screen keeps its layout between states; the stage stays first, behind it (stage.ts).
-    const marks = ".canccu-offline-marker, .canccu-preview-mark, .canccu-identify";
+    const marks =
+      ".canccu-offline-marker, .canccu-preview-mark, .canccu-identify, .canccu-test-pattern";
     if (mountBehindStage(this.env.root, node, marks, safety)) keepSafetyLast(this.env.root);
   }
 
@@ -269,6 +282,11 @@ export class Player {
       if (typeof zone === "string") this.timeZone = zone;
     }
     const event = this.eventName ?? null;
+    if (!(this.env.secure?.() ?? globalThis.isSecureContext !== false)) {
+      const address = `${this.env.nav.origin().replace(/^http:/, "https:")}/screen/`;
+      this.show({ kind: "insecure", event, where: SETUP, ...insecure(address) });
+      return;
+    }
     const answer = await call(this.env.fetch, "POST", "/api/screen/pairing");
     if (gen !== this.generation) return;
     const body = answer.body as { pairing_id?: string; code?: string; expires_at?: string } | null;
@@ -298,19 +316,9 @@ export class Player {
     const serverNow = Number.isNaN(serverMs) ? this.now() : serverMs;
     const left = Math.min(CODE_MAX_MS, Math.max(0, Date.parse(expiresAt) - serverNow || 0));
     const until = this.now() + left;
-    // No QR and no Studio path until Screen studio's Devices page exists (#190): the frame must
-    // not send anyone to a page that answers 404 (UX audit, D3).
-    const node = this.show(
-      {
-        kind: "pairing",
-        event,
-        where: SETUP,
-        kicker: "New screen",
-        title: "Pair this screen",
-        lines: ["Ask an organiser to pair it with this code."],
-      },
-      code,
-    );
+    const node = this.show({ kind: "pairing", event, where: SETUP, ...PAIRING }, code);
+    const studio = `${this.env.nav.origin()}/admin/screen/devices#pair=${encodeURIComponent(code)}`;
+    node.querySelector(".canccu-frame__bottom")?.prepend(pairQr(studio));
     this.tick = () => {
       setFoot(
         node,

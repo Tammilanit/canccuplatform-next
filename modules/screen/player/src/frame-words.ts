@@ -15,8 +15,8 @@ export const UNREACHABLE = {
 export const REFUSED = {
   title: "Not at the venue",
   lines: [
-    "This screen plays only on the venue's network.",
-    "Crew: check the venue uplink, or ask an organiser about the emergency switch (48 h max).",
+    "This event lets screens play only on the venue's network.",
+    "Crew: connect it to the venue's network, or ask an organiser to let screens play from anywhere (Event access).",
   ],
   foot: "Trying again every 30 s · nothing is shown while refused",
 };
@@ -46,3 +46,20 @@ export const TOO_MANY = {
   lines: ["Use an open code, or wait until one expires."],
   foot: "Trying again every 30 s",
 };
+/** The pairing frame (#783): the code, the QR beside the words, and the typed fallback. */
+export const PAIRING = {
+  kicker: "New screen",
+  title: "Pair this screen",
+  lines: [
+    "Waiting for an organiser…",
+    "Scan the QR code with a phone and sign in, or type the code in Screen studio → Devices.",
+  ],
+};
+/**
+ * The pairing and device cookies are `Secure`: over plain http the browser drops them, so a code
+ * could be claimed but never collected (contracts/screen.md, Pairing). Say so instead.
+ */
+export const insecure = (address: string) => ({
+  title: "This address can't pair screens",
+  lines: [`Open it with https: ${address}`, "Crew: change the kiosk's start address to that one."],
+});

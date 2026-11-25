@@ -6,13 +6,33 @@ import { FakeApi, fakeNav, json, problem, screenState } from "./fake.js";
 
 const T0 = Date.parse("2026-01-01T18:40:00Z");
 
-function setup(api: FakeApi, hash = "") {
+function setup(api: FakeApi, hash = "", secure = true) {
   document.body.replaceChildren();
   document.body.className = "canccu-page canccu-surface canccu-surface--screen";
   const nav = fakeNav(hash);
-  const player = new Player({ fetch: api.fetch, nav, root: document.body, bundle: "1.0.0" });
+  const player = new Player({
+    fetch: api.fetch,
+    nav,
+    root: document.body,
+    bundle: "1.0.0",
+    secure: () => secure,
+  });
   return { player, nav };
 }
+
+const pairingApi = (): FakeApi =>
+  new FakeApi()
+    .on("GET /api/screen/device/state", () => problem(401, "device_unknown"))
+    .on("GET /api/tenants/current", () => json(200, { id: "alpha", name: "Demo Event" }))
+    .on("POST /api/screen/pairing", () =>
+      json(201, {
+        pairing_id: "pr_1",
+        code: "K7Q49WXP",
+        expires_at: new Date(T0 + 581_000).toISOString(),
+        poll_seconds: 2,
+      }),
+    )
+    .on("GET /api/screen/pairing/pr_1", () => json(200, { status: "waiting" }));
 
 /** The frame on screen, or `playing` while a zone's layout is drawn. */
 const shown = (): string | undefined =>
@@ -57,6 +77,7 @@ describe("the device-state frames", () => {
     expect(text()).toContain("Demo EventScreen setup");
     expect(text()).toContain("K7Q4 9WXP");
     expect(text()).toContain("Code expires in 9:41");
+    expect(text()).toContain("Waiting for an organiser…");
     await settle(2000);
     expect(api.calls).toContain("GET /api/screen/pairing/pr_1");
     claimed = true;
@@ -66,6 +87,32 @@ describe("the device-state frames", () => {
     expect(text()).toContain("Paired. Waiting for a zone.");
     expect(api.calls).toContain("GET /api/screen/device/stream");
     await player.start();
+  });
+
+  it("shows a QR of Studio's pair dialog with the code, on the kiosk's own address (#783)", async () => {
+    const { player } = setup(pairingApi());
+    await player.start();
+    await settle();
+    const qr = document.querySelector<HTMLElement>(".canccu-frame__qr");
+    expect(qr?.dataset.url).toBe("https://alpha.test/admin/screen/devices#pair=K7Q49WXP");
+    const img = qr?.querySelector("img");
+    expect(img?.getAttribute("src")).toMatch(/^data:image\/svg\+xml,/);
+    expect(img?.getAttribute("alt")).toBe("");
+    expect(text()).toContain("Scan the QR code with a phone");
+    // Typing stays the fallback, and says where.
+    expect(text()).toContain("Screen studio → Devices");
+  });
+
+  it("asks for no code over plain http, and says to open the address with https (#783)", async () => {
+    const api = pairingApi();
+    const { player } = setup(api, "", false);
+    await player.start();
+    await settle();
+    expect(shown()).toBe("insecure");
+    expect(text()).toContain("This address can't pair screens");
+    expect(text()).toContain("https://alpha.test/screen/");
+    expect(api.calls).not.toContain("POST /api/screen/pairing");
+    expect(document.querySelector(".canccu-pairing-code")).toBeNull();
   });
 
   it("asks for a new code when the old one expired", async () => {
@@ -106,7 +153,9 @@ describe("the device-state frames", () => {
     await player.start();
     expect(shown()).toBe("refused");
     expect(text()).toContain("Not at the venue");
-    expect(text()).toContain("emergency switch");
+    // The venue check is the event's choice: the frame says who turns it off (#783).
+    expect(text()).toContain("only on the venue's network");
+    expect(text()).toContain("Event access");
     await settle(RETRY_MS);
     expect(api.calls.filter((c) => c === "GET /api/screen/device/state")).toHaveLength(2);
   });
@@ -387,5 +436,25 @@ describe("while playing", () => {
     api.send("command", { command: "reload", expires_at: expires });
     await settle();
     expect(nav.reloads).toBe(1);
+  });
+
+  it("shows a test pattern with the screen's name and size for 15 s (#783)", async () => {
+    const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, screenState()));
+    const { player } = setup(api);
+    await player.start();
+    await settle();
+    api.send("command", {
+      command: "test_pattern",
+      expires_at: new Date(T0 + 60_000).toISOString(),
+    });
+    await settle();
+    const pattern = document.querySelector(".canccu-test-pattern");
+    expect(pattern?.textContent).toContain("Hall left");
+    expect(pattern?.textContent).toMatch(/\d+×\d+/);
+    expect(pattern?.querySelectorAll(".canccu-test-pattern__corner")).toHaveLength(4);
+    // On top of the page, under packages/ui's safety elements.
+    expect(document.body.lastElementChild?.classList.contains("canccu-test-pattern")).toBe(true);
+    await settle(15_000);
+    expect(document.querySelector(".canccu-test-pattern")).toBeNull();
   });
 });

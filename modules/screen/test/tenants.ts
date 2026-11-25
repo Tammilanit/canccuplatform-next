@@ -10,6 +10,8 @@ export function context(id: string, overrides: Partial<TenantContext> = {}): Ten
     info_page_mode: "public",
     membership: "open",
     admin_access: "internet",
+    // The tests' events keep the venue check; open.test has the default (#783).
+    screen_access: "restricted",
     venue: { id: "v_1", name: "Demo Hall", addresses: ["10.0.0.0/24"] },
     venue_ip_check: { enabled: true, disabled_until: null, reason: null },
     flags_version: 1,
@@ -32,6 +34,8 @@ export const TENANTS: Record<string, TenantContext> = {
     },
   }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
+  // The default: a paired screen plays from anywhere (contracts/tenants.md, Screen access).
+  "open.test": context("open", { screen_access: "internet" }),
   // Before the event: Studio opens on Zones, not Live.
   "eta.test": context("eta", { status: "draft" }),
   // Web and YouTube assets off: Studio offers no links (contracts/screen.md, Feature flags).

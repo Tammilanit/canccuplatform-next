@@ -189,8 +189,8 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
       const ctx = tenantOf(request);
       assertWritable(ctx);
       const command = body(request).command;
-      if (command !== "reload" && command !== "identify") {
-        throw invalidRequest("`command` must be `reload` or `identify`.");
+      if (!isCommand(command)) {
+        throw invalidRequest("`command` must be `reload`, `identify` or `test_pattern`.");
       }
       const device = await db.tenant((c) => eventDevice(c, request.params.device_id));
       // Recorded before it is queued, so no command reaches a screen unrecorded.
@@ -229,8 +229,12 @@ function commandsKey(deviceId: string): string {
   return tenantKey("screen", "commands", deviceId);
 }
 
+const COMMANDS = ["reload", "identify", "test_pattern"] as const;
+const isCommand = (value: unknown): value is (typeof COMMANDS)[number] =>
+  COMMANDS.includes(value as (typeof COMMANDS)[number]);
+
 export interface PendingCommand {
-  command: "reload" | "identify";
+  command: (typeof COMMANDS)[number];
   expires_at: string;
 }
 

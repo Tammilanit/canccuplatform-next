@@ -5,10 +5,12 @@
  * createElement and textContent only, so no server text is ever parsed as markup. The platform's
  * mark appears on these pages and nowhere else on a screen (brief, L6): where the event is unknown.
  */
+import qrcode from "qrcode-generator";
 
 export const PLATFORM_MARK = "Canccu";
 
-export type FrameKind = "pairing" | "unassigned" | "refused" | "archived" | "moved" | "unknown";
+export type FrameKind =
+  "pairing" | "insecure" | "unassigned" | "refused" | "archived" | "moved" | "unknown";
 
 export interface FrameText {
   /** The event's name, when the page knows it. */
@@ -77,6 +79,25 @@ export function frame(kind: FrameKind, text: FrameText): HTMLElement {
   body.append(bottom);
   root.append(frameHead(text), body, el("footer", "canccu-frame__foot", text.foot ?? ""));
   return root;
+}
+
+/**
+ * The QR of Studio's pair dialog (contracts/screen.md, Pairing): a phone that scans it opens the
+ * dialog with the code filled in. Drawn in the browser; the URL is kept on the element for checks.
+ */
+export function pairQr(url: string): HTMLElement {
+  const code = qrcode(0, "M");
+  code.addData(url);
+  code.make();
+  const svg = code.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  const figure = el("figure", "canccu-frame__qr");
+  figure.dataset.url = url;
+  const img = el("img", "canccu-frame__qr-img");
+  img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  // The words beside it say what it is for; a reader gains nothing from the picture's name.
+  img.alt = "";
+  figure.append(img);
+  return figure;
 }
 
 /** The pairing code as packages/ui's safety class draws it: no theme can hide, move or restyle it. */
