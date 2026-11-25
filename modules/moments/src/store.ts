@@ -88,12 +88,16 @@ export async function lockMoment(c: SqlClient, id: string): Promise<MomentRow | 
   return rows[0] ? momentOf(rows[0]) : null;
 }
 
+/** The running moment of a key, locked like `lockMoment` (its zones first) so a renewal and a pass never cross. */
 export async function lockRunningByKey(c: SqlClient, key: string): Promise<MomentRow | null> {
-  const { rows } = await c.query(
-    `SELECT ${COLUMNS} FROM moments WHERE dedupe_key = $1 AND ended_at IS NULL FOR UPDATE`,
+  const { rows: ids } = await c.query(
+    `SELECT id FROM moments WHERE dedupe_key = $1 AND ended_at IS NULL`,
     [key],
   );
-  return rows[0] ? momentOf(rows[0]) : null;
+  if (ids[0] === undefined) return null;
+  const m = await lockMoment(c, ids[0].id as string);
+  // It may have ended while we waited for the zones.
+  return m !== null && m.ended_at === null ? m : null;
 }
 
 /**

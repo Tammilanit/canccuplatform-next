@@ -7,7 +7,7 @@
  */
 import { isDeepStrictEqual } from "node:util";
 import type { Outbox, SqlClient } from "@canccu/kit";
-import { adoptionOf, endOld } from "./air-adopt.js";
+import { adoptionOf, endOld, slotsEverywhere } from "./air-adopt.js";
 import { planZone } from "./air-plan.js";
 import type { SlotIn, SlotOut, ZonePlan } from "./air-plan.js";
 import type { AirSettings } from "./air-settings.js";
@@ -195,7 +195,9 @@ export async function passZone(
       await syncExpiry(c, m.id);
     }
     // D19: the old override ends only once the per-zone one has started.
-    for (const m of adopted.values()) await endOld(c, engine.outbox, m, reason, actor, true);
+    // It covers every zone of the moment, so it waits for the last zone's first pass.
+    for (const m of adopted.values())
+      if (await slotsEverywhere(c, m)) await endOld(c, engine.outbox, m, reason, actor, true);
     await saveZone(c, zone, plan.zone);
     return;
   }

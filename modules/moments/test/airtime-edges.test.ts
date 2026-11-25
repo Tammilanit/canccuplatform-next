@@ -124,6 +124,45 @@ run("airtime edges (#777)", () => {
     expect((await row(shown.id))?.ended_at).toBeNull();
   });
 
+  it("a placed ticker moment hidden past its stale time keeps its remaining time", async () => {
+    const t = await start({ ...pizza, regions: ["ticker"], ttl_seconds: 3600, dedupe_key: "t" }, 0);
+    await report(1, [[`${t.id}.main`, "ticker"]], [], []);
+    await tick(1900);
+    await report(1900, [], [], [`${t.id}.main`]);
+    await tick(1901);
+    expect((await row(t.id))?.ended_at).toBeNull();
+  });
+
+  it("adopts a moment on every zone it covers and ends its old override after the last", async () => {
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('side')`));
+    const a = await start({ ...card, ttl_seconds: 300 }, 0);
+    await w.tx("demo", async (c) => {
+      await c.query(`DELETE FROM moment_slots`);
+      await c.query(`DELETE FROM moments_zone_air`);
+      await c.query(`DELETE FROM moment_placements`);
+      await c.query(`DELETE FROM moment_overrides`);
+      await c.query(`UPDATE moments SET expires_at = $1, fresh_at = NULL`, [w.at(100)]);
+      await c.query(
+        `INSERT INTO moment_overrides (override_id, moment_id, sent)
+         SELECT id, id, jsonb_build_object('id', id, 'kind', kind, 'zones', '[]'::jsonb,
+           'rank', 50, 'template', template, 'content', content, 'regions', to_jsonb(regions),
+           'expires_at', $1::text)
+         FROM moments`,
+        [w.at(100).toISOString()],
+      );
+    });
+    const from = w.events("demo").length;
+    await tick(10);
+    expect(secondsLeft(`${a.id}.main`, 10)).toBeCloseTo(90, 0);
+    expect(secondsLeft(`${a.id}.side`, 10)).toBeCloseTo(90, 0);
+    const events = w.events("demo").slice(from);
+    const idx = (f: (e: Event) => boolean) => events.findIndex(f);
+    const startOf = (z: string) =>
+      idx((e) => (e.data.override as Record<string, unknown> | undefined)?.id === `${a.id}.${z}`);
+    const ended = idx((e) => e.data.override_id === a.id);
+    expect(ended).toBeGreaterThan(Math.max(startOf("main"), startOf("side")));
+  });
+
   it("adopts moments running at the deploy: the hero stays, the old override ends after", async () => {
     const a = await start({ ...hot(1), ttl_seconds: 300 }, 0);
     const b = await start({ ...card, ttl_seconds: 300 }, 0);

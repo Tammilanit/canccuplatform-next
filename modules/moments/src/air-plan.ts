@@ -80,11 +80,10 @@ export const usedUpAt = (s: SlotIn, now: number): number =>
 const claimant = (s: SlotIn) => s.chain.includes("hero") || s.chain.includes("full");
 const onAir = (s: SlotIn) => s.granted === "hero" || s.granted === "pass" || s.granted === "inside";
 /**
- * Waiting, so it can go stale: off air, or passed through but not seen (Screen leaves it unplaced
- * or hidden, or never placed it), which nothing else would ever end.
+ * Waiting, so it can go stale: off air, or passed through but never seen (Screen never placed it; one placed once and
+ * hidden since keeps its time, rule 2), which nothing else would ever end.
  */
-const waiting = (s: SlotIn) =>
-  !onAir(s) || (s.granted === "pass" && (s.on_air_since === null || !s.placed));
+const waiting = (s: SlotIn) => !onAir(s) || (s.granted === "pass" && !s.placed);
 const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id);
 
 /** Moved forward first (latest first), then rank, then the longest wait. */

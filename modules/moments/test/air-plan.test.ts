@@ -131,12 +131,11 @@ describe("the airtime scheduler", () => {
       planZone(1_800_000, held, [card({ budget_ms: null }), s], DEFAULT_AIR);
     expect(at(ticker({ granted: "pass", on_air_since: 0 })).ends).toEqual([]);
     const stale = [{ moment_id: "ticker", reason: "stale" }];
-    // Screen leaves it unplaced or hidden: its clock is paused.
-    expect(at(ticker({ granted: "pass", on_air_since: null, played_ms: 1000 })).ends).toEqual(
-      stale,
-    );
+    // Placed once and hidden or unplaced since: its clock is paused and it keeps its time (rule 2).
+    expect(at(ticker({ granted: "pass", on_air_since: null, played_ms: 1000 })).ends).toEqual([]);
     // Screen never placed it there.
     expect(at(ticker({ granted: "pass", on_air_since: 0, placed: false })).ends).toEqual(stale);
+    expect(at(ticker({ granted: "pass", on_air_since: null, placed: false })).ends).toEqual(stale);
     const early = planZone(
       1_799_999,
       held,

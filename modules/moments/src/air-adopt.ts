@@ -5,8 +5,9 @@
  * one started, so a restart with moments on air never blanks a screen.
  */
 import type { Outbox, SqlClient } from "@canccu/kit";
-import { endOverride, liveOverrides } from "./store.js";
+import { endOverride, knownZones, liveOverrides } from "./store.js";
 import type { Actor, MomentRow } from "./store.js";
+import { covers } from "./engine.js";
 import type { EndReason } from "./engine.js";
 
 export interface Adopted {
@@ -16,7 +17,7 @@ export interface Adopted {
   hero: boolean;
 }
 
-/** The moment's adoption on `zone` when it still has its old override and no slot yet, or null. */
+/** The moment's adoption on `zone` when it still has its old override and no slot on this zone yet, or null. */
 export async function adoptionOf(
   c: SqlClient,
   m: MomentRow,
@@ -24,9 +25,10 @@ export async function adoptionOf(
   now: Date,
 ): Promise<Adopted | null> {
   if (!(await liveOverrides(c, m.id)).some((o) => o.override_id === m.id)) return null;
-  const { rows: slots } = await c.query(`SELECT 1 FROM moment_slots WHERE moment_id = $1 LIMIT 1`, [
-    m.id,
-  ]);
+  const { rows: slots } = await c.query(
+    `SELECT 1 FROM moment_slots WHERE moment_id = $1 AND zone_key = $2 LIMIT 1`,
+    [m.id, zone],
+  );
   if (slots.length > 0) return null;
   const { rows: hero } = await c.query(
     `SELECT 1 FROM moment_placements WHERE override_id = $1 AND zone_key = $2
@@ -38,6 +40,17 @@ export async function adoptionOf(
       m.expires_at === null ? null : Math.max(1000, m.expires_at.getTime() - now.getTime()),
     hero: hero.length > 0,
   };
+}
+
+/**
+ * Whether every zone the moment covers has its own slot: only then may the old `<id>` end, for it
+ * covers all those zones at once and the passes reach them one by one (D19).
+ */
+export async function slotsEverywhere(c: SqlClient, m: MomentRow): Promise<boolean> {
+  const known = await knownZones(c);
+  const { rows } = await c.query(`SELECT zone_key FROM moment_slots WHERE moment_id = $1`, [m.id]);
+  const have = new Set(rows.map((r) => r.zone_key as string));
+  return known.every((z) => !covers(m, z, known) || have.has(z));
 }
 
 /**

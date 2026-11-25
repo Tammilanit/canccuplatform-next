@@ -7,7 +7,7 @@
 import type { Event, SqlClient } from "@canccu/kit";
 import { passZone } from "./air.js";
 import type { PassEngine } from "./air.js";
-import { pause, resume, saveSlot, slotsOn } from "./air-store.js";
+import { lockZone, pause, resume, saveSlot, slotsOn } from "./air-store.js";
 import { titleOf, writeHistory } from "./store.js";
 import type { MomentRow } from "./store.js";
 
@@ -102,6 +102,9 @@ export async function applyClaims(
   now: Date,
   engine?: PassEngine,
 ): Promise<void> {
+  // The zone first, as the pass and `lockMoment` take it: moments and slots are locked after it,
+  // so a pass in between neither loses its write to ours nor deadlocks with it (#777).
+  if (engine !== undefined) await lockZone(c, report.zone_key, "wait");
   await placementRows(c, report, now);
   if (engine === undefined) return;
   for (const slot of await slotsOn(c, report.zone_key)) {
