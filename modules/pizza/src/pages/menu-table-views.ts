@@ -188,6 +188,7 @@ export function tableView(
     }
     ${o.failure === null || o.failure === undefined ? "" : readErrorView(c, o.failure, {})}
     <p class="canccu-muted canccu-small">${c.t("menuread.fix")}</p>
+    <!-- Enter in a field shows the table again with the edits, never a row's delete. -->
     <form${attrs({
       method: "post",
       action,
@@ -198,7 +199,8 @@ export function tableView(
       ...menuProgressAttrs(c),
     })}>
       ${formKey()}
-      <button class="pizza-sr-only" type="submit" name="do" value="show" data-plain tabindex="-1">
+      <button class="pizza-sr-only" type="submit" name="do" value="show" data-plain tabindex="-1"
+        aria-hidden="true">
         ${c.t("menuread.check")}
       </button>
       ${notes.map(

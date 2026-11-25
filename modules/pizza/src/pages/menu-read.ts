@@ -71,11 +71,13 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
     reply: FastifyReply,
     c: PageCtx,
     body: Parameters<typeof organiserPage>[4]["body"],
+    // The photos' form is narrow; the table takes the page's width.
+    narrow = true,
   ) =>
     organiserPage(request, reply, deps, c, {
       title: c.t("read.title"),
       crumb: { href: `${P}/${encodeURIComponent(request.params.id)}`, label: c.t("tab.pizzerias") },
-      narrow: true,
+      narrow,
       body,
     });
 
@@ -103,6 +105,7 @@ export function menuReadPages(app: FastifyInstance, deps: AppDeps): void {
       reply,
       c,
       tableView(c, { pizzeriaId: id, pizzeria: String(pizzeria.name), table, failure }),
+      false,
     );
   };
 
