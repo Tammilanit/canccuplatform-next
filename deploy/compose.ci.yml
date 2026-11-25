@@ -35,7 +35,8 @@ services:
   # second event is written as the tenants module's own seed writes the first one. The superuser
   # bypasses RLS, so `tenant_id` is given rather than taken from the transaction's setting. The
   # demo event's Wi-Fi is written here too, for the screenshots' venue card (#375): the CI session
-  # holds no tenants right, so no API call can set it.
+  # holds no tenants right, so no API call can set it. So is its photo wall's flag, which the dev
+  # server's tenants command turns on (#788), for the dev-seed shard's photos.
   tenant-two-seed:
     image: postgres:17.11-alpine
     environment:
@@ -55,6 +56,8 @@ services:
         UPDATE venue_info
           SET wifi = '[{"ssid": "demo-guest", "password": null, "note": null, "visibility": "public"}]'
           WHERE tenant_id = 'demo' AND wifi = '[]';
+        INSERT INTO tenant_flags (tenant_id, name, value)
+          VALUES ('demo', 'screen.photos', true) ON CONFLICT DO NOTHING;
         INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary)
           VALUES ('demo-two.localhost', 'demo-two', 'platform', 'active', true) ON CONFLICT DO NOTHING;
         COMMIT;
