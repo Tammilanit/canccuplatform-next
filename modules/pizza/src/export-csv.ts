@@ -32,6 +32,7 @@ export interface ExportOrder {
   payer_name: string | null;
   total_cents: number | null;
   split: Split | null;
+  even_limit_cents: number | null;
   settle_to: SettleTo;
   rows: {
     user_id: string | null;
@@ -64,7 +65,10 @@ export function buildExport(
       left_out.push({ order_id: exportId(o), pizzeria: o.pizzeria, reason: "no_total" });
       continue;
     }
-    const money = amounts({ total_cents: o.total_cents, split: o.split }, o.rows);
+    const money = amounts(o, o.rows);
+    // Even shares leave the amount to the payment system, by units; a pizza over the even-share
+    // limit (#789) pays more than its units say, so then every row carries its amount.
+    const withAmounts = money.split === "exact" || money.people.some((p) => p.over_limit_cents > 0);
     const discord = new Map(o.rows.map((r) => [r.user_id, r.discord_id]));
     const head = [
       exportId(o),
@@ -84,7 +88,7 @@ export function buildExport(
           nick(p),
           discord.get(p.user_id) ?? "",
           String(p.units),
-          money.split === "exact" && p.amount_cents !== null ? euros(p.amount_cents) : "",
+          withAmounts && p.amount_cents !== null ? euros(p.amount_cents) : "",
         ]),
       );
     }

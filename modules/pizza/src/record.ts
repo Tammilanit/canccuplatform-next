@@ -16,6 +16,7 @@ export interface RecordOrder {
   payer_name: string | null;
   total_cents: number | null;
   split: Split | null;
+  even_limit_cents: number | null;
   settle_to: SettleTo;
   auto_released: boolean;
   /** Cancelled once it was called in: the payment system may already have it. */
@@ -77,7 +78,7 @@ export function buildRecord(orders: RecordOrder[]): DailyRecord {
     }
     const where = `${o.day} order ${o.seq} (${o.pizzeria})`;
     const { rows, ...rest } = o;
-    const money = amounts({ total_cents: o.total_cents, split: o.split }, rows);
+    const money = amounts(o, rows);
     const comments = new Map<string | null, string[]>();
     for (const r of rows)
       if (r.comment) comments.set(r.user_id, [...(comments.get(r.user_id) ?? []), r.comment]);

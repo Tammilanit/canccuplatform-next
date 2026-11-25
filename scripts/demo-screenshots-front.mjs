@@ -37,6 +37,8 @@ const ELSEWHERE = "demo-elsewhere.localhost";
 const NO_EVENT = "no-event.localhost"; // no tenant has it, so nothing resolves
 const DRAFT = "demo-draft.localhost";
 const VENUE_ONLY = "demo-venue-only.localhost"; // its pages open only at a venue CI is not at
+// Its organiser chose "Only from the venue's network" (#778), and CI is not at its venue.
+const RESTRICTED = "demo-restricted.localhost";
 // A well-formed code: the pages that answer before the code is checked never read it.
 const ANY_CODE = "/notify/check-in?p=arrival&c=AAAAAAAAAAAAAAAAAAAAAA";
 const FRESH = "@fresh"; // a code fetched right before the shot
@@ -90,6 +92,19 @@ const SHOTS = [
     "/admin/sign-in",
     PHONE,
     { cookie: null, host: NO_EVENT, text: "Organisers and crew sign in here" },
+  ],
+  // An organiser page of an event whose organiser opened it only on the venue's network (#778).
+  [
+    "error-venue-network-only",
+    "/agenda/",
+    DESK,
+    { host: RESTRICTED, status: 403, text: "Venue network only" },
+  ],
+  [
+    "error-venue-network-only-phone",
+    "/agenda/",
+    PHONE,
+    { host: RESTRICTED, status: 403, text: "Venue network only" },
   ],
   // From another module's page (#474): no role at all lands on "No role yet", not "No access".
   [

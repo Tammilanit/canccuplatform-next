@@ -187,7 +187,7 @@ services:
   screen:
     environment:
       CANCCU_ADMIN_URL: http://session-stub:8080
-      # The demo tenant's admin paths answer only from the venue or Tailscale. The tests' calls to
+      # A restricted event's admin paths answer only from the venue or Tailscale. The tests' calls to
       # the published port reach Caddy from the Docker network's gateway, an address of Docker's
       # default pools, so those pools stand in for Tailscale here. A daemon with its own
       # `default-address-pools` gets 403 on the screen tests: add its pools here when running them.

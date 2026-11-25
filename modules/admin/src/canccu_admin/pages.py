@@ -68,6 +68,7 @@ PAGE_NAMES = {
     "health-view": "Health",
     "profile": "the event profile",
     "people": "People",
+    "access": "Event access",
 }
 
 

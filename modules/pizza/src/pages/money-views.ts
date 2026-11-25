@@ -38,11 +38,21 @@ export function splitLine(c: PageCtx, m: MoneyView): string {
       extras: euro(c, m.extras_cents),
       each: euro(c, Math.round(m.extras_cents / units)),
     });
-  return c.t("money.even_line", {
+  // The even-share limit (#789 item 8): who pays above it, or that there is no average to limit.
+  const over = m.people.filter((p) => p.over_limit_cents > 0);
+  if (over.length > 0) {
+    const surplus = over.reduce((s, p) => s + p.over_limit_cents, 0);
+    return c.t("money.even_over", {
+      each: euro(c, Math.round((total - surplus) / units)),
+      over: over.map((p) => `${p.name ?? "—"} +${euro(c, p.over_limit_cents)}`).join(", "),
+    });
+  }
+  const line = c.t("money.even_line", {
     total: euro(c, total),
     n: units,
     each: euro(c, Math.round(total / units)),
   });
+  return m.even_limit_cents === null ? c.t("money.even_no_average", { line }) : line;
 }
 
 /**

@@ -56,6 +56,11 @@ INSERT INTO tenants (id, name, time_zone, venue_id, status, starts_at, ends_at, 
    date_trunc('day', now()) - interval '7 hours', date_trunc('day', now()) + interval '1 day 22 hours',
    'venue_only')
   ON CONFLICT DO NOTHING;
+-- An event whose organiser chose "Only from the venue's network" (#778), at a venue CI is not at:
+-- its organiser pages refuse in words.
+INSERT INTO tenants (id, name, time_zone, venue_id, status, admin_access)
+  VALUES ('demo-restricted', 'Demo Event', 'UTC', 'demo-elsewhere-venue', 'live', 'restricted')
+  ON CONFLICT DO NOTHING;
 INSERT INTO venue_info (tenant_id, venue_id, copied_at, revision, wifi)
   VALUES ('demo-elsewhere', 'demo-elsewhere-venue', now(), 1,
           '[{"ssid": "demo-hall", "password": null, "note": null, "visibility": "public"}]')
@@ -65,7 +70,8 @@ INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary) VALUES
   ('demo-soon.localhost', 'demo-soon', 'platform', 'active', true),
   ('demo-elsewhere.localhost', 'demo-elsewhere', 'platform', 'active', true),
   ('demo-draft.localhost', 'demo-draft', 'platform', 'active', true),
-  ('demo-venue-only.localhost', 'demo-venue-only', 'platform', 'active', true)
+  ('demo-venue-only.localhost', 'demo-venue-only', 'platform', 'active', true),
+  ('demo-restricted.localhost', 'demo-restricted', 'platform', 'active', true)
   ON CONFLICT DO NOTHING;
 -- The archived event's run of show (#439): one item of its day, which its pages show read-only.
 -- Its state row too, so the agenda never adds its starter kinds beside this one (store.ensure_event).

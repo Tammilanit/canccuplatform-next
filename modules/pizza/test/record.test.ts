@@ -14,6 +14,7 @@ const base = {
   pizzeria: "Demo Pizzeria",
   payer_name: "Pena",
   split: null,
+  even_limit_cents: null,
   settle_to: "organiser" as const,
   auto_released: false,
   cancelled_after_placed: false,
@@ -81,12 +82,20 @@ describe("buildRecord", () => {
   });
   it("lists each order's people by name, with pizzas, comments and amounts", () => {
     expect(r.days[0]?.orders[0]?.people).toEqual([
-      { user_id: "u_Anni", name: "Anni", units: 1, amount_cents: 6087, comments: [] },
+      {
+        user_id: "u_Anni",
+        name: "Anni",
+        units: 1,
+        amount_cents: 6087,
+        over_limit_cents: 0,
+        comments: [],
+      },
       {
         user_id: "u_alex",
         name: "alex",
         units: 2,
         amount_cents: 12173,
+        over_limit_cents: 0,
         comments: ["split with Pena", "extra"],
       },
     ]);

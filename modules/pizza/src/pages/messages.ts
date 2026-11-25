@@ -200,7 +200,7 @@ export const EN = {
   "menus.phone": "Phone",
   "menus.web": "Web page",
   "menus.service": "Service",
-  "menus.own": "Own pizza: a base and 1–4 toppings, {n} to choose from",
+  "menus.own": "Own pizza: a base and 1–6 toppings, {n} to choose from",
   "menus.no_own": "No own pizza: the menu has no base.",
   "menus.save": "Save",
   "menus.hide": "Hide this pizzeria",

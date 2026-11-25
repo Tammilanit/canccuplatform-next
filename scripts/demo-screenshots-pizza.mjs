@@ -17,21 +17,23 @@ import {
 } from "../modules/screen/test/stack/client.mjs";
 import { roomReady } from "../modules/screen/test/stack/food.mjs";
 import { PHONE, firstLine } from "./demo-screenshots-shot.mjs";
-import { BOX, ORDER, PAID, PIZZERIA, PLAYERS, RECEIPT, SHOTS } from "./demo-screenshots-pizza-list.mjs";
+import { BOX, EVEN, ORDER, PAID, PIZZERIA, PLAYERS, RECEIPT, SHOTS } from "./demo-screenshots-pizza-list.mjs";
 
 export { pizzaListed } from "./demo-screenshots-pizza-list.mjs";
 
 /** The demo pizzerias, when the stack has not loaded the event profile that holds them. */
 const DEMO_MENU = [
-  "pizzeria,phone,website,service,kind,number,name,description,price",
-  'Demo Pizzeria,+000 000 0000,https://pizzeria.example,delivery,item,1,Margherita,"tomato, mozzarella",8.00',
-  'Demo Pizzeria,,,,item,3,Pepperoni,"tomato, mozzarella, pepperoni",9.00',
-  'Demo Pizzeria,,,,item,12,Kebab,"kebab, onion, chili",9.50',
-  'Demo Pizzeria,,,,base,,Own pizza,"tomato, mozzarella",7.00',
-  "Demo Pizzeria,,,,topping,,Ham,,1.00",
-  "Demo Pizzeria,,,,topping,,Pineapple,,1.00",
-  'Demo Trattoria,+000 000 0001,https://trattoria.example,takeaway,item,4,Margherita,"tomato, mozzarella",8.00',
-  'Demo Trattoria,,,,item,7,Funghi,"mushroom, mozzarella",8.50',
+  "pizzeria,phone,website,service,kind,number,name,description,price,included_toppings,extra_topping_price,tier",
+  'Demo Pizzeria,+000 000 0000,https://pizzeria.example,delivery,item,1,Margherita,"tomato, mozzarella",8.00,,,',
+  'Demo Pizzeria,,,,item,3,Pepperoni,"tomato, mozzarella, pepperoni",9.00,,,',
+  'Demo Pizzeria,,,,item,12,Kebab,"kebab, onion, chili",9.50,,,',
+  'Demo Pizzeria,,,,base,,Fantasia,"tomato, mozzarella",10.00,3,1.50,',
+  "Demo Pizzeria,,,,topping,,Ham,,1.00,,,",
+  "Demo Pizzeria,,,,topping,,Pineapple,,1.00,,,",
+  "Demo Pizzeria,,,,topping,,Prosciutto,,2.50,,,special",
+  'Demo Trattoria,+000 000 0001,https://trattoria.example,takeaway,item,4,Margherita,"tomato, mozzarella",8.00,,,',
+  'Demo Trattoria,,,,item,7,Funghi,"mushroom, mozzarella",8.50,,,',
+  'Demo Trattoria,,,,item,21,Tartufo,"truffle, mushroom, mozzarella",18.90,,,',
   "",
 ].join("\n");
 
@@ -174,6 +176,7 @@ export async function pizzaShots({ shot, fail }) {
   let pz;
   let order;
   let receipt = "";
+  let even = "";
   try {
     await orderingOpen();
     await readerOn();
@@ -257,6 +260,30 @@ export async function pizzaShots({ shot, fail }) {
     arrived: () =>
       api("POST", `/api/pizza/orders/${order}/arrive`, { pickup: "Entrance table" }),
     done: () => api("POST", `/api/pizza/orders/${order}/hand-out`),
+    // #789 item 8: at Demo Trattoria the Tartufo is over the menu's even-share limit; called in
+    // (which fixes the limit) and split evenly, its holder pays the part above it.
+    even: async () => {
+      const listed = expect(await api("GET", "/api/pizza/pizzerias"), 200, "pizzerias");
+      const tz = listed.body.pizzerias.find((p) => p.name === "Demo Trattoria").id;
+      const menu = expect(await api("GET", `/api/pizza/pizzerias/${tz}`), 200, "the menu");
+      const closes = new Date(Date.now() + 45 * 60_000).toISOString();
+      even = expect(await openOrder({ pizzeria_id: tz, closes_at: closes }), 201, "opening")
+        .body.id;
+      for (const [cookie, number] of [
+        [SESSION, "21"],
+        [PLAYERS[0][0], "4"],
+        [PLAYERS[1][0], "7"],
+      ]) {
+        const item = menu.body.menu.items.find((i) => i.number === number);
+        expect(
+          await api("POST", `/api/pizza/orders/${even}/items`, { kind: "menu", menu_item_id: item.id }, cookie),
+          201,
+          "adding a pizza",
+        );
+      }
+      expect(await api("POST", `/api/pizza/orders/${even}/place`, {}), 200, "calling it in");
+      return api("PATCH", `/api/pizza/orders/${even}/money`, { total_cents: 3600, split: "even" });
+    },
   };
   let at = "open";
   for (const [name, path, viewport, step, cookie = SESSION] of SHOTS) {
@@ -272,7 +299,7 @@ export async function pizzaShots({ shot, fail }) {
     const preview = name.startsWith("pizza-import-preview");
     await shot(
       name,
-      path.replace(ORDER, order).replace(PIZZERIA, pz).replace(RECEIPT, receipt),
+      path.replace(ORDER, order).replace(PIZZERIA, pz).replace(RECEIPT, receipt).replace(EVEN, even),
       viewport,
       cookie,
       {

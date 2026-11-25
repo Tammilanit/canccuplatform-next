@@ -6,6 +6,8 @@ import { DESK, PHONE } from "./demo-screenshots-shot.mjs";
 export const ORDER = "<order>";
 export const PIZZERIA = "<pizzeria>";
 export const RECEIPT = "<receipt>";
+/** A second order, at Demo Trattoria, split evenly with a pizza over the limit (#789 item 8). */
+export const EVEN = "<even>";
 const GUEST = null;
 /**
  * The order's other people (#704): Players 1–3 of the CI session stub (deploy/compose.ci.yml), each
@@ -92,6 +94,10 @@ const LISTED = [
   ["pizza-export-phone", "/pizza/crew/export", PHONE, "done"],
   // With the month's read log under the key (#789 item 12).
   ["pizza-integrations-phone", "/pizza/integrations", PHONE, "done"],
+  // #789 item 8: even shares with the Tartufo over the menu's limit, for its holder and on their
+  // own order.
+  ["pizza-holder-money-even-limit-phone", `/pizza/hold/${EVEN}/money`, PHONE, "even"],
+  ["pizza-food-even-limit-phone", `/pizza/orders/${EVEN}`, PHONE, "even"],
 ];
 /** Every page at both widths (amendment 5): a phone shot not listed at desk width gets it next. */
 export const SHOTS = LISTED.flatMap((s) => {

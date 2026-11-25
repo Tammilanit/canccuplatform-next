@@ -36,7 +36,7 @@ Once, on the dev server, after [Set up auto-deploy](../../setup/README.md#auto-d
    - **The Discord application needs the dev redirect URL.** The product owner, who owns the application, adds `http://<dev host>/admin/sign-in/callback` in the [Discord Developer Portal](https://discord.com/developers/applications): the application → OAuth2 → Redirects → Add Redirect → Save. It must match `CANCCU_PUBLIC_URL` exactly (scheme, name, no port 80).
    - Sign in on that name: the session cookie belongs to it, and admin refuses a form sent from any other origin. Pages on another name of the list load, but signed out.
    - The first person to sign in becomes the owner with the first-run code: `docker compose -f deploy/compose.yml logs admin | grep "first-run code"`, then `http://<dev host>/admin/first-run` ([modules/admin/README.md](../../modules/admin/README.md)).
-   - Organiser pages answer only from the venue or Tailscale while the event's admin access is restricted (the default, [contracts/tenants.md](../../contracts/tenants.md), Admin access), so open them over Tailscale.
+   - Organiser pages open from anywhere with sign-in (admin access `internet`, the default, [contracts/tenants.md](../../contracts/tenants.md), Admin access). While an organiser has set it to `restricted`, they answer only from the venue or Tailscale, so open them over Tailscale then.
 3. After changing `deploy/.env`, restart the stack so the modules read it: `docker compose -f deploy/compose.yml up -d --wait --no-build`.
 
 ## Screens over Tailscale

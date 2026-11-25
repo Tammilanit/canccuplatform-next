@@ -156,6 +156,12 @@ export function checkView(
     r.pizzas.reduce((s, p) => s + (p.suggested_cents ?? p.price_cents ?? 0), 0) + r.extras_cents;
   const why = (p: ReceiptMatch["pizzas"][number]) => {
     if (p.line === null) return c.t("check.no_line");
+    // A group line ("15 × pizza", #789 item 9): the pizza's own price, or the line's unit price.
+    const g = p.group ? r.lines[p.line] : undefined;
+    if (g !== undefined && p.suggested_cents !== null)
+      return p.differs || p.price_cents === null
+        ? c.t("check.group_unit", { line: g.text, price: euro(c, p.suggested_cents) })
+        : c.t("check.in_group", { line: g.text, price: euro(c, p.price_cents) });
     if (p.price_cents === null) return c.t("check.no_menu_price");
     return p.differs
       ? c.t("check.menu_said", { price: euro(c, p.price_cents) })
@@ -178,7 +184,25 @@ export function checkView(
       ${amountField(`price_${p.item_id}`, p.suggested_cents ?? p.price_cents, p.label)}
     </li>`;
   const toCheck = r.pizzas.filter(problem);
-  const unmatched = r.unmatched_lines.map((i) => r.lines[i]?.text ?? "");
+  const unmatched = [
+    ...r.unmatched_lines.map((i) => ({
+      text: r.lines[i]?.text ?? "",
+      what: c.t("check.no_pizza"),
+    })),
+    // Reads kept before #789 have no group warnings.
+    ...(r.group_count_mismatch ?? []).map((g) => ({
+      text: r.lines[g.line]?.text ?? "",
+      what: c.t("check.group_count", { count: g.count, pizzas: g.pizzas }),
+    })),
+  ];
+  // What each group line costs beyond its pizzas' prices: shared per pizza with the extras.
+  const beyond = r.lines.flatMap((l, i) => {
+    const covered = r.pizzas.filter((p) => p.group && p.line === i);
+    const rest = l.amount_cents - covered.reduce((s, p) => s + (p.suggested_cents ?? 0), 0);
+    return covered.length === 0 || rest === 0
+      ? []
+      : [{ name: c.t("check.group_extra", { line: l.text }), amount_cents: rest }];
+  });
   const first =
     toCheck.length + unmatched.length === 0
       ? ""
@@ -186,11 +210,11 @@ export function checkView(
           <ul class="pizza-people pizza-list">
             ${toCheck.map(pizzaRow)}
             ${unmatched.map(
-              (text) =>
+              (u) =>
                 html`<li class="pizza-person pizza-person--warn">
                   <span class="pizza-person__text"
-                    ><span class="pizza-person__name">${text}</span
-                    ><span class="pizza-person__what">${c.t("check.no_pizza")}</span></span
+                    ><span class="pizza-person__name">${u.text}</span
+                    ><span class="pizza-person__what">${u.what}</span></span
                   >
                 </li>`,
             )}
@@ -221,11 +245,11 @@ export function checkView(
                   </ul>`
           }
           ${
-            extras.length === 0
+            extras.length + beyond.length === 0
               ? ""
               : html`<h2 class="pizza-section">${c.t("check.extras")}</h2>
                   <ul class="pizza-people pizza-list">
-                    ${extras.map(
+                    ${[...extras, ...beyond].map(
                       (l) =>
                         html`<li class="pizza-person">
                           <span class="pizza-person__text"

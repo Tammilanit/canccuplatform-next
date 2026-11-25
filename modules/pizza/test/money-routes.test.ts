@@ -178,3 +178,68 @@ describe.skipIf(!DATABASE_URL)("money", () => {
     expect(errorOf(await patch("crew", { split: "even" })).code).toBe("cancelled");
   });
 });
+
+describe.skipIf(!DATABASE_URL)("the even-share limit (#789 item 8, D17)", () => {
+  const menu = (prices: (number | undefined)[]) =>
+    w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      items: ["1", "3", "12", "20"].map((number, i) =>
+        prices[i] === undefined
+          ? { number, name: `Pizza ${number}` }
+          : { number, name: `Pizza ${number}`, price: prices[i] },
+      ),
+    });
+  const stored = async () => {
+    const { rows } = await pool.query<{ even_limit_cents: number | null }>(
+      "SELECT even_limit_cents FROM pizza_orders WHERE id = $1",
+      [id],
+    );
+    return rows[0]?.even_limit_cents;
+  };
+  it("is the menu's average × 1.3 to 10 cents, live until the call-in", async () => {
+    // Items 800, 900 and 950 (and one without a price): 883.33 × 1.3 = 1148.33 → 1150.
+    expect(json(await money()).even_limit_cents).toBe(1150);
+    await menu([1000, 1200, 1400, undefined]);
+    // 1200 × 1.3 = 1560.
+    expect(json(await money()).even_limit_cents).toBe(1560);
+    expect(await stored()).toBeNull();
+  });
+  it("rounds half a ten up", async () => {
+    // 1050 × 1.3 = 1365.
+    await menu([1050, undefined, undefined, undefined]);
+    expect(json(await money()).even_limit_cents).toBe(1370);
+  });
+  it("the order keeps the limit set at call-in after a menu edit", async () => {
+    await place();
+    expect(await stored()).toBe(1150);
+    await menu([2000, 2000, 2000, 2000]);
+    expect(json(await money()).even_limit_cents).toBe(1150);
+  });
+  it("a limit is computed live while the stored one is null and the menu now has prices", async () => {
+    await menu([undefined, undefined, undefined, undefined]);
+    await place();
+    expect(await stored()).toBeNull();
+    expect(json(await money()).even_limit_cents).toBeNull();
+    await menu([800, 900, 950, undefined]);
+    expect(json(await money()).even_limit_cents).toBe(1150);
+    expect(await stored()).toBeNull();
+  });
+  it("an even split charges a pizza over it the part above, and tells its owner", async () => {
+    await place();
+    await w.call("pena", "PUT", `/api/pizza/items/${items.mikko}/price`, { price_cents: 1360 });
+    const m = json(await patch("pena", { total_cents: 2500, split: "even" }));
+    // 210 above the 1150 limit; (2500 − 210) / 2 = 1145 a pizza.
+    expect(m).toMatchObject({
+      split_effective: "even",
+      even_limit_cents: 1150,
+      people: [
+        { name: "Anni", amount_cents: 1145, over_limit_cents: 0 },
+        { name: "Mikko", amount_cents: 1355, over_limit_cents: 210 },
+      ],
+    });
+    const mine = json(await w.call("mikko", "GET", `/api/pizza/orders/${id}`));
+    expect(mine).toMatchObject({ my_amount_cents: 1355, my_over_limit_cents: 210 });
+    expect(json(await w.call("anni", "GET", `/api/pizza/orders/${id}`)).my_over_limit_cents).toBe(
+      0,
+    );
+  });
+});

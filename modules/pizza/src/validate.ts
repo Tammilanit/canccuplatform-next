@@ -33,7 +33,7 @@ export const LIMITS = {
   pizzeria: 80,
   phone: 40,
   website: 300,
-  toppings: 4,
+  toppings: 6,
   orderNote: 200,
   pickup: 80,
   reason: 200,
@@ -171,6 +171,31 @@ export interface Snapshot {
   price_cents: number | null;
 }
 
+/**
+ * The own pizza's price (#789 item 6, D14). A base that includes N toppings (a "Fantasia") costs
+ * its price, plus the extra-topping price for each normal topping past N, plus each special
+ * topping's own price; specials never use up an included one. Without N, as before: the base plus
+ * each topping's price. Any price it needs that the menu lacks leaves the pizza unpriced.
+ */
+export function ownPizzaPrice(
+  base: Pick<MenuEntry, "price_cents" | "included_toppings" | "extra_topping_cents">,
+  chosen: Pick<MenuEntry, "price_cents" | "tier">[],
+): number | null {
+  const sum = (ps: (number | null)[]) =>
+    ps.some((p) => p === null) ? null : ps.reduce<number>((s, p) => s + (p ?? 0), 0);
+  if (base.included_toppings === null)
+    return sum([base.price_cents, ...chosen.map((t) => t.price_cents)]);
+  const specials = chosen.filter((t) => t.tier === "special");
+  const extras = Math.max(0, chosen.length - specials.length - base.included_toppings);
+  return sum([
+    base.price_cents,
+    ...(extras === 0
+      ? []
+      : [base.extra_topping_cents === null ? null : extras * base.extra_topping_cents]),
+    ...specials.map((t) => t.price_cents),
+  ]);
+}
+
 /** What a row keeps of the menu (D15): a later menu edit never rewrites it. */
 export function snapshotOf(input: ItemInput, ctx: PizzeriaMenu): Snapshot {
   if (input.kind === "menu") {
@@ -189,11 +214,10 @@ export function snapshotOf(input: ItemInput, ctx: PizzeriaMenu): Snapshot {
   if (input.kind === "custom") {
     const base = ctx.base ?? bad("kind", "this pizzeria has no own pizza");
     const names = input.toppings ?? [];
-    const chosen = names.map((n) => ctx.toppings.find((t) => t.name === n));
-    const prices = [base.price_cents, ...chosen.map((t) => t?.price_cents ?? null)];
-    const price = prices.some((p) => p === null)
-      ? null
-      : prices.reduce<number>((s, p) => s + (p ?? 0), 0);
+    const chosen = names.map(
+      (n) => ctx.toppings.find((t) => t.name === n) ?? { price_cents: null, tier: null },
+    );
+    const price = ownPizzaPrice(base, chosen);
     return {
       menu_item_id: null,
       number: null,

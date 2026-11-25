@@ -103,8 +103,36 @@
         box.disabled = !box.checked && on >= max;
       });
     };
+    // The own pizza's price as you choose, by the rule of validate.ts ownPizzaPrice (#789).
+    var priced = document.querySelector("[data-own-price]");
+    var total = priced && priced.querySelector("[data-own-total]");
+    var euros = new Intl.NumberFormat(document.documentElement.lang === "fi" ? "fi-FI" : "en-IE", {
+      style: "currency",
+      currency: "EUR",
+    });
+    var run = function () {
+      if (!total) return;
+      var num = function (el, name) {
+        var v = el.getAttribute(name);
+        return v === null ? null : Number(v);
+      };
+      var included = num(priced, "data-included");
+      var extra = num(priced, "data-extra");
+      var sum = num(priced, "data-own-price");
+      var normals = 0;
+      toppings.querySelectorAll("input:checked").forEach(function (box) {
+        var special = box.getAttribute("data-tier") === "special";
+        var p = num(box, "data-price");
+        if (included !== null && !special) normals += 1;
+        else sum = sum === null || p === null ? null : sum + p;
+      });
+      if (included !== null && normals > included)
+        sum = sum === null || extra === null ? null : sum + (normals - included) * extra;
+      total.textContent = sum === null ? "" : euros.format(sum / 100);
+    };
     boxes.forEach(function (box) {
       box.addEventListener("change", cap);
+      box.addEventListener("change", run);
     });
     cap();
   }
