@@ -41,11 +41,13 @@ export class VenueIpRefused extends KitError {
 
 /**
  * Shown on a refused kiosk, so it names the crew's next step: the address alone is never enough,
- * and only the venue's addresses or the audited emergency switch let a screen in.
+ * and only the venue's addresses, the event's choice to let screens play anywhere (`screen_access`)
+ * or the audited emergency switch let a screen in.
  */
 export const VENUE_REFUSED_MESSAGE =
-  "This screen is not on this event's venue network. Ask an event admin to check the venue's " +
-  "addresses, or to turn the venue IP check off for a while with the emergency switch.";
+  "This screen is not on this event's venue network, and the event lets screens play only there. " +
+  "Ask an event admin to check the venue's addresses, to let screens play anywhere (Event " +
+  "access), or to turn the venue IP check off for a while with the emergency switch.";
 
 export class InfoPagesClosed extends KitError {
   static override defaultStatus = 403;

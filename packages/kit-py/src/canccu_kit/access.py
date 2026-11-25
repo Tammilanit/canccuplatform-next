@@ -64,8 +64,9 @@ class DeviceUnknown(KitError):
 
 # Shown on a refused kiosk, so it names the crew's next step (the same text as kit-ts).
 VENUE_REFUSED_MESSAGE = (
-    "This screen is not on this event's venue network. Ask an event admin to check the venue's "
-    "addresses, or to turn the venue IP check off for a while with the emergency switch."
+    "This screen is not on this event's venue network, and the event lets screens play only there. "
+    "Ask an event admin to check the venue's addresses, to let screens play anywhere (Event "
+    "access), or to turn the venue IP check off for a while with the emergency switch."
 )
 
 

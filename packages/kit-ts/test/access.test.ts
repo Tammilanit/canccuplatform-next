@@ -165,7 +165,8 @@ describe("screens: screen_access", () => {
     expect(() => {
       checkScreenAccess(restricted, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
     }).toThrow(VenueIpRefused);
-    const { screen_access: _, ...missing } = tenantContext();
+    const missing = tenantContext();
+    delete missing.screen_access;
     expect(() => {
       checkScreenAccess(missing, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
     }).toThrow(VenueIpRefused);

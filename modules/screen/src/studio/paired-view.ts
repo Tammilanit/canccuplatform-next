@@ -94,7 +94,7 @@ export function setupGuide(c: ViewContext): Html {
     t("setup.portrait"),
     t("setup.pair"),
   ];
-  return html`<details class="canccu-card canccu-studio-help" data-setup-guide>
+  return html`<details class="canccu-card canccu-studio-setup" data-setup-guide>
     <summary class="canccu-card__title">${t("setup.title")}</summary>
     <p class="canccu-card__desc">${t("setup.desc")}</p>
     <ol>
