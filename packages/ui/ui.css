@@ -1373,6 +1373,66 @@
     background: transparent;
     color: var(--canccu-ink-down);
   }
+  /* The one tooltip (#782, tip.ts): hover and keyboard focus on a PC; shell.js opens it on a tap
+     (an info button, a chip) or a long press (an icon button). Hushed by Esc until the pointer or
+     focus leaves. */
+  .canccu-button--icon {
+    min-width: 2.75rem;
+    padding-inline: 0.5rem;
+  }
+  .canccu-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .canccu-tip__info {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--canccu-color-text-muted);
+    cursor: help;
+  }
+  .canccu-tip__info:hover,
+  .canccu-tip__info:focus-visible {
+    color: var(--canccu-color-text);
+  }
+  .canccu-tip__text {
+    position: absolute;
+    inset-block-end: calc(100% + 0.375rem);
+    inset-inline-start: 50%;
+    z-index: 60;
+    inline-size: max-content;
+    max-inline-size: min(18rem, 80vw);
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--canccu-radius);
+    background: var(--canccu-color-text);
+    color: var(--canccu-color-background);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: start;
+    white-space: normal;
+    transform: translateX(-50%);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  .canccu-tip:hover > .canccu-tip__text,
+  .canccu-tip:has(:focus-visible) > .canccu-tip__text,
+  .canccu-tip.canccu-tip--open > .canccu-tip__text {
+    visibility: visible;
+    opacity: 1;
+  }
+  .canccu-tip.canccu-tip--hushed > .canccu-tip__text {
+    visibility: hidden;
+    opacity: 0;
+  }
   .canccu-button--danger-ghost:hover {
     background: color-mix(in srgb, var(--canccu-color-status-down) 12%, transparent);
   }

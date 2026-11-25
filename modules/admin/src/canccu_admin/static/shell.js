@@ -68,3 +68,68 @@ document.addEventListener("canccu-health-swapped", () => {
   else readNote();
 });
 followNote();
+
+// Tooltips (#782, packages/ui tip.ts): ui.css shows them on hover and keyboard focus. A phone has
+// neither, so a tap on an info button or a chip opens its tooltip and a tap elsewhere closes it;
+// an icon button acts on a tap, so only a press of LONG_PRESS_MS shows its tooltip, and the click
+// that ends that press is swallowed. Esc hides an open or focused tooltip until it is left.
+const LONG_PRESS_MS = 500;
+const OPEN = "canccu-tip--open";
+const HUSHED = "canccu-tip--hushed";
+let pressTimer;
+let swallowClick = false;
+
+function closeTips(except) {
+  for (const tip of document.querySelectorAll(`.${OPEN}`)) {
+    if (tip !== except) tip.classList.remove(OPEN);
+  }
+}
+
+document.addEventListener(
+  "click",
+  (e) => {
+    if (swallowClick) {
+      swallowClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const trigger = e.target.closest?.(".canccu-tip > .canccu-tip__info, .canccu-tip > .canccu-badge");
+    const tip = trigger?.parentElement;
+    closeTips(tip);
+    if (tip) tip.classList.toggle(OPEN);
+  },
+  true,
+);
+
+document.addEventListener("pointerdown", (e) => {
+  const button = e.target.closest?.(".canccu-tip > .canccu-button--icon");
+  swallowClick = false;
+  if (!button || e.pointerType !== "touch") return;
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(() => {
+    closeTips(button.parentElement);
+    button.parentElement.classList.add(OPEN);
+    swallowClick = true;
+  }, LONG_PRESS_MS);
+});
+for (const name of ["pointerup", "pointercancel", "pointermove"]) {
+  document.addEventListener(name, () => clearTimeout(pressTimer));
+}
+document.addEventListener("contextmenu", (e) => {
+  if (e.target.closest?.(".canccu-tip > .canccu-button--icon")) e.preventDefault();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  closeTips();
+  const tip = document.activeElement?.closest?.(".canccu-tip");
+  if (tip) tip.classList.add(HUSHED);
+});
+for (const name of ["focusout", "pointerleave"]) {
+  document.addEventListener(
+    name,
+    (e) => e.target.closest?.(".canccu-tip")?.classList.remove(HUSHED),
+    true,
+  );
+}
