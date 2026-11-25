@@ -1,10 +1,11 @@
 /**
  * A reader that calls no provider: the tests and the CI stack (`CANCCU_PIZZA_READER=fake`, dev
- * only) read with it. It answers the receipt and the menu of mockups 18 and 11 D, and keeps what
+ * only) read with it. It answers the receipt of mockup 18 and the synthetic two-column menu (`fake-menu.ts`), and keeps what
  * it was sent, so a test sees that only a shrunk photo left the module.
  */
 import sharp from "sharp";
-import type { MenuReading, ReadReason, ReadUsage, Reader, ReceiptReading } from "./reader.js";
+import { DEMO_MENU_NOTES, DEMO_MENU_ROWS } from "./fake-menu.js";
+import type { MenuNote, MenuRow, ReadReason, ReadUsage, Reader, ReceiptReading } from "./reader.js";
 import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
 
 /** What a fake read "used": about a phone photo's tokens, so the read log has a cost to show. */
@@ -61,30 +62,6 @@ export const DEMO_RECEIPT: ReceiptReading = {
   ],
 };
 
-export const DEMO_MENU: MenuReading[] = [
-  {
-    number: "4",
-    name: "Margherita",
-    description: "tomato, mozzarella",
-    price_cents: 800,
-    unsure: false,
-  },
-  {
-    number: "7",
-    name: "Funghi",
-    description: "mushroom, mozzarella",
-    price_cents: 850,
-    unsure: false,
-  },
-  {
-    number: "12",
-    name: "Kebab",
-    description: "kebab, onion, chili",
-    price_cents: 950,
-    unsure: true,
-  },
-];
-
 export interface Sent {
   kind: "receipt" | "menu";
   key: string;
@@ -98,7 +75,11 @@ export interface Sent {
 
 export class FakeReader {
   receipt: ReceiptReading = DEMO_RECEIPT;
-  menu: MenuReading[] = DEMO_MENU;
+  /** The menu's rows and notes; a read of fewer pages gets those of its pages only. */
+  menu: MenuRow[] = DEMO_MENU_ROWS;
+  menuNotes: MenuNote[] = DEMO_MENU_NOTES;
+  /** How many pages each menu read sent in its one call. */
+  readonly menuCalls: number[] = [];
   fail: ReadReason | "rejected" | null = null;
   /** The wait a `rate_limited` failure names. */
   retryAfterS = 5;
@@ -115,8 +96,13 @@ export class FakeReader {
       return { reading: this.receipt, usage: FAKE_USAGE };
     },
     menu: async (pages) => {
+      this.menuCalls.push(pages.length);
       for (const p of pages) await this.note("menu", key, p.image, p.type);
-      return { reading: { items: this.menu }, usage: FAKE_USAGE };
+      const on = (x: { page: number }) => x.page <= pages.length;
+      return {
+        reading: { rows: this.menu.filter(on), notes: this.menuNotes.filter(on) },
+        usage: FAKE_USAGE,
+      };
     },
   });
 

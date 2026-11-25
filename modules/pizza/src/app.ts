@@ -7,6 +7,7 @@ import type { AppDeps } from "./http.js";
 import { itemRoutes } from "./item-routes.js";
 import { liveRoutes } from "./live.js";
 import { MAX_BYTES } from "./menu-csv.js";
+import { menuReadRoute } from "./menu-read-route.js";
 import { menuRoutes } from "./menu-routes.js";
 import { moneyRoutes } from "./money-routes.js";
 import { orderRoutes } from "./order-routes.js";
@@ -64,6 +65,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     receiptRoutes(event, deps);
     paidRoutes(event, deps);
     readerRoutes(event, deps);
+    menuReadRoute(event, deps);
     readerKeyRoutes(event, deps);
     menuRoutes(event, deps);
     recordRoutes(event, deps);

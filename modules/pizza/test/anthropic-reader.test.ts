@@ -111,21 +111,34 @@ describe("the Anthropic reader", () => {
     expect(read.lines[1]).toMatchObject({ quantity: 1, kind: "item", amount_cents: -100 });
   });
 
-  it("reads a menu page into items, leaving out those without a number", async () => {
+  it("reads a menu page into rows, leaving out an item without a number", async () => {
+    const row = {
+      page: 1,
+      kind: "item",
+      number: "4",
+      name: "Margherita",
+      description: "tomato",
+      price_cents: 800,
+      category: null,
+      category_price_cents: null,
+      included_toppings: null,
+      extra_topping_cents: null,
+      tier: null,
+      unsure: false,
+    };
     const answer = {
       readable: true,
       reason: null,
-      items: [
-        { number: "4", name: "Margherita", description: "tomato", price_cents: 800, unsure: false },
-        { number: "", name: "Drinks", description: null, price_cents: null, unsure: false },
-      ],
+      rows: [row, { ...row, number: "", name: "Drinks", price_cents: null }],
+      notes: [],
     };
     const r = anthropicReader("k", {
       fetch: fakeFetch({ body: message(JSON.stringify(answer)) }, []),
     });
-    expect((await r.menu([{ image: PHOTO, type: "image/webp" }])).reading.items).toEqual([
-      { number: "4", name: "Margherita", description: "tomato", price_cents: 800, unsure: false },
-    ]);
+    expect((await r.menu([{ image: PHOTO, type: "image/webp" }])).reading).toEqual({
+      rows: [row],
+      notes: [],
+    });
   });
 
   it("answers the tokens the read used", async () => {
