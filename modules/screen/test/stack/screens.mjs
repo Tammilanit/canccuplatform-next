@@ -37,6 +37,7 @@ import {
   stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
+import { untouched } from "./frame-shots.mjs";
 import { handStates, screenPages } from "./screen-pages.mjs";
 import {
   THEMES,
@@ -60,7 +61,6 @@ import {
   tickerFitted,
   emergencyIsRed,
   railShowsIdle,
-  expiryLast,
   settle,
 } from "./screen-waits.mjs";
 
@@ -117,7 +117,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         );
         if (theme === "default")
           for (const view of UNTHEMED)
-            await attempt(nameOf(theme, view, size), () => untouched(view, size));
+            await attempt(nameOf(theme, view, size), () =>
+              untouched({ demo, open, at, shot, cookie: main.cookie }, view, size),
+            );
       }
       try {
         for (const size of landscapeOf(theme, check))
@@ -357,48 +359,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await settled(page);
       if (showcase) await CLEAR_CHECKS[view]?.(page);
       await playing(nameOf(theme, view, size), page);
-      await close();
-    }
-
-    /** The frames drawn before a theme: a new screen, and the device answers of contracts/screen.md. */
-    async function untouched(view, size) {
-      const answers = {
-        refused: [403, { error: { code: "venue_ip_refused", message: "not at the venue" } }],
-        moved: [409, { error: { code: "device_moved", message: "moved" } }],
-        unreachable: [503, { error: { code: "unavailable", message: "down" } }],
-      };
-      // The loopback holds 3 open pairing codes at most (contracts/screen.md, Pairing), and each
-      // pairing frame leaves one.
-      if (view === "pairing")
-        expect(
-          await demo.call("DELETE", "/api/screen/pairing"),
-          204,
-          "clearing open pairing codes",
-        );
-      const fresh = view === "pairing" || view === "insecure";
-      const { page, close } = await open(size, fresh ? null : main.cookie);
-      // Plain http, as the browser reports it there (#783): the stack itself is a secure context.
-      if (view === "insecure")
-        await page.addInitScript(() =>
-          Object.defineProperty(window, "isSecureContext", { get: () => false }),
-        );
-      if (view in answers) {
-        const [status, json] = answers[view];
-        await page.route("**/api/screen/device/state", (route) => route.fulfill({ status, json }));
-        await page.route("**/api/screen/device/home", (route) =>
-          route.fulfill({ json: { url: "https://next-event.example/screen/" } }),
-        );
-      }
-      await page.goto(at(view === "check" ? "/screen/check" : "/screen/"));
-      const ready = {
-        pairing: ".canccu-pairing-code",
-        check: ".canccu-selfcheck__row",
-        unreachable: ".canccu-frame__foot:not(:empty)",
-      };
-      await page.waitForSelector(ready[view] ?? `.canccu-frame--${view}`);
-      await page.waitForTimeout(300);
-      if (view === "pairing") await expiryLast(page);
-      await shot(nameOf("default", view, size), page);
       await close();
     }
   } catch (err) {

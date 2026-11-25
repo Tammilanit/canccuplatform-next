@@ -7,6 +7,7 @@ import { expect } from "./client.mjs";
 import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
 import { editorShots } from "./editor-shots.mjs";
 import { saveZone } from "./fixture.mjs";
+import { pairedShots } from "./paired-shots.mjs";
 import { previewShots } from "./preview-shots.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -31,50 +32,6 @@ STUDIO_PAGES.push(
   ["screen-pair-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
   ["screen-devices-wide", "/admin/screen/devices", WIDE],
 );
-
-/**
- * The guided pairing (#783): Devices opened on a screen just paired, once on (the hall screen,
- * playing), once still waiting and once a minute later (a screen paired that never connects), and
- * the pair dialog saying a wrong code in its own words. `<hall>` and `<new>` are those screens' ids.
- */
-export const PAIRED_PAGES = [
-  ["screen-devices-paired", "/admin/screen/devices?paired=<hall>", DESK],
-  ["screen-devices-paired-phone", "/admin/screen/devices?paired=<hall>", PHONE],
-  ["screen-devices-waiting", "/admin/screen/devices?paired=<new>", DESK],
-  ["screen-devices-waiting-phone", "/admin/screen/devices?paired=<new>", PHONE],
-  ["screen-pair-error-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
-  ["screen-devices-late", "/admin/screen/devices?paired=<new>", DESK],
-  ["screen-devices-late-phone", "/admin/screen/devices?paired=<new>", PHONE],
-];
-/** A screen paired this long ago and never seen "has not connected" (src/studio/help.ts). */
-const LATE_AFTER_MS = 62_000;
-
-/** The pair dialog after Pair with a code no screen shows. */
-async function wrongCode(page) {
-  await page.fill("#canccu-studio-pair-name", "Hall right");
-  await page.click("#canccu-studio-pair button[type=submit]");
-  await page.locator("[data-pair-error]:not([hidden])").waitFor();
-  await studioReady(page);
-}
-
-async function pairedShots(demo, shot, hall) {
-  const fresh = await demo.pair("New screen", null);
-  const pairedAt = Date.now();
-  try {
-    for (const [name, path, viewport] of PAIRED_PAGES) {
-      // The late shots wait out the minute a kiosk gets to connect.
-      if (name.startsWith("screen-devices-late"))
-        await new Promise((r) => setTimeout(r, Math.max(0, pairedAt + LATE_AFTER_MS - Date.now())));
-      const url = path.replace("<hall>", hall.id).replace("<new>", fresh.id);
-      await shot(name, url, viewport, {
-        ready: name.endsWith("error-phone") ? wrongCode : studioReady,
-      });
-    }
-  } finally {
-    // Never seen, it would say "has not connected" on every later Devices shot.
-    await demo.revoke(fresh.id);
-  }
-}
 
 /** Taken while the event is frozen for an hour, then unfrozen: the Pins page and the banner. */
 export const FROZEN_PAGES = [
@@ -386,7 +343,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
-    await pairedShots(demo, shot, hall);
+    await pairedShots({ demo, shot, hall, ready: studioReady });
     await previewShots({ demo, shot, hall, ready: studioReady });
     lists = await seedPlaylist(demo, assets);
     for (const [name, path, viewport] of PLAYLIST_PAGES) await shot(name, path, viewport);
