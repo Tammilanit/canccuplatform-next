@@ -185,11 +185,12 @@
     width: min(100%, calc(18 * var(--canccu-u)));
   }
 
-  /* One line under the code (sheet 9), in sentence case: capitals and spacing would wrap it. */
+  /* One line under the code (sheet 9) in sentence case, and two balanced lines in a font wider than
+     the card: on a screen's own font the nowrap line ran past the card and its region cut it. */
   .canccu-widget--qr .canccu-widget__caption,
   .canccu-widget--checkin_qr .canccu-widget__caption {
     font-weight: 600;
-    white-space: nowrap;
+    text-wrap: balance;
   }
 
   .canccu-widget--checkin_qr .canccu-widget__bar {

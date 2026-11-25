@@ -123,16 +123,18 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
         const [duration, delay] = [Number(timing?.duration), Number(timing?.delay)];
         /** The first or second run's left edge at `at` ms into the loop. */
         const left = (el: HTMLElement, at: number) => {
-          // Within the loop: before 0 a negative delay's crawl is not drawn moved at all.
+          // Within the loop: before 0 a negative delay's crawl is not drawn moved at all. Never asked
+          // at the loop's very start or end, where the float sum of time and delay can land a hair
+          // short of the boundary and draw the end of the loop: a wider font moved it there in CI.
           anim.currentTime = (((at + delay) % duration) + duration) % duration;
           return el.getBoundingClientRect().left;
         };
         return {
           widths: runs.map((r) => r.getBoundingClientRect().width),
           now: left(first, -delay),
-          start: left(first, 0),
-          end: left(second, duration - 1),
-          second: left(first, 1000),
+          duration,
+          start: left(first, 50),
+          second: left(first, 1050),
         };
       });
 
@@ -142,8 +144,9 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
       expect(c).not.toBeNull();
       if (c === null) return;
       expect(c.widths[1]).toBeCloseTo(c.widths[0] ?? NaN, 1);
-      // One millisecond before the loop ends, the second run is where the first one began.
-      expect(Math.abs(c.end - c.start)).toBeLessThan(1);
+      // The loop slides by exactly one run, so the second run ends it where the first began.
+      const pxPerMs = (c.start - c.second) / 1000;
+      expect(Math.abs((c.widths[0] ?? NaN) - pxPerMs * c.duration)).toBeLessThan(1);
       await page.close();
     });
 
