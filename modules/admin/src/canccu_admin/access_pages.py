@@ -161,6 +161,13 @@ def access_routes(need: Need, api: TenantsApi | None) -> list[Route]:
         try:
             await tenants().call(request, "PATCH", {"revision": revision, "admin_access": value})
         except KitError as exc:
+            if exc.code == "missing_right":
+                # `tenants.access.write` is the event-admin role only; admin's owner and admin
+                # roles can read the full event without holding it, so the form can be offered
+                # and refused. Show the value read only instead of a dead end.
+                event = await tenants().call(request, "GET")
+                current = str(event.get("admin_access", DEFAULT))
+                return await show(request, access_view(current, None), 403)
             if exc.code != "version_conflict":
                 raise
             event = await tenants().call(request, "GET")

@@ -71,7 +71,7 @@ async def test_a_stale_form_shows_the_event_as_it_is_now(
 
 @pytest.mark.parametrize(
     ("code", "title"),
-    [("admin_access_restricted", "Venue network only"), ("missing_right", "No access")],
+    [("admin_access_restricted", "Venue network only")],
 )
 async def test_a_refusal_from_tenants_is_the_shell_s_error_page(
     world: World, caplog: pytest.LogCaptureFixture, code: str, title: str
@@ -84,6 +84,22 @@ async def test_a_refusal_from_tenants_is_the_shell_s_error_page(
         headers={"origin": "https://admin.example.test"},
     )
     assert r.status_code == 403 and title in r.text and "raw detail" not in r.text
+
+
+async def test_a_missing_right_on_save_shows_the_page_read_only(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Tenants returned the full body (event.write) but the PATCH needs the event-admin role.
+    owner, _ = await owner_and_member(world, caplog)
+    world.tenants.refuse = (403, "missing_right")
+    r = await world.browser(owner).post(
+        "/admin/access",
+        data={"admin_access": "restricted", "revision": "3"},
+        headers={"origin": "https://admin.example.test"},
+    )
+    assert r.status_code == 403
+    assert ANYWHERE in r.text and "Only the event&#x27;s admins can change this" in r.text
+    assert "name=admin_access" not in r.text and "No access" not in r.text
 
 
 async def test_without_the_event_admin_role_the_page_only_reads(
