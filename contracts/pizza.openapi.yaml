@@ -840,6 +840,85 @@ components:
           description: The menu numbers the read was unsure of.
           items:
             type: string
+        rows:
+          type: array
+          description: The menu as read, in reading order (#789).
+          items:
+            $ref: "#/components/schemas/MenuRow"
+        notes:
+          type: array
+          description: Dated campaigns and lunch prices, shown and never prices (#789).
+          items:
+            type: object
+            required: [kind, text, page]
+            properties:
+              kind:
+                type: string
+                enum: [campaign, lunch]
+              text:
+                type: string
+              page:
+                type: integer
+        pages:
+          type: integer
+          minimum: 1
+          maximum: 6
+        cost_estimate_micro_usd:
+          type: integer
+          description: About what the read cost, $0.0015 a page, in micro-dollars.
+    MenuRow:
+      type: object
+      description: One item, base or topping of a menu read, with its page and category (#789).
+      required:
+        - page
+        - kind
+        - number
+        - name
+        - description
+        - price_cents
+        - category
+        - category_price_cents
+        - included_toppings
+        - extra_topping_cents
+        - tier
+        - unsure
+      properties:
+        page:
+          type: integer
+        kind:
+          type: string
+          enum: [item, base, topping]
+        number:
+          type: [string, "null"]
+        name:
+          type: string
+        description:
+          type: [string, "null"]
+        price_cents:
+          type: [integer, "null"]
+        category:
+          type: [string, "null"]
+        category_price_cents:
+          type: [integer, "null"]
+          description: The category heading's price.
+        included_toppings:
+          type: [integer, "null"]
+          description: A base only.
+        extra_topping_cents:
+          type: [integer, "null"]
+          description: A base only.
+        tier:
+          type: [string, "null"]
+          enum: [normal, special, null]
+          description: A topping only.
+        unsure:
+          type: boolean
+        price_from_category:
+          type: boolean
+          description: The price is the category's, the item showing none of its own.
+        gathered:
+          type: boolean
+          description: A topping gathered from the pizzas' ingredients, for the crew to confirm.
     ReaderError:
       description: The shared error body, with why a read gave nothing (#789, additive).
       allOf:
@@ -957,6 +1036,19 @@ components:
           type: [string, "null"]
         price_cents:
           type: [integer, "null"]
+        category:
+          type: [string, "null"]
+          description: Items only (#789).
+        included_toppings:
+          type: [integer, "null"]
+          description: The base only; null prices every topping (#789).
+        extra_topping_cents:
+          type: [integer, "null"]
+          description: The base only (#789).
+        tier:
+          type: string
+          enum: [normal, special]
+          description: Toppings only (#789).
         hidden:
           type: boolean
     Pizzeria:
@@ -1034,6 +1126,9 @@ components:
                 minimum: 0
                 maximum: 99999
                 description: In cents.
+              category:
+                type: [string, "null"]
+                maxLength: 60
         base:
           oneOf:
             - $ref: "#/components/schemas/MenuEntryInput"
@@ -1056,6 +1151,20 @@ components:
           type: [integer, "null"]
           minimum: 0
           maximum: 99999
+        included_toppings:
+          type: [integer, "null"]
+          minimum: 0
+          maximum: 10
+          description: The base only (#789).
+        extra_topping_price:
+          type: [integer, "null"]
+          minimum: 0
+          maximum: 99999
+          description: The base only, in cents (#789).
+        tier:
+          type: [string, "null"]
+          enum: [normal, special, null]
+          description: A topping only (#789).
     Issue:
       type: object
       required: [row, column, message]

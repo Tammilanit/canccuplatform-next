@@ -36,6 +36,12 @@ function menuView(entries: MenuRow[], hidden: boolean) {
     name: e.name,
     description: e.description,
     price_cents: e.price_cents,
+    // #789: an item's category, the own pizza's included toppings and extra price, a topping's tier.
+    ...(e.kind === "item" ? { category: e.category } : {}),
+    ...(e.kind === "base"
+      ? { included_toppings: e.included_toppings, extra_topping_cents: e.extra_topping_cents }
+      : {}),
+    ...(e.kind === "topping" ? { tier: e.tier ?? "normal" } : {}),
     ...(hidden ? { hidden: e.hidden } : {}),
   });
   return {

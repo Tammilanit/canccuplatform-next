@@ -37,6 +37,8 @@ export const LIMITS = {
   orderNote: 200,
   pickup: 80,
   reason: 200,
+  category: 60,
+  includedToppings: 10,
 } as const;
 
 /** Trimmed text, `null` when empty or absent. */
@@ -225,11 +227,38 @@ function line(raw: unknown, field: string): Line {
   };
 }
 
+/** The own pizza's base, with its included toppings and extra-topping price when given (#789). */
+function baseOf(raw: unknown): MenuInput["base"] {
+  const l = line(raw, "base");
+  const r = raw as Record<string, unknown>;
+  const n = r.included_toppings;
+  if (
+    n !== undefined &&
+    n !== null &&
+    !(Number.isInteger(n) && (n as number) >= 0 && (n as number) <= LIMITS.includedToppings)
+  )
+    bad("base.included_toppings", `an integer from 0 to ${LIMITS.includedToppings}, or null`);
+  const extra = parsePrice(r.extra_topping_price, "base.extra_topping_price");
+  return {
+    ...l,
+    ...(typeof n === "number" ? { included_toppings: n } : {}),
+    ...(extra === null ? {} : { extra_topping_cents: extra }),
+  };
+}
+
+/** A topping's tier: `normal` (also when absent) or `special` (#789). */
+function tierOf(raw: unknown, field: string): { tier?: "special" } {
+  const t = (raw as Record<string, unknown>).tier;
+  if (t === undefined || t === null || t === "normal") return {};
+  if (t === "special") return { tier: "special" };
+  return bad(field, "normal or special");
+}
+
 /** A whole menu (`PUT …/menu`, the profile's `pizza` section): the same rules as the menu CSV. */
 export function parseMenuBody(body: unknown): MenuInput {
   if (typeof body !== "object" || body === null) return bad("body", "must be an object");
   const b = body as Record<string, unknown>;
-  const base = b.base === undefined || b.base === null ? null : line(b.base, "base");
+  const base = b.base === undefined || b.base === null ? null : baseOf(b.base);
   const rawItems = b.items === undefined ? [] : b.items;
   if (!Array.isArray(rawItems)) return bad("items", "must be an array");
   const items: MenuInput["items"] = [];
@@ -245,13 +274,18 @@ export function parseMenuBody(body: unknown): MenuInput {
     );
     if (numbers.has(number)) bad(`${field}.number`, `${number} is on the menu twice`);
     numbers.add(number);
-    items.push({ number, ...l });
+    const category = optionalText(
+      (raw as Record<string, unknown>).category,
+      `${field}.category`,
+      LIMITS.category,
+    );
+    items.push({ number, ...l, ...(category === null ? {} : { category }) });
   });
   const rawToppings = b.toppings === undefined ? [] : b.toppings;
   if (!Array.isArray(rawToppings)) return bad("toppings", "must be an array");
   const toppings: Line[] = [];
   rawToppings.forEach((raw: unknown, i) => {
-    const t = line(raw, `toppings[${i}]`);
+    const t = { ...line(raw, `toppings[${i}]`), ...tierOf(raw, `toppings[${i}].tier`) };
     // The legacy rule: a topping named twice is kept once.
     if (!toppings.some((x) => x.name.toLowerCase() === t.name.toLowerCase())) toppings.push(t);
   });

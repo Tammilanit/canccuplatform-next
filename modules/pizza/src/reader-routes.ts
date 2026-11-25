@@ -10,12 +10,11 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { NotSignedIn } from "@canccu/kit";
-import { csvLine, euros } from "./csv.js";
 import { eventArchived, notFound, tenantOf, whoIs } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { CALLED_IN } from "./model.js";
-import { cleanPhoto, forProvider, photoOf } from "./photos.js";
-import { NO_FACTS, authorize } from "./policy.js";
+import { forProvider } from "./photos.js";
+import { authorize } from "./policy.js";
 import { facts } from "./present.js";
 import { matchReceipt } from "./receipt-match.js";
 import { noteRead, takeReader } from "./reader-key.js";
@@ -25,9 +24,8 @@ import { ReaderFailed, ReaderKeyRejected } from "./reader.js";
 import { getReceipt, receiptPath, receiptView } from "./receipts.js";
 import type { ReceiptRow } from "./receipts.js";
 import { cannot } from "./conflicts.js";
-import { getOrder, getPizzeria, itemsOf } from "./store.js";
+import { getOrder, itemsOf } from "./store.js";
 import type { OrderRow } from "./store.js";
-import { InvalidBody } from "./validate.js";
 import { readFile } from "node:fs/promises";
 
 /**

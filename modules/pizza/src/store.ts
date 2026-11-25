@@ -163,7 +163,8 @@ export async function menuEntries(
   hidden = false,
 ): Promise<MenuRow[]> {
   const { rows } = await c.query(
-    `SELECT id, pizzeria_id, kind, number, name, description, price_cents, hidden_at IS NOT NULL AS hidden
+    `SELECT id, pizzeria_id, kind, number, name, description, price_cents, category, included_toppings,
+            extra_topping_cents, tier, hidden_at IS NOT NULL AS hidden
      FROM pizza_menu_entries WHERE pizzeria_id = ANY($1::text[]) ${hidden ? "" : "AND hidden_at IS NULL"}
      ORDER BY hidden_at IS NOT NULL, position, id`,
     [pizzeriaIds],

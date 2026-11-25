@@ -17,8 +17,16 @@ export const COLUMNS = [
   "name",
   "description",
   "price",
+  "category",
+  "category_price",
+  "included_toppings",
+  "extra_topping_price",
+  "tier",
 ] as const;
 type Column = (typeof COLUMNS)[number];
+
+/** The columns of #789: written only when a menu uses them, so an old file reads back the same. */
+const EXTRA_COLUMNS = COLUMNS.slice(COLUMNS.indexOf("category"));
 
 export const MAX_ROWS = 1000;
 export const MAX_BYTES = 512 * 1024;
@@ -140,9 +148,28 @@ export function parseMenuCsv(text: string): MenuFile {
     const description = at("description");
     if (description.length > LIMITS.description)
       fail("description", `at most ${LIMITS.description} characters`);
-    const price = at("price");
-    if (price && !PRICE.test(price))
-      fail("price", "a dot decimal from 0 to 999.99, at most two decimals, no sign");
+    const PRICE_RULE = "a dot decimal from 0 to 999.99, at most two decimals, no sign";
+    const ownPrice = at("price");
+    if (ownPrice && !PRICE.test(ownPrice)) fail("price", PRICE_RULE);
+    const category = at("category");
+    const categoryPrice = at("category_price");
+    if (kind !== "item" && (category || categoryPrice))
+      fail(category ? "category" : "category_price", "only items have a category");
+    if (category.length > LIMITS.category)
+      fail("category", `at most ${LIMITS.category} characters`);
+    if (categoryPrice && !PRICE.test(categoryPrice)) fail("category_price", PRICE_RULE);
+    // An item without its own price takes its category's (#789 item 4).
+    const price = ownPrice || categoryPrice;
+    const included = at("included_toppings");
+    const extra = at("extra_topping_price");
+    if (kind !== "base" && (included || extra))
+      fail(included ? "included_toppings" : "extra_topping_price", "only a base has it");
+    if (included && !/^(\d|10)$/.test(included))
+      fail("included_toppings", `a whole number from 0 to ${LIMITS.includedToppings}`);
+    if (extra && !PRICE.test(extra)) fail("extra_topping_price", PRICE_RULE);
+    const tier = at("tier");
+    if (tier && tier !== "normal" && tier !== "special") fail("tier", "normal or special");
+    else if (tier && kind !== "topping") fail("tier", "only toppings have a tier");
     const phone = at("phone");
     if (phone.length > LIMITS.phone) fail("phone", `at most ${LIMITS.phone} characters`);
     const website = at("website");
@@ -190,19 +217,26 @@ export function parseMenuCsv(text: string): MenuFile {
         return;
       }
       g.numbers.set(number, row);
-      g.menu.items.push({ number, ...entry });
+      g.menu.items.push({ number, ...entry, ...(category ? { category } : {}) });
     } else if (kind === "base") {
       if (g.menu.base !== null) {
         fail("kind", `${g.name} already has a base`);
         return;
       }
-      g.menu.base = entry;
+      g.menu.base = {
+        ...entry,
+        ...(included ? { included_toppings: Number(included) } : {}),
+        ...(extra ? { extra_topping_cents: cents(extra) } : {}),
+      };
     } else {
       if (g.menu.toppings.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
         fail("name", `${name} is already a topping of ${g.name}`);
         return;
       }
-      g.menu.toppings.push(entry);
+      g.menu.toppings.push({
+        ...entry,
+        ...(tier === "special" ? { tier: "special" as const } : {}),
+      });
     }
     if (!price) warnings.push({ row, column: "price", message: `${name} has no price` });
   });
@@ -213,23 +247,51 @@ function strip(g: Building): MenuFilePizzeria {
   return { name: g.name, phone: g.phone, website: g.website, service: g.service, menu: g.menu };
 }
 
-/** The download: the same columns, phone, web page and service on each pizzeria's first row. */
+/** Whether a menu uses the columns of #789. */
+const usesExtras = (m: MenuInput): boolean =>
+  m.items.some((i) => i.category !== undefined) ||
+  (m.base !== null &&
+    (m.base.included_toppings !== undefined || m.base.extra_topping_cents !== undefined)) ||
+  m.toppings.some((t) => t.tier !== undefined);
+
+/**
+ * The download: the same columns, phone, web page and service on each pizzeria's first row; the
+ * columns of #789 only when a menu uses them.
+ */
 export function writeMenuCsv(pizzerias: MenuFilePizzeria[]): string {
-  const lines = [COLUMNS.join(",")];
+  const extras = pizzerias.some((p) => usesExtras(p.menu));
+  const header = extras ? COLUMNS : COLUMNS.filter((c) => !EXTRA_COLUMNS.includes(c));
+  const lines = [header.join(",")];
   const price = (c: number | null) => (c === null ? "" : euros(c));
+  type Entry = MenuInput["toppings"][number] & {
+    category?: string;
+    included_toppings?: number;
+    extra_topping_cents?: number;
+  };
   for (const p of pizzerias) {
     let first = true;
-    const row = (
-      kind: string,
-      number: string,
-      e: { name: string; description: string | null; price_cents: number | null },
-    ) => {
+    const row = (kind: string, number: string, e: Entry) => {
       const head = first
         ? [p.name, p.phone ?? "", p.website ?? "", p.service ?? ""]
         : [p.name, "", "", ""];
       first = false;
+      const more = [
+        e.category ?? "",
+        "",
+        e.included_toppings === undefined ? "" : String(e.included_toppings),
+        price(e.extra_topping_cents ?? null),
+        e.tier ?? "",
+      ];
       lines.push(
-        csvLine([...head, kind, number, e.name, e.description ?? "", price(e.price_cents)]),
+        csvLine([
+          ...head,
+          kind,
+          number,
+          e.name,
+          e.description ?? "",
+          price(e.price_cents),
+          ...(extras ? more : []),
+        ]),
       );
     };
     for (const it of p.menu.items) row("item", it.number, it);

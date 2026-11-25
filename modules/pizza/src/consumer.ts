@@ -116,8 +116,9 @@ async function cloneFrom(deps: Deps, source: string, target: string): Promise<vo
     }
     for (const m of entries) {
       await c.query(
-        `INSERT INTO pizza_menu_entries (id, pizzeria_id, kind, number, name, description, price_cents, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO pizza_menu_entries (id, pizzeria_id, kind, number, name, description, price_cents, position,
+           category, included_toppings, extra_topping_cents, tier)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           m.id,
           m.pizzeria_id,
@@ -127,6 +128,10 @@ async function cloneFrom(deps: Deps, source: string, target: string): Promise<vo
           m.description,
           m.price_cents,
           position.get(m.id) ?? 0,
+          m.category,
+          m.included_toppings,
+          m.extra_topping_cents,
+          m.tier,
         ],
       );
     }

@@ -45,7 +45,7 @@ describe("a category's price", () => {
     ]);
     expect(byNumber(rows, "22")).toMatchObject({ price_cents: 1490 });
     expect(byNumber(rows, "22").price_from_category).toBeUndefined();
-    expect(byNumber(rows, "3")?.price_cents).toBeUndefined();
+    expect(rows.find((r) => r.number === "3")).toBeUndefined();
     expect(byNumber(read(), "3")).toMatchObject({ price_cents: 1150, category: "Classics" });
   });
 

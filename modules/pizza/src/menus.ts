@@ -16,10 +16,33 @@ export interface MenuCounts {
   hidden: number;
 }
 
-type Line = { name: string; description: string | null; price_cents: number | null };
+type Line = {
+  name: string;
+  description: string | null;
+  price_cents: number | null;
+  category?: string;
+  included_toppings?: number;
+  extra_topping_cents?: number;
+  tier?: "special";
+};
+
+/** The #789 fields as stored: a topping is normal unless special; the rest null when not given. */
+const extras = (kind: MenuRow["kind"], l: Line) => [
+  l.category ?? null,
+  l.included_toppings ?? null,
+  l.extra_topping_cents ?? null,
+  kind === "topping" ? (l.tier ?? "normal") : null,
+];
 type Write =
   | { op: "insert"; kind: MenuRow["kind"]; number: string | null; line: Line; position: number }
-  | { op: "update"; id: string; number: string | null; line: Line; position: number }
+  | {
+      op: "update";
+      id: string;
+      kind: MenuRow["kind"];
+      number: string | null;
+      line: Line;
+      position: number;
+    }
   | { op: "hide"; id: string };
 
 export function planMenu(
@@ -39,7 +62,14 @@ export function planMenu(
       items.added++;
     } else {
       kept.add(hit.id);
-      writes.push({ op: "update", id: hit.id, number: it.number, line: it, position });
+      writes.push({
+        op: "update",
+        id: hit.id,
+        kind: "item",
+        number: it.number,
+        line: it,
+        position,
+      });
       items.updated++;
     }
   });
@@ -66,7 +96,7 @@ export function planMenu(
       sets.push({ op: "insert", kind, number: null, line, position });
     else {
       keptSet.add(hit.id);
-      sets.push({ op: "update", id: hit.id, number: null, line, position });
+      sets.push({ op: "update", id: hit.id, kind, number: null, line, position });
     }
   });
   for (const e of existing) {
@@ -87,14 +117,23 @@ export async function applyMenu(
       await c.query(`UPDATE pizza_menu_entries SET hidden_at = $2 WHERE id = $1`, [w.id, now]);
     } else if (w.op === "update") {
       await c.query(
-        `UPDATE pizza_menu_entries SET name = $2, description = $3, price_cents = $4, position = $5, hidden_at = NULL
+        `UPDATE pizza_menu_entries SET name = $2, description = $3, price_cents = $4, position = $5, hidden_at = NULL,
+           category = $6, included_toppings = $7, extra_topping_cents = $8, tier = $9
          WHERE id = $1`,
-        [w.id, w.line.name, w.line.description, w.line.price_cents, w.position],
+        [
+          w.id,
+          w.line.name,
+          w.line.description,
+          w.line.price_cents,
+          w.position,
+          ...extras(w.kind, w.line),
+        ],
       );
     } else {
       await c.query(
-        `INSERT INTO pizza_menu_entries (id, pizzeria_id, kind, number, name, description, price_cents, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO pizza_menu_entries (id, pizzeria_id, kind, number, name, description, price_cents, position,
+           category, included_toppings, extra_topping_cents, tier)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           newId("mi"),
           pizzeriaId,
@@ -104,6 +143,7 @@ export async function applyMenu(
           w.line.description,
           w.line.price_cents,
           w.position,
+          ...extras(w.kind, w.line),
         ],
       );
     }
@@ -123,8 +163,25 @@ export function menuInputOf(entries: MenuRow[]): MenuInput {
   return {
     items: visible
       .filter((e) => e.kind === "item")
-      .map((e) => ({ number: e.number ?? "", ...line(e) })),
-    base: base === undefined ? null : line(base),
-    toppings: visible.filter((e) => e.kind === "topping").map(line),
+      .map((e) => ({
+        number: e.number ?? "",
+        ...line(e),
+        ...(e.category === null ? {} : { category: e.category }),
+      })),
+    base:
+      base === undefined
+        ? null
+        : {
+            ...line(base),
+            ...(base.included_toppings === null
+              ? {}
+              : { included_toppings: base.included_toppings }),
+            ...(base.extra_topping_cents === null
+              ? {}
+              : { extra_topping_cents: base.extra_topping_cents }),
+          },
+    toppings: visible
+      .filter((e) => e.kind === "topping")
+      .map((e) => ({ ...line(e), ...(e.tier === "special" ? { tier: "special" as const } : {}) })),
   };
 }

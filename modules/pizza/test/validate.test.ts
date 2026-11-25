@@ -16,6 +16,10 @@ const entry = (o: Partial<MenuEntry> & Pick<MenuEntry, "id" | "name">): MenuEntr
   number: null,
   description: null,
   price_cents: null,
+  category: null,
+  included_toppings: null,
+  extra_topping_cents: null,
+  tier: null,
   ...o,
 });
 const items = [

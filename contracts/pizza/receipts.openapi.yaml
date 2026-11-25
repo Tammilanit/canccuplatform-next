@@ -151,11 +151,13 @@
   post:
     tags: [menus]
     operationId: readMenuPhoto
-    summary: Read a menu photo into a menu CSV
+    summary: Read a menu's photos into rows and a menu CSV
     description: |
       Right `pizza.menu.write`; the AI reader as for a receipt (`reader_off`, `reader_limit`,
-      `reader_failed`, `reader_key_rejected`). One page per call, at most 30 MB; the photo is not kept. The answer's
-      `csv` is in the menu CSV's format for the pizzeria named, for the import's preview; nothing changes.
+      `reader_failed`, `reader_key_rejected`). One photo as the body, or up to 6 pages in one call as
+      `multipart/form-data` with one `page` part per photo, in order (#789); each at most 30 MB; no
+      photo is kept. The answer's `rows` and `notes` are the menu as read, and its `csv` the same in
+      the menu CSV's format for the pizzeria named, for the import's preview; nothing changes.
     security:
       - session: []
     parameters:
@@ -179,6 +181,18 @@
           schema:
             type: string
             contentMediaType: image/webp
+        multipart/form-data:
+          schema:
+            type: object
+            required: [page]
+            properties:
+              page:
+                type: array
+                minItems: 1
+                maxItems: 6
+                items:
+                  type: string
+                  contentMediaType: image/*
     responses:
       "200":
         description: The menu as read.

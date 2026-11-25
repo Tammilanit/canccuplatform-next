@@ -41,7 +41,7 @@ type Menu = {
     hidden?: boolean;
   }[];
   base: unknown;
-  toppings: { name: string }[];
+  toppings: { name: string; tier?: string }[];
 };
 const menuOf = async (id: string, who = "pena", q = "") =>
   json(await w.call(who, "GET", `/api/pizza/pizzerias/${id}${q}`)).menu as Menu;
@@ -143,6 +143,44 @@ describe.skipIf(!DATABASE_URL)("menus", () => {
       action: "pizza.menu.replaced",
       target: { type: "pizzeria", id: pz },
     });
+  });
+  it("keeps each item's category, the base's included toppings and extra price, and topping tiers", async () => {
+    const { pz } = await seedPizzerias(w);
+    const put = await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      items: [{ number: "21", name: "Demo Kebab", price: 1390, category: "Kebab pizzas" }],
+      base: { name: "Demo Fantasia", price: 1000, included_toppings: 3, extra_topping_price: 150 },
+      toppings: [
+        { name: "Kinkku", price: 150 },
+        { name: "Katkarapu", price: 250, tier: "special" },
+      ],
+    });
+    expect(put.statusCode).toBe(200);
+    const m = await menuOf(pz);
+    expect(m.items[0]).toMatchObject({ number: "21", category: "Kebab pizzas" });
+    expect(m.base).toMatchObject({ included_toppings: 3, extra_topping_cents: 150 });
+    expect(m.toppings.map((t) => [t.name, t.tier])).toEqual([
+      ["Kinkku", "normal"],
+      ["Katkarapu", "special"],
+    ]);
+    // A menu without them keeps the old pricing: no included count, normal toppings.
+    await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      items: [{ number: "21", name: "Demo Kebab", price: 1390 }],
+      base: { name: "Demo Fantasia", price: 1000 },
+    });
+    const plain = await menuOf(pz);
+    expect(plain.items[0]).toMatchObject({ category: null });
+    expect(plain.base).toMatchObject({ included_toppings: null, extra_topping_cents: null });
+  });
+  it("refuses a tier that is not normal or special, and more than 10 included toppings", async () => {
+    const { pz } = await seedPizzerias(w);
+    const tier = await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      toppings: [{ name: "Kinkku", tier: "gold" }],
+    });
+    expect(errorOf(tier)).toMatchObject({ code: "invalid_request", field: "toppings[0].tier" });
+    const many = await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      base: { name: "Own", included_toppings: 11 },
+    });
+    expect(errorOf(many)).toMatchObject({ field: "base.included_toppings" });
   });
   it("shows hidden items only to the menu writers", async () => {
     const { pz } = await seedPizzerias(w);
