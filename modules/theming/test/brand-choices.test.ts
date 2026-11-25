@@ -23,7 +23,7 @@ interface Current {
 }
 
 const BLACK_LOGO = readFileSync(
-  new URL("../../../events/demo/assets/logo-black.svg", import.meta.url),
+  new URL("../../../events/demo/images/logo-black.svg", import.meta.url),
 );
 const DARK = { primary: "#3b82f6", accent: "#f59e0b", scheme: "dark" };
 const LIGHT = { ...DARK, scheme: "light" };
