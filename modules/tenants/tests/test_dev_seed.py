@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 from canccu_kit.access import VenueIpRefused, check_screen_access
 from conftest import Env, make_tenant
 
@@ -256,7 +257,12 @@ async def test_the_dev_hostnames_command_seeds_the_venue_too(
             raise venue
         return venue
 
+    async def dev_event(db: object, bus: object, version: str, declared: object) -> list[str]:
+        seen.update(declared=sorted(declared))  # type: ignore[call-overload]
+        return ["screen.photos"]
+
     for name, value in {
+        "CANCCU_FLAGS_FILE": str(Path(__file__).parents[3] / "contracts" / "flags.yaml"),
         "CANCCU_MODULE": "tenants",
         "CANCCU_VERSION": "dev",
         "CANCCU_VALKEY_URL": "redis://127.0.0.1:1",
@@ -267,7 +273,15 @@ async def test_the_dev_hostnames_command_seeds_the_venue_too(
         monkeypatch.setenv(name, value)
     monkeypatch.setattr(dev_seed, "dev_hostnames", hostnames)
     monkeypatch.setattr(dev_seed, "dev_venue", dev_venue)
+    monkeypatch.setattr(dev_seed, "dev_event", dev_event)
     out = await shell.dev_hostnames(None, [FULL])  # type: ignore[arg-type]
     assert "hostnames are in place" in out
     assert said in out
+    # The demo content's own settings (#788) come after the venue, also when it is left alone.
+    assert "photo wall and Wi-Fi: set screen.photos" in out
+    assert seen.pop("declared") == sorted(
+        yaml.safe_load((Path(__file__).parents[3] / "contracts" / "flags.yaml").read_text())[
+            "flags"
+        ]
+    )
     assert seen == {"version": "dev", "tailscale": ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]}

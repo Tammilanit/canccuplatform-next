@@ -53,9 +53,10 @@ done
 BASE=${1:-http://127.0.0.1}
 OUT=${2:-screenshots}
 
-# The modules' dev-seed commands (#715), in the order setup/deploy runs them.
+# The modules' dev-seed commands (#715, #788), in the order setup/deploy runs them.
 SEEDS=("admin python -m canccu_admin dev-seed" "agenda python -m canccu_agenda dev-seed"
-  "pizza node dist/dev-seed-cli.js" "moments node dist/dev-seed-cli.js")
+  "pizza node dist/dev-seed-cli.js" "moments node dist/dev-seed-cli.js"
+  "screen node dist/dev-seed-cli.js")
 # The seeds' first run. On the dev-seed shard's own stack the demo event is as the stack made it,
 # and the plain run must know it for untouched. After the first pass on the same stack (the weekly
 # run of every group), that pass's shots have changed the run of show, the orders, the settings and

@@ -38,6 +38,8 @@ COPY --from=build /repo/modules/screen/dist modules/screen/dist
 COPY --from=build /repo/modules/screen/migrations modules/screen/migrations
 COPY --from=build /repo/modules/screen/static modules/screen/static
 COPY --from=build /repo/modules/screen/node_modules modules/screen/node_modules
+# The dev server's demo screen content (src/dev-seed.ts): photos, slides and clips, about 1 MB.
+COPY events/demo/media/ events/demo/media/
 WORKDIR /repo/modules/screen
 # nobody (65534), as every module that mounts the files volume: files-init gives it to that user.
 USER nobody

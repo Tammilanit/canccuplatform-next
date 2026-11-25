@@ -3,6 +3,10 @@
 Complete placeholder profile used by tests and screenshots; the tenants module seeds the demo tenant from it. Validated by `scripts/check-contracts`. Contains no real event content.
 
 ## Media
+Generated with ffmpeg 5.1's lavfi sources (`gradients`, `mandelbrot`, `life`) and `drawtext` in DejaVu Sans, in the Default theme's colours; no people, no real places. The dev server's screen seed (`modules/screen/src/dev-seed.ts`, #788) puts them on the demo event's screens; the screen image carries them.
+- `media/photos/demo-photo-1.jpg` … `-8.jpg`: 1280×960 abstract stills, the photo wall's placeholder photos (their captions and placeholder authors are the seed's).
+- `media/slides/demo-slide-welcome.jpg`, `-tournament.jpg`, `-food.jpg`: 1920×1080 title cards for the demo loop.
+- `media/demo-clip.mp4`: an 8 s clip of drifting gradients with the words "Demo clip", H.264, no sound, for the demo loop.
 - `media/demo-film.mp4` (not a profile asset, so the profile export leaves it out): "Demo Event: the film", a 12 s placeholder (a title card over a soft chord, H.264 and AAC, made with ffmpeg's `color` and `aevalsrc` sources and `drawtext` in DejaVu Sans). The storyboards' Premiere preset plays it in the CI screenshots (`scripts/demo-screenshots-stories.mjs`, mockup 22).
 
 ## Themes

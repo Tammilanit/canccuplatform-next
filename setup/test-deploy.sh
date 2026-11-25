@@ -268,12 +268,13 @@ fresh 'CANCCU_DEV_HOSTNAMES="devbox.lan, devbox.tail0.example.test"\n'; dep "dep
 logged "deploy gives the demo event the dev hostnames, in order" "$names devbox.lan devbox.tail0.example.test$"
 logged "deploy loads the demo profile into the demo event" "$seeds"
 # Then the demo content (#715), agenda before Moments, which looks up the run of show's raffle.
-order=$(grep -Eo 'exec -T (admin|agenda|pizza|moments) ' "$st/log" | awk '{print $3}' | paste -sd' ')
-if [ "$order" = "admin agenda pizza moments" ]; then pass "deploy seeds the run of show, the food and Moments after the demo profile, in order"
-else bad "deploy seeds the run of show, the food and Moments after the demo profile, in order" "$(cat "$st/log")"; fi
+order=$(grep -Eo 'exec -T (admin|agenda|pizza|moments|screen) ' "$st/log" | awk '{print $3}' | paste -sd' ')
+if [ "$order" = "admin agenda pizza moments screen" ]; then pass "deploy seeds the run of show, the food, Moments and the screens after the demo profile, in order"
+else bad "deploy seeds the run of show, the food, Moments and the screens after the demo profile, in order" "$(cat "$st/log")"; fi
 logged "deploy seeds the run of show" 'exec -T agenda python -m canccu_agenda dev-seed$'
 logged "deploy seeds the food" 'exec -T pizza node dist/dev-seed-cli.js$'
 logged "deploy seeds Moments" 'exec -T moments node dist/dev-seed-cli.js$'
+logged "deploy seeds the screens' photos, loop and ticker lines (#788)" 'exec -T screen node dist/dev-seed-cli.js$'
 : > "$st/log"; echo "sha256:newhello" > "$st/live_hello"; echo "sha256:newadmin" > "$st/live_admin"; dep "the next run, with nothing new" 0
 notlogged "an up-to-date run seeds nothing again" "dev-hostnames|dev-seed"
 echo 2026-11-21T11 > "$st/hour"; dep "the next run, an hour later" 0

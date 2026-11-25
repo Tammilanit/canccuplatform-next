@@ -3,5 +3,6 @@
 !packages/kit-ts
 !packages/ui
 !modules/screen
+!events/demo/media
 **/node_modules
 **/dist
