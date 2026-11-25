@@ -121,7 +121,11 @@ try {
   await sse.next(heroIs("winner_card"), 30_000);
   const t0 = Date.now();
   await new Promise((r) => setTimeout(r, 5000));
-  await xadd(TENANT, "pizza", "pizza.order.arrived", { order: order("arrived"), user_ids: [], people: [] });
+  await xadd(TENANT, "pizza", "pizza.order.arrived", {
+    order: order("arrived"),
+    user_ids: [],
+    people: [],
+  });
   await sse.next(railSays("Pizza is here"), 10_000);
   const inRail = (Date.now() - t0) / 1000;
   await sse.next(heroIs("announcement"), (FLOOR_S + GAP_S + 20) * 1000);
