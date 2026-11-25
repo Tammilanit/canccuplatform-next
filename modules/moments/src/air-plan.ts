@@ -24,6 +24,8 @@ export interface SlotIn {
   has_steps: boolean;
   /** Sent to this zone before: a crew moment pushed aside waits its turn, it cuts no more. */
   shown: boolean;
+  /** Screen placed it on this zone at least once. */
+  placed: boolean;
   fresh_at: number;
   queued_since: number;
   forward_at: number | null;
@@ -77,6 +79,12 @@ export const usedUpAt = (s: SlotIn, now: number): number =>
 
 const claimant = (s: SlotIn) => s.chain.includes("hero") || s.chain.includes("full");
 const onAir = (s: SlotIn) => s.granted === "hero" || s.granted === "pass" || s.granted === "inside";
+/**
+ * Waiting, so it can go stale: off air, or passed through but not seen (Screen leaves it unplaced
+ * or hidden, or never placed it), which nothing else would ever end.
+ */
+const waiting = (s: SlotIn) =>
+  !onAir(s) || (s.granted === "pass" && (s.on_air_since === null || !s.placed));
 const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id);
 
 /** Moved forward first (latest first), then rank, then the longest wait. */
@@ -103,7 +111,7 @@ export function planZone(
   for (const s of slots) {
     if (s.on_air_since !== null && s.budget_ms !== null && playedNow(s, now) >= s.budget_ms)
       ends.push({ moment_id: s.moment_id, reason: "expired" });
-    else if (!onAir(s) && now >= s.fresh_at + air.stale_after_ms[s.class])
+    else if (waiting(s) && now >= s.fresh_at + air.stale_after_ms[s.class])
       ends.push({ moment_id: s.moment_id, reason: "stale" });
   }
   const expired = (id: string | null) =>

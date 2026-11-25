@@ -222,13 +222,14 @@ run("airtime (#777)", () => {
     for (const n of [1, 2, 3, 4]) hots.push(await start(hot(n), n));
     await tick(60);
     await tick(70);
-    const round = lastOverride(`${(hots[0] as { id: string }).id}.main`);
-    expect(round).toMatchObject({ regions: ["hero", "rail"] });
+    // A new generation from when it took the hero: a `.changed` never moves `starts_at`.
+    const first = (hots[0] as { id: string }).id;
+    expect(ended(`${first}.main`)).toBe(true);
+    const round = lastOverride(`${first}.main.2`);
+    expect(round).toMatchObject({ regions: ["hero", "rail"], starts_at: w.at(70).toISOString() });
     expect((round?.steps as Record<string, unknown>[]).map((s) => s.duration_ms)).toEqual([
       22500, 22500, 22500, 22500,
     ]);
-    // Its steps start when it took the hero, not when it first waited in the rail.
-    expect(Date.parse(round?.starts_at as string) / 1000).toBeCloseTo(w.at(70).getTime() / 1000, 0);
     await tick(159);
     expect((await row((hots[3] as { id: string }).id))?.ended_at).toBeNull();
     await tick(160);

@@ -67,6 +67,15 @@ export async function slotsOn(c: SqlClient, zone: string): Promise<SlotRow[]> {
   return rows.map(slotOf);
 }
 
+/** The moments Screen has placed on `zone` at least once, by any of their overrides there. */
+export async function placedOn(c: SqlClient, zone: string): Promise<Set<string>> {
+  const { rows } = await c.query(
+    `SELECT DISTINCT moment_id FROM moment_placements WHERE zone_key = $1 AND placed_once`,
+    [zone],
+  );
+  return new Set(rows.map((r) => r.moment_id as string));
+}
+
 export async function slotsOf(c: SqlClient, momentId: string): Promise<SlotRow[]> {
   const { rows } = await c.query(`SELECT * FROM moment_slots WHERE moment_id = $1`, [momentId]);
   return rows.map(slotOf);

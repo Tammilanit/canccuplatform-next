@@ -7,14 +7,16 @@
  */
 import { isDeepStrictEqual } from "node:util";
 import type { Outbox, SqlClient } from "@canccu/kit";
+import { adoptionOf, endOld } from "./air-adopt.js";
 import { planZone } from "./air-plan.js";
-import type { SlotIn, SlotOut } from "./air-plan.js";
+import type { SlotIn, SlotOut, ZonePlan } from "./air-plan.js";
 import type { AirSettings } from "./air-settings.js";
 import {
   dropSlot,
   lockZone,
   newSlot,
   pause,
+  placedOn,
   playedAt,
   resume,
   saveSlot,
@@ -78,7 +80,7 @@ function segmentOf(m: MomentRow): SlotIn["segment"] {
   return k === null ? null : { round: k[1] as string, index: Number(k[2]) };
 }
 
-function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotIn {
+function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings, placed: boolean): SlotIn {
   return {
     moment_id: m.id,
     class: m.class,
@@ -89,6 +91,7 @@ function slotIn(s: SlotRow, m: MomentRow, rank: number, air: AirSettings): SlotI
     segment: segmentOf(m),
     has_steps: m.steps !== null,
     shown: s.generation > 0,
+    placed,
     // The planner counts stale from `fresh_at` with the class's time; a shorter own patience moves it.
     fresh_at: staleAt(m, air) - air.stale_after_ms[m.class],
     queued_since: s.queued_since.getTime(),
@@ -117,9 +120,12 @@ export async function passZone(
   if (z0 === null) return;
   const { air, ...orders } = await loadOrders(c);
   // Ends change who is live, so the plan is made again after them; each round ends at least one.
-  // A slot made in any round of this pass is new: it shows from its moment's own start.
-  const fresh = new Set<string>();
   const own = new Set<string>();
+  const seen = await placedOn(c, zone);
+  const adopted = new Map<string, MomentRow>();
+  // A round that ended something plans again with the new holder already set, so the condensed
+  // round it just made goes on into the next one (rule 6).
+  let carried: ZonePlan["condensed"] = null;
   for (let round = 0; round < 50; round += 1) {
     const moments = new Map((await momentsOn(c, zone)).map((m) => [m.id, m]));
     const slots = new Map<string, SlotRow>();
@@ -129,20 +135,32 @@ export async function passZone(
     }
     for (const m of moments.values())
       if (!slots.has(m.id)) {
-        slots.set(m.id, await newSlot(c, m.id, zone, m.starts_at, budgetOf(m)));
-        fresh.add(m.id);
+        const old = await adoptionOf(c, m, zone, now);
+        const budget = old === null ? budgetOf(m) : old.budget_ms;
+        slots.set(m.id, await newSlot(c, m.id, zone, m.starts_at, budget));
+        if (old !== null) {
+          adopted.set(m.id, m);
+          if (old.hero && z0.holder === null) z0 = { holder: m.id, free_since: null };
+        }
         // Only a moment asked for in this very pass (or one that starts later) runs from its own
         // start; one reaching a zone late gets its full time there (rule 2).
         if (m.id === requested || m.starts_at.getTime() > now.getTime()) own.add(m.id);
       }
+    for (const id of carried?.inside ?? []) {
+      const s = slots.get(id);
+      if (s !== undefined) Object.assign(s, { granted: "inside", inside_of: carried?.holder });
+    }
     const ins = [...slots.values()].map((s) => {
       const m = moments.get(s.moment_id) as MomentRow;
-      return slotIn(s, m, rankOn(orders, zone, m.class), air);
+      return slotIn(s, m, rankOn(orders, zone, m.class), air, seen.has(m.id));
     });
     const plan = planZone(now.getTime(), z0, ins, air);
+    const condensed: ZonePlan["condensed"] =
+      plan.condensed ?? (carried !== null && plan.zone.holder === carried.holder ? carried : null);
     if (plan.ends.length > 0) {
       // As the plan has it: the gap from when the holder's time ran out, or its next segment.
       z0 = plan.zone;
+      carried = condensed;
       for (const e of plan.ends) {
         const m = moments.get(e.moment_id);
         if (m !== undefined) await engine.endHere(c, m, e.reason, now, zone);
@@ -153,9 +171,11 @@ export async function passZone(
       const s = slots.get(out.moment_id) as SlotRow;
       const m = moments.get(out.moment_id) as MomentRow;
       const steps = condensedSteps(plan.slots, out, moments, air);
-      if (plan.condensed?.holder === m.id && steps !== null)
-        s.budget_ms = steps.reduce((t, x) => t + (x.duration_ms as number), 0);
-      apply(s, out, m, air, now, own.has(m.id) ? m.starts_at : now);
+      // A round newly condensed plays all its steps from now, in an override of its own (rule 6).
+      const restart = condensed?.holder === m.id && steps !== null;
+      if (restart)
+        s.budget_ms = playedAt(s, now) + steps.reduce((t, x) => t + (x.duration_ms as number), 0);
+      apply(s, out, m, air, now, own.has(m.id) && !restart ? m.starts_at : now);
       await send(
         c,
         engine.outbox,
@@ -166,20 +186,25 @@ export async function passZone(
         steps,
         // Shown in the pass that asked for it: from its own start, so a story's late take plays
         // from the item's time (SU3); else from now, minus what it already played (rule 2).
-        own.has(m.id) ? m.starts_at : new Date(now.getTime() - playedAt(s, now)),
+        restart ? now : own.has(m.id) ? m.starts_at : new Date(now.getTime() - playedAt(s, now)),
+        restart,
         actor,
         reason,
       );
       await saveSlot(c, s);
       await syncExpiry(c, m.id);
     }
+    // D19: the old override ends only once the per-zone one has started.
+    for (const m of adopted.values()) await endOld(c, engine.outbox, m, reason, actor, true);
     await saveZone(c, zone, plan.zone);
     return;
   }
 }
 
-/** The slot's clock and place as the plan has them (D5: the clock runs from the grant). */
-/** `from`: when its clock starts if it goes on air now; a new moment's own start (a story's plan). */
+/**
+ * The slot's clock and place as the plan has them (D5: the clock runs from the grant). `from`:
+ * when its clock starts if it goes on air now; a new moment's own start (a story's plan).
+ */
 function apply(
   s: SlotRow,
   out: SlotOut,
@@ -196,12 +221,13 @@ function apply(
   s.inside_of = out.inside_of;
   s.queued_since = new Date(out.queued_since);
   s.tenure_from_ms = out.tenure_from_ms;
-  const running = is && s.on_air_since !== null;
-  s.ends_at = !running
+  // Paused on air (Screen hides it or leaves it unplaced): no end of its own, or Screen would
+  // drop the claim at it while Moments still holds the zone for the time it has left (rule 2).
+  s.ends_at = !is
     ? new Date(staleAt(m, air))
-    : s.budget_ms === null
+    : s.on_air_since === null || s.budget_ms === null
       ? null
-      : new Date((s.on_air_since as Date).getTime() + s.budget_ms - s.played_ms);
+      : new Date(s.on_air_since.getTime() + s.budget_ms - s.played_ms);
 }
 
 /** A condensed round's steps (rule 6): the holder and the moments inside it, in queue order. */
@@ -239,13 +265,13 @@ async function send(
   rank: number,
   condensed: Record<string, unknown>[] | null,
   from: Date,
+  restart: boolean,
   actor: Actor | null,
   reason: EndReason,
 ): Promise<void> {
-  if (out.regions === null) {
-    await withdraw(c, outbox, s, reason, actor, false);
-    return;
-  }
+  // A restart is a new generation: a `.changed` never moves `starts_at` (contracts/screen.md).
+  if (out.regions === null || restart) await withdraw(c, outbox, s, reason, actor, false);
+  if (out.regions === null) return;
   const by = actor?.user_id ?? null;
   const base = {
     kind: m.kind,
@@ -280,16 +306,9 @@ async function send(
     ?.sent as Sent | undefined;
   if (before === undefined) {
     s.override_id = null;
-    return send(c, outbox, m, s, out, rank, condensed, from, actor, reason);
+    return send(c, outbox, m, s, out, rank, condensed, from, false, actor, reason);
   }
-  // A round newly condensed starts its steps now, not when the holder first waited in the rail.
-  const newlyCondensed =
-    (before.steps ?? null) === null && base.steps !== null && condensed !== null;
-  const next: Sent = {
-    id: before.id,
-    ...base,
-    starts_at: newlyCondensed ? from.toISOString() : before.starts_at,
-  };
+  const next: Sent = { id: before.id, ...base, starts_at: before.starts_at };
   const changed = overrideChanges(before, next);
   if (!isDeepStrictEqual(before.steps ?? null, next.steps)) changed.push("steps");
   if (changed.length === 0) return;
@@ -343,6 +362,8 @@ export async function withdrawAll(
     await withdraw(c, outbox, s, reason, actor, true);
     zones.push(s.zone_key);
   }
+  // One that ended before a pass adopted it (D19) still has its old override.
+  await endOld(c, outbox, m, reason, actor, false);
   return zones;
 }
 

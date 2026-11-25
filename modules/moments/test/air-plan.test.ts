@@ -16,6 +16,7 @@ const slot = (id: string, over: Partial<SlotIn> = {}): SlotIn => ({
   segment: null,
   has_steps: false,
   shown: false,
+  placed: true,
   fresh_at: 0,
   queued_since: 0,
   forward_at: null,
@@ -121,6 +122,28 @@ describe("the airtime scheduler", () => {
       { moment_id: "hot", reason: "stale" },
     ]);
     expect(planZone(1_800_000, held, [card({ budget_ms: null })], DEFAULT_AIR).ends).toEqual([]);
+  });
+
+  it("a pass-through moment nobody sees goes stale; one on screen does not", () => {
+    const ticker = (over: Partial<SlotIn>) =>
+      slot("ticker", { class: "announcement", chain: ["ticker"], budget_ms: null, ...over });
+    const at = (s: SlotIn) =>
+      planZone(1_800_000, held, [card({ budget_ms: null }), s], DEFAULT_AIR);
+    expect(at(ticker({ granted: "pass", on_air_since: 0 })).ends).toEqual([]);
+    const stale = [{ moment_id: "ticker", reason: "stale" }];
+    // Screen leaves it unplaced or hidden: its clock is paused.
+    expect(at(ticker({ granted: "pass", on_air_since: null, played_ms: 1000 })).ends).toEqual(
+      stale,
+    );
+    // Screen never placed it there.
+    expect(at(ticker({ granted: "pass", on_air_since: 0, placed: false })).ends).toEqual(stale);
+    const early = planZone(
+      1_799_999,
+      held,
+      [ticker({ granted: "pass", placed: false })],
+      DEFAULT_AIR,
+    );
+    expect(early.ends).toEqual([]);
   });
 
   it("a budget shorter than the floor ends on its own", () => {
