@@ -5,7 +5,7 @@
 export const SCHEDULE_EN = {
   "tab.schedule": "Schedule",
   "schedule.desc":
-    "What each zone's playlist widget plays, on the event's days. Tap a window for its details; where windows overlap, the one that loses is greyed.",
+    "Which playlist each zone's screens play, day by day. Tap a window for its details; a greyed window loses to another where they overlap.",
   "schedule.zone_filter": "Zone",
   "schedule.day": "Day",
   "schedule.all_zones": "All zones",
