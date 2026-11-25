@@ -122,6 +122,36 @@ test("a book embeds its PNGs from the artifact folder, falling back to the book'
   assert.match(html, /<td><img [^>]*alt="Front page"/, "images stay where the book puts them");
 });
 
+test("a pack built by a script lists PNG sheets beside SVGs, and --check compares them too", () => {
+  const base = git("rev-parse", "HEAD");
+  mkdirSync(join(repo, "docs/design/png-pack"), { recursive: true });
+  writeFileSync(
+    join(repo, "docs/design/png-pack.md"),
+    "# PNG pack\n\n## Every mockup\n\n| Sheet | Shows |\n|---|---|\n| [02-b.svg](png-pack/02-b.svg) | The second |\n| [01-a-1280.png](png-pack/01-a-1280.png) | The first, rendered |\n",
+  );
+  writeFileSync(join(repo, "docs/design/png-pack/01-a-1280.png"), png(4));
+  writeFileSync(join(repo, "docs/design/png-pack/02-b.svg"), "<svg xmlns='http://www.w3.org/2000/svg'/>");
+  writeFileSync(join(repo, "docs/design/png-pack/03-c-1920.png"), png(5));
+  commit("a png pack");
+  const html = buildPage({ md: join(repo, "docs/design/png-pack.md") });
+  const sheets = embedded(html);
+  assert.deepEqual(
+    sheets.map((s) => [s.src, s.mime]),
+    [
+      ["docs/design/png-pack/02-b.svg", "image/svg+xml"],
+      ["docs/design/png-pack/01-a-1280.png", "image/png"],
+    ],
+    "the table's order, PNGs included; an unlisted PNG is no sheet",
+  );
+  assert.ok(sheets[1].bytes.equals(png(4)));
+  assert.match(html, /<figcaption>[^]*01-a-1280\.png[^]*The first, rendered[^]*<\/figcaption>/);
+  assert.equal(checkPage(html, "HEAD", repo).checked.length, 2);
+  writeFileSync(join(repo, "docs/design/png-pack/01-a-1280.png"), png(6));
+  const head = commit("re-render a sheet");
+  assert.deepEqual(checkPage(html, head, repo).diffs.map((d) => d.src), ["docs/design/png-pack/01-a-1280.png"]);
+  git("reset", "-q", "--hard", base);
+});
+
 test("a missing image stops the build with its name", () => {
   assert.throws(() => buildPage({ md: join(repo, "docs/reports/demo-book.md") }), /b01-front\.png/);
 });

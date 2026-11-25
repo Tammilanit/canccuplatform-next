@@ -56,9 +56,11 @@ function sheetsOf(md, src) {
     while (i < lines.length && !lines[i].trim()) i++;
     for (i += 2; i < lines.length && lines[i].includes("|"); i++) {
       const cells = lines[i].trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map((c) => c.trim());
-      const k = cells.findIndex((c) => /\]\([^)\s]+\.svg\)/.test(c));
+      // A PNG only when listed: a script-built pack's renders (#784). The folder's unlisted files
+      // stay SVG only, so a book's screenshots beside it never turn into sheets.
+      const k = cells.findIndex((c) => /\]\([^)\s]+\.(?:svg|png)\)/.test(c));
       if (k < 0) continue;
-      const [, name, url] = cells[k].match(/\[([^\]]*)\]\(([^)\s]+\.svg)\)/);
+      const [, name, url] = cells[k].match(/\[([^\]]*)\]\(([^)\s]+\.(?:svg|png))\)/);
       const file = resolve(dir, url);
       if (!listed.some((s) => s.file === file)) listed.push({ file, name, caption: cells.filter((_, j) => j !== k) });
     }
@@ -70,7 +72,7 @@ function sheetsOf(md, src) {
         .map((file) => ({ file, name: basename(file), caption: null }))
     : [];
   const id = slugger();
-  return [...listed, ...extra].map((s) => ({ ...s, id: id(`sheet-${basename(s.file, ".svg")}`) }));
+  return [...listed, ...extra].map((s) => ({ ...s, id: id(`sheet-${basename(s.file, extname(s.file))}`) }));
 }
 
 export function buildPage({ md, verdict, images }) {
@@ -158,14 +160,19 @@ export function embedded(html) {
     const data = attrs.match(/ src="data:([^;"]+);base64,([A-Za-z0-9+/=]*)"/);
     if (!data) return [];
     const src = attrs.match(/ data-src="([^"]*)"/);
-    return [{ src: src ? src[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&") : null, mime: data[1], bytes: Buffer.from(data[2], "base64") }];
+    const sheet = / class="sheet"/.test(attrs);
+    return [{ src: src ? src[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&") : null, mime: data[1], sheet, bytes: Buffer.from(data[2], "base64") }];
   });
 }
 
-/** Compares every embedded SVG with its file at ref; diffs name each one that is not identical. */
+/**
+ * Compares every embedded SVG, and every sheet (a pack's PNG renders too), with its file at ref;
+ * diffs name each one that is not identical. A book's screenshots come from a CI artifact, not
+ * the ref, so they are not checked.
+ */
 export function checkPage(html, ref, root) {
   execFileSync("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`], { cwd: root, stdio: "ignore" });
-  const svgs = embedded(html).filter((e) => e.mime === SVG);
+  const svgs = embedded(html).filter((e) => e.mime === SVG || e.sheet);
   const diffs = [];
   for (const e of svgs) {
     if (!e.src) {
@@ -214,7 +221,7 @@ function main() {
     for (const d of result.diffs) console.error(`mismatch: ${d.src} ${d.reason}`);
     if (!result.checked.length) console.error("error: the page embeds no SVG to check");
     if (result.diffs.length || !result.checked.length) process.exit(1);
-    console.log(`${result.checked.length} SVG sheets match ${values.check}`);
+    console.log(`${result.checked.length} sheets match ${values.check}`);
     return;
   }
 
