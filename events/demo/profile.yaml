@@ -52,12 +52,14 @@ pizza:
         - { number: "3", name: Pepperoni, description: "tomato, mozzarella, pepperoni", price: 900 }
         - { number: "12", name: Kebab, description: "kebab, onion, chili", price: 950 }
         - { number: "20", name: Vegetariana, description: "tomato, mushroom, pepper, olives", price: 900 }
-      base: { name: Own pizza, description: "tomato, mozzarella", price: 700 }
+      # A "Fantasia" own pizza (#789): three toppings included, each further one 1.50, specials extra.
+      base: { name: Fantasia, description: "tomato, mozzarella", price: 1000, included_toppings: 3, extra_topping_price: 150 }
       toppings:
         - { name: Ham, price: 100 }
         - { name: Pineapple, price: 100 }
         - { name: Olives, price: 100 }
         - { name: Jalapeño, price: 100 }
+        - { name: Prosciutto, price: 250, tier: special }
     - name: Demo Trattoria
       phone: "+000 000 0001"
       website: https://trattoria.example
@@ -66,3 +68,5 @@ pizza:
         - { number: "4", name: Margherita, description: "tomato, mozzarella", price: 800 }
         - { number: "7", name: Funghi, description: "mushroom, mozzarella", price: 850 }
         - { number: "15", name: Lasagne, description: "beef, béchamel", price: 1200 }
+        # Well over the menu's average, so an even split shows the limit (#789 item 8).
+        - { number: "21", name: Tartufo, description: "truffle, mushroom, mozzarella", price: 1890 }

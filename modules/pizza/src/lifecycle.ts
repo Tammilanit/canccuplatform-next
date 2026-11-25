@@ -12,7 +12,7 @@ import { emitOrder, personOf } from "./events.js";
 import type { Emitter } from "./events.js";
 import { UNPLACED } from "./model.js";
 import type { DoneReason, OrderState } from "./model.js";
-import { ORDER_COLUMNS, getOrder, itemsOf, logStep } from "./store.js";
+import { LIVE_EVEN_LIMIT, ORDER_COLUMNS, getOrder, itemsOf, logStep } from "./store.js";
 import type { Actor, OrderRow } from "./store.js";
 
 export interface Step {
@@ -128,7 +128,9 @@ export async function place(
     "place",
     UNPLACED,
     "placed",
-    "closed_at = COALESCE(closed_at, $3), placed_at = $4, estimate_at = $5, payer_user_id = $6, payer_name = $7",
+    // The even-share limit is fixed at the call-in (#789 item 8): a later menu edit moves no amount.
+    `closed_at = COALESCE(closed_at, $3), placed_at = $4, estimate_at = $5, payer_user_id = $6, payer_name = $7,
+     even_limit_cents = ${LIVE_EVEN_LIMIT}`,
     [s.now, input.placed_at, input.estimate_at, input.payer.user_id, input.payer.name],
   );
   if (m.changed) {

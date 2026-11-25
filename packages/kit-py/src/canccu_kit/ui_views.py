@@ -94,7 +94,7 @@ def front_page(
 _TITLES = {
     "no_access": "No access",
     "not_found": "Not found",
-    "not_at_venue": "Not at the venue",
+    "not_at_venue": "Venue network only",
     "archived": "Event archived",
     "failed": "Something went wrong",
     "refused": "Couldn't do that",
@@ -158,11 +158,12 @@ def error_view(
         )
         parts = ("compass", text, "", go or way_back)
     elif kind == "not_at_venue":
+        # Only an organiser's choice refuses here (`admin_access: restricted`, #778): there may be
+        # no venue Wi-Fi and the crew has no VPN, so the page names neither.
         parts = (
             "pin",
-            "Organiser pages open only on the venue's network or through the crew's VPN.",
-            "Join the venue Wi-Fi and try again. No VPN, or not sure what that is?"
-            " Ask an organiser: they can let you in.",
+            "This event's organiser pages open only from the venue's network.",
+            "Ask an organiser if you need in.",
             again,
         )
     elif kind == "archived":

@@ -48,6 +48,8 @@ export interface OrderRow {
   money_changed_at: Date | null;
   shares_sent_at: Date | null;
   revision: number;
+  /** The even-share limit: the one stored at the call-in, else the menu's as it is now (#789). */
+  even_limit_cents: number | null;
 }
 
 export interface ItemRow {
@@ -78,12 +80,23 @@ export interface PizzeriaRow {
   hidden_at: Date | null;
 }
 
+/**
+ * The even-share limit of the order's pizzeria as its menu is now (#789 item 8, D17): the average
+ * of its visible priced items × 1.3, rounded to 10 cents (half up); null when none has a price.
+ * In SQL so the order's reads and the call-in, which stores it, share one formula.
+ */
+export const LIVE_EVEN_LIMIT = `(SELECT (round(sum(e.price_cents) * 13 / NULLIF(count(*) * 100.0, 0)) * 10)::int
+    FROM pizza_menu_entries e
+   WHERE e.tenant_id = pizza_orders.tenant_id AND e.pizzeria_id = pizza_orders.pizzeria_id
+     AND e.kind = 'item' AND e.hidden_at IS NULL AND e.price_cents IS NOT NULL)`;
+
 /** The order's columns, its day as text (pg would make a `date` a local midnight). */
 export const ORDER_COLUMNS = `id, to_char(day, 'YYYY-MM-DD') AS day, seq, pizzeria_id, pizzeria_name, state,
   closes_at, note, opened_at, opened_by_user_id, holder_user_id, holder_name, claimed_at, closed_at,
   placed_at, estimate_at, arrived_at, pickup, done_at, done_reason, cancelled_at, cancel_reason,
   cancelled_by_user_id, auto_released, nudged_at, payer_user_id, payer_name, total_cents, split, settle_to, total_set_at, total_set_by_name, total_set_by_user_id,
-  total_receipt_id, money_changed_at, shares_sent_at, revision`;
+  total_receipt_id, money_changed_at, shares_sent_at, revision,
+  COALESCE(even_limit_cents, ${LIVE_EVEN_LIMIT}) AS even_limit_cents`;
 
 const ITEM_COLUMNS = `id, order_id, user_id, name, kind, menu_item_id, number, label, description,
   toppings, text, note, comment, price_cents, handed_out_at, created_at`;

@@ -198,7 +198,7 @@ export const FI: Record<MessageKey, string> = {
   "menus.phone": "Puhelin",
   "menus.web": "Verkkosivu",
   "menus.service": "Palvelu",
-  "menus.own": "Oma pizza: pohja ja 1–4 täytettä, {n} vaihtoehtoa",
+  "menus.own": "Oma pizza: pohja ja 1–6 täytettä, {n} vaihtoehtoa",
   "menus.no_own": "Ei omaa pizzaa: menussa ei ole pohjaa.",
   "menus.save": "Tallenna",
   "menus.hide": "Piilota pizzeria",

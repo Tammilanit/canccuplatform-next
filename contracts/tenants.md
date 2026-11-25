@@ -51,7 +51,7 @@ A tenant (`Tenant` in the OpenAPI file):
 | `primary_hostname` | The hostname for absolute URLs; `null` until the first hostname is added, or while none is `active`. No absolute URL can be built then |
 | `info_page_mode` | `public`, `venue_only` or `sign_in` (see Access) |
 | `membership` | `venue_or_link` (a signed-in user joins from one of the venue's addresses or with the event's own join link; the default) or `closed` (only event admins add members). See Users, roles and membership |
-| `admin_access` | `restricted` (default) or `internet` (see Access) |
+| `admin_access` | `internet` (default) or `restricted` (see Access) |
 | `venue_ip_check` | `{"enabled", "disabled_until", "reason"}` (see Access) |
 | `archived_at`, `presence_delete_at`, `personal_anonymise_at` | Set when archived (see Privacy and retention) |
 | `storage_quota_bytes` | The most bytes the event's files may take, across all its modules: 2 GiB (2,147,483,648) unless the superadmin sets another (see [Storage quota](#storage-quota)) |
@@ -172,10 +172,11 @@ Info pages are read-only, public-facing pages and data: the run-of-show, announc
 - Every change, and the automatic switch back, is written to the audit log and emits `tenants.venue_ip_check.changed`. The superadmin fixes the venue's addresses (audited too), then turns the check on.
 
 ### Admin access
-- `admin_access` keeps admin reachable from the internet with sign-in, behind a "venue or Tailscale only" switch that is on by default ([0022](../docs/decisions/0022-product-vision.md)). `restricted`: admin pages and every request that needs a right come only from the venue's addresses or the platform's Tailscale prefixes (`CANCCU_TAILSCALE_CIDRS`, by default `100.64.0.0/10` and `fd7a:115c:a1e0::/48`); otherwise 403 `admin_access_restricted`. `internet`: from anywhere.
-- It only narrows: sign-in and rights are always needed. Changing it is a `PATCH` of the tenant (right `tenants.access.write`, role only) and is audited.
+- `admin_access` says where the event's organiser and crew pages open ([0022](../docs/decisions/0022-product-vision.md), amended 2026-11-23). `internet`, **the default**: from anywhere, protected by the sign-in and each person's rights; at an event there may be no venue network while setting up, or at all. `restricted`, an option an organiser turns on ("Only from the venue's network"): admin pages and every request that needs a right come only from the venue's addresses or the platform's Tailscale prefixes (`CANCCU_TAILSCALE_CIDRS`, by default `100.64.0.0/10` and `fd7a:115c:a1e0::/48`); otherwise 403 `admin_access_restricted`. Tailscale is the platform developer's way in, never something the crew is told about: the refusal page names only the venue's network.
+- It only narrows: sign-in and rights are always needed. Changing it is a `PATCH` of the tenant (right `tenants.access.write`, role only) and is audited. A new event starts with `internet`; an event created before the default changed and that never chose a value was moved to `internet` (audited as `system`), and one that chose `restricted` keeps it.
 - An event with no venue (an online event, or one whose venue is not chosen yet) has no venue addresses, so while `restricted` its admin is reachable over Tailscale only, until an event admin there or the superadmin sets `internet`.
 - When a restricted event loses its venue address, admins recover over Tailscale, or the superadmin fixes the address.
+- Superadmin paths keep their own rule (the superadmin hostname, see Superadmin); `admin_access` does not change it.
 
 ## Feature flags
 - Per tenant (0013 item 17): `GET /api/tenants/current/flags` → `{"flags_version", "flags"}`, readable by anyone, except guests of a `draft` event (403 `info_pages_closed`); `PUT /api/tenants/current/flags` with `flags_version` and the flags to set, right `tenants.flags.write`. A stale `flags_version` is 409 `version_conflict`.

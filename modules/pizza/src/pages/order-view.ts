@@ -68,6 +68,7 @@ export interface OrderView {
   /** The caller's own money (contracts/pizza.md, Who sees what), for the people in the order. */
   my_amount_cents?: number | null;
   my_amount_estimated?: boolean;
+  my_over_limit_cents?: number | null;
   settle_to?: "organiser" | "payer";
   my_paid?: boolean | null;
   pay_to?: {

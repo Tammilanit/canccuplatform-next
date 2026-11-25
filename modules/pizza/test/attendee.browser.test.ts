@@ -120,6 +120,35 @@ describe.skipIf(browser === undefined)(
       await context.close();
     });
 
+    it("keeps a Fantasia own pizza's price running as toppings are ticked (#789 item 6)", async () => {
+      if (browser === undefined) return;
+      const pz = (
+        json(await w.call("anni", "GET", `/api/pizza/orders/${id}`)).pizzeria as { id: string }
+      ).id;
+      await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+        base: { name: "Fantasia", price: 1000, included_toppings: 3, extra_topping_price: 150 },
+        items: [{ number: "1", name: "Margherita", price: 800 }],
+        toppings: [
+          ...["kinkku", "ananas", "salami", "sipuli"].map((name) => ({ name, price: 100 })),
+          { name: "prosciutto", price: 250, tier: "special" },
+        ],
+      });
+      const context = await signedIn(browser, s, "anni");
+      const page = await context.newPage();
+      await page.goto(`${s.origin}/pizza/orders/${id}/add?tab=own`);
+      const total = page.locator("[data-own-total]");
+      await expect.poll(() => total.textContent()).toBe("€10.00");
+      for (const name of ["kinkku", "ananas", "salami"]) await page.getByLabel(name).check();
+      await expect.poll(() => total.textContent()).toBe("€10.00");
+      await page.getByLabel("sipuli").check();
+      await expect.poll(() => total.textContent()).toBe("€11.50");
+      await page.getByLabel(/prosciutto/).check();
+      await expect.poll(() => total.textContent()).toBe("€14.00");
+      await page.getByLabel("kinkku").uncheck();
+      await expect.poll(() => total.textContent()).toBe("€12.50");
+      await context.close();
+    });
+
     it("says Reconnecting while the stream is gone, and catches up when it is back (E16)", async () => {
       if (browser === undefined) return;
       const context = await signedIn(browser, s, "anni");

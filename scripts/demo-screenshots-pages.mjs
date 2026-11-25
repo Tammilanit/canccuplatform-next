@@ -15,6 +15,7 @@ const SHELL = [
   ["health-view", "/admin/health-view"],
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
+  ["access", "/admin/access"],
   ["notify-topics", "/notify/admin/topics"],
 ];
 export const PAGES = [
