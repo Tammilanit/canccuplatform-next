@@ -27,6 +27,7 @@ from canccu_kit import (
     valkey_check,
 )
 
+from .access_pages import TenantsApi
 from .app import create_app
 from .auth import Auth, normalize_public_url
 from .auth_db import PgAuthStore
@@ -68,15 +69,20 @@ def discord(public: str | None) -> Discord | None:
     return None
 
 
+def tenants_url() -> str:
+    url = os.environ.get("CANCCU_TENANTS_URL", "").strip()
+    if not url:
+        raise SystemExit("missing environment variable(s): CANCCU_TENANTS_URL")
+    return url
+
+
 def tenant_resolver(version: str, identity: ServiceIdentity) -> TenantResolver:
     """Hostname -> tenant through the tenants module (contracts/tenants.md, Resolving the tenant).
 
     The platform's own hostnames are never a tenant. IP mode follows the tenants module's switch
     (CANCCU_IP_MODE=demo, only while the version is dev).
     """
-    url = os.environ.get("CANCCU_TENANTS_URL", "").strip()
-    if not url:
-        raise SystemExit("missing environment variable(s): CANCCU_TENANTS_URL")
+    url = tenants_url()
     own = ("CANCCU_SIGNIN_HOSTNAME", "CANCCU_SUPERADMIN_HOSTNAME")
     demo = version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
     return TenantResolver(
@@ -146,6 +152,7 @@ async def serve() -> None:
         rights.handle_event,
         identity=identity,
         viewer=rights.session,
+        tenants_api=TenantsApi(tenants_url(), httpx.AsyncClient(timeout=5.0)),
     )
 
     async def drop_cached_tenants(event: Event) -> None:

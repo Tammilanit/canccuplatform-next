@@ -6,9 +6,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from canccu_kit import DEMO_TENANT
 from conftest import Env, make_tenant
 
-from canccu_tenants.seed import DEMO_TENANT, seed_demo
+from canccu_tenants.core import Files
+from canccu_tenants.seed import seed_demo
 
 HOST = "alpha.example.org"
 MIGRATION = Path(__file__).parents[1] / "migrations/003_admin_access_internet.sql"
@@ -41,7 +43,9 @@ async def test_restricted_refuses_away_from_the_venue_and_internet_lets_in_again
     admin = env.rights.sign_in("u_admin")
     async with env.client(HOST) as c:
         on = await c.patch(
-            "/api/tenants/current", json={"revision": 1, "admin_access": "restricted"}, headers=admin
+            "/api/tenants/current",
+            json={"revision": 1, "admin_access": "restricted"},
+            headers=admin,
         )
         at_venue = await c.get("/api/tenants/current/storage", headers=admin)
         await away_from_the_venue(env)
@@ -57,8 +61,6 @@ async def test_restricted_refuses_away_from_the_venue_and_internet_lets_in_again
 
 
 async def test_the_demo_event_opens_from_anywhere(env: Env, tmp_path: Path) -> None:
-    from canccu_tenants.core import Files
-
     assert await seed_demo(env.db, Files(str(tmp_path)), PROFILE, None)
     async with env.db.tenant(DEMO_TENANT) as conn:
         value = await conn.fetchval("SELECT admin_access FROM tenants WHERE id = $1", DEMO_TENANT)

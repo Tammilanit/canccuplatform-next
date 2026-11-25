@@ -336,7 +336,12 @@ components:
       enum: [venue_or_link, closed]
     AdminAccess:
       type: string
+      description: |
+        Where the event's organiser pages and every request that needs a right are served from:
+        `internet` (the default) from anywhere, with sign-in and rights; `restricted` only from the
+        venue's addresses or the platform's Tailscale prefixes (contracts/tenants.md, Admin access).
       enum: [restricted, internet]
+      default: internet
     TimeZone:
       type: string
       description: An IANA time zone name.

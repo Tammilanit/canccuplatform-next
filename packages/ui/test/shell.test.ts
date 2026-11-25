@@ -227,7 +227,9 @@ describe("errorView", () => {
   });
   it("says off the venue network that the organiser chose it, without Wi-Fi or a VPN (#778)", () => {
     const view = s(errorView({ status: 403, code: "admin_access_restricted", message: "x" }, {}));
-    expect(view).toContain("This event&#39;s organiser pages open only from the venue&#39;s network.");
+    expect(view).toContain(
+      "This event&#39;s organiser pages open only from the venue&#39;s network.",
+    );
     expect(view).toContain("Ask an organiser if you need in.");
     expect(view).not.toMatch(/VPN|Wi-Fi/);
   });

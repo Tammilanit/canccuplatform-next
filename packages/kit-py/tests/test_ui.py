@@ -335,7 +335,7 @@ def test_a_failure_after_a_form_post_offers_the_way_back_not_a_retry() -> None:
 def test_off_the_venue_network_says_the_organiser_chose_it_without_wifi_or_vpn() -> None:
     # #778: the restriction is an organiser's choice; there may be no venue Wi-Fi and no VPN.
     _, view = error_view(KitError("x", status=403, code="admin_access_restricted"))
-    assert "This event&#x27;s organiser pages open only from the venue&#x27;s network." in view
+    assert "This event's organiser pages open only from the venue's network." in view
     assert "Ask an organiser if you need in." in view
     assert "VPN" not in view and "Wi-Fi" not in view
 

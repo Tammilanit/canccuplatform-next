@@ -13,7 +13,7 @@ from canccu_kit.starlette import TenancyMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 # Page paths as admin sees them, after Caddy strips `/admin`.
-TENANT_PATHS = ("/api/admin/settings", "/api/admin/profile", "/settings", "/profile")
+TENANT_PATHS = ("/api/admin/settings", "/api/admin/profile", "/settings", "/profile", "/access")
 
 
 def is_tenant_path(path: str) -> bool:
