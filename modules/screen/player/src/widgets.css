@@ -32,7 +32,7 @@
 
   .canccu-widget--logo .canccu-widget__name {
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     font-size: calc(3.6 * var(--canccu-u));
     font-weight: 600;
@@ -343,7 +343,7 @@
   .canccu-widget__line {
     flex: 1 1 auto;
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     white-space: nowrap;
     font-size: calc(4.4 * var(--canccu-u));
     line-height: 1.25;
@@ -356,6 +356,7 @@
   .canccu-widget__crawl {
     display: inline-flex;
     animation: canccu-crawl var(--canccu-crawl-seconds, 30s) linear infinite;
+    animation-delay: var(--canccu-crawl-delay, 0s);
   }
 
   .canccu-widget__run {

@@ -38,7 +38,7 @@ describe("claims.css, a card in the ticker role", () => {
     const title = rulesOf(`${CARD} .canccu-widget__title`);
     expect(title).toMatch(/white-space:\s*nowrap;/);
     expect(title).toMatch(/text-overflow:\s*ellipsis;/);
-    expect(title).toMatch(/overflow:\s*hidden;/);
+    expect(title).toMatch(/overflow:\s*clip;/);
   });
 });
 

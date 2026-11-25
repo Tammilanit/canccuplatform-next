@@ -9,26 +9,39 @@ import type { Motion } from "./display.js";
 /** How long each line shows when the ticker steps. */
 export const STEP_MS = 5000;
 /**
- * The crawl's pace, in screen short sides a second: about 86 px a second at 1080p, slow enough to
- * read from across a hall. The same at calm and moderate: the energy levels never change the pace
- * (design guideline, amendment 1).
+ * The crawl's pace when the state names none (a server before #779): the event's `normal`, in
+ * pixels a second of a 1080p screen (contracts/screen.md, Ticker). The PO found 86 px a second
+ * slow at the step 5 demo. The energy levels never change it (design guideline, amendment 1).
  */
-const CRAWL_PER_SECOND = 0.08;
+export const DEFAULT_SPEED = 180;
 
 type Fit = "fits" | "crawl" | "step";
 
-export function fitTickers(root: HTMLElement, motion: Motion, nowMs: number): void {
-  const lines = root.querySelectorAll<HTMLElement>(".canccu-widget--ticker .canccu-widget__line");
-  for (const line of lines) fit(line, motion, nowMs);
+/** The event's pace from the state's ticker, `DEFAULT_SPEED` when it has none. */
+export function speedOf(ticker: unknown): number {
+  const speed = (ticker as { speed?: unknown } | null)?.speed;
+  return typeof speed === "number" && speed > 0 ? speed : DEFAULT_SPEED;
 }
 
-function fit(line: HTMLElement, motion: Motion, nowMs: number): void {
+export function fitTickers(
+  root: HTMLElement,
+  motion: Motion,
+  nowMs: number,
+  speed = DEFAULT_SPEED,
+): void {
+  const lines = root.querySelectorAll<HTMLElement>(".canccu-widget--ticker .canccu-widget__line");
+  for (const line of lines) fit(line, motion, nowMs, speed);
+}
+
+function fit(line: HTMLElement, motion: Motion, nowMs: number, speed: number): void {
   const text = line.dataset.text ?? line.textContent;
   const fitted = line.dataset.fit as Fit | undefined;
   const moving = motion === "none" ? "step" : "crawl";
-  // Measured once per text and motion: a redraw with new data brings a fresh line element.
+  // Measured once per text and motion: a redraw with new data brings a fresh line element. A new
+  // pace only times the crawl again.
   if (fitted !== undefined && (fitted === "fits" || fitted === moving)) {
     if (fitted === "step") step(line, nowMs);
+    if (fitted === "crawl" && line.dataset.speed !== String(speed)) time(line, nowMs, speed);
     return;
   }
   // A line off the page (a new layout's `<main>` before the player mounts it) or not laid out yet
@@ -36,13 +49,14 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number): void {
   if (!line.isConnected || line.clientWidth === 0) return;
   line.replaceChildren(text);
   line.style.removeProperty("--canccu-crawl-seconds");
+  line.style.removeProperty("--canccu-crawl-delay");
   line.dataset.text = text;
   if (line.scrollWidth <= line.clientWidth) {
     line.dataset.fit = "fits";
     return;
   }
   line.dataset.fit = moving;
-  if (moving === "crawl") crawl(line, text);
+  if (moving === "crawl") crawl(line, text, nowMs, speed);
   else {
     const steps = document.createElement("span");
     steps.className = "canccu-widget__steps";
@@ -56,7 +70,7 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number): void {
 }
 
 /** Two runs of the text in a track that slides by one run, so the loop never shows a gap. */
-function crawl(line: HTMLElement, text: string): void {
+function crawl(line: HTMLElement, text: string, nowMs: number, speed: number): void {
   const track = document.createElement("span");
   track.className = "canccu-widget__crawl";
   for (const copy of [false, true]) {
@@ -67,9 +81,23 @@ function crawl(line: HTMLElement, text: string): void {
     track.append(run);
   }
   line.replaceChildren(track);
+  time(line, nowMs, speed);
+}
+
+/**
+ * The loop's length at `speed` pixels a second of a 1080p screen, scaled to this screen's short
+ * side, and where in the loop the server's clock is: a line drawn again (a redraw, a theme, the
+ * page reloaded) goes on from there instead of starting over, and a zone's screens agree.
+ */
+function time(line: HTMLElement, nowMs: number, speed: number): void {
+  const track = line.querySelector<HTMLElement>(".canccu-widget__crawl");
+  if (track === null) return;
   const shortSide = Math.min(window.innerWidth, window.innerHeight) || 1080;
-  const seconds = track.scrollWidth / 2 / (shortSide * CRAWL_PER_SECOND);
-  line.style.setProperty("--canccu-crawl-seconds", `${String(Math.max(seconds, 1))}s`);
+  const seconds = Math.max(track.scrollWidth / 2 / ((speed * shortSide) / 1080), 1);
+  const into = (nowMs / 1000) % seconds;
+  line.dataset.speed = String(speed);
+  line.style.setProperty("--canccu-crawl-seconds", `${String(seconds)}s`);
+  line.style.setProperty("--canccu-crawl-delay", `${String(-into)}s`);
 }
 
 /** Shows line `k` of the wrapped text, by the server's clock, so every screen of a zone agrees. */

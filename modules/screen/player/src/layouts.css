@@ -170,7 +170,7 @@
     display: block;
     flex: 0 1 auto;
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
   }
 

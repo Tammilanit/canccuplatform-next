@@ -67,18 +67,12 @@ describe("food.css", () => {
     expect(rulesOf(third)).toMatch(/display:\s*none;/);
   });
 
-  // #775: the cue's frame sat on the region, 4 units inside the claimed box that reaches into the
-  // QR's half, so the box showed a second line through it.
-  it("draws a cue's frame and rings round the whole box in the venue rail: one frame", () => {
+  // #775: the cue's frame sat on the region, 4 units inside the claimed box that reached into the
+  // QR's half. #779: the two parts are cards of their own, so the box is its region, and the frame
+  // on the region is the box's.
+  it("draws the venue rail's parts as cards of their own, the box its region: one frame", () => {
     const rail = read("rail.css").replace(/\/\*[\s\S]*?\*\//g, "");
-    const rule =
-      /\.canccu-region--venue_rail\.canccu-cue::after,\s*\.canccu-region--venue_rail\.canccu-cue::before\s*\{([^}]*)\}/.exec(
-        rail,
-      );
-    expect(rule?.[1]).toMatch(/right:\s*calc\(-1 \* var\(--canccu-venue-seam\)\);/);
-    expect(rule?.[1]).toMatch(
-      /border-radius:\s*var\(--canccu-card-radius\) 0 0 var\(--canccu-card-radius\);/,
-    );
+    expect(rail).not.toMatch(/venue-seam|\.canccu-region--venue_rail(-2)? > \.canccu-widget/);
   });
 
   it("draws the claim on the ticker as one row: no lead, no QR, the status shown again", () => {
@@ -92,7 +86,7 @@ describe("food.css", () => {
   // ellipsis, and its label is the ticker's own size.
   it("keeps the claim on the ticker one line: a long name ends with an ellipsis", () => {
     const name = rulesOf(`${TICKER} .canccu-widget__name`);
-    expect(name).toMatch(/overflow:\s*hidden;/);
+    expect(name).toMatch(/overflow:\s*clip;/);
     expect(name).toMatch(/text-overflow:\s*ellipsis;/);
     expect(name).toMatch(/white-space:\s*nowrap;/);
     expect(rulesOf(`${TICKER} .canccu-widget__kicker`)).toMatch(

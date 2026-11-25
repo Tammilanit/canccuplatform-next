@@ -10,14 +10,14 @@
 import { readFile } from "node:fs/promises";
 import { afterAll, describe, expect, it } from "vitest";
 import type { Page } from "playwright-core";
-import { collectSamples } from "../../test/stack/readability.mjs";
-import { bundle, draw, fontFace, launch, screenPage, themeCss, tick } from "./browser.js";
-import type { Bundle } from "./browser.js";
+import { collectSamples } from "./stack/readability.mjs";
+import { bundle, draw, fontFace, launch, screenPage, themeCss, tick } from "./player-browser.js";
+import type { Bundle } from "./player-browser.js";
 
 interface Fixture {
   time: string;
   ticker: Record<string, unknown> | null;
-  regions: { id: string }[];
+  regions: { id: string; widgets: { widget: string; view: Record<string, unknown> }[] }[];
 }
 
 const STATES = JSON.parse(
@@ -36,7 +36,7 @@ afterAll(async () => {
 function stateOf(kind: "landscape" | "portrait", ticker: Record<string, unknown> = {}): Fixture {
   const s = structuredClone(STATES[kind]);
   s.ticker = { ...(s.ticker ?? {}), ...ticker };
-  for (const r of s.regions as { widgets: { widget: string; view: Record<string, unknown> }[] }[])
+  for (const r of s.regions)
     for (const w of r.widgets) if (w.widget === "ticker") Object.assign(w.view, ticker);
   return s;
 }
@@ -107,24 +107,32 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
   });
 
   describe("the ticker's crawl", () => {
-    /** The crawl's two runs at its start and just before its end, and its pace, paused. */
+    /**
+     * The crawl paused: its two runs at the loop's start and just before its end, a second in, and
+     * where the server's clock put the loop when it was drawn.
+     */
     const crawl = (page: Page) =>
       page.evaluate(() => {
         const track = document.querySelector<HTMLElement>(".canccu-widget__crawl");
         const runs = [...document.querySelectorAll<HTMLElement>(".canccu-widget__run")];
         const anim = track?.getAnimations()[0];
-        if (track === null || anim === undefined || runs.length !== 2) return null;
+        const [first, second] = runs;
+        if (track === null || anim === undefined || !first || !second) return null;
         anim.pause();
-        const duration = Number(anim.effect?.getComputedTiming().duration);
+        const timing = anim.effect?.getComputedTiming();
+        const [duration, delay] = [Number(timing?.duration), Number(timing?.delay)];
+        /** The first or second run's left edge at `at` ms into the loop. */
         const left = (el: HTMLElement, at: number) => {
-          anim.currentTime = at;
+          // Within the loop: before 0 a negative delay's crawl is not drawn moved at all.
+          anim.currentTime = (((at + delay) % duration) + duration) % duration;
           return el.getBoundingClientRect().left;
         };
         return {
           widths: runs.map((r) => r.getBoundingClientRect().width),
-          start: left(runs[0], 0),
-          end: left(runs[1], duration - 1),
-          second: left(runs[0], 1000),
+          now: left(first, -delay),
+          start: left(first, 0),
+          end: left(second, duration - 1),
+          second: left(first, 1000),
         };
       });
 
@@ -133,7 +141,7 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
       const c = await crawl(page);
       expect(c).not.toBeNull();
       if (c === null) return;
-      expect(c.widths[1]).toBeCloseTo(c.widths[0], 1);
+      expect(c.widths[1]).toBeCloseTo(c.widths[0] ?? NaN, 1);
       // One millisecond before the loop ends, the second run is where the first one began.
       expect(Math.abs(c.end - c.start)).toBeLessThan(1);
       await page.close();
@@ -166,31 +174,46 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
         const page = await open([1920, 1080], state);
         const c = await crawl(page);
         await page.close();
-        return c?.start ?? NaN;
+        return { left: c?.now ?? NaN, loop: c?.widths[0] ?? NaN };
       };
-      // A second later, the line has moved on 240 px.
-      expect((await at(0)) - (await at(1000))).toBeCloseTo(240, 0);
+      // A second later, the line has moved on 240 px, round the loop when it wrapped meanwhile.
+      const [before, after] = [await at(0), await at(1000)];
+      const moved = (before.left - after.left) % before.loop;
+      expect((moved + before.loop) % before.loop).toBeCloseTo(240, 0);
     });
   });
 
   describe("the regions keep their place and size", () => {
-    /** Each region's box, and each widget whose box is not its region's. */
+    /**
+     * Each region's box, and each widget laid out out of its region's box (a theme may size one
+     * inside it: level-up's clock is a pill at its right). Layout boxes, not drawn ones: a theme's
+     * own entrance (level-up's widgets rise in) moves a widget for a moment, on purpose.
+     */
     const boxes = (page: Page) =>
       page.evaluate(() => {
-        const r = (el: Element) => {
-          const b = el.getBoundingClientRect();
-          return [b.left, b.top, b.width, b.height].map(Math.round).join(",");
-        };
         const regions: Record<string, string> = {};
         const apart: string[] = [];
         let two = false;
-        for (const el of document.querySelectorAll(".canccu-region:not([hidden])")) {
+        for (const el of document.querySelectorAll<HTMLElement>(".canccu-region:not([hidden])")) {
           const id = [...el.classList].find((c) => c.startsWith("canccu-region--")) ?? "";
-          regions[id] = r(el);
-          const widgets = [...el.querySelectorAll(":scope > .canccu-widget")];
+          const b = el.getBoundingClientRect();
+          regions[id] = [b.left, b.top, b.width, b.height].map(Math.round).join(",");
+          const widgets = [...el.querySelectorAll<HTMLElement>(":scope > .canccu-widget")];
           if (widgets.length > 1) two = true;
-          for (const w of widgets)
-            if (r(w) !== r(el)) apart.push(`${id} ${[...w.classList].join(".")}: ${r(w)}`);
+          const [width, height] = [el.clientWidth, el.clientHeight];
+          for (const w of widgets) {
+            const [x, y] = [w.offsetLeft, w.offsetTop];
+            const inside =
+              w.offsetParent === el &&
+              Math.min(x, y) >= 0 &&
+              x + w.offsetWidth <= width + 1 &&
+              y + w.offsetHeight <= height + 1;
+            const at = [x, y, w.offsetWidth, w.offsetHeight].join(",");
+            if (!inside)
+              apart.push(
+                `${id} ${[...w.classList].join(".")}: ${at}, out of 0,0,${String(width)},${String(height)}`,
+              );
+          }
         }
         return { regions, apart, two };
       });

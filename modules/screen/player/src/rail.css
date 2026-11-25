@@ -98,7 +98,7 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    overflow: hidden;
+    overflow: clip;
     font-size: calc(4 * var(--canccu-u));
     font-weight: 600;
   }
@@ -138,7 +138,7 @@
 
   .canccu-widget--venue_info .canccu-widget__name,
   .canccu-widget--venue_info .canccu-widget__password {
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -148,37 +148,10 @@
   }
 
   /*
-   * The parts split the rail's columns evenly (contracts/screen.md, Header and hub QR); the seam
-   * moves `--canccu-venue-seam` into the QR's half, which needs only the code's width. Margins,
-   * not offsets: they move an edge whether a theme places the widget absolutely or in the flow.
+   * The parts split the rail's columns evenly (contracts/screen.md, Header and hub QR), each a card
+   * of its own with the layout's gap between them (#779): drawn as one card joined at a seam, they
+   * read as a box in a box once a theme framed each, and the food box touched the QR.
    */
-  .canccu-region--venue_rail > .canccu-widget {
-    margin-right: calc(-1 * var(--canccu-venue-seam));
-    padding-right: calc(1 * var(--canccu-u));
-    border-right: 0;
-    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
-  }
-
-  .canccu-region--venue_rail-2 > .canccu-widget {
-    margin-left: calc(var(--canccu-venue-seam) - var(--canccu-gap));
-    padding-inline: calc(1.2 * var(--canccu-u));
-    border-left: 0;
-    border-radius: 0 var(--canccu-card-radius) var(--canccu-card-radius) 0;
-  }
-
-  .canccu-region--venue_rail,
-  .canccu-region--venue_rail-2 {
-    --canccu-venue-seam: calc(4 * var(--canccu-u));
-  }
-
-  /* A cue's frame and rings (cues.css) go round the box the claim draws, seam and all, with its
-     corners: on the region alone they ran 4 units inside the claimed food box's own frame, a
-     second line through the box (#775). */
-  .canccu-region--venue_rail.canccu-cue::after,
-  .canccu-region--venue_rail.canccu-cue::before {
-    right: calc(-1 * var(--canccu-venue-seam));
-    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
-  }
 
   .canccu-widget--qr .canccu-widget__qr,
   .canccu-widget--checkin_qr .canccu-widget__qr {

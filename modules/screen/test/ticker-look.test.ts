@@ -2,10 +2,11 @@
 // appearance, and its pace in pixels a second of a 1080p screen, much faster by default than the
 // 86 px a second the PO found slow at the step 5 demo.
 import { describe, expect, it } from "vitest";
+import type { Settings } from "../src/health.js";
 import { tickerLook } from "../src/ticker/look.js";
 
-const settings = (values: Record<string, unknown>) => ({
-  get: (key: string, fallback: unknown) => (key in values ? values[key] : fallback),
+const settings = (values: Record<string, unknown>): Pick<Settings, "get"> => ({
+  get: (key, fallback) => (key in values ? values[key] : fallback) as typeof fallback,
 });
 
 describe("the ticker's look", () => {

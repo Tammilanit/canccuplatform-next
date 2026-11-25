@@ -18,7 +18,7 @@ import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
-import { fitTickers } from "./ticker.js";
+import { fitTickers, speedOf } from "./ticker.js";
 import { fitAnnouncements } from "./fit.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
@@ -225,7 +225,7 @@ export class Screen {
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
     this.stage.apply(state.display?.stage, level, now);
     this.scene.apply(state.display?.scene);
-    fitTickers(this.root, motion, now);
+    fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);

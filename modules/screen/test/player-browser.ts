@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 /**
  * The player in a real browser (#779): what happy-dom cannot show, because it lays nothing out
  * (a glyph's ink against its box, a crawl's wrap, a region's place through a theme change). The
@@ -10,8 +11,8 @@ import { build } from "esbuild";
 import { chromium } from "playwright-core";
 import type { Browser, Page } from "playwright-core";
 
-const SRC = new URL("../src/", import.meta.url);
-const THEMES = new URL("../../../../events/demo/themes/", import.meta.url);
+const SRC = new URL("../player/src/", import.meta.url);
+const THEMES = new URL("../../../events/demo/themes/", import.meta.url);
 
 /** Playwright's bundled Chromium, else the runner's Chrome; undefined when neither starts. */
 export async function launch(): Promise<Browser | undefined> {

@@ -61,7 +61,7 @@
     align-items: center;
     gap: calc(2.4 * var(--canccu-u));
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
   }
 
   .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__title {
@@ -69,7 +69,7 @@
     min-width: 0;
     font-size: calc(3.4 * var(--canccu-u));
     white-space: nowrap;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
   }
 
@@ -85,7 +85,7 @@
     border-inline-start: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
     font-size: calc(3.4 * var(--canccu-u));
     white-space: nowrap;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
   }
 

@@ -12,8 +12,14 @@ export const UHD = [
   [3840, 2160],
   [2160, 3840],
 ];
-// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
-export const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
+// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only. The
+// level-up theme, whose widgets lie in the flow and whose fonts reach below their line box, is shot
+// at 4K too (#779: no clipped letters at 1080p, 4K and portrait in both themes).
+export function sizesOf(theme, check) {
+  if (check) return HD;
+  if (theme === "default") return [...HD, ...UHD];
+  return theme === "level-up" ? [...HD, UHD[0]] : HD;
+}
 /** The frames that differ by theme; the others are drawn before any theme reaches the page. */
 export const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
 export const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];

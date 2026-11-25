@@ -1095,6 +1095,14 @@ components:
         appearance:
           type: string
           enum: [default, high_contrast, minimal, broadcast]
+        speed:
+          type: integer
+          minimum: 1
+          maximum: 2000
+          description: >-
+            Additive (#779): how fast a line too long for the screen crawls, in pixels a second of a
+            1080p screen; the player scales it to its own short side. `ticker_pixels_per_second`
+            when it is set, else `ticker_speed`: slow 120, normal 180, fast 270.
     TickerSet:
       type: object
       required: [text, until]

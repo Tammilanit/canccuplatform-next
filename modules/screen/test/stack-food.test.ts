@@ -69,7 +69,7 @@ describe("the food box's fit check", () => {
   it("allows a pixel of rounding", () => {
     const texts = [{ text: "Demo Pizzeria", left: 1274.5, top: 860, right: 1566.6, bottom: 948.4 }];
     const box = { ...BOX, right: 1566.6 };
-    expect(judgeFood(measure({ texts, box, frame: { ...BOX, right: 1565.2 } }))).toEqual([]);
+    expect(judgeFood(measure({ texts, box, frame: { ...BOX, right: 1565.8 } }))).toEqual([]);
   });
 
   // The longest pickup note pizza accepts (its LIMITS.pickup, 80), at 1080p, portrait and 4K.

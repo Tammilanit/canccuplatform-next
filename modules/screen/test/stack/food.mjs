@@ -61,7 +61,8 @@ export const withFoodClaim = (view) => (s) => {
 /**
  * Runs in the page (Playwright's evaluate), so it uses nothing from outside: the food box drawn
  * now (not the ticker's one line), the cue's frame on its region where one is drawn, the hub QR's
- * card beside it, and the box of each piece of text the box draws. Hidden text draws no box.
+ * card beside it, the layout's gap, and the box of each piece of text the box draws. Hidden text
+ * draws no box.
  */
 export function measureFood() {
   const edges = (r) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
@@ -106,6 +107,7 @@ export function measureFood() {
     box: edges(box.getBoundingClientRect()),
     frame,
     qr: qr === null ? null : edges(qr.getBoundingClientRect()),
+    gap: parseFloat(getComputedStyle(region.parentElement).columnGap) || 0,
     texts,
   };
 }
@@ -129,6 +131,13 @@ export function judgeFood(m) {
     const px = (v) => Math.round(v);
     out.push(
       `the cue's frame is drawn apart from the box (${side} edge ${px(m.frame[side])} px, the box's ${px(m.box[side])} px): two frames`,
+    );
+  }
+  // #779: drawn against the QR's card, the two read as one box in another.
+  if (m.qr !== null && m.qr.left - m.box.right < m.gap - SLACK) {
+    const px = (v) => Math.round(v);
+    out.push(
+      `the food box is ${px(m.qr.left - m.box.right)} px from the hub QR's card, under the layout's gap of ${px(m.gap)} px`,
     );
   }
   for (const t of m.texts) {

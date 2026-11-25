@@ -35,7 +35,12 @@ describe("the screen's stylesheet", () => {
     // A bare `cqmin` would read the nearest container: a theme's widget, if the theme makes it one.
     expect(css).toMatch(/@property --canccu-u \{[^}]*syntax: "<length>";[^}]*inherits: true;/);
     expect(css).toMatch(/\.canccu-layout > \* \{\s*--canccu-u: 1cqmin;\s*\}/);
-    expect(rules.replace(/--canccu-u: 1cqmin/, "")).not.toMatch(/\dcq(min|w|h|i|b|max)\b/);
+    // The one-row bands (#779) cap it by the band, read on the band's children: a theme's own
+    // container is a child of the band, so it never shrinks the text either.
+    const band = String.raw`--canccu-u: min\(var\(--canccu-band-u\), 100cqh / 6\.2\)`;
+    expect(css).toMatch(new RegExp(`\\[data-role="ticker"\\]\\) > \\* \\{\\s*${band};\\s*\\}`));
+    const others = rules.replace(/--canccu-u: 1cqmin/, "").replace(new RegExp(band), "");
+    expect(others).not.toMatch(/\dcq(min|w|h|i|b|max)\b/);
   });
 
   it("sits in the platform's base layer, so a theme's CSS overrides it without !important", () => {

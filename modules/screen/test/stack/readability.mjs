@@ -226,11 +226,14 @@ export function collectSamples() {
       const s = n === el ? style : getComputedStyle(n);
       if (s.overflowX === "visible" && s.overflowY === "visible") continue;
       const c = n.getBoundingClientRect();
+      // `overflow: clip` paints its `overflow-clip-margin` past the box (screen.css, the ink's room).
+      const room =
+        s.overflowY === "clip" ? Number(/[\d.]+(?=px)/.exec(s.overflowClipMargin)?.[0] ?? 0) : 0;
       boxes.push({
         left: c.left,
         right: c.right,
-        top: c.top + parseFloat(s.borderTopWidth),
-        bottom: c.bottom - parseFloat(s.borderBottomWidth),
+        top: c.top + parseFloat(s.borderTopWidth) - room,
+        bottom: c.bottom - parseFloat(s.borderBottomWidth) + room,
       });
     }
     for (const node of nodes) {
