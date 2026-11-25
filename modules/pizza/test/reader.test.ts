@@ -129,10 +129,18 @@ describe.skipIf(!DATABASE_URL)("reading a receipt", () => {
     expect(r.pizzas.find((p) => p.item_id === items.mikko)).toMatchObject({ line: null });
   });
 
-  it("sends only the photo, shrunk to 2,576 px and without its location", async () => {
+  it("sends only the photo, shrunk to 1,600 px and without its location", async () => {
     await setKey();
     await read(await addReceipt(await photoWithLocation(3000, 4000)));
-    expect(w.reader.sent[0]).toMatchObject({ height: 2576, width: 1932, exif: false });
+    expect(w.reader.sent[0]).toMatchObject({ height: 1600, width: 1200, exif: false });
+  });
+
+  it("sends the reader the photo as it is stored, no second copy", async () => {
+    await setKey();
+    const receipt = await addReceipt(await photoWithLocation(3000, 4000));
+    await read(receipt);
+    const photo = await w.call("pena", "GET", `/api/pizza/receipts/${receipt}/photo`);
+    expect(w.reader.sent[0]?.bytes.equals(photo.rawPayload)).toBe(true);
   });
 
   it("sends a JPEG rendition of a PNG photo, never the lossless PNG", async () => {

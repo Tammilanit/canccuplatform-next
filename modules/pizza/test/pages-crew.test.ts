@@ -266,6 +266,7 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
     const pageDefaults: Partial<typeof DEFAULT_SETTINGS> = { ...DEFAULT_SETTINGS };
     delete pageDefaults.ai_reader;
     delete pageDefaults.ai_reader_daily_reads;
+    delete pageDefaults.ai_reader_monthly_limit_usd;
     expect(w.adminSettings.writes.at(-1)).toEqual({
       host: "demo.test",
       values: {

@@ -1,0 +1,52 @@
+/* A photo's read (#789 items 2, 11 and 12): the progress while it is sent and read, a read that
+   gave nothing with its ways on, a line the reader was unsure of, and the month's read log. */
+
+.pizza-progress {
+  display: grid;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+.pizza-progress__bar {
+  inline-size: 100%;
+  block-size: 0.5rem;
+  accent-color: var(--canccu-color-primary);
+}
+.pizza-progress__text {
+  font-size: var(--canccu-text-sm);
+  color: var(--canccu-color-text);
+}
+
+.pizza-read-error {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.pizza-read-error p {
+  margin: 0;
+}
+.pizza-read-error__ways {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pizza-read-error__ways .pizza-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pizza-tips {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  font-size: var(--canccu-text-sm);
+}
+
+.pizza-unsure .pizza-person__what {
+  color: var(--canccu-ink-degraded);
+  font-weight: 600;
+}
+
+.pizza-reads .pizza-person__what {
+  overflow-wrap: anywhere;
+}

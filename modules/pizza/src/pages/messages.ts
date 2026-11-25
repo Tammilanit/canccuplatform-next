@@ -5,6 +5,7 @@
  */
 import { FOOD_EN } from "./food-messages.js";
 import { MONEY_EN } from "./money-messages.js";
+import { READ_EN } from "./read-messages.js";
 import { SETTINGS_EN } from "./settings-messages.js";
 import { FI } from "./messages-fi.js";
 
@@ -235,6 +236,7 @@ export const EN = {
   "time.h_min": "{h} h {m} min",
   ...FOOD_EN,
   ...MONEY_EN,
+  ...READ_EN,
   ...SETTINGS_EN,
 } as const;
 

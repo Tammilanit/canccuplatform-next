@@ -226,7 +226,8 @@ async function lockOrDone(c: SqlClient, id: string): Promise<Moved | null> {
 /** Ticks one pizza handed out (U4, U9); the last tick makes the order done (`handed_out`). */
 export async function handOut(s: Step, item: ItemRow, handedOut: boolean): Promise<Moved | null> {
   // Done meanwhile (the timer, or "Everyone got theirs" elsewhere): answered as it is, as handOutAll.
-  const o = await getOrder(s.c, item.order_id);
+  // Read under the order's lock, so a finish still in flight is waited for, not missed.
+  const o = await getOrder(s.c, item.order_id, true);
   if (o?.state === "done") return unchanged(o);
   const locked = await lockOrDone(s.c, item.order_id);
   if (locked !== null) return locked;
@@ -240,7 +241,7 @@ export async function handOut(s: Step, item: ItemRow, handedOut: boolean): Promi
 /** "Everyone got theirs" (the U4 note): one press ticks the whole order. */
 export async function handOutAll(s: Step, orderId: string): Promise<Moved> {
   // Already done (the timer, or another press first): answered as it is, as every step is.
-  const o = await getOrder(s.c, orderId);
+  const o = await getOrder(s.c, orderId, true);
   if (o?.state === "done") return unchanged(o);
   const locked = await lockOrDone(s.c, orderId);
   if (locked !== null) return locked;

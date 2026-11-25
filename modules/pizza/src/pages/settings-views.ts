@@ -8,7 +8,13 @@
 import { attrs, html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { PROVIDER } from "../reader.js";
-import { DEFAULT_SETTINGS, NOTE_MAX, READS_BOUNDS, TIME_BOUNDS } from "../settings.js";
+import {
+  DEFAULT_SETTINGS,
+  MONTHLY_LIMIT_BOUNDS,
+  NOTE_MAX,
+  READS_BOUNDS,
+  TIME_BOUNDS,
+} from "../settings.js";
 import type { TimeKey } from "../settings.js";
 import { PREFIX, formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
@@ -21,6 +27,7 @@ export const COUNTS = {
   max_open_orders: [1, 20],
   max_items_per_person: [1, 20],
   ai_reader_daily_reads: READS_BOUNDS,
+  ai_reader_monthly_limit_usd: MONTHLY_LIMIT_BOUNDS,
 } as const;
 type CountKey = keyof typeof COUNTS;
 
@@ -202,7 +209,8 @@ function fields(c: PageCtx, v: Values) {
     title: c.t("settings.reader_outside"),
     text: c.t("settings.reader_cost", { provider: PROVIDER.name, model: PROVIDER.model }),
   })}
-  ${count("ai_reader_daily_reads", "settings.ai_reader_daily_reads", "settings.ai_reader_daily_reads_hint")}`;
+  ${count("ai_reader_daily_reads", "settings.ai_reader_daily_reads", "settings.ai_reader_daily_reads_hint")}
+  ${count("ai_reader_monthly_limit_usd", "settings.ai_reader_monthly_limit_usd", "settings.ai_reader_monthly_limit_usd_hint")}`;
   return { ordering, times, settling, reader };
 }
 

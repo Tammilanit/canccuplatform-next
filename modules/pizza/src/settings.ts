@@ -37,6 +37,12 @@ export interface PizzaSettings {
   ai_reader: boolean;
   /** The reads the event may make in one event day: the cost's bound. */
   ai_reader_daily_reads: number;
+  /**
+   * The provider account's monthly spend limit in whole dollars, as its Console sets it (0 = none).
+   * Shown against the month's reads in Integrations, warned of from 80 %; it stops nothing, as the
+   * provider stops reads itself (#789 D23).
+   */
+  ai_reader_monthly_limit_usd: number;
 }
 
 export const DEFAULT_SETTINGS: PizzaSettings = {
@@ -57,8 +63,10 @@ export const DEFAULT_SETTINGS: PizzaSettings = {
   close_forgotten: true,
   ai_reader: false,
   ai_reader_daily_reads: 100,
+  ai_reader_monthly_limit_usd: 0,
 };
 export const READS_BOUNDS = [1, 1000] as const;
+export const MONTHLY_LIMIT_BOUNDS = [0, 1000] as const;
 
 /** Each time's bounds, as admin's declaration (modules/admin/declarations/pizza.yaml) has them. */
 export const TIME_BOUNDS = {
@@ -115,6 +123,11 @@ export function settingsReader(client: SettingsClient): (tenant: string) => Prom
           client.get("ai_reader_daily_reads"),
           d.ai_reader_daily_reads,
           ...READS_BOUNDS,
+        ),
+        ai_reader_monthly_limit_usd: int(
+          client.get("ai_reader_monthly_limit_usd"),
+          d.ai_reader_monthly_limit_usd,
+          ...MONTHLY_LIMIT_BOUNDS,
         ),
         ...times((k) => client.get(k)),
       };

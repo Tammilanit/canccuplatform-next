@@ -44,6 +44,7 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | | | | `pizza.item.changed`, `pizza.item.removed` (someone else changed or removed a person's pizza) | personal: `data.user_id` | `removed`: only when `data.by_owner` is `false` | no |
 | | | | `pizza.share.ready`, `pizza.share.changed`, `pizza.share.paid` (a person's share of the order's money, #703; never an amount) | personal: `data.user_ids`, or `data.user_id` for `paid` (never the payer) | by `data.settle_to` and `data.reason` | no |
 | | | | `pizza.reminder.triggered` (a stalled order's holder and the crew; the hand-out nudge, D12; the payment reminder, #703) | personal: `data.user_id` (the one person it is for) | one trigger per `data.kind` (and `data.role` for `not_paid`) | no |
+| | | | `pizza.reader.stopped` (the AI reader stopped on a refused key or an empty account, #789) | personal: `data.user_ids` (the crew) | one trigger per `data.reason` | no |
 | `tournament` | tournament | event: event (off, off); personal: user (on, off) | `tournament.registration.opened` (provisional) | event: `public` | — | no |
 | | | | `tournament.match.called` (provisional) | personal: `data.user_ids` (each player of the match) | — | yes |
 | | | | `tournament.checkin.opened` (provisional) | personal: `data.user_ids` (each registered player) | — | no |
@@ -200,7 +201,15 @@ The `food` registration in full, as the pizza module sends it (step 5, D12; [piz
   {"event": "pizza.reminder.triggered", "part": "personal", "recipients": {"user_field": "data.user_id"},
    "where": [{"field": "data.kind", "op": "eq", "value": "not_paid"}, {"field": "data.role", "op": "eq", "value": "payer"}],
    "title": "Order {data.order.seq}: {data.count} not marked paid", "body": "See who still owes you",
-   "url": "/pizza/hold/{data.order.id}/money"}]}
+   "url": "/pizza/hold/{data.order.id}/money"},
+  {"event": "pizza.reader.stopped", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.reason", "op": "eq", "value": "key_rejected"}],
+   "title": "The AI reader stopped: its key was refused", "body": "Receipts are typed by hand until an admin sets a new key",
+   "url": "/pizza/integrations"},
+  {"event": "pizza.reader.stopped", "part": "personal", "recipients": {"user_field": "data.user_ids"},
+   "where": [{"field": "data.reason", "op": "eq", "value": "out_of_credit"}],
+   "title": "The AI reader stopped: out of credit", "body": "Add credit or raise the limit in the provider's Console; receipts are typed meanwhile",
+   "url": "/pizza/integrations"}]}
 ```
 
 **Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules), whether or not the change was announced (`data.announce`).

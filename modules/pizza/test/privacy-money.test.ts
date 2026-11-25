@@ -63,6 +63,11 @@ beforeEach(async () => {
       contentType: "image/png",
     }),
   ).id as string;
+  receiptName = (
+    (await pool.query("SELECT file FROM pizza_receipts WHERE id = $1", [receipt])).rows[0] as {
+      file: string;
+    }
+  ).file;
   await w.call("integrator", "PUT", "/api/pizza/reader/key", {
     api_key: "sk-ant-demo-0000000000000000wxyz",
   });
@@ -75,7 +80,9 @@ const count = async (table: string, where = "true", values: unknown[] = []) =>
       n: number;
     }
   ).n;
-const receiptFile = () => join(w.filesRoot, "demo", "pizza", "receipts", `${receipt}.png`);
+// The server keeps the photo it re-encoded (a PNG becomes a JPEG), so the file's name comes from its row.
+let receiptName = "";
+const receiptFile = () => join(w.filesRoot, "demo", "pizza", "receipts", receiptName);
 const event = (type: string, data: Record<string, unknown>, tenant?: string): Event => ({
   id: `e_${type}_${Math.random()}`,
   type,

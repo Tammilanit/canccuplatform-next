@@ -118,6 +118,14 @@ settings:
     help: "The most photos the reader reads in one event day, to cap the cost."
     short: Reads a day
     default: 100
+  - key: ai_reader_monthly_limit_usd
+    type: integer
+    min: 0
+    max: 1000
+    label: Monthly spend limit in dollars (0 for none)
+    help: "Copy it from the provider's Console. Integrations shows the month's reads against it; the provider stops reads itself."
+    short: Monthly limit
+    default: 0
 groups:
   - id: ordering
     label: Ordering
@@ -130,7 +138,7 @@ groups:
   - id: reader
     label: AI reader
     description: Reading receipts and menus from photos; works only once Integrations has a key.
-    keys: [ai_reader, ai_reader_daily_reads]
+    keys: [ai_reader, ai_reader_daily_reads, ai_reader_monthly_limit_usd]
   - id: times
     label: Times and forgotten orders
     description: When the app reminds the holder and the crew, and what it closes by itself.
