@@ -238,19 +238,20 @@ body.canccu-surface--screen {
 
 /*
  * The QR of Studio's pair dialog (#783), under the code and above the words. Dark modules on white
- * with a quiet zone whatever the theme, or a phone's camera may not read it.
+ * with a quiet zone whatever the theme, or a phone's camera may not read it. Kept small: the lines
+ * under it must still end above the expiry at 1080p (the stack shots check it).
  */
 .canccu-frame__qr {
-  margin: 0 0 1vmin;
-  padding: 1vmin;
+  margin: 0;
+  padding: 0.8vmin;
   border-radius: var(--canccu-radius);
   background: #fff;
   line-height: 0;
 }
 
 .canccu-frame__qr-img {
-  width: 20vmin;
-  height: 20vmin;
+  width: 12vmin;
+  height: 12vmin;
 }
 
 /* The code's expiry: the last line, under the instruction (mockup 05, sheet 9). */
