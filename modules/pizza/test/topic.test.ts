@@ -24,6 +24,26 @@ describe("the food topic", () => {
     expect(FOOD_TOPIC).toEqual(contractBlock());
   });
 
+  it("tells the crew when the AI reader stops, one text for each reason (#789 item 11)", () => {
+    const stopped = FOOD_TOPIC.triggers.filter((t) => t.event === "pizza.reader.stopped");
+    const shape = (t: (typeof stopped)[number]) =>
+      "recipients" in t ? [t.part, t.recipients, t.where, t.url] : [t.part];
+    expect(stopped.map(shape)).toEqual([
+      [
+        "personal",
+        { user_field: "data.user_ids" },
+        [{ field: "data.reason", op: "eq", value: "key_rejected" }],
+        "/pizza/integrations",
+      ],
+      [
+        "personal",
+        { user_field: "data.user_ids" },
+        [{ field: "data.reason", op: "eq", value: "out_of_credit" }],
+        "/pizza/integrations",
+      ],
+    ]);
+  });
+
   it("is registered at start as pizza, through passing refusals, and stops once taken", async () => {
     const calls: { url: string; method: string; body: unknown; caller: string | null }[] = [];
     const answers = [503, 401, 200];

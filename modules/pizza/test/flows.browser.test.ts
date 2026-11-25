@@ -12,7 +12,7 @@ import { HOSTS, serve, signedIn } from "./browser.js";
 import type { Served } from "./browser.js";
 import { launch } from "./chromium.js";
 import { SPEC_MENU } from "./fixtures.js";
-import { png } from "./images.js";
+import { png, tallJpeg } from "./images.js";
 import {
   DATABASE_URL,
   freshDatabase,
@@ -174,6 +174,30 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
     await context.close();
   });
 
+  it("sends a new camera photo at once also under a failed read's Try again", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan?failed=timeout&receipt=pr_kept1`);
+    // Try again also shows progress, and comes before the scan form on the page.
+    await page.getByRole("button", { name: "Try again" }).waitFor();
+    await page.locator("input[capture]").setInputFiles({
+      name: "receipt.png",
+      mimeType: "image/png",
+      buffer: await png(),
+    });
+    await page.waitForURL(`**/pizza/hold/${id}/money/total`);
+    expect(
+      (
+        json(await w.call("pena", "GET", `/api/pizza/orders/${id}/money`)) as {
+          receipts: unknown[];
+        }
+      ).receipts.length,
+    ).toBe(1);
+    await context.close();
+  });
+
   it("shows a receipt photo in a viewer that closes on ✕, Esc, a tap outside and a swipe down", async () => {
     if (browser === undefined) return;
     await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
@@ -221,6 +245,83 @@ describe.skipIf(browser === undefined)("the Food pages in Chromium", { timeout: 
       fire("touchend", 420);
     });
     await closed();
+    await context.close();
+  });
+
+  it("keeps the viewer open on a swipe while the page is zoomed, and leaves a modifier click to the browser", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/receipts`, undefined, {
+      raw: await png(),
+      contentType: "image/png",
+    });
+    await w.call("pena", "PATCH", `/api/pizza/orders/${id}/money`, { total_cents: 3000 });
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money`);
+    const viewer = page.locator("dialog.pizza-viewer");
+    const link = page.locator("a[data-viewer]").first();
+
+    // Ctrl or Shift asks for a new tab or window: the browser's, not the viewer's.
+    const popup = context.waitForEvent("page");
+    await link.click({ modifiers: ["Shift"] });
+    await (await popup).close();
+    expect(await viewer.count()).toBe(0);
+
+    await link.click();
+    await viewer.waitFor({ state: "visible" });
+    // A pinch-zoomed page: a drag down pans the photo, it does not close it.
+    await page.evaluate(() =>
+      Object.defineProperty(window.visualViewport, "scale", { configurable: true, get: () => 2 }),
+    );
+    await viewer.evaluate((d) => {
+      const at = (y: number) => [new Touch({ identifier: 1, target: d, clientX: 195, clientY: y })];
+      const fire = (type: string, y: number) =>
+        d.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            touches: type === "touchend" ? [] : at(y),
+            changedTouches: at(y),
+          }),
+        );
+      fire("touchstart", 300);
+      fire("touchmove", 420);
+      fire("touchend", 420);
+    });
+    await page.waitForTimeout(100);
+    expect(await viewer.isVisible()).toBe(true);
+    await context.close();
+  });
+
+  it("shrinks a 4000 px photo to 2000 px on the phone before it uploads", async () => {
+    if (browser === undefined) return;
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/place`, {});
+    const context = await signedIn(browser, s, "pena", 390);
+    const page = await context.newPage();
+    await page.goto(`${s.origin}/pizza/hold/${id}/money/scan`);
+    // What the form posts when it is sent: Chromium does not show a request's file parts.
+    const sent = page.evaluate(
+      () =>
+        new Promise<{ width: number; height: number; type: string; n: number }>((resolve) => {
+          const form = document.querySelector("form[data-shrink]") as HTMLFormElement;
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const files = [...form.querySelectorAll("input[type=file]")].flatMap((i) => [
+              ...((i as HTMLInputElement).files ?? []),
+            ]);
+            const file = files[0] as File;
+            void createImageBitmap(file).then((b) => {
+              resolve({ width: b.width, height: b.height, type: file.type, n: files.length });
+            });
+          });
+        }),
+    );
+    await page.locator("input[capture]").setInputFiles({
+      name: "big.jpg",
+      mimeType: "image/jpeg",
+      buffer: await tallJpeg(4000, 3000),
+    });
+    expect(await sent).toEqual({ width: 2000, height: 1500, type: "image/jpeg", n: 1 });
     await context.close();
   });
 

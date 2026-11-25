@@ -342,8 +342,11 @@
 .pizza-viewer {
   max-width: 100vw;
   max-height: 100vh;
+  /* dvh: a phone's browser bar comes and goes; vh for browsers without it. */
+  max-height: 100dvh;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 1rem;
   border: 0;
@@ -360,6 +363,7 @@
 .pizza-viewer__photo {
   max-width: 100%;
   max-height: calc(100vh - 2 * 1rem);
+  max-height: calc(100dvh - 2 * 1rem);
   object-fit: contain;
 }
 .pizza-viewer__close {

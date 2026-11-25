@@ -34,8 +34,9 @@
     description: |
       The holder until the order's event day turns, the crew at any time; once the order is called in
       (409 `not_placed` before), not when cancelled. The body is the photo: JPEG, PNG or WebP, at most
-      10 MB. It is kept upright, at most 2,576 px on its long edge, with its metadata (a location among
-      it) stripped. At most 10 per order (409 `too_many_receipts`).
+      30 MB. It is kept upright, at most 1,600 px on its long edge (2,400 for a photo more than twice as
+      tall as wide), with its metadata (a location among it) stripped, as a JPEG (also a PNG's) or a
+      WebP; the upload's own bytes are not kept. At most 10 per order (409 `too_many_receipts`).
     security:
       - session: []
     parameters:
@@ -118,10 +119,13 @@
     description: |
       Who may add a receipt. Sends the photo, and fixed instructions only, to the provider, and keeps
       the answer on the receipt as a suggestion matched to the order's pizzas; the order's money does
-      not change (confirm with `PATCH …/money` and `receipt_id`). Each call is a read against the
-      event's daily reads, also when it fails; no `Idempotency-Key`. 409 `reader_off` while the event's
-      `ai_reader` is off, no key is set or the provider refused it; 429 `reader_limit` past the day's
-      reads; 502 `reader_failed` (the provider failed or took over 20 s) or `reader_key_rejected`.
+      not change (confirm with `PATCH …/money` and `receipt_id`). Each call is a read, logged (`GET
+      /api/pizza/reader/reads`); it counts against the event's daily reads when the model answered
+      (also `unreadable` and `declined`), not when the provider billed nothing (`rate_limited`,
+      `service_down`, `timeout`, `out_of_credit`, a refused key); no `Idempotency-Key`. 409 `reader_off`
+      while the event's `ai_reader` is off, no key is set or the provider refused it; 429
+      `reader_limit` past the day's reads; 502 `reader_failed` with its `reason`, or
+      `reader_key_rejected`. A failed read changes nothing on the receipt or the order.
     security:
       - session: []
     responses:
@@ -150,7 +154,7 @@
     summary: Read a menu photo into a menu CSV
     description: |
       Right `pizza.menu.write`; the AI reader as for a receipt (`reader_off`, `reader_limit`,
-      `reader_failed`, `reader_key_rejected`). One page per call; the photo is not kept. The answer's
+      `reader_failed`, `reader_key_rejected`). One page per call, at most 30 MB; the photo is not kept. The answer's
       `csv` is in the menu CSV's format for the pizzeria named, for the import's preview; nothing changes.
     security:
       - session: []
@@ -375,3 +379,35 @@
         $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
       "409":
         $ref: "../pizza.openapi.yaml#/components/responses/Conflict"
+/api/pizza/reader/reads:
+  get:
+    tags: [reader]
+    operationId: readerReads
+    summary: The AI reader's reads of a month, and their cost
+    description: |
+      Right `admin.integrations.write` (#789 item 12). Each read of the month by event day, with its
+      outcome, the model's reason, pages, tokens, cost and time, and the month's totals against
+      `ai_reader_monthly_limit_usd`. Admin → Integrations shows it.
+    security:
+      - session: []
+    parameters:
+      - name: month
+        in: query
+        required: false
+        description: "`YYYY-MM`; the event day's month when absent."
+        schema:
+          type: string
+          pattern: "^[0-9]{4}-(0[1-9]|1[0-2])$"
+    responses:
+      "200":
+        description: The month's reads.
+        content:
+          application/json:
+            schema:
+              $ref: "../pizza.openapi.yaml#/components/schemas/ReadLog"
+      "400":
+        $ref: "../pizza.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../pizza.openapi.yaml#/components/responses/Forbidden"
