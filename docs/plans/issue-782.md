@@ -8,7 +8,7 @@
 
 **Tech stack:** Python 3 (Starlette, the kit, pytest, mypy), TypeScript (Fastify 5, `@canccu/ui`, vitest), Postgres with RLS, Playwright (browser tests and the CI screenshots).
 
-**Status:** waiting for (1) the PO's accept of the two Notifications sheets below (issue AC 1: "The PO accepts the Notifications sheets before the build") and (2) the lead's answers to [Q1–Q9](#questions). No code before both.
+**Status:** the lead answered Q1–Q9 on 2026-11-25: all as recommended; B and C are high risk (Q4, Q7). Part A is built in the plan's PR; the lead releases B, then C, after each merge. C still waits for the PO's accept of sheets 01 and 02.
 
 **Spec:** [issue #782](https://github.com/Tammilanit/canccuplatform-next/issues/782) with the lead's comment of 2026-11-23 (notification tests and health); [contracts/tenants.md](../../contracts/tenants.md), [contracts/notify.md](../../contracts/notify.md), [contracts/admin.md](../../contracts/admin.md); the admin control room pack ([docs/briefs/admin-control-room.md](../briefs/admin-control-room.md), sheet 07 for the Event page).
 

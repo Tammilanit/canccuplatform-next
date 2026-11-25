@@ -11,9 +11,11 @@ import { PREVIEW_CLIENT_KEYS, PREVIEW_EN } from "./preview-messages.js";
 import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 import { MOTION_CLIENT_KEYS, MOTION_EN } from "./motion-view.js";
 import { PINS_EN } from "./pins-messages.js";
+import { TIPS_EN } from "./tips-messages.js";
 
 const EN = {
   ...CONTENT_EN,
+  ...TIPS_EN,
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
   ...LAYOUT_EN,
@@ -93,10 +95,6 @@ const EN = {
   "device.behind": "{count} changes behind",
   "device.behind.one": "1 change behind",
   "device.flag.clock_drift": "Clock off",
-  "device.flag.clock_drift.tip":
-    "Its clock is more than 2 seconds off, so its rotation and countdowns drift from the other screens.",
-  "device.flag.shared_token.tip":
-    "Two browsers show this screen at once: its cookie was copied to another kiosk, or two tabs are open.",
   "device.flag.shared_token": "Cookie copied",
   "device.identify": "Identify",
   "device.identified": "The screen shows its name for a few seconds.",
@@ -162,8 +160,6 @@ const EN = {
   "zones.empty_text": "Add a zone, then assign screens to it in Devices.",
 
   "zone.back": "All zones",
-  "zone.about":
-    "What this zone's screens show and when. A change reaches its screens when you save it.",
   "zone.name": "Name",
   "zone.header": "Header",
   "zone.header_default": "As the layout says",
