@@ -1,0 +1,25 @@
+{
+  "name": "Broadcast",
+  "heading": {
+    "family": "Barlow Semi Condensed",
+    "faces": [
+      {
+        "weight": 600,
+        "file": "barlow-semi-condensed-600.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Barlow",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "barlow-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "barlow-700.woff2"
+      }
+    ]
+  }
+}

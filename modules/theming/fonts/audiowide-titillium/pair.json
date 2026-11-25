@@ -1,0 +1,25 @@
+{
+  "name": "Synth",
+  "heading": {
+    "family": "Audiowide",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "audiowide-400.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Titillium Web",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "titillium-web-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "titillium-web-700.woff2"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Elegant",
+  "heading": {
+    "family": "Josefin Sans",
+    "faces": [
+      {
+        "weight": 700,
+        "file": "josefin-sans-700.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Lato",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "lato-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "lato-700.woff2"
+      }
+    ]
+  }
+}

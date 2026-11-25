@@ -1,0 +1,25 @@
+{
+  "name": "Bold",
+  "heading": {
+    "family": "Russo One",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "russo-one-400.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Roboto Condensed",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "roboto-condensed-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "roboto-condensed-700.woff2"
+      }
+    ]
+  }
+}
