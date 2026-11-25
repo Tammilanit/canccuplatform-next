@@ -4,6 +4,7 @@ The dev server is the VM that runs main in dev mode, so the product owner can wa
 
 ## What it runs
 - **The whole platform** from `deploy/compose.yml` (every module, Postgres, Valkey, Caddy in IP mode on port 80), with `CANCCU_VERSION=dev` in `deploy/.env`.
+- **https on its Tailscale name** (#786): Tailscale serve holds port 443 with the tailnet's certificate and sends to Caddy's https front, `127.0.0.1:8480` ([HTTPS](#https)).
 - **How often it updates:** auto-deploy ([setup/README.md](../../setup/README.md#auto-deploy)) checks every 2 minutes. A merge to main reaches it a few minutes after its Images run has pushed the `dev` images: it checks health, and on a failure it goes back to the previous version and opens an issue. `/api/hello/health` shows the last deploy (`deploy` check).
 - **After each deploy** (#709, #715), and again each hour, it seeds the demo event, once per commit, list of names and hour:
   - `python -m canccu_tenants dev-hostnames` makes the names in `CANCCU_DEV_HOSTNAMES` hostnames of the demo event, the first one primary. Pages find their event by the `Host` they are called on ([contracts/tenants.md](../../contracts/tenants.md)), so without these names every event page answers `not_found`. Names are only added: one taken out of the list stays until the demo event is reset.
@@ -19,29 +20,57 @@ What the seed puts in the demo event, so its pages have something to show and to
 - **Moments** (`/moments/on-air`, `/moments/storyboards`): the storyboard and scene presets as an event's first use copies them, and Prize draw turned on for the run of show's next Raffle, so it is ready to go on air: its cards come 10 and 2 minutes before the raffle, and On air offers its Fire for a run at once. The scene presets give On air its "Peak now" crew button.
 
 ## Its URLs
-`<dev host>` is the primary name from `CANCCU_DEV_HOSTNAMES`, the host of `CANCCU_PUBLIC_URL`. Plain http over the private network:
-- `http://<dev host>/admin/`: the organiser's home; `/admin/sign-in` to sign in, `/admin/profile` for the event profile.
-- `http://<dev host>/screen/zones/main`: the main zone as a screen draws it (signed in, see [Screens over Tailscale](#screens-over-tailscale)); `/screen/` is the kiosk page a real screen pairs from, and `/admin/screen/` the Screen studio.
-- `http://<dev host>/agenda/`: the run of show.
-- `http://<dev host>/pizza/`: Food for attendees, `/pizza/crew` for the crew.
-- `http://<dev host>/moments/on-air`: Moments.
-- `http://<dev host>/theming/studio/`: the Theme studio.
-- `http://<dev host>/api/hello/health`: health, with the last deploy.
+`<dev host>` is the primary name from `CANCCU_DEV_HOSTNAMES`, the host of `CANCCU_PUBLIC_URL`, its Tailscale name. https over the tailnet ([HTTPS](#https)); plain http on that name redirects to https. Another name of the list (a LAN name) stays plain http, with pages signed out:
+- `https://<dev host>/admin/`: the organiser's home; `/admin/sign-in` to sign in, `/admin/profile` for the event profile.
+- `https://<dev host>/screen/zones/main`: the main zone as a screen draws it (signed in, see [Screens over Tailscale](#screens-over-tailscale)); `/screen/` is the kiosk page a real screen pairs from, and `/admin/screen/` the Screen studio.
+- `https://<dev host>/agenda/`: the run of show.
+- `https://<dev host>/pizza/`: Food for attendees, `/pizza/crew` for the crew.
+- `https://<dev host>/moments/on-air`: Moments.
+- `https://<dev host>/theming/studio/`: the Theme studio.
+- `https://<dev host>/api/hello/health`: health, with the last deploy.
 
 ## Set up
 Once, on the dev server, after [Set up auto-deploy](../../setup/README.md#auto-deploy). Real names and secrets go in `deploy/.env` only, never in the repo.
 1. **Hostnames:** in `deploy/.env`, `CANCCU_DEV_HOSTNAMES=<full name> [<other name> …]`, space or comma separated, the one the product owner signs in on first (for example the VM's Tailscale name `<name>.<tailnet>.ts.net`, then its LAN name `<name>.lan`). Each must be fully qualified: the platform resolves no single-label name, so a bare `<name>` does not work. The next deploy run adds them; to apply them at once: `sudo systemctl start canccu-deploy`.
-2. **Sign-in** is the same Discord sign-in as everywhere; nothing is stubbed on the dev server.
-   - In `deploy/.env`: `CANCCU_PUBLIC_URL=http://<dev host>` (the primary name), `CANCCU_DISCORD_CLIENT_ID` and `CANCCU_DISCORD_CLIENT_SECRET` of the platform's Discord application.
-   - **The Discord application needs the dev redirect URL.** The product owner, who owns the application, adds `http://<dev host>/admin/sign-in/callback` in the [Discord Developer Portal](https://discord.com/developers/applications): the application → OAuth2 → Redirects → Add Redirect → Save. It must match `CANCCU_PUBLIC_URL` exactly (scheme, name, no port 80).
+2. **https:** as in [HTTPS](#https), before sign-in: Web Push and the screens' pairing work only over https.
+3. **Sign-in** is the same Discord sign-in as everywhere; nothing is stubbed on the dev server.
+   - In `deploy/.env`: `CANCCU_PUBLIC_URL=https://<dev host>` (the primary name), `CANCCU_DISCORD_CLIENT_ID` and `CANCCU_DISCORD_CLIENT_SECRET` of the platform's Discord application.
+   - **The Discord application needs the dev redirect URL.** The product owner, who owns the application, adds `https://<dev host>/admin/sign-in/callback` in the [Discord Developer Portal](https://discord.com/developers/applications): the application → OAuth2 → Redirects → Add Redirect → Save. It must match `CANCCU_PUBLIC_URL` exactly (scheme, name, no port).
    - Sign in on that name: the session cookie belongs to it, and admin refuses a form sent from any other origin. Pages on another name of the list load, but signed out.
-   - The first person to sign in becomes the owner with the first-run code: `docker compose -f deploy/compose.yml logs admin | grep "first-run code"`, then `http://<dev host>/admin/first-run` ([modules/admin/README.md](../../modules/admin/README.md)).
+   - The first person to sign in becomes the owner with the first-run code: `docker compose -f deploy/compose.yml logs admin | grep "first-run code"`, then `https://<dev host>/admin/first-run` ([modules/admin/README.md](../../modules/admin/README.md)).
    - Organiser pages answer only from the venue or Tailscale while the event's admin access is restricted (the default, [contracts/tenants.md](../../contracts/tenants.md), Admin access), so open them over Tailscale.
-3. After changing `deploy/.env`, restart the stack so the modules read it: `docker compose -f deploy/compose.yml up -d --wait --no-build`.
+4. After changing `deploy/.env`, restart the stack so the modules read it: `docker compose -f deploy/compose.yml up -d --wait --no-build`.
+
+## HTTPS
+Browsers allow Web Push (service workers) only in a secure context, and keep the screens' pairing and device cookies only over https, since they are `Secure`. So the dev server is served over https on its Tailscale name (#786).
+- **How:** Tailscale serve holds port 443 on the tailnet with the tailnet's certificate, and sends to Caddy's https front, `127.0.0.1:8480`. Caddy itself stays in IP mode on port 80, with no certificate of its own. Why not Caddy with the tailnet certificate: Caddy would need tailscaled's socket and port 443, which Tailscale serve already holds on this host (#255), and the TLS option for real domains is its own work (#5); Tailscale serve was already in place and renews its certificate itself.
+- **The client address:** Tailscale serve reaches Caddy through Docker's gateway, so the app would see the gateway (`172.18.0.1`), not the phone. Caddy's front trusts the `X-Forwarded-For` and `X-Forwarded-Proto` that Tailscale serve sends, and passes the client's own address on, so logs, rate limits and every address check see the tailnet address (`100.x.y.z`), and pages know they are on https. Compose publishes the front only on the host's loopback, so nothing but the host reaches it; port 80 trusts no proxy, and a client's own `X-Forwarded-For` never counts there ([deploy/Caddyfile](../../deploy/Caddyfile)).
+- **Plain http** on `<dev host>` redirects to https (308) once `CANCCU_PUBLIC_URL` is https. Every other name and address stays on plain http.
+
+**What the product owner changes,** once, after the change that adds the front is deployed (`/api/hello/health` names its commit). The lead never edits `deploy/.env`, the host or the portal. In this order, since Caddy redirects plain http on `<dev host>` as soon as `CANCCU_PUBLIC_URL` is https, and a Tailscale serve still sending to port 80 would then loop:
+1. Tailscale serve to the front. `sudo tailscale serve status` shows what it serves now; take off what it sends to port 80, then send to the front:
+   ```
+   sudo tailscale serve --https=443 off
+   sudo tailscale serve --bg --https=443 http://127.0.0.1:8480
+   ```
+   If the `off` line is refused, `sudo tailscale serve reset` takes it off instead (with anything else serve holds). `tailscale serve status` then lists `https://<dev host>` → `proxy http://127.0.0.1:8480`. HTTPS certificates must be on in the tailnet's DNS settings (they are, since serve already ran).
+2. In `deploy/.env`, the line:
+   ```
+   CANCCU_PUBLIC_URL=https://<dev host>
+   ```
+3. In the [Discord Developer Portal](https://discord.com/developers/applications), the application → OAuth2 → Redirects → Add Redirect, then Save:
+   ```
+   https://<dev host>/admin/sign-in/callback
+   ```
+   The old `http://<dev host>/admin/sign-in/callback` may stay or go.
+4. Restart the stack so Caddy and the modules read the new URL: `docker compose -f deploy/compose.yml up -d --wait --no-build`.
+5. Sign in again on `https://<dev host>/admin/sign-in`: the old session cookie belongs to the http address.
+
+**Check it:** `curl -sI http://<dev host>/admin/` answers `308` with `location: https://<dev host>/admin/`; `https://<dev host>/api/hello/health` is `ok`. On the phone, open `https://<dev host>/` and turn notifications on in the hub; the next notification of a topic switched on (for example the lead delays a run-of-show item) then arrives as a push. `https://<dev host>/screen/` shows a pairing code, not "Not at the venue": the venue check sees the tailnet address, which the demo venue holds, where before it saw Docker's gateway and refused.
 
 ## Screens over Tailscale
-- **The main zone in a browser:** sign in on `<dev host>`, then open `http://<dev host>/screen/zones/main` (`?orientation=portrait` for a portrait screen). The real player draws the zone live, as the zone's screens show it, with every widget, takeover and theme change, but without sound. It is a person's view, not a device: it needs the sign-in and the right `screen.devices.read` (the owner has it) and, like every organiser page, the venue or Tailscale, but never the venue IP check, which is only for paired devices ([contracts/screen.md](../../contracts/screen.md), A zone for a session). This is the screen view for demos.
-- **A paired screen:** `/screen/` is the kiosk page. With the demo venue's Tailscale prefixes it passes the venue check over Tailscale, so it shows a pairing code instead of "Not at the venue". It cannot finish pairing on the dev server, though: the pairing and device cookies are `Secure` ([contracts/screen.md](../../contracts/screen.md), Pairing), and a browser keeps them only over https, while the dev server is plain http. The code shows, Studio claims it, but the kiosk never collects its device. Pair a browser only once the dev server is served over https.
+- **The main zone in a browser:** sign in on `<dev host>`, then open `https://<dev host>/screen/zones/main` (`?orientation=portrait` for a portrait screen). The real player draws the zone live, as the zone's screens show it, with every widget, takeover and theme change, but without sound. It is a person's view, not a device: it needs the sign-in and the right `screen.devices.read` (the owner has it) and, like every organiser page, the venue or Tailscale, but never the venue IP check, which is only for paired devices ([contracts/screen.md](../../contracts/screen.md), A zone for a session). This is the screen view for demos.
+- **A paired screen:** `/screen/` is the kiosk page. With the demo venue's Tailscale prefixes it passes the venue check over Tailscale, so it shows a pairing code instead of "Not at the venue". Over https ([HTTPS](#https)) the browser keeps the pairing and device cookies, which are `Secure` ([contracts/screen.md](../../contracts/screen.md), Pairing): open `https://<dev host>/screen/`, claim its code in Studio (`https://<dev host>/admin/screen/devices`), and the kiosk collects its device. Over plain http (a LAN name) it never does: the code shows and Studio claims it, but the browser drops the cookies.
 
 ## Reset the demo event
 - **The demo content again** (as above, over any change made by hand), one part or all of them:

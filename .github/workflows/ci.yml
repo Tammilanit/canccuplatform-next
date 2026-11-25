@@ -139,6 +139,11 @@ jobs:
           cat /tmp/health.json; echo
           test "$code" = 200
           jq -e '.status == "ok" and .module == "hello" and .checks.valkey.status == "ok" and .checks.postgres.status == "ok"' /tmp/health.json
+      # The https front (#786): published on the loopback, then every route on both listeners.
+      - name: The edge (the https front answers; deploy/test-edge.sh)
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8480/api/hello/health)" = 200
+          deploy/test-edge.sh
       # Each module's own checks live in modules/<name>/ci/stack-smoke.sh, so a module PR never
       # edits this file (#324). Before Valkey stops: they expect the whole stack up.
       - name: Module stack smoke checks (modules/*/ci/stack-smoke.sh)

@@ -21,6 +21,7 @@ run_id=canccu-edge-$$
 labels=(--label canccu.test=edge)
 # A runner's own label, so its cleanup finds what an interrupted run left behind.
 [ -n "${CANCCU_RUN:-}" ] && labels+=(--label "canccu.run=$CANCCU_RUN")
+# shellcheck disable=SC2317  # runs from the trap
 cleanup() {
   docker rm -f "$run_id-stub" "$run_id-https" "$run_id-http" >/dev/null 2>&1
   docker network rm "$run_id" >/dev/null 2>&1
@@ -29,14 +30,15 @@ trap cleanup EXIT
 
 # Every upstream the Caddyfile names answers from the stub, under its service name.
 aliases=()
-for name in $(grep -oE '[a-z][a-z-]*:8080' deploy/Caddyfile | cut -d: -f1 | sort -u); do
+while read -r name; do
   aliases+=(--network-alias "$name")
-done
+done < <(grep -oE '[a-z][a-z-]*:8080' deploy/Caddyfile | cut -d: -f1 | sort -u)
 docker network create "${labels[@]}" "$run_id" >/dev/null || exit 2
 docker run -d --name "$run_id-stub" "${labels[@]}" --network "$run_id" "${aliases[@]}" \
-  --tmpfs /data --tmpfs /config --entrypoint caddy "$IMAGE" \
-  respond --listen :8080 'xff=[{header.X-Forwarded-For}] xfp=[{header.X-Forwarded-Proto}]' \
-  >/dev/null || exit 2
+  --tmpfs /data --tmpfs /config --entrypoint /bin/sh "$IMAGE" -c '
+    printf "{\n\tauto_https off\n\tadmin off\n}\n:8080 {\n\trespond \"%s\"\n}\n" \
+      "xff=[{header.X-Forwarded-For}] xfp=[{header.X-Forwarded-Proto}]" > /tmp/Caddyfile &&
+    exec caddy run --adapter caddyfile --config /tmp/Caddyfile' >/dev/null || exit 2
 # One edge whose public URL is https, one whose is plain http (no redirect there).
 for kind in https http; do
   docker run -d --name "$run_id-$kind" "${labels[@]}" --network "$run_id" \
@@ -77,7 +79,7 @@ paths=(
 )
 
 # Every route forwards exactly one address; a route outside the snippet would forward the chain.
-n=$(grep -c 'reverse_proxy' deploy/Caddyfile)
+n=$(grep -cE '^\s*reverse_proxy ' deploy/Caddyfile)
 if [ "$n" = 1 ]; then pass "every route proxies through the one snippet that sets X-Forwarded-For"
 else bad "every route proxies through the one snippet that sets X-Forwarded-For" "reverse_proxy appears $n times"; fi
 
