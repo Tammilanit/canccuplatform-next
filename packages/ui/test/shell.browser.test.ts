@@ -43,7 +43,7 @@ async function render(width: number, height: number, rows = 120, event = EVENT):
   const body = html`${Array.from({ length: rows }, (_, i) => html`<p>Row ${String(i + 1)}</p>`)}`;
   const doc = String(
     shellPage({
-      title: "Long page",
+      title: "Long page", description: "d",
       body,
       event,
       now: NOW,

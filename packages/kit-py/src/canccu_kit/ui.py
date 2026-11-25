@@ -191,6 +191,9 @@ def shell_page(
     are (href, label, current); `plain` leaves out the title row, for an error view that is its
     own title; `menu_notes` badge a menu item by id with (status, text) when its page needs a
     look."""
+    if not plain and not description_html.strip():
+        # Every organiser and crew page says what it is for (#782, docs/design/README.md).
+        raise ValueError(f"page description required: {title}")
     banner = ""
     if event and event.status == "archived":
         banner = (

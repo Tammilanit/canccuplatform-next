@@ -188,14 +188,13 @@ export interface DocumentOptions {
   now?: Date;
 }
 
-export interface ShellOptions extends DocumentOptions {
+interface ShellBase extends DocumentOptions {
   title: string;
   body: Slot;
   /** The menu id of this page, marked as the current one. */
   current?: string;
   /** Without one (a refusal before sign-in) the page has no menu. */
   session?: Viewer | undefined;
-  description?: Slot;
   crumb?: { href: string; label: string };
   /** Actions at the right of the title. */
   actions?: Slot;
@@ -204,9 +203,12 @@ export interface ShellOptions extends DocumentOptions {
   /** `narrow` (40rem) for forms; `wide` (120rem) for a collection, a board or a master–detail
    * editor (amendment 3); other workspaces keep the 64rem default. */
   width?: "narrow" | "wide";
-  /** An error page has no title row of its own: its view is the title. */
-  plain?: boolean;
 }
+
+/** Every organiser and crew page says in one or two sentences what it is for (#782,
+ * docs/design/README.md); an error page has no title row of its own: its view is the title. */
+export type ShellOptions = ShellBase &
+  ({ plain: true; description?: Slot } | { plain?: false; description: Slot });
 
 /** Admin's script for the shell: it registers the service worker, which shows the offline page
  * when a signed-in phone loses its connection (#440), and keeps the menu's Health note from
@@ -215,6 +217,9 @@ const SHELL_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>')
 
 /** An organiser page in the shell. */
 export function shellPage(o: ShellOptions): Html {
+  if (!o.plain && String(o.description ?? "").trim() === "") {
+    throw new Error(`page description required: ${o.title}`);
+  }
   const now = o.now ?? new Date();
   const archived =
     o.event?.status === "archived"

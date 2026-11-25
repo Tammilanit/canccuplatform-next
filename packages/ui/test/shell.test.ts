@@ -62,7 +62,7 @@ describe("barFor", () => {
 describe("shellPage", () => {
   const doc = s(
     shellPage({
-      title: "Theme",
+      title: "Theme", description: "d",
       current: "theme",
       event: EVENT,
       session: ORGANISER,
@@ -84,7 +84,7 @@ describe("shellPage", () => {
   it("draws the width: wide stops at 120rem (amendment 3), narrow at 40rem, the default at 64rem", () => {
     const main = (width?: "narrow" | "wide") =>
       /<main class="([^"]*)"/.exec(
-        s(shellPage({ title: "T", session: ORGANISER, body: "", ...(width ? { width } : {}) })),
+        s(shellPage({ title: "T", description: "d", session: ORGANISER, body: "", ...(width ? { width } : {}) })),
       )?.[1];
     expect(main("wide")).toBe("canccu-main canccu-main--wide");
     expect(main("narrow")).toBe("canccu-main canccu-main--narrow");
@@ -105,7 +105,7 @@ describe("shellPage", () => {
   it("marks no menu item on an error page, which is nowhere in the menu", () => {
     const error = s(
       shellPage({
-        title: "Not found",
+        title: "Not found", description: "d",
         current: "theme",
         session: ORGANISER,
         body: "",
@@ -116,7 +116,7 @@ describe("shellPage", () => {
   });
   it("loads the offline fallback for a signed-in shell only", () => {
     expect(doc).toContain('<script src="/admin/static/shell.js" defer></script>');
-    expect(s(shellPage({ title: "x", body: "" }))).not.toContain("shell.js");
+    expect(s(shellPage({ title: "x", description: "d", body: "" }))).not.toContain("shell.js");
   });
   it("shows who is signed in and signs out by POST", () => {
     expect(doc).toContain("Demo Organiser");
@@ -129,7 +129,7 @@ describe("shellPage", () => {
   });
   it("has no clock before the event starts", () => {
     const early = s(
-      shellPage({ title: "x", event: EVENT, body: "", now: new Date("2026-03-13T12:00:00Z") }),
+      shellPage({ title: "x", description: "d", event: EVENT, body: "", now: new Date("2026-03-13T12:00:00Z") }),
     );
     expect(early).toContain("Starts Sat");
     expect(early).not.toContain("canccu-clock");
@@ -139,7 +139,7 @@ describe("shellPage", () => {
       userName: "W",
       rights: new Set(["agenda.items.write", "admin.settings.read"]),
     };
-    const page = s(shellPage({ title: "x", event: EVENT, session: writer, body: "" }));
+    const page = s(shellPage({ title: "x", description: "d", event: EVENT, session: writer, body: "" }));
     expect(page).toContain('class="canccu-menu__item canccu-menu__item--bar" href="/agenda/"');
     expect(page).toContain('class="canccu-menu__item" href="/admin/settings"');
     expect(page).toContain("Sat 14 – Sun 15 Mar · Demo Venue");
@@ -147,13 +147,13 @@ describe("shellPage", () => {
   it("offers Quick add only with the right to add", () => {
     expect(doc).not.toContain("Quick add");
     const writer = { userName: "W", rights: new Set(["agenda.items.write"]) };
-    const other = s(shellPage({ title: "x", current: "agenda", session: writer, body: "" }));
+    const other = s(shellPage({ title: "x", description: "d", current: "agenda", session: writer, body: "" }));
     expect(other).toContain('href="/agenda/add"');
   });
   it("marks an archived event with a badge and a banner", () => {
     const archived = s(
       shellPage({
-        title: "x",
+        title: "x", description: "d",
         event: { ...EVENT, status: "archived" },
         session: ORGANISER,
         body: "",
@@ -165,7 +165,7 @@ describe("shellPage", () => {
   it("leaves Quick add out of the bar of an archived event", () => {
     const writer = { userName: "W", rights: new Set(["agenda.items.write"]) };
     const event = { ...EVENT, status: "archived" as const };
-    const archived = s(shellPage({ title: "x", event, session: writer, body: "" }));
+    const archived = s(shellPage({ title: "x", description: "d", event, session: writer, body: "" }));
     expect(archived).not.toContain('href="/agenda/add"');
     expect(archived).toContain('href="/agenda/"');
   });
@@ -173,7 +173,7 @@ describe("shellPage", () => {
     expect(doc).toContain(
       '<header class="canccu-header"><img class="canccu-header__logo" src="/theming/logo" alt="">',
     );
-    const bare = s(shellPage({ title: "x", body: "" }));
+    const bare = s(shellPage({ title: "x", description: "d", body: "" }));
     expect(bare).not.toContain("canccu-header__logo");
   });
   it("shows three sub-page tabs on a phone and the rest behind a count", () => {
@@ -182,7 +182,7 @@ describe("shellPage", () => {
       label,
       current: label === "Content",
     }));
-    const page = s(shellPage({ title: "Studio", session: ORGANISER, tabs, body: "" }));
+    const page = s(shellPage({ title: "Studio", description: "d", session: ORGANISER, tabs, body: "" }));
     const nav = /<nav class="canccu-tabs".*?<\/nav>/.exec(page)?.[0] ?? "";
     // The current tab stays among the three a phone shows.
     for (const shown of ["Live", "Devices", "Content"]) {
@@ -194,7 +194,7 @@ describe("shellPage", () => {
     expect(nav).toContain('popovertarget="canccu-tabs-more">3 more</button>');
     const more = nav.slice(nav.indexOf('id="canccu-tabs-more"'));
     expect(more).toContain('<a href="/s/Zones">Zones</a>');
-    const two = s(shellPage({ title: "x", session: ORGANISER, tabs: tabs.slice(0, 3), body: "" }));
+    const two = s(shellPage({ title: "x", description: "d", session: ORGANISER, tabs: tabs.slice(0, 3), body: "" }));
     expect(two).not.toContain("canccu-tabs__more");
   });
 });
@@ -326,5 +326,24 @@ describe("initials", () => {
 
   it("leaves escaping to the page, which draws them as text", () => {
     expect(initials("<a> & b")).toBe("<&");
+  });
+});
+
+describe("the page description (#782)", () => {
+  it("draws it under the title", () => {
+    const page = s(shellPage({ title: "Settings", description: "What this page is for.", body: "" }));
+    expect(page).toContain('<p class="canccu-pagehead__desc">What this page is for.</p>');
+  });
+
+  it("refuses an organiser page without one", () => {
+    expect(() => shellPage({ title: "Settings", description: "", body: "" })).toThrow(
+      "page description required: Settings",
+    );
+  });
+
+  it("needs none on a plain error page", () => {
+    expect(s(shellPage({ title: "Not found", plain: true, body: "x" }))).not.toContain(
+      "canccu-pagehead__desc",
+    );
   });
 });
