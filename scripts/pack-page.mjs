@@ -221,7 +221,7 @@ function main() {
     for (const d of result.diffs) console.error(`mismatch: ${d.src} ${d.reason}`);
     if (!result.checked.length) console.error("error: the page embeds no SVG to check");
     if (result.diffs.length || !result.checked.length) process.exit(1);
-    console.log(`${result.checked.length} SVG sheets match ${values.check}`);
+    console.log(`${result.checked.length} sheets match ${values.check}`);
     return;
   }
 
