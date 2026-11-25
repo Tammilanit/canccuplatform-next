@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { HTMLButtonElement, HTMLElement, HTMLInputElement, Window } from "happy-dom";
+import type { HTMLButtonElement, HTMLElement, Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const win = globalThis as unknown as Window;
