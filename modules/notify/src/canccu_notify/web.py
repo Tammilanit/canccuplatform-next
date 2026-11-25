@@ -88,6 +88,7 @@ def page(
     *,
     status: int = 200,
     actions: str = "",
+    description: str = "",
     plain: bool = False,
 ) -> HTMLResponse:
     """A notifications page in the organiser shell; the topic list carries New topic as its
@@ -110,6 +111,7 @@ def page(
         css=CSS,
         crumb=crumb,
         actions=actions,
+        description_html=ui.esc(description),
         narrow=True,
         plain=plain,
     )

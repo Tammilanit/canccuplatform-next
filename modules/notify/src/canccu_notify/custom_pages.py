@@ -48,6 +48,10 @@ OPS = {
 """The conditions the form writes. `nearest_in` and conditions against a parameter are set
 through the API; the form keeps them as they are."""
 EMPTY_ROWS = 2
+CUSTOM_ABOUT = (
+    "A topic of this event's own: a narrower copy of one the event has,"
+    " sent only when its conditions hold."
+)
 
 
 def _literal(text: str) -> Any:
@@ -214,7 +218,7 @@ def _form(
         + f'<p class="canccu-notify-actions">{button("Save")}</p></form>'
     )
     title = "New topic" if key is None else f"Edit {values.get('title') or key}"
-    return page(request, title, body, status=status)
+    return page(request, title, body, status=status, description=CUSTOM_ABOUT)
 
 
 def _form_rows(form: Mapping[str, Any]) -> list[tuple[str, str, str]]:
@@ -250,7 +254,7 @@ async def new_page(request: Request) -> Response:
                 + empty_state("bell", "Nothing to base a topic on", text, back)
                 + "</section>"
             )
-            return page(request, "New topic", body)
+            return page(request, "New topic", body, description=CUSTOM_ABOUT)
         body = (
             "<p>A topic of this event's own narrows one a module offers, for example only the"
             " cosplay items of the schedule.</p>"
@@ -258,7 +262,7 @@ async def new_page(request: Request) -> Response:
             + field("Based on", select("based_on", options, None))
             + f'<p class="canccu-notify-actions">{button("Next")}</p></form>'
         )
-        return page(request, "New topic", body)
+        return page(request, "New topic", body, description=CUSTOM_ABOUT)
     return _form(request, base, {}, [], "[]")
 
 
@@ -350,7 +354,12 @@ async def remove_page(request: Request) -> Response:
         + f'<p class="canccu-notify-actions">{button("Remove", "danger")}'
         f' <a class="canccu-button canccu-button--secondary" href="{TOPICS}">Keep it</a></p></form>'
     )
-    return page(request, f"Remove {reg['title']}?", body)
+    return page(
+        request,
+        f"Remove {reg['title']}?",
+        body,
+        description="Removing this topic deletes it and the choices people made for it.",
+    )
 
 
 async def remove_submit(request: Request) -> Response:
