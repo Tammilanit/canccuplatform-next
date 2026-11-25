@@ -7,11 +7,17 @@ The same command gives the demo venue the platform's Tailscale prefixes (issue #
 server is reached over Tailscale, not a venue network, and a screen plays only from its event's
 venue addresses (contracts/tenants.md, Venue IP check).
 
-Both only add and never remove: a name dropped from the env file stays until the demo event is
+And it gives the demo event what its demo content needs (issue #788): the photo wall's flag on,
+so the screens show the seeded photos, and a public Wi-Fi, so the main zone's venue rail turns
+between the venue card and the food box.
+
+All only add and never remove: a name dropped from the env file stays until the demo event is
 reset (docs/operations/dev-server.md), so it never undoes a change made by hand."""
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from typing import Any
 
 from canccu_kit import DEMO_TENANT, Bus, KitError
@@ -169,6 +175,76 @@ async def dev_venue(db: Db, bus: Bus, version: str, tailscale: list[str]) -> lis
         platform=True,
     )
     return added
+
+
+# The CI stack's demo Wi-Fi too (deploy/compose.ci.yml): a guest network, no password.
+DEMO_WIFI = [{"ssid": "demo-guest", "password": None, "note": None, "visibility": "public"}]
+PHOTOS = "screen.photos"
+
+
+async def dev_event(db: Db, bus: Bus, version: str, declared: Mapping[str, bool]) -> list[str]:
+    """Turns the demo event's photo wall on while nobody set its flag, and gives the demo event
+    a public Wi-Fi while it has none. Returns what it changed (`screen.photos`, `wifi`)."""
+    _dev_mode(version)
+    changed: list[str] = []
+    async with db.tenant(DEMO_TENANT) as conn:
+        row = await conn.fetchrow("SELECT * FROM tenants WHERE id = $1 FOR UPDATE", DEMO_TENANT)
+        if row is None:
+            raise Refused("no demo event (the tenants module seeds it at start): nothing changed")
+        # A stored value, on or off, is someone's choice; only the default gives way.
+        if await conn.fetchval("SELECT 1 FROM tenant_flags WHERE name = $1", PHOTOS) is None:
+            await conn.execute("INSERT INTO tenant_flags (name, value) VALUES ($1, true)", PHOTOS)
+            flags_version = await conn.fetchval(
+                "UPDATE tenants SET flags_version = flags_version + 1 WHERE id = $1"
+                " RETURNING flags_version",
+                DEMO_TENANT,
+            )
+            await audit.append(
+                conn,
+                DEMO_TENANT,
+                audit.SYSTEM,
+                "tenants.flags.changed",
+                {"type": "tenant", "id": DEMO_TENANT},
+                {PHOTOS: {"old": False, "new": True}, "seed": "dev"},
+            )
+            flags = await core.flags_of(conn, declared)
+            changed.append(PHOTOS)
+        await conn.execute("INSERT INTO venue_info DEFAULT VALUES ON CONFLICT DO NOTHING")
+        info = await conn.fetchrow("SELECT * FROM venue_info FOR UPDATE")
+        if not model.wifi_of(info):
+            await conn.execute(
+                "UPDATE venue_info SET wifi = $1, revision = revision + 1", json.dumps(DEMO_WIFI)
+            )
+            # Field names only, as the organiser's writes (venue_info.py).
+            await audit.append(
+                conn,
+                DEMO_TENANT,
+                audit.SYSTEM,
+                "tenants.venue_info.changed",
+                {"type": "venue_info", "id": DEMO_TENANT},
+                {"fields": ["wifi"], "seed": "dev"},
+            )
+            changed.append("wifi")
+    if PHOTOS in changed:
+        await bus.publish(
+            "tenants.flags.changed",
+            {
+                "flags_version": flags_version,
+                "changed": [PHOTOS],
+                "flags": flags,
+                "actor_user_id": None,
+            },
+            version=1,
+            tenant=DEMO_TENANT,
+        )
+    if "wifi" in changed:
+        await bus.publish(
+            "tenants.venue_info.changed",
+            {"changed": ["wifi"], "copied": False, "actor_user_id": None},
+            version=1,
+            tenant=DEMO_TENANT,
+        )
+    return changed
 
 
 async def _changed(
