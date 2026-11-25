@@ -158,13 +158,18 @@
 	}
 
 	# The pizza contract's paths are /api/pizza/...; its pages are under /pizza/.
-	handle /api/pizza/health {
-		rewrite * /health
-		import proxy pizza:8080
-	}
-
+	# One block with the health rewrite inside: as two top-level handles, Caddy's sort put
+	# /api/pizza/* ahead of /api/pizza/health on the :80 server, and pizza answered 404.
 	handle /api/pizza/* {
-		import proxy pizza:8080
+		@pizza-health path /api/pizza/health
+		handle @pizza-health {
+			rewrite * /health
+			import proxy pizza:8080
+		}
+
+		handle {
+			import proxy pizza:8080
+		}
 	}
 
 	# The Food pages: the holder's (/pizza/hold/) and the crew's (/pizza/crew/), in one block as
