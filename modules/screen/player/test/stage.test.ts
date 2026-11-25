@@ -117,8 +117,10 @@ describe("the Pulse hero", () => {
     expect(text(box, "band-name")).toBe("Demo Game");
     expect(text(box, "teams")).toBe("8 teams left");
     expect(text(box, "description")).toBe("Bring your own headset.");
-    expect(text(box, "chip-label")).toBe("Semis starts in");
+    // One clock on the card, its own item's (#779): the chip says when the earlier item starts.
+    expect(text(box, "chip-label")).toBe("Semis in");
     expect(box.querySelector(".canccu-widget__chip-time")?.getAttribute("datetime")).toBe("2026-03-14T20:00:00Z");
+    expect(box.querySelectorAll("time.canccu-widget__big")).toHaveLength(1);
   }); // prettier-ignore
 
   it("draws no game band, chip or teams while the view has none", () => {

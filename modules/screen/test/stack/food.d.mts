@@ -11,6 +11,8 @@ export interface FoodMeasure {
   frame: Edges | null;
   /** The hub QR's card beside the box, or null where there is none. */
   qr: Edges | null;
+  /** The layout's gap between its columns, in px: the space the box keeps from the QR's card. */
+  gap: number;
   texts: (Edges & { text: string })[];
 }
 type FoodClaim = [

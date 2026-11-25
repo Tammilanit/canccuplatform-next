@@ -3,6 +3,8 @@
  * (contracts/screen.md, Composed state). A device's own `ScreenState` (its `device` and `sound`)
  * is put together from the stored zone part in src/push/device-state.ts.
  */
+import { tickerLook } from "../ticker/look.js";
+import type { TickerLook } from "../ticker/look.js";
 import type { Bus, Logger, SqlClient, TenantContext } from "@canccu/kit";
 import type { Db } from "../db.js";
 import { loadAgendaItems } from "../content/agenda.js";
@@ -143,7 +145,7 @@ export interface ZoneComposed {
   eventName: string;
   /** Landscape and portrait screens of a zone differ in the layout, its regions and so its claims. */
   views: Record<Orientation, ZoneView>;
-  ticker: ZoneFacts["ticker"] & { appearance: string };
+  ticker: ZoneFacts["ticker"] & TickerLook;
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
@@ -293,8 +295,7 @@ export async function composeZone(
     Object.assign(facts, content.facts);
     views = { landscape: build(false), portrait: build(true) };
   }
-  const setting = deps.settings.get("ticker_appearance", "default");
-  const appearance = typeof setting === "string" ? setting : "default";
+  const look = tickerLook(deps.settings);
   const { stage, covers } = withContent
     ? await stageOf({
         views,
@@ -330,7 +331,8 @@ export async function composeZone(
       windowLayoutId: read.windowLayout,
       theme: { revision: theme?.revision ?? 0, layouts: theme?.layouts ?? [] },
       facts,
-      tickerAppearance: appearance,
+      tickerAppearance: look.appearance,
+      tickerSpeed: look.speed,
       display,
       claims: read.claims,
       bundle,
@@ -346,7 +348,7 @@ export async function composeZone(
     theme: theme ?? NO_THEME,
     eventName,
     views,
-    ticker: { ...read.ticker, appearance },
+    ticker: { ...read.ticker, ...look },
     display,
     nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
     counts: countsOf(used),

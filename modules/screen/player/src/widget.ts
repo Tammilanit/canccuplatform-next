@@ -218,6 +218,14 @@ export function countdownText(ms: number): string {
   return `${two(Math.floor(s / 3600))}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}`;
 }
 
+/** Time left in hours and whole minutes, rounded up: "4 h 54 min", "2 h", "45 min". */
+export function chipText(leftMs: number): string {
+  const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
+  const [h, m] = [Math.floor(minutes / 60), minutes % 60];
+  if (h === 0) return `${String(m)} min`;
+  return m === 0 ? `${String(h)} h` : `${String(h)} h ${String(m)} min`;
+}
+
 /**
  * A `<time datetime>` that a template leaves empty shows the time left to it, counted here: a
  * view-model carries only the target (`countdown.target_at`), and the device keeps counting, also
@@ -239,8 +247,16 @@ export function fillCountdowns(root: ParentNode, nowMs: number): void {
     }
     if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
     el.dataset.canccuCountdown = "";
-    // A story's step counts its last hour as minutes and seconds, at hero size (sheet 08, 7).
     const left = target - nowMs;
+    // The hero's chip (#779): when an earlier item starts, in words, so the card keeps one clock.
+    // Once it has started the chip goes, also offline, rather than say "in 1 min" until a new state.
+    if (el.classList.contains("canccu-widget__chip-time")) {
+      const chip = el.closest<HTMLElement>(".canccu-widget__chip");
+      if (chip !== null) chip.hidden = left <= 0;
+      el.textContent = left <= 0 ? "" : chipText(left);
+      continue;
+    }
+    // A story's step counts its last hour as minutes and seconds, at hero size (sheet 08, 7).
     el.textContent =
       left <= 3_600_000 && el.closest(".canccu-is-claim") !== null
         ? countdownText(left).slice(3)

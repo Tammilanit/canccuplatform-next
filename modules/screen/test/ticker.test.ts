@@ -46,7 +46,13 @@ describe.skipIf(!DATABASE_URL)("ticker", () => {
     h.settings.alpha = { ticker_appearance: "broadcast" };
     const res = await call(h, "GET", "/api/screen/ticker", as("content"));
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ text: null, until: null, source: null, appearance: "broadcast" });
+    expect(res.json()).toEqual({
+      text: null,
+      until: null,
+      source: null,
+      appearance: "broadcast",
+      speed: 180,
+    });
     delete h.settings.alpha;
   });
 
@@ -91,6 +97,7 @@ describe.skipIf(!DATABASE_URL)("ticker", () => {
       until,
       source: "admin",
       appearance: "default",
+      speed: 180,
     });
     expect(changes()).toEqual([
       { text: "Pizza is here", until, source: "admin", actor_user_id: "u_ticker" },

@@ -353,6 +353,10 @@
     font-size: calc(3.4 * var(--canccu-u));
   }
 
+  .canccu-widget--countdown .canccu-widget__chip[hidden] {
+    display: none;
+  }
+
   .canccu-widget__chip-time {
     font-weight: 700;
     font-variant-numeric: tabular-nums;

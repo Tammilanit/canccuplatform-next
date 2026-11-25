@@ -32,7 +32,7 @@
 
   .canccu-widget--logo .canccu-widget__name {
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     font-size: calc(3.6 * var(--canccu-u));
     font-weight: 600;
@@ -49,7 +49,7 @@
    * On a portrait layout the header's half is narrow and two rows high: the zone goes under the
    * event's name, beside the logo, so the name is not cut short.
    */
-  @container (aspect-ratio < 1) {
+  @container canccu-layout (aspect-ratio < 1) {
     .canccu-region[data-role="header"] > .canccu-widget--logo {
       display: grid;
       /* canccu-grid: fixed screen — the player's or a layout's own grid: the photo beside the name and zone */
@@ -343,7 +343,7 @@
   .canccu-widget__line {
     flex: 1 1 auto;
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
     white-space: nowrap;
     font-size: calc(4.4 * var(--canccu-u));
     line-height: 1.25;
@@ -356,6 +356,7 @@
   .canccu-widget__crawl {
     display: inline-flex;
     animation: canccu-crawl var(--canccu-crawl-seconds, 30s) linear infinite;
+    animation-delay: var(--canccu-crawl-delay, 0s);
   }
 
   .canccu-widget__run {
@@ -363,8 +364,10 @@
     padding-right: calc(12 * var(--canccu-u));
   }
 
+  /* The hidden lines touch it, so no margin (#779); `0px`, as Chromium drops a unitless 0 here. */
   .canccu-widget__line[data-fit="step"] {
     height: 1.25em;
+    overflow-clip-margin: 0px;
     white-space: normal;
   }
 

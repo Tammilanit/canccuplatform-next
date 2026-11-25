@@ -179,7 +179,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec(
       "chip",
       el("p", "chip", [
-        el("span", "chip-label", [f("label"), t(" starts in")]),
+        el("span", "chip-label", [f("label"), t(" in")]),
         el("time", "chip-time", [], { datetime: [f("target_at")] }),
       ]),
     ),

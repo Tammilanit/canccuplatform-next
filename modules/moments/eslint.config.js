@@ -18,6 +18,7 @@ const BROWSER = Object.fromEntries(
     "Audio",
     "Event",
     "URLSearchParams",
+    "ResizeObserver",
   ].map((name) => [name, "readonly"]),
 );
 

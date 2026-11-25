@@ -62,6 +62,13 @@ CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55432/canccu_test npm tes
 docker stop canccu-screen-test
 ```
 
+`test/player-layout.browser.test.ts` draws the player in Chromium (#779), from its own CSS and `Screen` bundled as the build bundles them (`test/player-browser.ts`) and the demo stack's composed Pulse and Portrait (`test/fixtures/pulse-states.json`): every letter's ink inside the boxes that clip it at 1080p, 4K, portrait and a small window, in the device's font and in the level-up theme's deeper fonts, judged by the CI shots' own check (`test/stack/readability.mjs`); the ticker's wrap, speed and clock; and every region's place through a theme that lays its widgets out in the flow. It uses Playwright's Chromium where one is installed, else the system Chrome (`channel: "chrome"`, as on CI runners); without either it skips locally and fails in CI. Where the host lacks Chromium's libraries, run it in Playwright's image:
+
+```sh
+docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD/../..:$PWD/../.." -w "$PWD" \
+  mcr.microsoft.com/playwright:v1.64.1-noble npx vitest run browser
+```
+
 ## Soak and load
 
 The stack tests in `test/stack/` (#310, step 3 plan O1–O3) run against a running stack, where a device stream may open: in the screen container, or a browser in its network namespace, since the venue IP check lets a screen in only from the venue's addresses (the loopback there). `scripts/demo-stack-test` runs them on the CI stack, which has two events ([docs/ci.md](../../docs/ci.md#demo-stack)): `push-latency.mjs`, `load.mjs` (100 screens over the two events) and the soak, accelerated. `measure.mjs` holds the budgets' arithmetic, tested in `test/stack-measure.test.ts`.
