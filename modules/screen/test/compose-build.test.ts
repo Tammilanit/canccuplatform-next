@@ -159,8 +159,8 @@ describe("the builder", () => {
       regions: { hero: { skip_empty: false, dwell_seconds: 20 } },
     };
     const hero = buildRegions(input({ zone })).regions.find((r) => r.id === "hero");
-    // The Director's order (sheet 13): bracket, highlight, playlist, photo, hot game, the day.
-    expect(hero?.order).toEqual([2, 4, 0, 3, 1, 5]);
+    // The idle rotation's items in the PO's order (#787 D1), as the built-in lists them.
+    expect(hero?.order).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
     expect(hero?.widgets.every((w) => w.dwell_seconds === 20)).toBe(true);
   });
 

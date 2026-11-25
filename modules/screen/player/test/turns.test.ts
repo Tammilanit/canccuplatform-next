@@ -51,8 +51,11 @@ const at = (screen: Screen, ms: number) => {
   screen.tick();
 };
 const box = (root: ParentNode, id: string) => root.querySelector(`.canccu-region--${id}`);
+/** The widget a box turned to last: a turn crossfades also at `none` (#787 D5). */
 const line = (root: ParentNode, id: string) =>
-  box(root, id)?.querySelector(".canccu-is-active .canccu-widget__line")?.textContent;
+  [...(box(root, id)?.querySelectorAll(":scope > .canccu-widget.canccu-is-active") ?? [])]
+    .at(-1)
+    ?.querySelector(".canccu-widget__line")?.textContent;
 
 describe("a held turn", () => {
   beforeEach(() => {
@@ -98,7 +101,9 @@ describe("a held turn", () => {
     at(screen, 10_000);
     // Held on the photo; the photo is removed and the wall leads with another.
     screen.draw(state([hero("two"), early]));
-    const html = box(root, "hero")?.innerHTML ?? "";
+    const html =
+      [...(box(root, "hero")?.querySelectorAll(":scope > .canccu-widget") ?? [])].at(-1)
+        ?.innerHTML ?? "";
     expect(html).toContain("/f/two.jpg");
     expect(html).not.toContain("/f/one.jpg");
   });

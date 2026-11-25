@@ -193,7 +193,7 @@ export class Screen {
     const regions = drawns.map((d) => d.state);
     const chosen = drawns.map((drawn) => this.choose(drawn, state, now, takeover));
     // What each box would show were its change let through, for the choreographer to pace.
-    const wanted = joinedShown(regions, chosen, state);
+    const wanted = joinedShown(regions, chosen, state, now);
     const released = this.pace.release(
       drawns.flatMap((d, i) => (paced(d.shown, wanted[i]) ? [d.state.id] : [])),
       now,
@@ -212,6 +212,7 @@ export class Screen {
           regions,
           chosen.map((c, i) => (held[i] === undefined ? c : (held[i] ?? null))),
           state,
+          now,
         );
     for (const [i, drawn] of drawns.entries()) {
       const next = shown[i] ?? null;
@@ -347,12 +348,12 @@ export class Screen {
   /**
    * Two slots, load then fade (plan S7, ported from the legacy scene transition): the incoming
    * widget waits, unseen, for its images, then fades in over the outgoing one, which leaves once
-   * the fade is done. Without motion they swap at once.
+   * the fade is done; at `none` too, by opacity alone (#787 D5). Only an emptied box swaps at once.
    */
   private enter(drawn: Drawn, incoming: HTMLElement | null, motion: Motion, cut = false): void {
     const region = drawn.el;
-    if (motion === "none" || incoming === null) {
-      region.replaceChildren(...(incoming === null ? [] : [incoming]));
+    if (incoming === null) {
+      region.replaceChildren();
       if (drawn.marks !== null) region.append(drawn.marks);
       return;
     }

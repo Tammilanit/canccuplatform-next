@@ -131,8 +131,8 @@ describe("scenes and follow the day", () => {
       buildRegions({ zone, windowLayoutId: null, themeLayouts: [], portrait: false, facts, ...o });
     const hero = (o: Parameters<typeof build>[0]) =>
       build(o).regions.find((r) => r.id === "hero")?.order;
-    expect(hero({})).toEqual([2, 4, 0, 3, 1, 5]);
-    expect(hero({ heroOff: ["playlist", "countdown"] })).toEqual([2, 3, 1, 5]);
+    expect(hero({})).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(hero({ heroOff: ["playlist", "countdown"] })).toEqual([1, 2, 3, 4, 5, 7]);
     expect(build({ sceneLayoutId: "ambient" }).layout.id).toBe("ambient");
     expect(build({ sceneLayoutId: "no_such_layout" }).layout.id).toBe("pulse");
     expect(

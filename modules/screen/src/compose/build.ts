@@ -52,6 +52,8 @@ export interface WidgetView {
   dwell_seconds: number;
   stale_after_seconds: number | null;
   view: View;
+  /** Present only as `false`: the organiser switched it off (#787 D3). */
+  enabled?: false;
 }
 
 export type Idle = "logo" | "blank" | "collapse" | "next";
@@ -181,12 +183,13 @@ function region(
         DEFAULT_DWELL_S,
       stale_after_seconds: null,
       view: viewOf(entry.widget, props, input.facts, entry.embed ?? null, wide),
+      ...(entry.enabled === false ? { enabled: false as const } : {}),
     };
   });
   const skipEmpty = setting.skip_empty !== false;
   const off = new Set(role === "hero" ? (input.heroOff ?? []) : []);
   const sequence = widgets.flatMap((w, i) =>
-    (skipEmpty && w.view.empty) || off.has(w.widget) ? [] : [i],
+    (skipEmpty && w.view.empty) || off.has(w.widget) || w.enabled === false ? [] : [i],
   );
   // Cycles are anchored on the epoch, not on a save or a boot, so all screens of a zone show the
   // same widget at the same moment, also after a reload and offline.
@@ -209,7 +212,7 @@ function region(
       rotation === "shuffle"
         ? shuffled(sequence, `${input.zone.key}:${part.id}:${cycle}`)
         : rotation === "director"
-          ? directorOrder(widgets, sequence)
+          ? directorOrder(widgets, sequence, Array.isArray(setting.widgets))
           : sequence,
     cycle_started_at: new Date(cycle * cycleMs).toISOString(),
     indicator: INDICATORS.find((i) => i === setting.indicator) ?? "line",

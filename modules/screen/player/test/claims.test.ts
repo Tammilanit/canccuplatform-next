@@ -78,10 +78,12 @@ const unlabelled = (el: Element | null | undefined): string => {
   });
   return copy?.textContent ?? "";
 };
-const text = (screen: Screen, id: string) =>
-  unlabelled(screen.root.querySelector(`.canccu-region--${id}`));
-const typeIn = (screen: Screen, id: string) =>
-  screen.root.querySelector(`.canccu-region--${id} > .canccu-widget`)?.className ?? "";
+/** What a region turned to last: a turn crossfades also at `none` (#787 D5), so the one before
+ * may still be leaving. */
+const newest = (screen: Screen, id: string) =>
+  [...screen.root.querySelectorAll(`.canccu-region--${id} > .canccu-widget`)].at(-1);
+const text = (screen: Screen, id: string) => unlabelled(newest(screen, id));
+const typeIn = (screen: Screen, id: string) => newest(screen, id)?.className ?? "";
 
 describe("what a claim shows", () => {
   it("plays its steps in order from its start, then keeps the last until its end", () => {

@@ -44,9 +44,11 @@ const state = (regions: Region[]): ScreenState =>
     display: { motion: "none", drift: false },
   });
 
+/** The widget a box turned to last: a turn crossfades also at `none` (#787 D5). */
 const shownText = (root: ParentNode, id: string): string | undefined =>
-  root.querySelector(`.canccu-region--${id} .canccu-widget.canccu-is-active .canccu-widget__line`)
-    ?.textContent ?? undefined;
+  [...root.querySelectorAll(`.canccu-region--${id} > .canccu-widget.canccu-is-active`)]
+    .at(-1)
+    ?.querySelector(".canccu-widget__line")?.textContent ?? undefined;
 
 const draw = (type: string, view: Record<string, unknown>): HTMLElement => {
   const box = document.createElement("div");

@@ -5,6 +5,7 @@
 import qrcode from "qrcode-generator";
 import { graphFields, todayFields } from "./features.js";
 import { foodFields } from "./food.js";
+import { timelineFields } from "./timeline.js";
 import type { FoodOrder } from "./food.js";
 import type { Override } from "./claims.js";
 import type { Presence } from "./features.js";
@@ -53,6 +54,10 @@ export interface ZoneFacts {
   photosToday?: number | null;
   /** The pizza orders not over (food.ts), and whether the box names their holders (L8). */
   food?: { orders: FoodOrder[]; names: boolean };
+  /** The day's agenda items, for the coming hours (`agenda_timeline`); absent: none read. */
+  timeline?: AgendaItem[];
+  /** The zone's key: the coming hours show its items and those of no zone. */
+  zoneKey?: string;
 }
 
 /** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
@@ -152,8 +157,28 @@ function clockText(at: Date, timeZone: string, part: "time" | "date"): string {
 const textOf = (iso: string | null, facts: ZoneFacts): string | null =>
   iso === null ? null : clockText(new Date(iso), facts.timeZone, "time");
 
-const foodView = (orders: FoodOrder[], facts: ZoneFacts, names: boolean) =>
-  foodFields(orders, { nowMs: facts.now.getTime(), time: (iso) => textOf(iso, facts), names });
+/** The order's page in the hub, where a phone joins it (the hero's QR, #787 D1). */
+const joinUrl = (facts: ZoneFacts, id: string): string => `${facts.origin}/pizza/orders/${id}`;
+
+function foodView(
+  orders: FoodOrder[],
+  facts: ZoneFacts,
+  names: boolean,
+): Record<string, unknown> | null {
+  const view = foodFields(orders, {
+    nowMs: facts.now.getTime(),
+    time: (iso) => textOf(iso, facts),
+    names,
+    join: (id) => joinUrl(facts, id),
+  });
+  if (view === null) return null;
+  const open = (view.orders as { join_url: string | null }[]).find((x) => x.join_url !== null);
+  const join =
+    open?.join_url == null
+      ? null
+      : { url: open.join_url, label: "Join the order", image_url: qrImage(open.join_url) };
+  return { ...view, join };
+}
 
 /**
  * A `pizza_placed` claim (Moments' `pizza` rule) drawn as the food box draws its order (#771), so
@@ -258,6 +283,13 @@ function fields(
         time: clockText(facts.now, facts.timeZone, "time"),
         date: clockText(facts.now, facts.timeZone, "date"),
       };
+    case "agenda_timeline":
+      return timelineFields(facts.timeline ?? [], {
+        nowMs: facts.now.getTime(),
+        zoneKey: facts.zoneKey,
+        orders: facts.food?.orders ?? [],
+        time: (iso) => textOf(iso, facts),
+      });
     case "agenda_now": {
       const items = agendaRows(facts);
       const later = rows(facts.agenda?.later ?? [], "next", facts);

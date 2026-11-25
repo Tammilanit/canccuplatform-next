@@ -110,15 +110,19 @@
     line-height: 1.2;
   }
 
-  /* Two slots, load then fade: `moderate` also rises a little, `calm` only fades, slowly. */
-  .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-widget {
+  /*
+   * Two slots, load then fade, never a cut (#787 D5): about 1.2 s with the motion pack's move at
+   * `calm` and above, an opacity crossfade of 400 ms alone at `none` and under reduced motion.
+   */
+  .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-widget,
+  .canccu-layout[data-motion="calm"] .canccu-region > .canccu-widget {
     transition:
-      opacity 600ms ease,
-      transform 600ms ease;
+      opacity 1200ms ease,
+      transform 1200ms ease;
   }
 
-  .canccu-layout[data-motion="calm"] .canccu-region > .canccu-widget {
-    transition: opacity 1500ms ease;
+  .canccu-layout[data-motion="none"] .canccu-region > .canccu-widget {
+    transition: opacity 400ms linear;
   }
 
   /* Before the slot rules, which match as strongly: a stale widget still fades in and out. */
@@ -131,8 +135,24 @@
     opacity: 0;
   }
 
-  .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-slot--in {
+  /* The pack's move (contracts/theming.md, Motion vocabulary): standard rises, broadcast slides,
+     arcade scales up. */
+  .canccu-layout:not([data-motion="none"]) .canccu-region > .canccu-slot--in {
     transform: translateY(calc(1.5 * var(--canccu-u)));
+  }
+
+  .canccu-motion-pack--broadcast
+    .canccu-layout:not([data-motion="none"])
+    .canccu-region
+    > .canccu-slot--in {
+    transform: translateX(calc(3 * var(--canccu-u)));
+  }
+
+  .canccu-motion-pack--arcade
+    .canccu-layout:not([data-motion="none"])
+    .canccu-region
+    > .canccu-slot--in {
+    transform: scale(0.94);
   }
 
   .canccu-widget p,

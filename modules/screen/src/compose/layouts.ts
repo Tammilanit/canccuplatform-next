@@ -25,6 +25,8 @@ export type Props = Record<string, string | number | boolean>;
 
 export interface WidgetEntry {
   widget: string;
+  /** `false`: switched off by the organiser, kept in its place and skipped (#787 D3). */
+  enabled?: boolean;
   template?: string;
   embed?: string;
   props?: Props;
@@ -64,12 +66,21 @@ const VENUE_RAIL: WidgetEntry[] = [
   { widget: "venue_info" },
   { widget: "food_status" },
 ];
-// The Director's features (sheet 13): tonight's highlight, and "Today in numbers" at wind-down.
-const HERO: WidgetEntry[] = [
-  ...w("playlist", "hot_game", "bracket", "photo"),
-  { widget: "countdown", props: { highlight: true } },
-  { widget: "today_numbers" },
-];
+// The idle rotation (#787 D1): the PO's items in the PO's order. One whose source has nothing is
+// skipped (`skip_empty`), so a screen plays only what the event has. Tonight's highlight, the
+// surge, the bracket and "Today in numbers" stay for the zones that list them.
+const HERO: WidgetEntry[] = w(
+  "countdown",
+  "agenda_timeline",
+  "food_status",
+  "leaderboard",
+  "now_playing",
+  "photo",
+  "playlist",
+  "stats",
+);
+/** 30–60 s a turn (#787 D4): long enough to read a hero item across the hall. */
+const HERO_SECONDS = 45;
 const RAIL = w("agenda_now", "countdown");
 
 const HEADER = (): LayoutRegion => ({
@@ -97,14 +108,14 @@ const landscape = (id: string, name: string, regions: LayoutRegion[]): Layout =>
 export const BUILT_IN_LAYOUTS: readonly Layout[] = [
   landscape("pulse", "Pulse", [
     HEADER(),
-    { id: "hero", area: at(1, 2, 8, 10), widgets: HERO },
+    { id: "hero", area: at(1, 2, 8, 10), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "rail", area: at(9, 2, 4, 6), widgets: RAIL },
     { id: "venue_rail", area: at(9, 8, 4, 4), widgets: VENUE_RAIL },
     TICKER(),
   ]),
   landscape("dashboard", "Dashboard", [
     HEADER(),
-    { id: "hero", area: at(1, 2, 4, 5), widgets: HERO },
+    { id: "hero", area: at(1, 2, 4, 5), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "online", area: at(5, 2, 4, 5), widgets: w("activity_graph") },
     { id: "voice", area: at(9, 2, 4, 5), widgets: w("voice_rooms") },
     { id: "top_games", area: at(1, 7, 4, 5), widgets: w("now_playing") },
@@ -114,12 +125,12 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
   ]),
   landscape("hero", "Hero", [
     HEADER(),
-    { id: "hero", area: at(1, 2, 12, 10), widgets: HERO },
+    { id: "hero", area: at(1, 2, 12, 10), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "rail", area: at(1, 12, 12, 1), widgets: w("agenda_now") },
   ]),
   landscape("split", "Split", [
     HEADER(),
-    { id: "hero", area: at(1, 2, 7, 10), widgets: HERO },
+    { id: "hero", area: at(1, 2, 7, 10), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "rail", area: at(8, 2, 5, 5), widgets: RAIL },
     { id: "venue_rail", area: at(8, 7, 5, 5), widgets: VENUE_RAIL },
     TICKER(),
@@ -139,7 +150,7 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
     // The Pulse's boxes stacked (sheet 10), with the Right now box between the rail and the venue rail.
     regions: [
       { id: "header", area: at(1, 1, 6, 2), widgets: w("logo", "clock") },
-      { id: "hero", area: at(1, 3, 6, 6), widgets: HERO },
+      { id: "hero", area: at(1, 3, 6, 6), rotate_seconds: HERO_SECONDS, widgets: HERO },
       { id: "rail", area: at(1, 9, 6, 3), widgets: RAIL },
       { id: "right_now", area: at(1, 12, 6, 2), widgets: w("stats") },
       { id: "venue_rail", area: at(1, 14, 6, 2), widgets: VENUE_RAIL },

@@ -223,7 +223,7 @@ describe("the food item in the hero (D1, D9)", () => {
       url: "https://demo.example/pizza/orders/po_1",
       label: "Join the order",
     });
-    expect(String((view.join as { image_url: string }).image_url)).toMatch(/^data:image\/svg/);
+    expect((view.join as { image_url: string }).image_url).toMatch(/^data:image\/svg/);
     expect(view.countdown_at).toBe("2026-03-14T18:30:00Z");
   });
 

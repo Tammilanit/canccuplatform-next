@@ -110,8 +110,9 @@ describe("how the screen moves", () => {
       "moderate",
       "moderate",
     ]);
-    expect(FADE_MS.none).toBe(0);
-    expect(FADE_MS.calm).toBeGreaterThan(FADE_MS.moderate);
+    // Never a cut (#787 D5): an opacity crossfade at `none`, about 1.2 s with a move above it.
+    expect(FADE_MS.none).toBe(400);
+    expect(FADE_MS.calm).toBe(FADE_MS.moderate);
   });
 
   it("drifts one step a minute round a circle in an hour, the same on every screen", () => {

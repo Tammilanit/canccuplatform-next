@@ -266,7 +266,7 @@ describe("the showcase", () => {
       (r) =>
       r.role !== "hero"
         ? r
-        : { ...r, widgets: r.widgets.map((w) => (w.widget === "hot_game" ? { ...w, view: { ...w.view, empty: false } } : w)) }, // prettier-ignore
+        : { ...r, widgets: [...r.widgets, { ...(r.widgets[0] as RegionView["widgets"][number]), widget: "hot_game", view: { qr: null, stale: false, empty: false } }] }, // prettier-ignore
     );
     expect(isShowcase(surging)).toBe(true);
   });

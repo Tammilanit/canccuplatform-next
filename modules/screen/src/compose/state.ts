@@ -249,6 +249,8 @@ export async function composeZone(
     embeds: theme?.embeds ?? [],
     phase: motion.phase,
     highlight: highlightOf(items, at.getTime()),
+    timeline: items,
+    zoneKey,
     food: { orders: read.food, names: deps.settings.get("food_holder_names", true) !== false },
   };
   const claims = read.claims.map((o) => foodClaim(o, facts));

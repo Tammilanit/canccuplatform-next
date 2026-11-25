@@ -41,7 +41,7 @@ const state = (regions: Region[], motion = "none"): ScreenState =>
   screenState({
     layout: { id: "pulse", aspect: "16:9", grid: { columns: 12, rows: 12 } },
     regions,
-    display: { motion_level: motion, drift: false },
+    display: { motion: "moderate", motion_level: motion, drift: false },
   });
 
 let reduced = false;
@@ -51,8 +51,10 @@ const slots = (root: ParentNode, id: string) =>
   [...(box(root, id)?.children ?? [])].filter((el) => el.classList.contains("canccu-widget"));
 const lines = (root: ParentNode, id: string) =>
   slots(root, id).map((el) => el.querySelector(".canccu-widget__line")?.textContent ?? "");
+/** The widget a box turned to last: while a turn fades, the outgoing one is still there. */
 const active = (root: ParentNode, id: string) =>
-  box(root, id)?.querySelector(".canccu-is-active .canccu-widget__line")?.textContent;
+  [...(box(root, id)?.querySelectorAll(".canccu-is-active .canccu-widget__line") ?? [])].at(-1)
+    ?.textContent;
 
 describe("a turn is never a hard cut (D5)", () => {
   beforeEach(() => {
@@ -163,7 +165,9 @@ describe("one place at a time for the rotation's own items (D7)", () => {
     const screen = new Screen(host);
     const root = screen.draw(state([hero, venue]));
     const shows = (id: string, type: string) =>
-      box(root, id)?.querySelector(`.canccu-is-active.canccu-widget--${type}`) != null;
+      [...(box(root, id)?.querySelectorAll(":scope > .canccu-widget.canccu-is-active") ?? [])]
+        .at(-1)
+        ?.classList.contains(`canccu-widget--${type}`) === true;
     const tick = (ms: number) => {
       vi.setSystemTime(T0 + ms);
       screen.tick();

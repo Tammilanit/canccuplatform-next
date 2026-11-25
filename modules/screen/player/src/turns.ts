@@ -62,6 +62,52 @@ export function heldShown(
 }
 
 /**
+ * The types with one event-wide source, so two boxes of the type show the same thing; a ticker's
+ * or a countdown's text differs per entry (and the hero and the rail's run of show are joined
+ * apart in hero-rail.ts).
+ */
+const ONE_SOURCE = new Set([
+  "food_status",
+  "agenda_timeline",
+  "leaderboard",
+  "now_playing",
+  "stats",
+]);
+
+/**
+ * One place at a time for the rotation's own items (#787 D7): a box whose turn shows what the
+ * hero's turn shows (the food item) goes on to its next item of another type, or its idle choice.
+ */
+function onePlace(
+  regions: readonly Region[],
+  choices: readonly Choice[],
+  state: ScreenState,
+  now: number,
+): Choice[] {
+  const h = regions.findIndex((r) => r.role === "hero");
+  const hero = choices[h];
+  if (
+    h === -1 ||
+    typeof hero !== "object" ||
+    hero === null ||
+    turnIndexOf(hero) === null ||
+    !ONE_SOURCE.has(hero.type)
+  ) {
+    return [...choices];
+  }
+  return choices.map((c, i) => {
+    const r = regions[i];
+    const at = turnIndexOf(c);
+    if (i === h || r === undefined || at === null || typeof c !== "object" || c?.type !== hero.type)
+      return c;
+    const from = r.order.indexOf(at);
+    const rest = [...r.order.slice(from + 1), ...r.order.slice(0, from)];
+    const other = rest.find((j) => r.widgets[j]?.widget !== hero.type);
+    return (other === undefined ? undefined : turnShown(r, other, state, now)) ?? idleOf(r, state);
+  });
+}
+
+/**
  * The boxes' choices as one Pulse (hero-rail.ts). A rail the join leaves without a row shows its
  * idle choice, never an empty card, and never the hero's own item again.
  */
@@ -69,9 +115,11 @@ export function joinedShown(
   regions: readonly Region[],
   choices: readonly Choice[],
   state: ScreenState,
+  now: number,
 ): Choice[] {
+  const placed = onePlace(regions, choices, state, now);
   const joined = joinHeroAndRail(
-    choices.map((s, i) => {
+    placed.map((s, i) => {
       const r = regions[i];
       if (typeof s !== "object" || s === null || r === undefined) return null;
       return { ...s, role: r.role, agenda: agendaOf(r) };
@@ -81,7 +129,7 @@ export function joinedShown(
   const hero = heroCountdownOf(joined)?.view ?? null;
   return regions.map((r, i) => {
     const part = joined[i];
-    const own = choices[i];
+    const own = placed[i];
     const emptied =
       part?.view.empty === true && !(typeof own === "object" && own?.view.empty === true);
     return emptied ? idleOf(r, state, hero) : (part ?? own ?? null);

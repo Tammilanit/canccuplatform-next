@@ -143,7 +143,13 @@ function leadOf(
  */
 export function foodFields(
   orders: FoodOrder[],
-  o: { nowMs: number; time: (iso: string | null) => string | null; names: boolean },
+  o: {
+    nowMs: number;
+    time: (iso: string | null) => string | null;
+    names: boolean;
+    /** The order's join link; absent: none. */
+    join?: (id: string) => string;
+  },
 ): Record<string, unknown> | null {
   const list = orders.filter((x) => shown(x, o.nowMs)).sort(urgency);
   if (list.length === 0) return null;
@@ -177,6 +183,7 @@ export function foodFields(
       people_count: x.people_count,
       holder_name: holder,
       status_text: status,
+      join_url: x.state === "open" && o.join !== undefined ? o.join(x.id) : null,
     };
   };
   const rows = list.map(row);
@@ -194,5 +201,13 @@ export function foodFields(
     people_count: first?.people_count,
     holder_name: first?.holder_name,
     orders: rows,
+    // What the hero counts down to (#787 D9): the close of an open order, the estimate of one
+    // on the way; null while the first order has neither.
+    countdown_at:
+      list[0]?.state === "open"
+        ? list[0].closes_at
+        : list[0]?.state === "placed"
+          ? list[0].estimate_at
+          : null,
   };
 }
