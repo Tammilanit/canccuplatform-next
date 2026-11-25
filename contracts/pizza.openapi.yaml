@@ -295,7 +295,7 @@ components:
       type: object
       description: |
         An order as the caller may see it (contracts/pizza.md, Who sees what). Every caller gets the base
-        fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents`,
+        fields; a member also `holder`, `you_hold`, `note`, `cancel_reason`, `mine`, `my_amount_cents`, `my_over_limit_cents`,
         `my_amount_estimated` and `lines`; a person in the order (and the holder and the crew) also
         `settle_to`, `pay_to` (how to pay the payer, when it settles to them) and `my_paid` (their own
         Paid mark, or null); the holder and the crew `items` instead of `lines`, the pizzeria's `phone`
@@ -377,6 +377,9 @@ components:
             $ref: "#/components/schemas/Item"
         my_amount_cents:
           type: [integer, "null"]
+        my_over_limit_cents:
+          type: [integer, "null"]
+          description: With even shares, the part of `my_amount_cents` for the caller's pizzas above the even-share limit (#789); 0 when none, null without an amount.
         lines:
           type: array
           description: Everyone's pizzas without names or notes.
@@ -537,7 +540,7 @@ components:
         toppings:
           type: array
           minItems: 1
-          maxItems: 4
+          maxItems: 6
           items:
             type: string
         text:
@@ -615,6 +618,9 @@ components:
           type: integer
         amount_cents:
           type: [integer, "null"]
+        over_limit_cents:
+          type: integer
+          description: With even shares, what the person's pizzas cost above the even-share limit, included in `amount_cents` (#789); 0 otherwise.
         paid:
           type: [boolean, "null"]
           description: "In the money's `people`: the payer's Paid mark; null where there is none (settled through the organiser, or the payer)."
@@ -653,6 +659,9 @@ components:
           description: No total yet; the amounts are the menu's prices.
         extras_cents:
           type: [integer, "null"]
+        even_limit_cents:
+          type: [integer, "null"]
+          description: The even-share limit (#789), stored at the call-in, else the menu's now; null when the menu has no price.
         settle_to:
           $ref: "#/components/schemas/SettleTo"
         total_effective_cents:
@@ -764,7 +773,9 @@ components:
       description: |
         The last machine read: a suggestion only. Each pizza gets the unit price of the line that names
         it (menu number first, then name); a price unlike the pizza's is `differs`, a pizza with no line
-        has `line` null, and item lines that cover no or too few pizzas are in `unmatched_lines`.
+        has `line` null, and item lines that cover no or too few pizzas are in `unmatched_lines`. A
+        `group` line ("15 × pizza", #789) covers the pizzas no line names, each at its own price or
+        the line's `unit_cents`; what it costs beyond them is in `extras_cents`.
       required: [read_at, total_cents, lines, pizzas, unmatched_lines, extras_cents, adds_up]
       properties:
         read_at:
@@ -794,6 +805,12 @@ components:
               kind:
                 type: string
                 enum: [item, extra]
+              group:
+                type: boolean
+                description: The line counts pizzas without naming one (#789); absent on older reads.
+              unit_cents:
+                type: [integer, "null"]
+                description: The price of one the line shows ("à €13,00"); absent on older reads.
         pizzas:
           type: array
           items:
@@ -816,10 +833,26 @@ components:
                 type: [integer, "null"]
               differs:
                 type: boolean
+              group:
+                type: boolean
+                description: Covered by a group line (#789); absent on older reads.
         unmatched_lines:
           type: array
           items:
             type: integer
+        group_count_mismatch:
+          type: array
+          description: Group lines whose count is unlike the pizzas left for them (#789); absent on older reads.
+          items:
+            type: object
+            required: [line, count, pizzas]
+            properties:
+              line:
+                type: integer
+              count:
+                type: integer
+              pizzas:
+                type: integer
         extras_cents:
           type: integer
         adds_up:

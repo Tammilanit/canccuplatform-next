@@ -311,4 +311,49 @@ describe("the Anthropic reader", () => {
     });
     expect((await r.receipt(PHOTO, "image/png")).reading.lines[0]).toMatchObject({ unsure: true });
   });
+
+  it("keeps a group line and its unit price, and asks for them (#789 item 9)", async () => {
+    const sent: Sent[] = [];
+    const r = anthropicReader("k", {
+      fetch: fakeFetch(
+        {
+          body: message(
+            receiptJson({
+              lines: [
+                {
+                  text: "15 kpl pizzaa à 13,00 € 195,00",
+                  number: null,
+                  name: "pizzaa",
+                  quantity: 15,
+                  amount_cents: 19500,
+                  kind: "item",
+                  unsure: false,
+                  group: true,
+                  unit_cents: 1300,
+                },
+                {
+                  text: "Toimitus 5,00",
+                  number: null,
+                  name: "Toimitus",
+                  quantity: 1,
+                  amount_cents: 500,
+                  kind: "extra",
+                  unsure: false,
+                  group: false,
+                  unit_cents: 99_999_999,
+                },
+              ],
+            }),
+          ),
+        },
+        sent,
+      ),
+    });
+    const lines = (await r.receipt(PHOTO, "image/png")).reading.lines;
+    expect(lines[0]).toMatchObject({ group: true, unit_cents: 1300 });
+    // A unit price out of range is dropped, not trusted.
+    expect(lines[1]).toMatchObject({ group: false, unit_cents: null });
+    expect(JSON.stringify(sent[0]?.body)).toContain("unit_cents");
+    expect(JSON.stringify(sent[0]?.body)).toContain("à €13,00");
+  });
 });

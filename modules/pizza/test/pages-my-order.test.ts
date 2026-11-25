@@ -102,6 +102,35 @@ describe.skipIf(!DATABASE_URL)("the menu", () => {
     expect((await mine("mikko"))[0]?.label).toContain("kinkku, ananas");
   });
 
+  it("says what a Fantasia own pizza includes, the extra and the special prices (#789 item 6)", async () => {
+    await w.call("menus", "PUT", `/api/pizza/pizzerias/${pz}/menu`, {
+      base: { name: "Fantasia", price: 1000, included_toppings: 3, extra_topping_price: 150 },
+      items: [{ number: "1", name: "Margherita", price: 800 }],
+      toppings: [
+        { name: "kinkku", price: 100 },
+        { name: "ananas", price: 100 },
+        { name: "prosciutto", price: 250, tier: "special" },
+      ],
+    });
+    const own = await view(w, "anni", `/orders/${id}/add?tab=own`);
+    expect(own.body).toContain("Toppings, 1 to 6");
+    expect(own.body).toContain("Includes 3 toppings · each extra €1.50");
+    // A normal topping is in the base's price; a special one says what it adds.
+    expect(own.body).toMatch(/<span>kinkku<\/span>/);
+    expect(own.body).toContain("prosciutto +€2.50 · special");
+    // The running price's numbers, for static/food.js.
+    expect(own.body).toContain('data-own-price="1000"');
+    expect(own.body).toContain('data-included="3"');
+    expect(own.body).toContain('data-extra="150"');
+    expect(own.body).toContain('data-tier="special"');
+    await form(w, "anni", `/orders/${id}/add`, { kind: "custom", toppings: "prosciutto" });
+    const priced = json(await w.call("pena", "GET", `/api/pizza/orders/${id}`)).items as {
+      label: string;
+      price_cents: number | null;
+    }[];
+    expect(priced.find((p) => p.label.startsWith("Fantasia"))?.price_cents).toBe(1250);
+  });
+
   it("offers no own pizza where the pizzeria has no base", async () => {
     const other = json(await open(w, "tero", grill)).id as string;
     const r = await view(w, "anni", `/orders/${other}/add`);

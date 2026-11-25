@@ -21,6 +21,10 @@ export interface ReceiptLine {
    * Reads kept before #789 have none.
    */
   unsure?: boolean;
+  /** The line names no item ("15 × pizza"): it covers the pizzas no other line names (#789 item 9). */
+  group?: boolean;
+  /** The unit price the line shows ("à €13,00"), or null. */
+  unit_cents?: number | null;
 }
 
 export interface ReceiptReading {

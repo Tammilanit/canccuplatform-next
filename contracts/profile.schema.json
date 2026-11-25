@@ -392,36 +392,6 @@
         }
       }
     },
-    "pizza_menu_entry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 80
-        },
-        "description": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "maxLength": 300
-        },
-        "price": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0,
-          "maximum": 99999,
-          "description": "In euro cents."
-        }
-      }
-    },
     "pizza_menu_item": {
       "type": "object",
       "additionalProperties": false,
@@ -455,6 +425,15 @@
           "minimum": 0,
           "maximum": 99999,
           "description": "In euro cents."
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "The menu's heading the item is under (#789)."
         }
       }
     },
@@ -502,7 +481,7 @@
         "base": {
           "oneOf": [
             {
-              "$ref": "#/$defs/pizza_menu_entry"
+              "$ref": "#/$defs/pizza_menu_base"
             },
             {
               "type": "null"
@@ -513,10 +492,96 @@
           "type": "array",
           "maxItems": 200,
           "items": {
-            "$ref": "#/$defs/pizza_menu_entry"
+            "$ref": "#/$defs/pizza_menu_topping"
           }
         }
       }
+    },
+    "pizza_menu_base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "price": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99999,
+          "description": "In euro cents."
+        },
+        "included_toppings": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10,
+          "description": "How many toppings the base's price includes."
+        },
+        "extra_topping_price": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99999,
+          "description": "In euro cents: each topping past the included ones."
+        }
+      },
+      "description": "The own pizza's base (#789: a \"Fantasia\" includes toppings in its price)."
+    },
+    "pizza_menu_topping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "price": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99999,
+          "description": "In euro cents."
+        },
+        "tier": {
+          "enum": [
+            "normal",
+            "special"
+          ]
+        }
+      },
+      "description": "A topping of the own pizza (#789: `special` costs extra even within the included ones)."
     }
   }
 }

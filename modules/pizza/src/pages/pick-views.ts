@@ -1,13 +1,14 @@
 /**
  * Picking a pizza (mockups 02 B and 04): the menu with the legacy filter and each item's price when
- * it has one (D7 B), the own pizza from the base and 1–4 toppings, Other as free text, and your
+ * it has one (D7 B), the own pizza from the base and 1–6 toppings (a "Fantasia" base includes some,
+ * #789), Other as free text, and your
  * last pizza from this pizzeria one tap away (U6). One plain form per tab, so it works without a
  * script; static/food.js filters as you type and stops the toppings at the limit.
  */
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { menuMatches } from "../menu-filter.js";
-import { LIMITS } from "../validate.js";
+import { LIMITS, ownPizzaPrice } from "../validate.js";
 import { formKey } from "./kit.js";
 import { flash } from "./order-view.js";
 import type { MineView, OrderView } from "./order-view.js";
@@ -22,6 +23,11 @@ interface Line {
   name: string;
   description: string | null;
   price_cents: number | null;
+  /** The base's (#789 item 6). */
+  included_toppings?: number | null;
+  extra_topping_cents?: number | null;
+  /** A topping's. */
+  tier?: "normal" | "special" | null;
 }
 
 export interface Menu {
@@ -99,6 +105,72 @@ ${value ?? ""}</textarea>`
   </label>`;
 }
 
+/**
+ * The own pizza's tab: the base, what a "Fantasia" base includes and costs past that, each
+ * topping with what it adds, and the price so far, which static/food.js keeps running (#789).
+ */
+function ownPizza(c: FoodCtx, base: Line, toppings: Line[], chosen: Set<string>): Html {
+  const included = base.included_toppings ?? null;
+  const extra = base.extra_topping_cents ?? null;
+  const fantasia =
+    included === null
+      ? ""
+      : [
+          c.t("pick.includes", { n: included }),
+          ...(extra === null ? [] : [c.t("pick.each_extra", { price: price(c, extra) })]),
+        ].join(" · ");
+  // A Fantasia's normal topping is in the base's price until the included ones run out.
+  const adds = (t: Line) => {
+    const special = t.tier === "special";
+    const costs = t.price_cents !== null && (included === null || special);
+    return `${costs ? ` +${price(c, t.price_cents)}` : ""}${special ? ` · ${c.t("pick.special")}` : ""}`;
+  };
+  const now = ownPizzaPrice(
+    { price_cents: base.price_cents, included_toppings: included, extra_topping_cents: extra },
+    toppings
+      .filter((t) => chosen.has(t.name))
+      .map((t) => ({ price_cents: t.price_cents, tier: t.tier ?? null })),
+  );
+  return html`<p class="pizza-section">${c.t("pick.base")}</p>
+    <p class="pizza-block">
+      <span class="pizza-title">${base.name}</span>
+      <span class="pizza-meta"
+        >${[base.description, price(c, base.price_cents)].filter(Boolean).join(" · ")}</span
+      >
+      ${fantasia === "" ? "" : html`<span class="pizza-meta">${fantasia}</span>`}
+    </p>
+    <fieldset class="pizza-fieldset" data-toppings="${LIMITS.toppings}">
+      <legend>${c.t("pick.toppings", { max: LIMITS.toppings })}</legend>
+      <div class="pizza-choices">
+        ${toppings.map(
+          (t) =>
+            html`<label class="pizza-choice"
+              ><input${attrs({
+                type: "checkbox",
+                name: "toppings",
+                value: t.name,
+                checked: chosen.has(t.name),
+                "data-price": t.price_cents ?? undefined,
+                "data-tier": t.tier === "special" ? "special" : undefined,
+              })} /><span>${t.name}${adds(t)}</span></label
+            >`,
+        )}
+      </div>
+    </fieldset>
+    ${
+      base.price_cents === null
+        ? ""
+        : html`<p${attrs({
+            class: "pizza-meta",
+            "data-own-price": base.price_cents,
+            "data-included": included ?? undefined,
+            "data-extra": extra ?? undefined,
+          })}>
+          ${c.t("pick.own_price")} <output data-own-total>${price(c, now)}</output>
+        </p>`
+    }`;
+}
+
 export function pickView(
   c: FoodCtx,
   o: OrderView,
@@ -124,31 +196,7 @@ export function pickView(
   let body: Slot;
   if (q.tab === "own" && menu.base !== null) {
     const chosen = new Set(edit?.kind === "custom" ? (edit.toppings ?? []) : []);
-    body = html`<p class="pizza-section">${c.t("pick.base")}</p>
-      <p class="pizza-block">
-        <span class="pizza-title">${menu.base.name}</span>
-        <span class="pizza-meta"
-          >${[menu.base.description, price(c, menu.base.price_cents)].filter(Boolean).join(" · ")}</span
-        >
-      </p>
-      <fieldset class="pizza-fieldset" data-toppings="${LIMITS.toppings}">
-        <legend>${c.t("pick.toppings", { max: LIMITS.toppings })}</legend>
-        <div class="pizza-choices">
-          ${menu.toppings.map(
-            (t) =>
-              html`<label class="pizza-choice"
-                ><input
-                  type="checkbox"
-                  name="toppings"
-                  value="${t.name}"
-                  ${chosen.has(t.name) ? "checked" : ""}
-                /><span
-                  >${t.name}${t.price_cents === null ? "" : ` +${price(c, t.price_cents)}`}</span
-                ></label
-              >`,
-          )}
-        </div>
-      </fieldset>`;
+    body = ownPizza(c, menu.base, menu.toppings, chosen);
   } else if (q.tab === "other") {
     body = html`${textField("text", c.t("pick.other_what"), LIMITS.text, edit?.kind === "text" ? edit.text : null, true)}
       <p class="pizza-muted">${c.t("pick.other_hint")}</p>`;

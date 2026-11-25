@@ -37,6 +37,7 @@ export async function moneyView(c: SqlClient, o: OrderRow): Promise<Record<strin
     exact_possible: a.exact_possible,
     estimated: a.estimated,
     extras_cents: a.extras_cents,
+    even_limit_cents: a.even_limit_cents,
     settle_to: o.settle_to,
     total_effective_cents: a.total_cents,
     // A mark only where people pay the payer, and never for the payer themselves (U12 A).

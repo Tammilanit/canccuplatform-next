@@ -54,6 +54,7 @@ async function exportOf(deps: AppDeps, c: SqlClient, ctx: TenantContext, day: st
     payer_name: o.payer_name,
     total_cents: o.total_cents,
     split: o.split,
+    even_limit_cents: o.even_limit_cents,
     settle_to: o.settle_to,
     rows: items
       .filter((i) => i.order_id === o.id)

@@ -205,6 +205,14 @@ const copyable = (c: FoodCtx, label: string, value: string) =>
     </button>
   </li>`;
 
+/** Even shares, with this person's pizza over the even-share limit (#789 item 8). */
+const overLimit = (c: FoodCtx, o: OrderView): Slot =>
+  (o.my_over_limit_cents ?? 0) > 0
+    ? html`<p class="pizza-muted">
+        ${c.t("mine.over_limit", { over: euro(c, o.my_over_limit_cents ?? 0) })}
+      </p>`
+    : "";
+
 /**
  * The person's own amount once the order has one, and whom they pay (U12 A, M1): the organiser
  * after the event, or the payer, with the payer's "Pay me with" details. No money moves here.
@@ -222,11 +230,13 @@ function myMoney(c: FoodCtx, o: OrderView): Slot {
       !payer
         ? html`<p class="pizza-hero__big canccu-num">${sum}</p>
             ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+            ${overLimit(c, o)}
             ${o.settle_to === "payer" ? "" : html`<p>${c.t("mine.pay_organiser")}</p>`}`
         : html`<p class="pizza-hero__big">
               ${c.t("mine.pay_to", { name: p.name ?? "—", amount: sum })}
             </p>
             ${o.my_amount_estimated === true ? html`<p class="pizza-muted">${c.t("mine.share_estimated")}</p>` : ""}
+            ${overLimit(c, o)}
             ${
               p.mobilepay === null && p.iban === null
                 ? ""
