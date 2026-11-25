@@ -155,7 +155,7 @@ run("the built-in rules", () => {
       rank: 80,
       regions: ["hero", "full", "rail", "ticker"],
       hero_min_share: 0.35,
-      keep_ticker: false,
+      keep_ticker: true,
       source: { module: "pizza" },
       expires_at: new Date(w.now.getTime() + 180_000).toISOString(),
       content: {

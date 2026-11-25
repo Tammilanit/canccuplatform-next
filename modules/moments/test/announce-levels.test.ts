@@ -85,7 +85,7 @@ describe.skipIf(!DATABASE_URL)("announcements by level", () => {
     expect(card).toMatchObject({
       regions: ["hero", "full", "rail", "ticker"],
       hero_min_share: 0.35,
-      keep_ticker: false,
+      keep_ticker: true,
       rank: 80,
       content: {
         title: "Finals start",
