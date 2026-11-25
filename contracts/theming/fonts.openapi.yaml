@@ -1,0 +1,95 @@
+# Part of theming.openapi.yaml (contracts/README.md, Parts): the platform's font pairs, which a theme
+# names in `brand.font_pair` (contracts/theming.md, Brand kit: simple mode).
+/api/theming/font-pairs:
+  get:
+    tags: [files]
+    operationId: listFontPairs
+    summary: The platform's font pairs
+    description: |
+      Public: platform data, the same for every event, for the Theme studio's choice of fonts. Each pair is freely
+      licensed (SIL OFL) and served from theming itself.
+    security:
+      - {}
+    responses:
+      "200":
+        description: Every pair, by id.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pairs]
+              properties:
+                pairs:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, name, heading, body]
+                    properties:
+                      id:
+                        type: string
+                        pattern: "^[a-z0-9][a-z0-9-]{0,39}$"
+                      name:
+                        description: Text for people, such as "Game night".
+                        type: string
+                      heading:
+                        $ref: "#/FamilyFaces"
+                      body:
+                        $ref: "#/FamilyFaces"
+/theming/fonts/{pair}/{file}:
+  parameters:
+    - name: pair
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-z0-9][a-z0-9-]{0,39}$"
+    - name: file
+      in: path
+      required: true
+      schema:
+        type: string
+  get:
+    tags: [files]
+    operationId: getFontPairFile
+    summary: A face of a font pair
+    description: |
+      Public, as the token CSS that links it. Answers only the WOFF2 files a pair lists, never its licence or
+      anything else. A pair's file never changes under its name, so it is immutable.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The face.
+        headers:
+          Cache-Control:
+            description: "`public, max-age=31536000, immutable`."
+            schema:
+              type: string
+          X-Content-Type-Options:
+            $ref: "../theming.openapi.yaml#/components/headers/NoSniff"
+          Cross-Origin-Resource-Policy:
+            $ref: "../theming.openapi.yaml#/components/headers/SameOriginResource"
+        content:
+          font/woff2:
+            schema:
+              type: string
+              format: binary
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+FamilyFaces:
+  type: object
+  required: [family, faces]
+  properties:
+    family:
+      type: string
+    faces:
+      type: array
+      items:
+        type: object
+        required: [weight, url]
+        properties:
+          weight:
+            type: integer
+          url:
+            description: The face at `/theming/fonts/{pair}/{file}`.
+            type: string

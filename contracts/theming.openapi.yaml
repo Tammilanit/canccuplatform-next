@@ -553,6 +553,10 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/theming/font-pairs:
+    $ref: "theming/fonts.openapi.yaml#/~1api~1theming~1font-pairs"
+  /theming/fonts/{pair}/{file}:
+    $ref: "theming/fonts.openapi.yaml#/~1theming~1fonts~1{pair}~1{file}"
   /theming/logo:
     get:
       tags: [files]
@@ -979,6 +983,7 @@ components:
             - reference_unknown
             - duplicate_id
             - area_outside_grid
+            - logo_unreadable
             - mode_mismatch
             - contrast_low
             - text_small
@@ -1175,6 +1180,17 @@ components:
           enum: [dark, light]
         embed_color:
           $ref: "#/components/schemas/Color"
+        logo_plate:
+          $ref: "theme.schema.json#/$defs/logo_plate"
+        font_pair:
+          description: One of `GET /api/theming/font-pairs` (else 400).
+          type: string
+        roundness:
+          type: string
+          enum: [square, soft, round]
+        backdrop:
+          description: The screen's background; its `image` must be an image already in the draft (else 400).
+          $ref: "theme.schema.json#/$defs/backdrop"
     BrandResult:
       type: object
       required: [draft, adjusted]
@@ -1345,6 +1361,30 @@ components:
               frame_url:
                 description: The embed's entry in the sandbox, on the event's own hostname under `/theming/sandbox/` by default, or on the sandbox origin when the stack sets one; absent from the list when the stack serves no embeds.
                 type: string
+        backdrop:
+          description: The screen's background (contracts/theming.md, The two backgrounds), defaults filled in.
+          type: object
+          required: [looks, game_art, daylight, hype]
+          properties:
+            looks:
+              type: array
+              items:
+                type: string
+                enum: [glows, gradient, particles, waves]
+            game_art:
+              type: boolean
+            daylight:
+              type: boolean
+            hype:
+              type: boolean
+            image_url:
+              description: The theme's own picture, in place of the cycle; absent without one.
+              type: string
+            scrim:
+              description: The opacity of `background` over the picture (0.55–1) that keeps `text` at 4.5:1; with `image_url`.
+              type: number
+              minimum: 0.55
+              maximum: 1
     ParsedTemplate:
       type: object
       required: [name, widget, tree]

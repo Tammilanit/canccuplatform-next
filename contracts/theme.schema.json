@@ -121,7 +121,7 @@
       "pattern": "^images/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(png|jpg|jpeg|webp|svg)$"
     },
     "brand": {
-      "description": "The simple mode's colour input, kept so the simple editor can reopen it. The logo and icon are `images.logo` and `images.icon`.",
+      "description": "The simple mode's input, kept so the simple editor can reopen it: the colours, and the choices the Theme studio's Make it yours offers. The logo and icon are `images.logo` and `images.icon`.",
       "type": "object",
       "additionalProperties": false,
       "required": ["primary", "accent", "scheme"],
@@ -138,7 +138,51 @@
         "embed_color": {
           "description": "Discord embed colour; `primary` when absent.",
           "$ref": "#/$defs/color"
+        },
+        "logo_plate": {
+          "$ref": "#/$defs/logo_plate"
+        },
+        "font_pair": {
+          "description": "One of the platform's font pairs (contracts/theming.md, Brand kit): it sets the heading, display and body fonts. A pair the platform does not hold is a warning, and the text keeps the system font.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "roundness": {
+          "description": "Corner roundness: the `radius` token `0`, `0.5rem` (the default) or `1rem`.",
+          "enum": ["square", "soft", "round"]
+        },
+        "backdrop": {
+          "$ref": "#/$defs/backdrop"
         }
+      }
+    },
+    "logo_plate": {
+      "description": "A plate behind the logo, so a logo with no ground of its own shows on any scheme: light (#f7f7f8), dark (#121317) or the theme's surface; rounded by the theme's radius or a circle; padded by a share of the logo's height (small 0.08, medium 0.15, large 0.25).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["none", "light", "dark", "surface"], "default": "none" },
+        "shape": { "enum": ["rounded", "circle"], "default": "rounded" },
+        "padding": { "enum": ["small", "medium", "large"], "default": "medium" }
+      }
+    },
+    "backdrop": {
+      "description": "The screen's background (contracts/theming.md, The two backgrounds): a slow cycle of `looks`, which the current game's art replaces while a game is on (`game_art`), tinted by the time of day (`daylight`) and moved by the hype (`hype`); or the organiser's own picture (`image`) in place of the cycle. Hub pages keep their plain background.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "looks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["glows", "gradient", "particles", "waves"] },
+          "default": ["glows", "gradient", "particles", "waves"]
+        },
+        "game_art": { "type": "boolean", "default": true },
+        "daylight": { "type": "boolean", "default": true },
+        "hype": { "type": "boolean", "default": true },
+        "image": { "$ref": "#/$defs/image_path" }
       }
     },
     "tokens": {
