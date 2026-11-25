@@ -1397,9 +1397,19 @@
     color: var(--canccu-color-text-muted);
     cursor: help;
   }
-  .canccu-tip__info:hover,
   .canccu-tip__info:focus-visible {
     color: var(--canccu-color-text);
+  }
+  /* A touch screen keeps :hover on the last element tapped, so there only shell.js's --open
+     class shows or hides a tooltip. */
+  @media (hover: hover) {
+    .canccu-tip__info:hover {
+      color: var(--canccu-color-text);
+    }
+    .canccu-tip:hover > .canccu-tip__text {
+      visibility: visible;
+      opacity: 1;
+    }
   }
   .canccu-tip__text {
     position: absolute;
@@ -1430,7 +1440,6 @@
     inset: auto;
     transform: none;
   }
-  .canccu-tip:hover > .canccu-tip__text,
   .canccu-tip:has(:focus-visible) > .canccu-tip__text,
   .canccu-tip.canccu-tip--open > .canccu-tip__text {
     visibility: visible;

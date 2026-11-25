@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { html } from "../src/html.js";
+import { html, type Slot } from "../src/html.js";
 import {
   barFor,
   dateRange,
@@ -374,6 +374,15 @@ describe("the page description (#782)", () => {
     expect(() => shellPage({ title: "Settings", description: "", body: "" })).toThrow(
       "page description required: Settings",
     );
+  });
+
+  it('refuses a falsy slot, as from `cond && "…"`, like a missing one', () => {
+    const falsy: Slot[] = [false, null, [], [false, " "], html`  `];
+    for (const description of falsy) {
+      expect(() => shellPage({ title: "Settings", description, body: "" })).toThrow(
+        "page description required: Settings",
+      );
+    }
   });
 
   it("needs none on a plain error page", () => {

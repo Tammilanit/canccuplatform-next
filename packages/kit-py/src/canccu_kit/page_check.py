@@ -1,8 +1,9 @@
 """What every organiser page must have (#782, docs/design/README.md decisions 8 and 9), as a test
 helper the modules' page tests call on each page they draw: a description of at most two
-sentences and 240 characters under the title, a tooltip on every status chip, and a label and a
-tooltip on every icon-only button. The shell's own header and menu are the kit's, tested there;
-the check reads the page's `<main>`. packages/ui's page-check.ts is its twin."""
+sentences and 240 characters under the title, a tooltip on every status chip (but one inside a
+link, which is part of the link's text and opens it on a tap), and a label and a tooltip on every
+icon-only button. The shell's own header and menu are the kit's, tested there; the check reads
+the page's `<main>`. packages/ui's page-check.ts is its twin."""
 
 from __future__ import annotations
 
@@ -39,7 +40,9 @@ def page_problems(doc: str) -> list[str]:
         elif len(text) > MAX_DESCRIPTION or len(_SENTENCE_END.findall(text)) > 2:
             problems.append(f"page description longer than two sentences: {text!r}")
     for chip in _BADGE.finditer(main):
-        if "aria-describedby=" not in chip.group(1):
+        before = main[: chip.start()]
+        in_link = before.rfind("<a ") > before.rfind("</a>")
+        if "aria-describedby=" not in chip.group(1) and not in_link:
             problems.append(f"status chip without a tooltip: {_text(chip.group(2))!r}")
     for button in _BUTTON.finditer(main):
         tag, attrs, inner = button.groups()

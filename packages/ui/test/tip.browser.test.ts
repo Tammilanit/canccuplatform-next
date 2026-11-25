@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /**
  * The tooltip in Chromium (#782): hover and keyboard focus at 1280 px; at 390 px a tap opens an
- * info tooltip and a tap elsewhere closes it, and an icon button acts on a tap while a long press
+ * info tooltip and a tap elsewhere or on it again closes it, and an icon button acts on a tap while a long press
  * shows its tooltip without acting. The touch half is admin's shell.js, which every shell loads.
  */
 import { readFileSync } from "node:fs";
@@ -72,10 +72,17 @@ describe.skipIf(browser === undefined)("tooltips (#782)", () => {
     expect(await shown(page, ".canccu-tip__info")).toBe("visible");
     await page.keyboard.press("Escape");
     expect(await shown(page, ".canccu-tip__info")).toBe("hidden");
+    // Enter on the hushed info button opens it again.
+    await page.keyboard.press("Enter");
+    expect(await shown(page, ".canccu-tip__info")).toBe("visible");
+    await page.locator(".canccu-tip__info").blur();
     await page.locator(".canccu-tip__info").hover();
     await page.locator("#away").hover();
     await page.locator(".canccu-tip__info").hover();
     expect(await shown(page, ".canccu-tip__info")).toBe("visible");
+    // Esc hushes a tooltip shown by hover too.
+    await page.keyboard.press("Escape");
+    expect(await shown(page, ".canccu-tip__info")).toBe("hidden");
     await page.close();
   });
 
@@ -85,6 +92,10 @@ describe.skipIf(browser === undefined)("tooltips (#782)", () => {
     expect(await shown(page, ".canccu-tip__info")).toBe("visible");
     await page.locator("#away").tap();
     expect(await shown(page, ".canccu-tip__info")).toBe("hidden");
+    // A second tap on the button closes it: a touch screen's sticky :hover does not keep it open.
+    await page.locator(".canccu-tip__info").tap();
+    await page.locator(".canccu-tip__info").tap();
+    expect(await shown(page, ".canccu-tip__info")).toBe("hidden");
     await page.close();
   });
 
@@ -92,6 +103,7 @@ describe.skipIf(browser === undefined)("tooltips (#782)", () => {
     const page = await render(390, true);
     await page.locator(".canccu-button--icon").tap();
     expect(await page.evaluate(() => (window as unknown as { acted: number }).acted)).toBe(1);
+    expect(await shown(page, ".canccu-button--icon")).toBe("hidden");
     await page.locator(".canccu-button--icon").evaluate(async (b) => {
       b.dispatchEvent(new PointerEvent("pointerdown", { pointerType: "touch", bubbles: true }));
       await new Promise((r) => setTimeout(r, 600));

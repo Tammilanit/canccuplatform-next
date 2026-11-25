@@ -69,14 +69,15 @@ def icon_button(
     return f'<span class="canccu-tip">{trigger}{_text(_id(), label, hidden=True)}</span>'
 
 
-def status_chip(kind: str, label: str, words: str, *, focusable: bool = True) -> str:
+def status_chip(kind: str, label: str, words: str, *, in_link: bool = False) -> str:
     """A status chip (the shell's badge colours) whose tooltip says what the status means.
-    `focusable` False for a chip inside a link: the link is the one tab stop, the chip's label is
-    part of its text, and the tooltip still shows on hover."""
+    `in_link` for a chip inside a link: the chip is part of the link's text, with no tooltip and
+    no tab stop, so a tap on a phone just follows the link; its label carries its meaning."""
+    if in_link:
+        return f'<span class="canccu-badge canccu-badge--{esc(kind)}">{esc(label)}</span>'
     tip_id = _id()
-    tab = ' tabindex="0"' if focusable else ""
     return (
         f'<span class="canccu-tip"><span class="canccu-badge canccu-badge--{esc(kind)}"'
-        f'{tab} aria-describedby="{tip_id}">{esc(label)}</span>'
+        f' tabindex="0" aria-describedby="{tip_id}">{esc(label)}</span>'
         f"{_text(tip_id, words)}</span>"
     )

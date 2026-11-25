@@ -72,7 +72,8 @@ followNote();
 // Tooltips (#782, packages/ui tip.ts): ui.css shows them on hover and keyboard focus. A phone has
 // neither, so a tap on an info button or a chip opens its tooltip and a tap elsewhere closes it;
 // an icon button acts on a tap, so only a press of LONG_PRESS_MS shows its tooltip, and the click
-// that ends that press is swallowed. Esc hides an open or focused tooltip until it is left.
+// that ends that press is swallowed. Esc hides every shown tooltip until it is left, or until its
+// trigger is clicked or pressed again.
 const LONG_PRESS_MS = 500;
 // A finger drifts a few pixels while it holds still; a scroll moves further and is no press.
 const PRESS_SLOP_PX = 10;
@@ -142,6 +143,7 @@ document.addEventListener(
     closeTips(tip);
     if (tip) {
       place(tip);
+      tip.classList.remove(HUSHED);
       tip.classList.toggle(OPEN);
     }
   },
@@ -157,6 +159,7 @@ document.addEventListener("pointerdown", (e) => {
   pressTimer = setTimeout(() => {
     closeTips(button.parentElement);
     place(button.parentElement);
+    button.parentElement.classList.remove(HUSHED);
     button.parentElement.classList.add(OPEN);
     swallowClick = true;
   }, LONG_PRESS_MS);
@@ -179,9 +182,11 @@ document.addEventListener("contextmenu", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  const shown = new Set(document.querySelectorAll(`.canccu-tip:hover, .${OPEN}`));
+  const focused = document.activeElement?.closest?.(".canccu-tip");
+  if (focused) shown.add(focused);
   closeTips();
-  const tip = document.activeElement?.closest?.(".canccu-tip");
-  if (tip) tip.classList.add(HUSHED);
+  for (const tip of shown) tip.classList.add(HUSHED);
 });
 for (const name of ["focusout", "pointerleave"]) {
   document.addEventListener(

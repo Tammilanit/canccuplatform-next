@@ -219,7 +219,9 @@ const SHELL_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>')
 
 /** An organiser page in the shell. */
 export function shellPage(o: ShellOptions): Html {
-  if (!o.plain && String(o.description ?? "").trim() === "") {
+  // The rendered value, so a falsy slot (`cond && "…"`) counts as missing, like an empty one.
+  const description = html`${o.description}`.toString().trim();
+  if (!o.plain && description === "") {
     throw new Error(`page description required: ${o.title}`);
   }
   const now = o.now ?? new Date();
@@ -230,7 +232,7 @@ export function shellPage(o: ShellOptions): Html {
   const crumb = o.crumb
     ? html`<a class="canccu-crumb" href="${o.crumb.href}">${icon("left")}${o.crumb.label}</a>`
     : "";
-  const desc = o.description ? html`<p class="canccu-pagehead__desc">${o.description}</p>` : "";
+  const desc = description ? html`<p class="canccu-pagehead__desc">${o.description}</p>` : "";
   const head = o.plain
     ? ""
     : html`<div class="canccu-pagehead"><div>${crumb}<h1 class="canccu-pagehead__title">${o.title}</h1>${desc}</div>${o.actions ? html`<div class="canccu-cluster">${o.actions}</div>` : ""}</div>`;

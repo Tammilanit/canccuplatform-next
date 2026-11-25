@@ -66,10 +66,10 @@ def _slip(row: Any) -> int:
     return 0
 
 
-def _late(minutes: int, focusable: bool = True) -> str:
+def _late(minutes: int, in_link: bool = False) -> str:
     if not minutes:
         return ""
-    return status_chip("late", f"{minutes:+d} min", CHIP_TIPS["delayed"], focusable=focusable)
+    return status_chip("late", f"{minutes:+d} min", CHIP_TIPS["delayed"], in_link=in_link)
 
 
 def late_badge(row: Any) -> str:
@@ -192,17 +192,18 @@ def row_html(
     was = ""
     if row["starts_at"] != row["planned_starts_at"]:
         was = f'<s class="canccu-agenda-was">{hhmm(row["planned_starts_at"], tz)}</s>'
-    # The row is one link and one tab stop: its chips are part of its text, not stops of their own.
+    # The row is one link and one tab stop, and a tap on a phone opens it: its chips are part of
+    # its text, with no tooltip or tab stop of their own.
     badges = ""
     if state == "running":
-        badges += status_chip("primary", "Now", CHIP_TIPS["running"], focusable=False)
+        badges += status_chip("primary", "Now", CHIP_TIPS["running"], in_link=True)
     if state == "cancelled":
-        badges += status_chip("down", "Cancelled", CHIP_TIPS["cancelled"], focusable=False)
+        badges += status_chip("down", "Cancelled", CHIP_TIPS["cancelled"], in_link=True)
     else:
-        badges += _late(_slip(row), focusable=False)
+        badges += _late(_slip(row), in_link=True)
     if row["visibility"] == "crew":
         badges += status_chip(
-            "plain", VISIBILITY_LABELS["crew"], VISIBILITY_TIPS["crew"], focusable=False
+            "plain", VISIBILITY_LABELS["crew"], VISIBILITY_TIPS["crew"], in_link=True
         )
     kind = kinds.get(row["kind"], row["kind"])
     where = _where(row)
