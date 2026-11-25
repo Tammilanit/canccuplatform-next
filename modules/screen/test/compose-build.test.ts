@@ -354,4 +354,8 @@ describe("review fixes", () => {
     expect(print({ zone: { ...zone, name: "Hall" } })).not.toBe(base);
     expect(print({ zone, facts: facts({ eventName: "Other" }) })).not.toBe(base);
   });
+
+  it("changes the fingerprint with the ticker's speed alone", () => {
+    expect(print({ tickerSpeed: 270 })).not.toBe(print({ tickerSpeed: 180 }));
+  });
 });

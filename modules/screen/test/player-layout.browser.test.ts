@@ -118,6 +118,8 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
         const anim = track?.getAnimations()[0];
         const [first, second] = runs;
         if (track === null || anim === undefined || !first || !second) return null;
+        // Where it is drawn as it runs, before the pause and the reads below move it.
+        const live = first.getBoundingClientRect().left;
         anim.pause();
         const timing = anim.effect?.getComputedTiming();
         const [duration, delay] = [Number(timing?.duration), Number(timing?.delay)];
@@ -131,6 +133,7 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
         };
         return {
           widths: runs.map((r) => r.getBoundingClientRect().width),
+          live,
           now: left(first, -delay),
           duration,
           start: left(first, 50),
@@ -184,6 +187,51 @@ describe.skipIf(browser === undefined)("the player in Chromium", { timeout: 60_0
       const moved = (before.left - after.left) % before.loop;
       expect((moved + before.loop) % before.loop).toBeCloseTo(240, 0);
     });
+
+    it("goes back on the server's clock when the event's speed changes", async () => {
+      // The server sends the speed on the state's ticker only, so the line stays as it is drawn.
+      const at = (speed: number) => {
+        const state = stateOf("landscape", { text: LONG });
+        state.ticker = { ...state.ticker, speed };
+        return state;
+      };
+      const page = await open([1920, 1080], at(180));
+      // The crawl has run a while on this screen before the new speed comes in.
+      await page.waitForTimeout(1500);
+      await draw(page, at(240));
+      const c = await crawl(page);
+      expect(c).not.toBeNull();
+      if (c === null) return;
+      // Drawn where the server's clock puts it at 240 px a second, give or take the few frames
+      // since the redraw: the screen's own time before it would put it hundreds of pixels off.
+      const loop = c.widths[0] ?? NaN;
+      const off = (((c.live - c.now) % loop) + loop) % loop;
+      expect(Math.min(off, loop - off)).toBeLessThan(60);
+      await page.close();
+    });
+  });
+
+  it("paints nothing of the lines above a stepped ticker line", async () => {
+    const state = stateOf("landscape", { text: "gjpqy ".repeat(60).trim() });
+    Object.assign(state, { display: { motion_level: "none", motion: "none", drift: false } });
+    const page = await open([1920, 1080], state, await DEEP_FONTS);
+    // The second line of the text, its first one now above the line's box.
+    await tick(page, 5000);
+    await page.waitForTimeout(300);
+    const strip = await page.evaluate(() => {
+      const line = document.querySelector<HTMLElement>('.canccu-widget__line[data-fit="step"]');
+      if (line === null) return null;
+      const r = line.getBoundingClientRect();
+      const h = Math.ceil(parseFloat(getComputedStyle(line).fontSize) * 0.3);
+      return { x: r.left, y: r.top - h, width: r.width, height: h };
+    });
+    expect(strip).not.toBeNull();
+    if (strip === null) return;
+    const shot = () => page.screenshot({ clip: strip, animations: "disabled" });
+    const drawn = await shot();
+    await page.addStyleTag({ content: ".canccu-widget__steps{visibility:hidden}" });
+    expect(drawn.equals(await shot())).toBe(true);
+    await page.close();
   });
 
   describe("the regions keep their place and size", () => {

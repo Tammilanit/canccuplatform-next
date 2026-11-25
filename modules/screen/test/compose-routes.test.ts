@@ -21,6 +21,7 @@ interface State {
   sound: { enabled: boolean; sounded_claims: string[]; play: unknown };
   offline: { marker_after_seconds: number };
   display: { motion: string; drift: boolean };
+  ticker: { speed: number };
 }
 
 const NEXT = {
@@ -156,6 +157,18 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     h.settings.alpha = { ...h.settings.alpha, burn_in_drift: false };
     const after = (await state(token)).json<State>();
     expect(after.display).toMatchObject({ motion_level: "calm", motion: "calm", drift: false });
+    expect(after.state_version).toBe(before.state_version + 1);
+    h.settings.alpha = {};
+  });
+
+  it("sends the event's ticker speed, and a new speed is a new version", async () => {
+    const { id, token } = await pairDevice(h, "alpha.test", "Ticker");
+    await assignMain(id);
+    const before = (await state(token)).json<State>();
+    expect(before.ticker.speed).toBe(180);
+    h.settings.alpha = { ...h.settings.alpha, ticker_speed: "fast" };
+    const after = (await state(token)).json<State>();
+    expect(after.ticker.speed).toBe(270);
     expect(after.state_version).toBe(before.state_version + 1);
     h.settings.alpha = {};
   });

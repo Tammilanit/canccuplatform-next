@@ -81,6 +81,18 @@ describe("what ticks on the device", () => {
     expect(chip(45 * 60_000)).toBe("45 min");
     expect(chip(20_000)).toBe("1 min");
   });
+
+  it("drops the chip once its item has started, also with no new state", () => {
+    const box = document.createElement("div");
+    const target = new Date(at + 30_000).toISOString();
+    box.innerHTML = `<p class="canccu-widget__chip"><span>Doors open in</span><time class="canccu-widget__chip-time" datetime="${target}"></time></p>`;
+    const chip = box.querySelector<HTMLElement>(".canccu-widget__chip");
+    fillCountdowns(box, at);
+    expect([chip?.hidden, box.querySelector("time")?.textContent]).toEqual([false, "1 min"]);
+    fillCountdowns(box, at + 30_000);
+    expect(chip?.hidden).toBe(true);
+    expect(box.querySelector("time")?.textContent).toBe("");
+  });
 });
 
 describe("how the screen moves", () => {

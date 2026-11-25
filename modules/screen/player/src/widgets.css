@@ -364,8 +364,10 @@
     padding-right: calc(12 * var(--canccu-u));
   }
 
+  /* The hidden lines touch it, so no margin (#779); `0px`, as Chromium drops a unitless 0 here. */
   .canccu-widget__line[data-fit="step"] {
     height: 1.25em;
+    overflow-clip-margin: 0px;
     white-space: normal;
   }
 

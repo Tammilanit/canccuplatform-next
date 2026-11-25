@@ -249,8 +249,11 @@ export function fillCountdowns(root: ParentNode, nowMs: number): void {
     el.dataset.canccuCountdown = "";
     const left = target - nowMs;
     // The hero's chip (#779): when an earlier item starts, in words, so the card keeps one clock.
+    // Once it has started the chip goes, also offline, rather than say "in 1 min" until a new state.
     if (el.classList.contains("canccu-widget__chip-time")) {
-      el.textContent = chipText(left);
+      const chip = el.closest<HTMLElement>(".canccu-widget__chip");
+      if (chip !== null) chip.hidden = left <= 0;
+      el.textContent = left <= 0 ? "" : chipText(left);
       continue;
     }
     // A story's step counts its last hour as minutes and seconds, at hero size (sheet 08, 7).

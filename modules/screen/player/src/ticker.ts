@@ -38,10 +38,11 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number, speed: number): v
   const fitted = line.dataset.fit as Fit | undefined;
   const moving = motion === "none" ? "step" : "crawl";
   // Measured once per text and motion: a redraw with new data brings a fresh line element. A new
-  // pace only times the crawl again.
+  // pace builds the crawl again: new timings on a running animation keep its start, so the loop
+  // would go on from this screen's own time instead of the server's clock.
   if (fitted !== undefined && (fitted === "fits" || fitted === moving)) {
     if (fitted === "step") step(line, nowMs);
-    if (fitted === "crawl" && line.dataset.speed !== String(speed)) time(line, nowMs, speed);
+    if (fitted === "crawl" && line.dataset.speed !== String(speed)) crawl(line, text, nowMs, speed);
     return;
   }
   // A line off the page (a new layout's `<main>` before the player mounts it) or not laid out yet
