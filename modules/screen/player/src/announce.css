@@ -257,6 +257,7 @@
    */
   .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__aside) {
     display: grid;
+    /* canccu-grid: fixed screen — the card beside its nearby content */
     grid-template-columns: minmax(0, 1fr) minmax(0, 34%);
     align-items: center;
     column-gap: calc(5 * var(--canccu-ann-u));
@@ -308,6 +309,7 @@
   /* Portrait stacks the column under the card (sheet 5's screen shape). */
   @media (max-aspect-ratio: 1/1) {
     .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__aside) {
+      /* canccu-grid: fixed screen — portrait stacks the card over its nearby content */
       grid-template-columns: minmax(0, 1fr);
       align-content: center;
       row-gap: calc(4 * var(--canccu-ann-u));
