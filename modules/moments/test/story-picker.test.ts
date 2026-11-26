@@ -97,8 +97,8 @@ describe("a preset's status", () => {
   it("asks for an item or a time a preset needs, and says when it waits for an event not sent yet", () => {
     expect(statusOf(preset("prize_draw"), at([DINNER]))).toContain("Pick an item");
     expect(statusOf(preset("premiere"), at())).toContain("Set its time");
-    expect(statusOf(preset("pizza_last_call"), at())).toContain(
-      "Waits for “A pizza order is about to close”, which the pizza module sends from step 5",
+    expect(statusOf(preset("round_start"), at())).toContain(
+      "Waits for “A tournament round starts”, which the tournament module sends from step 7",
     );
     expect(statusOf(preset("midnight"), at())).toContain("Not in a quiet scene");
   });

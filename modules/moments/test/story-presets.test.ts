@@ -1,5 +1,5 @@
 /**
- * The preset catalogue, pure (the storyboards plan, The preset catalogue (final); #602): the 24
+ * The preset catalogue, pure (the storyboards plan, The preset catalogue (final); #602): the 21
  * built-ins in order with their defaults, each valid, their cues in the seed with a sound of the
  * CC0 pack and a line in its credits, Premiere's placeholders filled for each of its triggers
  * (SD3), the two provisional events' facts and sources, and which rule a preset takes over (WD2).
@@ -26,7 +26,6 @@ const KEYS = [
   "quiet_hours_soon",
   "good_morning",
   "checkin_open",
-  "pizza_order_open",
   "closing_time",
   "arrival_checkin",
   "hot_game",
@@ -36,20 +35,19 @@ const KEYS = [
   "group_photo",
   "venue_info",
   "stage_break",
-  "pizza_last_call",
   "round_start",
   "premiere",
   "champion_replay",
 ];
-/** The catalogue's "some venues; off" rows: 12–19 and 23. */
-const SOME_VENUES = [12, 13, 14, 15, 16, 17, 18, 19, 22];
+/** The catalogue's "some venues; off" rows, after the presets retired by #777 and #787. */
+const SOME_VENUES = [11, 12, 13, 14, 15, 16, 17, 18, 20];
 
 const preset = (key: string): Story => presetOf(key) as Story;
 const cuesOf = (s: Story) =>
   [...s.round.steps, ...(s.finale ?? [])].map((x) => x.cue).filter((c) => c !== null);
 
 describe("the preset catalogue", () => {
-  it("is the 23 built-ins (Pizza orders ready retired by #777) in the catalogue's order, each valid, together within the event's limit", () => {
+  it("is the 21 built-ins (Pizza orders ready retired by #777, the order open and its last call by #787) in the catalogue's order, each valid, together within the event's limit", () => {
     expect(PRESETS.map((p) => p.key)).toEqual(KEYS);
     for (const [i, p] of PRESETS.entries()) {
       expect(checkStory(p, DEFAULT_TIMING), p.key).toBeNull();
@@ -90,10 +88,6 @@ describe("the preset catalogue", () => {
       rounds: { mode: "offsets", offsets_minutes: [-60, -30, -10] },
       sound: "first_and_last",
     });
-    expect(preset("pizza_order_open")).toMatchObject({
-      end: { rounds: 6, until_event: { kind: "domain", type: "pizza.order.closed" } },
-      finale: [{ cue: "pizza.closed", duration_seconds: 8 }],
-    });
     expect(preset("sponsor_thanks").triggers).toEqual([
       { kind: "clock", mode: "every", at: null, every_minutes: 60, from: "10:00", until: "22:00" },
     ]);
@@ -104,16 +98,6 @@ describe("the preset catalogue", () => {
       conditions: { item_zone: true },
       end: { until_event: { kind: "next_item_starts" } },
     });
-    expect(preset("pizza_last_call")).toMatchObject({
-      rounds: { mode: "offsets", offsets_minutes: [0, 8] },
-      end: { until_event: { kind: "domain", type: "pizza.order.closed" } },
-    });
-    // L6 (#119): their QR lands on the Food page's only open order, or the list of them.
-    for (const key of ["pizza_order_open", "pizza_last_call"])
-      expect(preset(key).round.steps.map((x) => x.content.qr)).toContainEqual({
-        path: "/pizza/go",
-        label: "Order pizza in the hub",
-      });
     // An arrived order is already closed: its end is its one round, held three minutes while the
     // arrival is fresh, or the order's done (#643, #775).
     expect(preset("round_start").conditions.once).toBe("source");

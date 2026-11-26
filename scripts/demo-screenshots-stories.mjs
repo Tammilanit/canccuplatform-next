@@ -121,7 +121,6 @@ const PRESET_SHOTS = [
   ["quiet_hours_soon", shows("Quiet hours from"), "quiet"],
   ["good_morning", shows("Today at"), "quiet"],
   ["checkin_open", shows("Check in for")],
-  ["pizza_order_open", shows("Pizza order open")],
   ["closing_time", shows("ends at")],
   ["arrival_checkin", drawn(".canccu-widget--qr"), "doors"],
   ["hot_game", shows("is hot")],
@@ -131,7 +130,6 @@ const PRESET_SHOTS = [
   ["group_photo", shows("Group photo"), "any"],
   ["venue_info", shows("Venue info")],
   ["stage_break", shows("Back at"), "tournament"],
-  ["pizza_last_call", shows("Last call: pizza order")],
   ["round_start", shows("starts now")],
   ["champion_replay", shows("Our champion")],
 ];
