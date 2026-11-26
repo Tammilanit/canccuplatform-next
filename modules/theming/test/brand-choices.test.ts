@@ -204,7 +204,7 @@ describe.skipIf(!DATABASE_URL)("the brand's choices", () => {
     );
   });
 
-  it("gives each value one source: an advanced radius or font clears the brand's choice", async () => {
+  it("gives each value one source: an advanced radius or pair font clears the brand's choice", async () => {
     const version = await withLogo();
     const set = await putBrand({
       draft_version: version,
@@ -230,6 +230,11 @@ describe.skipIf(!DATABASE_URL)("the brand's choices", () => {
     expect(brand.font_pair).toBe("space-inter");
     res = await send(t.h, "PATCH", "/api/theming/draft/tokens", {
       draft_version: version + 3,
+      tokens: { fonts: { mono: "monospace" } },
+    });
+    expect(res.json<Draft>().manifest.brand?.font_pair).toBe("space-inter");
+    res = await send(t.h, "PATCH", "/api/theming/draft/tokens", {
+      draft_version: version + 4,
       tokens: { fonts: { body: "serif" } },
     });
     brand = res.json<Draft>().manifest.brand ?? {};

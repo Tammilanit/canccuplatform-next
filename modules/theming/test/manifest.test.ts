@@ -89,6 +89,15 @@ describe("referenceProblems", () => {
     ]);
   });
 
+  it("names a missing backdrop picture (file_missing), as it does a missing image", () => {
+    const withBackdrop = {
+      ...advanced,
+      brand: { backdrop: { image: "images/stage.jpg" } },
+    };
+    expect(codes(withBackdrop, paths(ALL))).toEqual(["file_missing images/stage.jpg"]);
+    expect(codes(withBackdrop, paths([...ALL, "images/stage.jpg"]))).toEqual([]);
+  });
+
   it("does not call a file missing that is there but failed its checks", () => {
     const failed = ["fonts/exo.woff2", "embeds/drift/drift.js"];
     expect(

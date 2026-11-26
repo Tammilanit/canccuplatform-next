@@ -85,7 +85,11 @@ function withoutReplacedChoices(manifest: Manifest, edit: TokensEdit["tokens"]):
   const brand = { ...manifest.brand };
   const radius = edit.sizes?.radius;
   if (radius !== undefined && radius !== null) delete brand.roundness;
-  if (Object.values(edit.fonts ?? {}).some((v) => v !== null)) delete brand.font_pair;
+  // The pair sets the heading, display and body fonts; a monospace font is no part of it.
+  const pairTokens = ["heading", "display", "body"] as const;
+  if (pairTokens.some((k) => edit.fonts?.[k] !== undefined && edit.fonts[k] !== null)) {
+    delete brand.font_pair;
+  }
   return { brand };
 }
 

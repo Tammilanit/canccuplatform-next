@@ -136,7 +136,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
             .filter((k) => input[k] === undefined && isObject(m.brand) && m.brand[k] !== undefined)
             .map((k) => [k, (m.brand as Record<string, unknown>)[k]]),
         );
-        const brand = { ...kept, ...picked } as unknown as Brand;
+        const brand = { ...kept, ...picked };
         const picture = {
           logo: input.logo,
           icon: input.icon,
