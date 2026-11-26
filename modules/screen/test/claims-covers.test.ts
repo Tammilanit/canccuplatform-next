@@ -30,7 +30,7 @@ function region(id: string, role: RegionView["role"], types: string[] = []): Reg
     idle_view: null,
     widgets: types.map(widget),
     claim: null,
-  } as RegionView;
+  };
 }
 
 const PULSE = [

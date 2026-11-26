@@ -212,7 +212,7 @@ export function overrideOf(v: unknown): Override | null {
     effect,
     hero_min_share: (v.hero_min_share as number | null | undefined) ?? null,
     keep_ticker: v.keep_ticker === true,
-    covers: (v.covers as string[] | undefined) ?? [],
+    covers: v.covers ?? [],
     // An event carries `source.module`; a stored override is the parsed shape, with `source_module`.
     source_module:
       typeof v.source_module === "string"

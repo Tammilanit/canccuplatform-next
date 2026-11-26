@@ -16,8 +16,8 @@ const facts = (over: Partial<ZoneFacts> = {}): ZoneFacts => ({
   logoUrl: null,
   agenda: { current: [], next: [] },
   venue: {
-    wifi: [{ ssid: "Demo-Guest", password: "pizza-time", note: null }],
-    has_floor_plan: false,
+    wifi: [{ ssid: "Demo-Guest", password: "pizza-time", note: null, visibility: "public" }],
+    floor_plan: null,
   },
   ticker: { text: null, until: null, source: null },
   ...over,
