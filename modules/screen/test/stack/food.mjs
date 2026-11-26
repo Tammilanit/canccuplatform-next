@@ -196,8 +196,11 @@ export async function roomReady(page, step) {
       .waitFor({ timeout: 45_000 })
       .catch(() => undefined);
   const box = page.locator(".canccu-widget--food_status .canccu-widget__row").first();
+  // Pizza is here covers the food box while it holds the hero (#787 D7): the box is back when it
+  // steps down, after its floor (90 s by default).
+  const boxWait = step === "arrived" ? 150_000 : 60_000;
   for (let turn = 0; turn < 4; turn++) {
-    await box.waitFor({ timeout: 60_000 });
+    await box.waitFor({ timeout: boxWait });
     await page.waitForTimeout(900);
     if (await box.isVisible()) return foodFits(page);
   }
