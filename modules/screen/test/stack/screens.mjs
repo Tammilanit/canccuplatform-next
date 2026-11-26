@@ -64,6 +64,8 @@ import {
   settle,
 } from "./screen-waits.mjs";
 
+import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announce-levels.mjs";
+
 export { THEMES, planned } from "./screen-views.mjs";
 
 export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
@@ -131,6 +133,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         if (theme === "default")
           for (const [view, id] of DEFAULT_LAYOUT_VIEWS)
             await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
+        // The announcement's levels (#780): handed as Screen places them, measured, then shot.
+        for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
+          for (const size of annSizes(v, check))
+            await attempt(nameOf(theme, v.view, size), async () => {
+              await saveZone(demo, "main", { layout_id: v.layout });
+              await handed(theme, v.view, size, v.make(Date.now()));
+            });
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -354,6 +363,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           await page.waitForTimeout(400);
         }
         return await close();
+      } else if (ANNOUNCE_VIEWS.some((v) => v.view === view)) {
+        settled = (p) =>
+          annSettled(
+            p,
+            ANNOUNCE_VIEWS.find((v) => v.view === view),
+          );
       } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         settled = agendaSettled;
       await settled(page);
