@@ -29,6 +29,7 @@
   margin: 0;
 }
 .canccu-studio-column .canccu-studio-previews__row {
+  /* canccu-grid: fixed master-detail — the preview row: the phone beside the hub page */
   grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
 }
 .canccu-studio-column .canccu-studio-preview {
@@ -95,7 +96,7 @@
 }
 .canccu-studio-schemes {
   display: grid;
-  /* canccu-grid: auto-fill — as many thumbnails a row as fit */
+  /* canccu-grid: fixed control — a picker of thumbnails, as many a row as fit */
   grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));
   gap: 0.75rem;
 }
@@ -179,7 +180,7 @@
 }
 .canccu-studio-pairs {
   display: grid;
-  /* canccu-grid: auto-fill — font pairs, as many a row as fit */
+  /* canccu-grid: fixed control — a picker of font pairs, as many a row as fit */
   grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
   gap: 0.5rem;
 }
@@ -187,6 +188,7 @@
 .canccu-studio-look {
   position: relative;
   display: grid;
+  /* canccu-grid: fixed row — lays out one look's own parts: its swatch and name */
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 0.125rem;
@@ -220,7 +222,7 @@
 }
 .canccu-studio-looks {
   display: grid;
-  /* canccu-grid: auto-fill — the looks of the cycle */
+  /* canccu-grid: fixed control — a picker of the looks of the cycle */
   grid-template-columns: repeat(auto-fill, minmax(min(7rem, 100%), 1fr));
   gap: 0.5rem;
 }
