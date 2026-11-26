@@ -71,7 +71,7 @@ export const SAMPLES: Record<string, { title: string; surface: Surface; body: ()
           </section>
           <section class="canccu-card">
             <h2 class="canccu-card__title">Pizza</h2>
-            <p><span class="canccu-badge canccu-badge--ok">Orders open</span> until 19:55</p>
+            <p class="canccu-muted">Orders open until 19:55</p>
           </section>
           <section class="canccu-card">
             <h2 class="canccu-card__title">Schedule</h2>

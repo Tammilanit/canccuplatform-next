@@ -73,6 +73,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     });
 
     it("sends the admin page policy: never framed, frames its own previews", async () => {
+      await t.fresh();
       for (const path of [
         "/theming/studio/",
         "/theming/studio/advanced",
@@ -95,33 +96,14 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     });
   });
 
-  describe("the brand kit page", () => {
-    it("offers every starting point to a writer with the embeds right", async () => {
-      const res = await page("/theming/studio/", "embedder");
-      expect(res.body).toContain('data-action="start"');
-      for (const name of ["default", "terminal", "level-up"]) {
-        expect(res.body).toContain(`data-starter="${name}"`);
-      }
-      // Named as organisers read them, not by their slugs (UX audit C2).
-      expect(res.body).toMatch(/data-starter="level-up"[^>]*>Level-up</);
-      expect(res.body).not.toContain(">level-up<");
-      expect(res.body).not.toContain("theming.embeds.write");
-    });
-
-    it("offers a writer without the embeds right only the starters without embeds", async () => {
+  describe("Make it yours (the brand kit grown)", () => {
+    it("shows the current theme while there is no draft", async () => {
       const res = await page("/theming/studio/");
       expect(res.body).toContain('data-action="start"');
-      expect(res.body).toContain('data-starter="default"');
-      for (const name of ["terminal", "level-up"]) {
-        expect(res.body).not.toContain(`data-starter="${name}"`);
-      }
-      // Says why the others are missing, rather than leaving them to a refusal, in words.
-      expect(res.body).toContain("ask an event owner to add embeds");
-      expect(res.body).not.toContain("theming.embeds.write");
       expect(res.body).not.toContain('data-action="brand"');
-      // The current theme is shown, not a draft.
       expect(res.body).toContain('data-fallback-src="/theming/studio/preview/screen"');
       expect(res.body).toContain('src="/theming/studio/preview/hub"');
+      expect(res.body).not.toContain("theming.embeds.write");
     });
 
     it("shows the draft's brand, its colours and what was adjusted", async () => {
@@ -134,7 +116,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
         embed_color: "#11223344",
       });
       expect(res.statusCode).toBe(200);
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toContain('data-draft-version="2"');
       // The field takes every colour the schema does, so its value never blocks a Save.
       const pattern = /name="embed_color" pattern="([^"]+)"[^>]*value="#11223344"/.exec(body)?.[1];
@@ -156,15 +138,17 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).not.toContain('data-adjusted="primary"');
     });
 
-    it("frames the draft preview of the current version on four surfaces", async () => {
+    it("frames the draft preview of the current version: the screen, the phone and a hub page", async () => {
       const draft = await t.fresh();
       const v = draft.draft_version;
-      const body = (await page("/theming/studio/")).body;
-      for (const surface of ["hub", "admin", "discord"]) {
-        expect(body).toContain(
-          `src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${v}"`,
-        );
-      }
+      const body = (await page("/theming/studio/yours")).body;
+      const hubs = body.match(
+        /src="\/theming\/studio\/preview\/hub\?canccu_theme=draft&amp;v=\d+"/g,
+      );
+      expect(hubs).toEqual([
+        `src="/theming/studio/preview/hub?canccu_theme=draft&amp;v=${v}"`,
+        `src="/theming/studio/preview/hub?canccu_theme=draft&amp;v=${v}"`,
+      ]);
       // The screen is the real player of a zone, given the draft's look; the sample is its fallback.
       expect(body).toContain(
         `data-fallback-src="/theming/studio/preview/screen?canccu_theme=draft&amp;v=${v}"`,
@@ -172,38 +156,40 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain(`data-tokens-css-url="/theming/studio/draft/tokens.css?v=${v}"`);
     });
 
-    it("puts the form beside the previews, Preview and Publish in the title row, Discard under the form", async () => {
+    it("puts the controls beside the previews, Publish in the title row, Discard under the controls", async () => {
       await t.fresh();
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toMatch(
-        /class="canccu-studio-kit"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/,
+        /class="canccu-studio-depth"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/,
       );
-      const row = /<div class="canccu-cluster">([\s\S]*?)<\/div><\/div>/.exec(body)?.[1] ?? "";
-      expect(row).toMatch(/data-action="preview"[\s\S]*data-action="publish"/);
+      const row = /data-refresh="actions"[^>]*>([\s\S]*?)<\/form>/.exec(body)?.[1] ?? "";
+      expect(row).toContain("Saved");
+      expect(body).toMatch(
+        /data-refresh="actions"[\s\S]*Export[\s\S]*Import[\s\S]*data-action="publish"/,
+      );
       expect(row).not.toContain("discard");
-      // Sheet 6: Discard under the form, apart from Publish; on a phone the same two buttons
+      // Sheet 6: Discard under the controls, apart from Publish; on a phone Preview and Publish
       // share a row above the bottom bar.
       expect(body).toMatch(
-        /class="canccu-studio-side"[\s\S]*data-action="font"[\s\S]*canccu-studio-danger-link[^>]*data-action="discard-ask"/,
+        /data-action="brand"[\s\S]*canccu-studio-danger-link[^>]*data-action="discard-ask"/,
       );
       expect(body).toMatch(
-        /class="canccu-studio-pendbar"><button[^>]*data-action="preview"[\s\S]*data-action="publish"/,
+        /class="canccu-studio-pendbar"[^>]*>\s*<button[^>]*data-action="preview"[\s\S]*data-action="publish"/,
       );
       // Discard asks first, in a dialog of the page's own.
       expect(body).toMatch(/<dialog[^>]*canccu-studio-dialog[\s\S]*data-action="discard"/);
     });
 
-    it("offers the system font as the text font while the theme holds no font", async () => {
+    it("offers the platform font while the draft has no pair, and no text font without fonts", async () => {
       await t.fresh();
-      const body = (await page("/theming/studio/")).body;
-      const select = /<select[^>]*name="body"[^>]*>([\s\S]*?)<\/select>/.exec(body)?.[1] ?? "";
-      expect(select).toMatch(/<option value="" selected>System font<\/option>/);
-      expect(select.match(/<option/g)).toHaveLength(1);
+      const body = (await page("/theming/studio/yours")).body;
+      expect(body).toMatch(/name="font_pair" value="" checked/);
+      expect(body).not.toContain('name="body"');
     });
 
     it("says where the draft stands in words", async () => {
       await t.fresh();
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toContain("last changed by you");
       expect(body).toContain("Nothing published yet");
       for (const jargon of ["advanced mode", "Revision 0", "u_admin", "Draft version"]) {
@@ -213,7 +199,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
 
     it("says a clean draft is ready to publish", async () => {
       await t.fresh();
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toContain("Ready to publish");
       expect(body).toMatch(/<button[^>]*data-action="publish"(?![^>]*disabled)[^>]*>/);
     });
@@ -222,7 +208,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const fonted = { host: "fonted.test", session: "admin" };
       const res = await send(t.h, "POST", "/api/theming/draft", { from: "current" }, fonted);
       expect(res.statusCode).toBe(201);
-      const body = (await get(t.h, "/theming/studio/", fonted)).body;
+      const body = (await get(t.h, "/theming/studio/yours", fonted)).body;
       expect(body).toContain("Can&#39;t publish yet");
       expect(body).toContain("The text font Inter isn&#39;t in the theme");
       expect(body).toMatch(/data-action="font-system"[^>]*data-token="body"/);
@@ -230,14 +216,14 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       // The field shows the font the problem names, and the problem sits right under it (sheet 6).
       expect(body).toMatch(/<option value="Inter" selected>Inter<\/option>/);
       expect(body).toMatch(
-        /data-action="font"[\s\S]*?<\/form>\s*<div class="canccu-notice canccu-notice--down"/,
+        /data-action="font"[\s\S]*?<\/form>\s*<div data-refresh="check">\s*<div class="canccu-notice canccu-notice--down"/,
       );
       expect(body).not.toContain("theme.yaml#");
     });
 
     it("lets a draft without CSS changes publish at once", async () => {
       await t.fresh();
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toMatch(/<button[^>]*data-action="publish"/);
       expect(body).not.toContain("data-needs-preview");
     });
@@ -245,7 +231,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     it("holds Publish for the preview when the draft's CSS differs from the current", async () => {
       const res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
       expect(res.statusCode).toBe(200);
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toMatch(/<button[^>]*data-needs-preview[^>]*disabled/);
     });
 
@@ -262,7 +248,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(res.statusCode).toBe(201);
       res = await send(t.h, "POST", "/api/theming/draft", { from: "current" });
       expect(res.statusCode).toBe(201);
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toMatch(/<button[^>]*data-action="publish"/);
       expect(body).not.toContain("data-needs-preview");
     });
@@ -271,7 +257,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const draft = await t.fresh();
       const res = await t.put("images/bad.png", draft.draft_version, Buffer.from("not a png"));
       expect(res.statusCode).toBe(200);
-      const body = (await page("/theming/studio/")).body;
+      const body = (await page("/theming/studio/yours")).body;
       expect(body).toMatch(/<button[^>]*data-action="publish"[^>]*disabled/);
       expect(body).toContain("images/bad.png");
       expect(body).toContain("Can&#39;t publish yet");
@@ -323,9 +309,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain("Save the brand kit first");
     });
 
-    it("lets a package start a draft when there is none", async () => {
-      const body = (await page("/theming/studio/advanced")).body;
-      expect(body).toContain('data-action="package"');
+    it("lets Import start a draft when there is none, from the gallery", async () => {
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toContain('data-action="import"');
       expect(body).not.toContain("data-draft-version");
     });
   });
@@ -388,7 +374,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     });
   });
 
-  it("shows the draft logo on the brand kit page", async () => {
+  it("shows the draft logo on Make it yours", async () => {
     const draft = await t.fresh();
     let res = await t.put("images/logo.png", draft.draft_version, await png("#ff0000", 16));
     res = await send(t.h, "PUT", "/api/theming/draft/brand", {
@@ -399,7 +385,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       scheme: "dark",
     });
     expect(res.statusCode).toBe(200);
-    const body = (await page("/theming/studio/")).body;
+    const body = (await page("/theming/studio/yours")).body;
     expect(body).toMatch(/<img[^>]*src="\/theming\/draft\/[0-9a-f]{64}\.png"/);
     // The kept logo is one void <input>: an end tag is invalid HTML and leaves a second input.
     expect(body).toContain('<input type="hidden" name="logo" value="images/logo.png">');

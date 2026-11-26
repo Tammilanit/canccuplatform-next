@@ -131,7 +131,7 @@ describe.skipIf(browser === undefined)(
           }),
         );
       }
-      await page.goto(`${s.origin}/theming/studio/`);
+      await page.goto(`${s.origin}/theming/studio/yours`);
       const posted = (zone: string) =>
         page
           .frame({ url: new RegExp(`/screen/zones/${zone}$`) })

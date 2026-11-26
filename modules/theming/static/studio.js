@@ -84,7 +84,9 @@
     if (problem !== undefined) {
       // Take the refused file out again, or its error would block Publish with no page to remove it.
       const back = query({ path, draft_version: draft.draft_version });
-      await call("DELETE", `/api/theming/draft/file?${back}`);
+      const after = await call("DELETE", `/api/theming/draft/file?${back}`);
+      // The page is not read again, so the next save must name the version this one left.
+      root.dataset.draftVersion = String(after.draft_version);
       throw new Error(`${path}: ${problem.message}`);
     }
     return { path, version: draft.draft_version };
@@ -103,9 +105,10 @@
     const fileInput = f.namedItem("logo_file");
     const file = fileInput.files[0];
     if (file !== undefined) {
-      ({ path: logo, version } = await uploadLogo(file, version));
-      // A save queued behind this one names the stored logo instead of uploading it again.
+      // Taken now: a save behind this one names the stored logo, and a refused file is never
+      // uploaded again by the next change (the page no longer reloads).
       fileInput.value = "";
+      ({ path: logo, version } = await uploadLogo(file, version));
       keepLogo(form, logo);
       root.dataset.draftVersion = String(version);
     }

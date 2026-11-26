@@ -123,7 +123,7 @@
     }
     const next = doc.querySelector(".canccu-studio");
     for (const key of ["draftVersion", "ownWork", "vars"]) {
-      if (next?.dataset[key] === undefined) delete root.dataset[key];
+      if (next?.dataset[key] === undefined) Reflect.deleteProperty(root.dataset, key);
       else root.dataset[key] = next.dataset[key];
     }
     if (root.dataset.vars !== undefined) post(JSON.parse(root.dataset.vars));

@@ -90,15 +90,17 @@ function logoSection(state: StudioState, draft: DraftRow, info: LogoInfo): Html 
   return section(
     "Logo",
     "Shown on the screens, the hub, the organiser pages and in Discord.",
-    html`${fileDrop({
-        id: "canccu-studio-logo",
-        name: "logo_file",
-        label: "Logo",
-        accept: "image/png,image/jpeg,image/webp,image/svg+xml",
-        title: name ?? "Add a logo",
-        hint: `${name === undefined ? "" : "Choose another file to replace it. "}PNG, JPEG, WebP or SVG, up to 5 MB.`,
-        image: state.logoUrl,
-      })}
+    html`<div data-refresh="logo">
+        ${fileDrop({
+          id: "canccu-studio-logo",
+          name: "logo_file",
+          label: "Logo",
+          accept: "image/png,image/jpeg,image/webp,image/svg+xml",
+          title: name ?? "Add a logo",
+          hint: `${name === undefined ? "" : "Choose another file to replace it. "}PNG, JPEG, WebP or SVG, up to 5 MB.`,
+          image: state.logoUrl,
+        })}
+      </div>
       <div data-refresh="plate-advice">${advice}</div>
       ${field("Plate behind the logo", chips("plate_kind", PLATES, plate?.kind ?? "none"))}
       ${field(
@@ -309,10 +311,11 @@ function ownFont(draft: DraftRow): Html | string {
   const families = list(draft.manifest.fonts)
     .map((f) => (isObject(f) && typeof f.family === "string" ? f.family : undefined))
     .filter((f): f is string => f !== undefined);
-  if (families.length === 0) return "";
   const tokens = isObject(draft.manifest.tokens) ? draft.manifest.tokens : {};
   const body = isObject(tokens.fonts) ? tokens.fonts.body : undefined;
   const chosen = typeof body === "string" ? body : "";
+  // Also a family no package holds, so the publish check reads against what the field says.
+  if (families.length === 0 && chosen === "") return "";
   const options = [...new Set([...families, ...(chosen === "" ? [] : [chosen])])].map(
     (family) =>
       html`<option${attrs({ value: family, selected: family === chosen })}>${family}</option>`,
@@ -326,6 +329,13 @@ function ownFont(draft: DraftRow): Html | string {
       <p class="canccu-field__hint">One of the fonts this theme holds; a pair above replaces it.</p>
     </div>
   </form>`;
+}
+
+function publishHint(state: StudioState): string {
+  if (state.problems.some((p) => p.severity === "error")) return "";
+  return state.cssChanged
+    ? "The CSS changed: Publish turns on once the previews of this version have loaded."
+    : "Publish makes it live: every screen and phone switches without a reload.";
 }
 
 export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): Html {
@@ -364,8 +374,12 @@ export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): 
       )}
       ${backgroundSection(brand)}
     </form>
-    ${ownFont(draft)} ${resetView(state)}
+    ${ownFont(draft)}
     <div data-refresh="check">${checkView(state.problems, coloursDetails(brand, colors))}</div>
+    ${resetView(state)}
     <p class="canccu-field__hint">Changes are saved as you make them.</p>
+    <p class="canccu-field__hint canccu-studio-publish-hint" data-refresh="publish-hint">
+      ${publishHint(state)}
+    </p>
   </div>`;
 }

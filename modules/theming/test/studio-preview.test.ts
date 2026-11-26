@@ -43,7 +43,10 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
         expect(res.headers["content-security-policy"]).toMatch(SURFACE_CSP);
         expect(res.headers["cache-control"]).toBe("no-store");
         expect(res.headers["x-content-type-options"]).toBe("nosniff");
-        expect(res.body).not.toContain("<script");
+        // Only the live preview's own script, which takes the Studio's token values (issue-784 D3).
+        expect(res.body.match(/<script[^>]*>/g), surface).toEqual([
+          '<script src="/theming/studio/static/preview-live.js">',
+        ]);
       }
     });
 

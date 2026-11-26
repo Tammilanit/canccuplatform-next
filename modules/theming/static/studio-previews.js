@@ -295,7 +295,7 @@
         "layouts",
         "fallbackSrc",
       ]) {
-        if (next.dataset[key] === undefined) delete screenFrame.dataset[key];
+        if (next.dataset[key] === undefined) Reflect.deleteProperty(screenFrame.dataset, key);
         else screenFrame.dataset[key] = next.dataset[key];
       }
       if (zoneState !== undefined) post();
