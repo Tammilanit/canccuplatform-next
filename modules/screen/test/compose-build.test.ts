@@ -333,11 +333,13 @@ describe("review fixes", () => {
 
   it("moves the version when the coming hours' window moves, with nothing else changed", () => {
     const at = Date.parse("2026-01-01T17:10:00Z");
-    const before = print({ facts: facts({ timelineFrom: windowFrom(at) }) });
-    expect(windowChangeAt(at)).toBe(Date.parse("2026-01-01T17:30:00Z"));
-    const across = windowFrom(windowChangeAt(at));
+    const tz = "Asia/Kolkata";
+    const before = print({ facts: facts({ timelineFrom: windowFrom(at, tz) }) });
+    // The line moves on the event's own hour: 23:00 in Kolkata is 17:30 UTC.
+    expect(windowChangeAt(at, tz)).toBe(Date.parse("2026-01-01T17:30:00Z"));
+    const across = windowFrom(windowChangeAt(at, tz), tz);
     expect(print({ facts: facts({ timelineFrom: across }) })).not.toBe(before);
-    expect(print({ facts: facts({ timelineFrom: windowFrom(at + 60_000) }) })).toBe(before);
+    expect(print({ facts: facts({ timelineFrom: windowFrom(at + 60_000, tz) }) })).toBe(before);
   });
 
   it("leaves time, cycles and shuffles out of the fingerprint", () => {

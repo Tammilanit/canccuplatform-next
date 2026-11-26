@@ -267,7 +267,9 @@ function fields(
     case "agenda_timeline":
       return timelineFields(facts.timeline ?? [], {
         nowMs: facts.now.getTime(),
+        timeZone: facts.timeZone,
         zoneKey: facts.zoneKey,
+        unitsWide,
         orders: facts.food?.orders ?? [],
         time: (iso) => textOf(iso, facts),
       });

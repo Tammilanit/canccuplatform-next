@@ -11,6 +11,7 @@ import "./logo.css";
 import "./rail.css";
 import "./food.css";
 import "./timeline.css";
+import "./timeline-cols.css";
 import "./lower-third.css";
 import "./claims.css";
 import "./cues.css";
