@@ -2,6 +2,9 @@
 // branch changed, which screenshot groups and CI shards they need, and the steps the local run
 // takes. The stack run itself is checked by hand against a known failure (the PR's Verification).
 import { strict as assert } from "node:assert";
+import { cpSync, mkdirSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -136,4 +139,18 @@ test("automatic mode stops for paths CI runs in full or on the dev-seed shard, n
 
 test("automatic mode drops names git lists that are not module directories", () => {
   assert.deepEqual(autoModules(["modules/gone/src/a.ts", "modules/moments/src/a.ts"], KNOWN), ["moments"]);
+});
+
+test("two worktrees get two stack names, so their runs never share a Compose project", () => {
+  const names = [0, 1].map(() => {
+    const root = mkdtempSync(join(tmpdir(), "shots-root-"));
+    cpSync(join(ROOT, "scripts"), join(root, "scripts"), { recursive: true });
+    mkdirSync(join(root, "modules", "screen"), { recursive: true });
+    const run = spawnSync("scripts/shots-local.sh", ["--dry-run", "screen"], {
+      cwd: root, encoding: "utf8", env: { ...process.env, CANCCU_SHOTS_PROJECT: "", COMPOSE_PROJECT_NAME: "" },
+    });
+    return /-p (canccu-shots-[a-z0-9-]+) /.exec(run.stdout)?.[1];
+  });
+  assert.ok(names[0] && names[1], "dry run names the project");
+  assert.notEqual(names[0], names[1]);
 });

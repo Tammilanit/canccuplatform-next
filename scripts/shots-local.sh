@@ -10,7 +10,7 @@
 # check mode: every check of modules/screen/test/stack, the screens at 1920×1080 and 1080×1920 only.
 # Prints the failing checks, then one line per module; exits 1 when a check failed. The PNGs and
 # each shard's whole log are in shots-local/<shard>/.
-# The stack is a Compose project of its own (CANCCU_SHOTS_PROJECT, default canccu-shots-<user>;
+# The stack is a Compose project of its own (CANCCU_SHOTS_PROJECT, default canccu-shots-<user>-<worktree hash>;
 # never COMPOSE_PROJECT_NAME, which names the host's own stack) beside any other, and the script
 # refuses a project that already has containers, so its `down -v` removes only what it started: Caddy on a free loopback port, no fixed IPv6 subnet, a deploy-status volume of its
 # own. Images build with Docker's layer cache. It is taken down at the end.
@@ -38,7 +38,10 @@ if [ ${#mods[@]} = 0 ]; then
 fi
 
 OUT=shots-local
-PROJECT=${CANCCU_SHOTS_PROJECT:-canccu-shots-$(id -un | tr -c 'a-z0-9\n' - | tr 'A-Z' 'a-z')}
+# Per worktree: workers share one user in sibling worktrees, and two runs on one project would
+# re-tag each other's images and `down -v` each other's stack.
+here=$(pwd -P | sha1sum | cut -c1-8)
+PROJECT=${CANCCU_SHOTS_PROJECT:-canccu-shots-$(id -un | tr -c 'a-z0-9\n' - | tr 'A-Z' 'a-z')-$here}
 case "$PROJECT" in
   canccuplatform | "${COMPOSE_PROJECT_NAME:-}")
     echo "error: $PROJECT is the host's own stack; set CANCCU_SHOTS_PROJECT to another name" >&2; exit 2 ;;
@@ -88,6 +91,11 @@ fi
 [ ${#shards[@]} = 0 ] && { report; exit 0; }
 
 command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+# Held for the whole run (fd 9 closes at exit): the container check below cannot see a run that is
+# still building its images.
+command -v flock >/dev/null || { echo "error: flock not found" >&2; exit 2; }
+exec 9> "${TMPDIR:-/tmp}/$PROJECT.lock"
+flock -n 9 || { echo "error: $PROJECT is in use by another run" >&2; exit 2; }
 if [ -n "$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT")" ]; then
   echo "error: project $PROJECT already has containers; stop them or set CANCCU_SHOTS_PROJECT" >&2
   exit 2
