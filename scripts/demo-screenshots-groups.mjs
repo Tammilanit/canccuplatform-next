@@ -87,6 +87,8 @@ const MAP = [
   [".github/actions/demo-stack-up/*", "full"],
   ["scripts/demo-*", "full"],
   ["scripts/screen-soak", "full"],
+  // The local run of the same checks (#817): its own tests run in the ci-scripts job.
+  ["scripts/shots-local*", "docs"],
   // The modules' dev seeds (#715): their own surfaces and the shard that runs them.
   ["modules/admin/src/canccu_admin/dev_seed.py", ["admin", "dev-seed"]],
   ["modules/agenda/src/canccu_agenda/dev_seed.py", ["agenda", "dev-seed"]],
@@ -113,7 +115,8 @@ const READ_AT_RUNTIME = new Map([
   ["contracts/theme.schema.json", "theming"],
   ["contracts/flags.yaml", "tenants"],
 ]);
-const asModule = (path) =>
+/** A changed path as a module's path when it is a contract file the module reads at runtime. */
+export const asModule = (path) =>
   READ_AT_RUNTIME.has(path)
     ? `modules/${READ_AT_RUNTIME.get(path)}/${path}`
     : path;
