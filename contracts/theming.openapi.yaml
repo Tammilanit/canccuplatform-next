@@ -318,7 +318,8 @@ paths:
       description: |
         Needs right `theming.theme.write`, and `theming.embeds.write` under `embeds/`. The content decides the
         type, never the `Content-Type` sent. Checked at once; problems are listed on the draft. Sets
-        `mode: advanced` for anything but an image. Embed changes are audited.
+        `mode: advanced` for anything but an image. Embed changes are audited. A font's licence
+        (`fonts/…txt` or `fonts/…md`) may come on its own, UTF-8 text, for a font theme.yaml then names.
       requestBody:
         required: true
         content:
@@ -433,6 +434,10 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/theming/draft/check:
+    $ref: "theming/advanced.openapi.yaml#/~1api~1theming~1draft~1check"
+  /api/theming/draft/parts:
+    $ref: "theming/advanced.openapi.yaml#/~1api~1theming~1draft~1parts"
   /api/theming/draft/preview-key:
     $ref: "theming/preview.openapi.yaml#/~1api~1theming~1draft~1preview-key"
   /internal/theming/previews/{preview_key}:
@@ -966,6 +971,14 @@ components:
           type: string
         message:
           type: string
+        line:
+          description: Where in a CSS file or template, 1-based, when the check knows it.
+          type: integer
+          minimum: 1
+        column:
+          description: The column on `line`, 1-based, when the check knows it.
+          type: integer
+          minimum: 1
     Tokens:
       description: Tokens by group; names and custom properties in contracts/theming.md.
       type: object

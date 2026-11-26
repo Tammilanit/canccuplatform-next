@@ -111,6 +111,48 @@ const modeSwitchCheck = ajv.compile({
   },
 });
 
+/**
+ * The body of `PATCH …/draft/parts` (Advanced, plan issue-784 D15, D16): theme.yaml's lists as the
+ * manifest's schema has them, templates and box looks by name with `null` taking one away.
+ */
+const partsEditCheck = ajv.compile({
+  type: "object",
+  additionalProperties: false,
+  required: ["draft_version"],
+  minProperties: 2,
+  properties: {
+    draft_version: { type: "integer", minimum: 1 },
+    css: { $ref: `${schema.$id}#/properties/css` },
+    fonts: { $ref: `${schema.$id}#/properties/fonts` },
+    templates: {
+      type: "object",
+      maxProperties: 64,
+      propertyNames: { $ref: def("name") },
+      additionalProperties: { oneOf: [{ $ref: def("template") }, { type: "null" }] },
+    },
+    looks: {
+      type: "object",
+      maxProperties: 64,
+      propertyNames: { $ref: def("widget_type") },
+      additionalProperties: { oneOf: [{ $ref: def("name") }, { type: "null" }] },
+    },
+    backdrop_image: { oneOf: [{ $ref: def("image_path") }, { type: "null" }] },
+  },
+});
+
+export interface PartsEdit {
+  draft_version: number;
+  css?: string[];
+  fonts?: Record<string, unknown>[];
+  templates?: Record<string, { widget: string; file: string } | null>;
+  looks?: Record<string, string | null>;
+  backdrop_image?: string | null;
+}
+
+export function partsEditError(body: unknown): string | undefined {
+  return partsEditCheck(body) ? undefined : describe(partsEditCheck.errors);
+}
+
 const manifestCheck = ajv.getSchema(schema.$id) as ValidateFunction;
 const layoutCheck = ajv.compile({ $ref: def("layout") });
 const tokensEditCheck = ajv.compile(tokensEditSchema());

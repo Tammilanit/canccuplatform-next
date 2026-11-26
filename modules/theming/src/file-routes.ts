@@ -11,9 +11,10 @@ import { draftBody, editDraft } from "./drafts.js";
 import { WRITE, actorOf, assertWritable, invalidRequest, needs, rawBody } from "./http.js";
 import { removeDraftPath, setDraftPath } from "./package-files.js";
 import type { PathEntry } from "./package-files.js";
-import { MAX_PATH } from "./package.js";
+import { MAX_PATH, checkLicence } from "./package.js";
 import { writingFiles } from "./stored.js";
 import { BODY_LIMIT, UPLOAD_FOLDERS, checkUpload } from "./uploads.js";
+import type { CheckedUpload } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml. */
 const PACKAGE_PATH = /^(?!.*\.\.)(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
@@ -31,15 +32,25 @@ function uploadPath(value: unknown): string {
   ) {
     throw invalidRequest("path must be a package path, such as images/logo.png.");
   }
-  // Embeds and font licences come only with the whole package (package-routes.ts): an embed is
-  // checked as a whole folder, a licence with the fonts it belongs to.
+  // Embeds come only with the whole package (package-routes.ts): an embed is checked as a whole
+  // folder. A font's licence may come on its own, as Advanced adds an own font (plan issue-784,
+  // part 3): theme.yaml names it with its font, and file_missing holds a font without it.
   const folder = value.slice(0, value.indexOf("/"));
-  if (!UPLOAD_FOLDERS.includes(folder) || /\.(txt|md)$/i.test(value)) {
+  if (!UPLOAD_FOLDERS.includes(folder) || (/\.(txt|md)$/i.test(value) && !LICENCE.test(value))) {
     throw invalidRequest(
-      "Only CSS, templates, images and fonts can be uploaded one by one; embeds and licences come with the package.",
+      "Only CSS, templates, images, fonts and their licences can be uploaded one by one; embeds come with the package.",
     );
   }
   return value;
+}
+
+const LICENCE = /^fonts\/.*\.(txt|md)$/i;
+
+/** A licence by the package's own check, else the checks of one upload of its folder. */
+async function checkOne(path: string, body: Buffer): Promise<CheckedUpload> {
+  if (!LICENCE.test(path)) return checkUpload(path, body);
+  const checked = checkLicence(path, body);
+  return "problem" in checked ? { ok: false, problem: checked.problem } : { ok: true, ...checked };
 }
 
 interface FileQuery {
@@ -57,7 +68,7 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
       const version = requiredVersion(request.query.draft_version);
       const path = uploadPath(request.query.path);
       const body = Buffer.isBuffer(request.body) ? request.body : Buffer.alloc(0);
-      const checked = await checkUpload(path, body);
+      const checked = await checkOne(path, body);
       const row = await writingFiles(deps, async (c, place) => {
         let unused: string[] = [];
         const draft = await editDraft(

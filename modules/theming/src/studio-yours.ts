@@ -288,7 +288,7 @@ function backgroundSection(brand: Brand | undefined): Html {
 }
 
 /** Reset to the preset the draft came from (D11), or the way back to the gallery without one. */
-function resetView(state: StudioState): Html {
+export function resetView(state: StudioState): Html {
   const from = presetOf(state);
   if (from === undefined) {
     return html`<p class="canccu-studio-row" data-refresh="reset">

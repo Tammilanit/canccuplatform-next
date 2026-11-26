@@ -14,6 +14,9 @@ export interface Problem {
   code: string;
   path?: string;
   message: string;
+  /** Where in a CSS file or template, 1-based (plan issue-784 D15), when the check knows it. */
+  line?: number;
+  column?: number;
 }
 
 /** The manifest as stored: theme.schema.json's shape, though a draft may break it. */
