@@ -95,6 +95,12 @@ class Env:
             (c.stream, json.loads(v)["type"]) for c in self.store.calls for v in c.fields.values()
         ]
 
+    def event_data(self) -> list[tuple[str, dict[str, Any]]]:
+        """(stream, data) of every published event, in order."""
+        return [
+            (c.stream, json.loads(v)["data"]) for c in self.store.calls for v in c.fields.values()
+        ]
+
 
 async def make_tenant(
     db: Db, tid: str, host: str, *, status: str = "live", admins: tuple[str, ...] = ()
