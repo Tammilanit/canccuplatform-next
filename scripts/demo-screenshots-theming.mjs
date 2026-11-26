@@ -93,7 +93,8 @@ export const DRAFT = [
   ["studio-draft-advanced", DESK, { path: "/theming/studio/advanced" }],
   [
     "studio-draft-preview",
-    DESK,
+    // Preview is a phone-width control (sheet 6); at desktop width it is hidden and the click times out.
+    PHONE,
     {
       path: YOURS,
       fullPage: false,
