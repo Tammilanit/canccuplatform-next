@@ -123,16 +123,24 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     if (input.font_pair !== undefined && !FONT_PAIRS.has(input.font_pair)) {
       throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
     }
-    const brand = Object.fromEntries(
+    const picked = Object.fromEntries(
       BRAND_FIELDS.filter((k) => input[k] !== undefined).map((k) => [k, input[k]]),
     ) as unknown as Brand;
-    const { adjusted } = generateColors(brand);
+    const { adjusted } = generateColors(picked);
     const row = await deps.db.tenant((c) =>
       editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
+        // The Studio's kit form sends only the colours and pictures: the stored plate, pair,
+        // roundness and backdrop stay unless the body names them (a plate goes with `kind: none`).
+        const kept = Object.fromEntries(
+          (["logo_plate", "font_pair", "roundness", "backdrop"] as const)
+            .filter((k) => input[k] === undefined && isObject(m.brand) && m.brand[k] !== undefined)
+            .map((k) => [k, (m.brand as Record<string, unknown>)[k]]),
+        );
+        const brand = { ...kept, ...picked } as unknown as Brand;
         const picture = {
           logo: input.logo,
           icon: input.icon,
-          "backdrop.image": brand.backdrop?.image,
+          "backdrop.image": input.backdrop?.image,
         };
         for (const [role, path] of Object.entries(picture)) {
           if (path !== undefined && !(await isDraftImage(c, path))) {

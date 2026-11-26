@@ -53,6 +53,34 @@ describe.skipIf(!DATABASE_URL)("the brand's choices", () => {
 
   const text = async (url: string): Promise<string> => (await get(t.h, url)).body;
 
+  it("keeps the stored choices when a brand PUT leaves them out", async () => {
+    const version = await withLogo();
+    let res = await putBrand({
+      draft_version: version,
+      ...DARK,
+      logo: "images/logo.svg",
+      logo_plate: PLATE,
+      font_pair: "space-inter",
+      roundness: "round",
+    });
+    expect(res.statusCode).toBe(200);
+    // What the Studio's kit form sends: colours and pictures only.
+    res = await putBrand({
+      draft_version: res.json<{ draft: Draft }>().draft.draft_version,
+      ...DARK,
+      primary: "#10b981",
+      logo: "images/logo.svg",
+    });
+    expect(res.statusCode).toBe(200);
+    const brand = res.json<{ draft: Draft }>().draft.manifest.brand;
+    expect(brand).toMatchObject({
+      primary: "#10b981",
+      logo_plate: PLATE,
+      font_pair: "space-inter",
+      roundness: "round",
+    });
+  });
+
   it("keeps every choice in the brand, stays simple, and draws them in the published tokens", async () => {
     const version = await withLogo();
     const res = await putBrand({
