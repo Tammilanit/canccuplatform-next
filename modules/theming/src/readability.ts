@@ -16,6 +16,8 @@ export interface FontSize {
   value: string;
   /** Set on `:root` or `html`: the root size `rem` resolves against. */
   root: boolean;
+  /** The declaration's line, for the editor's mark (plan issue-784 D15); absent on older rows. */
+  line?: number;
 }
 
 const SCREEN = { width: 1920, height: 1080 };
@@ -90,10 +92,12 @@ export function fontSizes(ast: StyleSheet): FontSize[] {
     const others = rule.selectors.filter((s) => !roots.includes(s));
     // A root size under a media or container query may hold only on other screens (a phone's),
     // and it is no text of its own, so it is left out rather than guessed.
+    const line = node.loc?.start.line;
+    const at = line === undefined ? {} : { line };
     if (roots.length > 0 && !conditional) {
-      out.push({ selector: roots.join(", "), value, root: true });
+      out.push({ selector: roots.join(", "), value, root: true, ...at });
     }
-    if (others.length > 0) out.push({ selector: others.join(", "), value, root: false });
+    if (others.length > 0) out.push({ selector: others.join(", "), value, root: false, ...at });
   };
   /** Children of the sheet, of an at-rule or of a style rule; `rule` is the style rule they are in. */
   const visit = (
@@ -261,11 +265,13 @@ export function textSmallProblems(files: { path: string; sizes: FontSize[] }[]):
   const out: Problem[] = [];
   for (const { path, sizes } of files) {
     const found: string[] = [];
+    const lines: (number | undefined)[] = [];
     for (const s of sizes) {
       const size = resolve(s.value, s.root ? PLATFORM_PX : rootPx);
       // The root size is the scale `rem` reads, not text of its own, unless it shrinks the
       // platform's text below its own size.
       if (size === undefined || size >= (s.root ? PLATFORM_PX : MIN_PX)) continue;
+      lines.push(s.line);
       found.push(
         s.root
           ? `${s.selector}: font-size ${s.value} shrinks the platform's text to ${px(size)} on the screen, hard to read across a hall`
@@ -279,20 +285,34 @@ export function textSmallProblems(files: { path: string; sizes: FontSize[] }[]):
         more > 0 && i === MAX_WARNINGS - 1 ? `${m} (and ${String(more)} more in this file)` : m,
       );
     out.push(
-      ...shown.map((message): Problem => ({
-        severity: "warning",
-        code: "text_small",
-        path,
-        message: `${message}.`,
-      })),
+      ...shown.map((message, i): Problem => {
+        const line = lines[i];
+        return {
+          severity: "warning",
+          code: "text_small",
+          path,
+          message: `${message}.`,
+          ...(line === undefined ? {} : { line }),
+        };
+      }),
     );
   }
   return out;
 }
 
-/** `text_small` for the draft: the CSS files theme.yaml lists, in its order, as stored. */
-export async function readabilityProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
-  const order = list(manifest.css).filter((p): p is string => typeof p === "string");
+/**
+ * `text_small` for the draft: the CSS files theme.yaml lists, in its order, as stored; with
+ * `trying`, that file as the editor holds it instead (at the end when theme.yaml does not list it
+ * yet, where saving it puts it: plan issue-784 D15).
+ */
+export async function readabilityProblems(
+  c: SqlClient,
+  manifest: Manifest,
+  trying?: { path: string; sizes: FontSize[] },
+): Promise<Problem[]> {
+  const listed = list(manifest.css).filter((p): p is string => typeof p === "string");
+  const order =
+    trying === undefined || listed.includes(trying.path) ? listed : [...listed, trying.path];
   if (order.length === 0) return [];
   const { rows } = await c.query(
     `SELECT path, font_sizes FROM theming_package_files
@@ -304,7 +324,7 @@ export async function readabilityProblems(c: SqlClient, manifest: Manifest): Pro
   );
   return textSmallProblems(
     order.flatMap((path) => {
-      const sizes = byPath.get(path);
+      const sizes = path === trying?.path ? trying.sizes : byPath.get(path);
       return sizes === undefined ? [] : [{ path, sizes }];
     }),
   );

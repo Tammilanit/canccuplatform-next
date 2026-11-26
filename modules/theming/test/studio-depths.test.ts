@@ -168,15 +168,16 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
       }
     });
 
-    it("leaves Publish out of Advanced, which draws no preview to hold it for", async () => {
+    it("offers Publish on Advanced too, which now draws the preview to hold it for", async () => {
       await apply("default", "night");
       const res = await page("/theming/studio/advanced");
-      expect(res.body).not.toMatch(/data-action="(publish|light-ask)"/);
+      expect(res.body).toMatch(/data-action="(publish|light-ask)"/);
+      expect(res.body).toContain("data-screen-preview");
     });
 
     it("holds the light dialog on a dark draft's pages, for a save that turns it light", async () => {
       await apply("default", "night");
-      for (const path of ["", "yours"]) {
+      for (const path of ["", "yours", "advanced"]) {
         const res = await page(`/theming/studio/${path}`);
         expect(res.body, path).toContain('id="canccu-studio-light"');
         expect(res.body, path).not.toContain('data-action="light-ask"');

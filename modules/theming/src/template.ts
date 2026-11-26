@@ -71,10 +71,17 @@ interface Tag {
   raw: string;
 }
 
-class Refusal extends Error {}
+class Refusal extends Error {
+  constructor(
+    message: string,
+    readonly line: number | undefined,
+  ) {
+    super(message);
+  }
+}
 
 function refuse(line: number | undefined, why: string): never {
-  throw new Refusal(line === undefined ? why : `line ${line}: ${why}`);
+  throw new Refusal(line === undefined ? why : `line ${line}: ${why}`, line);
 }
 
 /** A line of the parsed text as the template's line, for the messages. */
@@ -374,7 +381,12 @@ export function parseTemplate(path: string, bytes: Buffer): TemplateResult {
     const fragment = parseFragment(second, { sourceCodeLocationInfo: true });
     return { ok: true, tree: children(fragment.childNodes, 0, 0, ctx), refs: ctx.refs };
   } catch (err) {
-    if (err instanceof Refusal) return problem("template_forbidden", `Refused: ${err.message}.`);
+    if (err instanceof Refusal) {
+      const refused = problem("template_forbidden", `Refused: ${err.message}.`);
+      // The line for the editor's mark (plan issue-784 D15).
+      if (!refused.ok && err.line !== undefined) refused.problem.line = err.line;
+      return refused;
+    }
     throw err;
   }
 }

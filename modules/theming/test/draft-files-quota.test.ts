@@ -152,7 +152,9 @@ describe.skipIf(!DATABASE_URL)("draft files and the quota", () => {
         "/images/x.png",
         "images/x y.png",
         "embeds/drift/index.html",
-        "fonts/LICENSE.txt",
+        // A licence comes on its own only beside its font (check-routes.test.ts).
+        "css/LICENSE.txt",
+        "images/LICENSE.md",
       ]) {
         const res = await put(path, draft.draft_version, await png());
         expect([path, res.statusCode]).toEqual([path, 400]);

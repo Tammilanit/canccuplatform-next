@@ -1,0 +1,108 @@
+# Part of theming.openapi.yaml (contracts/README.md, Parts): the Theme studio's Advanced page, its check as you
+# type and the theme.yaml parts it edits (contracts/theming.md, Advanced mode).
+/api/theming/draft/check:
+  post:
+    tags: [draft]
+    operationId: checkDraftFile
+    summary: Check one CSS file or template as it is typed, storing nothing
+    description: |
+      Needs right `theming.theme.write`. Runs the checks of `path` against the draft as if it held `text`: each
+      refused CSS rule on its own, a template's refusal, a package file the text names that the draft does not
+      hold, `class_unstable`, and for CSS the `text_small` warnings among the draft's other CSS. Stores nothing:
+      the draft's version and the storage used stay as they are. 404 `no_draft` without a draft.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [path, text]
+            properties:
+              path:
+                description: A CSS file or a template of the package.
+                type: string
+                pattern: "^(css/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.css|templates/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.mustache)$"
+              text:
+                type: string
+                maxLength: 524288
+    responses:
+      "200":
+        description: What the checks found; empty when the text passes.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [problems]
+              properties:
+                problems:
+                  type: array
+                  items:
+                    $ref: "../theming.openapi.yaml#/components/schemas/Problem"
+      "400":
+        $ref: "../theming.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+/api/theming/draft/parts:
+  patch:
+    tags: [draft]
+    operationId: editDraftParts
+    summary: Put uploaded CSS, fonts, templates, box looks or the screen's own picture into theme.yaml
+    description: |
+      Needs right `theming.theme.write`. Each field given changes its part of theme.yaml; the files come by
+      `PUT /api/theming/draft/file` first. `css` and `fonts` replace their lists whole, `templates` and `looks`
+      go by name with `null` taking one away. A look names a template made for its widget type (else 400) and is
+      set on every widget of that type in the draft's layouts. `backdrop_image` is `brand.backdrop.image` (409
+      `brand_missing` without a brand). All but `backdrop_image` set `mode: advanced`. Every check runs on the
+      result; 409 `version_conflict` on a stale `draft_version`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [draft_version]
+            minProperties: 2
+            properties:
+              draft_version:
+                type: integer
+                minimum: 1
+              css:
+                $ref: "../theme.schema.json#/properties/css"
+              fonts:
+                $ref: "../theme.schema.json#/properties/fonts"
+              templates:
+                type: object
+                maxProperties: 64
+                additionalProperties:
+                  oneOf:
+                    - $ref: "../theme.schema.json#/$defs/template"
+                    - type: "null"
+              looks:
+                description: By widget type, the name under `templates` its widgets use, or `null` for the built-in look.
+                type: object
+                maxProperties: 64
+                additionalProperties:
+                  type: [string, "null"]
+              backdrop_image:
+                oneOf:
+                  - $ref: "../theme.schema.json#/$defs/image_path"
+                  - type: "null"
+    responses:
+      "200":
+        $ref: "../theming.openapi.yaml#/components/responses/DraftOk"
+      "400":
+        $ref: "../theming.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../theming.openapi.yaml#/components/responses/Conflict"
