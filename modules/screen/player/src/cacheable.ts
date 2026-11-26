@@ -8,6 +8,8 @@ const IMMUTABLE = [
   /^\/screen\/b\/[^/]+\/[^/]+$/,
   // Theme revision files, named by their content's hash (contracts/theming.md, Where files are served).
   /^\/theming\/a\/[^/]+$/,
+  // A font pair's faces, which the token CSS links; fixed per platform version (theming font-pairs).
+  /^\/theming\/fonts\/[a-z0-9][a-z0-9-]{0,39}\/[^/]+$/,
   // A published revision's embeds; a draft's (`/theming/sandbox/draft/…`) change, so never.
   /^\/theming\/sandbox\/[0-9]+\/[^?#]+$/,
   // The event's content-addressed files, and a version's rendered slides (contracts/screen.md).

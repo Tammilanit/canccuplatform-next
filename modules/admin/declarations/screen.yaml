@@ -43,6 +43,20 @@ settings:
     help: "How the ticker line at the foot of the screens looks."
     short: Ticker look
     default: default
+  - key: ticker_speed
+    type: string
+    choices: [slow, normal, fast]
+    label: Ticker speed
+    help: "How fast a ticker line too long for the screen runs past."
+    default: normal
+  - key: ticker_pixels_per_second
+    type: integer
+    min: 0
+    max: 2000
+    label: Ticker speed in pixels a second
+    short: Pixels a second
+    help: "An exact speed, as on a 1080p screen; larger screens scale it. 0: use Ticker speed."
+    default: 0
   - key: ready_timeout_seconds
     type: integer
     min: 1
@@ -88,7 +102,13 @@ groups:
   - id: playing
     label: Playing
     description: What a screen does between slides.
-    keys: [break_min_gap_seconds, ticker_appearance, progress_bars, burn_in_drift]
+    keys:
+      - break_min_gap_seconds
+      - ticker_appearance
+      - ticker_speed
+      - ticker_pixels_per_second
+      - progress_bars
+      - burn_in_drift
   - id: motion
     label: Motion
     description: How lively the screens move, unless a zone pins its own level.

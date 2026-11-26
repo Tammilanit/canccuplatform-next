@@ -61,7 +61,7 @@ run("the sound desk", () => {
       expect(page.statusCode).toBe(200);
       expect(flat(page.body)).toMatch(new RegExp(`data-sub="${sub}"[^>]*aria-current="page"`));
       const words = text(page.body);
-      for (const pill of ["Cues 33", "Library 12", "Limits and categories", "Log"])
+      for (const pill of ["Cues 34", "Library 12", "Limits and categories", "Log"])
         expect(words).toContain(pill);
       expect(flat(page.body)).toContain('class="moments-master');
       expect(words).toContain("Mute all 15 min");

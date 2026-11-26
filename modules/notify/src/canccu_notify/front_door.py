@@ -1,12 +1,15 @@
 """The event's front door: its base address `/`, which Caddy hands to notify unchanged (#750).
 
-The sign-in front page's poster in the hub's look, and one card: what is on now and next, the
-public pages that are on, and a way in for the crew. Notify serves it as the hub's module (App
-track), and the hub grows from here. What a guest sees follows the info-page mode; a draft shows
-guests nothing but that it is not open (contracts/tenants.md, Info-page mode, Lifecycle).
+The sign-in front page's poster in the hub's look, and one card: the live announcements by level
+(#780), what is on now and next, the public pages that are on, and a way in for the crew. Notify
+serves it as the hub's module (App track), and the hub grows from here. What a guest sees follows
+the info-page mode; a draft shows guests nothing but that it is not open (contracts/tenants.md,
+Info-page mode, Lifecycle).
 """
 
 from __future__ import annotations
+
+import asyncio
 
 from canccu_kit import AdminUnavailable, InfoPagesClosed, KitError, check_info_access, ui
 from canccu_kit.access import TenantContext
@@ -64,11 +67,20 @@ async def _card(request: Request, ctx: TenantContext, session: Session | None) -
         parts.append(views.ended())
     else:
         d = deps(request)
-        now = None
+        now, live = None, None
         if d.hub:
-            host = request.headers.get("host", "")
-            now = await d.hub.agenda_now(host, request.headers.get("cookie"), client_ip(request))
-        parts += [views.whats_on(), views.now_next(now, ctx["time_zone"], d.now())]
+            host, ip = request.headers.get("host", ""), client_ip(request)
+            cookie = request.headers.get("cookie")
+            now, live = await asyncio.gather(
+                d.hub.agenda_now(host, cookie, ip), d.hub.announcements(host, cookie, ip)
+            )
+        # An urgent one is pinned above everything; the others lead "What's on" (#780, sheet 6).
+        parts.insert(0, views.urgent(live or []))
+        parts += [
+            views.whats_on(),
+            views.announcements(live or [], d.now()),
+            views.now_next(now, ctx["time_zone"], d.now()),
+        ]
     parts.append(views.links(ctx["flags"]))
     return "".join(parts)
 

@@ -1,0 +1,25 @@
+{
+  "name": "Arena",
+  "heading": {
+    "family": "Bebas Neue",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "bebas-neue-400.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Roboto",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "roboto-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "roboto-700.woff2"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Tech",
+  "heading": {
+    "family": "Rajdhani",
+    "faces": [
+      {
+        "weight": 700,
+        "file": "rajdhani-700.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Nunito Sans",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "nunito-sans-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "nunito-sans-700.woff2"
+      }
+    ]
+  }
+}

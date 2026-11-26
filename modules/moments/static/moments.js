@@ -3,6 +3,12 @@
 // (sound-desk.js). Each page works without it (contracts/moments.md, Pages).
 "use strict";
 (function () {
+  // The player previews draw a 1920 × 1080 screen, scaled to their box's width (organiser.css).
+  const scaled = new ResizeObserver((entries) => {
+    for (const { target } of entries)
+      target.style.setProperty("--canccu-preview-scale", String(target.clientWidth / 1920));
+  });
+  for (const box of document.querySelectorAll(".moments-preview__frame")) scaled.observe(box);
   // Emergency (mockup 07): only a 2-second hold sends; a click or a short press does nothing.
   for (const form of document.querySelectorAll("form[data-hold-to-start]")) {
     const button = form.querySelector("[data-hold-ms]");
@@ -178,6 +184,31 @@
     // The player in the frame listens once it has loaded.
     if (frame.hasAttribute("data-preview-auto"))
       frame.addEventListener("load", () => run.click(), { once: true });
+  }
+
+  // The composer's level (#780, D17): a placement and a push still at the old level's default
+  // follow the new level at once; one the organiser changed stays. pages.ts does the same on post.
+  const levels = document.querySelectorAll("[data-announce-level] input[name=level]");
+  if (levels.length > 0) {
+    const place = { info: "rail", important: "hero", urgent: "full" };
+    const pushes = (level) => level !== "info";
+    let was = document.querySelector("[data-announce-level] input[name=level]:checked")?.value;
+    for (const input of levels)
+      input.addEventListener("change", () => {
+        const at = document.querySelector(`input[name=placement][value="${place[was]}"]`);
+        if (at?.checked) {
+          const next = document.querySelector(
+            `input[name=placement][value="${place[input.value]}"]`,
+          );
+          if (next) next.checked = true;
+        }
+        const push = document.querySelector("input[name=ch_push]");
+        if (push && push.checked === pushes(was)) push.checked = pushes(input.value);
+        was = input.value;
+        // The server compares the post against the level the organiser last saw (pages.ts).
+        const seen = document.querySelector("input[name=level_was]");
+        if (seen) seen.value = input.value;
+      });
   }
 
   // Announcements (U11): the card in the real player before it goes out. Screen's zone preview

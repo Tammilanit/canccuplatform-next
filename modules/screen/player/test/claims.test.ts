@@ -129,13 +129,14 @@ describe("claims on the screen", () => {
   it("says a crew moment is from the crew, never who (Moments' spotlight, L15)", () => {
     const screen = new Screen(host);
     screen.draw(state({ claim: claim() }));
-    expect(text(screen, "rail")).toContain("Announcement");
+    // The level's label (#780), where it said "Announcement" before.
+    expect(text(screen, "rail")).toContain("Info");
     const crew = claim({
       content: { title: "Pizza is here", body: "", level: "info", from_crew: true },
     });
     screen.draw(state({ claim: crew }));
     expect(text(screen, "rail")).toContain("From the crew");
-    expect(text(screen, "rail")).not.toContain("Announcement");
+    expect(text(screen, "rail")).not.toContain("Info");
     const standings = claim({
       template: "leaderboard",
       content: {
@@ -222,6 +223,20 @@ describe("claims on the screen", () => {
     expect(text(screen, "_full")).toBe("");
     expect(text(screen, "rail")).toContain("Dinner");
     screen.stop();
+  });
+
+  it("names a takeover that keeps the ticker running, so the ticker stays drawn (#780)", () => {
+    const screen = new Screen(host);
+    const raffle = claim({
+      override_id: "ov_14",
+      role: "full",
+      content: { title: "The raffle at 21", body: "", level: "info" },
+      keep_ticker: true,
+    });
+    screen.draw(state({}, raffle));
+    expect(screen.root.dataset.takeover).toBe("ticker");
+    screen.draw(state({}, { ...raffle, keep_ticker: undefined }));
+    expect(screen.root.dataset.takeover).toBe("");
   });
 
   it("draws an overlay band on top without hiding anything", () => {

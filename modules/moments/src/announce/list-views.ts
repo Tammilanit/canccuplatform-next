@@ -32,7 +32,8 @@ export function listView(o: {
       <div>
         <strong>${a.title}</strong>
         <span class="canccu-small canccu-muted"
-          >${a.level === "urgent" ? "urgent · " : ""}${a.status} · ${a.when}</span
+          >${a.level === "info" ? "" : a.level === "urgent" ? "Urgent · " : "Important · "}${a.status}
+          · ${a.when}</span
         >
       </div>
       ${

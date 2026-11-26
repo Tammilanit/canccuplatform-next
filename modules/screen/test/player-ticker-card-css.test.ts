@@ -38,7 +38,7 @@ describe("claims.css, a card in the ticker role", () => {
     const title = rulesOf(`${CARD} .canccu-widget__title`);
     expect(title).toMatch(/white-space:\s*nowrap;/);
     expect(title).toMatch(/text-overflow:\s*ellipsis;/);
-    expect(title).toMatch(/overflow:\s*hidden;/);
+    expect(title).toMatch(/overflow:\s*clip;/);
   });
 });
 
@@ -47,8 +47,8 @@ describe("claims.css, a card in the ticker role", () => {
  * taller than the one-row band, which cut "DEMO EVENT" in half at 1920×1080. In the ticker the logo
  * is one row at the header's size, as in the header.
  */
-describe("widgets.css, a logo in the ticker band", () => {
-  const widgets = readFileSync(new URL("../player/src/widgets.css", import.meta.url), "utf8")
+describe("logo.css, a logo in the ticker band", () => {
+  const widgets = readFileSync(new URL("../player/src/logo.css", import.meta.url), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\s+/g, " ");
   const LOGO = "> .canccu-widget--logo";
@@ -69,5 +69,13 @@ describe("widgets.css, a logo in the ticker band", () => {
     );
     expect(row?.[1]).toContain('[data-role="header"]');
     expect(row?.[2]).toMatch(/flex-direction: row;/);
+  });
+});
+
+describe("claims.css, a takeover that keeps the ticker running (#780)", () => {
+  it("shows the ticker regions again under it, after the rule that hides every region", () => {
+    const keep = '.canccu-layout[data-takeover="ticker"] > .canccu-region[data-role="ticker"]';
+    expect(rulesOf(keep)).toMatch(/visibility:\s*visible;/);
+    expect(rules.indexOf(keep)).toBeGreaterThan(rules.indexOf(".canccu-layout[data-takeover]"));
   });
 });

@@ -56,7 +56,7 @@ describe("the stage", () => {
     expect(stageLook(undefined, "party", T0).classes).toEqual(["canccu-stage"]);
   });
 
-  it("puts one stage with its six layers first in the body, and sets the art and scrim", () => {
+  it("puts one stage with its seven layers first in the body, and sets the art and scrim", () => {
     const layer = new StageLayer(document.body);
     document.body.append(document.createElement("main"));
     layer.apply(stage, "lively", T0);
@@ -64,11 +64,68 @@ describe("the stage", () => {
     const el = document.body.firstElementChild as HTMLElement;
     expect(document.querySelectorAll(".canccu-stage")).toHaveLength(1);
     expect([...el.children].map((c) => c.className)).toEqual(
-      ["art", "glow", "kind", "phase", "tint", "scrim"].map((l) => `canccu-stage__${l}`),
+      ["backdrop", "art", "glow", "kind", "phase", "tint", "scrim"].map(
+        (l) => `canccu-stage__${l}`,
+      ),
     );
-    expect((el.firstElementChild as HTMLElement).style.backgroundImage).toContain(ART);
+    expect(el.querySelector<HTMLElement>(".canccu-stage__art")?.style.backgroundImage).toContain(
+      ART,
+    );
     expect(el.style.getPropertyValue("--canccu-stage-scrim")).toBe("0.7");
     expect(el.getAttribute("aria-hidden")).toBe("true");
+  });
+});
+
+describe("the theme's own picture (theming.md, The two backgrounds)", () => {
+  const PICTURE = `/theming/a/${"b".repeat(64)}.webp`;
+  const fresh = (): { root: HTMLElement; layer: StageLayer } => {
+    const root = document.createElement("div");
+    return { root, layer: new StageLayer(root) };
+  };
+  const stageOf = (root: HTMLElement): HTMLElement => root.firstElementChild as HTMLElement;
+
+  it("draws it in the bottom layer under the scrim at every level", () => {
+    for (const level of ["none", "calm", "lively", "party"] as const) {
+      const { root, layer } = fresh();
+      layer.apply(undefined, level, T0, { image_url: PICTURE, scrim: 0.8 });
+      const el = stageOf(root);
+      expect(el.classList.contains("canccu-stage--backdrop"), level).toBe(true);
+      expect(el.querySelector<HTMLElement>(".canccu-stage__backdrop")?.style.backgroundImage).toContain(PICTURE);
+      expect(el.style.getPropertyValue("--canccu-stage-scrim")).toBe("0.8");
+    }
+  }); // prettier-ignore
+
+  it("keeps the larger scrim while a box's art shows too", () => {
+    const { root, layer } = fresh();
+    layer.apply(stage, "lively", T0, { image_url: PICTURE, scrim: 0.6 });
+    expect(stageOf(root).style.getPropertyValue("--canccu-stage-scrim")).toBe("0.7");
+    layer.apply(stage, "lively", T0, { image_url: PICTURE, scrim: 0.9 });
+    expect(stageOf(root).style.getPropertyValue("--canccu-stage-scrim")).toBe("0.9");
+  });
+
+  it("draws none without a picture, for a picture from anywhere else, or without its scrim", () => {
+    for (const backdrop of [
+      undefined,
+      { looks: ["glows"] },
+      { image_url: "https://x.example/a.webp", scrim: 0.8 },
+      { image_url: "/theming/a/x.html", scrim: 0.8 },
+      { image_url: PICTURE },
+    ]) {
+      const { root, layer } = fresh();
+      layer.apply(undefined, "lively", T0, backdrop);
+      const el = stageOf(root);
+      expect(el.classList.contains("canccu-stage--backdrop"), JSON.stringify(backdrop)).toBe(false);
+      expect(el.querySelector<HTMLElement>(".canccu-stage__backdrop")?.style.backgroundImage).toBe(
+        "",
+      );
+    }
+  });
+
+  it("takes a draft's picture under its preview key", () => {
+    const { root, layer } = fresh();
+    const draft = `/theming/preview/Ab-9_x/${"c".repeat(64)}.png`;
+    layer.apply(undefined, "calm", T0, { image_url: draft, scrim: 0.75 });
+    expect(stageOf(root).classList.contains("canccu-stage--backdrop")).toBe(true);
   });
 });
 
@@ -117,8 +174,10 @@ describe("the Pulse hero", () => {
     expect(text(box, "band-name")).toBe("Demo Game");
     expect(text(box, "teams")).toBe("8 teams left");
     expect(text(box, "description")).toBe("Bring your own headset.");
-    expect(text(box, "chip-label")).toBe("Semis starts in");
+    // One clock on the card, its own item's (#779): the chip says when the earlier item starts.
+    expect(text(box, "chip-label")).toBe("Semis in");
     expect(box.querySelector(".canccu-widget__chip-time")?.getAttribute("datetime")).toBe("2026-03-14T20:00:00Z");
+    expect(box.querySelectorAll("time.canccu-widget__big")).toHaveLength(1);
   }); // prettier-ignore
 
   it("draws no game band, chip or teams while the view has none", () => {

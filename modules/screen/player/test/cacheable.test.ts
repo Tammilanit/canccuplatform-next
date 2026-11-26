@@ -54,4 +54,9 @@ describe("what a screen keeps offline", () => {
       .c{background:url(data:image/png;base64,AAA)}`;
     expect(cssFiles(css).sort()).toEqual(["/theming/a/bg.webp", "/theming/a/f1.woff2"]);
   });
+
+  it("names a font pair's faces from the token CSS", () => {
+    const css = `@font-face{src:url("/theming/fonts/space-inter/Inter.woff2") format("woff2")}`;
+    expect(cssFiles(css)).toEqual(["/theming/fonts/space-inter/Inter.woff2"]);
+  });
 });

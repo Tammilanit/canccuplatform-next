@@ -51,6 +51,31 @@
         $ref: "../common.openapi.yaml#/components/responses/Forbidden"
       "409":
         $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/announcements/live:
+  get:
+    tags: [announcements]
+    operationId: liveAnnouncements
+    summary: The live announcements for the hub, newest first
+    description: |
+      No right (additive, #780): the live announcements whose screen card is on, newest first, for the hub's front
+      door. It follows the event's info-page mode as the hub's other reads do: a guest the mode keeps out gets 403
+      `info_pages_closed`. Nothing about who sent it.
+    security: []
+    responses:
+      "200":
+        description: The live announcements.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [announcements]
+              properties:
+                announcements:
+                  type: array
+                  items:
+                    $ref: "announcement-look.openapi.yaml#/LiveAnnouncement"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
 /api/moments/announcements/preview:
   post:
     tags: [announcements]

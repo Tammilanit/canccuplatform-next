@@ -19,19 +19,11 @@ import type { DraftRow } from "./drafts.js";
 import { FILE_NAME, fileName } from "./files.js";
 import type { FileStore } from "./files.js";
 import { SERVED } from "./theme.js";
+import { PRESET_IDS } from "./presets.js";
 
 export const STUDIO = "/theming/studio/";
-export const STARTERS = ["default", "terminal", "level-up"] as const;
-export const STARTER_NAMES: Record<(typeof STARTERS)[number], string> = {
-  default: "Default",
-  terminal: "Terminal",
-  "level-up": "Level-up",
-};
-/**
- * The starters that hold embeds, so uploading one needs `theming.embeds.write` as well; a writer
- * without it is not offered them (test/studio.test.ts checks this against events/demo/themes/).
- */
-export const STARTERS_WITH_EMBEDS: ReadonlySet<string> = new Set(["terminal", "level-up"]);
+/** The starting points the screens' stack fixture uploads: the presets' packages (presets.ts). */
+export const STARTERS = PRESET_IDS;
 
 /** The colour tokens as organisers name them; ids stay in the markup's data attributes only. */
 export const COLOUR_NAMES: Record<keyof typeof COLOR_TOKENS, string> = {
@@ -119,7 +111,7 @@ export async function studioState(
   const logoUrl = draft === undefined ? undefined : await draftFileUrl(c, images.logo);
   return {
     draft,
-    problems: draft === undefined ? [] : await draftProblems(c, draft.manifest),
+    problems: draft === undefined ? [] : await draftProblems(c, files, draft.manifest),
     current: head?.revision ?? 0,
     cssChanged,
     logoUrl,

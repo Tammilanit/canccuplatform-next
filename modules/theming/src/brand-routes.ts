@@ -12,6 +12,7 @@ import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
 import { draftBody, editDraft, loadDraft } from "./drafts.js";
+import { FONT_PAIRS } from "./font-pairs.js";
 import { WRITE, actorOf, assertWritable, invalidRequest, needs, versionConflict } from "./http.js";
 import { draftEmbedNames, removeDraftFolders } from "./package-files.js";
 import { brandInputError, modeSwitchError } from "./schema.js";
@@ -24,6 +25,18 @@ export interface BrandDeps extends DraftDeps {
 }
 
 const EMBEDS = "theming.embeds.write";
+
+/** What the brand keeps of the input: all but the version and the images, which go to `images`. */
+const BRAND_FIELDS = [
+  "primary",
+  "accent",
+  "scheme",
+  "embed_color",
+  "logo_plate",
+  "font_pair",
+  "roundness",
+  "backdrop",
+] as const;
 
 /** The folders of advanced files, which the switch back to simple removes with the embeds. */
 const ADVANCED_FOLDERS = ["css", "fonts", "templates"] as const;
@@ -97,6 +110,38 @@ function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   return withColors(out, brand);
 }
 
+/**
+ * A pair or corners the organiser picks now must show: a preset's own font and radius tokens sit
+ * over the brand's choices (tokens.ts), so they go when a different choice is made (the mirror of
+ * draft-routes.ts, where a token edit takes the choice away).
+ */
+function withoutOverriddenChoices(
+  manifest: Manifest,
+  before: Record<string, unknown>,
+  input: BrandEdit,
+): Manifest {
+  if (!isObject(manifest.tokens)) return manifest;
+  const tokens = { ...manifest.tokens };
+  const without = (group: unknown, keys: string[]): Record<string, unknown> | undefined => {
+    if (!isObject(group)) return undefined;
+    const rest = Object.fromEntries(Object.entries(group).filter(([k]) => !keys.includes(k)));
+    return Object.keys(rest).length > 0 ? rest : undefined;
+  };
+  const pair = typeof input.font_pair === "string" && input.font_pair !== before.font_pair;
+  if (pair) {
+    const fonts = without(tokens.fonts, ["heading", "display", "body"]);
+    if (fonts === undefined) delete tokens.fonts;
+    else tokens.fonts = fonts;
+  }
+  const corners = input.roundness !== undefined && input.roundness !== before.roundness;
+  if (corners) {
+    const sizes = without(tokens.sizes, ["radius"]);
+    if (sizes === undefined) delete tokens.sizes;
+    else tokens.sizes = sizes;
+  }
+  return { ...manifest, tokens };
+}
+
 export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -105,17 +150,35 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     const why = brandInputError(request.body);
     if (why !== undefined) throw invalidRequest(why);
     const input = request.body as BrandEdit;
-    const brand: Brand = {
-      primary: input.primary,
-      accent: input.accent,
-      scheme: input.scheme,
-      ...(input.embed_color === undefined ? {} : { embed_color: input.embed_color }),
-    };
-    const { adjusted } = generateColors(brand);
+    // The Studio offers only the platform's pairs; a manifest from elsewhere may name a newer one
+    // and only gets a warning (checks.ts), but this editor never stores a pair it cannot draw.
+    if (typeof input.font_pair === "string" && !FONT_PAIRS.has(input.font_pair)) {
+      throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
+    }
+    const picked = Object.fromEntries(
+      // A field sent as null is taken away: neither picked nor kept.
+      BRAND_FIELDS.filter((k) => input[k] !== undefined && input[k] !== null).map((k) => [
+        k,
+        input[k],
+      ]),
+    ) as unknown as Brand;
+    const { adjusted } = generateColors(picked);
     const row = await deps.db.tenant((c) =>
-      editDraft(c, input.draft_version, actorOf(request), async (m) => {
-        for (const role of ["logo", "icon"] as const) {
-          const path = input[role];
+      editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
+        // The Studio's kit form sends only the colours and pictures: the stored plate, pair,
+        // roundness and backdrop stay unless the body names them (a plate goes with `kind: none`).
+        const kept = Object.fromEntries(
+          (["logo_plate", "font_pair", "roundness", "backdrop"] as const)
+            .filter((k) => input[k] === undefined && isObject(m.brand) && m.brand[k] !== undefined)
+            .map((k) => [k, (m.brand as Record<string, unknown>)[k]]),
+        );
+        const brand = { ...kept, ...picked };
+        const picture = {
+          logo: input.logo,
+          icon: input.icon,
+          "backdrop.image": input.backdrop?.image,
+        };
+        for (const [role, path] of Object.entries(picture)) {
           if (path !== undefined && !(await isDraftImage(c, path))) {
             throw invalidRequest(`${role} must name an image already in the draft.`);
           }
@@ -129,7 +192,15 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
         const next: Manifest = { ...m, brand };
         if (Object.keys(images).length > 0) next.images = images;
         else delete next.images;
-        return withColors(next, brand);
+        // A scheme's hand-set colours (presets.ts) stay until the organiser changes what the
+        // colours come from; the page sends the whole brand on every change, the corners too.
+        const before = isObject(m.brand) ? m.brand : {};
+        const tokens = isObject(m.tokens) ? m.tokens : {};
+        const same = (["primary", "accent", "scheme"] as const).every(
+          (k) => before[k] === brand[k],
+        );
+        const colored = same && isObject(tokens.colors) ? next : withColors(next, brand);
+        return withoutOverriddenChoices(colored, before, input);
       }),
     );
     return { draft: draftBody(row), adjusted };
@@ -156,7 +227,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
       let removed: string[] = [];
       let unused: Unused[] = [];
       let embeds: string[] = [];
-      const row = await editDraft(c, version, actor, async (m) => {
+      const row = await editDraft(c, deps.files, version, actor, async (m) => {
         const brand = brandOf(m);
         if (brand === undefined) throw brandMissing();
         embeds = await embedsOf(c, m);

@@ -80,6 +80,40 @@ export const URGENT_PAGES = [
 export const FULL_PAGES = [
   screen("announce-screen-full", "main", "Doors close at 23:00"),
 ];
+/** Important picked: the placement follows to Hero and Push turns on at once (#780, D17). */
+const important = async (page) => {
+  await page.check("input[name=level][value=important]");
+  await page
+    .locator("input[name=placement][value=hero]:checked")
+    .waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+};
+export const LEVEL_PAGES = [
+  [
+    "announce-composer-important",
+    "/moments/announce",
+    DESK,
+    { ready: important },
+  ],
+  [
+    "announce-composer-important-phone",
+    "/moments/announce",
+    PHONE,
+    { touch: true, ready: important },
+  ],
+];
+/** The front door with one live announcement of each level (#780, sheet 6), phone and desk. */
+export const FRONT_PAGES = [
+  ["announce-front-door-levels-phone", "/", PHONE, { touch: true, ready: shows("Stays here until the crew lifts it") }],
+  ["announce-front-door-levels", "/", DESK, { ready: shows("Stays here until the crew lifts it") }],
+]; // prettier-ignore
+/** One of each level, live together: the front door draws all three looks. */
+const LEVELS = [
+  { title: "The raffle at 21", body: "Tickets at the info desk", level: "info", icon: "megaphone" },
+  { title: "Finals start", body: "Team Alpha vs Team Gamma on the main stage", level: "important", icon: "trophy" },
+  { title: "Semis in 15 min", body: "Players to the stage now", level: "urgent" },
+]; // prettier-ignore
+
 /** Its path ends in the withdrawn announcement's id, known only once it is sent. */
 export const WITHDRAWN_PAGES = [
   [
@@ -103,6 +137,8 @@ export function announceListed(at) {
     [UPDATED_PAGES, "the same, edited"],
     [URGENT_PAGES, "an urgent announcement with its ticker line"],
     [FULL_PAGES, "a full-screen announcement"],
+    [LEVEL_PAGES, "the composer with Important picked"],
+    [FRONT_PAGES, "the front door with one of each level"],
     [WITHDRAWN_PAGES, "the last one withdrawn, opened read-only"],
   ].flatMap(([pages, how]) =>
     pages.map(
@@ -154,10 +190,15 @@ export async function announceShots({ demo, shot, fail }) {
       level: "info",
       channels: { screen: true },
       duration_seconds: 300,
-      when: { mode: "at", at: new Date(Date.now() + 2 * 3_600_000).toISOString() },
+      when: {
+        mode: "at",
+        at: new Date(Date.now() + 2 * 3_600_000).toISOString(),
+      },
     });
     if (later.status !== 201)
-      throw new Error(`schedule: HTTP ${later.status} ${JSON.stringify(later.body)}`);
+      throw new Error(
+        `schedule: HTTP ${later.status} ${JSON.stringify(later.body)}`,
+      );
     sent.push(later.body.id);
     const pages = [
       [ANNOUNCE_PAGES, null],
@@ -208,6 +249,20 @@ export async function announceShots({ demo, shot, fail }) {
       for (const [name, path, viewport, o] of list)
         await shot(name, path, viewport, SESSION, o);
     }
+    for (const [name, path, viewport, o] of LEVEL_PAGES)
+      await shot(name, path, viewport, SESSION, o);
+    for (const id of sent.splice(0))
+      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const body of LEVELS)
+      sent.push(
+        await send({
+          ...body,
+          channels: { screen: true },
+          duration_seconds: 900,
+        }),
+      );
+    for (const [name, path, viewport, o] of FRONT_PAGES)
+      await shot(name, path, viewport, SESSION, o);
     const last = sent.splice(0);
     for (const id of last)
       await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});

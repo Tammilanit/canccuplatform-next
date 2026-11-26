@@ -4,6 +4,7 @@
  * idle choice, and the screen's motion and burn-in drift. The DOM is kept between states, so a push changes only
  * what it changed and a fade in progress is never cut short by an unrelated update.
  */
+import { animateAnnouncements } from "./announce-motion.js";
 import { claimEnd, claimOf, claimShown } from "./claims.js";
 import { applyCue } from "./cues.js";
 import type { ClaimState } from "./claims.js";
@@ -13,12 +14,13 @@ import { legacyMotion, motionStyleOf } from "@canccu/ui";
 import { MotionLayer, levelOf } from "./motion.js";
 import { SceneLayer } from "./scene.js";
 import { StageLayer } from "./stage.js";
+import type { BackdropView } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
-import { fitTickers } from "./ticker.js";
+import { fitTickers, speedOf } from "./ticker.js";
 import { fitAnnouncements } from "./fit.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
@@ -187,7 +189,7 @@ export class Screen {
     // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
     const full = claimOf(state.regions.find((r) => r.role === "full")?.claim);
     const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
-    if (takeover) this.root.dataset.takeover = "";
+    if (takeover) this.root.dataset.takeover = full.keep_ticker === true ? "ticker" : "";
     else delete this.root.dataset.takeover;
     const drawns = [...this.regions.values()];
     const regions = drawns.map((d) => d.state);
@@ -223,10 +225,16 @@ export class Screen {
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
-    this.stage.apply(state.display?.stage, level, now);
+    this.stage.apply(
+      state.display?.stage,
+      level,
+      now,
+      state.theme.backdrop as BackdropView | undefined,
+    );
     this.scene.apply(state.display?.scene);
-    fitTickers(this.root, motion, now);
+    fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);
+    animateAnnouncements(this.root, now, level);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
       this.root.style.setProperty("--canccu-drift-x", String(x));

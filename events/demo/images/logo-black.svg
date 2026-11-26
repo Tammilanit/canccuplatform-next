@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64">
+  <!-- A synthetic black mark on transparent, for the plate check (docs/plans/issue-784.md D20). -->
+  <g fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round">
+    <path d="M32 5 56 19v26L32 59 8 45V19z"/>
+    <path d="M22 24h10a8 8 0 0 1 0 16H22z"/>
+  </g>
+  <g fill="#000">
+    <rect x="70" y="10" width="140" height="18" rx="3"/>
+    <rect x="70" y="36" width="96" height="18" rx="3"/>
+  </g>
+</svg>

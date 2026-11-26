@@ -62,7 +62,9 @@ function embedFiles(embed: unknown): string[] {
 
 /** Every file the manifest names, in the manifest's order. */
 function namedFiles(m: Manifest): string[] {
-  const out = [...strings(Object.values(record(m.images))), ...strings(m.css)];
+  // The backdrop's picture is the brand's, outside `images`, yet as much a file the theme needs.
+  const backdrop = strings([record(record(m.brand).backdrop).image]);
+  const out = [...strings(Object.values(record(m.images))), ...backdrop, ...strings(m.css)];
   for (const font of list(m.fonts))
     out.push(...strings([record(font).file, record(font).licence_file]));
   for (const t of Object.values(record(m.templates))) out.push(...strings([record(t).file]));

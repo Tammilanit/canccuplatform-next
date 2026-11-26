@@ -7,6 +7,7 @@
 import "./player.css";
 import "./screen.css";
 import "./widgets.css";
+import "./logo.css";
 import "./rail.css";
 import "./food.css";
 import "./claims.css";
@@ -19,6 +20,8 @@ import "./stage.css";
 import "./scene.css";
 import "./director.css";
 import "./hero.css";
+import "./announce.css";
+import "./announce-motion.css";
 import "./test-pattern.css";
 import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";

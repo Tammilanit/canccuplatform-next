@@ -148,6 +148,8 @@ export const BUILTIN_CUES: readonly Cue[] = [
     hold_seconds: 120,
   }),
   seed("announce.urgent", "urgent", ["alarm"], { effects: ["ripple"] }),
+  // Important's break-in (#780): one bright chime; the sweep is the card's own entrance.
+  seed("announce.important", "attention", ["chime-bright"], { effects: ["pop"] }),
   seed("announce.result", "result", ["ding"]),
   seed("announce.ended", "ended", ["airplane-chime"]),
   seed("announce.cleared", "ended", ["airplane-chime"], { effects: ["glow"] }),

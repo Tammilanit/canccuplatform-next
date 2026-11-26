@@ -29,8 +29,12 @@ export interface ClaimState {
   starts_at: string;
   ends_at: string | null;
   expires_at: string | null;
+  /** A takeover that leaves the ticker drawn (#780); absent otherwise. */
+  keep_ticker?: true;
   /** Moments' cue picture (cues.ts); absent from a claim without one. */
   effect?: unknown;
+  /** A full-screen announcement's nearby content (#780): a widget's `{ widget, view }`. */
+  aside?: unknown;
 }
 
 /** What the region draws now: `key` changes with the claim and the step, so each fades in. */
@@ -90,7 +94,9 @@ export function claimShown(c: ClaimState, nowMs: number): ClaimShown | null {
   if (c.template === "video" && skipped(c.override_id)) return null;
   const key = `claim:${c.override_id}`;
   const steps = Array.isArray(c.steps) ? c.steps : [];
-  if (steps.length === 0) return { key, type: typeOf(c.template), view: c.content };
+  // The nearby content rides in the view: the template draws it beside the card (widget.ts).
+  const view = c.aside != null ? { ...c.content, aside: c.aside } : c.content;
+  if (steps.length === 0) return { key, type: typeOf(c.template), view };
   // A device whose clock runs a little ahead of the start shows the first step.
   const elapsed = Math.max(0, nowMs - Date.parse(c.starts_at));
   let at = 0;

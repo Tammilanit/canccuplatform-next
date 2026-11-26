@@ -55,20 +55,15 @@
   --canccu-studio-h: 1080px;
   --canccu-studio-aspect: 16 / 9;
 }
-.canccu-studio-preview--hub {
+.canccu-studio-preview--phone {
   --canccu-studio-w: 390px;
-  --canccu-studio-h: 340px;
-  --canccu-studio-aspect: 390 / 340;
+  --canccu-studio-h: 780px;
+  --canccu-studio-aspect: 390 / 780;
 }
-.canccu-studio-preview--admin {
-  --canccu-studio-w: 760px;
-  --canccu-studio-h: 400px;
-  --canccu-studio-aspect: 760 / 400;
-}
-.canccu-studio-preview--discord {
-  --canccu-studio-w: 360px;
-  --canccu-studio-h: 170px;
-  --canccu-studio-aspect: 360 / 170;
+.canccu-studio-preview--page {
+  --canccu-studio-w: 1280px;
+  --canccu-studio-h: 800px;
+  --canccu-studio-aspect: 1280 / 800;
 }
 
 /* Preview: the screen at full size over the page; on a phone held upright, turned on its side. */
@@ -119,7 +114,7 @@
   .canccu-main:has(.canccu-studio-pendbar) .canccu-pagehead .canccu-cluster {
     display: none;
   }
-  .canccu-studio-kit > .canccu-studio-previews {
+  .canccu-studio-depth > .canccu-studio-previews {
     order: -1;
     display: grid;
     margin: 0;
@@ -140,10 +135,8 @@
   }
   .canccu-studio-previews:not(:has(input[value="screen"]:checked))
     .canccu-studio-preview--screen:not(.canccu-studio-preview--full),
-  .canccu-studio-previews:not(:has(input[value="hub"]:checked)) .canccu-studio-preview--hub,
-  .canccu-studio-previews:not(:has(input[value="admin"]:checked)) .canccu-studio-preview--admin,
-  .canccu-studio-previews:not(:has(input[value="discord"]:checked))
-    .canccu-studio-preview--discord {
+  .canccu-studio-previews:not(:has(input[value="phone"]:checked)) .canccu-studio-preview--phone,
+  .canccu-studio-previews:not(:has(input[value="page"]:checked)) .canccu-studio-preview--page {
     display: none;
   }
   .canccu-studio-surfaces {

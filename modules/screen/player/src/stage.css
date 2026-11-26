@@ -1,7 +1,8 @@
 /*
  * The two backgrounds (contracts/theming.md, The two backgrounds; design guideline sheet 15, Q14).
- * The stage (stage.ts) sits behind every region: the server's blurred art, the drifting glows, the
- * kind and phase tints and a box's tint, then the scrim that keeps text readable over the art. The
+ * The stage (stage.ts) sits behind every region: the theme's own picture, the server's blurred art,
+ * the drifting glows, the kind and phase tints and a box's tint, then the scrim that keeps text
+ * readable over the pictures. The
  * card is one box's own ground: its art under a veil of the theme's surface (widget.ts). Layers move
  * only by opacity and transform, and the art arrives blurred, so nothing here filters live. In
  * `canccu-base`, so a theme's layer restyles any part; colours come from the theme's tokens.
@@ -22,11 +23,46 @@
     inset: 0;
   }
 
+  /*
+   * The time of day the Theme studio's preview picks (theming's plan issue-784 D21), #787's rule:
+   * morning cool and light, late night deep and dim, the day as it is. Behind every box, as the
+   * stage is. #787's daylight layer takes this over for the screens themselves.
+   */
+  body[data-canccu-daypart] .canccu-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transition: background-color 2s ease;
+  }
+
+  body[data-canccu-daypart="morning"] .canccu-stage::after {
+    background-color: rgb(190 225 255 / 0.12);
+  }
+
+  body[data-canccu-daypart="late"] .canccu-stage::after {
+    background-color: rgb(2 4 12 / 0.38);
+  }
+
   .canccu-stage__art {
     background-position: center;
     background-size: cover;
     opacity: 0;
     transition: opacity 2s ease;
+  }
+
+  /* The theme's own picture (`brand.backdrop.image`): it replaces the glows, under the scrim. */
+  .canccu-stage__backdrop {
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+  }
+
+  .canccu-stage--backdrop .canccu-stage__backdrop {
+    opacity: 1;
+  }
+
+  .canccu-stage--backdrop .canccu-stage__glow {
+    opacity: 0;
   }
 
   .canccu-stage__glow {
@@ -104,7 +140,7 @@
     transition: opacity 2s ease;
   }
 
-  .canccu-stage--art .canccu-stage__scrim {
+  .canccu-stage:is(.canccu-stage--art, .canccu-stage--backdrop) .canccu-stage__scrim {
     opacity: var(--canccu-stage-scrim, 1);
   }
 
@@ -351,6 +387,10 @@
     border: max(2px, calc(0.25 * var(--canccu-u))) solid var(--canccu-color-accent);
     border-radius: 999px;
     font-size: calc(3.4 * var(--canccu-u));
+  }
+
+  .canccu-widget--countdown .canccu-widget__chip[hidden] {
+    display: none;
   }
 
   .canccu-widget__chip-time {

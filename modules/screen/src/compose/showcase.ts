@@ -113,3 +113,12 @@ export function isShowcase(regions: readonly RegionView[]): boolean {
     (hero.claim !== null || hero.widgets.some((w) => w.widget === "hot_game" && !w.view.empty))
   );
 }
+
+/** The hero's share of the grid's cells (the grow rule, #780): 0 for a zone without a hero. */
+export function heroShare(
+  regions: readonly RegionView[],
+  grid: { columns: number; rows: number },
+): number {
+  const hero = regions.find((r) => r.role === "hero");
+  return hero === undefined ? 0 : (hero.area.columns * hero.area.rows) / (grid.columns * grid.rows);
+}

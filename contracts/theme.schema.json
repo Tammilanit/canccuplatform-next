@@ -96,9 +96,66 @@
       "items": {
         "$ref": "#/$defs/layout"
       }
+    },
+    "schemes": {
+      "description": "A preset's colour schemes (contracts/theming.md, Presets): the Theme studio's Pick a look shows each one, and applying one sets `brand` and the colour tokens from it. Kept as they are by a draft, a revision and an export; nothing else reads them.",
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/scheme"
+      }
+    },
+    "preset": {
+      "description": "The preset and scheme a draft was made from, so the Theme studio's Reset to the preset knows what to return to. Set by applying a preset; text for no one else.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "scheme"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9:-]{0,63}$" },
+        "scheme": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" }
+      }
     }
   },
   "$defs": {
+    "scheme": {
+      "description": "One colour scheme of a preset: `dark`, `light`, high `contrast` or an `accent` variant. `colors`, when given, is the whole colour-token set tuned by hand; without it the colours are generated from `brand` as the simple mode does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "brand"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "kind": { "enum": ["dark", "light", "contrast", "accent"] },
+        "brand": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "accent", "scheme"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "scheme": { "enum": ["dark", "light"] }
+          }
+        },
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["background", "surface", "border", "text", "text_muted", "primary", "primary_text", "accent", "status_ok", "status_degraded", "status_down"],
+          "properties": {
+            "background": { "$ref": "#/$defs/color" },
+            "surface": { "$ref": "#/$defs/color" },
+            "border": { "$ref": "#/$defs/color" },
+            "text": { "$ref": "#/$defs/color" },
+            "text_muted": { "$ref": "#/$defs/color" },
+            "primary": { "$ref": "#/$defs/color" },
+            "primary_text": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "status_ok": { "$ref": "#/$defs/color" },
+            "status_degraded": { "$ref": "#/$defs/color" },
+            "status_down": { "$ref": "#/$defs/color" }
+          }
+        }
+      }
+    },
     "name": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_-]{0,31}$"
@@ -121,7 +178,7 @@
       "pattern": "^images/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(png|jpg|jpeg|webp|svg)$"
     },
     "brand": {
-      "description": "The simple mode's colour input, kept so the simple editor can reopen it. The logo and icon are `images.logo` and `images.icon`.",
+      "description": "The simple mode's input, kept so the simple editor can reopen it: the colours, and the choices the Theme studio's Make it yours offers. The logo and icon are `images.logo` and `images.icon`.",
       "type": "object",
       "additionalProperties": false,
       "required": ["primary", "accent", "scheme"],
@@ -138,7 +195,51 @@
         "embed_color": {
           "description": "Discord embed colour; `primary` when absent.",
           "$ref": "#/$defs/color"
+        },
+        "logo_plate": {
+          "$ref": "#/$defs/logo_plate"
+        },
+        "font_pair": {
+          "description": "One of the platform's font pairs (contracts/theming.md, Brand kit): it sets the heading, display and body fonts. A pair the platform does not hold is a warning, and the text keeps the system font.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "roundness": {
+          "description": "Corner roundness: the `radius` token `0`, `0.5rem` (the default) or `1rem`.",
+          "enum": ["square", "soft", "round"]
+        },
+        "backdrop": {
+          "$ref": "#/$defs/backdrop"
         }
+      }
+    },
+    "logo_plate": {
+      "description": "A plate behind the logo, so a logo with no ground of its own shows on any scheme: light (#f7f7f8), dark (#121317) or the theme's surface; rounded by the theme's radius or a circle; padded by a share of the logo's height (small 0.08, medium 0.15, large 0.25).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["none", "light", "dark", "surface"], "default": "none" },
+        "shape": { "enum": ["rounded", "circle"], "default": "rounded" },
+        "padding": { "enum": ["small", "medium", "large"], "default": "medium" }
+      }
+    },
+    "backdrop": {
+      "description": "The screen's background (contracts/theming.md, The two backgrounds): a slow cycle of `looks`, which the current game's art replaces while a game is on (`game_art`), tinted by the time of day (`daylight`) and moved by the hype (`hype`); or the organiser's own picture (`image`) in place of the cycle. Hub pages keep their plain background.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "looks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["glows", "gradient", "particles", "waves"] },
+          "default": ["glows", "gradient", "particles", "waves"]
+        },
+        "game_art": { "type": "boolean", "default": true },
+        "daylight": { "type": "boolean", "default": true },
+        "hype": { "type": "boolean", "default": true },
+        "image": { "$ref": "#/$defs/image_path" }
       }
     },
     "tokens": {

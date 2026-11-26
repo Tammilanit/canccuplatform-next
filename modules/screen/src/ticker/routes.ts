@@ -24,11 +24,11 @@ import {
 import { onlyKeys } from "../zone-input.js";
 import { publishAll } from "../zones.js";
 import type { Emit } from "../zones.js";
+import { tickerLook } from "./look.js";
 import type { TickerNow } from "./resolve.js";
 import { announce, listWindows, lockTicker, tickerNow } from "./store.js";
 
 const TEXT_MAX = 280;
-const APPEARANCES = ["default", "high_contrast", "minimal", "broadcast"];
 
 export interface TickerDeps {
   db: Db;
@@ -64,7 +64,7 @@ async function lineNow(c: SqlClient): Promise<{ text: string | null; until: stri
 
 /**
  * Runs `write` with the ticker locked, then announces any change it made, after commit. The
- * contract's `Ticker` is answered with the event's appearance setting.
+ * contract's `Ticker` is answered with the event's appearance and speed settings.
  */
 async function changeTicker(
   deps: TickerDeps,
@@ -84,11 +84,7 @@ async function changeTicker(
 
 async function withAppearance(settings: Settings, ticker: TickerNow) {
   await settings.ensure();
-  const value = settings.get("ticker_appearance", "default");
-  return {
-    ...ticker,
-    appearance: typeof value === "string" && APPEARANCES.includes(value) ? value : "default",
-  };
+  return { ...ticker, ...tickerLook(settings) };
 }
 
 /** The tick's part: announces a window starting or ending, or a line running out. */

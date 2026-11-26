@@ -14,6 +14,8 @@ export interface FingerprintInput {
   theme: { revision: number; layouts: unknown[] };
   facts: ZoneFacts;
   tickerAppearance?: string;
+  /** The ticker's speed setting (#779), which reaches the screens only in the state. */
+  tickerSpeed?: number;
   /** Holds the `burn_in_drift` setting and the energy level, which no other input carries. */
   display?: Display;
   /** The overrides active on the zone now: one that ends changes the inputs, so it is drawn away. */
@@ -45,6 +47,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     theme: input.theme,
     facts: { ...input.facts, now: null },
     ticker: input.tickerAppearance ?? "default",
+    tickerSpeed: input.tickerSpeed ?? null,
     display: input.display ?? NO_DISPLAY,
     claims: input.claims ?? [],
     bundle: input.bundle ?? null,

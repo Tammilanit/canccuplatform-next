@@ -1,7 +1,8 @@
 """What the check-in's done page shows beside the confirmation (docs/design/mockups.html, sheet 7;
 #441): the venue's Wi-Fi and what is on now, read from the tenants and agenda APIs as the person
-reads them, so a member sees the attendee network and its password and a guest only the public
-ones (contracts/tenants.md, Venue profile; contracts/agenda.md, Reading).
+reads them, and the front door's live announcements from Moments (#780), so a member sees the
+attendee network and its password and a guest only the public ones (contracts/tenants.md, Venue
+profile; contracts/agenda.md, Reading).
 
 The request names the event by its hostname and carries the person's cookie, as the browser's own
 read would. These rows are extras: a module that does not answer leaves its row out, never the page.
@@ -18,9 +19,16 @@ log = logging.getLogger("canccu.notify")
 
 
 class HubReader:
-    def __init__(self, tenants_url: str, agenda_url: str, http: httpx.AsyncClient) -> None:
+    def __init__(
+        self,
+        tenants_url: str,
+        agenda_url: str,
+        http: httpx.AsyncClient,
+        moments_url: str = "http://moments:8080",
+    ) -> None:
         self.tenants = tenants_url.rstrip("/")
         self.agenda = agenda_url.rstrip("/")
+        self.moments = moments_url.rstrip("/")
         self.http = http
 
     async def _get(
@@ -49,3 +57,13 @@ class HubReader:
     ) -> dict[str, Any] | None:
         body = await self._get(f"{self.agenda}/api/agenda/now", host, cookie, client_ip)
         return body if isinstance(body, dict) else None
+
+    async def announcements(
+        self, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> list[dict[str, Any]] | None:
+        """The live announcements on the screens (contracts/moments.md, Sending), newest first.
+        None: Moments did not answer, or the info-page mode keeps this visitor out."""
+        url = f"{self.moments}/api/moments/announcements/live"
+        body = await self._get(url, host, cookie, client_ip)
+        items = body.get("announcements") if isinstance(body, dict) else None
+        return [a for a in items if isinstance(a, dict)] if isinstance(items, list) else None

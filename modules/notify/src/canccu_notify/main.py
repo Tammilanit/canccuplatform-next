@@ -178,7 +178,12 @@ async def serve() -> None:
         push=Pusher(vapid),
         outbox=Outbox(bus, db),
         agenda=AgendaReader(agenda_url, identity),
-        hub=HubReader(os.environ["CANCCU_TENANTS_URL"], agenda_url, httpx.AsyncClient(timeout=2.0)),
+        hub=HubReader(
+            os.environ["CANCCU_TENANTS_URL"],
+            agenda_url,
+            httpx.AsyncClient(timeout=2.0),
+            os.environ.get("CANCCU_MOMENTS_URL", "http://moments:8080"),
+        ),
         users=UsersReader(os.environ["CANCCU_TENANTS_URL"], identity),
     )
 

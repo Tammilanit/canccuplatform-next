@@ -8,6 +8,7 @@ import type { Category, SoundSettings } from "./catalog.js";
 
 const NAMES: Record<string, string> = {
   "announce.attention": "Announcement",
+  "announce.important": "Important announcement",
   "announce.urgent": "Urgent announcement",
   "announce.result": "Result announced",
   "announce.ended": "Announcement over",
