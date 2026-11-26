@@ -20,7 +20,15 @@ TENANT_SQL = (
     " FROM tenants t LEFT JOIN venues v ON v.id = t.venue_id WHERE t.id = $1"
 )
 RETENTION = timedelta(days=30)
-EVENT_FIELDS = {"name", "time_zone", "starts_at", "ends_at"}
+EVENT_FIELDS = {
+    "name",
+    "time_zone",
+    "starts_at",
+    "ends_at",
+    "short_name",
+    "description",
+    "contact_user_id",
+}
 ACCESS_FIELDS = {"info_page_mode", "membership", "admin_access", "screen_access"}
 
 
@@ -195,6 +203,15 @@ def _patch_values(body: Mapping[str, Any]) -> dict[str, Any]:
         out["name"] = model.check_name(body["name"])
     if "time_zone" in body:
         out["time_zone"] = model.check_time_zone(body["time_zone"])
+    if "short_name" in body:
+        out["short_name"] = model.check_text(body["short_name"], "short_name", 24)
+    if "description" in body:
+        out["description"] = model.check_text(body["description"], "description", 500)
+    if "contact_user_id" in body:
+        contact = body["contact_user_id"]
+        out["contact_user_id"] = (
+            None if contact is None else model.check_id(contact, "contact_user_id")
+        )
     for key in ("starts_at", "ends_at"):
         if key in body:
             out[key] = model.parse_time(body[key], key)

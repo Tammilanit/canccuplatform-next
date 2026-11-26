@@ -76,6 +76,7 @@ def _info(row: Any, viewer: str) -> dict[str, Any]:
     return {
         "venue_id": row["venue_id"],
         "copied_at": model.iso(row["copied_at"]),
+        "address": row["address"],
         "house_rules": row["house_rules"],
         "wifi": wifi,
         "floor_plan": model.floor_plan(row),
@@ -86,6 +87,7 @@ def _info(row: Any, viewer: str) -> dict[str, Any]:
 EMPTY = {
     "venue_id": None,
     "copied_at": None,
+    "address": "",
     "house_rules": "",
     "wifi": "[]",
     "floor_plan_type": None,
@@ -126,6 +128,8 @@ async def put_info(request: Request) -> Response:
     body = await body_of(request)
     revision = model.check_revision(body)
     rules, wifi = model.check_profile(body)
+    # Optional, so a client that does not know the address (#782) leaves it as it is.
+    address = model.check_text(body["address"], "address", 300) if "address" in body else None
     tid = ctx["tenant_id"]
     async with d.db.tenant() as conn:
         core.writable(await core.tenant_row(conn, tid))
@@ -135,16 +139,19 @@ async def put_info(request: Request) -> Response:
         row = await conn.fetchrow("SELECT * FROM venue_info FOR UPDATE")
         if row["revision"] != revision:
             raise conflict("version_conflict", "the venue info changed meanwhile; read it again")
+        address = row["address"] if address is None else address
         changed = [
             k
-            for k, v in (("house_rules", rules), ("wifi", wifi))
+            for k, v in (("address", address), ("house_rules", rules), ("wifi", wifi))
             if v != (model.wifi_of(row) if k == "wifi" else row[k])
         ]
         if changed:
             await conn.execute(
-                "UPDATE venue_info SET house_rules = $1, wifi = $2, revision = revision + 1",
+                "UPDATE venue_info SET house_rules = $1, wifi = $2, address = $3,"
+                " revision = revision + 1",
                 rules,
                 json.dumps(wifi),
+                address,
             )
             actor = await audit.user_actor(conn, session.user_id)
             # Field names only: a Wi-Fi password is never written to the audit log.

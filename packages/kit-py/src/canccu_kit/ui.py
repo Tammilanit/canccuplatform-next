@@ -159,9 +159,13 @@ def _tabbar(viewer: Viewer, current: str | None, event: EventInfo | None) -> str
 
 
 def _header(event: EventInfo | None, now: datetime | None) -> str:
-    title = (
-        f'<span class="canccu-header__title">{esc(event.name if event else None) or "Event"}</span>'
-    )
+    name = esc(event.name if event else None) or "Event"
+    if event and event.short_name:  # the short name where a phone has no room for the name
+        name = (
+            f'<span class="canccu-hide-phone">{name}</span>'
+            f'<span class="canccu-show-phone">{esc(event.short_name)}</span>'
+        )
+    title = f'<span class="canccu-header__title">{name}</span>'
     dates = date_range(event) if event else ""
     meta = (
         '<span class="canccu-header__sep"></span>'

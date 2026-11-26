@@ -80,6 +80,12 @@ def check_name(value: object, field: str = "name") -> str:
     return value.strip()
 
 
+def check_text(value: object, field: str, most: int) -> str:
+    if not isinstance(value, str) or len(value.strip()) > most:
+        raise bad_request(f"{field}: text of at most {most} characters")
+    return value.strip()
+
+
 def check_choice(value: object, choices: tuple[str, ...], field: str) -> str:
     if value not in choices:
         raise bad_request(f"{field} must be one of {', '.join(choices)}")
@@ -203,6 +209,8 @@ def public_tenant(row: Mapping[str, Any], primary: str | None) -> dict[str, Any]
         "primary_hostname": primary,
         "info_page_mode": row["info_page_mode"],
         "membership": row["membership"],
+        "short_name": row["short_name"],
+        "description": row["description"],
     }
 
 
@@ -216,6 +224,7 @@ def tenant(row: Mapping[str, Any], primary: str | None, now: datetime) -> dict[s
         "archived_at": iso(row["archived_at"]),
         "presence_delete_at": iso(row["presence_delete_at"]),
         "cloned_from": row["cloned_from"],
+        "contact_user_id": row["contact_user_id"],
         "created_at": iso(row["created_at"]),
         "revision": row["revision"],
     }
@@ -244,6 +253,16 @@ def context(
         "venue_ip_check": ip_check(row, now),  # type: ignore[typeddict-item]
         "flags_version": row["flags_version"],
         "flags": flags,
+    }
+
+
+def own_hostname(row: Mapping[str, Any]) -> dict[str, Any]:
+    """A hostname as the event's organisers see it: no verification token, no hold."""
+    return {
+        "hostname": row["hostname"],
+        "kind": row["kind"],
+        "status": row["status"],
+        "primary": row["is_primary"],
     }
 
 

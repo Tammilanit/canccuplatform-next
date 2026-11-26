@@ -54,6 +54,8 @@ export async function eventOf(
     startsAt: e.starts_at,
     endsAt: e.ends_at,
     venue: e.venue?.name,
+    shortName: e.short_name,
+    description: e.description,
   };
 }
 

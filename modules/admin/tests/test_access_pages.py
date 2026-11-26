@@ -1,5 +1,6 @@
-"""Event access (#778): where the organiser pages open, `admin_access` in plain words, read and
-saved through the tenants API as the person (contracts/tenants.md, Admin access)."""
+"""Event access (#778), the Event page's Access section since #782: where the organiser pages
+open, `admin_access` in plain words, read and saved through the tenants API as the person
+(contracts/tenants.md, Admin access)."""
 
 from __future__ import annotations
 
@@ -20,16 +21,16 @@ async def test_the_switch_is_in_plain_words_with_its_default(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
-    r = await world.browser(owner).get("/admin/access")
+    r = await world.browser(owner).get("/admin/event")
     assert r.status_code == 200
     assert ANYWHERE in r.text and VENUE in r.text
     # The default is named beside its choice, and nothing speaks of VPNs or Tailscale to crew.
     assert re.search(rf"{ANYWHERE}</label>.*?Default", r.text, re.S)
     assert "VPN" not in r.text and "Tailscale" not in r.text
     assert checked(r.text) == ["internet"]
-    assert 'name=revision value="3"' in r.text
+    assert 'name="revision" value="3"' in r.text
     # Read as the person, on the event's own hostname.
-    read = world.tenants.seen[-1]
+    read = next(q for q in world.tenants.seen if q.url.path == "/api/tenants/current")
     assert read.headers["host"] == "admin.example.test" and owner in read.headers["cookie"]
 
 
@@ -43,14 +44,14 @@ async def test_saving_patches_tenants_as_the_person_from_their_own_address(
         data={"admin_access": "restricted", "revision": "3"},
         headers={"x-forwarded-for": "198.51.100.7", "origin": "https://admin.example.test"},
     )
-    assert r.status_code == 303 and r.headers["location"] == "/admin/access?saved=1"
+    assert r.status_code == 303 and r.headers["location"] == "/admin/event?saved=access#access"
     patch = world.tenants.seen[-1]
     assert patch.method == "PATCH" and patch.url.path == "/api/tenants/current"
     # Tenants judges `admin_access` by the person's address, never by admin's own.
     assert patch.headers["x-forwarded-for"] == "198.51.100.7"
     assert owner in patch.headers["cookie"]
     assert patch.read() == b'{"revision":3,"admin_access":"restricted"}'
-    after = await browser.get("/admin/access?saved=1")
+    after = await browser.get("/admin/event?saved=access")
     assert checked(after.text) == ["restricted"] and "Saved" in after.text
 
 
@@ -65,7 +66,8 @@ async def test_a_stale_form_shows_the_event_as_it_is_now(
     )
     assert r.status_code == 409
     assert "changed this meanwhile" in r.text
-    assert checked(r.text) == ["internet"] and 'name=revision value="3"' in r.text
+    # What was typed is kept, with the event's revision now, so saving again keeps it (#782).
+    assert checked(r.text) == ["restricted"] and 'name="revision" value="3"' in r.text
     assert world.tenants.admin_access == "internet"
 
 
@@ -107,10 +109,10 @@ async def test_without_the_event_admin_role_the_page_only_reads(
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
     world.tenants.full = False  # tenants shows the public fields only
-    r = await world.browser(owner).get("/admin/access")
+    r = await world.browser(owner).get("/admin/event")
     assert r.status_code == 200
     assert ANYWHERE in r.text and "Only the event&#x27;s admins can change this" in r.text
-    assert "name=admin_access" not in r.text and "name=revision" not in r.text
+    assert "name=admin_access" not in r.text and "/admin/event/basics" not in r.text
 
 
 async def test_settings_lists_event_access_with_its_value(
@@ -118,7 +120,7 @@ async def test_settings_lists_event_access_with_its_value(
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
     r = await world.browser(owner).get("/admin/settings")
-    assert 'href="/admin/access"' in r.text and ">Event access</p>" in r.text
+    assert 'href="/admin/event#access"' in r.text and ">Event access</p>" in r.text
     assert ANYWHERE in r.text
 
 
@@ -134,7 +136,7 @@ async def test_screens_play_anywhere_once_paired_by_default(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
-    r = await world.browser(owner).get("/admin/access")
+    r = await world.browser(owner).get("/admin/event")
     assert SCREENS_ANYWHERE in r.text and SCREENS_VENUE in r.text
     assert re.search(rf"{SCREENS_ANYWHERE}</label>.*?Default", r.text, re.S)
     assert screens_checked(r.text) == ["internet"]
@@ -155,7 +157,7 @@ async def test_an_organiser_turns_the_screens_venue_check_on(
         world.tenants.seen[-1].read()
         == b'{"revision":3,"admin_access":"internet","screen_access":"restricted"}'
     )
-    after = await browser.get("/admin/access?saved=1")
+    after = await browser.get("/admin/event?saved=access")
     assert screens_checked(after.text) == ["restricted"]
     bad = await browser.post(
         "/admin/access",
@@ -170,5 +172,5 @@ async def test_the_read_only_page_says_where_screens_play(
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
     world.tenants.full = False
-    r = await world.browser(owner).get("/admin/access")
+    r = await world.browser(owner).get("/admin/event")
     assert SCREENS_ANYWHERE in r.text and "name=screen_access" not in r.text

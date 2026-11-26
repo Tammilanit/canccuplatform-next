@@ -30,14 +30,21 @@ describe("menuFor", () => {
   it("lists only the pages the rights open and drops empty groups", () => {
     const groups = menuFor(new Set(["agenda.crew.read", "admin.settings.read"]));
     expect(groups.map((g) => [g.label, g.items.map((i) => i.id)])).toEqual([
-      ["Run the event", ["agenda"]],
+      ["Run the event", ["home", "agenda"]],
       ["Admin", ["settings", "health"]],
     ]);
+  });
+  // #782: the admin home opens to whoever may open any other page, and leads the menu.
+  it("opens Home to whoever may open another page, and to no one else", () => {
+    const first = menuFor(new Set(["moments.announce"]))[0]?.items[0];
+    expect(first).toMatchObject({ id: "home", label: "Home", href: "/admin/", icon: "home" });
+    expect(menuFor(new Set(["screen.content.write"]))).toEqual([]);
+    expect(menuFor(new Set())).toEqual([]);
   });
   it("opens Screen studio to a role with content or bundle rights only", () => {
     for (const right of ["screen.content.read", "screen.bundle.write"]) {
       const groups = menuFor(new Set([right]));
-      expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["screen"]);
+      expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["home", "screen"]);
     }
     // No Studio tab opens with it alone (#611): Schedule and Content need screen.content.read.
     expect(menuFor(new Set(["screen.content.write"]))).toEqual([]);
@@ -389,5 +396,26 @@ describe("the page description (#782)", () => {
     expect(
       s(shellPage({ title: "Not found", plain: true, description: "", body: "x" })),
     ).not.toContain("canccu-pagehead__desc");
+  });
+});
+
+// #782 (Q4): the event's short name in the header on a phone, its poster text on the front door.
+describe("the event's short name and poster text", () => {
+  const named = { ...EVENT, shortName: "Demo", description: "A weekend of <games>." };
+  it("puts the short name in the header for phones and the name for wider screens", () => {
+    const doc = s(shellPage({ title: "X", description: "For X.", event: named, body: "" }));
+    expect(doc).toContain(
+      '<span class="canccu-header__title"><span class="canccu-hide-phone">Demo &lt;Event&gt;</span><span class="canccu-show-phone">Demo</span></span>',
+    );
+    expect(s(shellPage({ title: "X", description: "For X.", event: EVENT, body: "" }))).toContain(
+      '<span class="canccu-header__title">Demo &lt;Event&gt;</span>',
+    );
+  });
+  it("shows the poster text under the event's name on the front door", () => {
+    const front = s(frontPage({ title: "Sign in", event: named, card: "" }));
+    expect(front).toContain('<p class="canccu-poster__about">A weekend of &lt;games&gt;.</p>');
+    expect(s(frontPage({ title: "Sign in", event: EVENT, card: "" }))).not.toContain(
+      "poster__about",
+    );
   });
 });

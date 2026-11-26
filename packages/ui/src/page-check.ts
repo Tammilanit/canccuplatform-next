@@ -8,7 +8,8 @@
  */
 const MAIN = /<main\b[\s\S]*?<\/main>/;
 const DESC = /<p class="canccu-pagehead__desc">([\s\S]*?)<\/p>/;
-const BADGE = /<span class="canccu-badge[^"]*"([^>]*)>([\s\S]*?)<\/span>/g;
+// Pizza draws its order and holder states in its own colours (pizza-badge).
+const BADGE = /<span class="(?:canccu|pizza)-badge[^"]*"([^>]*)>([\s\S]*?)<\/span>/g;
 const BUTTON = /<(button|a)\b([^>]*)>([\s\S]*?)<\/\1>/g;
 const TIP_OPEN = '<span class="canccu-tip">';
 const MAX_DESCRIPTION = 240;
@@ -61,6 +62,7 @@ export function pageProblems(doc: string): string[] {
   for (const b of main.matchAll(BUTTON)) {
     const [whole, tag, attrs = "", inner = ""] = b;
     if (tag === "a" && !attrs.includes("canccu-button")) continue;
+    if (attrs.includes('aria-hidden="true"')) continue;
     if (text(inner).length > 1) continue;
     const label = /aria-label="([^"]*)"/.exec(attrs)?.[1];
     if (label === undefined)

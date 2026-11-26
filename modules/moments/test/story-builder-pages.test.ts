@@ -5,6 +5,7 @@
  * drawing is in story-pages.test.ts and in Chromium in story-builder.browser.test.ts.
  */
 import type pg from "pg";
+import { pageProblems } from "@canccu/ui";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
@@ -48,6 +49,21 @@ describe.skipIf(!DATABASE_URL)("the storyboard builder's page", () => {
     // Every step's fields go with the form, so saving one step never empties another.
     expect(b.body).toContain('name="s0_title"');
     expect(b.body).toContain('name="s1_title"');
+  });
+
+  // #782 B0: the line under the title says what the page is for; the status moved to the actions.
+  it("has a description of its own, with no badge or switch in it", async () => {
+    const b = await w.call("admin", "GET", "/storyboards?edit=starting_soon");
+    const desc = /<p class="canccu-pagehead__desc">([\s\S]*?)<\/p>/.exec(b.body)?.[1] ?? "";
+    expect(desc).toContain("round by round");
+    expect(desc).not.toMatch(/<input|canccu-badge/);
+    expect(pageProblems(b.body)).toEqual([]);
+    expect(b.body).toMatch(/moments-builder__actions[\s\S]*name="enabled"/);
+  });
+
+  it("gives each storyboard's On or Off a tooltip in the picker", async () => {
+    const list = (await w.call("admin", "GET", "/storyboards")).body;
+    expect(pageProblems(list)).toEqual([]);
   });
 
   // #668 (R21): the preview fills what no item gives with the test-fire's sample text.

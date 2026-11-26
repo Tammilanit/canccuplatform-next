@@ -61,7 +61,7 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
     route.request().url().includes("/moments/storyboards")
       ? route.fulfill({
           contentType: "text/html; charset=utf-8",
-          body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page"><main class="canccu-main"><div class="canccu-pagehead"><p>${String(head.description)}</p>${String(head.actions)}</div>${String(body)}</main><script>${script}</script></body></html>`,
+          body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page"><main class="canccu-main"><div class="canccu-pagehead"><p>${head.description}</p>${String(head.actions)}</div>${String(body)}</main><script>${script}</script></body></html>`,
         })
       : route.fulfill({ status: 404, body: "" }),
   );

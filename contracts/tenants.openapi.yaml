@@ -76,6 +76,10 @@ paths:
     $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1support"
   /api/tenants/current/audit:
     $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1audit"
+  /api/tenants/current/hostnames:
+    $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1hostnames"
+  /api/tenants/current/venue:
+    $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1venue"
   /api/tenants/current/storage:
     $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1storage"
   /api/tenants/audit:
@@ -375,7 +379,7 @@ components:
     PublicTenant:
       type: object
       description: What a guest sees of the event.
-      required: [id, name, status, time_zone, starts_at, ends_at, venue, primary_hostname, info_page_mode, membership]
+      required: [id, name, status, time_zone, starts_at, ends_at, venue, primary_hostname, info_page_mode, membership, short_name, description]
       properties:
         id:
           $ref: "#/components/schemas/TenantId"
@@ -406,6 +410,14 @@ components:
           $ref: "#/components/schemas/InfoPageMode"
         membership:
           $ref: "#/components/schemas/Membership"
+        short_name:
+          type: string
+          maxLength: 24
+          description: For narrow screens, such as the shell's header on a phone; empty when not set.
+        description:
+          type: string
+          maxLength: 500
+          description: The event's poster text; empty when not set.
     Tenant:
       description: The whole tenant, for event admins and the superadmin.
       allOf:
@@ -437,6 +449,9 @@ components:
             cloned_from:
               type: [string, "null"]
               description: The source tenant id once the tenants part of a clone has run.
+            contact_user_id:
+              type: [string, "null"]
+              description: The event's contact person, one of the people with a role; never shown to guests.
             created_at:
               type: string
               format: date-time
@@ -471,6 +486,15 @@ components:
           $ref: "#/components/schemas/AdminAccess"
         screen_access:
           $ref: "#/components/schemas/ScreenAccess"
+        short_name:
+          type: string
+          maxLength: 24
+        description:
+          type: string
+          maxLength: 500
+        contact_user_id:
+          type: [string, "null"]
+          pattern: "^[A-Za-z0-9_-]{1,64}$"
     RegistryPatch:
       description: As `TenantPatch`, plus the venue and the series (`null` removes them).
       allOf:
@@ -724,13 +748,17 @@ components:
     VenueInfo:
       type: object
       description: The event's copy of its venue's profile; Wi-Fi networks the caller may not see are left out.
-      required: [venue_id, copied_at, house_rules, wifi, floor_plan, revision]
+      required: [venue_id, copied_at, address, house_rules, wifi, floor_plan, revision]
       properties:
         venue_id:
           type: [string, "null"]
         copied_at:
           type: [string, "null"]
           format: date-time
+        address:
+          type: string
+          maxLength: 300
+          description: The venue's street address for this event; empty when not set.
         house_rules:
           type: string
           maxLength: 20000
@@ -752,6 +780,10 @@ components:
             revision:
               type: integer
               minimum: 0
+            address:
+              type: string
+              maxLength: 300
+              description: Left out, the address stays as it is.
     VenueIpCheck:
       type: object
       required: [enabled, disabled_until, reason]

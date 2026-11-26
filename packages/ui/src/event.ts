@@ -13,6 +13,10 @@ export interface EventInfo {
   startsAt?: string | null | undefined;
   endsAt?: string | null | undefined;
   venue?: string | null | undefined;
+  /** For narrow screens: the header on a phone (#782). */
+  shortName?: string | undefined;
+  /** The poster text on the event's front door (#782). */
+  description?: string | undefined;
 }
 
 // The event's language decides the format (UX audit B5); English is the only one until step 10.

@@ -7,6 +7,7 @@
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { Summary } from "../summary.js";
+import { pizzaChip } from "./crew-views.js";
 import { formKey } from "./kit.js";
 import type { PageCtx } from "./kit.js";
 import { base, counts, flash, post, time } from "./order-view.js";
@@ -157,8 +158,8 @@ export function notHeldView(c: PageCtx, o: OrderView, error?: string): Html {
   const holder = o.holder ?? null;
   const badge =
     holder === null
-      ? html`<span class="pizza-badge pizza-badge--warn">${c.t("hold.nobody")}</span>`
-      : html`<span class="pizza-badge pizza-badge--info">${c.t("hold.held")}</span>`;
+      ? pizzaChip("warn", c.t("hold.nobody"), c.t("tip.nobody"))
+      : pizzaChip("info", c.t("hold.held"), c.t("tip.held"));
   const head = html`<section class="pizza-hero">
     <p class="pizza-hero__title">
       ${c.t("order.title", { seq: o.seq, pizzeria: o.pizzeria.name })}

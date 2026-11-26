@@ -83,6 +83,8 @@ export interface PublicEvent {
   starts_at?: string | null;
   ends_at?: string | null;
   venue?: { id: string; name: string } | null;
+  short_name?: string;
+  description?: string;
 }
 
 /** GET `url` with this Host header, as JSON; the global fetch() would drop the header. */

@@ -5,6 +5,7 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
+import { pageProblems } from "@canccu/ui";
 import { DEFAULT_SETTINGS } from "../src/settings.js";
 import { SPEC_MENU } from "./fixtures.js";
 import {
@@ -65,6 +66,18 @@ describe.skipIf(!DATABASE_URL)("the crew's Food page", () => {
     expect(r.body).not.toContain('type="date"');
     expect(r.body).toContain(`href="/pizza/crew/orders/${id}"`);
     expect(r.body).toContain('aria-current="page"');
+  });
+
+  // #782 B0: every state chip says what it means, in a tooltip, on the crew's pages.
+  it("gives each state and count chip a tooltip, on the day and on one order", async () => {
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/close`);
+    await w.call("pena", "POST", `/api/pizza/orders/${id}/release`);
+    const day = (await view(w, "crew", "/crew")).body;
+    expect(pageProblems(day)).toEqual([]);
+    expect(day).toContain("Orders that wait for the crew");
+    const one = (await view(w, "crew", `/crew/orders/${id}`)).body;
+    expect(pageProblems(one)).toEqual([]);
+    expect(one).toContain("Nobody holds this order");
   });
 
   it("puts the day's orders in call time order, with the day in the event's format (C1)", async () => {

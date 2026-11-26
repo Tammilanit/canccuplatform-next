@@ -193,6 +193,35 @@ async def put_ip_check(request: Request) -> Response:
     return JSONResponse(result["venue_ip_check"])
 
 
+async def get_hostnames(request: Request) -> Response:
+    """The event's own hostnames, for its Event page; the superadmin changes them (#782)."""
+    d, ctx = deps(request), tenant_of(request)
+    await d.caller.require(request, "tenants.event.write")
+    async with d.db.tenant() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM hostnames WHERE tenant_id = $1 ORDER BY is_primary DESC, hostname",
+            ctx["tenant_id"],
+        )
+    return JSONResponse({"hostnames": [model.own_hostname(r) for r in rows]})
+
+
+async def get_venue(request: Request) -> Response:
+    """The event's venue, name and network addresses, read only for its organisers (#782)."""
+    d, ctx = deps(request), tenant_of(request)
+    await d.caller.require(request, "tenants.event.write")
+    async with d.db.tenant() as conn:
+        row = await core.tenant_row(conn, ctx["tenant_id"])
+    if row["venue_id"] is None:
+        raise model.not_found()
+    return JSONResponse(
+        {
+            "id": row["venue_id"],
+            "name": row["venue_name"],
+            "addresses": list(row["venue_addresses"]),
+        }
+    )
+
+
 async def get_audit(request: Request) -> Response:
     d = deps(request)
     await d.caller.require(request, "tenants.audit.read")
@@ -210,4 +239,6 @@ ROUTES = [
     Route("/api/tenants/current/flags", put_flags, methods=["PUT"]),
     Route("/api/tenants/current/venue-ip-check", put_ip_check, methods=["PUT"]),
     Route("/api/tenants/current/audit", get_audit, methods=["GET"]),
+    Route("/api/tenants/current/hostnames", get_hostnames, methods=["GET"]),
+    Route("/api/tenants/current/venue", get_venue, methods=["GET"]),
 ]

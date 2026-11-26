@@ -2,6 +2,7 @@
  * The holder's pages (mockups 07–09) on the server: the checklist from prepare to hand-out, each
  * form the API's own step; who else sees what; Finnish; sign-in.
  */
+import { pageProblems } from "@canccu/ui";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import {
@@ -113,11 +114,15 @@ describe.skipIf(!DATABASE_URL)("the holder's pages", () => {
   it("shows a member whose order it is, and lets them take over a released one", async () => {
     let r = await view(w, "anni", `/hold/${id}`);
     expect(r.body).toContain("Pena holds this order");
+    // #782 B0: the holder chip says what it means.
+    expect(pageProblems(r.body)).toEqual([]);
+    expect(r.body).toContain("A member holds this order");
     expect(r.body).not.toContain("Close the order now");
     expect(r.body).not.toContain("tel:");
     await w.call("pena", "POST", `/api/pizza/orders/${id}/release`);
     r = await view(w, "anni", `/hold/${id}`);
     expect(r.body).toContain("Nobody holds it");
+    expect(pageProblems(r.body)).toEqual([]);
     expect(r.body).toContain("Take over the order");
     r = await form(w, "anni", `/hold/${id}/step/claim`);
     expect(location(r)).toBe(`/pizza/hold/${id}`);

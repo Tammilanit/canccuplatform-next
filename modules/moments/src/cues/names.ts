@@ -89,6 +89,15 @@ export const OUTCOMES: Record<string, string> = {
   dropped: "Dropped",
 };
 
+/** What each outcome means, for its chip's tooltip (#782). */
+export const OUTCOME_TIPS: Record<string, string> = {
+  played: "The sound played on the zone's sound screen.",
+  queued: "It waited in the queue behind another sound, then played.",
+  suppressed: "A limit or the zone's setting held it back. The reason says which.",
+  missed: "Its time passed before it could play. The reason says why.",
+  dropped: "It was dropped without playing. The reason says why.",
+};
+
 /** A length in words: "Off", "30 s", "2 min", "1 min 30 s". */
 export function seconds(n: number, zero = "Off"): string {
   if (n === 0) return zero;
