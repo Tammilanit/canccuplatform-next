@@ -13,7 +13,7 @@ import { lockRunningByKey } from "./store.js";
 import type { Binding } from "./store.js";
 import { loadStories } from "./story/store.js";
 import { rulesOff } from "./story/presets.js";
-import { chainOf } from "./announce/chain.js";
+import { orderContent, pizzaMoments } from "./rules-pizza.js";
 
 export interface RuleSettings {
   enabled: boolean;
@@ -46,6 +46,8 @@ interface RuleDef {
   ref: (d: Data) => string;
   content: (d: Data, e: Event) => Data;
   binding?: Binding;
+  /** Its moments are its own module's (rules-pizza.ts): the loop below leaves its events alone. */
+  own?: boolean;
 }
 
 const RULE = (
@@ -118,31 +120,27 @@ export const RULES: readonly RuleDef[] = [
   }),
   RULE({
     id: "pizza",
-    on: ["pizza.order.placed", "pizza.order.arrived"],
-    ends: ["pizza.order.cancelled"],
+    on: [
+      "pizza.order.opened",
+      "pizza.order.closing",
+      "pizza.order.placed",
+      "pizza.order.changed",
+      "pizza.order.arrived",
+    ],
+    ends: ["pizza.order.closed", "pizza.order.cancelled", "pizza.order.done"],
     templates: ["pizza_placed"],
     defaults: {
       template: "pizza_placed",
       class: "announcement",
-      // The food box's own place (#771): Screen draws the claim in the box's words, so the hall
-      // reads the order's state in one box; a layout without a venue rail has it on the ticker.
-      regions: ["venue_rail", "ticker"],
+      // Food as hero moments (#787 D8): the hero first, then the food box, which Screen draws in
+      // the box's words (#771), then the ticker where a layout has no venue rail.
+      regions: ["hero", "venue_rail", "ticker"],
       ttl_seconds: 300,
       cue: "pizza.placed",
     },
     ref: (d) => str(obj(d.order).id) ?? "",
-    content: (d) => {
-      const o = obj(d.order);
-      return {
-        state: str(o.state) ?? "",
-        seq: o.seq ?? null,
-        pizzeria_name: str(obj(o.pizzeria).name) ?? "",
-        target_at: o.target_at ?? null,
-        pizza_count: o.pizza_count ?? 0,
-        people_count: o.people_count ?? 0,
-        holder_name: str(obj(o.holder).name),
-      };
-    },
+    content: (d) => orderContent(obj(d.order)),
+    own: true,
   }),
   RULE({
     id: "hot_game",
@@ -233,10 +231,10 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
   // A preset on for the event shows the same happening: its rule is off (SD6, WD2).
   const shownByPreset = rulesOff((await loadStories(c)).stories, e.type);
   const pizza = rules.find((r) => r.rule_id === "pizza");
-  if (pizza !== undefined) await pizzaIsHere(c, engine, e, now, pizza);
+  if (pizza !== undefined) await pizzaMoments(c, engine, e, now, pizza);
   for (const def of RULES) {
     const s = rules.find((r) => r.rule_id === def.id);
-    if (s === undefined) continue;
+    if (s === undefined || def.own === true) continue;
     // A preset that takes this event over also ends the rule's older moment of the same source
     // (the placed order, when Pizza orders ready shows it arrived), so the source has one voice.
     const takenOver = shownByPreset.has(def.id) && def.on.includes(e.type);
@@ -268,70 +266,4 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
       now,
     );
   }
-}
-
-/** Pizza is here's on-air time: #775's hold of the hero. */
-const PIZZA_HERE_TTL_SECONDS = 180;
-
-/**
- * Pizza is here (#777, contracts/moments.md, Built-in rules): the `pizza` rule's arrival is an
- * announcement that takes the hero, waits in the rail while the hero is held, and degrades to
- * the ticker; the food box keeps the order's state. It ends on the order's done or cancel.
- */
-async function pizzaIsHere(
-  c: SqlClient,
-  engine: Engine,
-  e: Event,
-  now: Date,
-  s: RuleSettings,
-): Promise<void> {
-  const o = obj(e.data.order);
-  const id = str(o.id) ?? "";
-  if (id === "") return;
-  const key = `order-arrived:${id}`;
-  if (e.type === "pizza.order.done" || e.type === "pizza.order.cancelled") {
-    const m = await lockRunningByKey(c, key);
-    if (m !== null) await engine.end(c, m, "source_ended", null, now);
-    return;
-  }
-  if (e.type !== "pizza.order.arrived" || !s.enabled) return;
-  const seq = typeof o.seq === "number" ? String(o.seq) : "ready";
-  const pickup = `Collect at ${str(o.pickup) ?? "the pickup point"}`;
-  const body = `Order ${seq} · ${pickup}`;
-  const expires = new Date(now.getTime() + PIZZA_HERE_TTL_SECONDS * 1000);
-  await engine.request(
-    c,
-    {
-      class: "announcement",
-      template: "announcement",
-      content: {
-        title: "Pizza is here",
-        body,
-        level: "important",
-        placement: "hero",
-        icon: "food",
-        art: { kind: "food", url: null },
-        starts_at: now.toISOString(),
-        expires_at: expires.toISOString(),
-        countdown_at: null,
-        // The second beat of a full screen: where to go, apart from the order's number.
-        second_line: pickup,
-        // A path: Screen makes it whole on the event's hostname, which a rule does not know.
-        qr: { url: `/pizza/orders/${id}`, label: "Your order" },
-        updated: false,
-        ticker_line: `Pizza is here · ${body}`,
-      },
-      origin: "rule",
-      rule_id: "pizza",
-      why: `rule: ${e.type}`,
-      regions: chainOf("important", "hero").regions,
-      ttl_seconds: PIZZA_HERE_TTL_SECONDS,
-      zones: s.zones,
-      source: { module: e.source, event_id: e.id, ref: id },
-      dedupe_key: key,
-      cue: s.cue,
-      happening: `${e.type}:${id}`,
-    },
-    now,
-  );
 }

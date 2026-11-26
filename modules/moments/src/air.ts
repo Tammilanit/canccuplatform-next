@@ -362,6 +362,9 @@ function wire(m: MomentRow, s: Sent): Record<string, unknown> {
     regions: s.regions,
     // From the chain this zone is granted: one held in the rail asks for no hero share.
     ...overrideHints({ template: s.template, content: s.content, regions: s.regions }),
+    // One place at a time (#787 D7): the food box leaves the zone's other regions while a pizza
+    // moment holds the hero, as it would repeat the moment.
+    ...(m.rule_id === "pizza" ? { covers: ["food_status"] } : {}),
     expires_at: s.expires_at,
     source: m.source,
     effect: m.effect,

@@ -124,29 +124,29 @@ run("the built-in rules", () => {
 
   // #771: in the venue rail the call-in holds the food box in its own place, so the hall reads the
   // order's state in one box; a layout without a venue rail has it on the ticker.
-  it("puts pizza in the venue rail, updates it when it arrives, and ends it when cancelled", async () => {
-    await presetsOff(["pizza_arrived"]);
+  // #787 D8: on the way is a hero moment that covers the food box; the arrival ends it.
+  it("puts an order on the way in the hero, then the food box, and ends it when it arrives", async () => {
     await deliver(FIXTURES.placed());
-    await deliver(FIXTURES.arrived());
-    const box = overrides().filter((o) => o.template === "pizza_placed");
-    expect(box[0]).toMatchObject({
+    const way = overrides().filter((o) => o.template === "pizza_placed");
+    expect(way[0]).toMatchObject({
       type: "moments.override.started",
       rank: 80,
-      regions: ["venue_rail", "ticker"],
+      regions: ["hero", "venue_rail", "ticker"],
+      covers: ["food_status"],
+      content: { title: "On the way", state: "placed" },
     });
-    expect(box.at(-1)).toMatchObject({
-      type: "moments.override.changed",
-      content: { state: "arrived" },
-    });
-    await deliver(FIXTURES.cancelled());
+    await deliver(FIXTURES.arrived());
     const ended = w.events("demo").filter((e) => e.type === "moments.override.ended");
-    expect(ended.map((e) => e.data.reason)).toEqual(["source_ended", "source_ended"]);
+    expect(ended.map((e) => e.data.reason)).toEqual(["source_ended"]);
   });
 
   // #777: Pizza is here is the rule's announcement on the hero, ending on the order's done.
   // #780: an Important, with the food art, the pickup place as its second beat and a QR to the order.
   it("says Pizza is here as an Important on the hero, the full screen, the rail, the ticker, until done", async () => {
     await deliver(FIXTURES.placed());
+    // Called in long before it arrives: on the way has left the hero for the food box by then.
+    w.now = w.at(1200);
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.now));
     await deliver(FIXTURES.arrived());
     const here = overrides().find((o) => o.template === "announcement");
     const order = FIXTURES.arrived().data.order as { id: string };
