@@ -45,7 +45,7 @@
     > .canccu-widget--stats
     .canccu-widget__stat:first-child:nth-last-child(2)
     + .canccu-widget__stat {
-    --canccu-two-big: min(calc(30 * var(--canccu-u)), 28cqh);
+    --canccu-two-big: min(calc(36 * var(--canccu-u)), 34cqh);
   }
 
   .canccu-region[data-role="hero"]
@@ -60,11 +60,19 @@
     font-size: var(--canccu-two-big);
   }
 
-  /* One number alone is the hero: as large as the box holds, as wall.css's lone number is. */
+  /*
+   * One number alone is the hero: as large as the box holds, as wall.css's lone number is. In a
+   * tall, narrow box (a phone-shaped screen) the width caps its size, so the number and its label
+   * spread over the box's height rather than sit in the middle with a bare half above and below.
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stat:only-child {
+    justify-content: space-evenly;
+  }
+
   .canccu-region[data-role="hero"]
     > .canccu-widget--stats
     .canccu-widget__stat:only-child
     .canccu-widget__big {
-    font-size: min(calc(36 * var(--canccu-u)), 46cqh);
+    font-size: min(calc(48 * var(--canccu-u)), 58cqh, 54cqw);
   }
 }

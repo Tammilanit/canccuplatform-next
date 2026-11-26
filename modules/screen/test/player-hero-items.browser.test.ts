@@ -54,13 +54,30 @@ const timeline = {
   })),
   marks: [{ label: "Pizza order closes", at_text: "11:30", col: 4 }],
 };
-const twoNumbers = {
-  members: 412,
-  online: 187,
-  in_voice: 46,
-  members_trend: "up",
-  online_trend: "up",
-  in_voice_trend: "flat",
+const peaks = {
+  online_peak: { count: 231, at: "2026-11-20T23:30:00Z", time_text: "01:30" },
+  in_voice_peak: { count: 64, at: "2026-11-20T21:00:00Z", time_text: "23:00" },
+};
+/** The statistics as the bot fills them: two numbers, then with the check-ins, each with its peak. */
+const STATS = {
+  "two numbers": { online: 187, in_voice: 46, online_trend: "up", in_voice_trend: "flat" },
+  "two numbers with peaks": { online: 187, in_voice: 46, ...peaks },
+  "three numbers": { online: 187, in_voice: 46, checked_in: 164 },
+  "three numbers with peaks": { online: 187, in_voice: 46, checked_in: 164, ...peaks },
+  "the bot's full set": {
+    members: 1240,
+    online: 218,
+    in_voice: 38,
+    checked_in: 164,
+    members_trend: "flat",
+    online_trend: "up",
+    in_voice_trend: "flat",
+    ...peaks,
+  },
+  "online and check-ins": { online: 187, checked_in: 164, online_trend: "up", ...peaks },
+  "in voice and check-ins": { in_voice: 46, checked_in: 164, in_voice_trend: "flat", ...peaks },
+  "one number": { checked_in: 164 },
+  "one number with its peak": { online: 187, online_trend: "up", ...peaks },
 };
 
 /** The Pulse's hero area, the Hero layout's full width, the Dashboard's small box. */
@@ -80,13 +97,13 @@ describe.skipIf(browser === undefined)(
   "a hero's coming hours and numbers",
   { timeout: 60_000 },
   () => {
-    for (const [widget, view] of [
-      ["agenda_timeline", timeline],
-      ["stats", twoNumbers],
+    for (const [widget, label, view] of [
+      ["agenda_timeline", "coming hours", timeline],
+      ...Object.entries(STATS).map(([name, v]) => ["stats", name, v] as const),
     ] as const)
       for (const [kind, size] of SIZES)
         for (const area of AREAS)
-          it(`${widget}, ${kind} ${size.join("×")}, ${area.columns} columns wide`, async () => {
+          it(`${label}, ${kind} ${size.join("×")}, ${area.columns} columns wide`, async () => {
             if (browser === undefined || code === undefined) throw new Error("no browser");
             const state = structuredClone(STATES[kind]);
             const hero = state.regions.find((r) => r.id === "hero");
