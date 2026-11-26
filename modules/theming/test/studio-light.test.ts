@@ -4,7 +4,8 @@
  */
 import { describe, expect, it } from "vitest";
 import type { Manifest } from "../src/checks.js";
-import { brandKitView } from "../src/studio-kit.js";
+import { depthFrame, discardView, previewColumn } from "../src/studio-column.js";
+import { yoursView } from "../src/studio-yours.js";
 import type { StudioState } from "../src/studio-views.js";
 
 function stateOf(colors: Record<string, string>, scheme: "dark" | "light"): StudioState {
@@ -33,10 +34,13 @@ function stateOf(colors: Record<string, string>, scheme: "dark" | "light"): Stud
   };
 }
 
-const page = (s: StudioState): string => {
-  const v = brandKitView(s, false, undefined);
-  return `${String(v.actions)}${String(v.body)}`;
+const yours = (s: StudioState): string => {
+  const f = depthFrame(s, undefined);
+  const view =
+    s.draft === undefined ? "" : String(yoursView(s, s.draft, { advice: undefined, palette: [] }));
+  return `${String(f.actions)}${String(f.extra)}${view}${String(previewColumn(s))}${String(discardView(s))}`;
 };
+const page = yours;
 const LIGHT = { background: "#f8fafc", surface: "#ffffff", text: "#0f172a", primary: "#2563eb" };
 const DARK = { background: "#0b0d1a", surface: "#161a2e", text: "#f3f5ff", primary: "#3ddcff" };
 
@@ -67,7 +71,7 @@ describe("publishing a light look", () => {
 describe("preview on a screen (#444, sheet 6)", () => {
   it("offers it beside Preview, with the screen, how long, and the notice while it runs", () => {
     const body = page(stateOf(DARK, "dark"));
-    expect(body.match(/data-screen-preview="open"/g)).toHaveLength(2);
+    expect(body.match(/data-screen-preview="open"/g)).toHaveLength(1);
     expect(body).toContain("Preview on a screen…");
     const dialog = /<dialog[^>]*id="canccu-studio-screen"[\s\S]*?<\/dialog>/.exec(body)?.[0] ?? "";
     expect(dialog).toContain("Preview the draft on a screen");
@@ -87,7 +91,7 @@ describe("preview on a screen (#444, sheet 6)", () => {
   });
 
   it("is not offered without a draft", () => {
-    const none = brandKitView({ ...stateOf(DARK, "dark"), draft: undefined }, false, undefined);
-    expect(String(none.body)).not.toContain("canccu-studio-screen");
+    const none = yours({ ...stateOf(DARK, "dark"), draft: undefined });
+    expect(none).not.toContain("canccu-studio-screen");
   });
 });

@@ -2,6 +2,7 @@
 # Format: contracts/theming.md. Fonts: Barlow Semi Condensed, SIL OFL 1.1 (fonts/OFL.txt).
 schema_version: 1
 name: Terminal
+description: "Retro screens: square, sharp, glowing"
 mode: advanced
 tokens:
   colors:

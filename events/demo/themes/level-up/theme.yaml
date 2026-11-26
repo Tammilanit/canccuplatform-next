@@ -6,7 +6,7 @@
 # CSS can draw the panels as glass over the embed and still keep text above 4.5:1.
 schema_version: 1
 name: Level up
-description: Dark glass panels over warm embers and one orange-to-pink gradient; countdowns fill like progress bars and the leaderboard reads as a rank ladder.
+description: "Warm neon: energetic and rounded"
 mode: advanced
 tokens:
   colors:

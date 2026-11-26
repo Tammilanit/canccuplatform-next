@@ -25,8 +25,7 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
   const page = (path: string, session = "embedder") => get(t.h, path, { session });
   const apply = async (preset: string, scheme: string, session = "embedder") => {
     const now = await get(t.h, "/api/theming/draft", { session: "admin" });
-    const version =
-      now.statusCode === 200 ? now.json<DraftBody>().draft_version : undefined;
+    const version = now.statusCode === 200 ? now.json<DraftBody>().draft_version : undefined;
     const res = await send(
       t.h,
       "PUT",
@@ -39,11 +38,7 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
   };
   const withBlackLogo = async (): Promise<DraftBody> => {
     const applied = await apply("default", "night");
-    const res = await t.put(
-      "images/logo.svg",
-      applied.draft_version,
-      await readFile(BLACK_LOGO),
-    );
+    const res = await t.put("images/logo.svg", applied.draft_version, await readFile(BLACK_LOGO));
     expect(res.statusCode).toBe(200);
     return res.json<DraftBody>();
   };

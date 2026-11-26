@@ -45,10 +45,7 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
   const PHONE = 'iframe[data-surface="phone"]';
   const HUB = 'iframe[data-surface="page"]';
   const cssVar = (f: Frame, name: string) =>
-    f.evaluate(
-      (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
-      name,
-    );
+    f.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
   /** Waits until the page has saved the version after `version` and says so. */
   const savedAfter = (page: Page, version: number) =>
     page.waitForFunction(
@@ -106,7 +103,7 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await page.locator('input[data-hex-for="primary"]').fill("#ff7a45");
     for (const selector of [SCREEN, PHONE, HUB]) {
       const f = await frame(page, selector);
-      await expect.poll(() => cssVar(f, "--canccu-color-primary"), selector).toBe("#ff7a45");
+      await expect.poll(() => cssVar(f, "--canccu-color-primary")).toBe("#ff7a45");
     }
     await expect.poll(() => held.length).toBe(1);
     expect(await page.getAttribute(".canccu-studio", "data-save-state")).toBe("saving");
@@ -132,7 +129,7 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await Promise.all(held.map((r) => r.continue()));
     for (const selector of [PHONE, HUB]) {
       const f = await frame(page, selector);
-      await expect.poll(() => cssVar(f, "--canccu-color-accent"), selector).toBe("#22aa88");
+      await expect.poll(() => cssVar(f, "--canccu-color-accent")).toBe("#22aa88");
     }
   });
 
@@ -188,8 +185,6 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await savedAfter(page, before);
     expect(await box()).toEqual(at);
     const screen = await frame(page, SCREEN);
-    await expect
-      .poll(() => cssVar(screen, "--canccu-font-heading"))
-      .toContain("Space Grotesk");
+    await expect.poll(() => cssVar(screen, "--canccu-font-heading")).toContain("Space Grotesk");
   });
 });

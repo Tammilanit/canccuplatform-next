@@ -3,6 +3,7 @@
 # (decision 1 of docs/design/README.md) are computed from these by packages/ui, not set here.
 schema_version: 1
 name: Default
+description: "Clean and dark: fits any event"
 mode: simple
 brand:
   primary: "#3ddcff"
