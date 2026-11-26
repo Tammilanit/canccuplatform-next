@@ -37,6 +37,7 @@ const TENANTS: Record<string, TenantContext> = {
   "away.test": ctx("away", { venue: { id: "v_2", name: "Away", addresses: [] } }),
   "archived.test": ctx("archived", { status: "archived" }),
   "draft.test": ctx("draft", { status: "draft" }),
+  "closed.test": ctx("demo", { info_page_mode: "sign_in" }),
 };
 export const SUPERADMIN_HOST = "super.test";
 

@@ -29,6 +29,8 @@ export interface ClaimState {
   starts_at: string;
   ends_at: string | null;
   expires_at: string | null;
+  /** A takeover that leaves the ticker drawn (#780); absent otherwise. */
+  keep_ticker?: true;
   /** Moments' cue picture (cues.ts); absent from a claim without one. */
   effect?: unknown;
 }

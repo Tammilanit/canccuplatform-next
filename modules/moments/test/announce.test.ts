@@ -21,6 +21,8 @@ const CREW = { user_id: "u_crew", name: "Demo Crew" };
 
 const draft = (o: Partial<Draft> = {}): Draft => ({
   level: "info",
+  placement: "rail",
+  icon: "info",
   full_screen: false,
   title_text: "Pizza is here",
   body_text: "Pick up at {place}",
@@ -126,10 +128,10 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     });
   });
 
-  it("full screen takes the full region first, then degrades along its level's chain", async () => {
-    await send({ full_screen: true });
+  it("full screen takes the full region first, then the hero, the rail, the ticker (#780)", async () => {
+    await send({ placement: "full", full_screen: true });
     const [card] = overrides(w.events("demo"), "moments.override.started");
-    expect(card?.regions).toEqual(["full", "rail", "ticker"]);
+    expect(card?.regions).toEqual(["full", "hero", "rail", "ticker"]);
     // The theme's look, ranked as an announcement: never the emergency's.
     expect(card).toMatchObject({ rank: 80, content: { level: "info" } });
   });

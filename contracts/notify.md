@@ -313,7 +313,7 @@ The hub is a static PWA served by Notify under `/notify/`, reached from the Puls
 | The hub shows | For | From |
 |---|---|---|
 | Now and next, the run-of-show | Guests (`public` items), members (also `attendees` items) | agenda API: `GET /api/agenda/now`, `GET /api/agenda/items` |
-| Announcements | Guests and members | Moments' announcements ([moments.md](moments.md#announcements-115)); a read for the hub comes with the App track |
+| Announcements | Guests and members | Moments' announcements ([moments.md](moments.md#announcements-115)): the live ones from `GET /api/moments/announcements/live` (additive, #780), drawn by their level on the front door's "What's on" until the App track's Now takes the same looks |
 | Notifications, preferences, subscribe and unsubscribe | Guests and members | This API |
 | Channels per topic, followed games | Members | This API (`/api/notify/me`, follows); the games for the follow list from the games API ([games.md](games.md)) |
 | Your order | Members | The pizza contract: the caller's own orders and their status |

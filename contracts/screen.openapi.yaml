@@ -968,6 +968,23 @@ components:
           description: The override's `expires_at` (else `starts_at` plus `ttl_seconds`); the screen ends the claim then, also offline. Renewals move it; `starts_at` never moves.
         effect:
           $ref: "#/components/schemas/CueEffect"
+        keep_ticker:
+          type: boolean
+          enum: [true]
+          description: On a placed `full` claim whose override keeps the ticker running (additive, #780); absent otherwise.
+        aside:
+          type: object
+          description: |
+            Nearby content for a full-screen announcement at info or important (additive, #780; contracts/screen.md,
+            Moments drive it): the zone's `food_status` for a pizza-sourced one while the food box has content, else
+            its `agenda_now`. Absent on every other claim.
+          required: [widget, view]
+          properties:
+            widget:
+              type: string
+              enum: [food_status, agenda_now]
+            view:
+              type: object
     CueEffect:
       type: object
       description: A Moments cue's picture on the claimed box, from `starts_at` (contracts/screen.md, Cue effects). Absent without one.

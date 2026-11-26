@@ -8,6 +8,7 @@ import type { Orders, SentOverride, WantedOverride } from "./arbiter.js";
 import { dropPlacements, endOverride, liveOverrides, putOverride, splitZones } from "./store.js";
 import type { Actor, MomentRow } from "./store.js";
 import type { EndReason } from "./engine.js";
+import { overrideHints } from "./announce/chain.js";
 
 /**
  * Sends what changed between the overrides last sent and the ones the moment wants now:
@@ -90,6 +91,7 @@ function sentOf(m: MomentRow, w: WantedOverride): SentOverride {
 function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
   return {
     ...s,
+    ...overrideHints(m),
     source: m.source,
     effect: m.effect,
     sound: null,
