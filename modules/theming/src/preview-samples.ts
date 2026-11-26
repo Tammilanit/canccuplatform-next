@@ -123,6 +123,7 @@ export function organiserPage(
 ): Html {
   return shellPage({
     title: "Run of show",
+    description: "Everything that happens at the event, in time order.",
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,

@@ -203,6 +203,8 @@ Everything is drawn night-first: the board opens on "Demo night". Five new sheet
 5. **The bottom bar always ends in More.** A page's pending row (Save, Publish) sits above the bar, is 52 px, and hides while scrolling.
 6. **The run of show is one continuous list;** the day switch jumps and follows the scroll.
 7. **Front pages keep the poster at one height** in every state.
+8. **Every organiser and crew page says what it is for** (PO, 2026-11-23, #782): one or two sentences, at most 240 characters, under the title, in the reader's words. The kits refuse a page without one (`shellPage`'s `description`, `shell_page`'s `description_html`); only an error view, which is its own title, has none. The demo screenshots fail a shot whose page has none.
+9. **Tooltips everywhere** (PO, 2026-11-23, #782): every icon-only button, every setting's label and every status chip has one, from the kit's one tooltip (`tooltip`, `infoTip`, `iconButton`, `statusChip`). It opens on hover and keyboard focus on a PC and on a tap on a phone; an icon-only button still acts on a tap, and a long press shows its tooltip. A chip inside a link (a run-of-show row) is part of the link's text, with no tooltip of its own, so a tap opens the link; its label says what it means.
 
 ## Questions for the product owner
 

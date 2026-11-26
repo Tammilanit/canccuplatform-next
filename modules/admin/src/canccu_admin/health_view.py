@@ -5,10 +5,17 @@ from __future__ import annotations
 
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from canccu_kit.ui import esc, time_label
+from canccu_kit.ui import esc, status_chip, time_label
 
 from .health import EVERY_SECONDS, Check, Part
 from .pages import BASE, HEALTH_ORDER, HEALTH_WORDS, part_name
+
+# What a part's status means, in its chip's tooltip (#782).
+HEALTH_TIPS = {
+    "ok": "It answered the last check in time.",
+    "degraded": "It answered the last check, but slowly or with a warning: see what it says.",
+    "down": "It did not answer the last check. What to check says where to look.",
+}
 
 # One line per part: what it does for the event.
 DOES = {
@@ -108,8 +115,9 @@ def _live(check: Check, zone: str) -> tuple[str, str]:
     rows = "".join(
         f"<tr><td><b>{esc(part_name(p.key))}</b>"
         + (f'<span class="canccu-table__sub">{esc(DOES[p.key])}</span>' if p.key in DOES else "")
-        + f'</td><td><span class="canccu-badge canccu-badge--{esc(p.status)}">'
-        f"{esc(HEALTH_WORDS.get(p.status, p.status))}</span></td>"
+        + "</td><td>"
+        + status_chip(p.status, HEALTH_WORDS.get(p.status, p.status), HEALTH_TIPS.get(p.status, ""))
+        + "</td>"
         + (f"<td>{says[p.key]}</td>" if said else "")
         + f'<td class="canccu-hide-phone canccu-num">{esc(p.version)}</td>'
         f'<td class="canccu-hide-phone canccu-num">'

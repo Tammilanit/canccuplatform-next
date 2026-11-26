@@ -44,6 +44,9 @@ async function render(width: number, height: number, rows = 120, event = EVENT):
   const doc = String(
     shellPage({
       title: "Long page",
+      // A whole-pixel height: a text line is 22.5 px, and a page of 9797.5 px scrolls to a whole
+      // pixel, so a sticky menu would sit 0.5 px off its window's foot.
+      description: html`<span style="display: block; height: 24px">Description</span>`,
       body,
       event,
       now: NOW,

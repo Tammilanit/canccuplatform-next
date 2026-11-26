@@ -76,6 +76,11 @@ async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env
     # The item that slipped carries the badge; its planned time stands struck through in Was.
     assert "+15 min" in text and '<s class="canccu-agenda-was">18:30</s>' in text
     assert "Crew only" in text and crew_only["id"] in text
+    # Each row is one link and one tab stop, and a tap opens it: its chips are its text, with no
+    # tab stop or tooltip of their own.
+    rows = re.findall(r'<a class="canccu-agenda-row.*?</a>', text, re.S)
+    assert rows and not any("tabindex" in r or "canccu-tip" in r for r in rows)
+    assert any(">Cancelled</span>" in r for r in rows)
 
 
 async def test_an_empty_run_of_show_says_so(env: Env) -> None:

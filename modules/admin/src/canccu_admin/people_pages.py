@@ -12,7 +12,16 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from canccu_kit.rights import Session
-from canccu_kit.ui import day_label, empty_state, esc, icon, initials, notice, time_label
+from canccu_kit.ui import (
+    day_label,
+    empty_state,
+    esc,
+    icon,
+    initials,
+    notice,
+    status_chip,
+    time_label,
+)
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
@@ -60,7 +69,9 @@ def last_here(at: datetime | None, now: datetime, time_zone: str) -> str:
 def role_control(person: Person) -> str:
     """The role as buttons: one tap applies it (the owner's is a badge, as it never changes)."""
     if person.role == "owner":
-        return '<span class="canccu-badge canccu-badge--primary">Owner</span>'
+        return status_chip(
+            "primary", "Owner", "The owner holds every right. The owner's role never changes."
+        )
     buttons = "".join(
         f'<button class="canccu-chip" name="role" value="{_role_value(r)}" aria-pressed='
         f'"{"true" if person.role == r else "false"}">{ROLE_NAMES[r]}</button>'
@@ -272,6 +283,9 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
             current="people",
             crumb=(PEOPLE, "People"),
             narrow=True,
+            description_html=(
+                "This person's role and what it lets them do. A new role applies at once."
+            ),
         )
 
     async def save_role(request: Request) -> Response:
@@ -321,6 +335,10 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
             current="people",
             crumb=(PEOPLE, "People"),
             narrow=True,
+            description_html=(
+                "Removing someone ends their sessions and takes their role."
+                " They stay in the history."
+            ),
         )
 
     async def remove(request: Request) -> Response:

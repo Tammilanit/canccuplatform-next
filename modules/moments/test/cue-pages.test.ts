@@ -155,7 +155,8 @@ run("the sound desk", () => {
   it("tells a zone without a sound screen where to set one", async () => {
     w.zoneStatus.set("cafe", { energy: "lively", device: null });
     const words = text((await w.call("admin", "GET", "/cues/limits")).body);
-    expect(words).toContain("None · Set one in Devices ›");
+    // The chip's tooltip (#782) sits between "None" and the link.
+    expect(words).toMatch(/None The zone has no sound screen[^·]*· Set one in Devices ›/);
     expect(text((await w.call("admin", "GET", "/cues")).body)).toMatch(
       /cafe \d+ of 20 this hour no sound screen/,
     );

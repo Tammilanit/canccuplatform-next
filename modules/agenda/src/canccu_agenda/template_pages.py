@@ -27,6 +27,11 @@ from .web import (
     text_input,
 )
 
+TEMPLATE_ABOUT = (
+    "A template fills Quick add's items: their kind, length, place, audience, reminders and "
+    "channels."
+)
+
 
 async def _template_writer(request: Request) -> None:
     session = await page_session(request)
@@ -128,7 +133,7 @@ async def edit_page(request: Request) -> Response:
         raise not_found("template")
     title = "New template" if row is None else f"Template: {row['name']}"
     values = dict(row) if row is not None else {"visibility": "public", "kind": "other"}
-    return page(request, title, _form(values, template_id, kinds))
+    return page(request, title, _form(values, template_id, kinds), description=TEMPLATE_ABOUT)
 
 
 async def save_page(request: Request) -> Response:
@@ -146,7 +151,7 @@ async def save_page(request: Request) -> Response:
             # Shown again as posted, so nothing typed is lost.
             shown = {**form, **_safe(form)}
             body = _form(shown, template_id, kinds, exc.message)
-            return page(request, "Template", body, status=400)
+            return page(request, "Template", body, status=400, description=TEMPLATE_ABOUT)
     return redirect("/templates")
 
 

@@ -10,11 +10,11 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from canccu_kit.rights import Session
-from canccu_kit.ui import icon
+from canccu_kit.ui import icon, status_chip
 
 from .access import WRITE
 from .times import hhmm, next_minute
-from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc
+from .web import BASE, CHANNEL_LABELS, CHIP_TIPS, VISIBILITY_LABELS, VISIBILITY_TIPS, esc
 
 # Screen's own player of a zone for a signed-in person (contracts/screen.md, A zone for a
 # session), so the miniature is the live Pulse with this list's delays. Every event has `main`.
@@ -66,10 +66,10 @@ def _slip(row: Any) -> int:
     return 0
 
 
-def _late(minutes: int) -> str:
+def _late(minutes: int, in_link: bool = False) -> str:
     if not minutes:
         return ""
-    return f'<span class="canccu-badge canccu-badge--late">{minutes:+d} min</span>'
+    return status_chip("late", f"{minutes:+d} min", CHIP_TIPS["delayed"], in_link=in_link)
 
 
 def late_badge(row: Any) -> str:
@@ -192,15 +192,19 @@ def row_html(
     was = ""
     if row["starts_at"] != row["planned_starts_at"]:
         was = f'<s class="canccu-agenda-was">{hhmm(row["planned_starts_at"], tz)}</s>'
+    # The row is one link and one tab stop, and a tap on a phone opens it: its chips are part of
+    # its text, with no tooltip or tab stop of their own.
     badges = ""
     if state == "running":
-        badges += '<span class="canccu-badge canccu-badge--primary">Now</span>'
+        badges += status_chip("primary", "Now", CHIP_TIPS["running"], in_link=True)
     if state == "cancelled":
-        badges += '<span class="canccu-badge canccu-badge--down">Cancelled</span>'
+        badges += status_chip("down", "Cancelled", CHIP_TIPS["cancelled"], in_link=True)
     else:
-        badges += _late(_slip(row))
+        badges += _late(_slip(row), in_link=True)
     if row["visibility"] == "crew":
-        badges += f'<span class="canccu-badge">{VISIBILITY_LABELS["crew"]}</span>'
+        badges += status_chip(
+            "plain", VISIBILITY_LABELS["crew"], VISIBILITY_TIPS["crew"], in_link=True
+        )
     kind = kinds.get(row["kind"], row["kind"])
     where = _where(row)
     pick = " is-selected" if selected else ""
@@ -300,9 +304,9 @@ def side_html(
         when += f' <s class="canccu-agenda-was">{hhmm(row["planned_starts_at"], tz)}</s>'
     channels = ", ".join(CHANNEL_LABELS[c] for c in item["notify_channels"]) or "none"
     facts = [("When", when), ("Where", esc(_where(row)) or "—"), ("Told on", esc(channels))]
-    badges = "".join(
-        f'<span class="canccu-badge">{esc(b)}</span>'
-        for b in (kinds.get(row["kind"], row["kind"]), VISIBILITY_LABELS[row["visibility"]])
+    badges = status_chip("plain", kinds.get(row["kind"], row["kind"]), CHIP_TIPS["kind"])
+    badges += status_chip(
+        "plain", VISIBILITY_LABELS[row["visibility"]], VISIBILITY_TIPS[row["visibility"]]
     )
     shut = (
         f'<a class="canccu-button canccu-button--ghost canccu-button--sm canccu-agenda-close"'

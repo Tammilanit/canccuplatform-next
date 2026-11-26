@@ -70,6 +70,7 @@ def test_shell_page() -> None:
     doc = shell_page(
         "Theme",
         "<p>body</p>",
+        description_html="d",
         current="theme",
         event=EVENT,
         session=Viewer("theming.theme.write"),
@@ -96,6 +97,7 @@ def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
     doc = shell_page(
         "Settings",
         "",
+        description_html="d",
         session=Viewer("admin.settings.read"),
         menu_notes={"health": ("degraded", "1 <slow>")},
     )
@@ -123,13 +125,19 @@ def test_bar_puts_quick_add_in_the_middle() -> None:
 
 
 def test_no_clock_before_the_event_starts() -> None:
-    doc = shell_page("x", "", event=EVENT, now=datetime(2026, 3, 13, 12, tzinfo=UTC))
+    doc = shell_page(
+        "x", "", description_html="d", event=EVENT, now=datetime(2026, 3, 13, 12, tzinfo=UTC)
+    )
     assert "Starts Sat" in doc and "canccu-clock" not in doc
 
 
 def test_more_leaves_out_what_the_bar_shows() -> None:
     doc = shell_page(
-        "x", "", event=EVENT, session=Viewer("agenda.items.write", "admin.settings.read")
+        "x",
+        "",
+        description_html="d",
+        event=EVENT,
+        session=Viewer("agenda.items.write", "admin.settings.read"),
     )
     assert 'class="canccu-menu__item canccu-menu__item--bar" href="/agenda/"' in doc
     assert 'class="canccu-menu__item" href="/admin/settings"' in doc
@@ -137,34 +145,38 @@ def test_more_leaves_out_what_the_bar_shows() -> None:
 
 
 def test_shell_offers_quick_add_with_the_right() -> None:
-    doc = shell_page("x", "", current="agenda", session=Viewer("agenda.items.write"))
+    doc = shell_page(
+        "x", "", description_html="d", current="agenda", session=Viewer("agenda.items.write")
+    )
     assert 'href="/agenda/add"' in doc
 
 
 def test_archived_event_has_badge_and_banner() -> None:
     archived = EventInfo(**{**EVENT.__dict__, "status": "archived"})
-    doc = shell_page("x", "", event=archived, session=Viewer())
+    doc = shell_page("x", "", description_html="d", event=archived, session=Viewer())
     assert ">Archived<" in doc and "canccu-banner" in doc
 
 
 def test_an_archived_event_has_no_quick_add_in_the_bar() -> None:
     archived = EventInfo(**{**EVENT.__dict__, "status": "archived"})
-    doc = shell_page("x", "", event=archived, session=Viewer("agenda.items.write"))
+    doc = shell_page(
+        "x", "", description_html="d", event=archived, session=Viewer("agenda.items.write")
+    )
     assert 'href="/agenda/add"' not in doc and 'href="/agenda/"' in doc
 
 
 def test_the_header_shows_the_event_s_logo_or_initials() -> None:
-    doc = shell_page("x", "", event=EVENT, session=Viewer())
+    doc = shell_page("x", "", description_html="d", event=EVENT, session=Viewer())
     assert (
         '<header class="canccu-header"><img class="canccu-header__logo" src="/theming/logo" alt="">'
     ) in doc
-    assert "canccu-header__logo" not in shell_page("x", "")
+    assert "canccu-header__logo" not in shell_page("x", "", description_html="d")
 
 
 def test_a_phone_shows_three_tabs_and_the_rest_behind_a_count() -> None:
     labels = ["Live", "Devices", "Zones", "Schedule", "Content", "Ticker"]
     tabs = [(f"/s/{label}", label, label == "Content") for label in labels]
-    doc = shell_page("Studio", "", session=Viewer(), tabs=tabs)
+    doc = shell_page("Studio", "", description_html="d", session=Viewer(), tabs=tabs)
     nav = doc.split('<nav class="canccu-tabs"')[1].split("</nav>")[0]
     assert '<a href="/s/Live">Live</a>' in nav
     assert '<a href="/s/Content" aria-current="page">Content</a>' in nav
@@ -172,7 +184,9 @@ def test_a_phone_shows_three_tabs_and_the_rest_behind_a_count() -> None:
         assert f'<a class="canccu-tabs__extra" href="/s/{extra}">{extra}</a>' in nav
     assert 'popovertarget="canccu-tabs-more">3 more</button>' in nav
     assert '<a href="/s/Zones">Zones</a>' in nav.split('id="canccu-tabs-more"')[1]
-    assert "canccu-tabs__more" not in shell_page("x", "", session=Viewer(), tabs=tabs[:3])
+    assert "canccu-tabs__more" not in shell_page(
+        "x", "", description_html="d", session=Viewer(), tabs=tabs[:3]
+    )
 
 
 def test_no_access_never_shows_the_right() -> None:
@@ -244,7 +258,9 @@ def test_event_info_from_the_tenants_api() -> None:
 
 def test_pages_link_the_event_s_tokens_after_ui_css() -> None:
     # contracts/theming.md, The current tokens, for pages (#432).
-    page = shell_page("Settings", "<p>x</p>", css=["/ui/ui.css", "/admin/static/admin.css"])
+    page = shell_page(
+        "Settings", "<p>x</p>", description_html="d", css=["/ui/ui.css", "/admin/static/admin.css"]
+    )
     assert (
         '<link rel="stylesheet" href="/ui/ui.css">'
         '<link rel="stylesheet" href="/theming/current/admin-tokens.css">'
@@ -268,9 +284,11 @@ def test_an_error_page_marks_no_menu_item() -> None:
 
 
 def test_a_signed_in_shell_loads_the_offline_fallback() -> None:
-    signed_in = shell_page("Settings", "", session=Viewer("admin.settings.read"))
+    signed_in = shell_page(
+        "Settings", "", description_html="d", session=Viewer("admin.settings.read")
+    )
     assert '<script src="/admin/static/shell.js" defer></script>' in signed_in
-    assert "shell.js" not in shell_page("Signed out", "")
+    assert "shell.js" not in shell_page("Signed out", "", description_html="d")
 
 
 def test_a_front_page_without_an_event_shows_the_platform_poster() -> None:
@@ -321,7 +339,7 @@ def test_a_page_description_is_html_by_name() -> None:
     doc = shell_page("x", "", description_html='Checked <span data-live="1">now</span>.')
     assert '<p class="canccu-pagehead__desc">Checked <span data-live="1">now</span>.</p>' in doc
     with pytest.raises(TypeError):
-        shell_page("x", "", description="<b>raw</b>")  # type: ignore[call-arg]
+        shell_page("x", "", description_html="d", description="<b>raw</b>")  # type: ignore[call-arg]
 
 
 def test_a_failure_after_a_form_post_offers_the_way_back_not_a_retry() -> None:
@@ -344,3 +362,12 @@ def test_off_the_venue_after_a_form_post_offers_the_way_back() -> None:
     refused = KitError("x", status=403, code="admin_access_restricted")
     _, view = error_view(refused, back=("/agenda/", "Back to the run of show"))
     assert "Try again</a>" not in view and "Back to the run of show" in view
+
+
+def test_shell_page_refuses_an_empty_description() -> None:
+    with pytest.raises(ValueError, match="page description required: Settings"):
+        shell_page("Settings", "")
+
+
+def test_plain_page_needs_no_description() -> None:
+    assert "canccu-pagehead__desc" not in shell_page("Not found", "x", plain=True)

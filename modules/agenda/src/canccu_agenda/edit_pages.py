@@ -24,6 +24,14 @@ from .preview import change_of, preview_html, told, told_announce
 from .times import hhmm, zone_of
 from .web import BASE, button, esc, field, hidden, notice, page, page_writer, redirect, text_input
 
+CANCEL_ABOUT = (
+    "A cancelled item stays in the run of show, marked as cancelled. Check who is told before "
+    "you confirm."
+)
+SHOW_ABOUT = (
+    "Show the item on the screens now. Check what moves and who is told before you confirm."
+)
+
 
 def _day(row: Any, request: Request) -> str:
     starts: datetime = row["starts_at"]
@@ -60,7 +68,7 @@ async def cancel_page(request: Request) -> Response:
         + button("Cancel the item", "danger")
         + "</form>"
     )
-    return page(request, f"Cancel {row['title']}", body)
+    return page(request, f"Cancel {row['title']}", body, description=CANCEL_ABOUT)
 
 
 async def cancel_save(request: Request) -> Response:
@@ -157,7 +165,7 @@ async def show_now_page(request: Request) -> Response:
     if minutes == 0:
         if not announcing:
             body = notice("Screens already show it in now and next.")
-            return page(request, f"Show {row['title']} now", body)
+            return page(request, f"Show {row['title']} now", body, description=SHOW_ABOUT)
         body = notice("Screens already show it in now and next; you can still announce it.")
         label = "Announce now"
     else:
@@ -174,7 +182,7 @@ async def show_now_page(request: Request) -> Response:
         + announcing
         + f'<div class="canccu-agenda-actions">{button(label)}</div></form>'
     )
-    return page(request, f"Show {row['title']} now", body)
+    return page(request, f"Show {row['title']} now", body, description=SHOW_ABOUT)
 
 
 async def show_now_save(request: Request) -> Response:

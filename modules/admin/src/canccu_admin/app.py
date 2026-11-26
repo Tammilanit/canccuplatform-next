@@ -267,6 +267,10 @@ def create_app(
             current="settings",
             narrow=True,
             crumb=(f"{BASE}/settings", "Settings"),
+            description_html=esc(
+                f"How {part_name(module, settings=True)} behaves at this event. Each field says"
+                " what it does; a change applies when you save it."
+            ),
         )
 
     async def settings_form(request: Request) -> Response:

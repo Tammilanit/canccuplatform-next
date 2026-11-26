@@ -31,6 +31,7 @@ from .ui_base import (
     tabs_nav,
     time_label,
 )
+from .ui_tips import icon_button, info_tip, status_chip, tooltip
 from .ui_views import empty_state, error_view, front_page, notice
 
 # The modules import the shell from here; canccu_kit.ui_base holds its data and small parts.
@@ -49,6 +50,8 @@ __all__ = [
     "event_clock",
     "front_page",
     "icon",
+    "icon_button",
+    "info_tip",
     "initials",
     "local_time",
     "menu_for",
@@ -56,7 +59,9 @@ __all__ = [
     "shell_page",
     "sign_out_form",
     "state_badge",
+    "status_chip",
     "time_label",
+    "tooltip",
 ]
 
 
@@ -191,6 +196,9 @@ def shell_page(
     are (href, label, current); `plain` leaves out the title row, for an error view that is its
     own title; `menu_notes` badge a menu item by id with (status, text) when its page needs a
     look."""
+    if not plain and not description_html.strip():
+        # Every organiser and crew page says what it is for (#782, docs/design/README.md).
+        raise ValueError(f"page description required: {title}")
     banner = ""
     if event and event.status == "archived":
         banner = (

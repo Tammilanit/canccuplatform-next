@@ -67,7 +67,7 @@ export async function page(
     title: string;
     tab?: string;
     body: Slot;
-    description?: Slot;
+    description: Slot;
     status?: number;
     plain?: boolean;
     /** The menu item it belongs to: the Screen studio's, unless it is a page of its own. */
@@ -106,7 +106,7 @@ export async function page(
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     plain: o.plain ?? false,
     ...(o.wide === true ? { width: "wide" as const } : {}),
-    ...(o.description === undefined ? {} : { description: o.description }),
+    description: o.description,
     ...(o.tab === undefined
       ? {}
       : {
@@ -168,6 +168,7 @@ export function pageErrors(scope: FastifyInstance, deps: AppDeps): void {
       body: view,
       status: pageErr.status,
       plain: true,
+      description: "",
     });
   });
 }

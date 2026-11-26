@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import timedelta
 
 import pytest
@@ -58,7 +59,10 @@ async def test_health_names_every_part_with_a_badge(
 ) -> None:
     owner, _ = await owner_and_member(world, caplog)
     r = await world.browser(owner).get("/admin/health-view")
-    assert "<b>Admin</b>" in r.text and 'canccu-badge--ok">Running</span>' in r.text
+    assert "<b>Admin</b>" in r.text
+    assert re.search(
+        r'canccu-badge--ok" tabindex="0" aria-describedby="[^"]+">Running</span>', r.text
+    )
 
 
 async def test_food_s_settings_open_in_food_s_own_settings_tab(

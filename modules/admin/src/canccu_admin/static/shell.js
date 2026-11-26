@@ -68,3 +68,130 @@ document.addEventListener("canccu-health-swapped", () => {
   else readNote();
 });
 followNote();
+
+// Tooltips (#782, packages/ui tip.ts): ui.css shows them on hover and keyboard focus. A phone has
+// neither, so a tap on an info button or a chip opens its tooltip and a tap elsewhere closes it;
+// an icon button acts on a tap, so only a press of LONG_PRESS_MS shows its tooltip, and the click
+// that ends that press is swallowed. Esc hides every shown tooltip until it is left, or until its
+// trigger is clicked or pressed again.
+const LONG_PRESS_MS = 500;
+// A finger drifts a few pixels while it holds still; a scroll moves further and is no press.
+const PRESS_SLOP_PX = 10;
+// The click that ends a long press follows its pointerup at once; a press that ends without one
+// (the browser's own long-press menu) must not swallow a later click.
+const SWALLOW_MS = 400;
+const OPEN = "canccu-tip--open";
+const HUSHED = "canccu-tip--hushed";
+const PLACED = "canccu-tip__text--placed";
+// Triggers that act on a tap, so their tooltip waits for a long press.
+const PRESSED = ".canccu-tip > .canccu-button--icon, .canccu-tip > .canccu-stepper__button";
+const EDGE_PX = 8;
+const GAP_PX = 6;
+let pressTimer;
+let pressFrom;
+let swallowClick = false;
+
+/** Fixed on the screen, above its trigger or below when there is no room, inside the screen's
+ * edges: a card that clips its overflow (canccu-card--flush) never cuts it. */
+function place(tip) {
+  const text = tip.querySelector(":scope > .canccu-tip__text");
+  if (!text) return;
+  const at = tip.getBoundingClientRect();
+  const { width, height } = text.getBoundingClientRect();
+  const right = document.documentElement.clientWidth - EDGE_PX - width;
+  const left = Math.max(EDGE_PX, Math.min(at.left + at.width / 2 - width / 2, right));
+  const above = at.top - GAP_PX - height;
+  text.classList.add(PLACED);
+  text.style.left = `${left}px`;
+  text.style.top = `${above >= EDGE_PX ? above : at.bottom + GAP_PX}px`;
+}
+
+function placeShown() {
+  for (const tip of document.querySelectorAll(
+    `.canccu-tip:hover, .canccu-tip:focus-within, .${OPEN}`,
+  )) {
+    place(tip);
+  }
+}
+
+for (const name of ["pointerover", "focusin"]) {
+  document.addEventListener(name, (e) => {
+    const tip = e.target.closest?.(".canccu-tip");
+    if (tip) place(tip);
+  });
+}
+document.addEventListener("scroll", placeShown, { capture: true, passive: true });
+window.addEventListener("resize", placeShown);
+
+function closeTips(except) {
+  for (const tip of document.querySelectorAll(`.${OPEN}`)) {
+    if (tip !== except) tip.classList.remove(OPEN);
+  }
+}
+
+document.addEventListener(
+  "click",
+  (e) => {
+    if (swallowClick) {
+      swallowClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const trigger = e.target.closest?.(".canccu-tip > .canccu-tip__info, .canccu-tip > .canccu-badge");
+    const tip = trigger?.parentElement;
+    closeTips(tip);
+    if (tip) {
+      place(tip);
+      tip.classList.remove(HUSHED);
+      tip.classList.toggle(OPEN);
+    }
+  },
+  true,
+);
+
+document.addEventListener("pointerdown", (e) => {
+  const button = e.target.closest?.(PRESSED);
+  swallowClick = false;
+  if (!button || e.pointerType !== "touch") return;
+  clearTimeout(pressTimer);
+  pressFrom = { x: e.clientX, y: e.clientY };
+  pressTimer = setTimeout(() => {
+    closeTips(button.parentElement);
+    place(button.parentElement);
+    button.parentElement.classList.remove(HUSHED);
+    button.parentElement.classList.add(OPEN);
+    swallowClick = true;
+  }, LONG_PRESS_MS);
+});
+document.addEventListener("pointermove", (e) => {
+  if (pressFrom && Math.hypot(e.clientX - pressFrom.x, e.clientY - pressFrom.y) > PRESS_SLOP_PX) {
+    clearTimeout(pressTimer);
+  }
+});
+for (const name of ["pointerup", "pointercancel"]) {
+  document.addEventListener(name, () => {
+    clearTimeout(pressTimer);
+    pressFrom = undefined;
+    if (swallowClick) setTimeout(() => (swallowClick = false), SWALLOW_MS);
+  });
+}
+document.addEventListener("contextmenu", (e) => {
+  if (e.target.closest?.(PRESSED)) e.preventDefault();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const shown = new Set(document.querySelectorAll(`.canccu-tip:hover, .${OPEN}`));
+  const focused = document.activeElement?.closest?.(".canccu-tip");
+  if (focused) shown.add(focused);
+  closeTips();
+  for (const tip of shown) tip.classList.add(HUSHED);
+});
+for (const name of ["focusout", "pointerleave"]) {
+  document.addEventListener(
+    name,
+    (e) => e.target.closest?.(".canccu-tip")?.classList.remove(HUSHED),
+    true,
+  );
+}

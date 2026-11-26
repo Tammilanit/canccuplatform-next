@@ -28,6 +28,20 @@ export const cookieOn = (pair) => {
 };
 
 /**
+ * The page rule of the organiser pages (#782, docs/design/README.md decision 8): a page with a
+ * title row says what it is for in one or two sentences, at most 240 characters. `seen` is what
+ * the page shows: whether it has a title row and its description's text. Null when it passes.
+ */
+export function descriptionProblem(path, seen) {
+  if (!seen.head) return null;
+  if (seen.text === "") return `${path} has no page description`;
+  const ends = seen.text.match(/[.!?](?=\s|$)/g) ?? [];
+  if (seen.text.length > 240 || ends.length > 2)
+    return `${path} has a page description longer than two sentences`;
+  return null;
+}
+
+/**
  * `shot(name, path, viewport, cookie, options)`: one page in a fresh context, written to
  * `out/<name>.png` unless `check`. A failure is handed to `fail`, never thrown, so the run goes on.
  */
@@ -79,6 +93,17 @@ export function shooter({ browser, at, out, check, fail, ok }) {
           .catch(() => undefined);
       if (refused.length)
         throw new Error(`its API reads answered ${refused.join(", ")}`);
+      const described = descriptionProblem(
+        path,
+        await page.evaluate(() => ({
+          head: document.querySelector("main .canccu-pagehead") !== null,
+          text:
+            document
+              .querySelector("main .canccu-pagehead__desc")
+              ?.textContent?.trim() ?? "",
+        })),
+      );
+      if (described) throw new Error(described);
       if (tall) {
         // A full-page capture would leave the sticky bottom bar where the window ended.
         const { width, height } = page.viewportSize();

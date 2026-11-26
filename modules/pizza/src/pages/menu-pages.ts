@@ -49,6 +49,7 @@ export async function previewPage(
   const rows = csv.split(/\r?\n/).filter((l) => l.trim() !== "").length - 1;
   return organiserPage(request, reply, deps, c, {
     title: c.t("import.title"),
+    description: c.t("about.import"),
     crumb: { href: `${P}/import`, label: c.t("import.back") },
     body: previewView(c, csv, file, changesOf(c, file, current), Math.max(rows, 0)),
   });
@@ -68,6 +69,7 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
     const c = await writer(request);
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
+      description: c.t("about.menus"),
       tab: "pizzerias",
       body: pizzeriasView(c, await all(request), request.query.error),
     });
@@ -86,6 +88,7 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
     const c = await writer(request);
     return organiserPage(request, reply, deps, c, {
       title: c.t("import.title"),
+      description: c.t("about.import"),
       crumb: { href: P, label: c.t("tab.pizzerias") },
       narrow: true,
       body: importView(c, request.query.error),
@@ -138,6 +141,7 @@ export function menuPages(app: FastifyInstance, deps: AppDeps): void {
       const p = await one(request, request.params.id);
       return organiserPage(request, reply, deps, c, {
         title: p.name,
+        description: c.t("about.pizzeria"),
         crumb: { href: P, label: c.t("tab.pizzerias") },
         body: pizzeriaView(c, p, request.query.error, await readerAvailable(deps, c.tenant)),
       });

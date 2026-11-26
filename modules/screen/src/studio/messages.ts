@@ -12,9 +12,11 @@ import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 import { MOTION_CLIENT_KEYS, MOTION_EN } from "./motion-view.js";
 import { PINS_EN } from "./pins-messages.js";
 import { PAIR_CLIENT_KEYS, PAIR_EN } from "./pair-messages.js";
+import { TIPS_EN } from "./tips-messages.js";
 
 const EN = {
   ...CONTENT_EN,
+  ...TIPS_EN,
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
   ...LAYOUT_EN,
