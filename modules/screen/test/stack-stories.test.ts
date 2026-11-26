@@ -64,7 +64,8 @@ describe("the storyboards while the screens are shot", () => {
   it("are left alone when none is on", async () => {
     const off = STORIES.map((s) => ({ ...s, enabled: false }));
     const { demo, calls } = moments(off);
-    await (await storiesOff(demo))();
+    const back = await storiesOff(demo);
+    await back();
     expect(calls).toEqual(["GET on: "]);
   });
 
