@@ -364,4 +364,6 @@ export const themeView = (t: ThemeNow): Record<string, unknown> => ({
   css_url: t.css_url,
   logo_url: t.logo_url,
   templates: t.templates,
+  // The screen's background (theming.md, The two backgrounds); absent from an older theming.
+  ...(t.backdrop === undefined ? {} : { backdrop: t.backdrop }),
 });

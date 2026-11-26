@@ -188,7 +188,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       const body = await publish(request, fromDraft, async (c, base) => {
         const draft = await lockDraft(c, version);
         // Checked again: the stored problems may come from an older module version.
-        const problems = await draftProblems(c, draft.manifest);
+        const problems = await draftProblems(c, deps.files, draft.manifest);
         if (hasError(problems)) throw new Invalid(problems);
         const current = await lockHistory(c);
         const p = await writeRevision(c, deps.files, current, {

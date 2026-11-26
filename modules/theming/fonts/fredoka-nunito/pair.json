@@ -1,0 +1,25 @@
+{
+  "name": "Cozy",
+  "heading": {
+    "family": "Fredoka",
+    "faces": [
+      {
+        "weight": 600,
+        "file": "fredoka-600.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Nunito",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "nunito-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "nunito-700.woff2"
+      }
+    ]
+  }
+}

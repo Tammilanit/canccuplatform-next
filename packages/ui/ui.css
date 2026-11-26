@@ -135,10 +135,26 @@
     border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
     background: var(--canccu-color-surface);
   }
+  /*
+   * The logo's plate (contracts/theming.md, Stable classes and custom properties): the theme's
+   * ground for a logo with none of its own, padded by a share of the logo's own height (the
+   * private --canccu-logo-height), so every size wears the same plate. Without a plate the
+   * custom properties are unset and the logo draws as before.
+   */
+  .canccu-header__logo,
+  .canccu-poster__logo {
+    box-sizing: content-box;
+    height: var(--canccu-logo-height);
+    padding: calc(var(--canccu-logo-height) * var(--canccu-logo-plate-padding, 0));
+    border-radius: var(--canccu-logo-plate-radius, 0);
+    background: var(--canccu-logo-plate, transparent);
+    aspect-ratio: var(--canccu-logo-plate-aspect, auto);
+    object-fit: contain;
+  }
   .canccu-header__logo {
+    --canccu-logo-height: 1.75rem;
     display: block;
     flex: none;
-    height: 1.75rem;
     width: auto;
     max-width: 10rem;
   }
@@ -454,8 +470,8 @@
     text-decoration: none;
   }
   .canccu-poster__logo {
+    --canccu-logo-height: 3.5rem;
     display: block;
-    height: 3.5rem;
     width: auto;
     max-width: 16rem;
     margin-bottom: 1rem;
@@ -708,7 +724,7 @@
       max-width: 4.5rem;
     }
     .canccu-poster__logo {
-      height: 2.5rem;
+      --canccu-logo-height: 2.5rem;
     }
     .canccu-poster__mark {
       width: 2.5rem;

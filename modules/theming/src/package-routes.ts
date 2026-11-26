@@ -175,7 +175,7 @@ export function packageRoutes(app: FastifyInstance, deps: DraftDeps & { audit: A
           if (version === undefined) await startDraft(c, actor);
           let unused: Unused[] = [];
           let before: Embeds = { manifest: undefined, files: [] };
-          const draft = await editDraft(c, version ?? 0, actor, async () => {
+          const draft = await editDraft(c, deps.files, version ?? 0, actor, async () => {
             before = await draftEmbeds(c);
             // The embeds changed between the right check and the lock.
             if (differs(before) && !embedsAllowed) throw versionConflict("draft");

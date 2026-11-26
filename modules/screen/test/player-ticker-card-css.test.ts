@@ -47,8 +47,8 @@ describe("claims.css, a card in the ticker role", () => {
  * taller than the one-row band, which cut "DEMO EVENT" in half at 1920×1080. In the ticker the logo
  * is one row at the header's size, as in the header.
  */
-describe("widgets.css, a logo in the ticker band", () => {
-  const widgets = readFileSync(new URL("../player/src/widgets.css", import.meta.url), "utf8")
+describe("logo.css, a logo in the ticker band", () => {
+  const widgets = readFileSync(new URL("../player/src/logo.css", import.meta.url), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\s+/g, " ");
   const LOGO = "> .canccu-widget--logo";

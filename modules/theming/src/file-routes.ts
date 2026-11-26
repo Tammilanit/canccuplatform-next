@@ -60,20 +60,26 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
       const checked = await checkUpload(path, body);
       const row = await writingFiles(deps, async (c, place) => {
         let unused: string[] = [];
-        const draft = await editDraft(c, version, actorOf(request), async (manifest) => {
-          const entry: PathEntry = checked.ok
-            ? {
-                file: await place(checked.bytes, checked.ext),
-                bytes: checked.bytes.length,
-                refs: checked.refs,
-                warnings: checked.warnings,
-                sizes: checked.sizes,
-              }
-            : { problem: checked.problem };
-          unused = await setDraftPath(c, path, entry);
-          // Any file but an image is styling only the advanced mode makes (Advanced mode).
-          return path.startsWith("images/") ? manifest : { ...manifest, mode: "advanced" };
-        });
+        const draft = await editDraft(
+          c,
+          deps.files,
+          version,
+          actorOf(request),
+          async (manifest) => {
+            const entry: PathEntry = checked.ok
+              ? {
+                  file: await place(checked.bytes, checked.ext),
+                  bytes: checked.bytes.length,
+                  refs: checked.refs,
+                  warnings: checked.warnings,
+                  sizes: checked.sizes,
+                }
+              : { problem: checked.problem };
+            unused = await setDraftPath(c, path, entry);
+            // Any file but an image is styling only the advanced mode makes (Advanced mode).
+            return path.startsWith("images/") ? manifest : { ...manifest, mode: "advanced" };
+          },
+        );
         return { result: draft, unused };
       });
       return draftBody(row);
@@ -85,10 +91,16 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
       const path = uploadPath(request.query.path);
       const row = await writingFiles(deps, async (c) => {
         let unused: string[] = [];
-        const draft = await editDraft(c, version, actorOf(request), async (manifest) => {
-          unused = await removeDraftPath(c, path);
-          return manifest;
-        });
+        const draft = await editDraft(
+          c,
+          deps.files,
+          version,
+          actorOf(request),
+          async (manifest) => {
+            unused = await removeDraftPath(c, path);
+            return manifest;
+          },
+        );
         return { result: draft, unused };
       });
       return draftBody(row);

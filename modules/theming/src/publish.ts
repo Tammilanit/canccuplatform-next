@@ -4,6 +4,7 @@
  */
 import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
+import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import { brandImages } from "./brand-images.js";
 import { compileStyle } from "./compile.js";
@@ -12,7 +13,7 @@ import { embedHoldings } from "./embeds.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
 import { versionConflict } from "./http.js";
-import { adminTokens, themeTokens, tokensCss } from "./tokens.js";
+import { adminTokens, manifestCss, manifestTokens } from "./tokens.js";
 import type { ThemeTokens, Tokens } from "./tokens.js";
 
 /** The parts `theming.theme.published` names in `changed`, in the contract's order. */
@@ -22,7 +23,7 @@ type Part = (typeof PARTS)[number];
 /** Stored tokens: every token filled in, plus `motion` and `motion_style` when the theme sets them. */
 export type RevisionTokens = ThemeTokens;
 
-const revisionTokens = (manifest: Manifest): RevisionTokens => themeTokens(manifest.tokens);
+const revisionTokens = (manifest: Manifest): RevisionTokens => manifestTokens(manifest);
 
 /**
  * One lock per event's history, held to the end of the transaction, so two publishes or a publish
@@ -82,6 +83,15 @@ const EXTS: Record<string, Part> = {
   mustache: "templates",
 };
 
+/**
+ * The brand's choices no token holds: the plate (drawn through the token CSS) and the backdrop
+ * (in `current`). The colours, the pair and the roundness show in the tokens themselves.
+ */
+function drawnChoices(manifest: Manifest): unknown[] {
+  const brand = isObject(manifest.brand) ? manifest.brand : {};
+  return [brand.logo_plate, brand.backdrop];
+}
+
 function changedParts(before: Holdings, after: Holdings): Part[] {
   const filesOf = (h: Holdings, part: Part): string[] =>
     h.files.filter((f) => EXTS[f.slice(f.lastIndexOf(".") + 1)] === part);
@@ -89,7 +99,12 @@ function changedParts(before: Holdings, after: Holdings): Part[] {
   const pathsOf = (h: Holdings, part: Part): string[] =>
     h.paths.filter((p) => p.startsWith(`${part}/`));
   const differs = (part: Part): boolean => {
-    if (part === "tokens") return !isDeepStrictEqual(before.tokens, after.tokens);
+    if (part === "tokens") {
+      return (
+        !isDeepStrictEqual(before.tokens, after.tokens) ||
+        !isDeepStrictEqual(drawnChoices(before.manifest), drawnChoices(after.manifest))
+      );
+    }
     if (part === "embeds") {
       return (
         !isDeepStrictEqual(before.manifest.embeds, after.manifest.embeds) ||
@@ -187,17 +202,15 @@ export async function writeRevision(
   const style = await compileStyle(c, files, input.source, input.manifest);
   // Generated once here, so every later read of the revision is a pure read of addresses (D4).
   // Files land before the row; on a rollback they stay unreferenced and retention (#246) removes them.
-  const tokensName = await files.put(c, Buffer.from(tokensCss(tokens)), "css");
-  const adminName = await files.put(c, Buffer.from(tokensCss(adminTokens(tokens))), "css");
+  const tokensName = await files.put(c, Buffer.from(manifestCss(input.manifest, tokens)), "css");
+  const adminName = await files.put(
+    c,
+    Buffer.from(manifestCss(input.manifest, adminTokens(tokens))),
+    "css",
+  );
   // Rendered under the history lock, which a publish holds for a few image renders at most: the
   // images are part of the revision, written with it or not at all.
-  const images = await brandImages(
-    c,
-    files,
-    input.source,
-    input.manifest,
-    tokens.colors.background ?? "#000000",
-  );
+  const images = await brandImages(c, files, input.source, input.manifest, tokens);
   const brand = (input.manifest.brand ?? {}) as { embed_color?: string };
   const embedColor = colorInt(brand.embed_color ?? tokens.colors.primary ?? "#000000");
   await c.query(

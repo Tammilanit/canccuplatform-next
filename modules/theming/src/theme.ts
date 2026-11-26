@@ -1,6 +1,9 @@
 /** The current theme as GET /api/theming/current answers it (contracts/theming.md, Reading the current theme). */
 import { requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
+import { backdropImage, backdropView } from "./backdrop.js";
+import type { BackdropView } from "./backdrop.js";
+import type { Manifest } from "./checks.js";
 import type { Db } from "./db.js";
 import { listEmbeds } from "./embeds.js";
 import type { EmbedRef } from "./embeds.js";
@@ -28,6 +31,7 @@ export interface ResolvedTheme {
   layouts: unknown[];
   templates: unknown[];
   embeds: EmbedRef[];
+  backdrop: BackdropView;
 }
 
 /** `#rrggbb[aa]` → the 24-bit Discord colour, alpha dropped (contracts/theming.md, Brand kit). */
@@ -67,6 +71,7 @@ export function revisionZero(profile: PartialTokens | undefined): RevisionZero {
       layouts: [],
       templates: [],
       embeds: [],
+      backdrop: backdropView({}, tokens.colors),
     },
   };
 }
@@ -74,7 +79,7 @@ export function revisionZero(profile: PartialTokens | undefined): RevisionZero {
 interface RevisionRow {
   revision: number;
   published_at: Date;
-  manifest: { layouts?: unknown[] };
+  manifest: Manifest & { layouts?: unknown[] };
   tokens: Tokens;
   tokens_css: string;
   admin_tokens_css: string;
@@ -88,7 +93,7 @@ interface RevisionRow {
   templates: unknown[];
 }
 
-function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
+function fromRevision(row: RevisionRow, embeds: EmbedRef[], picture?: string): ResolvedTheme {
   return {
     revision: row.revision,
     published_at: row.published_at.toISOString(),
@@ -113,6 +118,11 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
     layouts: row.manifest.layouts ?? [],
     templates: row.templates,
     embeds,
+    backdrop: backdropView(
+      row.manifest,
+      row.tokens.colors,
+      picture === undefined ? undefined : SERVED + picture,
+    ),
   };
 }
 
@@ -134,7 +144,19 @@ export async function resolvedRevision(
   const row = rows[0] as RevisionRow | undefined;
   if (row === undefined) return undefined;
   const base = `${SANDBOX}${row.revision}/`;
-  return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base));
+  const path = backdropImage(row.manifest);
+  const picture =
+    path === undefined
+      ? undefined
+      : (
+          (
+            await client.query(
+              `SELECT file FROM theming_package_files WHERE owner = $1 AND path = $2 AND file IS NOT NULL`,
+              [`r:${row.revision}`, path],
+            )
+          ).rows[0] as { file: string } | undefined
+        )?.file;
+  return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base), picture);
 }
 
 /**

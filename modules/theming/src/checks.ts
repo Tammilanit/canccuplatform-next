@@ -4,6 +4,7 @@
  * template and package checks join as their slices land (docs/plans/issue-185.md).
  */
 import { contrastFailures } from "./contrast.js";
+import { FONT_PAIRS } from "./font-pairs.js";
 import { schemaErrors } from "./schema.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
@@ -140,11 +141,29 @@ function contrastProblems(m: Manifest): Problem[] {
   }));
 }
 
+/**
+ * A font pair a newer platform offers, from an import or a sync: a warning, never blocking, as the
+ * text then keeps the system font (plan issue-784 D6, Review focus 4).
+ */
+function pairProblems(m: Manifest): Problem[] {
+  const pair = isObject(m.brand) ? m.brand.font_pair : undefined;
+  if (typeof pair !== "string" || FONT_PAIRS.has(pair)) return [];
+  return [
+    {
+      severity: "warning",
+      code: "reference_unknown",
+      path: "theme.yaml#/brand/font_pair",
+      message: `This platform has no font pair ${pair}, so the text uses the system font.`,
+    },
+  ];
+}
+
 export function checkManifest(m: Manifest): Problem[] {
   return [
     ...schemaErrors(m).map((e) => error("schema", e.path, e.message)),
     ...layoutProblems(m),
     ...contrastProblems(m),
+    ...pairProblems(m),
   ];
 }
 

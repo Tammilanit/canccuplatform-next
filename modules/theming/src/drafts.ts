@@ -4,14 +4,16 @@ import type { SqlClient } from "@canccu/kit";
 import { COLOR_TOKENS } from "@canccu/ui";
 import { generateColors } from "./brand.js";
 import type { Brand } from "./brand.js";
-import { checkManifest } from "./checks.js";
+import { checkManifest, isObject } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
+import type { FileStore } from "./files.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
+import { logoAdvice, logoProblems } from "./logo-plate.js";
 import { referenceProblems } from "./manifest.js";
 import { draftPaths, pathProblems } from "./package-files.js";
 import { lockHistory } from "./publish.js";
 import { readabilityProblems } from "./readability.js";
-import { fillTokens } from "./tokens.js";
+import { fillTokens, manifestTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 
 export interface DraftRow {
@@ -163,6 +165,7 @@ export function profileManifest(profile: PartialTokens | undefined): Manifest {
 
 export async function createDraft(
   c: SqlClient,
+  files: FileStore,
   source: DraftSource,
   actor: string,
   /** The profile's `theme`, which revision 0 shows: a draft from current at revision 0 keeps it. */
@@ -194,7 +197,7 @@ export async function createDraft(
   // Checked again by publish's own check (with any files just copied), so the draft never shows
   // fewer problems than publish refuses with: revision 0's profile may name a font no package holds.
   await c.query(`UPDATE theming_drafts SET problems = $1`, [
-    JSON.stringify(await draftProblems(c, manifest)),
+    JSON.stringify(await draftProblems(c, files, manifest)),
   ]);
   return (await loadDraft(c)) as DraftRow;
 }
@@ -204,14 +207,38 @@ export async function createDraft(
  * problems of the uploads it holds instead of files (package-files.ts), and its CSS's small text
  * (readability.ts).
  */
-export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
+export async function draftProblems(
+  c: SqlClient,
+  files: FileStore,
+  manifest: Manifest,
+): Promise<Problem[]> {
   const paths = await draftPaths(c);
   return [
     ...checkManifest(manifest),
     ...referenceProblems(manifest, paths),
     ...(await pathProblems(c, paths)),
     ...(await readabilityProblems(c, manifest)),
+    ...(await logoReadability(c, files, manifest)),
   ];
+}
+
+/** `logo_unreadable` for the draft's logo on its own colours (logo-plate.ts). */
+async function logoReadability(
+  c: SqlClient,
+  files: FileStore,
+  manifest: Manifest,
+): Promise<Problem[]> {
+  const path = isObject(manifest.images) ? manifest.images.logo : undefined;
+  if (typeof path !== "string") return [];
+  const { rows } = await c.query(
+    `SELECT file FROM theming_package_files WHERE owner = 'draft' AND path = $1 AND file IS NOT NULL`,
+    [path],
+  );
+  const file = (rows[0] as { file: string } | undefined)?.file;
+  if (file === undefined) return [];
+  const { background = "#000000", surface = "#000000" } = manifestTokens(manifest).colors;
+  const advice = await logoAdvice((name) => files.read(name), file, { background, surface });
+  return logoProblems(manifest, path, advice);
 }
 
 /**
@@ -221,6 +248,7 @@ export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<P
  */
 export async function editDraft(
   c: SqlClient,
+  files: FileStore,
   version: number,
   actor: string,
   change: (manifest: Manifest) => Manifest | Promise<Manifest>,
@@ -235,7 +263,7 @@ export async function editDraft(
     [
       newDraftKey(),
       JSON.stringify(manifest),
-      JSON.stringify(await draftProblems(c, manifest)),
+      JSON.stringify(await draftProblems(c, files, manifest)),
       actor,
     ],
   );

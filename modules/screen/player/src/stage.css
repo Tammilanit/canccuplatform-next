@@ -1,7 +1,8 @@
 /*
  * The two backgrounds (contracts/theming.md, The two backgrounds; design guideline sheet 15, Q14).
- * The stage (stage.ts) sits behind every region: the server's blurred art, the drifting glows, the
- * kind and phase tints and a box's tint, then the scrim that keeps text readable over the art. The
+ * The stage (stage.ts) sits behind every region: the theme's own picture, the server's blurred art,
+ * the drifting glows, the kind and phase tints and a box's tint, then the scrim that keeps text
+ * readable over the pictures. The
  * card is one box's own ground: its art under a veil of the theme's surface (widget.ts). Layers move
  * only by opacity and transform, and the art arrives blurred, so nothing here filters live. In
  * `canccu-base`, so a theme's layer restyles any part; colours come from the theme's tokens.
@@ -27,6 +28,21 @@
     background-size: cover;
     opacity: 0;
     transition: opacity 2s ease;
+  }
+
+  /* The theme's own picture (`brand.backdrop.image`): it replaces the glows, under the scrim. */
+  .canccu-stage__backdrop {
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+  }
+
+  .canccu-stage--backdrop .canccu-stage__backdrop {
+    opacity: 1;
+  }
+
+  .canccu-stage--backdrop .canccu-stage__glow {
+    opacity: 0;
   }
 
   .canccu-stage__glow {
@@ -104,7 +120,7 @@
     transition: opacity 2s ease;
   }
 
-  .canccu-stage--art .canccu-stage__scrim {
+  .canccu-stage:is(.canccu-stage--art, .canccu-stage--backdrop) .canccu-stage__scrim {
     opacity: var(--canccu-stage-scrim, 1);
   }
 
