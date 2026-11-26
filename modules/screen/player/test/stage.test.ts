@@ -127,6 +127,62 @@ describe("the theme's own picture (theming.md, The two backgrounds)", () => {
     layer.apply(undefined, "calm", T0, { image_url: draft, scrim: 0.75 });
     expect(stageOf(root).classList.contains("canccu-stage--backdrop")).toBe(true);
   });
+
+  describe("and its video (plan issue-784 D19)", () => {
+    const VIDEO = `/theming/a/${"d".repeat(64)}.mp4`;
+    const withVideo = { image_url: PICTURE, video_url: VIDEO, scrim: 0.8 };
+    const videoOf = (root: HTMLElement): HTMLVideoElement | null =>
+      stageOf(root).querySelector("video");
+
+    it("plays it muted, looping and without controls over its picture at lively and party", () => {
+      for (const level of ["lively", "party"] as const) {
+        const { root, layer } = fresh();
+        layer.apply(undefined, level, T0, withVideo);
+        const video = videoOf(root);
+        expect(video?.getAttribute("src"), level).toBe(VIDEO);
+        expect(video?.muted).toBe(true);
+        expect(video?.loop).toBe(true);
+        expect(video?.hasAttribute("playsinline")).toBe(true);
+        expect(video?.hasAttribute("controls")).toBe(false);
+        expect(video?.getAttribute("poster")).toBe(PICTURE);
+        expect(video?.closest(".canccu-stage__backdrop")).not.toBeNull();
+        expect(stageOf(root).classList.contains("canccu-stage--video")).toBe(true);
+      }
+    });
+
+    it("shows the picture alone at none (reduced motion) and calm, with no video", () => {
+      for (const level of ["none", "calm"] as const) {
+        const { root, layer } = fresh();
+        layer.apply(undefined, level, T0, withVideo);
+        expect(videoOf(root), level).toBeNull();
+        expect(stageOf(root).classList.contains("canccu-stage--backdrop")).toBe(true);
+        expect(stageOf(root).querySelector<HTMLElement>(".canccu-stage__backdrop")?.style.backgroundImage).toContain(PICTURE);
+      }
+    }); // prettier-ignore
+
+    it("stops it when the level drops, and keeps the one playing while it stays", () => {
+      const { root, layer } = fresh();
+      layer.apply(undefined, "party", T0, withVideo);
+      const first = videoOf(root);
+      layer.apply(undefined, "lively", T0 + 1000, withVideo);
+      expect(videoOf(root)).toBe(first);
+      layer.apply(undefined, "calm", T0 + 2000, withVideo);
+      expect(videoOf(root)).toBeNull();
+      expect(stageOf(root).classList.contains("canccu-stage--video")).toBe(false);
+    });
+
+    it("plays none from anywhere else, or without its picture", () => {
+      for (const backdrop of [
+        { ...withVideo, video_url: "https://x.example/a.mp4" },
+        { ...withVideo, video_url: `/theming/a/${"d".repeat(64)}.html` },
+        { video_url: VIDEO, scrim: 0.8 },
+      ]) {
+        const { root, layer } = fresh();
+        layer.apply(undefined, "party", T0, backdrop);
+        expect(videoOf(root), JSON.stringify(backdrop)).toBeNull();
+      }
+    });
+  });
 });
 
 describe("the card's background", () => {

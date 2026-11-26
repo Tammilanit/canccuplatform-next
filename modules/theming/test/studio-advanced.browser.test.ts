@@ -7,7 +7,9 @@
 import type { Frame, Page } from "playwright-core";
 import { describe, expect, it } from "vitest";
 import { ADVANCED_CONTROLS } from "../src/studio-controls.js";
+import { png } from "./drafting.js";
 import { browser, studioSuite } from "./studio-page.js";
+import { mp4 } from "./videos.js";
 
 describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000 }, () => {
   const s = studioSuite();
@@ -147,6 +149,75 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
     await form.locator("button[type=submit]").click();
     await expect.poll(() => parts?.fonts?.[0]?.family).toMatch(/^[A-Za-z0-9 _-]{1,64}$/);
     expect(puts).toEqual(["PUT", "PUT"]);
+  });
+
+  /** A file into the draft as the page uploads one. */
+  async function putFile(path: string, bytes: Buffer): Promise<number> {
+    const version = (await draft()).draft_version;
+    const res = await fetch(
+      `${s.origin}/api/theming/draft/file?path=${encodeURIComponent(path)}&draft_version=${version}`,
+      {
+        method: "PUT",
+        headers: {
+          cookie: "canccu_session=embedder",
+          origin: s.origin,
+          "content-type": "application/octet-stream",
+        },
+        body: new Uint8Array(bytes),
+      },
+    );
+    expect(res.status).toBe(200);
+    return ((await res.json()) as { draft_version: number }).draft_version;
+  }
+
+  /** Picks `bytes` as `name` in a form's file field and sends the form; it says why it refused. */
+  async function refusedPick(page: Page, form: string, field: string, name: string) {
+    const f = page.locator(`form[data-action="${form}"]`);
+    await f.locator(`input[name="${field}"]`).setInputFiles({
+      name,
+      mimeType: "application/octet-stream",
+      buffer: Buffer.from("<html>not a picture</html>"),
+    });
+    await f.locator("button[type=submit]").click();
+    await page.waitForSelector(".canccu-studio-notice:not([hidden])");
+  }
+
+  it("keeps the picture in use when a new one is refused", async () => {
+    await levelUp();
+    const v = await putFile("images/still.png", await png("#223344", 32));
+    const set = await api("PATCH", "/api/theming/draft/parts", {
+      draft_version: v,
+      backdrop_image: "images/still.png",
+    });
+    expect(set.status).toBe(200);
+    const page = await open("/theming/studio/advanced");
+    await refusedPick(page, "backdrop-image", "backdrop_file", "new.png");
+    const after = await draft();
+    const brand = after.manifest.brand as { backdrop?: { image?: string } };
+    expect(brand.backdrop?.image).toBe("images/still.png");
+    expect(after.problems.filter((p) => p.severity === "error")).toEqual([]);
+    expect((after.files ?? []).map((f) => f.path)).toContain("images/still.png");
+  });
+
+  it("keeps the video in use when a new one is refused", async () => {
+    await levelUp();
+    let v = await putFile("images/still.png", await png("#223344", 32));
+    v = await putFile("videos/loop.mp4", mp4());
+    const set = await api("PATCH", "/api/theming/draft/parts", {
+      draft_version: v,
+      backdrop_image: "images/still.png",
+      backdrop_video: "videos/loop.mp4",
+    });
+    expect(set.status).toBe(200);
+    const page = await open("/theming/studio/advanced");
+    await refusedPick(page, "backdrop-video", "video_file", "new.mp4");
+    const after = await draft();
+    const brand = after.manifest.brand as { backdrop?: { video?: string } };
+    expect(brand.backdrop?.video).toBe("videos/loop.mp4");
+    expect(after.problems.filter((p) => p.severity === "error")).toEqual([]);
+    expect((after.files ?? []).map((f) => f.path).filter((p) => p.startsWith("videos/"))).toEqual([
+      "videos/loop.mp4",
+    ]);
   });
 
   it("marks a refused line of the CSS as it is typed", async () => {
