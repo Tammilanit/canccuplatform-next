@@ -265,10 +265,12 @@ function backgroundSection(brand: Brand | undefined): Html {
     html`${field("Looks in the cycle", html`<div class="canccu-studio-looks">${tiles}</div>`)}
       ${switches}${image}
       <p class="canccu-small canccu-muted canccu-studio-note">
-        ${icon("info")}How much the screens move is set for each screen zone in
-        <a href="/admin/screen/zones">Screen settings</a>, not here. A screen starts calm and rises
-        toward that level as the event gets busy (quiet, building, live), and quiet hours keep it
-        calm. Try it with the chips in the preview.
+        ${icon("info")}<span
+          >How much the screens move is set for each screen zone in
+          <a href="/admin/screen/zones">Screen settings</a>, not here. A screen starts calm and
+          rises toward that level as the event gets busy (quiet, building, live), and quiet hours
+          keep it calm. Try it with the chips in the preview.</span
+        >
       </p>`,
   );
 }
@@ -359,17 +361,14 @@ export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): 
       ${section(
         "Corners",
         "",
-        field(
-          "Corners",
-          chips(
-            "roundness",
-            [
-              ["square", "Square"],
-              ["soft", "Soft"],
-              ["round", "Round"],
-            ],
-            roundnessOf(brand, draft),
-          ),
+        chips(
+          "roundness",
+          [
+            ["square", "Square"],
+            ["soft", "Soft"],
+            ["round", "Round"],
+          ],
+          roundnessOf(brand, draft),
         ),
       )}
       ${backgroundSection(brand)}

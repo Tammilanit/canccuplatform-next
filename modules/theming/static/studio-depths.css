@@ -187,6 +187,7 @@
 .canccu-studio-look {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 0.125rem;
   padding: 0.5rem 0.625rem;
@@ -238,6 +239,7 @@
 }
 .canccu-studio-note {
   display: flex;
+  align-items: flex-start;
   gap: 0.5rem;
   margin: 0;
 }
