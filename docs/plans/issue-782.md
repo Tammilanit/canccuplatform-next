@@ -120,6 +120,8 @@ Each with a recommendation; the lead answers in the PR.
 - [ ] **Step 3: Implement**: write each page's one or two sentences (what the page is for, in the reader's words); swap icon-only buttons to `iconButton`/`icon_button`, chips to `statusChip`/`status_chip`, settings labels to D4.
 - [ ] **Step 4: Run** each module's checks (README commands) — PASS. **Step 5: Commit** per module, e.g. `feat(agenda): page descriptions and tooltips`.
 
+**Moved to Part B (PO, 2026-11-26, option a).** Part A ships with its current code. Two gaps the fix-check found in Task A3 moved to Task B0, Part B's first task: the storyboard builder's description, and tooltips on the TypeScript modules' status chips with `pageProblems` seeing `pizza-badge`. Every other page and chip in Task A3 is done in Part A.
+
 ### Task A4: The AI key how-to
 **Files:** Modify `modules/pizza/src/pages/integrations.ts` (split the key card out as `pages/integrations-key.ts` to stay under 400 lines), `modules/pizza/src/pages/messages.ts`, `messages-fi.ts`, `static/pizza.css` · Test `modules/pizza/test/pages-integrations.test.ts`
 
@@ -135,6 +137,14 @@ Each with a recommendation; the lead answers in the PR.
 ---
 
 ## Part B — the admin home and the Event page (items 1, 5)
+
+### Task B0: The two gaps left from Part A (PO, 2026-11-26)
+**Files:** Modify `modules/moments/src/story/builder.ts` (`builderHead`), `modules/moments/src/story/pages.ts`, `modules/moments/src/story/picker-view.ts`, `modules/moments/src/cues/log-view.ts`, `modules/pizza/src/pages/crew-views.ts` (`stateLabel`, the crew counts), `modules/pizza/src/pages/holder-views.ts`, pizza's messages en and fi, `modules/theming/src/studio-advanced.ts` ("Pinned"), `packages/ui/src/page-check.ts` · Test moments' and pizza's page tests, `packages/ui/test/page-check.test.ts`
+
+- [ ] **Step 1: Failing tests**: moments `the storyboard builder has a description` (GET `/moments/storyboards?edit=<key>`: `.canccu-pagehead__desc` is one or two sentences saying what the page is for, with no badge or switch in it); `page-check.test.ts` `a pizza-badge without a tooltip is a problem`; pizza and moments page tests that run `pageProblems` on the crew, holder, storyboard and cue-log pages; theming `the Pinned chip has a tooltip`.
+- [ ] **Step 2: Run** `npx vitest run` on those files in moments, pizza, theming and `packages/ui` — FAIL.
+- [ ] **Step 3: Implement**: the builder gets its own sentence; its Preset/On status moves into the body or the actions (as `studio-kit.ts` does), the badge drawn with `statusChip`. The status chips get tooltips: pizza's order and holder states and crew counts (a wrapper that keeps the `pizza-badge` colours, tooltip text in en and fi), the storyboard On/Off, cue outcomes, theming's "Pinned". `pageProblems` also matches `pizza-badge`.
+- [ ] **Step 4: Run** the checks of moments, pizza, theming and `packages/ui` — PASS. **Step 5: Commit** `fix(moments,pizza,theming): the storyboard builder's description and status chip tooltips left from part A`.
 
 ### Task B1: Tenants fields and reads (D9)
 **Files:** Create `modules/tenants/migrations/004_event_details.sql`; modify `modules/tenants/src/canccu_tenants/current.py` (PATCH fields, the two reads), `model.py`, `venue_info.py` (`address`), `hostnames.py`, `venues.py`; `contracts/tenants.md`, `contracts/tenants/event.openapi.yaml` · Test `modules/tenants/tests/test_current.py`, `test_venue_info.py` (new), `test_leak.py`
