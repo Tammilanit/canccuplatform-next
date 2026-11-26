@@ -76,6 +76,22 @@
     setVersion(
       await call("PATCH", "/api/theming/draft/tokens", { draft_version: draftVersion(), tokens }),
     );
+    // The page does not reload, so what was just stored is now the drawn state: a change back to
+    // the first value would otherwise look like no change and never be saved.
+    markSent(form, tokens);
+  }
+  function markSent(form, tokens) {
+    const sent = (name) => {
+      const [group, key] = name.split(".");
+      return tokens[group] !== undefined && key in tokens[group];
+    };
+    for (const el of form.elements) {
+      if (el.name === "" || !sent(el.name)) continue;
+      if (el.type === "radio") el.defaultChecked = el.checked;
+      else if (el instanceof HTMLSelectElement)
+        for (const o of el.options) o.defaultSelected = o.selected;
+      else el.defaultValue = el.value;
+    }
   }
   saveTokens.autosave = true;
   saveTokens.live = true;
@@ -109,8 +125,14 @@
       .replaceAll(/[^a-z0-9]+/g, "-")
       .replaceAll(/^-|-$/g, "");
     // "Orbit-Bold" and "OrbitSans_Regular" read as Orbit and Orbit Sans in the lists.
+    // Cleaned to the schema's family pattern (letters, digits, space, _ and -; 64 at most), before any upload.
     const family =
-      (base.split(/[-_]/)[0] ?? "").replaceAll(/([a-z])([A-Z])/g, "$1 $2").trim() || "Own font";
+      (base.split(/[-_]/)[0] ?? "")
+        .replaceAll(/[^A-Za-z0-9 _-]/g, "")
+        .replaceAll(/([a-z])([A-Z])/g, "$1 $2")
+        .trim()
+        .slice(0, 64)
+        .trim() || "Own font";
     const file = `fonts/${slug || "font"}.woff2`;
     const licenceFile = `fonts/${slug || "font"}.${/\.md$/i.test(licence.name) ? "md" : "txt"}`;
     let v = await upload(file, font, draftVersion());
@@ -128,7 +150,8 @@
     const file = form.elements.namedItem("backdrop_file").files[0];
     const ext = IMAGE_EXTS[file?.name.split(".").pop().toLowerCase()];
     if (ext === undefined) throw new Invalid("The picture must be a PNG, JPEG or WebP file.");
-    const path = `images/backdrop.${ext}`;
+    // A new path each time: a refused file takes only its own path out, never the picture in use.
+    const path = `images/backdrop-${Date.now()}.${ext}`;
     const v = await upload(path, file, draftVersion());
     await parts(v, { backdrop_image: path });
   }

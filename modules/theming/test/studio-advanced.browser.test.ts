@@ -81,6 +81,74 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
     expect(loads).toBe(0);
   });
 
+  it("saves a token set back to the value the page was drawn with", async () => {
+    await levelUp();
+    const page = await open("/theming/studio/advanced");
+    const input = 'input[name="colors.primary"]';
+    const first = await page.locator(input).inputValue();
+    const red = first === "#ff0000" ? "#00ff00" : "#ff0000";
+    const primary = async () =>
+      ((await draft()).manifest.tokens as Record<string, Record<string, string>>).colors?.primary;
+    await setValue(page, input, red);
+    await expect.poll(primary, { timeout: 5_000 }).toBe(red);
+    await setValue(page, input, first);
+    await expect.poll(primary, { timeout: 5_000 }).toBe(first);
+  });
+
+  it("shows the preset's values again after Reset on Advanced", async () => {
+    await levelUp();
+    const page = await open("/theming/studio/advanced");
+    const input = 'input[name="colors.primary"]';
+    const first = await page.locator(input).inputValue();
+    await setValue(page, input, first === "#ff0000" ? "#00ff00" : "#ff0000");
+    await expect
+      .poll(
+        async () =>
+          ((await draft()).manifest.tokens as Record<string, Record<string, string>>).colors
+            ?.primary,
+        { timeout: 5_000 },
+      )
+      .not.toBe(first);
+    await page.locator('[data-action="reset-ask"]').click();
+    await Promise.all([
+      page.waitForEvent("load"),
+      page.locator('#canccu-studio-reset [data-action="preset"]').click(),
+    ]);
+    expect(await page.locator(input).inputValue()).toBe(first);
+  });
+
+  it("cleans an own font's family to the schema's pattern before it uploads anything", async () => {
+    await levelUp();
+    const ctx = await s.context();
+    const puts: string[] = [];
+    let parts: { fonts?: { family: string }[] } | undefined;
+    await ctx.route("**/api/theming/draft/file?*", async (r) => {
+      puts.push(r.request().method());
+      await r.fulfill({ json: { draft_version: 99, problems: [] } });
+    });
+    await ctx.route("**/api/theming/draft/parts", async (r) => {
+      parts = r.request().postDataJSON() as typeof parts;
+      await r.fulfill({ json: { draft_version: 100 } });
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${s.origin}/theming/studio/advanced`);
+    await page.getByText("Add a font").click();
+    const form = page.locator('form[data-action="font-add"]');
+    await form.locator('input[name="font_file"]').setInputFiles({
+      name: "Roboto[wght].woff2",
+      mimeType: "font/woff2",
+      buffer: Buffer.from("x"),
+    });
+    await form.locator('input[name="licence_file"]').setInputFiles({
+      name: "OFL.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("x"),
+    });
+    await form.locator("button[type=submit]").click();
+    await expect.poll(() => parts?.fonts?.[0]?.family).toMatch(/^[A-Za-z0-9 _-]{1,64}$/);
+    expect(puts).toEqual(["PUT", "PUT"]);
+  });
+
   it("marks a refused line of the CSS as it is typed", async () => {
     await levelUp();
     const page = await open("/theming/studio/advanced");

@@ -173,7 +173,10 @@
     root.dataset.draftVersion = String(draft.draft_version);
     // Without a draft before, the page has none of a draft's parts yet; and Make it yours's form
     // still holds the old choices, which its next save would send back over the preset's.
-    if (version === undefined || document.querySelector('form[data-action="brand"]') !== null)
+    if (
+      version === undefined ||
+      document.querySelector('form[data-action="brand"], form[data-autosave]') !== null
+    )
       throw new Reload();
   }
 
