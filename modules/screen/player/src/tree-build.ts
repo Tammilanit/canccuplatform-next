@@ -28,3 +28,13 @@ export function el(
 export const title = (field: string): TreeNode => el("p", "title", [f(field)]);
 export const img = (field: string, cls: string, alt: TreeNode[] = []): TreeNode =>
   el("img", cls, [], { src: [f(field)], alt });
+
+/**
+ * The theme's own art band (v8 rule 5, "No half-empty large panel"): where a large panel has no
+ * game art, the band holds the theme's glows, faded into the card by a mask (stage.css). Drawn
+ * only in the hero; elsewhere the look hides it.
+ */
+export const THEME_BAND: TreeNode = el("div", null, [], {
+  class: [t("canccu-widget__band canccu-widget__band--theme")],
+  "aria-hidden": [t("true")],
+});
