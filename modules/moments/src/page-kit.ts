@@ -48,6 +48,8 @@ async function eventOf(request: FastifyRequest, deps: AppDeps): Promise<EventInf
     startsAt: e.starts_at,
     endsAt: e.ends_at,
     venue: e.venue?.name,
+    shortName: e.short_name,
+    description: e.description,
   };
 }
 

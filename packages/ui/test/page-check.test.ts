@@ -56,4 +56,22 @@ describe("pageProblems (#782)", () => {
     });
     expect(pageProblems(String(page))).toEqual([]);
   });
+
+  // Pizza draws its states in its own colours (pizza-badge), and they need a tooltip as well.
+  it("counts a pizza-badge without a tooltip as a problem", () => {
+    const body = raw('<span class="pizza-badge pizza-badge--warn">Waiting</span>');
+    expect(pageProblems(String(shellPage({ title: "X", description: "For X.", body })))).toEqual([
+      "status chip without a tooltip: Waiting",
+    ]);
+  });
+
+  // A form's hidden default button (Enter submits it) is no button anyone sees or tabs to.
+  it("leaves out a button hidden from everyone", () => {
+    const body = raw(
+      '<button type="submit" disabled hidden tabindex="-1" aria-hidden="true"></button>',
+    );
+    expect(pageProblems(String(shellPage({ title: "X", description: "For X.", body })))).toEqual(
+      [],
+    );
+  });
 });

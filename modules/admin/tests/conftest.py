@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -25,9 +24,9 @@ from canccu_kit import (
 from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
+from fakes import FakeScreen, FakeTenants
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from canccu_admin.access_pages import TenantsApi
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
 from canccu_admin.auth_memory import MemoryAuthStore
@@ -35,6 +34,7 @@ from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
 from canccu_admin.discord import Discord
+from canccu_admin.event_owners import ScreenApi, TenantsApi
 from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
@@ -139,45 +139,6 @@ class FakeDiscord:
 
 
 @dataclass
-class FakeTenants:
-    """Tenants' `GET` and `PATCH /api/tenants/current` for the Event access page: the full event
-    while `full` (an event admin asks), else the public fields; `refuse` answers the next PATCH."""
-
-    admin_access: str = "internet"
-    screen_access: str = "internet"
-    revision: int = 3
-    full: bool = True
-    refuse: tuple[int, str] | None = None
-    seen: list[httpx.Request] = field(default_factory=list)
-
-    def body(self) -> dict[str, object]:
-        body: dict[str, object] = {"id": "demo", "name": "Demo Event", "status": "live"}
-        if self.full:
-            body |= {
-                "revision": self.revision,
-                "admin_access": self.admin_access,
-                "screen_access": self.screen_access,
-            }
-        return body
-
-    def handler(self, request: httpx.Request) -> httpx.Response:
-        self.seen.append(request)
-        if request.method == "GET":
-            return httpx.Response(200, json=self.body())
-        if self.refuse is not None:
-            status, code = self.refuse
-            return httpx.Response(status, json={"error": {"code": code, "message": "raw detail"}})
-        patch = json.loads(request.content)
-        if patch["revision"] != self.revision:
-            error = {"code": "version_conflict", "message": "the event changed meanwhile"}
-            return httpx.Response(409, json={"error": error})
-        self.admin_access = patch.get("admin_access", self.admin_access)
-        self.screen_access = patch.get("screen_access", self.screen_access)
-        self.revision += 1
-        return httpx.Response(200, json=self.body())
-
-
-@dataclass
 class World:
     client: httpx.AsyncClient
     internal: httpx.AsyncClient
@@ -191,6 +152,7 @@ class World:
     checker: RightsChecker
     watch: HealthWatch
     tenants: FakeTenants
+    screen: FakeScreen
     event: dict[str, str] = field(default_factory=dict)
     """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
@@ -258,6 +220,8 @@ def world(tmp_path: Path) -> World:
 
     watch = HealthWatch(Health("admin", "dev", {}), {}, clock=lambda: clock[0])
     tenants = FakeTenants()
+    screen = FakeScreen()
+    identity = ServiceIdentity("admin", SERVICE_KEY)
     app = create_app(
         service,
         watch,
@@ -267,10 +231,15 @@ def world(tmp_path: Path) -> World:
             {"admin.example.test": "demo"}, ids=("other",), archived=("gone",), event=event
         ),
         holder_event(holder),
-        identity=ServiceIdentity("admin", SERVICE_KEY),
+        identity=identity,
         viewer=viewer,  # as main.py reads sessions: through the rights checker
         tenants_api=TenantsApi(
             "http://tenants", httpx.AsyncClient(transport=httpx.MockTransport(tenants.handler))
+        ),
+        screen_api=ScreenApi(
+            "http://screen",
+            httpx.AsyncClient(transport=httpx.MockTransport(screen.handler)),
+            identity,
         ),
     )
     internal = httpx.AsyncClient(
@@ -284,7 +253,19 @@ def world(tmp_path: Path) -> World:
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
     return World(
-        client, internal, service, auth, store, streams, fake, clock, checker, watch, tenants, event
+        client,
+        internal,
+        service,
+        auth,
+        store,
+        streams,
+        fake,
+        clock,
+        checker,
+        watch,
+        tenants,
+        screen,
+        event,
     )
 
 

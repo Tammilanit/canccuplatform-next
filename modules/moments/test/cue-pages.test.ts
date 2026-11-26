@@ -2,6 +2,7 @@
  * Studio → Cues, the sound desk (#626, the step 4 polish sheets 01, 03 and 04): the four sub-pages
  * under one master strip, drawn and used as a browser does. The editor is cue-editor-pages.test.ts.
  */
+import { pageProblems } from "@canccu/ui";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { DATABASE_URL, T0, freshDatabase } from "./helpers.js";
@@ -18,6 +19,10 @@ const text = (body: string) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .replaceAll("&#39;", "'");
+
+/** The log's words without the outcome chips' tooltips, which are shown on demand (#782). */
+const logText = (body: string) =>
+  text(body.replace(/<span[^>]*class="canccu-tip__text"[^>]*>[^<]*<\/span>/g, " "));
 
 run("the sound desk", () => {
   let pool: pg.Pool;
@@ -165,17 +170,20 @@ run("the sound desk", () => {
   it("writes the log in words, the reason code second, and filters it", async () => {
     await spotlight();
     const page = await w.call("admin", "GET", "/cues/log");
-    const words = text(page.body);
+    const words = logText(page.body);
     expect(words).toContain("Announcement announce.attention");
     expect(words).toMatch(/Played (Chime|Happy beep)/);
     expect(words).toContain("Missed The sound screen's audio is locked");
     expect(words).toContain("audio_locked");
-    const missed = text((await w.call("admin", "GET", "/cues/log?outcome=missed")).body);
+    // #782 B0: each outcome chip says what it means.
+    expect(pageProblems(page.body)).toEqual([]);
+    expect(page.body).toContain("Its time passed before it could play. The reason says why.");
+    const missed = logText((await w.call("admin", "GET", "/cues/log?outcome=missed")).body);
     expect(missed).toContain("audio_locked");
     expect(missed).not.toMatch(/Played (Chime|Happy beep)/);
-    const main = text((await w.call("admin", "GET", "/cues/log?zone=main")).body);
+    const main = logText((await w.call("admin", "GET", "/cues/log?zone=main")).body);
     expect(main).not.toContain("audio_locked");
-    const found = text((await w.call("admin", "GET", "/cues/log?q=audio_locked")).body);
+    const found = logText((await w.call("admin", "GET", "/cues/log?q=audio_locked")).body);
     expect(found).toContain("audio_locked");
     expect(found).not.toMatch(/Played (Chime|Happy beep)/);
   });

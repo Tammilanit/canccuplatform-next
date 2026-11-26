@@ -11,11 +11,13 @@ export const CHECK_IN = "@check-in";
 // Each surface people use, at the width they use it at, full page. A new page joins here. The
 // organiser shell's pages are shot at both widths: on a phone the menu becomes the bottom bar.
 const SHELL = [
+  // The admin home with the event's screens, and the Event page with every base setting (#782).
+  ["admin-home", "/admin/"],
+  ["admin-event", "/admin/event"],
   ["settings", "/admin/settings"],
   ["health-view", "/admin/health-view"],
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
-  ["access", "/admin/access"],
   ["notify-topics", "/notify/admin/topics"],
 ];
 export const PAGES = [

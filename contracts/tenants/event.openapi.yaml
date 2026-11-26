@@ -693,6 +693,64 @@
         $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
       "403":
         $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+/api/tenants/current/hostnames:
+  get:
+    tags: [event]
+    operationId: listOwnHostnames
+    summary: The event's own hostnames, the primary first
+    description: Right `tenants.event.write`. Read only; the superadmin adds and changes them.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: Every hostname of the event, whatever its status.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hostnames]
+              properties:
+                hostnames:
+                  type: array
+                  items:
+                    type: object
+                    required: [hostname, kind, status, primary]
+                    properties:
+                      hostname:
+                        $ref: "../tenants.openapi.yaml#/components/schemas/HostnameValue"
+                      kind:
+                        type: string
+                        enum: [platform, custom]
+                      status:
+                        type: string
+                        enum: [pending, active, held]
+                      primary:
+                        type: boolean
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+/api/tenants/current/venue:
+  get:
+    tags: [event]
+    operationId: getOwnVenue
+    summary: The event's venue, with its network addresses
+    description: Right `tenants.event.write`. Read only; the superadmin edits venues.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The venue.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueRef"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
 /api/tenants/current/storage:
   get:
     tags: [storage]

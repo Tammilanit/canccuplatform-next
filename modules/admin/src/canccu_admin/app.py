@@ -18,7 +18,7 @@ from canccu_kit import (
 )
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import esc, icon, menu_for
+from canccu_kit.ui import esc, icon
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -26,12 +26,15 @@ from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Re
 from starlette.routing import Route
 
 from . import profile as prof
-from .access_pages import TenantsApi, access_routes, access_row
+from .access_pages import access_row
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
+from .event_owners import ScreenApi, TenantsApi
+from .event_pages import event_routes
 from .forms import from_form, typed
 from .health import HealthWatch
 from .health_view import health_body, health_live
+from .home_page import home_route
 from .pages import (
     BASE,
     MODULE_ICONS,
@@ -81,6 +84,7 @@ def create_app(
     identity: ServiceIdentity,
     viewer: Viewer | None = None,
     tenants_api: TenantsApi | None = None,
+    screen_api: ScreenApi | None = None,
 ) -> Starlette:
     """`viewer` reads a cookie's session as the kit does, for pages that need no right; without
     it, admin's own sessions. `tenants_api` reads and saves Event access as the person."""
@@ -206,11 +210,7 @@ def create_app(
 
     # --- pages
 
-    async def index(request: Request) -> Response:
-        """The first page this person may open; without a role, "No role yet" on sign-in."""
-        session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
-        pages = [i["href"] for g in menu_for(session) for i in g["items"]]
-        return RedirectResponse(pages[0] if pages else f"{BASE}/sign-in", status_code=303)
+    index = home_route(read_session, tenants_api, screen_api)
 
     async def settings_index(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
@@ -380,7 +380,7 @@ def create_app(
             *profile_routes(service, auth, need),
             *auth_routes(auth, authorize, on_event, viewer),
             *people_routes(auth, need, on_event),
-            *access_routes(need, tenants_api),
+            *event_routes(need, tenants_api, auth.users, service.declarations),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,

@@ -7,7 +7,7 @@
  * platform's and is copied when turned on. Built-ins by catalogue number, the event's own A to Z.
  */
 import type { Html } from "@canccu/ui";
-import { html } from "@canccu/ui";
+import { html, statusChip } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
 import type { Story } from "./model.js";
 import { roundsShort, soundShort, statusOf, triggerShort } from "./picker.js";
@@ -57,9 +57,11 @@ function card(r: Row, ctx: PickerCtx, canWrite: boolean, revision: number): Html
   return html`<li class="canccu-card moments-preset">
     <div class="moments-preset__head">
       ${r.copied ? html`<a href="${PREFIX}storyboards?edit=${s.key}"><strong>${s.name}</strong></a>` : html`<strong>${s.name}</strong>`}
-      <span class="canccu-badge ${s.enabled ? "canccu-badge--ok" : "canccu-badge--plain"}"
-        >${s.enabled ? "On" : "Off"}</span
-      >
+      ${
+        s.enabled
+          ? statusChip("ok", "On", "It plays at this event when its trigger fires.")
+          : statusChip("plain", "Off", "It does not play at this event.")
+      }
     </div>
     <span class="canccu-table__sub"
       >${number === undefined || number === null ? "" : `${String(number)} · `}${s.triggers.map(triggerShort).join("; ")}</span

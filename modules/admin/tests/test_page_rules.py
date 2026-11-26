@@ -8,6 +8,8 @@ from canccu_kit.page_check import page_problems
 from conftest import World, owner_and_member
 
 PAGES = [
+    "/admin/",
+    "/admin/event",
     "/admin/settings",
     "/admin/settings/admin",
     "/admin/settings/screen",
