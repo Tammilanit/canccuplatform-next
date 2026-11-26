@@ -87,7 +87,7 @@ The module's own clock (O2; the plan's [Forgotten orders](../docs/briefs/step-5-
 
 | The order is | The scheduler |
 |---|---|
-| open | `pizza.order.closing` 10 min before `closes_at` (`last_call_minutes`; not for an order closed earlier); at `closes_at` it closes, or is cancelled when empty (E9), while `auto_close` is on. With it off: the holder is reminded 30 min past the close time (`remind_holder_minutes`), the holder and the crew at 60 (`remind_crew_minutes`) |
+| open | `pizza.order.closing` 5 min before `closes_at` (`last_call_minutes`; not for an order closed earlier); at `closes_at` it closes, or is cancelled when empty (E9), while `auto_close` is on. With it off: the holder is reminded 30 min past the close time (`remind_holder_minutes`), the holder and the crew at 60 (`remind_crew_minutes`) |
 | closed, not called in | The holder at +30, the holder and the crew at +60, counted from the close or a later claim; the holder released at +120 (`release_after_minutes`; `reason` `timeout`) and the crew told (`released`) |
 | called in, not arrived | "Has it arrived?" to the holder 30 min past `estimate_at` (`arrival_check_minutes`), or 90 min after the call-in without one (`arrival_check_no_estimate_minutes`); to the crew as much later as the crew's reminder comes after the holder's |
 | arrived | `done` (`timer`) 120 min after arrival (`done_after_arrival_minutes`, O7) |
@@ -243,7 +243,7 @@ Saved through admin's settings API with `admin.settings.write` ([admin.md](admin
 | `max_open_orders` | integer 1–20 | 3 | Orders open at once in the event (O5) |
 | `max_items_per_person` | integer 1–20 | 5 | One person's pizzas in one order (U18) |
 | `settle_to_payer` | boolean | `false` | An order may settle to its payer instead of the organiser (M1) |
-| `last_call_minutes` | integer 1–60 | 10 | The last call, before the close time |
+| `last_call_minutes` | integer 1–60 | 5 (10 before #787: an event that saved its settings keeps its value) | The last call, before the close time: on the phone and on the screens at once |
 | `auto_close` | boolean | `true` | An open order closes at its close time (U3) |
 | `remind_holder_minutes` | integer 5–240 | 30 | A stalled order reminds its holder after this |
 | `remind_crew_minutes` | integer 10–480 | 60 | Then the holder and the crew |
@@ -292,7 +292,7 @@ The catalog's "one open order at a time per event" becomes **one open order per 
 | `pizza.share.paid` (new, #703) | The payer marked this person paid | personal (`user_id`); `order` event-wide | `order`, `user_id`, `payer` (Person or null), `actor_user_id` |
 | `pizza.reader.stopped` (new, #789) | The AI reader stopped: the provider refused the key (once per key) or the account is out of credit (once per event day) | personal (`user_ids`) | `reason` (`key_rejected`, `out_of_credit`), `user_ids` (the crew: who pizza has seen with `pizza.order.manage`) |
 | `pizza.amount.changed` (new) | A money change once the order was closed changed these people's amounts (U14); no amounts | personal (`user_ids`) | `order_id`, `user_ids`, `actor_user_id` |
-| `pizza.order.closing` | As the catalog: the last call, `last_call_minutes` (10 by default) before the close time; [the scheduler](#the-scheduler) | event-wide, `public` | `order`, `closes_at` |
+| `pizza.order.closing` | As the catalog: the last call, `last_call_minutes` (5 by default) before the close time; [the scheduler](#the-scheduler) | event-wide, `public` | `order`, `closes_at` |
 | `pizza.reminder.triggered` | A person needs to act (D12): a stalled order's holder or the crew ([the scheduler](#the-scheduler)), someone whose pizza waits (the nudge), or someone not marked paid and their payer ([Notices](#notices)); one per person. `not_collected` and `not_paid` are personal only: never posted in a channel | personal (`user_id`); `order` event-wide, `public` | `order`, `kind` (`open_past_target`, `closed_not_placed`, and added: `not_arrived`, `released`, `not_collected`, `not_paid`), `minutes` (past the close time, the close, the estimate or call-in, the arrival, or since the shares went out), and added: `user_id` (who hears it), `role` (`holder`, `crew`, `member`, `payer`), `count` (`not_paid` only: the people not marked paid) |
 
 **Consumes:** `tenants.status.changed` (archived: E11), `tenants.retention.reached`, `tenants.member.left`, `tenants.tenant.cloned` on the event's stream; `tenants.user.deleted`, `tenants.tenant.deleted` on the platform stream; `admin.settings.changed`.

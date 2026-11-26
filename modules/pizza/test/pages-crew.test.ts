@@ -317,7 +317,7 @@ describe.skipIf(!DATABASE_URL)("Food settings", () => {
     expect(r.body).not.toMatch(
       /data-canccu-for="pizza-last_call_minutes"[^>]*data-canccu-pick="90"/,
     );
-    expect(r.body).toContain("From 1 min to 1 h. Default: 10 min.");
+    expect(r.body).toContain("From 1 min to 1 h. Default: 5 min.");
     expect(r.body).toContain("People in an order hear the last call this long before it closes.");
     expect(r.body).toMatch(
       /placeholder="[^"]+"[^>]*name="ordering_note"|name="ordering_note"[^>]*placeholder="[^"]+"/,

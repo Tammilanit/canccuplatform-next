@@ -73,12 +73,12 @@ db("the scheduler", () => {
   const state = async (id: string) =>
     json(await w.call("pena", "GET", `/api/pizza/orders/${id}`)).state;
 
-  it("gives the last call once, 10 minutes before the close, then closes at the time", async () => {
+  it("gives the last call once, 5 minutes before the close (#787 Q1), then closes at the time", async () => {
     const id = await anOrder();
-    await at(49);
+    await at(54);
     expect(sent("pizza.order.closing")).toHaveLength(0);
-    await at(50);
-    await at(51);
+    await at(55);
+    await at(56);
     const closing = sent("pizza.order.closing");
     expect(closing).toHaveLength(1);
     expect(closing[0]?.data.closes_at).toBe(new Date(T0.getTime() + 3600_000).toISOString());
@@ -95,7 +95,7 @@ db("the scheduler", () => {
     const id = await anOrder();
     await w.call("pena", "POST", `/api/pizza/orders/${id}/close`);
     const empty = json(await open(w, "mikko", (await seedOther()).id)).id as string;
-    await at(50);
+    await at(55);
     expect(sent("pizza.order.closing").map((e) => (e.data.order as { id: string }).id)).toEqual([
       empty,
     ]);
@@ -149,16 +149,16 @@ db("the scheduler", () => {
 
   it("gives the last call and closes again when a closed order is reopened with a new time", async () => {
     const id = await anOrder();
-    await at(50);
+    await at(55);
     await at(60);
     expect(await state(id)).toBe("closed");
     w.setNow(new Date(T0.getTime() + 61 * 60_000).toISOString());
     expect((await w.call("pena", "POST", `/api/pizza/orders/${id}/reopen`)).statusCode).toBe(200);
     const closesAt = new Date(T0.getTime() + 80 * 60_000).toISOString();
     await w.call("pena", "PATCH", `/api/pizza/orders/${id}`, { closes_at: closesAt });
-    await at(69);
+    await at(74);
     expect(sent("pizza.order.closing")).toHaveLength(1);
-    await at(70);
+    await at(75);
     expect(sent("pizza.order.closing").map((e) => e.data.closes_at)).toEqual([
       new Date(T0.getTime() + 3600_000).toISOString(),
       closesAt,
@@ -311,7 +311,7 @@ db("the scheduler", () => {
     let health = await scheduler.check()();
     expect(health.status).toBe("degraded");
     await anOrder();
-    await at(50.5);
+    await at(55.5);
     health = await scheduler.check()();
     expect(health).toEqual({ status: "ok", detail: "lag 30 s" });
   });
