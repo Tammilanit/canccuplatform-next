@@ -90,7 +90,10 @@ const brandInputCheck = ajv.compile({
     scheme: { enum: ["dark", "light"] },
     embed_color: { $ref: def("color") },
     logo_plate: { $ref: def("logo_plate") },
-    font_pair: { type: "string", pattern: "^[a-z0-9][a-z0-9-]{0,39}$" },
+    // null takes the pair away: the platform font (the Studio's "Platform font").
+    font_pair: {
+      oneOf: [{ type: "string", pattern: "^[a-z0-9][a-z0-9-]{0,39}$" }, { type: "null" }],
+    },
     roundness: { enum: ["square", "soft", "round"] },
     backdrop: { $ref: def("backdrop") },
   },
@@ -154,7 +157,7 @@ export interface BrandEdit {
   scheme: "dark" | "light";
   embed_color?: string;
   logo_plate?: LogoPlate;
-  font_pair?: string;
+  font_pair?: string | null;
   roundness?: Brand["roundness"];
   backdrop?: Backdrop;
 }

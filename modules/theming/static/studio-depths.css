@@ -1,0 +1,247 @@
+/* The Theme studio's depths (plan issue-784 D1, D2; pack sheets 1 and 2): the controls beside the
+   live preview column, which stays in view as the controls scroll; on a phone the preview first. */
+.canccu-main:has(.canccu-studio-depth) {
+  max-width: 100rem;
+}
+.canccu-studio-depth {
+  display: grid;
+  /* canccu-grid: fixed master-detail — the controls and what they draw */
+  grid-template-columns: minmax(0, 34rem) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+.canccu-studio-controls {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.canccu-studio-column {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.canccu-studio-column__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+}
+.canccu-studio-column .canccu-studio-previews__row {
+  /* canccu-grid: fixed master-detail — the preview row: the phone beside the hub page */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
+}
+.canccu-studio-column .canccu-studio-preview {
+  margin: 0;
+}
+@media (max-width: 60rem) {
+  .canccu-studio-depth {
+    /* canccu-grid: fixed master-detail — one column, the preview first */
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .canccu-studio-column {
+    position: static;
+  }
+  .canccu-studio-column__head,
+  .canccu-studio-column > .canccu-button {
+    display: none;
+  }
+}
+
+/* The preview's chips: how busy, the time of day (D21). */
+.canccu-studio-chips {
+  display: grid;
+  gap: 0.5rem;
+}
+.canccu-studio-chips__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.canccu-studio-chips__row legend {
+  float: left;
+  min-width: 6rem;
+}
+
+/* Title row: saved, Export, Import, Publish. */
+.canccu-studio-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.canccu-studio-import {
+  display: inline-flex;
+  margin: 0;
+}
+.canccu-studio-import .canccu-studio-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* Pick a look: each preset's schemes as one-click thumbnails. */
+.canccu-studio-preset__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 0.75rem;
+  font-size: var(--canccu-text-lg, 1.125rem);
+}
+.canccu-studio-schemes {
+  display: grid;
+  /* canccu-grid: fixed control — a picker of thumbnails, as many a row as fit */
+  grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+.canccu-studio-scheme {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem 0.625rem;
+  font: inherit;
+  color: var(--canccu-color-text);
+  text-align: start;
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+.canccu-studio-scheme[aria-pressed="true"] {
+  border-color: var(--canccu-ink-primary);
+  box-shadow: 0 0 0 1px var(--canccu-ink-primary);
+}
+.canccu-studio-scheme:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.canccu-studio-scheme__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 600;
+}
+.canccu-studio-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: calc(var(--canccu-radius) - 0.25rem);
+}
+.canccu-studio-next {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+/* Make it yours: sections of choices. */
+.canccu-studio-section {
+  display: grid;
+  gap: 0.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.canccu-studio-section > .canccu-card__title,
+.canccu-studio-section > .canccu-card__desc {
+  margin: 0;
+}
+.canccu-studio-choice {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.canccu-studio-colour-choice {
+  display: grid;
+  gap: 0.375rem;
+}
+.canccu-studio-colour-choice p {
+  margin: 0;
+}
+.canccu-studio-swatch-pick {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.1875rem;
+  background: none;
+  border: var(--canccu-border-width) solid var(--canccu-line-field);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.canccu-studio-swatch-pick svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.canccu-studio-pairs {
+  display: grid;
+  /* canccu-grid: fixed control — a picker of font pairs, as many a row as fit */
+  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
+  gap: 0.5rem;
+}
+.canccu-studio-pair,
+.canccu-studio-look {
+  position: relative;
+  display: grid;
+  /* canccu-grid: fixed row — lays out one look's own parts: its swatch and name */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.125rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+.canccu-studio-pair input,
+.canccu-studio-look input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.canccu-studio-pair:has(input:checked),
+.canccu-studio-look:has(input:checked) {
+  border-color: var(--canccu-ink-primary);
+  box-shadow: 0 0 0 1px var(--canccu-ink-primary);
+}
+.canccu-studio-pair:has(input:focus-visible),
+.canccu-studio-look:has(input:focus-visible) {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: 2px;
+}
+.canccu-studio-pair__name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.canccu-studio-looks {
+  display: grid;
+  /* canccu-grid: fixed control — a picker of the looks of the cycle */
+  grid-template-columns: repeat(auto-fill, minmax(min(7rem, 100%), 1fr));
+  gap: 0.5rem;
+}
+.canccu-studio-look {
+  min-height: 3.5rem;
+  align-content: end;
+  font-weight: 600;
+}
+.canccu-studio-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.canccu-studio-switch > span {
+  display: grid;
+}
+.canccu-studio-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+}

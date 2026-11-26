@@ -110,6 +110,38 @@ function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   return withColors(out, brand);
 }
 
+/**
+ * A pair or corners the organiser picks now must show: a preset's own font and radius tokens sit
+ * over the brand's choices (tokens.ts), so they go when a different choice is made (the mirror of
+ * draft-routes.ts, where a token edit takes the choice away).
+ */
+function withoutOverriddenChoices(
+  manifest: Manifest,
+  before: Record<string, unknown>,
+  input: BrandEdit,
+): Manifest {
+  if (!isObject(manifest.tokens)) return manifest;
+  const tokens = { ...manifest.tokens };
+  const without = (group: unknown, keys: string[]): Record<string, unknown> | undefined => {
+    if (!isObject(group)) return undefined;
+    const rest = Object.fromEntries(Object.entries(group).filter(([k]) => !keys.includes(k)));
+    return Object.keys(rest).length > 0 ? rest : undefined;
+  };
+  const pair = typeof input.font_pair === "string" && input.font_pair !== before.font_pair;
+  if (pair) {
+    const fonts = without(tokens.fonts, ["heading", "display", "body"]);
+    if (fonts === undefined) delete tokens.fonts;
+    else tokens.fonts = fonts;
+  }
+  const corners = input.roundness !== undefined && input.roundness !== before.roundness;
+  if (corners) {
+    const sizes = without(tokens.sizes, ["radius"]);
+    if (sizes === undefined) delete tokens.sizes;
+    else tokens.sizes = sizes;
+  }
+  return { ...manifest, tokens };
+}
+
 export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -120,11 +152,15 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     const input = request.body as BrandEdit;
     // The Studio offers only the platform's pairs; a manifest from elsewhere may name a newer one
     // and only gets a warning (checks.ts), but this editor never stores a pair it cannot draw.
-    if (input.font_pair !== undefined && !FONT_PAIRS.has(input.font_pair)) {
+    if (typeof input.font_pair === "string" && !FONT_PAIRS.has(input.font_pair)) {
       throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
     }
     const picked = Object.fromEntries(
-      BRAND_FIELDS.filter((k) => input[k] !== undefined).map((k) => [k, input[k]]),
+      // A field sent as null is taken away: neither picked nor kept.
+      BRAND_FIELDS.filter((k) => input[k] !== undefined && input[k] !== null).map((k) => [
+        k,
+        input[k],
+      ]),
     ) as unknown as Brand;
     const { adjusted } = generateColors(picked);
     const row = await deps.db.tenant((c) =>
@@ -156,7 +192,15 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
         const next: Manifest = { ...m, brand };
         if (Object.keys(images).length > 0) next.images = images;
         else delete next.images;
-        return withColors(next, brand);
+        // A scheme's hand-set colours (presets.ts) stay until the organiser changes what the
+        // colours come from; the page sends the whole brand on every change, the corners too.
+        const before = isObject(m.brand) ? m.brand : {};
+        const tokens = isObject(m.tokens) ? m.tokens : {};
+        const same = (["primary", "accent", "scheme"] as const).every(
+          (k) => before[k] === brand[k],
+        );
+        const colored = same && isObject(tokens.colors) ? next : withColors(next, brand);
+        return withoutOverriddenChoices(colored, before, input);
       }),
     );
     return { draft: draftBody(row), adjusted };

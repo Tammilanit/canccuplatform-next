@@ -23,6 +23,18 @@ export const PREVIEW_MESSAGE = "canccu-screen-preview";
  * until its screen preview drew the draft, never on the frame's load alone (#551).
  */
 export const PREVIEW_DRAWN = "canccu-screen-preview-drawn";
+/**
+ * A live look from theming's Studio (theming's plan issue-784 D3, D21): token values the
+ * organiser is changing, shown before the draft saves, and the preview's chips (how busy, the time
+ * of day). The chips are only marked on the body: #787's stage answers the scene; the daypart's
+ * tint is drawn here (stage.css) until it does.
+ */
+export const LIVE_MESSAGE = "canccu-theme-live";
+const LIVE_VAR = /^--canccu-[a-z0-9-]{1,48}$/;
+const LIVE_STATE = {
+  scene: new Set(["quiet", "building", "live"]),
+  daypart: new Set(["morning", "day", "late"]),
+} as const;
 
 export interface VirtualEnv {
   fetch: Fetch;
@@ -104,6 +116,10 @@ export class VirtualScreen {
   preview(event: MessageEvent, parent: unknown, origin: string): void {
     const data = event.data as { type?: unknown; state?: unknown; id?: unknown } | null;
     if (event.source !== parent || event.origin !== origin) return;
+    if (data?.type === LIVE_MESSAGE) {
+      this.liveLook(event.data as { vars?: unknown; state?: unknown });
+      return;
+    }
     if (data?.type !== PREVIEW_MESSAGE || !isState(data.state)) return;
     this.previewing = true;
     clearTimeout(this.timer);
@@ -114,6 +130,25 @@ export class VirtualScreen {
     this.mount(this.screen.draw(data.state));
     this.screen.start();
     (event.source as Window).postMessage({ type: PREVIEW_DRAWN, id: data.id ?? null }, origin);
+  }
+
+  /** Only the platform's custom properties, as strings or null to take one back. */
+  private liveLook(data: { vars?: unknown; state?: unknown }): void {
+    const style = this.env.root.ownerDocument.documentElement.style;
+    if (typeof data.vars === "object" && data.vars !== null) {
+      for (const [name, value] of Object.entries(data.vars)) {
+        if (!LIVE_VAR.test(name)) continue;
+        if (value === null) style.removeProperty(name);
+        else if (typeof value === "string" && value.length <= 200) style.setProperty(name, value);
+      }
+    }
+    const state = typeof data.state === "object" && data.state !== null ? data.state : {};
+    for (const key of ["scene", "daypart"] as const) {
+      const value = (state as Record<string, unknown>)[key];
+      if (typeof value === "string" && LIVE_STATE[key].has(value)) {
+        this.env.root.dataset[key === "scene" ? "canccuScene" : "canccuDaypart"] = value;
+      }
+    }
   }
 
   private settle(answer: Answer): void {

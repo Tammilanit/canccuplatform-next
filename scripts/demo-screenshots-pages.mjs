@@ -35,7 +35,6 @@ export const PAGES = [
       [`settings-${part}-phone`, `/admin/settings/${part}`, PHONE],
     ],
   ),
-  ["studio-advanced", "/theming/studio/advanced", DESK],
   ["studio-history", "/theming/studio/history", DESK],
   ["hub-preview-phone", "/theming/studio/preview/hub", PHONE],
   // Before the fixture fills the run of show, so its empty state stays checked.

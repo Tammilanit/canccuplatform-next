@@ -83,6 +83,7 @@ import {
 import {
   DRAFT,
   LIGHT,
+  PLATES,
   STUDIO,
   brandKitShots,
   draftShots,
@@ -116,7 +117,7 @@ only(AGENDA_DOWN, ([, path]) => groupOf(path));
 only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
 only(SETTINGS_STATES, () => "admin");
 only(OTHERS, ([, path]) => groupOf(path));
-for (const list of [STUDIO, DRAFT, LIGHT]) only(list, () => "theming");
+for (const list of [STUDIO, DRAFT, LIGHT, PLATES]) only(list, () => "theming");
 for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED])
   only(list, () => "agenda");
 // The Screen studio's lists are studio-shots.mjs's own, and taken all or none.

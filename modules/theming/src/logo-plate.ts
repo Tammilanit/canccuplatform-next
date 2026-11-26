@@ -141,7 +141,7 @@ export async function rasterLogo(bytes: Buffer, ext: RasterKind | "svg"): Promis
 const CACHED = 256;
 const cache = new Map<string, PlateAdvice>();
 
-const kindOf = (name: string): RasterKind | "svg" | undefined => {
+export const kindOf = (name: string): RasterKind | "svg" | undefined => {
   const ext = name.slice(name.lastIndexOf(".") + 1);
   if (ext === "jpg") return "jpeg";
   return ext === "png" || ext === "webp" || ext === "svg" ? ext : undefined;

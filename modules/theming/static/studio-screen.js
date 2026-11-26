@@ -2,8 +2,8 @@
  * "Preview on a screen…" in the Theme studio (design sheet 6; contracts/screen.md, Preview on a
  * screen; contracts/theming.md, On a screen). The event's screens come from Screen's API, a key
  * to the draft from theming, and Screen starts the preview with it. Screen reads a key's draft
- * when it composes a state, which a draft change does not cause: so after each change (the page
- * reloads) a preview this browser started is sent again once, and the screen follows the draft.
+ * when it composes a state, which a draft change does not cause: so after each saved change
+ * a preview this browser started is sent again once, and the screen follows the draft.
  */
 "use strict";
 
@@ -13,7 +13,7 @@
   const dialog = document.getElementById("canccu-studio-screen");
   const notice = document.querySelector("[data-screen-preview-notice]");
   if (root === null || dialog === null || notice === null) return;
-  const version = Number(root.dataset.draftVersion) || 0;
+  let version = Number(root.dataset.draftVersion) || 0;
   const list = dialog.querySelector("[data-screen-preview-list]");
   const error = dialog.querySelector("[data-screen-preview-error]");
   const title = notice.querySelector("[data-screen-preview-title]");
@@ -185,4 +185,9 @@
   });
   dialog.querySelector("form").addEventListener("submit", (event) => void start(event));
   void follow().then(refresh);
+  // A save no longer reloads the page (plan issue-784 D3): the preview follows each saved version.
+  document.addEventListener("canccu-studio-redraw", () => {
+    version = Number(root.dataset.draftVersion) || 0;
+    void follow();
+  });
 })();

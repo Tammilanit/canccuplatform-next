@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /**
- * The Studio's brand kit and tokens in Chromium (studio.browser.test.ts has the rest of the
- * pages): each change saves at once, a change made mid-save follows it, and a refused file or font
+ * Make it yours (the brand kit grown, plan issue-784) and the tokens in Chromium (studio.browser.test.ts has the rest of the
+ * pages): each change saves by itself without a reload, a change made mid-save follows it, and a refused file or font
  * is put right.
  */
 import type { Route } from "playwright-core";
@@ -12,11 +12,11 @@ import { browser, studioSuite } from "./studio-page.js";
 
 describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 30_000 }, () => {
   const s = studioSuite();
-  const { open, api, draft, act, change, typeHex } = s;
+  const { open, api, draft, act, change, typeHex, savedAfter } = s;
 
   it("saves the brand kit with a new logo, keeping what it does not show", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     const logo = {
       name: "Our Logo.PNG",
       mimeType: "image/png",
@@ -26,7 +26,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     await typeHex(page, "primary", "#ff7a45");
     await change(page, () => page.check('input[name="scheme"][value="light"]'));
     const saved = await draft();
-    expect(saved.manifest.brand).toEqual({
+    expect(saved.manifest.brand).toMatchObject({
       primary: "#ff7a45",
       accent: "#f59e0b",
       scheme: "light",
@@ -42,9 +42,9 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     expect(again.manifest.images).toEqual({ logo: "images/logo.png" });
   });
 
-  it("saves a change made while the last one is still saving, then reloads once", async () => {
+  it("saves a change made while the last one is still saving, never reloading", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     const logo = { name: "logo.png", mimeType: "image/png", buffer: await png("#ff7a45", 32) };
     let release = (): void => undefined;
     const held = new Promise<void>((resolve) => (release = resolve));
@@ -57,19 +57,22 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     });
     let loads = 0;
     page.on("load", () => (loads += 1));
-    const loaded = page.waitForEvent("load");
+    const version = (await draft()).draft_version;
     await page.setInputFiles('input[name="logo_file"]', logo);
+    // Past the 400 ms a change waits for more, so the first save is under way.
+    await expect.poll(() => saves).toBe(1);
     const field = page.locator('input[name="primary"]');
     await field.fill("#7c5cff");
     await field.blur();
     await page.check('input[name="scheme"][value="light"]');
     release();
-    await loaded;
+    await expect.poll(() => saves).toBe(2);
+    await savedAfter(page, version + 2);
 
     expect(saves).toBe(2);
-    expect(loads).toBe(1);
+    expect(loads).toBe(0);
     const saved = await draft();
-    expect(saved.manifest.brand).toEqual({
+    expect(saved.manifest.brand).toMatchObject({
       primary: "#7c5cff",
       accent: "#f59e0b",
       scheme: "light",
@@ -81,7 +84,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
 
   it("keeps an invalid colour as typed and says why, without saving or reloading", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     let saves = 0;
     await page.route("**/api/theming/draft/brand", async (route: Route) => {
       saves += 1;
@@ -117,7 +120,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     });
     expect(res.status).toBe(200);
     const family = ((await draft()).manifest.fonts as { family: string }[])[0]?.family ?? "";
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     let loads = 0;
     page.on("load", () => (loads += 1));
     const primary = page.locator('input[name="primary"]');
@@ -137,10 +140,10 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     expect(await page.textContent(".canccu-studio-notice")).toContain("hex digits");
   });
 
-  it("stops the saves queued behind one that failed, and says the first failure", async () => {
+  it("stops the saves queued behind one refused as stale, and says another organiser changed it", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const before = (await draft()).manifest.brand;
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     let release = (): void => undefined;
     const held = new Promise<void>((resolve) => (release = resolve));
     let saves = 0;
@@ -153,21 +156,24 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
         json: { error: { code: "version_conflict", message: "The first save failed." } },
       });
     });
-    const loaded = page.waitForEvent("load");
     const field = page.locator('input[name="primary"]');
     await field.fill("#7c5cff");
     await field.blur();
+    await expect.poll(() => saves).toBe(1);
     await page.check('input[name="scheme"][value="light"]');
     release();
-    await loaded;
+    await expect
+      .poll(() => page.getAttribute(".canccu-studio", "data-save-state"))
+      .toBe("conflict");
+    await page.waitForTimeout(600);
     expect(saves).toBe(1);
-    expect(await page.textContent(".canccu-studio-notice")).toBe("The first save failed.");
+    expect(await page.textContent(".canccu-studio-notice")).toContain("Another organiser");
     expect((await draft()).manifest.brand).toEqual(before);
   });
 
-  it("saves a field still being typed in before the page reloads", async () => {
+  it("saves a field still being typed in with the save under way", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     let release = (): void => undefined;
     const held = new Promise<void>((resolve) => (release = resolve));
     let saves = 0;
@@ -176,12 +182,13 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
       if (saves === 1) await held;
       await route.continue();
     });
-    const loaded = page.waitForEvent("load");
+    const version = (await draft()).draft_version;
     await page.check('input[name="scheme"][value="light"]');
-    // Typed, never left: no change event comes before the reload.
+    await expect.poll(() => saves).toBe(1);
+    // Typed, never left: no change event comes before the first save ends.
     await page.locator('input[name="accent"]').fill("#7c5cff");
     release();
-    await loaded;
+    await savedAfter(page, version + 1);
     expect(saves).toBe(2);
     expect((await draft()).manifest.brand).toMatchObject({ accent: "#7c5cff", scheme: "light" });
     expect(await page.inputValue('input[name="accent"]')).toBe("#7c5cff");
@@ -189,10 +196,10 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
 
   it("takes a file dropped on the logo box as the logo", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     const bytes = [...(await png("#ff7a45", 32))];
-    const [, taken] = await Promise.all([
-      page.waitForEvent("load"),
+    const version = (await draft()).draft_version;
+    const [taken] = await Promise.all([
       page.evaluate((bytes) => {
         const data = new DataTransfer();
         data.items.add(new File([new Uint8Array(bytes)], "dropped.png", { type: "image/png" }));
@@ -205,6 +212,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
         return events.every((e) => e.defaultPrevented);
       }, bytes),
     ]);
+    await savedAfter(page, version);
     expect(taken).toBe(true);
     expect((await draft()).manifest.images).toEqual({ logo: "images/logo.png" });
     expect(await page.locator("img.canccu-studio-drop__logo").count()).toBe(1);
@@ -212,10 +220,13 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
 
   it("takes a refused logo out of the draft again and says why", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     const logo = { name: "logo.svg", mimeType: "image/svg+xml", buffer: SCRIPTED };
-    await change(page, () => page.setInputFiles('input[name="logo_file"]', logo));
+    await page.setInputFiles('input[name="logo_file"]', logo);
+    await expect.poll(() => page.getAttribute(".canccu-studio", "data-save-state")).toBe("failed");
     expect(await page.textContent(".canccu-studio-notice")).toContain("images/logo.svg");
+    // The page knows the version the refusal left, so the next change saves.
+    await typeHex(page, "primary", "#7c5cff");
     const after = await draft();
     expect((after.files ?? []).map((f) => f.path)).not.toContain("images/logo.svg");
     expect(after.problems.filter((p) => p.severity === "error")).toEqual([]);
@@ -228,7 +239,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
       draft_version: v,
       tokens: { fonts: { body: "Inter" } },
     });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     expect(await page.locator('.canccu-pagehead [data-action="publish"]').isDisabled()).toBe(true);
     expect(await page.inputValue('select[name="body"]')).toBe("Inter");
     await act(page, '[data-action="font-system"][data-token="body"]');
@@ -236,7 +247,8 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     // Not the notice of a preview on a screen, which waits hidden above (#444).
     const title = ".canccu-notice__title:not([data-screen-preview-title])";
     expect(await page.textContent(title)).toBe("Ready to publish");
-    expect(await page.inputValue('select[name="body"]')).toBe("");
+    // With no font of its own left, the theme offers only the pairs.
+    expect(await page.locator('select[name="body"]').count()).toBe(0);
   });
 
   it("sets the text font to a font the theme holds, and back to the system font", async () => {
@@ -253,7 +265,7 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     const fonts = (await draft()).manifest.fonts as { family: string }[];
     const family = fonts[0]?.family ?? "";
     expect(family).not.toBe("");
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     await change(page, () => page.selectOption('select[name="body"]', ""));
     const tokens = () =>
       draft().then((d) => (d.manifest.tokens as { fonts?: { body?: string } }).fonts?.body);
