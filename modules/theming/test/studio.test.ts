@@ -281,7 +281,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain("iframe");
       expect(body).toContain('name="import"');
       expect(/<p class="canccu-pagehead__desc">([\s\S]*?)<\/p>/.exec(body)?.[1]).toBe(
-        "The theme beyond Make it yours: set each colour, font and size by hand, add your own fonts and picture, or edit the theme's files.",
+        "The theme beyond Make it yours: set each colour, font and size by hand, add your own fonts and picture, or edit the files of the theme.",
       );
       expect(body).toMatch(/<p class="canccu-studio-status">[\s\S]*Nothing published yet/);
     });

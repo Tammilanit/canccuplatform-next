@@ -299,7 +299,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           title: "Theme studio",
           tab: "advanced",
           description:
-            "The theme beyond Make it yours: set each colour, font and size by hand, add your own fonts and picture, or edit the theme's files.",
+            "The theme beyond Make it yours: set each colour, font and size by hand, add your own fonts and picture, or edit the files of the theme.",
           actions: frame.actions,
           body: depthBody(page.state, advancedView(page.state, page.draft, page), frame, page.own),
         });
