@@ -137,8 +137,22 @@
           }
         },
         "colors": {
-          "$ref": "#/$defs/tokens/properties/colors",
-          "required": ["background", "surface", "border", "text", "text_muted", "primary", "primary_text", "accent", "status_ok", "status_degraded", "status_down"]
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["background", "surface", "border", "text", "text_muted", "primary", "primary_text", "accent", "status_ok", "status_degraded", "status_down"],
+          "properties": {
+            "background": { "$ref": "#/$defs/color" },
+            "surface": { "$ref": "#/$defs/color" },
+            "border": { "$ref": "#/$defs/color" },
+            "text": { "$ref": "#/$defs/color" },
+            "text_muted": { "$ref": "#/$defs/color" },
+            "primary": { "$ref": "#/$defs/color" },
+            "primary_text": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "status_ok": { "$ref": "#/$defs/color" },
+            "status_degraded": { "$ref": "#/$defs/color" },
+            "status_down": { "$ref": "#/$defs/color" }
+          }
         }
       }
     },

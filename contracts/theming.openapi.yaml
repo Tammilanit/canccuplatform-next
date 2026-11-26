@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.9.0
+  version: 1.10.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -24,6 +24,8 @@ tags:
     description: Editing, previewing and publishing the one draft.
   - name: revisions
     description: History, rollback and export.
+  - name: presets
+    description: The looks a draft starts from, and Reset to one.
   - name: sync
     description: Taking the package from the event's git repo.
   - name: clone
@@ -406,6 +408,32 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
   /api/theming/draft/package:
+    get:
+      tags: [draft]
+      operationId: exportDraft
+      summary: Download the draft as a package zip
+      description: |
+        Needs right `theming.theme.write`. The same format as an upload: another event that uploads it gets the same
+        manifest and files. 404 `no_draft` without a draft.
+      responses:
+        "200":
+          description: The package.
+          headers:
+            Content-Disposition:
+              description: "`attachment; filename=\"theme-draft.zip\"`."
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags: [draft]
       operationId: putDraftPackage
@@ -553,6 +581,10 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/theming/presets:
+    $ref: "theming/presets.openapi.yaml#/~1api~1theming~1presets"
+  /api/theming/draft/preset:
+    $ref: "theming/presets.openapi.yaml#/~1api~1theming~1draft~1preset"
   /api/theming/font-pairs:
     $ref: "theming/fonts.openapi.yaml#/~1api~1theming~1font-pairs"
   /theming/fonts/{pair}/{file}:
@@ -1183,8 +1215,8 @@ components:
         logo_plate:
           $ref: "theme.schema.json#/$defs/logo_plate"
         font_pair:
-          description: One of `GET /api/theming/font-pairs` (else 400).
-          type: string
+          description: One of `GET /api/theming/font-pairs` (else 400); null takes the pair away (the system font).
+          type: [string, "null"]
         roundness:
           type: string
           enum: [square, soft, round]

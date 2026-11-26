@@ -1,4 +1,6 @@
 /** The presets of Pick a look (plan issue-784 D9, D10): the demo themes and their schemes. */
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { contrastFailures } from "../src/contrast.js";
 import { generateColors } from "../src/brand.js";
@@ -8,6 +10,13 @@ describe("the presets", () => {
   it("are the demo themes the image holds, in the gallery's order", () => {
     expect([...PRESETS.keys()]).toEqual(["default", "terminal", "level-up"]);
     expect(PRESETS.get("level-up")?.name).toBe("Level up");
+  });
+
+  it("say they hold embeds exactly when their package has an embeds folder", () => {
+    for (const preset of PRESETS.values()) {
+      expect(preset.embeds, preset.id).toBe(existsSync(join(preset.dir, "embeds")));
+    }
+    expect([...PRESETS.values()].filter((p) => p.embeds).length).toBeGreaterThan(0);
   });
 
   it("each have 3–5 schemes, among them one dark and one light", () => {

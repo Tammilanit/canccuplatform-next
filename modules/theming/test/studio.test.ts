@@ -1,23 +1,10 @@
 /** The Studio pages under `/theming/studio/` (plan issue-185 D8, D10): brand kit, advanced, history. */
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import { draftFiles, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { DATABASE_URL, OUTSIDE_IP, get, send } from "./helpers.js";
-import { STARTERS, STARTERS_WITH_EMBEDS } from "../src/studio-views.js";
 import { demoZip, putPackage } from "./packaging.js";
-
-describe("the starters with embeds", () => {
-  it("are the demo themes that hold an embeds folder", () => {
-    const themes = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
-    const withEmbeds = STARTERS.filter((name) => existsSync(join(themes, name, "embeds")));
-    expect(withEmbeds.length).toBeGreaterThan(0);
-    expect([...STARTERS_WITH_EMBEDS].sort()).toEqual([...withEmbeds].sort());
-  });
-});
 
 describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
   const t = draftFiles();

@@ -1,0 +1,97 @@
+# Part of theming.openapi.yaml (contracts/README.md, Parts): the presets and applying one, and the draft's
+# export (contracts/theming.md, Presets; Reuse: series and export).
+/api/theming/presets:
+  get:
+    tags: [presets]
+    operationId: listPresets
+    summary: The presets and their colour schemes
+    description: Needs right `theming.theme.write`. In the Theme studio gallery's order.
+    responses:
+      "200":
+        description: The presets.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [presets]
+              properties:
+                presets:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, name, embeds, schemes]
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      embeds:
+                        description: Applying it changes the embeds, which needs `theming.embeds.write`.
+                        type: boolean
+                      schemes:
+                        type: array
+                        items:
+                          type: object
+                          required: [id, name, kind, brand, colors]
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            kind:
+                              type: string
+                              enum: [dark, light, contrast, accent]
+                            brand:
+                              $ref: "../theme.schema.json#/$defs/scheme/properties/brand"
+                            colors:
+                              description: "The whole colour-token set: the scheme's own, or generated from `brand`."
+                              type: object
+                              additionalProperties:
+                                $ref: "../theming.openapi.yaml#/components/schemas/Color"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+/api/theming/draft/preset:
+  put:
+    tags: [presets]
+    operationId: applyPreset
+    summary: Apply a preset to the draft (and Reset to it)
+    description: |
+      Needs right `theming.theme.write`, and `theming.embeds.write` when the preset's embeds differ from the
+      draft's. Replaces the draft's content with the preset's package under the scheme, keeping the event's
+      `images.logo` and `images.icon` (with their files), `brand.logo_plate` and `brand.embed_color`, and sets
+      `preset`. Starts the draft when `draft_version` is absent and there is none. Through the package upload's
+      checks.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [preset, scheme]
+            properties:
+              preset:
+                type: string
+              scheme:
+                type: string
+              draft_version:
+                description: The draft's current version; absent when no draft exists yet.
+                type: integer
+                minimum: 0
+    responses:
+      "200":
+        $ref: "../theming.openapi.yaml#/components/responses/DraftOk"
+      "400":
+        $ref: "../theming.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../theming.openapi.yaml#/components/responses/Conflict"
