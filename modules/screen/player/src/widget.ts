@@ -8,6 +8,7 @@ import type { EmbedOptions } from "@canccu/ui";
 import { currentItem, drawMedia } from "./media.js";
 import { skipVideo, videoItem, videoPosition } from "./story-video.js";
 import type { MediaOptions } from "./media.js";
+import { ASIDE_QR, CARD_URL, announceView } from "./announce-template.js";
 import { templateFor } from "./templates.js";
 import { renderTree } from "./tree.js";
 
@@ -51,7 +52,9 @@ export function drawWidget(
   } else if (type === "video") {
     el.append(...drawStoryVideo(view, media));
   } else if (type !== "embed") {
-    el.append(...renderTree(templateFor(type, template, themeTemplates), withUrgent(type, view)));
+    const shown = type === "announcement" ? announceView(view) : view;
+    el.append(...renderTree(templateFor(type, template, themeTemplates), shown));
+    if (type === "announcement") el.append(...drawAside(view, themeTemplates));
   }
   const art = cardArt(view);
   if (art !== null) el.prepend(art);
@@ -59,11 +62,23 @@ export function drawWidget(
 }
 
 /**
- * An urgent announcement says so (R6, A3; mockup 06 b): the player adds `urgent`, as the ticker's
- * view-model carries it, since a template can test a field but not a value.
+ * A full-screen announcement's nearby content (contracts/screen.md, `Claim.aside`, #780): the
+ * device's clock, the widget Screen composed (the food orders, or now and next) and the claim's QR
+ * to the details, in a column beside the card. Only a claim Screen gave an `aside` has one.
  */
-const withUrgent = (type: string, view: View): View =>
-  type === "announcement" && view.level === "urgent" ? { ...view, urgent: true } : view;
+function drawAside(view: View, themeTemplates: unknown): HTMLElement[] {
+  const aside = view.aside as { widget?: unknown; view?: unknown } | null | undefined;
+  if (typeof aside?.widget !== "string" || typeof aside.view !== "object" || aside.view === null)
+    return [];
+  const box = document.createElement("div");
+  box.className = "canccu-widget__aside";
+  const clock = view.aside_clock;
+  if (typeof clock === "object" && clock !== null)
+    box.append(drawWidget("clock", null, clock as View, themeTemplates));
+  box.append(drawWidget(aside.widget, null, aside.view as View, themeTemplates));
+  box.append(...renderTree(ASIDE_QR, view));
+  return [box];
+}
 
 /** A storyboard's video step: from its server-clock start, held while paused, skipped on failure. */
 function drawStoryVideo(view: View, media: MediaOptions): HTMLElement[] {
@@ -90,9 +105,6 @@ function drawStoryVideo(view: View, media: MediaOptions): HTMLElement[] {
   }
   return [shown];
 }
-
-/** An image on the event's hostname, or a picture handed in as data (the demo shots). */
-const CARD_URL = /^(\/(?!\/)[\x21-\x7e]*|data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)$/;
 
 /**
  * The card's own ground (contracts/theming.md, The two backgrounds): its art under a veil of the
@@ -150,15 +162,19 @@ export function liveView(type: string, view: View, nowMs: number, timeZone: stri
     const rest = Object.fromEntries(Object.entries(view).filter(([k]) => k !== "next_item"));
     return { ...rest, item: currentItem(view, nowMs) };
   }
-  if (type !== "clock") return view;
-  return {
-    ...view,
-    // To the minute, as the text shows it: else the clock redraws every second for nothing.
-    iso: new Date(Math.floor(nowMs / 60_000) * 60_000).toISOString(),
-    time: format(nowMs, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
-    date: format(nowMs, timeZone, { weekday: "short", day: "numeric", month: "short" }),
-  };
+  // The nearby content's clock is the device's, as the clock widget's is (#780).
+  if (type === "announcement" && view.aside != null)
+    return { ...view, aside_clock: clockFields({ qr: null }, nowMs, timeZone) };
+  return type === "clock" ? clockFields(view, nowMs, timeZone) : view;
 }
+
+const clockFields = (view: View, nowMs: number, timeZone: string): View => ({
+  ...view,
+  // To the minute, as the text shows it: else the clock redraws every second for nothing.
+  iso: new Date(Math.floor(nowMs / 60_000) * 60_000).toISOString(),
+  time: format(nowMs, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+  date: format(nowMs, timeZone, { weekday: "short", day: "numeric", month: "short" }),
+});
 
 /** Widgets the device keeps current itself, also offline: they never dim (mockup 16). */
 const KEPT_ON_DEVICE = new Set(["clock", "countdown", "playlist"]);

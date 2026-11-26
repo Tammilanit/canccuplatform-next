@@ -214,6 +214,23 @@
   align-items: center;
   margin-inline-end: 1rem;
 }
+/* The composer's level, placement and icon as chips (#780, D17): a radio in each, 44 px tall. */
+.moments-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.moments-chips .moments-choice {
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0 0.875rem;
+  border: 1px solid var(--canccu-color-border);
+  border-radius: 999px;
+}
+.moments-chips .moments-choice:has(input:checked) {
+  border-color: var(--canccu-color-primary);
+  background: color-mix(in srgb, var(--canccu-color-primary) 12%, transparent);
+}
 .moments-narrow {
   max-width: 6rem;
 }
