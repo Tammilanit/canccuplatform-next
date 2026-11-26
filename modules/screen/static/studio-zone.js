@@ -48,7 +48,10 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     // The photo wall's settings show while the box lists a photo (src/studio/widget-settings.ts).
     const wall = r.querySelector("[data-photo-wall]");
     if (wall) wall.hidden = !entriesOf(r).some((e) => e.widget === "photo");
-    const names = [...r.querySelectorAll(".canccu-studio-widget__name")].map((n) => n.textContent);
+    // A switched-off item is skipped by the screens, so the box's summary leaves it out too.
+    const names = [
+      ...r.querySelectorAll("li:not(.canccu-studio-widget--off) .canccu-studio-widget__name"),
+    ].map((n) => n.textContent);
     const shows = form.querySelector(`[data-pick="${CSS.escape(r.dataset.region)}"] [data-shows]`);
     if (shows) shows.textContent = names.length ? names.join(" → ") : say("zone.region_empty");
   }

@@ -118,10 +118,29 @@ export function withLiving(view) {
   };
 }
 
-/** One of the photo tiles as the slide, from the run's start for the whole strip. */
+/**
+ * The slide's path on the stack's own origin: the player draws only an own path
+ * (player/src/media.ts), so a `data:` slide left the hero bare and the strip still passed.
+ */
+const SLIDE_PATH = "/api/screen/files/canccu-living-slide.svg";
+
+/**
+ * Serves one of the photo tiles at the slide's path, before the page first asks for it. On the
+ * context: the player's service worker fetches the screen's files, which a page's route never sees.
+ */
+export const serveSlide = (page) =>
+  page.context().route(`**${SLIDE_PATH}`, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "image/svg+xml",
+      body: Buffer.from(TILES[0].url.slice(TILES[0].url.indexOf(",") + 1), "base64"),
+    }),
+  );
+
+/** The slide, from the run's start for the whole strip. */
 const slide = (startsAt) => ({
   kind: "image",
-  url: TILES[0].url,
+  url: SLIDE_PATH,
   slide_urls: [],
   started_at: at(startsAt),
   offset_seconds: 0,
@@ -151,6 +170,13 @@ export async function livingStrip(page, view, shoot) {
     return;
   }
   await waitUntil(page, oddRunAt + 2500);
+  // A slide that does not load fails the strip: the band over a bare hero is no shot of D6a.
+  await page.waitForSelector(".canccu-region--hero .canccu-widget--playlist img");
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll(".canccu-region--hero .canccu-widget--playlist img")].some(
+      (img) => img.complete && img.naturalWidth > 0,
+    ),
+  );
   await page.waitForSelector(".canccu-region--hero > .canccu-lower-third");
   await shoot("f1");
   await waitUntil(page, oddRunAt + 2 * RUN_S * 1000 + 2500);

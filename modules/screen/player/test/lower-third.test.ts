@@ -83,8 +83,9 @@ const state = (regions: Region[]): ScreenState =>
     display: { motion: "none", drift: false },
   });
 
-const at = (regions: Region[], ms: number) =>
-  lowerThirdAt(regions[0] as Region, state(regions), ms);
+// The hero draws the rotation's own turn: the slideshow's, index 0, in these runs.
+const at = (regions: Region[], ms: number, drawn: number | null = 0) =>
+  lowerThirdAt(regions[0] as Region, state(regions), ms, drawn);
 
 describe("the lower third over the slideshow", () => {
   it("leaves every second run clean, from its first slide to its last", () => {
@@ -135,6 +136,31 @@ describe("the lower third over the slideshow", () => {
     });
     expect(at([hero(T0 + 120_000), venue(null), rail(T0 + 30 * 60_000)], T0 + 121_000)).toBeNull();
   });
+
+  it("names a delayed next item as it names a next one", () => {
+    const late = rail(T0 + 12 * 60_000);
+    const row = (late.widgets[0]?.view.items as Record<string, unknown>[])[0];
+    if (row !== undefined) row.state = "delayed";
+    expect(at([hero(T0 + 120_000), venue(null), late], T0 + 121_000)).toMatchObject({
+      kind: "next",
+      title: "Next: Semi-finals",
+    });
+  });
+
+  it("says nothing of a switched-off food item", () => {
+    const v = venue(openOrder);
+    const food = v.widgets[0];
+    if (food !== undefined) food.enabled = false;
+    expect(at([hero(T0 + 120_000), v], T0 + 121_000)).toBeNull();
+    expect(at([hero(T0 + 120_000), v, rail(T0 + 12 * 60_000)], T0 + 121_000)).toMatchObject({
+      kind: "next",
+    });
+  });
+
+  it("lies only over the slideshow's turn the hero draws, not a turn shown in its place", () => {
+    expect(at([hero(T0 + 120_000), venue(openOrder)], T0 + 121_000, 1)).toBeNull();
+    expect(at([hero(T0 + 120_000), venue(openOrder)], T0 + 121_000, null)).toBeNull();
+  });
 });
 
 describe("the lower third on the screen", () => {
@@ -158,5 +184,40 @@ describe("the lower third on the screen", () => {
     vi.setSystemTime(T0 + 140_000);
     screen.tick();
     expect(root.querySelector(".canccu-region--hero > .canccu-lower-third")).toBeNull();
+  });
+
+  it("lays none when a claim's `next` skips the rest of the slideshow's turn", () => {
+    const screen = new Screen({ serverNow: () => Date.now(), reducedMotion: () => false });
+    const claimed = hero(T0 + 120_000);
+    claimed.claim = {
+      override_id: "ov_1",
+      hidden: false,
+      role: "hero",
+      rank: 1,
+      template: "announcement",
+      content: { title: "Dinner is served", body: "Café", level: "info" },
+      steps: null,
+      sound: null,
+      on_end: "next",
+      starts_at: iso(T0 + 60_000),
+      ends_at: iso(T0 + 600_000),
+      expires_at: null,
+    };
+    screen.draw(state([claimed, venue(openOrder)]));
+    // The state drops the claim mid-turn: the hero shows the turn after the slideshow's.
+    const root = screen.draw(state([hero(T0 + 120_000), venue(openOrder)]));
+    screen.tick();
+    const hero_ = root.querySelector(".canccu-region--hero");
+    expect(hero_?.querySelector(".canccu-widget--playlist.canccu-is-active")).toBeNull();
+    expect(hero_?.querySelector(".canccu-widget--ticker.canccu-is-active")).not.toBeNull();
+    expect(root.querySelector(".canccu-lower-third")).toBeNull();
+  });
+
+  it("lays the band again when a redraw took it out of the hero", () => {
+    const screen = new Screen({ serverNow: () => Date.now(), reducedMotion: () => false });
+    const root = screen.draw(state([hero(T0 + 120_000), venue(openOrder)]));
+    root.querySelector(".canccu-lower-third")?.remove();
+    screen.tick();
+    expect(root.querySelector(".canccu-region--hero > .canccu-lower-third")).not.toBeNull();
   });
 });

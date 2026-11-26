@@ -223,9 +223,10 @@ export class Screen {
       // A step's own cue picture wins over the claim's, from the step's start (#114).
       applyCue(drawn.el, (typeof next === "object" ? next?.cue : undefined) ?? drawn.claim, now);
       const zone = state.zone?.key ?? "";
-      drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
+      const turn = turnIndexOf(next);
+      drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turn, zone, now);
       if (drawn.state.role === "hero")
-        syncLowerThird(drawn.el, takeover ? null : lowerThirdAt(drawn.state, state, now));
+        syncLowerThird(drawn.el, takeover ? null : lowerThirdAt(drawn.state, state, now, turn));
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);

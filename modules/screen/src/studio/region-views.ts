@@ -119,12 +119,15 @@ export interface RegionInfo extends BoxInfo {
   layoutDwell: number;
 }
 
-const shows = (c: ViewContext, r: { entries: Entry[] }): string =>
-  r.entries.length === 0
+/** The box's summary on the map: the items it plays, so a switched-off one is left out. */
+const shows = (c: ViewContext, r: { entries: Entry[] }): string => {
+  const on = r.entries.filter((e) => e.enabled !== false);
+  return on.length === 0
     ? c.t("zone.region_empty")
-    : r.entries
+    : on
         .map((e) => nameOf(c.t, "widget", typeof e.widget === "string" ? e.widget : ""))
         .join(" → ");
+};
 
 const FRAME = new Set(["header", "ticker", "backdrop"]);
 

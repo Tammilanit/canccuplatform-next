@@ -91,7 +91,10 @@ function onePlace(
     return [...choices];
   }
   // The slideshow's band says the food for its 15 s, so the food box leaves meanwhile (D6a).
-  const band = hero.type === "playlist" ? lowerThirdAt(regions[h] as Region, state, now) : null;
+  const band =
+    hero.type === "playlist"
+      ? lowerThirdAt(regions[h] as Region, state, now, turnIndexOf(hero))
+      : null;
   const shows = band?.kind.startsWith("food_") === true ? "food_status" : hero.type;
   if (!ONE_SOURCE.has(shows)) return [...choices];
   return choices.map((c, i) => {

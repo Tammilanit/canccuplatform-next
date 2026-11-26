@@ -308,6 +308,21 @@ describe("the hero's rotation in Studio", () => {
     expect(saved?.widgets).toEqual([{ widget: "stats" }, { widget: "clock" }]);
   });
 
+  it("leaves a switched-off item out of the box's summary on the map, as drawn and as switched", async () => {
+    const z = zone({
+      regions: { hero: { widgets: [{ widget: "stats", enabled: false }, { widget: "clock" }] } },
+    });
+    const { form, region } = await open(z);
+    const shows = () =>
+      form.querySelector('[data-pick="hero"] [data-shows]')?.textContent.trim() ?? "";
+    expect(shows()).toBe(t("widget.clock"));
+    const [stats, clock] = [...region("hero").querySelectorAll("[data-widgets] li")];
+    toggle(switchOf(stats as Element));
+    expect(shows()).toBe(`${t("widget.stats")} → ${t("widget.clock")}`);
+    toggle(switchOf(clock as Element));
+    expect(shows()).toBe(t("widget.stats"));
+  });
+
   it("offers 30, 45 and 60 s as chips for the hero, the layout's 45 s pressed", async () => {
     const { region, submit, calls } = await open(zone());
     const chips = [...region("hero").querySelectorAll("[data-dwell-chip]")] as HTMLButtonElement[];

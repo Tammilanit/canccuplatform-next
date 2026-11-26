@@ -35,13 +35,15 @@ function inWindow(item: View, runStart: number, runEnd: number, nowMs: number): 
   return anchors.some((a) => start >= a && start - a < Math.max(lengthMs, 1));
 }
 
-/** The food box's view on the screen, in whichever region lists it. */
-const viewOf = (state: ScreenState, type: string): View | undefined =>
-  state.regions.flatMap((r) => r.widgets).find((w) => w.widget === type && w.view.empty !== true)
-    ?.view;
+/** A box's view of `type` on the screen, in whichever region lists it. */
+const viewOf = (state: ScreenState, type: string, on = false): View | undefined =>
+  state.regions
+    .flatMap((r) => r.widgets)
+    .find((w) => w.widget === type && w.view.empty !== true && !(on && w.enabled === false))?.view;
 
 function food(state: ScreenState): LowerThird | null {
-  const view = viewOf(state, "food_status");
+  // A switched-off food item says nothing (#787 D3): no band, so no food box steps aside either.
+  const view = viewOf(state, "food_status", true);
   const first = Array.isArray(view?.orders) ? (view.orders[0] as unknown) : undefined;
   if (view === undefined || !isObject(first)) return null;
   const join = isObject(view.join) ? str(view.join.image_url) : null;
@@ -56,7 +58,8 @@ function food(state: ScreenState): LowerThird | null {
 function next(state: ScreenState, nowMs: number): LowerThird | null {
   const items = viewOf(state, "agenda_now")?.items;
   const row = (Array.isArray(items) ? (items as unknown[]) : []).find(
-    (i): i is View => isObject(i) && i.state === "next",
+    // A delayed next item is still the next thing on (contracts/screen.md, agenda_now).
+    (i): i is View => isObject(i) && (i.state === "next" || i.state === "delayed"),
   );
   const startsAt = Date.parse(str(row?.starts_at) ?? "");
   if (row === undefined || Number.isNaN(startsAt) || startsAt - nowMs > NEXT_WITHIN_MS) return null;
@@ -69,12 +72,22 @@ function next(state: ScreenState, nowMs: number): LowerThird | null {
   };
 }
 
-/** The band the hero shows over its slideshow at `nowMs`, or null. */
-export function lowerThirdAt(hero: Region, state: ScreenState, nowMs: number): LowerThird | null {
+/**
+ * The band the hero shows over its slideshow at `nowMs`, or null. `drawn` is the rotation's turn
+ * the hero draws: a turn the choreographer holds or a claim's `next` skips is not the playlist
+ * turn the rotation names, and a band over it would say the wrong thing.
+ */
+export function lowerThirdAt(
+  hero: Region,
+  state: ScreenState,
+  nowMs: number,
+  drawn: number | null,
+): LowerThird | null {
   if (hero.rotation !== "director" || hero.claim != null) return null;
   const zone = state.zone?.key ?? "";
   const turn = shownAt(hero, zone, nowMs);
-  const w = turn.index === null ? undefined : hero.widgets[turn.index];
+  if (turn.index === null || turn.index !== drawn) return null;
+  const w = hero.widgets[turn.index];
   if (w?.widget !== "playlist" || !isObject(w.view.item) || !Number.isFinite(turn.until))
     return null;
   const cycleMs = hero.order.reduce((s, i) => s + (hero.widgets[i]?.dwell_seconds ?? 0), 0) * 1000;
@@ -117,7 +130,8 @@ function bandOf(third: LowerThird): HTMLElement {
 export function syncLowerThird(region: HTMLElement, third: LowerThird | null): void {
   const had = bands.get(region);
   const key = third === null ? "" : JSON.stringify(third);
-  if (had?.key === key) return;
+  // A redraw of the region may have taken the band out with the old widget.
+  if (had?.key === key && had.el.isConnected) return;
   had?.el.remove();
   bands.delete(region);
   if (third === null) return;

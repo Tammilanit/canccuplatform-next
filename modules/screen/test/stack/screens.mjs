@@ -15,7 +15,7 @@ import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
-import { LIVING_STRIPS, LIVING_THEMES, livingStrip, withLiving } from "./living.mjs";
+import { LIVING_STRIPS, LIVING_THEMES, livingStrip, serveSlide, withLiving } from "./living.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import { storiesOff } from "./stories.mjs";
 import { withFoodClaim } from "./food.mjs";
@@ -332,6 +332,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
 
     /** The handed page drawing `view`, checked, and its shots. */
     async function shown(theme, view, size, page, close, race) {
+      if (view === "living-slideshow") await serveSlide(page);
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
