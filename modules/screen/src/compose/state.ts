@@ -18,12 +18,12 @@ import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { showsName } from "./zone-reads.js";
-import { buildRegions } from "./build.js";
 import { stageOf } from "./stage.js";
 import type { ArtCache } from "../stage/art.js";
 import { themeColors } from "../stage/scrim.js";
-import { claimEndAt, placeClaims } from "./claims.js";
-import type { Placement } from "./claims.js";
+import { claimEndAt } from "./claims.js";
+import { placeZone } from "./zone-claims.js";
+import type { ZoneView } from "./zone-claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { displayOf, moodOf, phaseSource } from "./display.js";
 import { loadScene } from "./scenes.js";
@@ -33,11 +33,9 @@ import { nextPhaseAt, type MotionLevel, type MotionPhase } from "./motion.js";
 import { zonePlay, zonePrefetch } from "../moments-sound.js";
 import type { Play } from "../moments-sound.js";
 import { themeLayouts } from "./layouts.js";
-import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
 import { zoneFingerprint } from "./fingerprint.js";
 import { highlightChangeAt, highlightOf } from "./features.js";
-import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import { heldBundle } from "../pins/bundles.js";
 import type { BundleStore } from "../pins/bundles.js";
@@ -129,9 +127,7 @@ const origin = (ctx: TenantContext, host: string): string =>
   ctx.primary_hostname === null ? `http://${host}` : `https://${ctx.primary_hostname}`;
 
 /** One orientation's layout, its regions with their claims, and where the claims went. */
-export interface ZoneView extends Placement {
-  layout: Layout;
-}
+export type { ZoneView } from "./zone-claims.js";
 
 export interface ZoneComposed {
   /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
@@ -252,9 +248,9 @@ export async function composeZone(
     food: { orders: read.food, names: deps.settings.get("food_holder_names", true) !== false },
   };
   const claims = read.claims.map((o) => foodClaim(o, facts));
-  const build = (portrait: boolean): ZoneView => {
-    const once = (showcase?: "grow" | "keep"): ZoneView => {
-      const { layout, regions } = buildRegions({
+  const build = (portrait: boolean): ZoneView =>
+    placeZone(
+      {
         zone: {
           key: read.zone.key,
           layoutId: read.zone.layout_id,
@@ -269,16 +265,10 @@ export async function composeZone(
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
-        ...(showcase === undefined ? {} : { showcase }),
-      });
-      return { layout, ...placeClaims(regions, claims) };
-    };
-    const plain = once();
-    // A claim's place follows roles alone, so the second build places every claim as this one
-    // did. A showcase decides the hero's size; only without one does it fill the waiting boxes.
-    if (!isShowcase(plain.regions)) return plain;
-    return once(read.zone.grow_for_showcase ? "grow" : "keep");
-  };
+      },
+      claims,
+      read.zone.grow_for_showcase,
+    );
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only

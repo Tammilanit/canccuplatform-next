@@ -1,8 +1,9 @@
 /** The announcements' rows and the run-of-show items they read (contracts/moments.md, Announcements). */
 import type { SqlClient } from "@canccu/kit";
 import type { Actor } from "../store.js";
+import type { Icon, Level, Placement } from "./chain.js";
 
-export type Level = "info" | "urgent";
+export type { Icon, Level, Placement } from "./chain.js";
 export type Status = "scheduled" | "live" | "ended" | "withdrawn";
 export type EndReason =
   "expired" | "withdrawn" | "item_cancelled" | "item_removed" | "ended_on_air";
@@ -24,6 +25,8 @@ export interface AnnouncementRow {
   id: string;
   status: Status;
   level: Level;
+  placement: Placement;
+  icon: Icon;
   full_screen: boolean;
   title_text: string;
   body_text: string;
@@ -55,15 +58,17 @@ export interface AnnouncementRow {
 const COLUMNS = `id, status, level, full_screen, title_text, body_text, variables, item_id, title, body,
   channels, zones, duration_seconds, "when", fire_at, event_name, time_zone, template_key,
   card_moment_id, line_moment_id, sent_at, expires_at, updated_until, ended_at, end_reason, why,
-  actor_user_id, actor_name, created_at`;
+  actor_user_id, actor_name, created_at, placement, icon`;
 
-const rowOf = (r: Record<string, unknown>): AnnouncementRow => r as unknown as AnnouncementRow;
+// Migration 010 filled every stored row's placement; a null icon is the default one.
+const rowOf = (r: Record<string, unknown>): AnnouncementRow =>
+  ({ ...r, icon: r.icon ?? "info" }) as unknown as AnnouncementRow;
 
 export async function insertAnnouncement(c: SqlClient, a: AnnouncementRow): Promise<void> {
   await c.query(
     `INSERT INTO moments_announcements (${COLUMNS})
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-       $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)`,
+       $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)`,
     values(a),
   );
 }
@@ -75,7 +80,8 @@ export async function saveAnnouncement(c: SqlClient, a: AnnouncementRow): Promis
        zones = $12, duration_seconds = $13, "when" = $14, fire_at = $15, event_name = $16,
        time_zone = $17, template_key = $18, card_moment_id = $19, line_moment_id = $20,
        sent_at = $21, expires_at = $22, updated_until = $23, ended_at = $24, end_reason = $25,
-       why = $26, actor_user_id = $27, actor_name = $28, created_at = $29
+       why = $26, actor_user_id = $27, actor_name = $28, created_at = $29, placement = $30,
+       icon = $31
      WHERE id = $1`,
     values(a),
   );
@@ -112,6 +118,8 @@ function values(a: AnnouncementRow): unknown[] {
     a.actor_user_id,
     a.actor_name,
     a.created_at,
+    a.placement,
+    a.icon,
   ];
 }
 

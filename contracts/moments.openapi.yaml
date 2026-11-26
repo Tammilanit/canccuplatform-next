@@ -98,6 +98,8 @@ paths:
     $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1pack~1{file}"
   /api/moments/announcements:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements"
+  /api/moments/announcements/live:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1live"
   /api/moments/announcements/preview:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1preview"
   /api/moments/announcements/{announcement_id}:
@@ -1215,8 +1217,8 @@ components:
           type: [string, "null"]
     AnnouncementLevel:
       type: string
-      enum: [info, urgent]
-      description: Emergency is not a level here; it is Emergency's own flow.
+      enum: [info, important, urgent]
+      description: Emergency is not a level here; it is Emergency's own flow. `important` is additive (#780).
     AnnouncementChannels:
       type: object
       properties:
@@ -1269,9 +1271,20 @@ components:
           description: With placeholders; at most 140 characters once filled.
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        placement:
+          oneOf:
+            - $ref: "moments/announcement-look.openapi.yaml#/AnnouncementPlacement"
+            - type: "null"
+          description: Null or absent for the level's default, unless `full_screen` is sent; it wins over `full_screen`.
+        icon:
+          oneOf:
+            - $ref: "moments/announcement-look.openapi.yaml#/AnnouncementIcon"
+            - type: "null"
+          description: Null or absent for `info`.
         full_screen:
           type: boolean
-          default: false
+          deprecated: true
+          description: Use `placement`. Alone, `true` means `full` and `false` means `rail` (the chain before #780).
         channels:
           $ref: "#/components/schemas/AnnouncementChannels"
         zones:
@@ -1316,7 +1329,7 @@ components:
             maxLength: 60
     Announcement:
       type: object
-      required: [id, status, level, full_screen, title_text, body_text, variables, item_id, title, body, channels,
+      required: [id, status, level, placement, icon, full_screen, title_text, body_text, variables, item_id, title, body, channels,
         zones, duration_seconds, when, fire_at, sent_at, expires_at, updated_until, ended_at, end_reason, why,
         actor, moments]
       properties:
@@ -1327,8 +1340,14 @@ components:
           enum: [scheduled, live, ended, withdrawn]
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        placement:
+          $ref: "moments/announcement-look.openapi.yaml#/AnnouncementPlacement"
+        icon:
+          $ref: "moments/announcement-look.openapi.yaml#/AnnouncementIcon"
         full_screen:
           type: boolean
+          deprecated: true
+          description: True exactly when `placement` is `full`.
         title_text:
           type: string
         body_text:
@@ -1446,12 +1465,17 @@ components:
           default: ""
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        icon:
+          oneOf:
+            - $ref: "moments/announcement-look.openapi.yaml#/AnnouncementIcon"
+            - type: "null"
+          description: Additive (#780); null or absent for `info`.
         revision:
           type: integer
           minimum: 0
     AnnouncementTemplate:
       type: object
-      required: [key, name, title, body, level, builtin, variables, revision]
+      required: [key, name, title, body, level, icon, builtin, variables, revision]
       properties:
         key:
           type: string
@@ -1463,6 +1487,8 @@ components:
           type: string
         level:
           $ref: "#/components/schemas/AnnouncementLevel"
+        icon:
+          $ref: "moments/announcement-look.openapi.yaml#/AnnouncementIcon"
         builtin:
           type: boolean
         variables:
