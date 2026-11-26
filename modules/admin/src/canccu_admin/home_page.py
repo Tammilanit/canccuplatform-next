@@ -5,12 +5,14 @@ screens with each zone's live view, and the pages the person may open. The PO as
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any
 
 from canccu_kit import KitError, TenantResolver
 from canccu_kit.rights import Session
 from canccu_kit.ui import EventInfo, date_range, esc, icon, menu_for, notice
+from starlette.requests import Request
+from starlette.responses import RedirectResponse, Response
 
 from .event_owners import ScreenApi, TenantsApi
 from .pages import BASE, event_of, page
@@ -153,3 +155,19 @@ async def home_page(
         current="home",
         description_html=esc(DESCRIPTION),
     )
+
+
+def home_route(
+    read_session: Callable[[str | None], Awaitable[Session]],
+    tenants: TenantsApi | None,
+    screen: ScreenApi | None,
+) -> Callable[[Request], Awaitable[Response]]:
+    async def index(request: Request) -> Response:
+        """Home for anyone with a role; without one, "No role yet" on sign-in."""
+        session = await read_session(request.headers.get("cookie"))
+        if not menu_for(session):
+            return RedirectResponse(f"{BASE}/sign-in", status_code=303)
+        home: Response = await home_page(request, session, tenants, screen)
+        return home
+
+    return index

@@ -11,7 +11,8 @@ from canccu_kit.page_check import page_problems
 from canccu_kit.rights import Session
 from conftest import World, owner_and_member
 
-from canccu_admin.event_views import EventData, event_view
+from canccu_admin.event_views import event_view
+from canccu_admin.event_widgets import EventData
 
 
 async def event_page(world: World, caplog: pytest.LogCaptureFixture) -> str:

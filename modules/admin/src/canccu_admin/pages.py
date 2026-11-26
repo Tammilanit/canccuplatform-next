@@ -69,6 +69,7 @@ PAGE_NAMES = {
     "profile": "the event profile",
     "people": "People",
     "access": "Event access",
+    "event": "the Event page",
 }
 
 

@@ -59,10 +59,11 @@ async def test_start_and_end_are_read_in_the_zone_chosen_in_the_same_form(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
     browser = await owner(world, caplog)
-    form = BASICS | {"time_zone": "UTC", "starts_at": "2026-12-04T15:00"}
+    form = BASICS | {"time_zone": "UTC", "starts_at": "2026-12-04T16:00"}
     await browser.post("/admin/event/basics", data=form, headers=ORIGIN)
     _, body = sent(world)
-    assert body["time_zone"] == "UTC" and body["starts_at"] == "2026-12-04T15:00:00Z"
+    # 16:00 and 14:00 as typed, in UTC: not in Helsinki, where the form was drawn.
+    assert body["time_zone"] == "UTC" and body["starts_at"] == "2026-12-04T16:00:00Z"
     assert body["ends_at"] == "2026-12-06T14:00:00Z"
 
 
