@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from canccu_kit import KitError
-from canccu_kit.ui import empty_state
+from canccu_kit.ui import empty_state, info_tip
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -46,6 +46,10 @@ from .web import (
     writer_session,
 )
 
+DEFAULTS_TIP = (
+    "Where it goes for people who have not chosen yet. Each person can change it in their hub."
+)
+WHEN_TIP = "It goes out only when every condition holds. A row left empty is skipped."
 CUSTOM_ABOUT = (
     "A kind of your own: a narrower copy of one the event has, sent only when its conditions hold."
 )
@@ -105,9 +109,13 @@ def _form(
         + field(
             "Description", text_input("description", values.get("description") or "", maxlength=200)
         )
-        + f'<fieldset class="canccu-notify-fieldset"><legend>On by default</legend>{boxes}'
+        + '<fieldset class="canccu-notify-fieldset"><legend>On by default '
+        + info_tip(DEFAULTS_TIP)
+        + f"</legend>{boxes}"
         "</fieldset>"
-        + '<fieldset class="canccu-notify-fieldset"><legend>Only when</legend>'
+        + '<fieldset class="canccu-notify-fieldset"><legend>Only when '
+        + info_tip(WHEN_TIP)
+        + "</legend>"
         + "<p class=canccu-notify-muted>Every condition must hold. Pick what to look at, a test"
         " and a value; separate the values of 'is one of' with commas.</p>"
         + rows_html(rows, paths_of(base), kinds)

@@ -178,16 +178,15 @@ def _summary(found: dict[str, Any]) -> str:
 
 def _card(found: dict[str, Any], every: Mapping[str, Any], counts: Any, writable: bool) -> str:
     reg = found["topic_type"]
-    _, source = origin(found)
-    meta = source if "custom" not in found else "Your own kind"
+    meta = ""  # the group's heading names where it comes from
     if counts is not None:
         day, total = counts.get(reg["key"], (0, 0))
-        meta += f" · {day} sent in the last 24 hours · {total} in all"
+        meta = f"{day} sent in the last 24 hours · {total} in all"
     parts = "".join(
         f"<li>{esc(PART_LABELS.get(name, name))} {info_tip(PART_TIPS.get(name, name))}</li>"
         for name in reg["parts"]
     )
-    head = f'<p class="canccu-notify-muted">{esc(meta)}</p>'
+    head = f'<p class="canccu-notify-muted">{esc(meta)}</p>' if meta else ""
     if reg.get("description"):
         head += f"<p>{esc(reg['description'])}</p>"
     head += f'<ul class="canccu-notify-parts">{parts}</ul>'

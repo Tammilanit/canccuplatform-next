@@ -188,3 +188,6 @@
   .canccu-notify-health__row p { margin: 0.125rem 0 0; }
   .canccu-notify-health__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 }
+@layer canccu-module {
+  .canccu-notify-fieldset .canccu-notify-switch { margin: 0; }
+}
