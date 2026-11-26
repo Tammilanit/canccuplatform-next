@@ -6,6 +6,7 @@
 import { html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
+import type { Icon, Placement } from "./chain.js";
 import type { Channels, Level, RunItem } from "./store.js";
 import type { Template } from "./templates.js";
 import { freeVariables, own } from "./text.js";
@@ -15,7 +16,11 @@ export interface ComposerState {
   title: string;
   body: string;
   level: Level;
-  full_screen: boolean;
+  /** The level the form was drawn with: a placement or push still at its default follows a new
+   * level, one the organiser changed stays (pages.ts, `stateOf`). */
+  level_was: Level;
+  placement: Placement;
+  icon: Icon;
   channels: Channels;
   zones: string[];
   duration_seconds: number;
@@ -61,6 +66,27 @@ function radio(name: string, value: string, label: string, on: boolean): Html {
     ><input type="radio" name="${name}" value="${value}" ${checked(on)} /> ${label}</label
   >`;
 }
+
+const LEVEL_CHOICES: [Level, string][] = [
+  ["info", "Info"],
+  ["important", "Important"],
+  ["urgent", "Urgent"],
+];
+const PLACEMENT_CHOICES: [Placement, string][] = [
+  ["rail", "Rail"],
+  ["hero", "Hero"],
+  ["full", "Full screen"],
+];
+const ICON_CHOICES: [Icon, string][] = [
+  ["info", "Info"],
+  ["wifi", "Wi-Fi"],
+  ["food", "Food"],
+  ["trophy", "Trophy"],
+  ["clock", "Clock"],
+  ["door", "Door"],
+  ["search", "Lost and found"],
+  ["megaphone", "Megaphone"],
+];
 
 function templateChips(templates: Template[], current: string, item: string): Html {
   const q = (key: string) =>
@@ -139,22 +165,38 @@ ${s.body}</textarea>
         ${o.items.map((i) => option(i.id, `${i.title} (${clock(i.starts_at, o.timeZone)})`, i.id === s.item_id))}
       </select>
     </div>
-    <fieldset class="moments-fieldset">
+    <input type="hidden" name="level_was" value="${s.level}" />
+    <fieldset class="moments-fieldset" data-announce-level>
       <legend class="canccu-field__label">Level</legend>
-      ${radio("level", "info", "Info", s.level === "info")}
-      ${radio("level", "urgent", "Urgent", s.level === "urgent")}
+      <div class="moments-chips">
+        ${LEVEL_CHOICES.map(([v, label]) => radio("level", v, label, s.level === v))}
+      </div>
       <p class="canccu-small canccu-muted">
-        Urgent: the warning colour, the screen's spotlight once, pushed in quiet hours. Emergency is
-        on On air (hold 2 s).
+        Important: a break-in on the screens and a large card on phones. Urgent: the warning colour
+        on every screen, pushed in quiet hours. Emergency is on On air (hold 2 s).
       </p>
-      ${check("full_screen", "Full screen", s.full_screen, "in the theme's look, where the screen is free")}
+    </fieldset>
+    <fieldset class="moments-fieldset" data-announce-placement>
+      <legend class="canccu-field__label">Where on the screens</legend>
+      <div class="moments-chips">
+        ${PLACEMENT_CHOICES.map(([v, label]) => radio("placement", v, label, s.placement === v))}
+      </div>
+      <p class="canccu-small canccu-muted">
+        Follows the level until you pick one. A hero too small for Important goes full screen.
+      </p>
+    </fieldset>
+    <fieldset class="moments-fieldset">
+      <legend class="canccu-field__label">Icon</legend>
+      <div class="moments-chips">
+        ${ICON_CHOICES.map(([v, label]) => radio("icon", v, label, s.icon === v))}
+      </div>
     </fieldset>
     <fieldset class="moments-fieldset">
       <legend class="canccu-field__label">Channels</legend>
-      ${check("ch_screen", "Screen card", s.channels.screen, "rail, else ticker line")}
+      ${check("ch_screen", "Screen card", s.channels.screen, "where you placed it, else the ticker line")}
       ${check("ch_ticker", "Ticker line", s.channels.ticker, "until it ends")}
       ${check("ch_discord", "Discord channel", s.channels.discord, "posted by the bot from step 6")}
-      ${check("ch_push", "Push to phones", s.channels.push, "the Announcements topic")}
+      ${check("ch_push", "Push to phones", s.channels.push, "the Announcements topic; on for Important and Urgent")}
     </fieldset>
     <fieldset class="moments-fieldset">
       <legend class="canccu-field__label">Zones (none ticked: every zone)</legend>
@@ -218,6 +260,8 @@ export function previewView(p: Preview, s: ComposerState, zone: string | undefin
     title: p.title,
     body: p.body,
     level: s.level,
+    placement: s.placement,
+    icon: s.icon,
     starts_at: new Date().toISOString(),
     updated: false,
     ticker_line: p.line,

@@ -130,6 +130,50 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     expect(bad.body).not.toContain('value="send"');
   });
 
+  // #780 (D16, D17): the level as three chips, the placement as a switch that follows the level
+  // until the organiser picks one, the icon as chips; Push on for Important and Urgent.
+  const on = (body: string, name: string, value: string) =>
+    new RegExp(`name="${name}" value="${value}"\\s+checked`).test(body);
+
+  it("offers three levels, the placement and the icon, Info on the rail by default", async () => {
+    const page = (await w.call("crew", "GET", "/announce")).body;
+    for (const level of ["info", "important", "urgent"])
+      expect(page).toContain(`name="level" value="${level}"`);
+    for (const label of ["Rail", "Hero", "Full screen", "Lost and found", "Megaphone"])
+      expect(page).toContain(label);
+    expect(on(page, "level", "info") && on(page, "placement", "rail") && on(page, "icon", "info")).toBe(true);
+    expect(page).not.toMatch(/name="ch_push"[^>]*checked/);
+  }); // prettier-ignore
+
+  it("follows Important with Hero and Push, and keeps a placement the organiser picked", async () => {
+    const preview = (more: Record<string, string>) =>
+      w.call("crew", "POST", "/announce", { ...FIELDS, level_was: "info", placement: "rail", ...more, do: "preview" }, form);
+    const important = (await preview({ level: "important" })).body;
+    expect(on(important, "placement", "hero")).toBe(true);
+    expect(important).toMatch(/name="ch_push"\s+value="true"\s+checked/);
+    // Picked Full screen, then back to Info: the organiser's own placement stays, Push follows.
+    const own = (await preview({ level: "info", level_was: "important", placement: "full", ch_push: "true" })).body;
+    expect(on(own, "placement", "full")).toBe(true);
+    expect(own).not.toMatch(/name="ch_push"[^>]*checked/);
+  }); // prettier-ignore
+
+  it("sends the level, the placement and the icon picked, and lists the level in words", async () => {
+    const sent = await w.call("crew", "POST", "/announce", { ...FIELDS, level: "important", level_was: "important", placement: "hero", icon: "food", do: "send" }, form); // prettier-ignore
+    expect(sent.statusCode).toBe(303);
+    const [a] = json(await w.call("crew", "GET", "/api/moments/announcements")).announcements as {
+      level: string;
+      placement: string;
+      icon: string;
+    }[];
+    expect(a).toMatchObject({ level: "important", placement: "hero", icon: "food" });
+    expect((await w.call("crew", "GET", "/announce")).body).toMatch(/Important ·\s+live/);
+  });
+
+  it("opens a template with its icon, its level's placement and Push", async () => {
+    const food = (await w.call("crew", "GET", "/announce?template=food")).body;
+    expect(on(food, "icon", "food") && on(food, "placement", "rail")).toBe(true);
+  });
+
   it("schedules with a run-of-show item, minutes before its start", async () => {
     const r = await w.call(
       "crew",

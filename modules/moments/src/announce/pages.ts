@@ -11,6 +11,8 @@ import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
 import { canSee, listAnnouncements, readAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, RunItem } from "./store.js";
+import { ICONS, LEVELS, PLACEMENTS, placementOf } from "./chain.js";
+import type { Level, Placement } from "./chain.js";
 import { filled } from "./service.js";
 import { isBuiltin, loadTemplates } from "./templates.js";
 import { closedView, editView, listView } from "./list-views.js";
@@ -25,7 +27,9 @@ const BLANK: ComposerState = {
   title: "",
   body: "",
   level: "info",
-  full_screen: false,
+  level_was: "info",
+  placement: "rail",
+  icon: "info",
   channels: { screen: true, ticker: false, discord: false, push: false },
   zones: [],
   duration_seconds: 300,
@@ -37,6 +41,11 @@ const BLANK: ComposerState = {
   template_key: "",
 };
 
+/** Important and Urgent go to phones unless the organiser turns it off (D16). */
+const pushes = (level: Level): boolean => level !== "info";
+
+const placed = (level: Level): Placement => placementOf(level, null, undefined);
+
 /** The form as posted: unticked boxes are absent, so absent is false. */
 function stateOf(f: Form): ComposerState {
   const on = (k: string) => f[k] === "true";
@@ -47,16 +56,25 @@ function stateOf(f: Form): ComposerState {
     if (k.startsWith("zone_") && v === "true") zones.push(k.slice(5));
   }
   const when = f.when === "at" || f.when === "item" ? f.when : "now";
+  const level = LEVELS.find((l) => l === f.level) ?? "info";
+  const was = LEVELS.find((l) => l === f.level_was) ?? level;
+  const placement = PLACEMENTS.find((p) => p === f.placement) ?? placed(level);
+  // A choice still at the default of the level the form was drawn with follows the new level; one
+  // the organiser changed stays (D17): picking Important sets Hero and Push, and an own placement
+  // survives a change of level. The page's script does the same at once (moments.js).
+  const follows = <T>(posted: T, defaultWas: T): boolean => level !== was && posted === defaultWas;
   return {
     title: f.title ?? "",
     body: f.body ?? "",
-    level: f.level === "urgent" ? "urgent" : "info",
-    full_screen: on("full_screen"),
+    level,
+    level_was: level,
+    placement: follows(placement, placed(was)) ? placed(level) : placement,
+    icon: ICONS.find((i) => i === f.icon) ?? "info",
     channels: {
       screen: on("ch_screen"),
       ticker: on("ch_ticker"),
       discord: on("ch_discord"),
-      push: on("ch_push"),
+      push: follows(on("ch_push"), pushes(was)) ? pushes(level) : on("ch_push"),
     },
     zones,
     duration_seconds: Number(f.duration_seconds ?? 300),
@@ -102,7 +120,8 @@ function inputOf(s: ComposerState, timeZone: string): Record<string, unknown> {
     title: s.title,
     body: s.body,
     level: s.level,
-    full_screen: s.full_screen,
+    placement: s.placement,
+    icon: s.icon,
     channels: s.channels,
     zones: s.zones,
     duration_seconds: s.duration_seconds,
@@ -220,7 +239,16 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
       ...BLANK,
       ...(t === undefined
         ? {}
-        : { title: t.title, body: t.body, level: t.level, template_key: t.key }),
+        : {
+            title: t.title,
+            body: t.body,
+            level: t.level,
+            level_was: t.level,
+            placement: placed(t.level),
+            icon: t.icon,
+            channels: { ...BLANK.channels, push: pushes(t.level) },
+            template_key: t.key,
+          }),
       ...(q.item === undefined ? {} : { item_id: q.item, when: "item" as const }),
     });
   });
@@ -251,6 +279,7 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
         title: state.title,
         body: state.body,
         level: state.level,
+        icon: state.icon,
         revision: own?.revision ?? 0,
       });
       return a.status >= 400
