@@ -1,0 +1,160 @@
+/// <reference lib="dom" />
+/**
+ * Advanced in Chromium (plan issue-784 D14–D16, pack sheet 4): every control of the table moves
+ * the screen frame before its save answers, the CSS editor marks a refused line as it is typed,
+ * a box look reaches the screen frame, and the hub page frame is as tall as its page.
+ */
+import type { Frame, Page } from "playwright-core";
+import { describe, expect, it } from "vitest";
+import { ADVANCED_CONTROLS } from "../src/studio-controls.js";
+import { browser, studioSuite } from "./studio-page.js";
+
+describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000 }, () => {
+  const s = studioSuite();
+  const { open, api, draft } = s;
+
+  /** Level up · Sunset: own fonts, CSS, templates and layouts, as the customise-everything organiser has. */
+  async function levelUp(): Promise<void> {
+    const applied = await api("PUT", "/api/theming/draft/preset", {
+      preset: "level-up",
+      scheme: "sunset",
+    });
+    expect(applied.status).toBe(200);
+  }
+
+  async function frame(page: Page, selector: string): Promise<Frame> {
+    const f = await (await page.waitForSelector(selector, { state: "attached" })).contentFrame();
+    if (f === null) throw new Error(`${selector} shows no frame`);
+    await f.waitForLoadState("load");
+    return f;
+  }
+  const SCREEN = "iframe[data-screen-preview]";
+  const cssVar = (f: Frame, name: string) =>
+    f.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
+  /** Sets a value as a person's drag or pick would, with the events the browser sends. */
+  const setValue = (page: Page, selector: string, value: string) =>
+    page.locator(selector).evaluate((el: HTMLInputElement, v) => {
+      el.value = v;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+
+  it("moves the screen frame with every control, then saves the tokens", async () => {
+    await levelUp();
+    const page = await open("/theming/studio/advanced");
+    let loads = 0;
+    page.on("load", () => (loads += 1));
+    const screen = await frame(page, SCREEN);
+    for (const c of ADVANCED_CONTROLS) {
+      const before = await cssVar(screen, c.cssVar);
+      const at = `[name="${c.token}"]`;
+      if (c.control === "colour") {
+        await setValue(page, `input${at}`, before === "#123456" ? "#654321" : "#123456");
+      } else if (c.control === "slider") {
+        const [min, max] = c.range ?? [0, 0];
+        const now = Number(await page.locator(`input${at}`).inputValue());
+        await setValue(page, `input${at}`, String(now === max ? min : max));
+      } else if (c.control === "font") {
+        const select = page.locator(`select${at}`);
+        const other = await select.evaluate((el: HTMLSelectElement) => {
+          const now = el.selectedOptions[0]?.dataset.stack;
+          return [...el.options].find((o) => o.dataset.stack !== now)?.value;
+        });
+        expect(other, c.token).toBeDefined();
+        await select.selectOption(other ?? "");
+      } else {
+        await page.locator(`input${at}:not(:checked)`).first().check();
+      }
+      await expect
+        .poll(() => cssVar(screen, c.cssVar), { timeout: 5_000, message: c.token })
+        .not.toBe(before);
+    }
+    await page.waitForFunction(
+      () => document.querySelector<HTMLElement>(".canccu-studio")?.dataset.saveState === "saved",
+      undefined,
+      { timeout: 15_000 },
+    );
+    const tokens = (await draft()).manifest.tokens as Record<string, Record<string, string>>;
+    expect(tokens.sizes?.safe_inset).toMatch(/px$/);
+    expect(tokens.motion_style).toBeDefined();
+    expect(loads).toBe(0);
+  });
+
+  it("marks a refused line of the CSS as it is typed", async () => {
+    await levelUp();
+    const page = await open("/theming/studio/advanced");
+    const editor = page.locator("textarea.canccu-studio-editor__text");
+    await editor.fill(
+      ".t-flare {\n  color: var(--canccu-color-accent);\n  background: url(https://example.org/flare.png);\n}\n",
+    );
+    const mark = ".canccu-studio-editor__gutter li:nth-child(3).canccu-studio-editor__line--error";
+    await page.waitForSelector(mark, { timeout: 1_000 });
+    expect(await page.locator(".canccu-studio-editor__problems").textContent()).toContain("Line 3");
+    // Only a check: nothing was stored.
+    expect((await draft()).files?.map((f) => f.path)).not.toContain("css/theme.css");
+  });
+
+  it("gives the screen frame the countdown's new look", async () => {
+    await levelUp();
+    const ctx = await s.context();
+    // One zone, drawn by a stand-in for screen's virtual screen that keeps what it is posted.
+    await ctx.route("**/api/screen/zones", (r) =>
+      r.fulfill({ json: { zones: [{ key: "main", name: "Main hall" }] } }),
+    );
+    await ctx.route("**/api/screen/zones/main/state", (r) =>
+      r.fulfill({ json: { layout: { id: "main", regions: [] }, regions: [], theme: {} } }),
+    );
+    await ctx.route("**/screen/zones/main", (r) =>
+      r.fulfill({
+        contentType: "text/html",
+        body: `<!doctype html><body class="canccu-surface"><script>
+          addEventListener("message", (e) => {
+            window.received = e.data;
+            parent.postMessage({ type: "canccu-screen-preview-drawn", id: e.data.id }, location.origin);
+          });</script></body>`,
+      }),
+    );
+    const page = await ctx.newPage();
+    await page.goto(`${s.origin}/theming/studio/advanced`);
+    const countdownTemplate = async () => {
+      const screen = await frame(page, SCREEN);
+      return screen.evaluate(() => {
+        const state = (
+          window as unknown as { received?: { state: { theme: { layouts: unknown } } } }
+        ).received?.state;
+        if (state === undefined) return undefined;
+        const layouts = state.theme.layouts as {
+          regions: { widgets: { widget: string; template?: string }[] }[];
+        }[];
+        const w = layouts
+          .flatMap((l) => l.regions.flatMap((r) => r.widgets))
+          .find((x) => x.widget === "countdown");
+        return w?.template ?? "platform";
+      });
+    };
+    await expect.poll(countdownTemplate).toBe("xp_countdown");
+    await Promise.all([
+      page.waitForEvent("load"),
+      page.locator('select[name="look.countdown"]').selectOption(""),
+    ]);
+    await expect.poll(countdownTemplate).toBe("platform");
+  });
+
+  it("sizes the hub page frame to its page, with no empty half below the cards", async () => {
+    await levelUp();
+    const page = await open("/theming/studio/advanced");
+    const hub = await frame(page, 'iframe[data-surface="page"]');
+    const content = await hub.evaluate(() =>
+      Math.max(
+        ...[...document.body.querySelectorAll("*")].map((e) => e.getBoundingClientRect().bottom),
+      ),
+    );
+    await expect
+      .poll(() =>
+        page
+          .locator('iframe[data-surface="page"]')
+          .evaluate((f: HTMLIFrameElement) => f.clientHeight),
+      )
+      .toBeLessThanOrEqual(Math.ceil(content) + 32);
+  });
+});
