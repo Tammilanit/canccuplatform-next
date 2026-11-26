@@ -321,6 +321,15 @@
     location.reload();
   }
 
+  /** studio-live.js found a version this page did not write: the same stop as a refused save. */
+  document.addEventListener("canccu-studio-conflict", () => {
+    conflicted = true;
+    root.dataset.saveState = "conflict";
+    show(
+      "Another organiser changed this draft meanwhile, so your last change may not be the latest. Reload the page to see theirs.",
+    );
+  });
+
   document.addEventListener("submit", (event) => {
     const form = event.target.closest("form[data-action]");
     if (form === null) return;

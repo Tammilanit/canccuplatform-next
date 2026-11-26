@@ -22,7 +22,8 @@
       },
       // The platform font is no pair: null takes the pair away.
       font_pair: checked(form, "font_pair") || null,
-      roundness: checked(form, "roundness") ?? "soft",
+      // Nothing is checked when the theme's own corners match no choice: they stay as they are.
+      roundness: checked(form, "roundness"),
       backdrop: {
         // At least one look: the cycle needs something to show (the schema's minItems).
         ...(looks.length > 0 ? { looks } : {}),

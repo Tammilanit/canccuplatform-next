@@ -266,6 +266,35 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     });
   });
 
+  it("stops, rather than adopt a version another organiser wrote before the refresh was read", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    let hold = true;
+    await page.route("**/theming/studio/yours", async (r) => {
+      if (!hold) return r.continue();
+      hold = false;
+      // Another organiser saves after this page's save and before its refresh is read.
+      const other = await api("PUT", "/api/theming/draft/preset", {
+        preset: "default",
+        scheme: "daylight",
+        draft_version: (await draft()).draft_version,
+      });
+      expect(other.status).toBe(200);
+      await r.continue();
+    });
+    const before = (await draft()).draft_version;
+    await page.click('input[name="roundness"][value="round"]', { force: true });
+    await page.waitForFunction(
+      () => document.querySelector<HTMLElement>(".canccu-studio")?.dataset.saveState === "conflict",
+    );
+    expect(await page.textContent(".canccu-studio-notice")).toContain("Another organiser");
+    const stored = await draft();
+    expect(stored.draft_version).toBeGreaterThan(before + 1);
+    await page.click('input[name="roundness"][value="square"]', { force: true });
+    await page.waitForTimeout(800);
+    expect(await draft()).toEqual(stored);
+  });
+
   it("shows the draft's colours again when a look is refused, or kept out by Keep my draft", async () => {
     await eventDraft();
     const page = await open("/theming/studio/");
@@ -304,6 +333,29 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await asked.waitForTimeout(300);
     expect(await cssVar(asking, "--canccu-color-background")).toBe(night);
     expect((await draft()).manifest.preset).toEqual({ id: "default", scheme: "night" });
+  });
+
+  it("names the loss in Reset's dialog when the draft holds its own CSS", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    const note = page.locator("#canccu-studio-reset .canccu-studio-own-note");
+    await page.click('[data-action="reset-ask"]');
+    expect(await note.isVisible()).toBe(false);
+    await page.click('#canccu-studio-reset [data-action="dialog-close"]');
+    const css = await fetch(
+      `${s.origin}/api/theming/draft/file?path=css%2Fextra.css&draft_version=${(await draft()).draft_version}`,
+      {
+        method: "PUT",
+        headers: { cookie: "canccu_session=embedder", origin: s.origin },
+        body: "a { color: red; }",
+      },
+    );
+    expect(css.status).toBe(200);
+    const again = await open("/theming/studio/yours");
+    await again.click('[data-action="reset-ask"]');
+    const named = again.locator("#canccu-studio-reset .canccu-studio-own-note");
+    expect(await named.isVisible()).toBe(true);
+    expect(await named.textContent()).toContain("own CSS");
   });
 
   it("keeps a logo picked just before an earlier save's refresh lands", async () => {

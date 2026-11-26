@@ -200,8 +200,13 @@ function coloursSection(
   );
 }
 
-function fontsSection(brand: Brand | undefined): Html {
-  const chosen = brand?.font_pair ?? "";
+function fontsSection(brand: Brand | undefined, draft: DraftRow): Html {
+  const tokens = isObject(draft.manifest.tokens) ? draft.manifest.tokens : {};
+  const own =
+    isObject(tokens.fonts) &&
+    ["heading", "display", "body"].some((k) => k in (tokens.fonts as object));
+  // A theme's own fonts (a preset's) are no pair: none is checked until one is picked.
+  const chosen = brand?.font_pair ?? (own ? undefined : "");
   const option = (
     value: string,
     name: string,
@@ -225,8 +230,15 @@ function fontsSection(brand: Brand | undefined): Html {
 /** The roundness the draft shows: the brand's choice, else the one its radius matches. */
 function roundnessOf(brand: Brand | undefined, draft: DraftRow): string {
   if (brand?.roundness !== undefined) return brand.roundness;
-  const radius = fillTokens(draft.manifest.tokens ?? {}).sizes.radius;
-  return Object.entries(ROUNDNESS).find(([, v]) => v === radius)?.[0] ?? "soft";
+  const tokens = isObject(draft.manifest.tokens) ? draft.manifest.tokens : {};
+  const own = isObject(tokens.sizes) ? tokens.sizes.radius : undefined;
+  const radius = own ?? fillTokens(tokens).sizes.radius;
+  // A radius of the theme's own (a preset's) that no choice matches shows none checked, so a save
+  // sends no corners and keeps it.
+  return (
+    Object.entries(ROUNDNESS).find(([, v]) => v === radius)?.[0] ??
+    (own === undefined ? "soft" : "")
+  );
 }
 
 const LOOK_NAMES: Record<(typeof LOOKS)[number], string> = {
@@ -300,6 +312,10 @@ function resetView(state: StudioState): Html {
         The colours, fonts, corners and background go back to the preset's. Your logo and its plate
         stay.
       </p>
+      <p class="canccu-studio-own-note">
+        Your draft has its own CSS, fonts, templates or embeds. Resetting drops them. Export the
+        draft first to keep a copy.
+      </p>
       <div class="canccu-studio-row canccu-studio-dialog__actions">
         ${actionButton("Keep my changes", { "data-action": "dialog-close" })}
         ${actionButton(`Reset to ${name}`, { "data-action": "preset", "data-preset": from.preset.id, "data-scheme": from.scheme.id }, "primary")}
@@ -357,7 +373,7 @@ export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): 
     ${advanced}
     <form class="canccu-studio-form canccu-studio-yours" data-action="brand">
       ${hidden}${logoSection(state, draft, info)}${coloursSection(brand, colors, info)}
-      ${fontsSection(brand)}
+      ${fontsSection(brand, draft)}
       ${section(
         "Corners",
         "",

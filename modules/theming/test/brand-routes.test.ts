@@ -75,6 +75,37 @@ describe.skipIf(!DATABASE_URL)("the brand kit's paths", () => {
       expect(none.json<{ draft: Draft }>().draft.manifest.brand).not.toHaveProperty("font_pair");
     });
 
+    it("drops a theme's own fonts and radius when a pair or corners are picked, and only then", async () => {
+      const version = (await t.fresh()).draft_version;
+      const own = {
+        fonts: { heading: "Barlow", body: "Barlow", mono: "Fira Code" },
+        sizes: { radius: "0px" },
+      };
+      const first = await putBrand({ ...BRAND, draft_version: version });
+      const current = first.json<{ draft: Draft }>().draft;
+      await setManifest({
+        ...current.manifest,
+        tokens: { ...current.manifest.tokens, ...own },
+      });
+      const base = (await draftNow()).draft_version;
+      // A save that names no corners and no pair (the form sends none) keeps the theme's own.
+      const kept = await putBrand({ ...BRAND, draft_version: base, font_pair: null });
+      const keptTokens = kept.json<{ draft: Draft }>().draft.manifest.tokens;
+      expect(keptTokens.fonts).toMatchObject({ heading: "Barlow" });
+      expect(keptTokens.sizes).toMatchObject({ radius: "0px" });
+      const picked = await putBrand({
+        ...BRAND,
+        draft_version: kept.json<{ draft: Draft }>().draft.draft_version,
+        font_pair: "space-inter",
+        roundness: "round",
+      });
+      expect(picked.statusCode).toBe(200);
+      const tokens = picked.json<{ draft: Draft }>().draft.manifest.tokens;
+      // The monospace font is no part of a pair: it stays.
+      expect(tokens.fonts).toEqual({ mono: "Fira Code" });
+      expect(tokens.sizes).toBeUndefined();
+    });
+
     it("generates the colours, takes the logo and icon, and names what it shaded", async () => {
       const version = await withImages();
       const res = await putBrand({

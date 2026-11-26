@@ -127,7 +127,12 @@
     const next = doc.querySelector(".canccu-studio");
     // A save made after this page was read: its own refresh draws the page, and the version the
     // next save names never goes back (a 409 would stop every save after it).
-    if (Number(next?.dataset.draftVersion) < Number(root.dataset.draftVersion)) return;
+    const read = Number(next?.dataset.draftVersion);
+    const mine = Number(root.dataset.draftVersion);
+    if (read < mine) return;
+    // Newer than this page's own last save: another organiser wrote it. The form still holds the
+    // old values, so taking the version would let the next save undo theirs without a 409.
+    if (read > mine) return void document.dispatchEvent(new Event("canccu-studio-conflict"));
     for (const el of document.querySelectorAll("[data-refresh]")) {
       // A file picked and not yet sent stays: the save 400 ms on reads it from this input.
       if (hasFile(el)) continue;

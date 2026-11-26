@@ -110,6 +110,38 @@ function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   return withColors(out, brand);
 }
 
+/**
+ * A pair or corners the organiser picks now must show: a preset's own font and radius tokens sit
+ * over the brand's choices (tokens.ts), so they go when a different choice is made (the mirror of
+ * draft-routes.ts, where a token edit takes the choice away).
+ */
+function withoutOverriddenChoices(
+  manifest: Manifest,
+  before: Record<string, unknown>,
+  input: BrandEdit,
+): Manifest {
+  if (!isObject(manifest.tokens)) return manifest;
+  const tokens = { ...manifest.tokens };
+  const without = (group: unknown, keys: string[]): Record<string, unknown> | undefined => {
+    if (!isObject(group)) return undefined;
+    const rest = Object.fromEntries(Object.entries(group).filter(([k]) => !keys.includes(k)));
+    return Object.keys(rest).length > 0 ? rest : undefined;
+  };
+  const pair = typeof input.font_pair === "string" && input.font_pair !== before.font_pair;
+  if (pair) {
+    const fonts = without(tokens.fonts, ["heading", "display", "body"]);
+    if (fonts === undefined) delete tokens.fonts;
+    else tokens.fonts = fonts;
+  }
+  const corners = input.roundness !== undefined && input.roundness !== before.roundness;
+  if (corners) {
+    const sizes = without(tokens.sizes, ["radius"]);
+    if (sizes === undefined) delete tokens.sizes;
+    else tokens.sizes = sizes;
+  }
+  return { ...manifest, tokens };
+}
+
 export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -167,7 +199,8 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
         const same = (["primary", "accent", "scheme"] as const).every(
           (k) => before[k] === brand[k],
         );
-        return same && isObject(tokens.colors) ? next : withColors(next, brand);
+        const colored = same && isObject(tokens.colors) ? next : withColors(next, brand);
+        return withoutOverriddenChoices(colored, before, input);
       }),
     );
     return { draft: draftBody(row), adjusted };

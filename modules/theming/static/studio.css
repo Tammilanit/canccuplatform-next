@@ -270,3 +270,8 @@
 .canccu-studio-screen-notice[hidden] {
   display: none;
 }
+
+/* Shown only while the draft holds the organiser's own CSS, fonts, templates or embeds. */
+.canccu-studio:not([data-own-work="1"]) .canccu-studio-own-note {
+  display: none;
+}
