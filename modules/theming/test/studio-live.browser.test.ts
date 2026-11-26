@@ -100,6 +100,7 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await page.route("**/api/theming/draft/brand", (r) => {
       held.push(r);
     });
+    // Only the first save is held: the handler stays, so nothing is left to it when it goes.
     await page.locator('input[data-hex-for="primary"]').fill("#ff7a45");
     for (const selector of [SCREEN, PHONE, HUB]) {
       const f = await frame(page, selector);
@@ -107,7 +108,6 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     }
     await expect.poll(() => held.length).toBe(1);
     expect(await page.getAttribute(".canccu-studio", "data-save-state")).toBe("saving");
-    await page.unroute("**/api/theming/draft/brand");
     await held[0]?.continue();
     await page.waitForFunction(
       () => document.querySelector<HTMLElement>(".canccu-studio")?.dataset.saveState === "saved",
@@ -119,13 +119,14 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await eventDraft();
     const page = await (await context()).newPage();
     const held: Route[] = [];
-    await page.route("**/theming/studio/preview/hub?*", (r) => {
-      held.push(r);
-    });
-    await page.goto(`${s.origin}/theming/studio/yours`);
+    let holding = true;
+    await page.route("**/theming/studio/preview/hub?*", (r) =>
+      holding ? void held.push(r) : r.continue(),
+    );
+    await page.goto(`${s.origin}/theming/studio/yours`, { waitUntil: "domcontentloaded" });
     await expect.poll(() => held.length).toBe(2);
     await page.locator('input[data-hex-for="accent"]').fill("#22aa88");
-    await page.unroute("**/theming/studio/preview/hub?*");
+    holding = false;
     await Promise.all(held.map((r) => r.continue()));
     for (const selector of [PHONE, HUB]) {
       const f = await frame(page, selector);
@@ -162,15 +163,16 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     const publish = page.locator('.canccu-pagehead [data-action="publish"]');
     await expect.poll(() => publish.isDisabled()).toBe(false);
     const held: Route[] = [];
-    await page.route("**/theming/studio/preview/**", (r) => {
-      held.push(r);
-    });
+    let holding = true;
+    await page.route("**/theming/studio/preview/**", (r) =>
+      holding ? void held.push(r) : r.continue(),
+    );
     const before = (await draft()).draft_version;
     await page.click('input[name="roundness"][value="round"]', { force: true });
     await savedAfter(page, before);
     await expect.poll(() => held.length).toBeGreaterThan(0);
     expect(await publish.isDisabled()).toBe(true);
-    await page.unroute("**/theming/studio/preview/**");
+    holding = false;
     await Promise.all(held.map((r) => r.continue()));
     await expect.poll(() => publish.isDisabled()).toBe(false);
   });
@@ -178,7 +180,15 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
   it("keeps the screen frame in place over a save: the page never reloads it", async () => {
     await eventDraft();
     const page = await open("/theming/studio/yours");
-    const box = () => page.locator(SCREEN).boundingBox();
+    // Where the frame sits in the preview column, which stays in view as the page scrolls.
+    const box = () =>
+      page.evaluate((sel) => {
+        const frame = document.querySelector(sel)?.getBoundingClientRect();
+        const column = document.querySelector(".canccu-studio-column")?.getBoundingClientRect();
+        return frame && column
+          ? { x: frame.x - column.x, y: frame.y - column.y, w: frame.width, h: frame.height }
+          : undefined;
+      }, SCREEN);
     const at = await box();
     const before = (await draft()).draft_version;
     await page.click('input[name="font_pair"][value="space-inter"]', { force: true });

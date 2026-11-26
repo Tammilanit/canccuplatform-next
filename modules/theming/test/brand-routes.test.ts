@@ -58,6 +58,23 @@ describe.skipIf(!DATABASE_URL)("the brand kit's paths", () => {
     (await get(t.h, "/api/theming/draft", { session: "admin" })).json<Draft>();
 
   describe("PUT /api/theming/draft/brand", () => {
+    it("takes the font pair away with null, back to the platform font (plan issue-784 D6)", async () => {
+      const version = (await t.fresh()).draft_version;
+      const paired = await putBrand({ ...BRAND, draft_version: version, font_pair: "space-inter" });
+      expect(paired.statusCode).toBe(200);
+      const after = paired.json<{ draft: Draft }>().draft;
+      expect(after.manifest.brand?.font_pair).toBe("space-inter");
+      const kept = await putBrand({ ...BRAND, draft_version: after.draft_version });
+      expect(kept.json<{ draft: Draft }>().draft.manifest.brand?.font_pair).toBe("space-inter");
+      const none = await putBrand({
+        ...BRAND,
+        draft_version: kept.json<{ draft: Draft }>().draft.draft_version,
+        font_pair: null,
+      });
+      expect(none.statusCode).toBe(200);
+      expect(none.json<{ draft: Draft }>().draft.manifest.brand).not.toHaveProperty("font_pair");
+    });
+
     it("generates the colours, takes the logo and icon, and names what it shaded", async () => {
       const version = await withImages();
       const res = await putBrand({

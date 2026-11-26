@@ -120,11 +120,15 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     const input = request.body as BrandEdit;
     // The Studio offers only the platform's pairs; a manifest from elsewhere may name a newer one
     // and only gets a warning (checks.ts), but this editor never stores a pair it cannot draw.
-    if (input.font_pair !== undefined && !FONT_PAIRS.has(input.font_pair)) {
+    if (typeof input.font_pair === "string" && !FONT_PAIRS.has(input.font_pair)) {
       throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
     }
     const picked = Object.fromEntries(
-      BRAND_FIELDS.filter((k) => input[k] !== undefined).map((k) => [k, input[k]]),
+      // A field sent as null is taken away: neither picked nor kept.
+      BRAND_FIELDS.filter((k) => input[k] !== undefined && input[k] !== null).map((k) => [
+        k,
+        input[k],
+      ]),
     ) as unknown as Brand;
     const { adjusted } = generateColors(picked);
     const row = await deps.db.tenant((c) =>

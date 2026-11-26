@@ -38,6 +38,10 @@
   let awaited;
   let zonePicks = 0;
   let onScreenLoad;
+  /** The zone's state the screen frame draws, so a save posts it again without a reload. */
+  let zoneState;
+  /** Frames sent to a newer version that have not loaded it yet. */
+  const loading = new Set();
 
   async function readJson(url) {
     const res = await fetch(url, { credentials: "same-origin" }).catch(() => undefined);
@@ -168,6 +172,7 @@
 
   /** A frame's earlier load handler goes, so it never posts its state into the next page. */
   function load(src, onLoad) {
+    zoneState = undefined;
     screenShown = false;
     awaited = undefined;
     clearTimeout(unanswered);
@@ -194,17 +199,25 @@
     if (state === undefined || !Array.isArray(state.regions)) return fallback();
     const caption = document.querySelector(".canccu-studio-zone");
     if (caption !== null) caption.textContent = `· ${zone.name}`;
-    const draft = withDraft(state);
     load(`/screen/zones/${key}`, () => {
-      // Without a draft nothing is held; a state the player refuses is never answered.
-      if (draft === undefined) return;
-      awaited = ++posts;
-      screenFrame.contentWindow.postMessage(
-        { type: PREVIEW_MESSAGE, state: draft, id: awaited },
-        location.origin,
-      );
-      unanswered = setTimeout(fallback, ANSWER_MS);
+      zoneState = state;
+      post();
     });
+  }
+
+  /** The zone's state with the draft as it is now, for the frame to draw instead of the live zone. */
+  function post() {
+    const draft = withDraft(zoneState);
+    // Without a draft nothing is held; a state the player refuses is never answered.
+    if (draft === undefined) return;
+    screenShown = false;
+    clearTimeout(unanswered);
+    awaited = ++posts;
+    screenFrame.contentWindow.postMessage(
+      { type: PREVIEW_MESSAGE, state: draft, id: awaited },
+      location.origin,
+    );
+    unanswered = setTimeout(fallback, ANSWER_MS);
   }
 
   addEventListener("message", (event) => {
@@ -243,18 +256,64 @@
       doc !== null && doc.readyState === "complete" && doc.querySelector(".canccu-surface") !== null
     );
   }
-  const shown = (frame) => (frame === screenFrame ? screenShown : isSurface(frame));
-  const held = [...document.querySelectorAll("[data-needs-preview]")];
+  const shown = (frame) =>
+    frame === screenFrame ? screenShown : !loading.has(frame) && isSurface(frame);
+  // Read each time: a save draws the title row again (studio-live.js).
+  const held = () => [...document.querySelectorAll("[data-needs-preview]")];
   const frames = [...document.querySelectorAll("iframe[data-preview]")];
   // Set by studio.js once a save has made the drawn version older than the draft (until a reload).
   const stale = () => document.querySelector(".canccu-studio")?.dataset.previewStale === "1";
   function check() {
-    if (held.length === 0 || stale() || !frames.every(shown)) return;
-    for (const button of held) button.disabled = false;
+    const buttons = held();
+    if (buttons.length === 0 || stale() || !frames.every(shown)) return;
+    for (const button of buttons) button.disabled = false;
     const hint = document.querySelector(".canccu-studio-publish-hint");
     if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
   }
-  for (const frame of frames) if (frame !== screenFrame) frame.addEventListener("load", check);
+  for (const frame of frames) {
+    if (frame === screenFrame) continue;
+    frame.addEventListener("load", () => {
+      loading.delete(frame);
+      check();
+    });
+  }
+
+  /*
+   * After a save (studio-live.js): the screen frame gets the saved draft posted again, never a
+   * reload, so its boxes stay where a paired screen has them; the hub frames load the saved version.
+   * Publish waits for both again when it holds for the preview.
+   */
+  document.addEventListener("canccu-studio-redraw", (event) => {
+    const doc = event.detail;
+    const next = doc.querySelector("iframe[data-screen-preview]");
+    if (screenFrame !== null && next !== null) {
+      for (const key of [
+        "tokensCssUrl",
+        "cssUrl",
+        "logoUrl",
+        "templates",
+        "layouts",
+        "fallbackSrc",
+      ]) {
+        if (next.dataset[key] === undefined) delete screenFrame.dataset[key];
+        else screenFrame.dataset[key] = next.dataset[key];
+      }
+      if (zoneState !== undefined) post();
+      else if (screenFrame.getAttribute("src") === screenFrame.dataset.fallbackSrc) {
+        // Already the newest sample; nothing to load.
+      } else if (screenFrame.getAttribute("src")?.startsWith("/theming/")) fallback();
+    }
+    for (const frame of frames) {
+      if (frame === screenFrame) continue;
+      const src = doc
+        .querySelector(`iframe[data-surface="${frame.dataset.surface}"]`)
+        ?.getAttribute("src");
+      if (src === undefined || src === null || src === frame.getAttribute("src")) continue;
+      loading.add(frame);
+      frame.src = src;
+    }
+    check();
+  });
   if (screenFrame !== null) void startScreen();
   check();
 })();

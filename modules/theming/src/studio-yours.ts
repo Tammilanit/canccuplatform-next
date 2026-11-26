@@ -200,10 +200,16 @@ function coloursSection(
 
 function fontsSection(brand: Brand | undefined): Html {
   const chosen = brand?.font_pair ?? "";
-  const option = (value: string, name: string, families: string): Html =>
-    html`<label${attrs({ class: `canccu-studio-pair canccu-studio-font--${value || "platform"}` })}><input${attrs({ type: "radio", name: "font_pair", value, checked: value === chosen })}><span class="canccu-studio-pair__name">${name}</span><span class="canccu-small canccu-muted">${families}</span></label>`;
+  const option = (
+    value: string,
+    name: string,
+    families: string,
+    heading?: string,
+    body?: string,
+  ): Html =>
+    html`<label${attrs({ class: `canccu-studio-pair canccu-studio-font--${value || "platform"}` })}><input${attrs({ type: "radio", name: "font_pair", value, checked: value === chosen, "data-heading": heading, "data-body": body })}><span class="canccu-studio-pair__name">${name}</span><span class="canccu-small canccu-muted">${families}</span></label>`;
   const pairs = [...FONT_PAIRS.values()].map((p) =>
-    option(p.id, p.name, `${p.heading.family} · ${p.body.family}`),
+    option(p.id, p.name, `${p.heading.family} · ${p.body.family}`, p.heading.family, p.body.family),
   );
   return section(
     "Fonts",

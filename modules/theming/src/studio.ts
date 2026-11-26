@@ -7,7 +7,8 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, MissingRight, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
-import { attrs, errorView, errorTitle, html, shellPage } from "@canccu/ui";
+import { attrs, cssVar, errorView, errorTitle, html, shellPage } from "@canccu/ui";
+import { fillTokens } from "./tokens.js";
 import type { Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
@@ -57,6 +58,7 @@ async function studioPage(
     cssHref: `${STUDIO}static/ui.css`,
     head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
       <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />
+      <link rel="stylesheet" href="${STUDIO}static/studio-depths.css" />
       <link rel="stylesheet" href="${STUDIO}static/pairs.css" />`,
     event: await eventOf(request, deps.tenants),
     session: request.session ?? undefined,
@@ -76,6 +78,7 @@ async function studioPage(
     body: html`<p class="canccu-studio-notice" role="alert" hidden></p>
       ${o.body}
       <script src="${STUDIO}static/studio.js" defer></script>
+      <script src="${STUDIO}static/studio-form.js" defer></script>
       <script src="${STUDIO}static/studio-live.js" defer></script>
       <script src="${STUDIO}static/studio-previews.js" defer></script>
       <script src="${STUDIO}static/studio-screen.js" defer></script>`,
@@ -97,7 +100,19 @@ function depthBody(state: StudioState, controls: Html, extra: Html): Html {
     m !== undefined &&
     from === undefined &&
     ["css", "fonts", "templates", "embeds"].some((k) => m[k] !== undefined);
-  return html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version, "data-save-state": "saved", "data-own-work": own ? "1" : undefined })}>
+  // The colours as saved, which the live preview posts after each save (static/studio-live.js).
+  const vars =
+    m === undefined
+      ? undefined
+      : JSON.stringify(
+          Object.fromEntries(
+            Object.entries(fillTokens(m.tokens ?? {}).colors).map(([k, v]) => [
+              cssVar("color", k),
+              v,
+            ]),
+          ),
+        );
+  return html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version, "data-save-state": "saved", "data-own-work": own ? "1" : undefined, "data-vars": vars })}>
     ${extra}
     <div class="canccu-studio-depth">${controls}${previewColumn(state)}</div>
     ${state.draft === undefined ? "" : discardView(state)}${replaceDialog}
@@ -133,11 +148,13 @@ const STATIC_TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "studio.css": "text/css; charset=utf-8",
   "studio-previews.css": "text/css; charset=utf-8",
+  "studio-depths.css": "text/css; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
   "studio-previews.js": "text/javascript; charset=utf-8",
   "studio-screen.js": "text/javascript; charset=utf-8",
   "studio-live.js": "text/javascript; charset=utf-8",
+  "studio-form.js": "text/javascript; charset=utf-8",
   "preview-live.js": "text/javascript; charset=utf-8",
   "pairs.css": "text/css; charset=utf-8",
 };
