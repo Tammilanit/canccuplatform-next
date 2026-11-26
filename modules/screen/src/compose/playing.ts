@@ -13,7 +13,7 @@ import { slideUrl } from "../render/jobs.js";
 import type { BreakPlaylist } from "../playback/break-play.js";
 import { resolveFrame, resumeBookmark, START_BOOKMARK } from "../playback/engine.js";
 import type { Bookmark, Frame } from "../playback/engine.js";
-import { clampSlideRange } from "../playback/timeline.js";
+import { clampSlideRange, cycleSeconds } from "../playback/timeline.js";
 import type { Assets, PlaybackPlaylist } from "../playback/timeline.js";
 import type { ZoneState } from "../tick/zone.js";
 
@@ -30,6 +30,11 @@ export interface PlayItem {
 export interface PlaylistView {
   item: PlayItem;
   next_item: PlayItem | null;
+  /**
+   * The playlist once through, in seconds: the idle rotation's turn for it (#787 D6a). Null for a
+   * pushed asset, which loops alone, and during a break.
+   */
+  run_seconds: number | null;
 }
 
 /** An asset's address: its current version's file, or a web or YouTube asset's own URL. */
@@ -179,11 +184,15 @@ export function playlistNow(
     const end = inBreak.endsAt;
     const next =
       end < inBreak.breakEndsAt ? breakAt(input, end) : ownAt(input, end, inBreak.breakEndsAt);
-    return { view: { item: inBreak.item, next_item: next?.item ?? null }, changesAt: end };
+    const view = { item: inBreak.item, next_item: next?.item ?? null, run_seconds: null };
+    return { view, changesAt: end };
   }
   const resume = resumeAt(input, nowMs);
   const now = ownAt(input, nowMs, resume);
   if (now === null) return null;
   const next = ownAt(input, now.endsAt, resume);
-  return { view: { item: now.item, next_item: next?.item ?? null }, changesAt: now.endsAt };
+  const playlist = input.state.playing?.playlistId == null ? null : own(input)?.playlist;
+  const run = playlist == null ? null : cycleSeconds(playlist, input.assets);
+  const view = { item: now.item, next_item: next?.item ?? null, run_seconds: run };
+  return { view, changesAt: now.endsAt };
 }

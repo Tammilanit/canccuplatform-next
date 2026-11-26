@@ -57,6 +57,17 @@ food_box() {
   body_is 200 "$1"
 }
 
+# jq expression: how many times the hero's food item and the food box (the other regions' food_status
+# widgets) hold an order that passes $1. The idle rotation puts the food moment in the hero first
+# (#787 D1) and the box keeps it too, so the order is in both places, never in one only; the player
+# shows one at a time (contracts/screen.md, One place at a time).
+# shellcheck disable=SC2329
+food_places() {
+  local in_orders="| select(.widget == \"food_status\") | .view.orders[]? | $1"
+  echo "[([.regions[] | select(.id == \"hero\") | .widgets[] $in_orders] | length),
+    ([.regions[] | select(.id != \"hero\") | .widgets[] $in_orders] | length)]"
+}
+
 # shellcheck disable=SC2329
 food_reaches() {
   local p256 auth sub pz order seq sql
@@ -100,12 +111,10 @@ food_reaches() {
   status_is 201 || return 1
   # The box shows it, counted, within the zone's rebuild.
   for _ in $(seq 30); do
-    food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
-      | select(.seq == $seq and .state == \"open\" and .pizza_count == 1)] | length == 1" && break
+    food_box "$(food_places "select(.seq == $seq and .state == \"open\" and .pizza_count == 1)") == [1, 1]" && break
     sleep 1
   done
-  food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
-    | select(.seq == $seq)] | length == 1" || return 1
+  food_box "$(food_places "select(.seq == $seq)") == [1, 1]" || return 1
   food_write POST "/api/pizza/orders/$order/place" '{"estimate_minutes": 30}'
   status_is 200 || return 1
   food_write POST "/api/pizza/orders/$order/arrive" '{"pickup": "Stack table"}'
@@ -124,12 +133,10 @@ food_reaches() {
   food_write POST "/api/pizza/orders/$order/hand-out" '{}'
   status_is 200 || return 1
   for _ in $(seq 30); do
-    food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
-      | select(.seq == $seq)] | length == 0" && break
+    food_box "$(food_places "select(.seq == $seq)") == [0, 0]" && break
     sleep 1
   done
-  food_box "[.regions[].widgets[] | select(.widget == \"food_status\") | .view.orders[]?
-    | select(.seq == $seq)] | length == 0" || return 1
+  food_box "$(food_places "select(.seq == $seq)") == [0, 0]" || return 1
   food_ordering false
 }
 

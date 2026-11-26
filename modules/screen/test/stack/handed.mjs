@@ -109,15 +109,22 @@ export function withPhoto(s, featured = false) {
  * choice, not an empty card.
  */
 export function withHeroItemOnly(s) {
-  const next = s.regions.find((r) => r.role === "hero")?.idle_view?.view;
-  if (next === undefined) throw new Error("the demo zone's hero has no idle countdown");
+  // The rail leaves out only the item the hero shows, and the hero now rotates (#787): hold it on
+  // its countdown, or the rail rightly keeps its one row while the hero shows another item.
+  const hero = s.regions.find((r) => r.role === "hero");
+  const at = hero?.widgets.findIndex((w) => w.widget === "countdown" && w.view.empty !== true);
+  const next = hero?.widgets[at]?.view;
+  if (next === undefined) throw new Error("the demo zone's hero lists no countdown");
   const only = (w) =>
     w.widget !== "agenda_now"
       ? w
       : { ...w, view: { ...w.view, later: [], items: w.view.items.filter((row) => row.name === next.label && row.starts_at === next.target_at) } }; // prettier-ignore
   return {
     ...s,
-    regions: s.regions.map((r) => (r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r)),
+    regions: s.regions.map((r) => {
+      if (r.role === "hero") return { ...r, order: [at] };
+      return r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r;
+    }),
   };
 }
 
@@ -206,9 +213,11 @@ export function withStats(s) {
     const box = { ...rail, id, role: null, area, order: [0], idle: "logo", idle_view: null };
     return { ...box, claim: null, widgets: widgets.map((w) => inBox(w, area)) };
   });
+  // The hero's rotation also lists `stats`, and while it shows them the box shows its idle choice
+  // (one place at a time, #787 D7), so this page would hold the numbers only part of the time.
   const regions = s.regions.map((r) =>
-    r.id === "hero" || r.id === "rail" ? { ...r, area: placed.get(r.id).area } : r,
-  );
+    r.id === "hero" ? { ...r, area: placed.get(r.id).area, order: r.order.filter((i) => r.widgets[i]?.widget !== "stats") } : r.id === "rail" ? { ...r, area: placed.get(r.id).area } : r,
+  ); // prettier-ignore
   const at = regions.findIndex((r) => r.id === "rail");
   return { ...s, regions: [...regions.slice(0, at), ...boxes, ...regions.slice(at)] };
 }

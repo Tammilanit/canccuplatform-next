@@ -5,6 +5,7 @@
 import qrcode from "qrcode-generator";
 import { graphFields, todayFields } from "./features.js";
 import { foodFields } from "./food.js";
+import { timelineFields } from "./timeline.js";
 import type { FoodOrder } from "./food.js";
 import type { Override } from "./claims.js";
 import type { Presence } from "./features.js";
@@ -53,6 +54,12 @@ export interface ZoneFacts {
   photosToday?: number | null;
   /** The pizza orders not over (food.ts), and whether the box names their holders (L8). */
   food?: { orders: FoodOrder[]; names: boolean };
+  /** The day's agenda items, for the coming hours (`agenda_timeline`); absent: none read. */
+  timeline?: AgendaItem[];
+  /** The coming hours' window start (ms): in the version, so a window that moves rebuilds the zone. */
+  timelineFrom?: number;
+  /** The zone's key: the coming hours show its items and those of no zone. */
+  zoneKey?: string;
 }
 
 /** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
@@ -88,27 +95,6 @@ export interface AgendaNow {
   later?: AgendaItem[];
 }
 
-const LATER_MAX = 2;
-
-/**
- * The `public`, `scheduled` items of the zone or of no zone that start after the next ones, at most
- * two, in order of start (contracts/screen.md, `agenda_now`): what follows the item a hero counts
- * down to. None while nothing is next.
- */
-export function laterOf(all: AgendaItem[], next: AgendaItem[], zoneKey: string): AgendaItem[] {
-  const after = Math.max(...next.map((i) => Date.parse(i.starts_at)));
-  if (!Number.isFinite(after)) return [];
-  return all
-    .filter(
-      (i) =>
-        i.visibility === "public" &&
-        i.status === "scheduled" &&
-        (i.zone == null || i.zone === zoneKey) &&
-        Date.parse(i.starts_at) > after,
-    )
-    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
-    .slice(0, LATER_MAX);
-}
 export interface VenueInfo {
   wifi: { ssid: string; password: string | null; note: string | null; visibility: string }[];
   floor_plan: unknown;
@@ -152,8 +138,28 @@ function clockText(at: Date, timeZone: string, part: "time" | "date"): string {
 const textOf = (iso: string | null, facts: ZoneFacts): string | null =>
   iso === null ? null : clockText(new Date(iso), facts.timeZone, "time");
 
-const foodView = (orders: FoodOrder[], facts: ZoneFacts, names: boolean) =>
-  foodFields(orders, { nowMs: facts.now.getTime(), time: (iso) => textOf(iso, facts), names });
+/** The order's page in the hub, where a phone joins it (the hero's QR, #787 D1). */
+const joinUrl = (facts: ZoneFacts, id: string): string => `${facts.origin}/pizza/orders/${id}`;
+
+function foodView(
+  orders: FoodOrder[],
+  facts: ZoneFacts,
+  names: boolean,
+): Record<string, unknown> | null {
+  const view = foodFields(orders, {
+    nowMs: facts.now.getTime(),
+    time: (iso) => textOf(iso, facts),
+    names,
+    join: (id) => joinUrl(facts, id),
+  });
+  if (view === null) return null;
+  const open = (view.orders as { join_url: string | null }[]).find((x) => x.join_url !== null);
+  const join =
+    open?.join_url == null
+      ? null
+      : { url: open.join_url, label: "Join the order", image_url: qrImage(open.join_url) };
+  return { ...view, join };
+}
 
 /**
  * A `pizza_placed` claim (Moments' `pizza` rule) drawn as the food box draws its order (#771), so
@@ -258,6 +264,13 @@ function fields(
         time: clockText(facts.now, facts.timeZone, "time"),
         date: clockText(facts.now, facts.timeZone, "date"),
       };
+    case "agenda_timeline":
+      return timelineFields(facts.timeline ?? [], {
+        nowMs: facts.now.getTime(),
+        zoneKey: facts.zoneKey,
+        orders: facts.food?.orders ?? [],
+        time: (iso) => textOf(iso, facts),
+      });
     case "agenda_now": {
       const items = agendaRows(facts);
       const later = rows(facts.agenda?.later ?? [], "next", facts);
@@ -345,31 +358,4 @@ export function viewOf(
     stale: isStale(type, facts),
     empty: found === null,
   };
-}
-
-/**
- * The rail's run of show at `atMs`, as the screens read it (`agenda_now`): the zone's items and
- * those of no zone, public and scheduled; what runs then, and every item at the first start after
- * it, as the agenda's now and next gives several when they start at once.
- */
-export function railAt(
-  items: readonly AgendaItem[],
-  zone: string,
-  atMs: number,
-): { now: AgendaItem[]; next: AgendaItem[] } {
-  const shown = items
-    .filter(
-      (i) =>
-        i.visibility === "public" &&
-        (i.status ?? "scheduled") === "scheduled" &&
-        (i.zone == null || i.zone === zone),
-    )
-    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
-  const now = shown.filter(
-    (i) => Date.parse(i.starts_at) <= atMs && i.ends_at !== null && atMs < Date.parse(i.ends_at),
-  );
-  const first = shown.find((i) => Date.parse(i.starts_at) > atMs)?.starts_at;
-  const next =
-    first === undefined ? [] : shown.filter((i) => Date.parse(i.starts_at) === Date.parse(first));
-  return { now, next };
 }

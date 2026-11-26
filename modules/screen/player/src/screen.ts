@@ -18,6 +18,7 @@ import type { BackdropView } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
+import { lowerThirdAt, syncLowerThird } from "./lower-third.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers, speedOf } from "./ticker.js";
@@ -195,7 +196,7 @@ export class Screen {
     const regions = drawns.map((d) => d.state);
     const chosen = drawns.map((drawn) => this.choose(drawn, state, now, takeover));
     // What each box would show were its change let through, for the choreographer to pace.
-    const wanted = joinedShown(regions, chosen, state);
+    const wanted = joinedShown(regions, chosen, state, now);
     const released = this.pace.release(
       drawns.flatMap((d, i) => (paced(d.shown, wanted[i]) ? [d.state.id] : [])),
       now,
@@ -214,6 +215,7 @@ export class Screen {
           regions,
           chosen.map((c, i) => (held[i] === undefined ? c : (held[i] ?? null))),
           state,
+          now,
         );
     for (const [i, drawn] of drawns.entries()) {
       const next = shown[i] ?? null;
@@ -221,7 +223,10 @@ export class Screen {
       // A step's own cue picture wins over the claim's, from the step's start (#114).
       applyCue(drawn.el, (typeof next === "object" ? next?.cue : undefined) ?? drawn.claim, now);
       const zone = state.zone?.key ?? "";
-      drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
+      const turn = turnIndexOf(next);
+      drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turn, zone, now);
+      if (drawn.state.role === "hero")
+        syncLowerThird(drawn.el, takeover ? null : lowerThirdAt(drawn.state, state, now, turn));
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
@@ -355,12 +360,12 @@ export class Screen {
   /**
    * Two slots, load then fade (plan S7, ported from the legacy scene transition): the incoming
    * widget waits, unseen, for its images, then fades in over the outgoing one, which leaves once
-   * the fade is done. Without motion they swap at once.
+   * the fade is done; at `none` too, by opacity alone (#787 D5). Only an emptied box swaps at once.
    */
   private enter(drawn: Drawn, incoming: HTMLElement | null, motion: Motion, cut = false): void {
     const region = drawn.el;
-    if (motion === "none" || incoming === null) {
-      region.replaceChildren(...(incoming === null ? [] : [incoming]));
+    if (incoming === null) {
+      region.replaceChildren();
       if (drawn.marks !== null) region.append(drawn.marks);
       return;
     }
@@ -378,7 +383,9 @@ export class Screen {
       incoming.getBoundingClientRect(); // Lay out the invisible start, so the fade runs from it.
       incoming.classList.remove("canccu-slot--in");
       for (const old of [...region.children]) {
-        if (old === incoming || !(old instanceof HTMLElement) || old === drawn.marks) continue;
+        // Only widgets leave: the marks and the slideshow's band (lower-third.ts) are the box's.
+        if (old === incoming || !(old instanceof HTMLElement)) continue;
+        if (!old.classList.contains("canccu-widget")) continue;
         if (cut) {
           old.remove();
           continue;

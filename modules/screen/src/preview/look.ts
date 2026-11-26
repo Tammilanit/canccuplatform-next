@@ -3,7 +3,7 @@
  * a screen): the run of show at its time, and the event's draft for the theme.
  */
 import type { Sources, ThemeNow } from "../compose/sources.js";
-import { laterOf, railAt } from "../compose/widgets.js";
+import { laterOf, railAt } from "../compose/agenda-rows.js";
 import type { AgendaNow } from "../compose/widgets.js";
 import { invalidRequest } from "../http.js";
 

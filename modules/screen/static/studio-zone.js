@@ -48,7 +48,10 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     // The photo wall's settings show while the box lists a photo (src/studio/widget-settings.ts).
     const wall = r.querySelector("[data-photo-wall]");
     if (wall) wall.hidden = !entriesOf(r).some((e) => e.widget === "photo");
-    const names = [...r.querySelectorAll(".canccu-studio-widget__name")].map((n) => n.textContent);
+    // A switched-off item is skipped by the screens, so the box's summary leaves it out too.
+    const names = [
+      ...r.querySelectorAll("li:not(.canccu-studio-widget--off) .canccu-studio-widget__name"),
+    ].map((n) => n.textContent);
     const shows = form.querySelector(`[data-pick="${CSS.escape(r.dataset.region)}"] [data-shows]`);
     if (shows) shows.textContent = names.length ? names.join(" → ") : say("zone.region_empty");
   }
@@ -75,6 +78,33 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
       region.querySelector("[data-widgets]").append(row);
     }
     region.querySelector("[name=layout_widgets]").checked = false;
+    changed(region);
+  });
+
+  // An item's switch (#787 D3): off keeps it in its place, skipped by the screens; on drops the
+  // setting. Either makes the widgets the box's own.
+  form.addEventListener("change", (event) => {
+    const on = event.target.closest?.("[data-widget-on]");
+    if (!on) return;
+    const row = on.closest("li");
+    const entry = JSON.parse(row.dataset.entry);
+    if (on.checked) delete entry.enabled;
+    else entry.enabled = false;
+    row.dataset.entry = JSON.stringify(entry);
+    row.classList.toggle("canccu-studio-widget--off", !on.checked);
+    row.closest("[data-region]").querySelector("[name=layout_widgets]").checked = false;
+  });
+
+  // The hero's turn as chips (#787 D4): the layout's own seconds leave the field empty.
+  form.addEventListener("click", (event) => {
+    const chip = event.target.closest?.("[data-dwell-chip]");
+    if (!chip) return;
+    const region = chip.closest("[data-region]");
+    const seconds = chip.dataset.dwellChip;
+    region.querySelector("[name=dwell_seconds]").value =
+      seconds === region.dataset.layoutDwell ? "" : seconds;
+    for (const c of region.querySelectorAll("[data-dwell-chip]"))
+      c.setAttribute("aria-pressed", String(c === chip));
     changed(region);
   });
 
@@ -238,8 +268,19 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     }
     for (const [r, was] of widgetsBefore) {
       const now = entriesOf(r);
-      const key = (e) => JSON.stringify(e);
+      // An item is the same item switched on or off, so the switch is its own line.
+      const key = (e) => JSON.stringify({ ...e, enabled: undefined });
       const region = r.dataset.label;
+      for (const e of now) {
+        const old = was.find((w) => key(w) === key(e));
+        if (old && (old.enabled === false) !== (e.enabled === false))
+          lines.push(
+            say(e.enabled === false ? "change.switched_off" : "change.switched_on", {
+              region,
+              widget: nameOfWidget(r, e),
+            }),
+          );
+      }
       const gone = was.filter((e) => !now.some((n) => key(n) === key(e)));
       const added = now.filter((e) => !was.some((w) => key(w) === key(e)));
       for (const e of added)

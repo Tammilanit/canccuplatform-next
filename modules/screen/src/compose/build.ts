@@ -52,6 +52,8 @@ export interface WidgetView {
   dwell_seconds: number;
   stale_after_seconds: number | null;
   view: View;
+  /** Present only as `false`: the organiser switched it off (#787 D3). */
+  enabled?: false;
 }
 
 export type Idle = "logo" | "blank" | "collapse" | "next";
@@ -117,6 +119,15 @@ export function shownAt(
   return null;
 }
 
+/** The longest run of the slideshow the hero plays in one turn (#787 D6a). */
+const RUN_MAX_S = 300;
+
+/** The slideshow's turn in the hero: one run, at most 5 minutes; undefined while unknown. */
+const runDwell = (widget: string, facts: BuildInput["facts"]): number | undefined => {
+  const run = widget === "playlist" ? facts.playlist?.run_seconds : null;
+  return typeof run === "number" ? Math.min(RUN_MAX_S, Math.max(5, Math.ceil(run))) : undefined;
+};
+
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
@@ -176,17 +187,19 @@ function region(
       embed: entry.embed ?? null,
       dwell_seconds:
         clampDwell(props.dwell_seconds) ??
+        (role === "hero" ? runDwell(entry.widget, input.facts) : undefined) ??
         zoneDwell ??
         clampDwell(source.rotate_seconds) ??
         DEFAULT_DWELL_S,
       stale_after_seconds: null,
       view: viewOf(entry.widget, props, input.facts, entry.embed ?? null, wide),
+      ...(entry.enabled === false ? { enabled: false as const } : {}),
     };
   });
   const skipEmpty = setting.skip_empty !== false;
   const off = new Set(role === "hero" ? (input.heroOff ?? []) : []);
   const sequence = widgets.flatMap((w, i) =>
-    (skipEmpty && w.view.empty) || off.has(w.widget) ? [] : [i],
+    (skipEmpty && w.view.empty) || off.has(w.widget) || w.enabled === false ? [] : [i],
   );
   // Cycles are anchored on the epoch, not on a save or a boot, so all screens of a zone show the
   // same widget at the same moment, also after a reload and offline.
@@ -209,7 +222,7 @@ function region(
       rotation === "shuffle"
         ? shuffled(sequence, `${input.zone.key}:${part.id}:${cycle}`)
         : rotation === "director"
-          ? directorOrder(widgets, sequence)
+          ? directorOrder(widgets, sequence, Array.isArray(setting.widgets))
           : sequence,
     cycle_started_at: new Date(cycle * cycleMs).toISOString(),
     indicator: INDICATORS.find((i) => i === setting.indicator) ?? "line",
@@ -290,6 +303,25 @@ function roomFor(
   return filledByHero(kept, waiting, input);
 }
 
+/**
+ * The types with one event-wide source that the player keeps in one place (player/src/turns.ts,
+ * `ONE_SOURCE`), less food: the hero's food item wins and the food box steps aside (#787 D7).
+ */
+const ONE_PLACE = new Set(["agenda_timeline", "leaderboard", "now_playing", "stats"]);
+
+/**
+ * The types another box plays as its only item (#787 D7, addition of 2026-11-26): the hero skips
+ * them, as a box with nothing else to show would otherwise give its turn to its idle logo (the
+ * Dashboard's Right now box during the hero's numbers).
+ */
+function soleElsewhere(regions: readonly RegionView[]): string[] {
+  const types = regions
+    .filter((r) => r.role !== "hero")
+    .map((r) => new Set(r.order.map((i) => r.widgets[i]?.widget)))
+    .flatMap((t) => (t.size === 1 ? [...t] : []));
+  return [...new Set(types)].filter((t): t is string => t !== undefined && ONE_PLACE.has(t));
+}
+
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
   const layout = chooseLayout({
     windowLayoutId: input.windowLayoutId,
@@ -310,7 +342,14 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     input,
   );
   const placed = growth ?? handedOver(swapped, waiting);
-  const regions = placed.flatMap((r) => regionsOf(r, layout, input));
+  const built = placed.flatMap((r) => regionsOf(r, layout, input));
+  const sole = soleElsewhere(built);
+  const regions =
+    sole.length === 0
+      ? built
+      : placed.flatMap((r) =>
+          regionsOf(r, layout, { ...input, heroOff: [...(input.heroOff ?? []), ...sole] }),
+        );
   return {
     layout,
     regions: [

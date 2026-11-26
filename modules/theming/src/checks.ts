@@ -28,6 +28,7 @@ const WIDGETS = new Set([
   "embed",
   "clock",
   "agenda_now",
+  "agenda_timeline",
   "countdown",
   "hot_game",
   "now_playing",

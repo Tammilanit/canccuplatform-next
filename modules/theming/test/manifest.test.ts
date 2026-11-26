@@ -150,15 +150,17 @@ describe("referenceProblems", () => {
 });
 
 describe("checkManifest", () => {
-  it("knows the screen's statistics widgets (contracts/screen.md, Widgets)", () => {
-    const widgets = ["today_numbers", "activity_graph", "voice_rooms"].map((widget) => ({
-      widget,
-    }));
+  it("knows the screen's statistics widgets and its coming hours (contracts/screen.md, Widgets)", () => {
+    const widgets = ["today_numbers", "activity_graph", "voice_rooms", "agenda_timeline"].map(
+      (widget) => ({
+        widget,
+      }),
+    );
     const layout = {
       id: "stats",
       name: "Stats",
       aspect: "16:9",
-      grid: { columns: 3, rows: 1 },
+      grid: { columns: 4, rows: 1 },
       regions: widgets.map((w, i) => ({
         id: `r${i}`,
         area: { column: i + 1, row: 1, columns: 1, rows: 1 },

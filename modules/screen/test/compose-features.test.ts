@@ -171,7 +171,13 @@ describe("today in numbers", () => {
         zone: {
           key: "main",
           layoutId,
-          regions: { voice: blank, top_games: blank, right_now: blank },
+          // "Today in numbers" plays where a zone lists it (#787 D1).
+          regions: {
+            voice: blank,
+            top_games: blank,
+            right_now: blank,
+            hero: { widgets: [{ widget: "today_numbers" }] },
+          },
         },
         windowLayoutId: null,
         themeLayouts: [],
@@ -252,7 +258,7 @@ describe("the Dashboard", () => {
     const boxes = dashboard?.regions.filter((r) => !["header", "ticker"].includes(r.id)) ?? [];
     const firsts = boxes.map((r) => r.widgets[0]?.widget);
     expect(firsts).toEqual([
-      "playlist",
+      "countdown",
       "activity_graph",
       "voice_rooms",
       "now_playing",

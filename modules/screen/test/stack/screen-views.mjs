@@ -3,6 +3,7 @@
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
 import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs";
 import { STAGE_VIEWS } from "./handed.mjs";
+import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
 export const HD = [
@@ -78,6 +79,10 @@ export function planned(check = false) {
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
     for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
       for (const size of annSizes(v, check)) out.push(nameOf(theme, v.view, size));
+    if (LIVING_THEMES.includes(theme))
+      for (const size of HD)
+        for (const { view, frames } of LIVING_STRIPS)
+          out.push(...stripNames(nameOf(theme, view, size), frames));
   }
   for (const [view] of DEFAULT_LAYOUT_VIEWS) out.push(nameOf("default", view, HD[0]));
   for (const size of HD)

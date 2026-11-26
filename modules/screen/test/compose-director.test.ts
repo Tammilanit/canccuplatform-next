@@ -74,7 +74,7 @@ describe("the Director's settings", () => {
 });
 
 describe("the Director's order", () => {
-  it("puts the features in the sheet's order, the rest after them as placed", () => {
+  it("puts a layout's features in the idle rotation's order, the rest after them as placed", () => {
     const widgets = [
       "qr",
       "photo",
@@ -88,11 +88,12 @@ describe("the Director's order", () => {
       widgets.map((widget) => ({ widget })),
       [0, 1, 2, 3, 4, 5, 6],
     );
+    // #787 D1: the PO's items first, then sheet 13's other features.
     expect(order.map((i) => widgets[i])).toEqual([
-      "bracket",
       "countdown",
-      "playlist",
       "photo",
+      "playlist",
+      "bracket",
       "hot_game",
       "today_numbers",
       "qr",

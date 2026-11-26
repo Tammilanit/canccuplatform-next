@@ -78,7 +78,10 @@ export function oneOf(value: unknown, allowed: string[], where: string): void {
 
 function widgetEntry(value: unknown, where: string): Json {
   if (!isObject(value)) throw invalidRequest(`${where} must be an object.`);
-  onlyKeys(value, ["widget", "template", "embed", "props"], where);
+  onlyKeys(value, ["widget", "enabled", "template", "embed", "props"], where);
+  if (value.enabled !== undefined && typeof value.enabled !== "boolean") {
+    throw invalidRequest(`${where}.enabled must be true or false.`);
+  }
   if (typeof value.widget !== "string" || !WIDGET_RE.test(value.widget)) {
     throw invalidRequest(`${where}.widget must be a widget type such as \`clock\`.`);
   }

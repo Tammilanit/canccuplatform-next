@@ -155,15 +155,15 @@ describe("what a region shows", () => {
       screen.root.querySelector(".canccu-widget")?.classList.contains("canccu-is-active"),
     ).toBe(true);
     await advance(5000);
-    expect(shownIn(screen, "rail")).toEqual(["two"]);
+    expect(shownIn(screen, "rail").at(-1)).toBe("two");
     await advance(5000);
-    expect(shownIn(screen, "rail")).toEqual(["one"]);
+    expect(shownIn(screen, "rail").at(-1)).toBe("one");
     screen.stop();
     await advance(5000);
-    expect(shownIn(screen, "rail")).toEqual(["one"]);
+    expect(shownIn(screen, "rail").at(-1)).toBe("one");
   });
 
-  it("fades the next widget in over the last, which then goes, and swaps at once without motion", async () => {
+  it("fades the next widget in over the last, which then goes, also without motion", async () => {
     const screen = new Screen(host);
     screen.draw(state([rotating], { display: { motion: "moderate", drift: false } }));
     expect(screen.root.dataset.motion).toBe("moderate");
@@ -208,7 +208,8 @@ describe("what a region shows", () => {
     const added = applyPatch(before, "region", { state_version: 2, region: shuffled([1]) });
     expect(added).not.toBeNull();
     screen.draw(added as ScreenState);
-    expect(shownIn(screen, "rail")).toEqual(["two"]);
+    // The one before still fades out (#787 D5: never a cut).
+    expect(shownIn(screen, "rail").at(-1)).toBe("two");
   });
 
   it("keeps a widget that waits for its images unseen when its data changes meanwhile", () => {
@@ -388,7 +389,7 @@ describe("the playlist on the screen", () => {
     muted: true,
   });
   const src = (screen: Screen) =>
-    screen.root.querySelector(".canccu-region--hero img")?.getAttribute("src");
+    [...screen.root.querySelectorAll(".canccu-region--hero img")].at(-1)?.getAttribute("src");
 
   it("goes on to the next frame by itself when the item ends, before any push", async () => {
     const screen = new Screen(host);

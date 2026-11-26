@@ -1,0 +1,80 @@
+/*
+ * The idle rotation's hero items fill their region (#787 D1, the clear-screen check in
+ * test/stack/clear.mjs: no empty band over a quarter of the hero). The coming hours do it in
+ * timeline.css; this is the statistics: one row a number, the rows sharing the box, each number as
+ * large as its row allows. In `canccu-base` like widgets.css, so a theme restyles it.
+ */
+@layer canccu-base {
+  .canccu-region[data-role="hero"] > .canccu-widget--stats {
+    container-type: size;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stats {
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    margin: 0;
+    min-height: 0;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stat {
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    text-align: center;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat
+    .canccu-widget__big {
+    font-size: min(calc(16 * var(--canccu-u)), 22cqh);
+    line-height: 1;
+  }
+
+  /*
+   * Two numbers share the box in two tall rows: at the three-row size each leaves a quarter of
+   * the box empty between them, so they grow with the room the second row's share gives.
+   */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2),
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    + .canccu-widget__stat {
+    --canccu-two-big: min(calc(36 * var(--canccu-u)), 34cqh);
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    .canccu-widget__big,
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    + .canccu-widget__stat
+    .canccu-widget__big {
+    font-size: var(--canccu-two-big);
+  }
+
+  /*
+   * One number alone is the hero: as large as the box holds, as wall.css's lone number is. In a
+   * tall, narrow box (a phone-shaped screen) the width caps its size, so the number and its label
+   * spread over the box's height rather than sit in the middle with a bare half above and below.
+   * The width cap holds three figures and the trend arrow in the widest bold figures a screen's
+   * font may have (about 0.7 em each, as on CI's Chrome), not only in the narrower ones here.
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stat:only-child {
+    justify-content: space-evenly;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__big {
+    font-size: min(calc(48 * var(--canccu-u)), 58cqh, 44cqw);
+  }
+}

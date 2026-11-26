@@ -266,3 +266,73 @@ describe("hiding the box that holds the hero role", () => {
     expect(calls[0]?.body.hero_region).toBeNull();
   });
 });
+
+// #787 D3, D4, sheet 06: the organiser switches an item off and back, and picks the hero's turn.
+describe("the hero's rotation in Studio", () => {
+  const switchOf = (row: Element) => row.querySelector("[data-widget-on]") as HTMLInputElement;
+  const toggle = (input: HTMLInputElement) => {
+    input.checked = !input.checked;
+    input.dispatchEvent(new win.Event("change", { bubbles: true }));
+  };
+
+  it("switches an item off in its place, says so in Changes, and saves `enabled: false`", async () => {
+    const { region, changes, submit, calls } = await open(zone());
+    const rows = [...region("hero").querySelectorAll("[data-widgets] li")];
+    expect(rows.every((r) => switchOf(r).checked)).toBe(true);
+    toggle(switchOf(rows[2] as Element));
+    expect(layoutWidgets(region("hero"))).toBe(false);
+    expect(changes()).toContain(
+      t("change.switched_off", { region: "Hero", widget: "Food status" }),
+    );
+    expect(changes().some((l) => l.includes(t("change.removed", { region: "Hero", widget: "Food status" })))).toBe(false); // prettier-ignore
+    await submit();
+    const saved = (calls.at(-1)?.body.regions as Record<string, { widgets: unknown[] }>).hero;
+    expect(saved?.widgets[2]).toEqual({ widget: "food_status", enabled: false });
+    expect(saved?.widgets.map((w) => (w as { widget: string }).widget)).toEqual([
+      "countdown", "agenda_timeline", "food_status", "leaderboard", "now_playing", "photo",
+      "playlist", "stats",
+    ]); // prettier-ignore
+  });
+
+  it("switches it back on, which drops the setting", async () => {
+    const z = zone({
+      regions: { hero: { widgets: [{ widget: "stats", enabled: false }, { widget: "clock" }] } },
+    });
+    const { region, submit, calls } = await open(z);
+    const row = region("hero").querySelector("[data-widgets] li") as Element;
+    expect(switchOf(row).checked).toBe(false);
+    expect(row.classList.contains("canccu-studio-widget--off")).toBe(true);
+    toggle(switchOf(row));
+    await submit();
+    const saved = (calls.at(-1)?.body.regions as Record<string, { widgets: unknown[] }>).hero;
+    expect(saved?.widgets).toEqual([{ widget: "stats" }, { widget: "clock" }]);
+  });
+
+  it("leaves a switched-off item out of the box's summary on the map, as drawn and as switched", async () => {
+    const z = zone({
+      regions: { hero: { widgets: [{ widget: "stats", enabled: false }, { widget: "clock" }] } },
+    });
+    const { form, region } = await open(z);
+    const shows = () =>
+      form.querySelector('[data-pick="hero"] [data-shows]')?.textContent.trim() ?? "";
+    expect(shows()).toBe(t("widget.clock"));
+    const [stats, clock] = [...region("hero").querySelectorAll("[data-widgets] li")];
+    toggle(switchOf(stats as Element));
+    expect(shows()).toBe(`${t("widget.stats")} → ${t("widget.clock")}`);
+    toggle(switchOf(clock as Element));
+    expect(shows()).toBe(t("widget.stats"));
+  });
+
+  it("offers 30, 45 and 60 s as chips for the hero, the layout's 45 s pressed", async () => {
+    const { region, submit, calls } = await open(zone());
+    const chips = [...region("hero").querySelectorAll("[data-dwell-chip]")] as HTMLButtonElement[];
+    expect(chips.map((c) => c.textContent.trim())).toEqual(["30 s", "45 s", "60 s"]);
+    expect(chips.map((c) => c.getAttribute("aria-pressed"))).toEqual(["false", "true", "false"]);
+    expect(region("rail").querySelector("[data-dwell-chip]")).toBeNull();
+    (chips[2] as HTMLButtonElement).click();
+    expect(chips.map((c) => c.getAttribute("aria-pressed"))).toEqual(["false", "false", "true"]);
+    await submit();
+    const saved = (calls.at(-1)?.body.regions as Record<string, Record<string, unknown>>).hero;
+    expect(saved?.dwell_seconds).toBe(60);
+  });
+});

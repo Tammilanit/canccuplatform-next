@@ -6,13 +6,20 @@
  * the rule (player/src/director.ts) and all screens of a zone agree, also offline.
  */
 
-/** Sheet 13's order; a type not listed comes after these, in its place order. */
+/**
+ * The type order for a layout's own list: the idle rotation's (#787 D1), then sheet 13's other
+ * features; a type not listed comes after these, in its place order.
+ */
 const FEATURES = [
-  "bracket",
-  "leaderboard",
   "countdown",
-  "playlist",
+  "agenda_timeline",
+  "food_status",
+  "leaderboard",
+  "now_playing",
   "photo",
+  "playlist",
+  "stats",
+  "bracket",
   "hot_game",
   "today_numbers",
 ];
@@ -25,11 +32,17 @@ const rankOf = (widget: string): number => {
   return rank === -1 ? FEATURES.length : rank;
 };
 
-/** The widgets taking part (`sequence`, in place order) as the Director turns through them. */
+/**
+ * The widgets taking part (`sequence`, in place order) as the Director turns through them. A list
+ * the zone set is the organiser's order and is played as placed (#787 D3); a layout's list in the
+ * type order, so a theme's layout plays the features as the built-ins do.
+ */
 export function directorOrder(
   widgets: readonly { widget: string }[],
   sequence: readonly number[],
+  zoneOwn = false,
 ): number[] {
+  if (zoneOwn) return [...sequence];
   const rank = (i: number): number => rankOf(widgets[i]?.widget ?? "");
   return [...sequence].sort((a, b) => rank(a) - rank(b) || a - b);
 }

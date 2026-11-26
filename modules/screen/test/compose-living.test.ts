@@ -1,0 +1,333 @@
+import { describe, expect, it } from "vitest";
+import { buildRegions } from "../src/compose/build.js";
+import type { BuildInput, RegionView } from "../src/compose/build.js";
+import type { FoodOrder } from "../src/compose/food.js";
+import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
+import { viewOf } from "../src/compose/widgets.js";
+import type { AgendaItem, ZoneFacts } from "../src/compose/widgets.js";
+import { zoneInput } from "../src/zone-input.js";
+
+// A living screen, part A (issue #787, docs/plans/issue-787.md D1–D4): the idle rotation's items,
+// the organiser's order and switches, 45 s turns, and the hero items' view-models.
+const NOW = Date.parse("2026-03-14T18:10:00Z");
+
+const item = (id: string, title: string, starts: string, ends: string | null, over = {}) =>
+  ({
+    id,
+    title,
+    kind: "tournament",
+    starts_at: starts,
+    ends_at: ends,
+    delay_minutes: 0,
+    location: "Main stage",
+    visibility: "public",
+    status: "scheduled",
+    zone: null,
+    ...over,
+  }) as AgendaItem;
+
+const order = (over: Partial<FoodOrder> = {}): FoodOrder => ({
+  id: "po_1",
+  seq: 3,
+  state: "open",
+  pizzeria_name: "Demo Pizzeria",
+  target_at: "2026-03-14T18:30:00Z",
+  closes_at: "2026-03-14T18:30:00Z",
+  estimate_at: null,
+  pickup: null,
+  holder_name: null,
+  pizza_count: 9,
+  people_count: 6,
+  placed_at: null,
+  arrived_at: null,
+  ...over,
+});
+
+function facts(over: Partial<ZoneFacts> = {}): ZoneFacts {
+  return {
+    now: new Date(NOW),
+    timeZone: "UTC",
+    origin: "https://demo.example",
+    eventName: "Demo Event",
+    logoUrl: null,
+    agenda: { current: [], next: [] },
+    venue: null,
+    ticker: { text: null, until: null, source: null },
+    ...over,
+  };
+}
+
+const input = (regions: Record<string, Record<string, unknown>> = {}): BuildInput => ({
+  zone: { key: "main", layoutId: null, regions },
+  windowLayoutId: null,
+  themeLayouts: [],
+  portrait: false,
+  facts: facts(),
+});
+
+const hero = (regions: Record<string, Record<string, unknown>> = {}): RegionView => {
+  const found = buildRegions(input(regions)).regions.find((r) => r.id === "hero");
+  if (found === undefined) throw new Error("no hero");
+  return found;
+};
+
+describe("the idle rotation's items (D1, D4)", () => {
+  const PO_ITEMS = [
+    "countdown",
+    "agenda_timeline",
+    "food_status",
+    "leaderboard",
+    "now_playing",
+    "photo",
+    "playlist",
+    "stats",
+  ];
+
+  it("gives every built-in hero the PO's items in the PO's order", () => {
+    for (const id of ["pulse", "dashboard", "hero", "split", "pulse_portrait"]) {
+      const layout = BUILT_IN_LAYOUTS.find((l) => l.id === id);
+      const region = layout?.regions.find((r) => r.id === "hero");
+      expect(
+        region?.widgets.map((w) => w.widget),
+        id,
+      ).toEqual(PO_ITEMS);
+      expect(region?.rotate_seconds, id).toBe(45);
+    }
+  });
+
+  it("turns every 45 s on a built-in hero, unless the zone sets its own time", () => {
+    expect(hero().widgets.every((w) => w.dwell_seconds === 45)).toBe(true);
+    expect(hero({ hero: { dwell_seconds: 30 } }).widgets.every((w) => w.dwell_seconds === 30)).toBe(
+      true,
+    );
+  });
+
+  it("plays the built-in items that have something in the PO's order, skipping the empty ones", () => {
+    const f = facts({
+      agenda: { current: [], next: [item("a1", "Semi-finals", "2026-03-14T19:30:00Z", null)] },
+      timeline: [item("a1", "Semi-finals", "2026-03-14T19:30:00Z", "2026-03-14T21:00:00Z")],
+      food: { orders: [order()], names: false },
+      stats: { members: 40, online: 12, in_voice: 3 },
+    });
+    const region = buildRegions({ ...input(), facts: f }).regions.find((r) => r.id === "hero");
+    const types = region?.order.map((i) => region.widgets[i]?.widget);
+    expect(types).toEqual(["countdown", "agenda_timeline", "food_status", "stats"]);
+  });
+});
+
+describe("the organiser's order and switches (D3)", () => {
+  const own = [
+    { widget: "stats" },
+    { widget: "countdown" },
+    { widget: "ticker", enabled: false },
+    { widget: "clock" },
+  ];
+  const f = facts({
+    agenda: { current: [], next: [item("a1", "Semi-finals", "2026-03-14T19:30:00Z", null)] },
+    stats: { members: 40, online: 12, in_voice: 3 },
+    ticker: { text: "Welcome", until: null, source: null },
+  });
+
+  it("plays the zone's own hero list in the zone's order, not the Director's type order", () => {
+    const region = buildRegions({ ...input({ hero: { widgets: own } }), facts: f }).regions.find(
+      (r) => r.id === "hero",
+    );
+    expect(region?.rotation).toBe("director");
+    expect(region?.order.map((i) => region.widgets[i]?.widget)).toEqual([
+      "stats",
+      "countdown",
+      "clock",
+    ]);
+  });
+
+  it("keeps a switched-off item in its place, skipped as an empty one is", () => {
+    const region = buildRegions({ ...input({ hero: { widgets: own } }), facts: f }).regions.find(
+      (r) => r.id === "hero",
+    );
+    expect(region?.widgets.map((w) => w.widget)).toEqual(["stats", "countdown", "ticker", "clock"]);
+    expect(region?.widgets[2]?.enabled).toBe(false);
+    expect(region?.order).not.toContain(2);
+  });
+
+  it("takes `enabled` as a widget setting and refuses anything but true or false", () => {
+    const zone = (widgets: unknown[]) => ({
+      key: "main",
+      name: "Main",
+      regions: { hero: { widgets } },
+    });
+    expect(zoneInput(zone([{ widget: "stats", enabled: false }])).regions.hero).toEqual({
+      widgets: [{ widget: "stats", enabled: false }],
+    });
+    expect(() => zoneInput(zone([{ widget: "stats", enabled: "no" }]))).toThrow(/enabled/);
+  });
+});
+
+describe("the coming hours (`agenda_timeline`)", () => {
+  const day = [
+    item("a0", "Dinner", "2026-03-14T17:30:00Z", "2026-03-14T18:30:00Z", { kind: "food" }),
+    item("a1", "Semi-finals", "2026-03-14T19:30:00Z", "2026-03-14T21:00:00Z"),
+    item("a2", "Crew meeting", "2026-03-14T19:00:00Z", "2026-03-14T19:15:00Z", {
+      visibility: "crew",
+    }),
+    item("a3", "Other hall", "2026-03-14T19:00:00Z", "2026-03-14T20:00:00Z", { zone: "side" }),
+    item("a4", "Breakfast", "2026-03-15T07:00:00Z", "2026-03-15T08:00:00Z"),
+    item("a5", "Lunch", "2026-03-14T12:00:00Z", "2026-03-14T13:00:00Z"),
+  ];
+
+  it("shows the next three hours with what runs and starts in them, public and of this zone", () => {
+    const view = viewOf("agenda_timeline", {}, facts({ timeline: day, zoneKey: "main" }));
+    expect(view.empty).toBe(false);
+    expect(view.from).toBe("2026-03-14T18:00:00.000Z");
+    expect(view.to).toBe("2026-03-14T21:00:00.000Z");
+    expect(view.now).toBe("2026-03-14T18:10:00.000Z");
+    expect((view.items as { name: string }[]).map((i) => i.name)).toEqual([
+      "Dinner",
+      "Semi-finals",
+    ]);
+    expect((view.items as Record<string, unknown>[])[1]).toMatchObject({
+      name: "Semi-finals",
+      kind: "tournament",
+      starts_at: "2026-03-14T19:30:00Z",
+      ends_at: "2026-03-14T21:00:00Z",
+      place: "Main stage",
+      starts_text: "19:30",
+      col: 10,
+      cols: 9,
+      row: 2,
+    });
+    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 3 });
+    expect([view.from_text, view.to_text]).toEqual(["18:00", "21:00"]);
+  });
+
+  it("marks an open food order's close on the line", () => {
+    const view = viewOf(
+      "agenda_timeline",
+      {},
+      facts({ timeline: day, food: { orders: [order()], names: false } }),
+    );
+    expect(view.marks).toEqual([
+      { label: "Pizza order closes", at: "2026-03-14T18:30:00Z", at_text: "18:30", col: 4 },
+    ]);
+  });
+
+  it("draws the first five items by start, so a small box never cuts a row's text", () => {
+    const many = Array.from({ length: 8 }, (_, i) =>
+      item(
+        `m${String(i)}`,
+        `Talk ${String(i)}`,
+        `2026-03-14T${String(18 + (i % 3))}:${i < 3 ? "20" : "40"}:00Z`,
+        "2026-03-14T20:50:00Z",
+      ),
+    );
+    const names = (
+      viewOf("agenda_timeline", {}, facts({ timeline: many, zoneKey: "main" })).items as {
+        name: string;
+      }[]
+    ).map((i) => i.name);
+    expect(names).toHaveLength(5);
+    expect(names).toEqual(
+      [...many]
+        .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+        .slice(0, 5)
+        .map((i) => i.title),
+    );
+  });
+
+  it("is empty when nothing runs or starts in the coming hours", () => {
+    expect(viewOf("agenda_timeline", {}, facts({ timeline: [day[4] as AgendaItem] })).empty).toBe(
+      true,
+    );
+    expect(viewOf("agenda_timeline", {}, facts()).empty).toBe(true);
+  });
+});
+
+describe("the food item in the hero (D1, D9)", () => {
+  it("gives an open order its join link and QR, and the first order's time to count down to", () => {
+    const view = viewOf("food_status", {}, facts({ food: { orders: [order()], names: false } }));
+    expect((view.orders as Record<string, unknown>[])[0]?.join_url).toBe(
+      "https://demo.example/pizza/orders/po_1",
+    );
+    expect(view.join).toMatchObject({
+      url: "https://demo.example/pizza/orders/po_1",
+      label: "Join the order",
+    });
+    expect((view.join as { image_url: string }).image_url).toMatch(/^data:image\/svg/);
+    expect(view.countdown_at).toBe("2026-03-14T18:30:00Z");
+  });
+
+  it("counts down to the estimate once called in, with no join link", () => {
+    const placed = order({
+      state: "placed",
+      placed_at: "2026-03-14T18:00:00Z",
+      estimate_at: "2026-03-14T18:45:00Z",
+    });
+    const view = viewOf("food_status", {}, facts({ food: { orders: [placed], names: false } }));
+    expect((view.orders as Record<string, unknown>[])[0]?.join_url).toBeNull();
+    expect(view.join).toBeNull();
+    expect(view.countdown_at).toBe("2026-03-14T18:45:00Z");
+  });
+});
+
+describe("the slideshow's turn (D6a)", () => {
+  const playlist = (run: number | null) => ({
+    item: {
+      kind: "image" as const,
+      url: "/api/screen/files/a.png",
+      slide_urls: [],
+      started_at: "2026-03-14T18:09:00Z",
+      offset_seconds: 0,
+      duration_seconds: 10,
+      muted: true,
+    },
+    next_item: null,
+    run_seconds: run,
+  });
+  const dwellOf = (run: number | null) =>
+    buildRegions({ ...input(), facts: facts({ playlist: playlist(run) }) })
+      .regions.find((r) => r.id === "hero")
+      ?.widgets.find((w) => w.widget === "playlist")?.dwell_seconds;
+
+  it("lasts one run of the playlist in the hero, at most 5 minutes", () => {
+    expect(dwellOf(200)).toBe(200);
+    expect(dwellOf(900)).toBe(300);
+    expect(dwellOf(3)).toBe(5);
+  });
+
+  it("takes the hero's turn while the run is unknown", () => {
+    expect(dwellOf(null)).toBe(45);
+  });
+});
+
+describe("one place for the rotation's items (D7, addition of 2026-11-26)", () => {
+  const played = (f: ZoneFacts, zone: Partial<BuildInput["zone"]>, id = "hero") => {
+    const region = buildRegions({
+      ...input(),
+      zone: { ...input().zone, ...zone },
+      facts: f,
+    }).regions.find((r) => r.id === id);
+    return region?.order.map((i) => region.widgets[i]?.widget);
+  };
+  const counted = facts({
+    agenda: { current: [], next: [item("a1", "Semi-finals", "2026-03-14T19:30:00Z", null)] },
+    stats: { checked_in: 164 },
+  });
+
+  it("skips the hero's numbers while the Dashboard's Right now box shows them as its only item", () => {
+    expect(played(counted, { layoutId: "dashboard" }, "right_now")).toEqual(["stats"]);
+    expect(played(counted, { layoutId: "dashboard" })).toEqual(["countdown"]);
+  });
+
+  it("keeps the hero's numbers where no other box shows only them", () => {
+    expect(played(counted, { layoutId: "pulse" })).toEqual(["countdown", "stats"]);
+  });
+
+  it("keeps the hero's food item when a box shows only food: the food box steps aside", () => {
+    const f = facts({ food: { orders: [order()], names: false } });
+    const zone = {
+      layoutId: "pulse",
+      regions: { venue_rail: { widgets: [{ widget: "food_status" }] } },
+    };
+    expect(played(f, zone, "venue_rail")).toEqual(["food_status"]);
+    expect(played(f, zone)).toContain("food_status");
+  });
+});

@@ -29,3 +29,4 @@ export function cutText(
     fontSize: number;
   }[],
 ): string[];
+export function panelFilled(page: import("playwright-core").Page): Promise<void>;
