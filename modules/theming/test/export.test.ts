@@ -4,9 +4,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
+import { withTenant } from "@canccu/kit";
 import { readPackage } from "../src/zip.js";
 import { DATABASE_URL, code, get, send } from "./helpers.js";
-import { draftFiles } from "./drafting.js";
+import { draftFiles, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { demoFiles, putPackage } from "./packaging.js";
 import { packageZip } from "./zips.js";
@@ -72,5 +73,78 @@ describe.skipIf(!DATABASE_URL)("GET /api/theming/revisions/{revision}/package", 
     expect(other.statusCode).toBe(404);
     const unknown = await get(d.h, "/api/theming/revisions/9/package", { session: "admin" });
     expect(code(unknown)).toBe("not_found");
+  });
+});
+
+describe.skipIf(!DATABASE_URL)("GET /api/theming/draft/package", () => {
+  const d = draftFiles();
+
+  /** The stored file of every draft path, by path: the same bytes give the same name. */
+  const held = (host: string) =>
+    withTenant(host.split(".")[0]!, () =>
+      d.h.db.tenant(async (c) => {
+        const { rows } = await c.query(
+          `SELECT path, file FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL
+           UNION ALL SELECT 'embeds/' || embed || '/' || path, file FROM theming_embed_files
+            WHERE owner = 'draft' ORDER BY 1`,
+        );
+        return rows as { path: string; file: string }[];
+      }),
+    );
+
+  it("exports the draft as a zip that gives another event the same draft (the round trip)", async () => {
+    // A preset with its schemes, the event's logo on a plate, a pair, roundness and a picture.
+    const applied = await send(
+      d.h,
+      "PUT",
+      "/api/theming/draft/preset",
+      { preset: "level-up", scheme: "sunset" },
+      { session: "embedder" },
+    );
+    expect(applied.statusCode).toBe(200);
+    const up = await d.put(
+      "images/hall.png",
+      applied.json<DraftBody>().draft_version,
+      await png("#223344", 64),
+    );
+    expect(up.statusCode).toBe(200);
+    const brand = await send(d.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: up.json<DraftBody>().draft_version,
+      primary: "#ff9a3c",
+      accent: "#ff6fae",
+      scheme: "dark",
+      logo: "images/logo.svg",
+      logo_plate: { kind: "dark", shape: "circle", padding: "large" },
+      font_pair: "space-inter",
+      roundness: "round",
+      backdrop: { looks: ["glows", "waves"], image: "images/hall.png" },
+    });
+    expect(brand.statusCode).toBe(200);
+    const draft = brand.json<{ draft: DraftBody & { manifest: Record<string, unknown> } }>().draft;
+    expect(draft.manifest.schemes).toBeDefined();
+    expect(draft.manifest.preset).toEqual({ id: "level-up", scheme: "sunset" });
+
+    const res = await get(d.h, "/api/theming/draft/package", { session: "admin" });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toBe("application/zip");
+    expect(res.headers["content-disposition"]).toBe('attachment; filename="theme-draft.zip"');
+    expect(res.headers["cache-control"]).toBe("no-store");
+
+    const upload = await putPackage(d.h, res.rawPayload, {
+      session: "embedder",
+      host: "beta.test",
+    });
+    expect(upload.statusCode).toBe(200);
+    expect(upload.json<{ manifest: unknown }>().manifest).toEqual(draft.manifest);
+    expect(await held("beta.test")).toEqual(await held("alpha.test"));
+  });
+
+  it("is the theme right's, and 404 without a draft", async () => {
+    expect(code(await get(d.h, "/api/theming/draft/package", { session: "admin" }))).toBe(
+      "no_draft",
+    );
+    await d.fresh();
+    const member = await get(d.h, "/api/theming/draft/package", { session: "member" });
+    expect(member.statusCode).toBe(403);
   });
 });

@@ -229,3 +229,82 @@ layouts:
         widgets:
           - widget: ticker
             template: ticker
+# The preset's colour schemes (contracts/theming.md, Presets), as the Theme studio's accepted pack
+# (docs/design/theme-studio.md) draws them; the first is the colours above.
+schemes:
+  - id: sunset
+    name: Sunset
+    kind: dark
+    brand:
+      primary: "#ff9a3c"
+      accent: "#ff6fae"
+      scheme: dark
+    colors:
+      background: "#140d0b"
+      surface: "#25170f"
+      border: "#5b3b2c"
+      text: "#fff3ea"
+      text_muted: "#d6b8a6"
+      primary: "#ff9a3c"
+      primary_text: "#140d0b"
+      accent: "#ff6fae"
+      status_ok: "#4ee39a"
+      status_degraded: "#ffd94a"
+      status_down: "#ff5d5d"
+  - id: berry
+    name: Neon berry
+    kind: accent
+    brand:
+      primary: "#ff6fae"
+      accent: "#ffb347"
+      scheme: dark
+    colors:
+      background: "#140d0b"
+      surface: "#25170f"
+      border: "#5b3b2c"
+      text: "#fff3ea"
+      text_muted: "#d6b8a6"
+      primary: "#ff6fae"
+      primary_text: "#140d0b"
+      accent: "#ffb347"
+      status_ok: "#4ee39a"
+      status_degraded: "#ffd94a"
+      status_down: "#ff5d5d"
+  - id: daylight
+    name: Daylight
+    kind: light
+    brand:
+      primary: "#b84a00"
+      accent: "#c2185b"
+      scheme: light
+    colors:
+      background: "#fff7f0"
+      surface: "#ffffff"
+      border: "#e3c3ad"
+      text: "#2a140b"
+      text_muted: "#6a4636"
+      primary: "#b84a00"
+      primary_text: "#ffffff"
+      accent: "#c2185b"
+      status_ok: "#1d7a4a"
+      status_degraded: "#8a6100"
+      status_down: "#c62828"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#ffa14d"
+      accent: "#ff7fbf"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#120a06"
+      border: "#ffb070"
+      text: "#ffffff"
+      text_muted: "#ffe0cc"
+      primary: "#ffa14d"
+      primary_text: "#000000"
+      accent: "#ff7fbf"
+      status_ok: "#4ee39a"
+      status_degraded: "#ffd94a"
+      status_down: "#ff6b6b"

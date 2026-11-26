@@ -49,3 +49,82 @@ layouts:
         area: { column: 1, row: 12, columns: 12, rows: 1 }
         widgets:
           - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets), as the Theme studio's accepted pack
+# (docs/design/theme-studio.md) draws them; the first is the colours above.
+schemes:
+  - id: night
+    name: Night
+    kind: dark
+    brand:
+      primary: "#3ddcff"
+      accent: "#b98cff"
+      scheme: dark
+    colors:
+      background: "#0b0d1a"
+      surface: "#161a2e"
+      border: "#343c66"
+      text: "#f3f5ff"
+      text_muted: "#a9b1d6"
+      primary: "#3ddcff"
+      primary_text: "#0b0d1a"
+      accent: "#b98cff"
+      status_ok: "#3ee39a"
+      status_degraded: "#ffc94d"
+      status_down: "#ff6b7d"
+  - id: daylight
+    name: Daylight
+    kind: light
+    brand:
+      primary: "#00799f"
+      accent: "#7b4fd8"
+      scheme: light
+    colors:
+      background: "#f5f6fb"
+      surface: "#ffffff"
+      border: "#c9cee0"
+      text: "#141629"
+      text_muted: "#4a5070"
+      primary: "#00799f"
+      primary_text: "#ffffff"
+      accent: "#7b4fd8"
+      status_ok: "#1a7f4b"
+      status_degraded: "#8a6100"
+      status_down: "#c2283d"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#33e1ff"
+      accent: "#ffd60a"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#111111"
+      border: "#ffffff"
+      text: "#ffffff"
+      text_muted: "#e0e0e0"
+      primary: "#33e1ff"
+      primary_text: "#000000"
+      accent: "#ffd60a"
+      status_ok: "#3ee39a"
+      status_degraded: "#ffd60a"
+      status_down: "#ff6b7d"
+  - id: ember
+    name: Ember
+    kind: accent
+    brand:
+      primary: "#ff9b54"
+      accent: "#ffd166"
+      scheme: dark
+    colors:
+      background: "#0b0d1a"
+      surface: "#161a2e"
+      border: "#343c66"
+      text: "#f3f5ff"
+      text_muted: "#a9b1d6"
+      primary: "#ff9b54"
+      primary_text: "#0b0d1a"
+      accent: "#ffd166"
+      status_ok: "#3ee39a"
+      status_degraded: "#ffc94d"
+      status_down: "#ff6b7d"

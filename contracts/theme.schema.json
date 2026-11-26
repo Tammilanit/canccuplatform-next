@@ -96,9 +96,52 @@
       "items": {
         "$ref": "#/$defs/layout"
       }
+    },
+    "schemes": {
+      "description": "A preset's colour schemes (contracts/theming.md, Presets): the Theme studio's Pick a look shows each one, and applying one sets `brand` and the colour tokens from it. Kept as they are by a draft, a revision and an export; nothing else reads them.",
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/scheme"
+      }
+    },
+    "preset": {
+      "description": "The preset and scheme a draft was made from, so the Theme studio's Reset to the preset knows what to return to. Set by applying a preset; text for no one else.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "scheme"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9:-]{0,63}$" },
+        "scheme": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" }
+      }
     }
   },
   "$defs": {
+    "scheme": {
+      "description": "One colour scheme of a preset: `dark`, `light`, high `contrast` or an `accent` variant. `colors`, when given, is the whole colour-token set tuned by hand; without it the colours are generated from `brand` as the simple mode does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "brand"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "kind": { "enum": ["dark", "light", "contrast", "accent"] },
+        "brand": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "accent", "scheme"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "scheme": { "enum": ["dark", "light"] }
+          }
+        },
+        "colors": {
+          "$ref": "#/$defs/tokens/properties/colors",
+          "required": ["background", "surface", "border", "text", "text_muted", "primary", "primary_text", "accent", "status_ok", "status_degraded", "status_down"]
+        }
+      }
+    },
     "name": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_-]{0,31}$"
