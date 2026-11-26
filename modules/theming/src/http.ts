@@ -76,10 +76,11 @@ export function positiveInt(value: unknown, name: string): number | undefined {
  * the type), read no further than `limit`.
  */
 export function rawBody(
-  limit: number,
+  limitOf: number | ((request: FastifyRequest) => number),
   tooLarge: () => KitError,
 ): (request: FastifyRequest, payload: AsyncIterable<Buffer>) => Promise<Buffer> {
   return async (request, payload) => {
+    const limit = typeof limitOf === "number" ? limitOf : limitOf(request);
     if (Number(request.headers["content-length"] ?? 0) > limit) throw tooLarge();
     const chunks: Buffer[] = [];
     let size = 0;

@@ -245,3 +245,13 @@
   gap: 0.5rem;
   margin: 0;
 }
+
+/* Your looks (D18): a saved preset's thumbnail with its Delete under it. */
+.canccu-studio-mine {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: start;
+}
+.canccu-studio-mine > .canccu-studio-scheme {
+  justify-self: stretch;
+}

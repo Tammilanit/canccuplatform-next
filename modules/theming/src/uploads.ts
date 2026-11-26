@@ -11,13 +11,16 @@ import { reencode } from "./raster.js";
 import type { RasterKind } from "./raster.js";
 import { checkSvg } from "./svg.js";
 import { parseTemplate } from "./template.js";
+import { VIDEO_LIMIT, sniffVideo } from "./video.js";
 
 const KB = 1024;
 const MB = 1024 * KB;
 /** The largest file this path takes: no request body is read past it. */
 export const BODY_LIMIT = 5 * MB;
+/** The largest video (`videos/`), which the same path takes with its own limit. */
+export const VIDEO_BODY_LIMIT = VIDEO_LIMIT.bytes;
 
-type Kind = RasterKind | "svg" | "woff2";
+type Kind = RasterKind | "svg" | "woff2" | "mp4" | "webm";
 
 /** Per-kind limits of contracts/theming.md, The theme package. */
 const LIMITS: Record<Kind, { bytes: number; label: string }> = {
@@ -26,6 +29,8 @@ const LIMITS: Record<Kind, { bytes: number; label: string }> = {
   webp: { bytes: 5 * MB, label: "5 MB" },
   svg: { bytes: 512 * KB, label: "512 KB" },
   woff2: { bytes: 1 * MB, label: "1 MB" },
+  mp4: VIDEO_LIMIT,
+  webm: VIDEO_LIMIT,
 };
 
 const NAMES: Record<Kind, string> = {
@@ -34,6 +39,8 @@ const NAMES: Record<Kind, string> = {
   webp: "WebP",
   svg: "SVG",
   woff2: "WOFF2",
+  mp4: "MP4",
+  webm: "WebM",
 };
 
 const STORED_AS: Record<Kind, Ext> = {
@@ -42,12 +49,15 @@ const STORED_AS: Record<Kind, Ext> = {
   webp: "webp",
   svg: "svg",
   woff2: "woff2",
+  mp4: "mp4",
+  webm: "webm",
 };
 
 /** What each folder takes, by the extension its paths may carry. */
 const FOLDERS: Record<string, Record<string, Kind>> = {
   images: { png: "png", jpg: "jpeg", jpeg: "jpeg", webp: "webp", svg: "svg" },
   fonts: { woff2: "woff2" },
+  videos: { mp4: "mp4", webm: "webm" },
 };
 
 /** The folders one upload takes files for: these, and the text of css/ and templates/. */
@@ -89,6 +99,8 @@ function sniff(bytes: Buffer): { kind: Kind; text?: string } | undefined {
     return { kind: "webp" };
   }
   if (head(4) === "wOF2") return { kind: "woff2" };
+  const video = sniffVideo(bytes);
+  if (video !== undefined) return { kind: video };
   const text = decodeUtf8(bytes);
   if (text !== undefined && looksLikeSvg(text)) return { kind: "svg", text };
   return undefined;
@@ -114,7 +126,7 @@ function woff2Reason(b: Buffer): string | undefined {
 
 /**
  * The checks of `bytes` uploaded as `path` (validated by the caller), as a file of `folder`
- * (`images` or `fonts`): its own folder, or the kind an embed's file takes by its extension.
+ * (`images`, `fonts` or `videos`): its own folder, or the kind an embed's file takes by its extension.
  */
 export async function checkFile(
   path: string,
@@ -143,6 +155,8 @@ export async function checkFile(
     return refuse("file_too_large", path, `${NAMES[found.kind]} files are at most ${limit.label}.`);
   }
   const ext = STORED_AS[found.kind];
+  // Stored as sent: a video is never transcoded (D19).
+  if (found.kind === "mp4" || found.kind === "webm") return { ok: true, bytes, ext };
   if (found.kind === "woff2") {
     const why = woff2Reason(bytes);
     return why === undefined

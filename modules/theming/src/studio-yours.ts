@@ -297,7 +297,7 @@ export function resetView(state: StudioState): Html {
       >
     </p>`;
   }
-  const name = `${from.preset.name} · ${from.scheme.name}`;
+  const name = from.name;
   return html`<div data-refresh="reset">
     <p class="canccu-studio-row">
       ${actionButton(html`${icon("refresh")}Reset to ${name}`, { "data-action": "reset-ask" }, "ghost")}
@@ -318,7 +318,7 @@ export function resetView(state: StudioState): Html {
       </p>
       <div class="canccu-studio-row canccu-studio-dialog__actions">
         ${actionButton("Keep my changes", { "data-action": "dialog-close" })}
-        ${actionButton(`Reset to ${name}`, { "data-action": "preset", "data-preset": from.preset.id, "data-scheme": from.scheme.id }, "primary")}
+        ${actionButton(`Reset to ${name}`, { "data-action": "preset", "data-preset": from.id, "data-scheme": from.scheme }, "primary")}
       </div>
     </dialog>
   </div>`;

@@ -82,6 +82,7 @@ async function resolvedDraft(
   const images = isObject(m.images) ? m.images : {};
   const logo = await draftFile(c, images.logo);
   const picture = await draftFile(c, backdropImage(m));
+  const video = await draftFile(c, backdropImage(m, "video"));
   const { rows } = await c.query(`SELECT draft_key FROM theming_drafts`);
   const draftKey = (rows[0] as { draft_key: string }).draft_key;
   return {
@@ -101,7 +102,10 @@ async function resolvedDraft(
     layouts: Array.isArray(m.layouts) ? m.layouts : [],
     templates,
     embeds: await listEmbeds(c, "draft", `${SANDBOX}draft/${draftKey}/`),
-    backdrop: backdropView(m, tokens.colors, picture === undefined ? undefined : base + picture),
+    backdrop: backdropView(m, tokens.colors, {
+      image: picture === undefined ? undefined : base + picture,
+      video: video === undefined ? undefined : base + video,
+    }),
   };
 }
 

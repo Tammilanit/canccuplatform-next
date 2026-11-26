@@ -111,7 +111,7 @@ describe.skipIf(!DATABASE_URL)("PUT /api/theming/draft/package", () => {
   });
 
   it("refuses a body over the package limit before reading it whole", async () => {
-    const res = await putPackage(d.h, Buffer.alloc(22 * 1024 * 1024));
+    const res = await putPackage(d.h, Buffer.alloc(42 * 1024 * 1024));
     expect(res.statusCode).toBe(413);
     expect(code(res)).toBe("too_large");
   });

@@ -2,7 +2,7 @@
  * Advanced's controls (plan issue-784 D14–D16). Each token control posts its value to the preview
  * frames as it changes (studio-live.js sends it on, also to a frame that loads later), and the one
  * tokens form saves 400 ms after the last change through studio.js, without a reload. Adding a
- * font, the screen's own picture and a box look reload the page, which then names them; saving
+ * font, the screen's own picture or video and a box look reload the page, which then names them; saving
  * a file the theme already names does not.
  */
 "use strict";
@@ -14,6 +14,7 @@
   if (root === null || tokensForm === null || studio === undefined) return;
   const { call, query, draftVersion, Invalid, Reload } = studio;
   const IMAGE_EXTS = { png: "png", jpg: "jpg", jpeg: "jpg", webp: "webp" };
+  const VIDEO_EXTS = { mp4: "mp4", webm: "webm" };
 
   const setVersion = (draft) => {
     root.dataset.draftVersion = String(draft.draft_version);
@@ -96,8 +97,12 @@
   saveTokens.autosave = true;
   saveTokens.live = true;
 
-  /** One file into the draft; a refused one is taken out again, so it never blocks Publish. */
-  async function upload(path, file, version) {
+  /**
+   * One file into the draft; a refused one is taken out again, so it never blocks Publish. A video
+   * beside the one in use is a problem only until the old one goes (`storedIsEnough`): it counts as
+   * refused only when its checks stored nothing.
+   */
+  async function upload(path, file, version, storedIsEnough = false) {
     const draft = await call(
       "PUT",
       `/api/theming/draft/file?${query({ path, draft_version: version })}`,
@@ -106,6 +111,7 @@
     );
     const problem = draft.problems.find((p) => p.path === path && p.severity === "error");
     if (problem === undefined) return draft.draft_version;
+    if (storedIsEnough && draft.files.some((f) => f.path === path)) return draft.draft_version;
     const back = query({ path, draft_version: draft.draft_version });
     setVersion(await call("DELETE", `/api/theming/draft/file?${back}`));
     throw new Error(problem.message);
@@ -156,6 +162,33 @@
     await parts(v, { backdrop_image: path });
   }
 
+  /** A file out of the draft; answers the new version. */
+  const removeFile = async (path, version) =>
+    (await call("DELETE", `/api/theming/draft/file?${query({ path, draft_version: version })}`))
+      .draft_version;
+
+  /** A video over the picture (D19): the one in use goes only once the new one is in its place. */
+  async function useVideo(form) {
+    const file = form.elements.namedItem("video_file").files[0];
+    const ext = VIDEO_EXTS[file?.name.split(".").pop().toLowerCase()];
+    if (ext === undefined) throw new Invalid("The video must be an MP4 or WebM file.");
+    const path = `videos/backdrop-${Date.now()}.${ext}`;
+    let v = await upload(path, file, draftVersion(), true);
+    v = (await parts(v, { backdrop_video: path })).draft_version;
+    if (form.dataset.video) await removeFile(form.dataset.video, v);
+  }
+  async function videoOff(el) {
+    const v = (await parts(draftVersion(), { backdrop_video: null })).draft_version;
+    await removeFile(el.dataset.video, v);
+  }
+
+  /** The looks cycle: the picture and the video over it go, and the video's file with them. */
+  async function cycle(el) {
+    const v = (await parts(draftVersion(), { backdrop_image: null, backdrop_video: null }))
+      .draft_version;
+    if (el.dataset.video) await removeFile(el.dataset.video, v);
+  }
+
   /** A box look (D16): every box of the type uses it, or the platform's look. */
   const useLook = (form) =>
     parts(draftVersion(), {
@@ -193,7 +226,9 @@
     tokens: saveTokens,
     "font-add": addFont,
     "backdrop-image": usePicture,
-    "backdrop-cycle": () => parts(draftVersion(), { backdrop_image: null }),
+    "backdrop-cycle": cycle,
+    "backdrop-video": useVideo,
+    "backdrop-video-off": videoOff,
     look: useLook,
     editor: saveFile,
   };

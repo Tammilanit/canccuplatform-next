@@ -12,6 +12,7 @@ import { PRESETS, schemeColors } from "./presets.js";
 import type { Preset, Scheme } from "./presets.js";
 import { ROUNDNESS } from "./brand.js";
 import { STUDIO, actionButton, card } from "./studio-views.js";
+import { mineSection } from "./studio-mine.js";
 import type { StudioState } from "./studio-views.js";
 import { cssVar } from "@canccu/ui";
 
@@ -22,13 +23,25 @@ const KINDS: Record<Scheme["kind"], string> = {
   accent: "Colour variant",
 };
 
-/** The draft's preset, as the gallery marks it and Reset names it. */
-export function presetOf(state: StudioState): { preset: Preset; scheme: Scheme } | undefined {
+/** Where the draft came from, as the gallery marks it and Reset names and sends it back. */
+export interface From {
+  id: string;
+  scheme: string;
+  name: string;
+}
+
+/** The draft's preset, a platform one or the event's own (D18), while it still exists. */
+export function presetOf(state: StudioState): From | undefined {
   const p = state.draft?.manifest.preset;
   if (!isObject(p)) return undefined;
-  const preset = PRESETS.get(String(p.id));
+  const id = String(p.id);
+  const mine = state.mine.find((m) => m.id === id);
+  if (mine !== undefined) return { id, scheme: "own", name: mine.name };
+  const preset = PRESETS.get(id);
   const scheme = preset?.schemes.find((s) => s.id === p.scheme);
-  return preset === undefined || scheme === undefined ? undefined : { preset, scheme };
+  return preset === undefined || scheme === undefined
+    ? undefined
+    : { id, scheme: scheme.id, name: `${preset.name} · ${scheme.name}` };
 }
 
 /** The thumbnail's radius in its own units: the preset's corners, a sixth of their size. */
@@ -50,11 +63,11 @@ function headingOf(preset: Preset): string {
   return typeof fonts.heading === "string" ? fonts.heading : "system-ui";
 }
 
-/** The scheme's colours as the frames take them live, before the draft has saved (D3). */
-const liveVars = (scheme: Scheme): string =>
+/** Colours as the frames take them live, before the draft has saved (D3). */
+export const colorVars = (colors: Readonly<Record<string, string>>): string =>
   JSON.stringify(
     Object.fromEntries(
-      Object.entries(schemeColors(scheme)).map(([token, value]) => [cssVar("color", token), value]),
+      Object.entries(colors).map(([token, value]) => [cssVar("color", token), value]),
     ),
   );
 
@@ -71,7 +84,7 @@ function schemeButton(
     headingFamily: headingOf(preset),
     radius: radiusOf(preset),
   });
-  return html`<button${attrs({ type: "button", class: "canccu-studio-scheme", "data-action": "preset", "data-preset": preset.id, "data-scheme": scheme.id, "data-vars": liveVars(scheme), "aria-pressed": o.chosen ? "true" : "false", disabled: !o.allowed })}>${thumb}<span class="canccu-studio-scheme__name">${scheme.name}${o.chosen ? icon("check") : ""}</span><span class="canccu-small canccu-muted">${KINDS[scheme.kind]}</span></button>`;
+  return html`<button${attrs({ type: "button", class: "canccu-studio-scheme", "data-action": "preset", "data-preset": preset.id, "data-scheme": scheme.id, "data-vars": colorVars(schemeColors(scheme)), "aria-pressed": o.chosen ? "true" : "false", disabled: !o.allowed })}>${thumb}<span class="canccu-studio-scheme__name">${scheme.name}${o.chosen ? icon("check") : ""}</span><span class="canccu-small canccu-muted">${KINDS[scheme.kind]}</span></button>`;
 }
 
 function presetSection(
@@ -101,7 +114,7 @@ function presetSection(
 /** `embedsAllowed`: whether the session holds `theming.embeds.write`, for the presets offered. */
 export function galleryView(state: StudioState, embedsAllowed: boolean): Html {
   const from = presetOf(state);
-  const chosen = from === undefined ? undefined : `${from.preset.id}/${from.scheme.id}`;
+  const chosen = from === undefined ? undefined : `${from.id}/${from.scheme}`;
   const presets = [...PRESETS.values()];
   const held = presets.filter((p) => p.embeds && !embedsAllowed).map((p) => p.name);
   const missing =
@@ -131,6 +144,7 @@ export function galleryView(state: StudioState, embedsAllowed: boolean): Html {
       title: "Pick a look, then make it yours",
       text: "One click tries a look in the preview. Your logo and its plate stay whichever you pick.",
     })}
-    ${missing}${presets.map((p) => presetSection(state, p, chosen, embedsAllowed))} ${start}
+    ${mineSection(state, chosen, embedsAllowed)}${missing}
+    ${presets.map((p) => presetSection(state, p, chosen, embedsAllowed))} ${start}
   </div>`;
 }

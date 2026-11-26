@@ -31,6 +31,7 @@ function stateOf(colors: Record<string, string>, scheme: "dark" | "light"): Stud
     cssChanged: false,
     logoUrl: undefined,
     screenTheme: undefined,
+    mine: [],
   };
 }
 

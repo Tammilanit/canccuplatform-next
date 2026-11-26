@@ -137,6 +137,7 @@ const partsEditCheck = ajv.compile({
       additionalProperties: { oneOf: [{ $ref: def("name") }, { type: "null" }] },
     },
     backdrop_image: { oneOf: [{ $ref: def("image_path") }, { type: "null" }] },
+    backdrop_video: { oneOf: [{ $ref: def("video_path") }, { type: "null" }] },
   },
 });
 
@@ -147,6 +148,7 @@ export interface PartsEdit {
   templates?: Record<string, { widget: string; file: string } | null>;
   looks?: Record<string, string | null>;
   backdrop_image?: string | null;
+  backdrop_video?: string | null;
 }
 
 export function partsEditError(body: unknown): string | undefined {

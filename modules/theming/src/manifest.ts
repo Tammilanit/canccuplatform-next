@@ -6,6 +6,7 @@
 import { parseDocument } from "yaml";
 import type { Manifest, Problem } from "./checks.js";
 import { isObject, list } from "./checks.js";
+import { extraVideos } from "./video.js";
 
 const MAX_MANIFEST = 64 * 1024;
 /** The families a font token may name without a package font (theme.schema.json, `family`). */
@@ -62,8 +63,10 @@ function embedFiles(embed: unknown): string[] {
 
 /** Every file the manifest names, in the manifest's order. */
 function namedFiles(m: Manifest): string[] {
-  // The backdrop's picture is the brand's, outside `images`, yet as much a file the theme needs.
-  const backdrop = strings([record(record(m.brand).backdrop).image]);
+  // The backdrop's picture and video are the brand's, outside `images`, yet as much files the
+  // theme needs.
+  const b = record(record(m.brand).backdrop);
+  const backdrop = strings([b.image, b.video]);
   const out = [...strings(Object.values(record(m.images))), ...backdrop, ...strings(m.css)];
   for (const font of list(m.fonts))
     out.push(...strings([record(font).file, record(font).licence_file]));
@@ -162,5 +165,11 @@ function modeMismatch(m: Manifest, p: PackagePaths): Problem[] {
 }
 
 export function referenceProblems(m: Manifest, p: PackagePaths): Problem[] {
-  return [...missing(m, p), ...unknownNames(m), ...modeMismatch(m, p)];
+  const video = record(record(m.brand).backdrop).video;
+  return [
+    ...missing(m, p),
+    ...unknownNames(m),
+    ...modeMismatch(m, p),
+    ...extraVideos(typeof video === "string" ? video : undefined, p.present),
+  ];
 }

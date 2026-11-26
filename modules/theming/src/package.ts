@@ -14,7 +14,7 @@ import { readText } from "./text.js";
 import { checkFile, checkUpload } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml; the zip reader has refused `.` and `..` parts. */
-export const PACKAGE_PATH = /^(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
+export const PACKAGE_PATH = /^(css|fonts|images|templates|embeds|videos)\/[A-Za-z0-9._/-]{1,129}$/;
 /** theming_package_files_path_check (migrations/006): `templates/` plus 129 would pass the pattern. */
 export const MAX_PATH = 136;
 /** An embed's name as theming_embed_files keeps it (migrations/002). */
@@ -91,7 +91,9 @@ async function checkEmbedFile(
     return { bytes, ext };
   }
   const checked = await checkFile(path, bytes, ext === "woff2" ? "fonts" : "images");
-  return checked.ok ? { bytes: checked.bytes, ext: checked.ext } : { problem: checked.problem };
+  if (!checked.ok) return { problem: checked.problem };
+  // Checked as an image or a font, never as a video, so the stored type is an embed's.
+  return { bytes: checked.bytes, ext: checked.ext as EmbedExt };
 }
 
 /** The files of each embed folder: stored whole when every one passes, else not at all. */
@@ -153,7 +155,7 @@ export async function checkPackage(files: Map<string, Buffer>): Promise<PackageR
     if (path !== "theme.yaml" && (!PACKAGE_PATH.test(path) || path.length > MAX_PATH)) {
       return {
         ok: false,
-        why: `${path} is outside the package's folders (css, fonts, images, templates, embeds) or too long.`,
+        why: `${path} is outside the package's folders (css, fonts, images, templates, embeds, videos) or too long.`,
       };
     }
   }

@@ -23,6 +23,7 @@ import { checkRoutes } from "./check-routes.js";
 import { draftRoutes } from "./draft-routes.js";
 import { fileRoutes } from "./file-routes.js";
 import type { FileStore } from "./files.js";
+import { myPresetRoutes } from "./my-presets.js";
 import { presetRoutes } from "./preset-routes.js";
 import { packageRoutes } from "./package-routes.js";
 import { internalPreviewRoutes, keyRoutes } from "./preview.js";
@@ -112,6 +113,7 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
     fileRoutes(event, deps);
     packageRoutes(event, deps);
     presetRoutes(event, deps);
+    myPresetRoutes(event, deps);
     revisionRoutes(event, deps);
     sandboxRoutes(event, deps);
     studioRoutes(event, deps);

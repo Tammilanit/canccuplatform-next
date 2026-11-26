@@ -3,7 +3,7 @@
  * issue-784 D11): CSS, fonts, templates or embeds other than its preset's. A draft from no preset
  * has its own as soon as it has any; one from a preset only once they differ from that preset's
  * (in theme.yaml or by file), since no Advanced edit clears `preset` and an exported draft keeps
- * it through Import.
+ * it through Import. A saved preset (D18) is compared the same way, with the files it holds.
  */
 import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
@@ -12,6 +12,7 @@ import type { Manifest } from "./checks.js";
 import { embedHoldings } from "./embeds.js";
 import { fileName } from "./files.js";
 import { checkPackage } from "./package.js";
+import { mineNumber } from "./my-presets.js";
 import { PRESETS, presetFiles } from "./presets.js";
 import type { Preset } from "./presets.js";
 
@@ -50,23 +51,36 @@ function presetPrint(preset: Preset): Promise<Print> {
   return print;
 }
 
-async function draftPrint(c: SqlClient): Promise<Print> {
+/** The print of what `owner` holds: the draft, or a saved preset (`p:<n>`, D18). */
+async function heldPrint(c: SqlClient, owner: string): Promise<Print> {
   const { rows } = await c.query(
     `SELECT path || '=' || coalesce(file, '') AS p FROM theming_package_files
-      WHERE owner = 'draft' AND split_part(path, '/', 1) = ANY ($1)`,
-    [FOLDERS],
+      WHERE owner = $2 AND split_part(path, '/', 1) = ANY ($1)`,
+    [FOLDERS, owner],
   );
   return {
     paths: (rows as { p: string }[]).map((r) => r.p).sort(),
-    embeds: await embedHoldings(c, "draft"),
+    embeds: await embedHoldings(c, owner),
   };
+}
+
+/** A saved preset's manifest and print, as a platform preset's are compared; undefined if gone. */
+async function savedOf(
+  c: SqlClient,
+  n: number,
+): Promise<{ manifest: Manifest; print: Print } | undefined> {
+  const { rows } = await c.query(`SELECT manifest FROM theming_presets WHERE id = $1`, [n]);
+  const row = rows[0] as { manifest: Manifest } | undefined;
+  return row && { manifest: row.manifest, print: await heldPrint(c, `p:${n}`) };
 }
 
 export async function ownWork(c: SqlClient, manifest: Manifest | undefined): Promise<boolean> {
   if (manifest === undefined) return false;
   // Files count even where theme.yaml names none: a replace drops them all the same.
-  const print = await draftPrint(c);
-  const preset = isObject(manifest.preset) ? PRESETS.get(String(manifest.preset.id)) : undefined;
+  const print = await heldPrint(c, "draft");
+  const id = isObject(manifest.preset) ? String(manifest.preset.id) : "";
+  const n = mineNumber(id);
+  const preset = n === undefined ? PRESETS.get(id) : await savedOf(c, n);
   if (preset === undefined) {
     return (
       PARTS.some((k) => manifest[k] !== undefined) ||
@@ -75,5 +89,5 @@ export async function ownWork(c: SqlClient, manifest: Manifest | undefined): Pro
     );
   }
   if (PARTS.some((k) => !isDeepStrictEqual(manifest[k], preset.manifest[k]))) return true;
-  return !isDeepStrictEqual(print, await presetPrint(preset));
+  return !isDeepStrictEqual(print, "print" in preset ? preset.print : await presetPrint(preset));
 }

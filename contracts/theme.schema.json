@@ -177,6 +177,10 @@
       "type": "string",
       "pattern": "^images/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(png|jpg|jpeg|webp|svg)$"
     },
+    "video_path": {
+      "type": "string",
+      "pattern": "^videos/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(mp4|webm)$"
+    },
     "brand": {
       "description": "The simple mode's input, kept so the simple editor can reopen it: the colours, and the choices the Theme studio's Make it yours offers. The logo and icon are `images.logo` and `images.icon`.",
       "type": "object",
@@ -225,9 +229,10 @@
       }
     },
     "backdrop": {
-      "description": "The screen's background (contracts/theming.md, The two backgrounds): a slow cycle of `looks`, which the current game's art replaces while a game is on (`game_art`), tinted by the time of day (`daylight`) and moved by the hype (`hype`); or the organiser's own picture (`image`) in place of the cycle. Hub pages keep their plain background.",
+      "description": "The screen's background (contracts/theming.md, The two backgrounds): a slow cycle of `looks`, which the current game's art replaces while a game is on (`game_art`), tinted by the time of day (`daylight`) and moved by the hype (`hype`); or the organiser's own picture (`image`) in place of the cycle, with the organiser's own `video` playing over it, the picture then its poster. Hub pages keep their plain background.",
       "type": "object",
       "additionalProperties": false,
+      "dependentRequired": { "video": ["image"] },
       "properties": {
         "looks": {
           "type": "array",
@@ -239,7 +244,11 @@
         "game_art": { "type": "boolean", "default": true },
         "daylight": { "type": "boolean", "default": true },
         "hype": { "type": "boolean", "default": true },
-        "image": { "$ref": "#/$defs/image_path" }
+        "image": { "$ref": "#/$defs/image_path" },
+        "video": {
+          "description": "A muted, looping video over `image` (MP4 or WebM, one a theme). The screen plays it at the lively and party levels and shows `image` at calm, at none and under reduced motion.",
+          "$ref": "#/$defs/video_path"
+        }
       }
     },
     "tokens": {

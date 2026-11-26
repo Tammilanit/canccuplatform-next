@@ -73,15 +73,21 @@ export function sendFile(
       .header("content-security-policy", SVG_POLICY)
       .header("content-disposition", "attachment");
   }
+  // A video plays where it is named and never downloads as a file (plan issue-784 D19).
+  if (ext === "mp4" || ext === "webm") void reply.header("content-disposition", "inline");
   return reply.send(bytes);
 }
 
-/** Whether `owner` refers to the file: the transaction ends before the disk read, freeing its connection. */
+/**
+ * Whether the draft (`draft`), else a revision, refers to the file: a saved preset's own files
+ * (`p:<id>`) are served by neither, as only the organisers see them. The transaction ends before
+ * the disk read, freeing its connection.
+ */
 export function referenced(db: Db, name: string, draft: boolean): Promise<boolean> {
   return db.tenant(async (c) => {
     const { rows } = await c.query(
-      `SELECT 1 FROM theming_file_refs WHERE file = $1 AND (owner = 'draft') = $2 LIMIT 1`,
-      [name, draft],
+      `SELECT 1 FROM theming_file_refs WHERE file = $1 AND owner ~ $2 LIMIT 1`,
+      [name, draft ? "^draft$" : "^r:"],
     );
     return rows.length > 0;
   });

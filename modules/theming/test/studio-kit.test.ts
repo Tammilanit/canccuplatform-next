@@ -35,6 +35,7 @@ function stateOf(problems: Problem[], current = 1, drafted = true): StudioState 
     cssChanged: false,
     logoUrl: undefined,
     screenTheme: undefined,
+    mine: [],
   };
 }
 

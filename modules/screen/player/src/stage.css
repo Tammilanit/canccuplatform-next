@@ -50,17 +50,7 @@
     transition: opacity 2s ease;
   }
 
-  /* The theme's own picture (`brand.backdrop.image`): it replaces the glows, under the scrim. */
-  .canccu-stage__backdrop {
-    background-position: center;
-    background-size: cover;
-    opacity: 0;
-  }
-
-  .canccu-stage--backdrop .canccu-stage__backdrop {
-    opacity: 1;
-  }
-
+  /* The theme's own picture and video: stage-backdrop.css. */
   .canccu-stage--backdrop .canccu-stage__glow {
     opacity: 0;
   }

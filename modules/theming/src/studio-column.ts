@@ -5,6 +5,7 @@
  * Preview on a screen, Publish). static/studio-live.js and studio-previews.js keep the column
  * live; parts marked `data-refresh` are drawn again after each save, the rest stays as it is.
  */
+import { saveMineButton, saveMineDialog } from "./studio-mine.js";
 import { attrs, html, icon } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { contrastRatio } from "./contrast.js";
@@ -187,12 +188,12 @@ export function depthFrame(state: StudioState, viewerId: string | undefined) {
     where,
     // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
     actions: html`<span class="canccu-cluster" data-refresh="actions"
-      >${saved}${exportLink}${importControl}${publish}</span
+      >${saved}${saveMineButton}${exportLink}${importControl}${publish}</span
     >`,
     extra: html`<div class="canccu-studio-pendbar" data-refresh="pendbar">
         ${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${publish}
       </div>
-      ${screenNotice}${discardDialog}${lightDialog}${screenDialog}`,
+      ${screenNotice}${discardDialog}${lightDialog}${screenDialog}${saveMineDialog}`,
   };
 }
 

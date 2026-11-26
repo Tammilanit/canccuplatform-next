@@ -20,6 +20,8 @@ export interface Backdrop {
   daylight?: boolean;
   hype?: boolean;
   image?: string;
+  /** Over `image`, its poster (plan issue-784 D19). */
+  video?: string;
 }
 
 export interface Brand {

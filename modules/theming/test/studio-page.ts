@@ -36,6 +36,7 @@ export function studioSuite() {
     await withTenant("local", () =>
       h.db.tenant(async (c) => {
         for (const table of [
+          "theming_presets",
           "theming_drafts",
           "theming_revisions",
           "theming_file_refs",

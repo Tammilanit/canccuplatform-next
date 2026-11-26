@@ -217,6 +217,19 @@ describe.skipIf(!DATABASE_URL)("the Advanced page's paths", () => {
       const back = await parts({ draft_version: d.draft_version, looks: { countdown: null } });
       const after = back.json<Draft>().manifest.layouts?.[0]?.regions[0]?.widgets;
       expect(after).toEqual([{ widget: "countdown" }]);
+
+      // Removing the template itself takes it off the boxes that used it, so none names a look
+      // the theme no longer has.
+      const used = await parts({ draft_version: back.json<Draft>().draft_version, looks: { countdown: "countdown_look" } }); // prettier-ignore
+      const removed = await parts({
+        draft_version: used.json<Draft>().draft_version,
+        templates: { countdown_look: null },
+      });
+      expect(removed.statusCode).toBe(200);
+      const gone = removed.json<Draft>();
+      expect(gone.manifest.templates).toBeUndefined();
+      expect(gone.manifest.layouts?.[0]?.regions[0]?.widgets).toEqual([{ widget: "countdown" }]);
+      expect(gone.problems.filter((p) => p.code === "reference_unknown")).toEqual([]);
     });
 
     it("refuses a look made for another type of box", async () => {

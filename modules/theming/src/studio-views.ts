@@ -20,6 +20,8 @@ import { FILE_NAME, fileName } from "./files.js";
 import type { FileStore } from "./files.js";
 import { SERVED } from "./theme.js";
 import { PRESET_IDS } from "./presets.js";
+import { listMine } from "./my-presets.js";
+import type { MyPreset } from "./my-presets.js";
 
 export const STUDIO = "/theming/studio/";
 /** The starting points the screens' stack fixture uploads: the presets' packages (presets.ts). */
@@ -54,6 +56,8 @@ export interface StudioState {
   logoUrl: string | undefined;
   /** What the screen preview gives the real player in place of the published theme. */
   screenTheme: ScreenTheme | undefined;
+  /** The event's saved presets (D18), which the gallery lists and Reset may name. */
+  mine: MyPreset[];
 }
 
 /** The draft's part of a `ScreenState`'s `theme` (contracts/screen.md), at its draft addresses. */
@@ -85,19 +89,14 @@ export async function draftFileUrl(c: SqlClient, path: unknown): Promise<string 
     : undefined;
 }
 
-/** `compare` false skips compiling the draft's CSS, for pages that never hold Publish (advanced). */
-export async function studioState(
-  c: SqlClient,
-  files: FileStore,
-  compare = true,
-): Promise<StudioState> {
+export async function studioState(c: SqlClient, files: FileStore): Promise<StudioState> {
   const draft = await loadDraft(c);
   const { rows } = await c.query(
     `SELECT revision, css FROM theming_revisions ORDER BY revision DESC LIMIT 1`,
   );
   const head = rows[0] as { revision: number; css: string | null } | undefined;
   let cssChanged = false;
-  if (draft !== undefined && compare) {
+  if (draft !== undefined) {
     // Compiled as publish would store it, so the same CSS has the same name as the current's.
     try {
       const css = await compiledCss(c, files, "draft", draft.manifest, SERVED);
@@ -115,8 +114,8 @@ export async function studioState(
     current: head?.revision ?? 0,
     cssChanged,
     logoUrl,
-    screenTheme:
-      draft === undefined || !compare ? undefined : await screenTheme(c, files, draft, logoUrl),
+    screenTheme: draft === undefined ? undefined : await screenTheme(c, files, draft, logoUrl),
+    mine: await listMine(c),
   };
 }
 
