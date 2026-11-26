@@ -13,6 +13,11 @@ const SPAN_MS = 3 * 3600_000;
 const COLUMN_MS = 10 * 60_000;
 const COLUMNS = SPAN_MS / COLUMN_MS;
 
+/** The window's start at `nowMs`: it moves each half hour, and a zone is rebuilt then. */
+export const windowFrom = (nowMs: number): number => Math.floor(nowMs / STEP_MS) * STEP_MS;
+/** When the window next moves: the zone's next change for the line. */
+export const windowChangeAt = (nowMs: number): number => windowFrom(nowMs) + STEP_MS;
+
 /** The most items the line draws: the first by start. */
 export const MAX_ITEMS = 5;
 
@@ -30,7 +35,7 @@ export function timelineFields(
     time: (iso: string) => string | null;
   },
 ): Record<string, unknown> | null {
-  const from = Math.floor(o.nowMs / STEP_MS) * STEP_MS;
+  const from = windowFrom(o.nowMs);
   const to = from + SPAN_MS;
   const shown = items
     .filter(

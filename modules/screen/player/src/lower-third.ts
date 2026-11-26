@@ -59,7 +59,11 @@ function next(state: ScreenState, nowMs: number): LowerThird | null {
   const items = viewOf(state, "agenda_now")?.items;
   const row = (Array.isArray(items) ? (items as unknown[]) : []).find(
     // A delayed next item is still the next thing on (contracts/screen.md, agenda_now).
-    (i): i is View => isObject(i) && (i.state === "next" || i.state === "delayed"),
+    // Still ahead: a running item that started late is also "delayed" but is not next.
+    (i): i is View =>
+      isObject(i) &&
+      (i.state === "next" || i.state === "delayed") &&
+      Date.parse(str(i.starts_at) ?? "") > nowMs,
   );
   const startsAt = Date.parse(str(row?.starts_at) ?? "");
   if (row === undefined || Number.isNaN(startsAt) || startsAt - nowMs > NEXT_WITHIN_MS) return null;

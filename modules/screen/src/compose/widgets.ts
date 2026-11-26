@@ -56,6 +56,8 @@ export interface ZoneFacts {
   food?: { orders: FoodOrder[]; names: boolean };
   /** The day's agenda items, for the coming hours (`agenda_timeline`); absent: none read. */
   timeline?: AgendaItem[];
+  /** The coming hours' window start (ms): in the version, so a window that moves rebuilds the zone. */
+  timelineFrom?: number;
   /** The zone's key: the coming hours show its items and those of no zone. */
   zoneKey?: string;
 }

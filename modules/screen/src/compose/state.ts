@@ -34,6 +34,7 @@ import { zonePlay, zonePrefetch } from "../moments-sound.js";
 import type { Play } from "../moments-sound.js";
 import { themeLayouts } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
+import { windowChangeAt, windowFrom } from "./timeline.js";
 import { zoneFingerprint } from "./fingerprint.js";
 import { highlightChangeAt, highlightOf } from "./features.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
@@ -282,6 +283,8 @@ export async function composeZone(
   // "Today in numbers" is empty outside wind-down: its counts would move every Pulse zone's
   // version at each count for nothing.
   if (facts.phase !== "wind_down") used.delete("today_numbers");
+  const lineUsed = used.has("agenda_timeline");
+  if (lineUsed) facts.timelineFrom = windowFrom(at.getTime());
   const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
@@ -311,6 +314,7 @@ export async function composeZone(
   const soundEnds = read.play === null ? null : Date.parse(read.play.catch_up_until);
   const changes = [
     content.changesAt,
+    lineUsed ? windowChangeAt(at.getTime()) : null,
     motion.next?.at,
     ...day,
     tintEnds,

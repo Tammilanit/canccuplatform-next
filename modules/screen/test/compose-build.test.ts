@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildRegions } from "../src/compose/build.js";
 import type { BuildInput } from "../src/compose/build.js";
 import { chooseLayout, roleOf, themeLayouts } from "../src/compose/layouts.js";
+import { windowChangeAt, windowFrom } from "../src/compose/timeline.js";
 import { zoneFingerprint } from "../src/compose/fingerprint.js";
 import type { FingerprintInput } from "../src/compose/fingerprint.js";
 import type { Layout } from "../src/compose/layouts.js";
@@ -329,6 +330,15 @@ describe("review fixes", () => {
       facts: facts(),
       ...over,
     });
+
+  it("moves the version when the coming hours' window moves, with nothing else changed", () => {
+    const at = Date.parse("2026-01-01T17:10:00Z");
+    const before = print({ facts: facts({ timelineFrom: windowFrom(at) }) });
+    expect(windowChangeAt(at)).toBe(Date.parse("2026-01-01T17:30:00Z"));
+    const across = windowFrom(windowChangeAt(at));
+    expect(print({ facts: facts({ timelineFrom: across }) })).not.toBe(before);
+    expect(print({ facts: facts({ timelineFrom: windowFrom(at + 60_000) }) })).toBe(before);
+  });
 
   it("leaves time, cycles and shuffles out of the fingerprint", () => {
     expect(print({ facts: facts({ now: new Date("2026-01-01T12:07:31Z") }) })).toBe(print());

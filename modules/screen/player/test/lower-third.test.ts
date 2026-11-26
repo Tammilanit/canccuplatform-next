@@ -147,6 +147,21 @@ describe("the lower third over the slideshow", () => {
     });
   });
 
+  it("never names a delayed item that is already running as the next one", () => {
+    const both = rail(T0 + 12 * 60_000);
+    const items = both.widgets[0]?.view.items as Record<string, unknown>[];
+    items.unshift({
+      name: "Tournament",
+      state: "delayed",
+      starts_at: iso(T0 - 5 * 60_000),
+      starts_text: "17:55",
+    });
+    expect(at([hero(T0 + 120_000), venue(null), both], T0 + 121_000)).toMatchObject({
+      kind: "next",
+      title: "Next: Semi-finals",
+    });
+  });
+
   it("says nothing of a switched-off food item", () => {
     const v = venue(openOrder);
     const food = v.widgets[0];
