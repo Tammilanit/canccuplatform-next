@@ -408,68 +408,7 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
   /api/theming/draft/package:
-    get:
-      tags: [draft]
-      operationId: exportDraft
-      summary: Download the draft as a package zip
-      description: |
-        Needs right `theming.theme.write`. The same format as an upload: another event that uploads it gets the same
-        manifest and files. 404 `no_draft` without a draft.
-      responses:
-        "200":
-          description: The package.
-          headers:
-            Content-Disposition:
-              description: "`attachment; filename=\"theme-draft.zip\"`."
-              schema:
-                type: string
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-    put:
-      tags: [draft]
-      operationId: putDraftPackage
-      summary: Upload a whole package
-      description: |
-        Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the draft's.
-        A zip of a package folder (`theme.yaml` at its root) replaces the draft's content; creates the draft
-        when there is none. A zip that breaks the archive rules (absolute paths, links, nested archives, over
-        300 files, over 20 MB unpacked, an unpacking ratio over 100:1) is refused whole: 400 `package_refused`.
-      parameters:
-        - name: draft_version
-          in: query
-          description: The draft's current version; absent when no draft exists yet.
-          schema:
-            type: integer
-            minimum: 1
-      requestBody:
-        required: true
-        content:
-          application/zip:
-            schema:
-              type: string
-              format: binary
-      responses:
-        "200":
-          $ref: "#/components/responses/DraftOk"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "413":
-          $ref: "#/components/responses/TooLarge"
+    $ref: "theming/presets.openapi.yaml#/~1api~1theming~1draft~1package"
   /api/theming/draft/preview:
     get:
       tags: [draft]

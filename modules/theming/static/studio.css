@@ -29,31 +29,10 @@
   margin-top: 0.25rem;
 }
 
-/* The brand kit: the form beside the previews (mockup 12), one column under 60rem. */
-.canccu-main:has(.canccu-studio-kit) {
-  max-width: 100rem;
-}
-.canccu-studio-kit {
-  display: grid;
-  /* canccu-grid: fixed master-detail — the form and what it draws */
-  grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr);
-  gap: var(--canccu-gap);
-  align-items: start;
-}
-@media (max-width: 60rem) {
-  .canccu-studio-kit {
-    /* canccu-grid: fixed master-detail — shows the picked item beside its list: one column */
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 .canccu-studio-form {
   display: grid;
   gap: 0.25rem;
   margin-bottom: 1rem;
-}
-.canccu-studio-side {
-  display: grid;
-  min-width: 0;
 }
 .canccu-studio-font {
   margin-bottom: 0.75rem;

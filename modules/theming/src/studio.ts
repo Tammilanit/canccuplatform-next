@@ -1,6 +1,6 @@
 /**
- * The Studio pages (plan issue-185 D8): the brand kit, advanced mode and history, under
- * `/theming/studio/`, linked from admin's "Event" menu. They only read; every change goes through
+ * The Studio pages (plan issue-185 D8, issue-784 D1): Pick a look, Make it yours, Advanced and
+ * History, under `/theming/studio/`, linked from admin's "Event" menu. They only read; every change goes through
  * the JSON API from static/studio.js, so the pages hold no right the API does not check itself.
  */
 import { readFile } from "node:fs/promises";

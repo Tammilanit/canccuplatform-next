@@ -1,9 +1,10 @@
 /*
- * The Studio pages' controls (plan issue-185 D8, D10). Each `data-action` control calls the JSON
- * API, which checks every right itself; the page then reloads, so it always shows the draft as
- * stored. A refusal is carried over the reload and said in words: after a conflict the page is the
- * one to read again, with no native dialog (brief N1). The brand kit saves as it changes, so its
- * previews follow the form (UX audit C2).
+ * The Studio pages' controls (plan issue-185 D8, D10; issue-784 D3). Each `data-action` control
+ * calls the JSON API, which checks every right itself. Make it yours and the gallery's looks save
+ * without a reload: studio-live.js draws the page's parts again and the frames follow; a stale save
+ * (409) says another organiser changed the draft and saves nothing over it. The other actions
+ * reload, so the page shows the draft as stored, and a refusal is carried over the reload and said
+ * in words, with no native dialog (brief N1).
  */
 "use strict";
 

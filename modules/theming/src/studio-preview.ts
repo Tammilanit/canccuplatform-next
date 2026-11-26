@@ -3,7 +3,7 @@
  * `?canccu_theme=draft` (else the current theme), the draft's CSS they link, and the demo themes as
  * starting points (D7). The hub does not exist yet; its sample needs only the stable classes, which
  * every later surface keeps (contracts/theming.md). The screen sample is only the fallback of the
- * brand kit's screen preview, which is screen's real player (studio-kit.ts).
+ * preview column's screen, which is screen's real player (studio-column.ts).
  */
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
