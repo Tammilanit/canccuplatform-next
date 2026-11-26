@@ -52,7 +52,8 @@
     border-left: calc(0.6 * var(--canccu-u)) solid var(--canccu-color-accent);
     border-radius: var(--canccu-card-radius);
     background: color-mix(in srgb, var(--canccu-color-accent) 14%, transparent);
-    font-size: min(calc(3.4 * var(--canccu-u)), 3.6cqh);
+    /* Never under the screen's size floor (2.5 % of the short side, test/stack/readability.mjs). */
+    font-size: max(2.6vmin, min(calc(3.4 * var(--canccu-u)), 3.6cqh));
     overflow: hidden;
   }
 
@@ -92,8 +93,31 @@
 
   .canccu-widget--agenda_timeline .canccu-widget__starts,
   .canccu-widget--agenda_timeline .canccu-widget__where {
-    font-size: min(calc(2.8 * var(--canccu-u)), 3cqh);
-    opacity: 0.8;
+    font-size: max(2.6vmin, min(calc(2.8 * var(--canccu-u)), 3cqh));
+    /* No opacity: fading the text drops it under the 4.5:1 the check holds it to. */
+    color: inherit;
+  }
+
+  /*
+   * A box under half the screen's short side (the Dashboard's hero) cannot hold five items of two
+   * lines at the size floor: one line a name, and the place left to the other boxes.
+   */
+  @container (height < 50vmin) {
+    .canccu-widget--agenda_timeline .canccu-widget__span {
+      flex-wrap: nowrap;
+    }
+
+    .canccu-widget--agenda_timeline .canccu-widget__name {
+      -webkit-line-clamp: 1;
+    }
+
+    .canccu-widget--agenda_timeline .canccu-widget__starts {
+      flex: none;
+    }
+
+    .canccu-widget--agenda_timeline .canccu-widget__where {
+      display: none;
+    }
   }
 
   .canccu-widget__span--col-1 {

@@ -34,6 +34,32 @@
     line-height: 1;
   }
 
+  /*
+   * Two numbers share the box in two tall rows: at the three-row size each leaves a quarter of
+   * the box empty between them, so they grow with the room the second row's share gives.
+   */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2),
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    + .canccu-widget__stat {
+    --canccu-two-big: min(calc(30 * var(--canccu-u)), 28cqh);
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    .canccu-widget__big,
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:first-child:nth-last-child(2)
+    + .canccu-widget__stat
+    .canccu-widget__big {
+    font-size: var(--canccu-two-big);
+  }
+
   /* One number alone is the hero: as large as the box holds, as wall.css's lone number is. */
   .canccu-region[data-role="hero"]
     > .canccu-widget--stats
