@@ -12,6 +12,7 @@ const SHEETS = [
   "rail.css",
   "food.css",
   "claims.css",
+  "announce.css",
 ] as const;
 const looks = SHEETS.map(read).join("\n");
 /** The rules alone: the comments name what the rules must not hold. */
@@ -22,16 +23,21 @@ describe("the screen's stylesheet", () => {
     // theming.md, Advanced mode: under 2.5 % of the screen height (27 px at 1080p) is hard to read
     // across a hall. `--canccu-u` is 1 % of the layout's short side, so 1080p and 4K, landscape and
     // portrait read alike.
-    const sizes = [...looks.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1]?.trim() ?? "");
+    // One line however the formatter breaks a long value.
+    const sizes = [...looks.matchAll(/font-size:\s*([^;]+);/g)].map((m) =>
+      (m[1] ?? "").replace(/\s+/g, " ").replace(/\( /g, "(").replace(/ \)/g, ")").trim(),
+    );
     expect(sizes.length).toBeGreaterThan(5);
     for (const size of sizes) {
       // An announcement card may carry `--canccu-fit` (fit.ts, E17): the stepped size sits inside
       // a `max()` whose floor is the readability floor, so the smallest step still reads.
+      // An announcement's `--canccu-ann-u` is the unit or more: 1 % of the screen's height, also in
+      // portrait (announce.css, #780).
       const stepped =
-        /^max\(([\d.]+) \* var\(--canccu-u\), calc\(([\d.]+) \* var\(--canccu-u\) \* var\(--canccu-fit, 1\)\)\)$/.exec(
+        /^max\(([\d.]+) \* var\(--canccu-(?:ann-)?u\), calc\(([\d.]+) \* var\(--canccu-(?:ann-)?u\) \* var\(--canccu-fit, 1\)\)\)$/.exec(
           size,
         );
-      const plain = /^calc\(([\d.]+) \* var\(--canccu-u\)\)$/.exec(size);
+      const plain = /^calc\(([\d.]+) \* var\(--canccu-(?:ann-)?u\)\)$/.exec(size);
       expect(stepped ?? plain, size).not.toBeNull();
       expect(Number((stepped ?? plain)?.[1]), size).toBeGreaterThanOrEqual(2.6);
       if (stepped !== null) expect(Number(stepped[2]), size).toBeGreaterThanOrEqual(2.6);

@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Screen } from "../src/screen.js";
 import type { Region, ScreenState } from "../src/state.js";
+import { announceView } from "../src/announce-template.js";
 import { DEFAULT_TEMPLATES } from "../src/templates.js";
 import { renderTree } from "../src/tree.js";
 import { fillCountdowns } from "../src/widget.js";
@@ -134,8 +135,11 @@ describe("the built-in templates", () => {
 
   it("names what a claim brings: an announcement, a hot game", () => {
     expect(
-      textOf(draw("announcement", { title: "Dinner", body: "", level: "info" }), "kicker"),
-    ).toBe("Announcement");
+      textOf(
+        draw("announcement", announceView({ title: "Dinner", body: "", level: "info" })),
+        "kicker",
+      ),
+    ).toBe("Info");
     const hot = draw("hot_game", { game: { name: "Demo Game", cover_url: null }, players: 14 });
     expect(textOf(hot, "kicker")).toBe("Hot right now");
   });

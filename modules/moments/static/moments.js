@@ -186,6 +186,31 @@
       frame.addEventListener("load", () => run.click(), { once: true });
   }
 
+  // The composer's level (#780, D17): a placement and a push still at the old level's default
+  // follow the new level at once; one the organiser changed stays. pages.ts does the same on post.
+  const levels = document.querySelectorAll("[data-announce-level] input[name=level]");
+  if (levels.length > 0) {
+    const place = { info: "rail", important: "hero", urgent: "full" };
+    const pushes = (level) => level !== "info";
+    let was = document.querySelector("[data-announce-level] input[name=level]:checked")?.value;
+    for (const input of levels)
+      input.addEventListener("change", () => {
+        const at = document.querySelector(`input[name=placement][value="${place[was]}"]`);
+        if (at?.checked) {
+          const next = document.querySelector(
+            `input[name=placement][value="${place[input.value]}"]`,
+          );
+          if (next) next.checked = true;
+        }
+        const push = document.querySelector("input[name=ch_push]");
+        if (push && push.checked === pushes(was)) push.checked = pushes(input.value);
+        was = input.value;
+        // The server compares the post against the level the organiser last saw (pages.ts).
+        const seen = document.querySelector("input[name=level_was]");
+        if (seen) seen.value = input.value;
+      });
+  }
+
   // Announcements (U11): the card in the real player before it goes out. Screen's zone preview
   // composes the zone as it is now; the card takes the first region of its chain that the layout
   // has and no higher claim holds, as Screen would place it, and the ticker line the ticker.

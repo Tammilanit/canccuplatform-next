@@ -112,6 +112,75 @@ def now_next(now: dict[str, Any] | None, zone: str, at: datetime) -> str:
     )
 
 
+# The kit's icons that stand for a Moments icon (contracts/moments.md, Levels); others read as info.
+_ICONS = {
+    "food": "food",
+    "trophy": "flag",
+    "clock": "clock",
+    "door": "out",
+    "search": "compass",
+    "megaphone": "megaphone",
+}
+
+
+def _left(item: dict[str, Any], at: datetime) -> str:
+    """The time left as words and a bar, from `sent_at` to `expires_at`; nothing when unknown."""
+    try:
+        sent = datetime.fromisoformat(str(item["sent_at"]))
+        ends = datetime.fromisoformat(str(item["expires_at"]))
+    except (KeyError, ValueError):
+        return ""
+    span = max(1, int((ends - sent).total_seconds()))
+    left = max(0, int((ends - at).total_seconds()))
+    minutes = max(1, -(-left // 60))
+    return (
+        f'<p class="canccu-front-door__left canccu-muted">{minutes} min left'
+        f'<progress max="{span}" value="{left}" aria-hidden="true"></progress></p>'
+    )
+
+
+def urgent(items: list[dict[str, Any]]) -> str:
+    """An urgent announcement's banner, full width above everything, until the crew lifts it."""
+    rows = [
+        '<section class="canccu-front-door__urgent" role="alert">'
+        f'<p class="canccu-overline">{ui.icon("alert")}Urgent</p>'
+        f"<h2>{ui.esc(a.get('title'))}</h2>"
+        + (f"<p>{ui.esc(a.get('body'))}</p>" if a.get("body") else "")
+        + "<p><small>Stays here until the crew lifts it</small></p></section>"
+        for a in items
+        if a.get("level") == "urgent"
+    ]
+    return "".join(rows)
+
+
+def announcements(items: list[dict[str, Any]], at: datetime) -> str:
+    """The live Important and Info announcements under "What's on", newest first as Moments
+    lists them: Important as a large card with its time bar, Info as a quiet row (#780, sheet 6).
+    One left edge and no box inside a box: each is one bordered block of the card."""
+    cards, rows = [], []
+    for a in items:
+        mark = ui.icon(_ICONS.get(str(a.get("icon")), "info"))
+        body = f'<p class="canccu-muted">{ui.esc(a.get("body"))}</p>' if a.get("body") else ""
+        if a.get("level") == "important":
+            cards.append(
+                '<article class="canccu-front-door__important">'
+                f'<p class="canccu-overline">{mark}Important</p>'
+                f"<h2>{ui.esc(a.get('title'))}</h2>{body}{_left(a, at)}</article>"
+            )
+        elif a.get("level") == "info":
+            rows.append(
+                f'<div class="canccu-front-door__info">{mark}'
+                f"<p><b>{ui.esc(a.get('title'))}</b></p>{body}</div>"
+            )
+    if not cards and not rows:
+        return ""
+    return (
+        '<section class="canccu-front-door__announcements" aria-label="Announcements">'
+        + "".join(cards + rows)
+        + "</section>"
+    )
+
+
 def links(flags: dict[str, bool]) -> str:
     shown = [
         f'<a class="canccu-front-door__link" href="{href}">{ui.icon(ico)}'

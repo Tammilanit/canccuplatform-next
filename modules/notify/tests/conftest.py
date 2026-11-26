@@ -156,8 +156,9 @@ class FakeUsers:
 
 @dataclass
 class FakeHub:
-    """What the check-in's done page and the front door read as the person: the venue's Wi-Fi and
-    what is on now (`GET /api/tenants/current/venue-info`, `GET /api/agenda/now`)."""
+    """What the check-in's done page and the front door read as the person: the venue's Wi-Fi,
+    what is on now and the live announcements (`GET /api/tenants/current/venue-info`,
+    `GET /api/agenda/now`, `GET /api/moments/announcements/live`)."""
 
     wifi: list[dict[str, Any]] = field(default_factory=list)
     now: dict[str, Any] | None = field(default_factory=lambda: {"current": [], "next": []})
@@ -166,6 +167,9 @@ class FakeHub:
     asked_now: list[tuple[str, str | None]] = field(default_factory=list)
     now_ips: list[str | None] = field(default_factory=list)
     """The visitor's address handed to agenda, as it judges the info-page mode by it."""
+    live: list[dict[str, Any]] | None = field(default_factory=list)
+    """Moments' live announcements (`GET /api/moments/announcements/live`); None: no answer."""
+    asked_live: list[tuple[str, str | None]] = field(default_factory=list)
 
     async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]:
         self.asked.append((host, cookie))
@@ -177,6 +181,12 @@ class FakeHub:
         self.asked_now.append((host, cookie))
         self.now_ips.append(client_ip)
         return self.now
+
+    async def announcements(
+        self, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> list[dict[str, Any]] | None:
+        self.asked_live.append((host, cookie))
+        return self.live
 
 
 @dataclass

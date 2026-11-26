@@ -64,13 +64,18 @@ class Users(Protocol):
 
 
 class Hub(Protocol):
-    """The person's view of the venue's Wi-Fi and of what is on now (hub.HubReader)."""
+    """The person's view of the venue's Wi-Fi, of what is on now and of the live announcements
+    (hub.HubReader)."""
 
     async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]: ...
 
     async def agenda_now(
         self, host: str, cookie: str | None, client_ip: str | None = None
     ) -> dict[str, Any] | None: ...
+
+    async def announcements(
+        self, host: str, cookie: str | None, client_ip: str | None = None
+    ) -> list[dict[str, Any]] | None: ...
 
 
 def utc_now() -> datetime:

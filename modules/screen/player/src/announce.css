@@ -1,0 +1,422 @@
+/*
+ * Announcements by level (contracts/screen.md, #780; docs/plans/issue-780.md, sheets 1–5): one
+ * block on one left edge (label, title, body, details) in every role but the ticker, also in the
+ * hero, where hero.css centres every other claim; no box inside the region's box; the frame in the
+ * level's colour. `--canccu-ann-u` is 1 % of the screen's height, landscape or portrait, as the PO's
+ * floors are set (the layout's unit is 1 % of its short side, a little under the screen's): the
+ * title never under 6 of it and the body never under 3.5, the floors across a hall, which
+ * test/player-announce-css.test.ts holds. Loaded after hero.css and stage.css, whose ties it wins.
+ * In `canccu-base` like screen.css, so a theme restyles all of it.
+ */
+@layer canccu-base {
+  .canccu-widget--announcement {
+    --canccu-ann-u: 1vh;
+    --canccu-ann-ink: var(--canccu-color-primary);
+  }
+
+  .canccu-widget--announcement:has(.canccu-widget__level--important) {
+    --canccu-ann-ink: var(--canccu-color-accent);
+  }
+
+  .canccu-widget--announcement:has(.canccu-widget__level--urgent) {
+    --canccu-ann-ink: var(--canccu-color-status-degraded);
+  }
+
+  /* The emergency's red is fixed, the same in every theme (claims.css). */
+  .canccu-widget--announcement:has(.canccu-widget__level--emergency) {
+    --canccu-ann-ink: #fff;
+  }
+
+  .canccu-region > .canccu-widget--announcement.canccu-is-claim {
+    border-color: var(--canccu-ann-ink);
+    box-shadow: inset 0 0 0 calc(0.4 * var(--canccu-u)) var(--canccu-ann-ink);
+  }
+
+  /* One left edge (D12): the block's parts start where the label starts, in every role. */
+  .canccu-region:not([data-role="ticker"]) > .canccu-widget--announcement,
+  .canccu-region[data-role="hero"] > .canccu-widget--announcement.canccu-is-claim,
+  .canccu-region--_full > .canccu-widget--announcement.canccu-is-claim {
+    align-items: stretch;
+    justify-content: center;
+    text-align: start;
+    text-wrap: pretty;
+  }
+
+  .canccu-region:not([data-role="ticker"]) > .canccu-widget--announcement > .canccu-widget__level {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(1 * var(--canccu-ann-u));
+    min-width: 0;
+  }
+
+  .canccu-widget--announcement .canccu-widget__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(1 * var(--canccu-ann-u));
+    margin: 0;
+    font-size: calc(3 * var(--canccu-ann-u));
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-region
+    > .canccu-widget.canccu-is-claim
+    .canccu-widget__kicker--urgent
+    .canccu-widget__urgent {
+    color: var(--canccu-color-status-degraded);
+  }
+
+  /* The level's mark: the icon in its colour, before the words (sheet 1, 2). */
+  .canccu-widget__icon {
+    flex: none;
+    width: 1.3em;
+    height: 1.3em;
+    background: var(--canccu-ann-ink);
+    mask: var(--canccu-ann-icon) center / contain no-repeat;
+  }
+
+  .canccu-widget__icon--info {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M12 11v6M12 7.5h.01'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--wifi {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M2 8.5a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16.4a5 5 0 0 1 6 0M12 20h.01'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--food {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M3 5.5c5.8-3.3 12.2-3.3 18 0L12 22z'/%3E%3Ccircle cx='10' cy='9' r='1.4'/%3E%3Ccircle cx='14.5' cy='12' r='1.4'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--trophy {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M7 3h10v6a5 5 0 0 1-10 0zM7 5H3.5a3.5 3.5 0 0 0 3.8 4.5M17 5h3.5a3.5 3.5 0 0 1-3.8 4.5M12 14v4M8 21h8'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--clock {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M12 6.5V12l3.5 2'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--door {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M5 21V3h11v18M3 21h18M13 12h.01'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--search {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='m15.5 15.5 5 5'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--megaphone {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M3 10v4h4l10 5V5L7 10zM20 9.5v5M7 14l1.5 6'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__icon--alert {
+    --canccu-ann-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01'/%3E%3C/svg%3E");
+  }
+
+  /* The sizes by role, never under the floors: 6 and 3.5 of the screen's height (sheet 1: a 68 px
+     title and a 40 px line in the rail at 1080p; sheet 2: 150 px in the hero). */
+  .canccu-region > .canccu-widget--announcement .canccu-widget__title {
+    margin: 0;
+    font-size: max(6 * var(--canccu-ann-u), calc(6.3 * var(--canccu-ann-u) * var(--canccu-fit, 1)));
+    line-height: 1.08;
+  }
+
+  .canccu-region > .canccu-widget--announcement .canccu-widget__body {
+    margin: 0;
+    font-size: max(
+      3.5 * var(--canccu-ann-u),
+      calc(3.7 * var(--canccu-ann-u) * var(--canccu-fit, 1))
+    );
+  }
+
+  /* The font's own line height: a theme's font pair may stand taller than 1.2 em, and its glyphs
+     would then reach past the box (2–3 px at 4K and in portrait). */
+  .canccu-region:not([data-role="ticker"]) > .canccu-widget--announcement .canccu-widget__body {
+    line-height: normal;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--announcement.canccu-is-claim
+    .canccu-widget__title {
+    font-size: max(
+      6 * var(--canccu-ann-u),
+      calc(13.9 * var(--canccu-ann-u) * var(--canccu-fit, 1))
+    );
+  }
+
+  .canccu-region--_full > .canccu-widget--announcement.canccu-is-claim .canccu-widget__title {
+    font-size: max(
+      6 * var(--canccu-ann-u),
+      calc(14.8 * var(--canccu-ann-u) * var(--canccu-fit, 1))
+    );
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--announcement.canccu-is-claim
+    .canccu-widget__body,
+  .canccu-region--_full > .canccu-widget--announcement.canccu-is-claim .canccu-widget__body {
+    font-size: max(3.5 * var(--canccu-ann-u), calc(5 * var(--canccu-ann-u) * var(--canccu-fit, 1)));
+  }
+
+  /* The ticker's one line keeps claims.css's sizes; its label matches the line. */
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__kicker {
+    font-size: calc(2.8 * var(--canccu-u));
+  }
+
+  /* The second beat's line and the living details belong to the hero and the full screen. */
+  .canccu-widget--announcement .canccu-widget__second,
+  .canccu-widget--announcement .canccu-widget__details {
+    display: none;
+  }
+
+  .canccu-region--_full > .canccu-widget--announcement .canccu-widget__second {
+    display: block;
+    margin: 0;
+    font-size: calc(4 * var(--canccu-ann-u));
+    font-weight: 600;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--announcement .canccu-widget__details,
+  .canccu-region--_full > .canccu-widget--announcement .canccu-widget__details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(1.2 * var(--canccu-ann-u)) calc(3 * var(--canccu-ann-u));
+    margin: calc(1 * var(--canccu-ann-u)) 0 0;
+    font-size: calc(2.8 * var(--canccu-ann-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  /* An alarm carries no decoration: no time, no bar (the PO's Urgent row). */
+  .canccu-region[data-role]
+    > .canccu-widget--announcement
+    :is(.canccu-widget__level--urgent, .canccu-widget__level--emergency)
+    > .canccu-widget__details {
+    display: none;
+  }
+
+  .canccu-widget__timebar {
+    display: inline-flex;
+    flex-direction: column;
+    gap: calc(0.6 * var(--canccu-ann-u));
+  }
+
+  /* The bar of its time left, emptying towards `expires_at` (announce-motion.ts). */
+  .canccu-widget__timebar::after {
+    content: "";
+    width: calc(24 * var(--canccu-ann-u));
+    height: calc(0.7 * var(--canccu-ann-u));
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--canccu-ann-ink) calc(var(--canccu-left, 1) * 100%),
+        transparent 0
+      )
+      var(--canccu-color-border);
+  }
+
+  .canccu-widget__countdown {
+    color: var(--canccu-color-text);
+    font-weight: 700;
+  }
+
+  /* An edit's chip, and the ticker line outside the ticker, stay as claims.css draws them. */
+
+  /* The source's art (D8), at the card's right, under the block; the block keeps the left edge. */
+  .canccu-widget__ann-art {
+    display: none;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--announcement .canccu-widget__ann-art,
+  .canccu-region--_full > .canccu-widget--announcement .canccu-widget__ann-art {
+    display: block;
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 46%;
+    z-index: 0;
+    /* A picture behind the words, never as loud as the title it may sit under. */
+    opacity: 0.45;
+    background: var(--canccu-ann-ink);
+    mask:
+      var(--canccu-ann-picture) right 10% center / 60% auto no-repeat,
+      linear-gradient(90deg, transparent, #000 40%);
+    mask-composite: intersect;
+  }
+
+  /* hero.css lifts every part of a banded hero card into the flow (position: relative): the art
+     stays a layer behind the block. */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--announcement.canccu-is-claim:has(> .canccu-widget__band--theme)
+    > .canccu-widget__ann-art {
+    position: absolute;
+    z-index: 0;
+  }
+
+  .canccu-widget__ann-art:has(.canccu-widget__art-img) {
+    background: none;
+    mask: linear-gradient(90deg, transparent, #000 45%);
+  }
+
+  .canccu-widget__art-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .canccu-widget__ann-art--food {
+    --canccu-ann-picture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M8 20c27-16 57-16 84 0L50 98z' fill='black' opacity='.55'/%3E%3Cpath d='M8 20c27-16 57-16 84 0l-5 9c-24-13-50-13-74 0z' fill='black'/%3E%3Ccircle cx='40' cy='40' r='6' fill='black'/%3E%3Ccircle cx='60' cy='52' r='6' fill='black'/%3E%3Ccircle cx='47' cy='68' r='5' fill='black'/%3E%3C/svg%3E");
+  }
+
+  .canccu-widget__ann-art--game {
+    --canccu-ann-picture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M28 12h44v26a22 22 0 0 1-44 0zM28 18H12a16 16 0 0 0 17 20M72 18h16a16 16 0 0 1-17 20M44 60h12v14H44zM32 84h36v8H32z' fill='black' opacity='.7'/%3E%3C/svg%3E");
+  }
+
+  /*
+   * Nearby content (D9): a full Info or Important lays its card and a column side by side, the
+   * column holding the clock, the source's status or now and next, and the QR to the details.
+   */
+  .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__aside) {
+    display: grid;
+    /* canccu-grid: fixed screen — the card beside its nearby content */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 34%);
+    align-items: center;
+    column-gap: calc(5 * var(--canccu-ann-u));
+  }
+
+  .canccu-widget__aside {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: calc(2 * var(--canccu-ann-u));
+    min-width: 0;
+    padding-inline-start: calc(4 * var(--canccu-ann-u));
+    border-inline-start: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
+  }
+
+  .canccu-widget__aside > .canccu-widget {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.8 * var(--canccu-ann-u));
+    border: 0;
+    background: none;
+    padding: 0;
+    font-size: calc(3 * var(--canccu-ann-u));
+  }
+
+  .canccu-widget__aside > .canccu-widget--clock .canccu-widget__big {
+    font-size: calc(9 * var(--canccu-ann-u));
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .canccu-widget__aside .canccu-widget__qr {
+    display: flex;
+    align-items: center;
+    gap: calc(2 * var(--canccu-ann-u));
+    margin: 0;
+    font-size: calc(2.8 * var(--canccu-ann-u));
+  }
+
+  .canccu-widget__aside .canccu-widget__code {
+    width: calc(16 * var(--canccu-ann-u));
+    height: calc(16 * var(--canccu-ann-u));
+    padding: calc(0.8 * var(--canccu-ann-u));
+    border-radius: calc(1 * var(--canccu-ann-u));
+    background: #fff;
+  }
+
+  /* Portrait stacks the column under the card (sheet 5's screen shape), the seams kept tight: the
+     card, the clock, now and next and the QR take all but about 2 % of a 1080 × 1920 screen. */
+  @media (max-aspect-ratio: 1/1) {
+    .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__aside) {
+      /* canccu-grid: fixed screen — portrait stacks the card over its nearby content */
+      grid-template-columns: minmax(0, 1fr);
+      align-content: center;
+      row-gap: calc(2 * var(--canccu-ann-u));
+    }
+
+    .canccu-widget__aside {
+      padding: calc(2 * var(--canccu-ann-u)) 0 0;
+      border-inline-start: 0;
+      border-top: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
+    }
+  }
+
+  /*
+   * Urgent and the emergency (D1, D6; sheet 5): a huge title, the instruction, no decoration; the
+   * instruction band along the bottom in the ticker's place, on every layout.
+   */
+  .canccu-region--_full
+    > .canccu-widget--announcement:has(.canccu-widget__level--urgent)
+    .canccu-widget__title,
+  .canccu-region--_full
+    > .canccu-widget--announcement:has(.canccu-widget__level--emergency)
+    .canccu-widget__title {
+    font-size: max(6 * var(--canccu-ann-u), calc(12 * var(--canccu-ann-u) * var(--canccu-fit, 1)));
+    font-weight: 800;
+  }
+
+  .canccu-widget--announcement:has(.canccu-widget__level--emergency) .canccu-widget__kicker {
+    display: inline-flex;
+    color: #fff;
+  }
+
+  /* claims.css drew the emergency's sign on its own; the label's icon carries it now. */
+  .canccu-region--_full .canccu-widget__level--emergency::before {
+    display: none;
+  }
+
+  .canccu-widget__instruction {
+    display: none;
+  }
+
+  /* In the card's flow, so the band takes the lines its text needs (a 140-character body wraps to
+     five in portrait) and the block keeps the room above it. Its text starts on the block's left
+     edge whatever padding a theme gives the card; its colour reaches the card's edges through the
+     border image's outset, which only paints, and the card's own clip trims it there. */
+  .canccu-region--_full > .canccu-widget--announcement .canccu-widget__instruction {
+    --canccu-ann-band: var(--canccu-color-status-degraded);
+    display: block;
+    position: relative;
+    z-index: 2;
+    flex: none;
+    align-self: stretch;
+    margin: 0;
+    padding: calc(2.2 * var(--canccu-ann-u)) 0;
+    background: var(--canccu-ann-band);
+    border-image: linear-gradient(var(--canccu-ann-band) 0 0) fill 0 / 0 / 0 100vw 100vw;
+    color: var(--canccu-color-background);
+    font-size: calc(4.4 * var(--canccu-ann-u));
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .canccu-region--_full
+    > .canccu-widget--announcement:has(.canccu-widget__level--emergency)
+    .canccu-widget__instruction {
+    --canccu-ann-band: #fff;
+    color: #b91c1c;
+  }
+
+  /* A band that carries the body says it once: the block keeps the title (sheet 5). */
+  .canccu-region--_full .canccu-widget__band-from--body > .canccu-widget__body {
+    display: none;
+  }
+
+  /* The band on the card's bottom edge, the block centred in the room the band leaves. */
+  .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__instruction) {
+    padding-bottom: 0;
+  }
+
+  .canccu-region--_full
+    > .canccu-widget--announcement:has(> .canccu-widget__instruction)
+    > .canccu-widget__level {
+    margin-block: auto;
+  }
+}

@@ -1,0 +1,299 @@
+/*
+ * An announcement's motion (contracts/screen.md, Announcements by level, #780; D10, D11): the
+ * entrance per level, the pulsing border of an alarm, and a full screen that stays alive. The beat
+ * classes are announce-motion.ts's, from the claim's `starts_at`; the endless pictures start at
+ * `--canccu-ann-since` into their cycle, so every screen of a zone shows the same frame. The motion
+ * level is the class on <body> (motion.ts): `calm` fades and halves the pace, `none` (also reduced
+ * motion) moves nothing. As motion.css, only opacity and transform move.
+ */
+@layer canccu-base {
+  .canccu-widget--announcement.canccu-is-claim {
+    --canccu-ann-delay: calc(-1 * var(--canccu-ann-since, 0s));
+  }
+
+  /* The frame's light: the info card's glow, an alarm's pulsing border, a full screen's breath. */
+  .canccu-widget--announcement.canccu-is-claim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 calc(0.6 * var(--canccu-u)) var(--canccu-ann-ink),
+      inset 0 0 calc(4 * var(--canccu-u)) calc(0.6 * var(--canccu-u)) var(--canccu-ann-ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The sweep in the accent across the block, at the break-in and lighter at each re-emphasis. */
+  .canccu-widget--announcement .canccu-widget__level::after {
+    content: "";
+    position: absolute;
+    inset: 0 -40%;
+    background: linear-gradient(
+      100deg,
+      transparent 35%,
+      color-mix(in srgb, var(--canccu-color-accent) 55%, transparent) 50%,
+      transparent 65%
+    );
+    opacity: 0;
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  /* Entrances (D10), at `lively` and `party`. */
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-ann--entering:has(.canccu-widget__level--info) {
+    animation: canccu-ann-slide 600ms var(--canccu-fx-ease, ease-out) both;
+  }
+
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-ann--entering:has(.canccu-widget__level--info)::after {
+    animation: canccu-ann-flash 2s ease-out both;
+  }
+
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-ann--entering:has(.canccu-widget__level--important) {
+    animation: canccu-ann-break-in 1s var(--canccu-fx-ease, ease-out) both;
+  }
+
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-ann--entering:has(.canccu-widget__level--important)
+    .canccu-widget__level::after {
+    animation: canccu-ann-sweep 1s ease-in-out both;
+  }
+
+  /* `calm` fades in, with no slide, scale or sweep; urgent and the emergency always cut. */
+  .canccu-motion--calm
+    .canccu-ann--entering:is(
+      :has(.canccu-widget__level--info),
+      :has(.canccu-widget__level--important)
+    ) {
+    animation: canccu-ann-fade 1s ease-out both;
+  }
+
+  /* Important's break-in dims the rest of the screen to 55 % for its second. */
+  :is(.canccu-motion--lively, .canccu-motion--party) .canccu-layout > .canccu-region {
+    transition: opacity 300ms ease;
+  }
+
+  .canccu-layout[data-breakin] > .canccu-region:not(:has(.canccu-ann--entering)) {
+    opacity: 0.55;
+  }
+
+  /* An alarm's pulsing border: steady at `none`, slower at `calm`. */
+  .canccu-widget--announcement.canccu-is-claim:is(
+      :has(.canccu-widget__level--urgent),
+      :has(.canccu-widget__level--emergency)
+    )::after {
+    opacity: 1;
+  }
+
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-widget--announcement.canccu-is-claim:is(
+      :has(.canccu-widget__level--urgent),
+      :has(.canccu-widget__level--emergency)
+    )::after {
+    animation: canccu-ann-pulse 1.4s ease-in-out infinite;
+  }
+
+  .canccu-motion--calm
+    .canccu-widget--announcement.canccu-is-claim:is(
+      :has(.canccu-widget__level--urgent),
+      :has(.canccu-widget__level--emergency)
+    )::after {
+    animation: canccu-ann-pulse 2.8s ease-in-out infinite;
+  }
+
+  /*
+   * A full screen that stays alive (D11): the drifting ground and the breathing frame. The ground
+   * and the particles sit in their own clipped layer, so their moves never count as the card's
+   * overflow, which would step its type down to the floor (fit.ts).
+   */
+  .canccu-widget__ambient {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .canccu-ann--alive > .canccu-widget__ambient::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background:
+      radial-gradient(
+        circle at 30% 35%,
+        color-mix(in srgb, var(--canccu-color-accent) 18%, transparent),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 75% 70%,
+        color-mix(in srgb, var(--canccu-color-primary) 16%, transparent),
+        transparent 45%
+      );
+    animation: canccu-ann-drift 120s ease-in-out var(--canccu-ann-delay) infinite alternate;
+  }
+
+  .canccu-ann--alive::after {
+    animation: canccu-ann-breathe 8s ease-in-out var(--canccu-ann-delay) infinite;
+  }
+
+  .canccu-motion--calm .canccu-ann--alive > .canccu-widget__ambient::before {
+    animation-duration: 240s;
+  }
+
+  .canccu-motion--calm .canccu-ann--alive::after {
+    animation-duration: 16s;
+  }
+
+  /* Every 25 s the title pulses once and the sweep replays lightly; at `calm` a soft fade. */
+  :is(.canccu-motion--lively, .canccu-motion--party) .canccu-ann--reemphasis .canccu-widget__title {
+    transform-origin: left center;
+    animation: canccu-ann-pop 800ms ease-in-out;
+  }
+
+  :is(.canccu-motion--lively, .canccu-motion--party)
+    .canccu-ann--reemphasis
+    .canccu-widget__level::after {
+    animation: canccu-ann-sweep-light 1s ease-in-out;
+  }
+
+  .canccu-motion--calm .canccu-ann--reemphasis .canccu-widget__title {
+    animation: canccu-ann-dip 1s ease-in-out;
+  }
+
+  /* The second beat: the secondary line fades in 12 s into each 30 s, for 8 s. */
+  .canccu-ann--alive .canccu-widget__second {
+    opacity: 0;
+    transition: opacity 900ms ease;
+  }
+
+  .canccu-ann--alive.canccu-ann--second .canccu-widget__second {
+    opacity: 1;
+  }
+
+  /* Soft particles in the accent: 26 at `party`, the first 14 at `lively`, none at `calm`. */
+  .canccu-widget__ambient > i {
+    position: absolute;
+    bottom: -4%;
+    left: calc(var(--i, 0) * 3.7% + 2%);
+    width: calc(0.9 * var(--canccu-u));
+    height: calc(0.9 * var(--canccu-u));
+    border-radius: 50%;
+    background: var(--canccu-color-accent);
+    opacity: 0;
+    animation: canccu-ann-rise 19s linear infinite;
+  }
+
+  .canccu-widget__ambient > i:nth-child(3n) {
+    width: calc(1.4 * var(--canccu-u));
+    height: calc(1.4 * var(--canccu-u));
+    animation-duration: 25s;
+  }
+
+  .canccu-widget__ambient > i:nth-child(4n + 1) {
+    animation-duration: 15s;
+  }
+
+  .canccu-motion--lively .canccu-widget__ambient > i:nth-child(n + 15),
+  :is(.canccu-motion--calm, .canccu-motion--none) .canccu-widget__ambient > i {
+    display: none;
+  }
+}
+
+@keyframes canccu-ann-slide {
+  from {
+    opacity: 0;
+    transform: translateX(8%);
+  }
+}
+
+@keyframes canccu-ann-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes canccu-ann-flash {
+  25% {
+    opacity: 1;
+  }
+}
+
+@keyframes canccu-ann-break-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes canccu-ann-sweep {
+  from {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes canccu-ann-sweep-light {
+  from {
+    opacity: 0.4;
+    transform: translateX(-100%);
+  }
+
+  to {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes canccu-ann-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes canccu-ann-breathe {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes canccu-ann-drift {
+  to {
+    transform: translate(12%, -8%) rotate(8deg);
+  }
+}
+
+@keyframes canccu-ann-pop {
+  45% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes canccu-ann-dip {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes canccu-ann-rise {
+  10% {
+    opacity: 0.55;
+  }
+
+  85% {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-110vh);
+  }
+}

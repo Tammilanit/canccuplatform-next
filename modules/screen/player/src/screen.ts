@@ -4,6 +4,7 @@
  * idle choice, and the screen's motion and burn-in drift. The DOM is kept between states, so a push changes only
  * what it changed and a fade in progress is never cut short by an unrelated update.
  */
+import { animateAnnouncements } from "./announce-motion.js";
 import { claimEnd, claimOf, claimShown } from "./claims.js";
 import { applyCue } from "./cues.js";
 import type { ClaimState } from "./claims.js";
@@ -237,6 +238,7 @@ export class Screen {
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);
+    animateAnnouncements(this.root, now, level);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
       this.root.style.setProperty("--canccu-drift-x", String(x));

@@ -17,6 +17,7 @@ import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from ".
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
 import { LIVING_STRIPS, LIVING_THEMES, livingStrip, withLiving } from "./living.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
+import { storiesOff } from "./stories.mjs";
 import { withFoodClaim } from "./food.mjs";
 import {
   CLAIM_OF,
@@ -65,10 +66,13 @@ import {
   settle,
 } from "./screen-waits.mjs";
 
+import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announce-levels.mjs";
+
 export { THEMES, planned } from "./screen-views.mjs";
 
 export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
-  await seedScreens(demo);
+  // Before the run of show, whose items start Moments' stories (stories.mjs says why).
+  const storiesBack = await storiesOff(demo);
   const devices = [];
   const pair = async (name, zone) => {
     const device = await demo.pair(name, zone);
@@ -95,6 +99,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
 
   let threw = false;
   try {
+    await seedScreens(demo);
     const main = await pair("Hall left", "main");
     const spare = await pair("Café TV", undefined);
     const entrance = await pair("Entrance", "entrance");
@@ -132,6 +137,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         if (theme === "default")
           for (const [view, id] of DEFAULT_LAYOUT_VIEWS)
             await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
+        // The announcement's levels (#780): handed as Screen places them, measured, then shot.
+        for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
+          for (const size of annSizes(v, check))
+            await attempt(nameOf(theme, v.view, size), async () => {
+              await saveZone(demo, "main", { layout_id: v.layout });
+              await handed(theme, v.view, size, v.make(Date.now()));
+            });
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -366,6 +378,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           await page.waitForTimeout(400);
         }
         return await close();
+      } else if (ANNOUNCE_VIEWS.some((v) => v.view === view)) {
+        settled = (p) =>
+          annSettled(
+            p,
+            ANNOUNCE_VIEWS.find((v) => v.view === view),
+          );
       } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         settled = agendaSettled;
       await settled(page);
@@ -377,9 +395,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     threw = true;
     throw err;
   } finally {
-    await cleanUp(
-      devices.map((device) => () => demo.revoke(device.id)),
-      threw,
-    );
+    await cleanUp([...devices.map((device) => () => demo.revoke(device.id)), storiesBack], threw);
   }
 }

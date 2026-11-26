@@ -1,6 +1,7 @@
 // The screen shots' views (screens.mjs): the themes and sizes each is taken at, and every PNG
 // name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
+import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs";
 import { STAGE_VIEWS } from "./handed.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
@@ -76,6 +77,8 @@ export function planned(check = false) {
     for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
+    for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
+      for (const size of annSizes(v, check)) out.push(nameOf(theme, v.view, size));
     if (LIVING_THEMES.includes(theme))
       for (const size of HD)
         for (const { view, frames } of LIVING_STRIPS)

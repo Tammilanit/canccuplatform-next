@@ -4,8 +4,9 @@
  * (plan S5). They read only the fields the screen contract documents for each type.
  */
 import type { TreeNode } from "./tree.js";
+import { ANNOUNCEMENT } from "./announce-template.js";
 import { LIVING_TEMPLATES } from "./templates-living.js";
-import { el, f, img, not, sec, t, title } from "./tree-build.js";
+import { THEME_BAND, el, f, img, not, sec, t, title } from "./tree-build.js";
 
 /** A QR widget's own code: the view-model is the QR itself. */
 const OWN_QR: TreeNode[] = [
@@ -124,16 +125,6 @@ const figure = (field: string, label: TreeNode[]): TreeNode =>
 /** A crew moment says it is from the crew and never who (Moments' spotlight, L15). */
 const FROM_CREW: TreeNode = sec("from_crew", el("p", "kicker", [t("From the crew")]));
 
-/**
- * The theme's own art band (v8 rule 5, "No half-empty large panel"): where a large panel has no
- * game art, the band holds the theme's glows, faded into the card by a mask (stage.css). Drawn
- * only in the hero; elsewhere the look hides it.
- */
-const THEME_BAND: TreeNode = el("div", null, [], {
-  class: [t("canccu-widget__band canccu-widget__band--theme")],
-  "aria-hidden": [t("true")],
-});
-
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
   // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
@@ -244,35 +235,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el("div", "wall", [sec("tiles", el("figure", "tile", PHOTO))]),
     sec("featured", el("figure", "pop", PHOTO)),
   ],
-  announcement: [
-    THEME_BAND,
-    el(
-      "div",
-      null,
-      [
-        FROM_CREW,
-        // `urgent` is the player's (widget.ts, withUrgent), from the level (R6).
-        not(
-          "from_crew",
-          sec(
-            "urgent",
-            el("p", null, [t("Urgent")], {
-              class: [t("canccu-widget__kicker canccu-widget__urgent")],
-            }),
-          ),
-          not("urgent", el("p", "kicker", [t("Announcement")])),
-        ),
-        // An edit's chip (L13); the ticker line shows only in the ticker role (L4, claims.css).
-        sec("updated", el("p", "updated", [t("Updated")])),
-        title("title"),
-        el("p", "body", [f("body")]),
-        sec("ticker_line", el("p", "ticker-line", [f("ticker_line")])),
-      ],
-      {
-        class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
-      },
-    ),
-  ],
+  announcement: ANNOUNCEMENT,
   ticker: [
     el("p", "label", [
       sec("updated", t("Updated")),
