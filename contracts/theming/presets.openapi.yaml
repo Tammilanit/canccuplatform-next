@@ -13,8 +13,13 @@
           application/json:
             schema:
               type: object
-              required: [presets]
+              required: [presets, mine]
               properties:
+                mine:
+                  description: The event's saved presets (My presets), newest first.
+                  type: array
+                  items:
+                    $ref: "#/MyPreset"
                 presets:
                   type: array
                   items:
@@ -54,6 +59,68 @@
         $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
       "403":
         $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [presets]
+    operationId: saveMyPreset
+    summary: Save the draft as one of the event's presets
+    description: |
+      Needs right `theming.theme.write`. Keeps the draft's manifest and every file it holds under `name`; the files
+      count against the storage quota and are served nowhere. 404 `no_draft` without a draft; 409 `preset_limit`
+      past 24 an event.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [name]
+            properties:
+              name:
+                type: string
+                minLength: 1
+                maxLength: 60
+    responses:
+      "201":
+        description: The saved preset.
+        content:
+          application/json:
+            schema:
+              $ref: "#/MyPreset"
+      "400":
+        $ref: "../theming.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../theming.openapi.yaml#/components/responses/Conflict"
+/api/theming/presets/{id}:
+  delete:
+    tags: [presets]
+    operationId: deleteMyPreset
+    summary: Delete one of the event's saved presets
+    description: |
+      Needs right `theming.theme.write`. Frees the files only it held. A draft made from it keeps its look. 404 for
+      an id the event has no preset of.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^event:[1-9][0-9]{0,8}$"
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
 /api/theming/draft/preset:
   put:
     tags: [presets]
@@ -64,7 +131,8 @@
       draft's. Replaces the draft's content with the preset's package under the scheme, keeping the event's
       `images.logo` and `images.icon` (with their files), `brand.logo_plate` and `brand.embed_color`, and sets
       `preset`. Starts the draft when `draft_version` is absent and there is none. Through the package upload's
-      checks.
+      checks. A saved preset (`event:<n>`, from `mine`) takes no `scheme`: its own manifest and files replace the
+      draft's, with the same kept, and `preset` becomes `{id: "event:<n>", scheme: own}`.
     requestBody:
       required: true
       content:
@@ -72,11 +140,12 @@
           schema:
             type: object
             additionalProperties: false
-            required: [preset, scheme]
+            required: [preset]
             properties:
               preset:
                 type: string
               scheme:
+                description: Required for a platform preset; a saved preset (`event:<n>`) has none.
                 type: string
               draft_version:
                 description: The draft's current version; absent when no draft exists yet.
@@ -130,7 +199,7 @@
       Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the draft's.
       A zip of a package folder (`theme.yaml` at its root) replaces the draft's content; creates the draft
       when there is none. A zip that breaks the archive rules (absolute paths, links, nested archives, over
-      300 files, over 20 MB unpacked, an unpacking ratio over 100:1) is refused whole: 400 `package_refused`.
+      300 files, over 40 MB unpacked, an unpacking ratio over 100:1) is refused whole: 400 `package_refused`.
     parameters:
       - name: draft_version
         in: query
@@ -158,3 +227,25 @@
         $ref: "../theming.openapi.yaml#/components/responses/Conflict"
       "413":
         $ref: "../theming.openapi.yaml#/components/responses/TooLarge"
+MyPreset:
+  description: One of the event's saved presets (contracts/theming.md, Presets, My presets).
+  type: object
+  required: [id, name, created_at, embeds, colors]
+  properties:
+    id:
+      description: "`event:<n>`, as `PUT /api/theming/draft/preset` takes it."
+      type: string
+      pattern: "^event:[1-9][0-9]{0,8}$"
+    name:
+      type: string
+    created_at:
+      type: string
+      format: date-time
+    embeds:
+      description: Applying it changes the embeds, which needs `theming.embeds.write`.
+      type: boolean
+    colors:
+      description: Its whole colour-token set, for the gallery's thumbnail.
+      type: object
+      additionalProperties:
+        $ref: "../theming.openapi.yaml#/components/schemas/Color"

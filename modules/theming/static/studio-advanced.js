@@ -109,9 +109,9 @@
       file,
       "application/octet-stream",
     );
-    const stored = draft.files.some((f) => f.path === path);
     const problem = draft.problems.find((p) => p.path === path && p.severity === "error");
-    if (problem === undefined || (storedIsEnough && stored)) return draft.draft_version;
+    if (problem === undefined) return draft.draft_version;
+    if (storedIsEnough && draft.files.some((f) => f.path === path)) return draft.draft_version;
     const back = query({ path, draft_version: draft.draft_version });
     setVersion(await call("DELETE", `/api/theming/draft/file?${back}`));
     throw new Error(problem.message);

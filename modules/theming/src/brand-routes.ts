@@ -177,10 +177,11 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
           logo: input.logo,
           icon: input.icon,
           "backdrop.image": input.backdrop?.image,
+          "backdrop.video": input.backdrop?.video,
         };
         for (const [role, path] of Object.entries(picture)) {
           if (path !== undefined && !(await isDraftImage(c, path))) {
-            throw invalidRequest(`${role} must name an image already in the draft.`);
+            throw invalidRequest(`${role} must name a file already in the draft.`);
           }
         }
         // The brand is replaced whole, the logo and icon with it: they are the theme's only ones.

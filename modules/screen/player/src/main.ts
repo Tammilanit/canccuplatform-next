@@ -17,6 +17,7 @@ import "./dashboard.css";
 import "./wall.css";
 import "./motion.css";
 import "./stage.css";
+import "./stage-backdrop.css";
 import "./scene.css";
 import "./director.css";
 import "./hero.css";
