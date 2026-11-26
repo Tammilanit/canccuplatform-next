@@ -61,32 +61,52 @@ export async function checkFile(c: SqlClient, path: string, text: string): Promi
 }
 
 const brandMissing = (): KitError =>
-  new KitError("The draft has no brand to put a picture in. Set one in Make it yours first.", {
-    status: 409,
-    code: "brand_missing",
-  });
+  new KitError(
+    "The draft has no brand to put a picture or video in. Set one in Make it yours first.",
+    {
+      status: 409,
+      code: "brand_missing",
+    },
+  );
 
 const without = (o: Record<string, unknown>, key: string): Record<string, unknown> =>
   Object.fromEntries(Object.entries(o).filter(([k]) => k !== key));
 
-/** Each widget of `type` in the draft's layouts with `name` as its template, or none. */
-function withLook(layouts: unknown, type: string, name: string | null): unknown {
+/** The draft's layouts with `widget` applied to each of their widgets. */
+function mapWidgets(layouts: unknown, widget: (w: Record<string, unknown>) => unknown): unknown {
   if (!Array.isArray(layouts)) return layouts;
-  const widget = (w: unknown): unknown => {
-    if (!isObject(w) || w.widget !== type) return w;
-    const rest = without(w, "template");
-    return name === null ? rest : { ...rest, template: name };
-  };
+  const each = (w: unknown): unknown => (isObject(w) ? widget(w) : w);
   return layouts.map((l: unknown) =>
     isObject(l) && Array.isArray(l.regions)
       ? {
           ...l,
           regions: l.regions.map((r: unknown) =>
-            isObject(r) && Array.isArray(r.widgets) ? { ...r, widgets: r.widgets.map(widget) } : r,
+            isObject(r) && Array.isArray(r.widgets) ? { ...r, widgets: r.widgets.map(each) } : r,
           ),
         }
       : l,
   );
+}
+
+/** Each widget of `type` with `name` as its template, or none. */
+const withLook = (layouts: unknown, type: string, name: string | null): unknown =>
+  mapWidgets(layouts, (w) => {
+    if (w.widget !== type) return w;
+    const rest = without(w, "template");
+    return name === null ? rest : { ...rest, template: name };
+  });
+
+/** No widget names the template `name` any more: they draw the platform's look again. */
+const withoutTemplate = (layouts: unknown, name: string): unknown =>
+  mapWidgets(layouts, (w) => (w.template === name ? without(w, "template") : w));
+
+/** The brand's backdrop with `part` set, or taken out by `null`. */
+function withBackdrop(m: Manifest, part: "image" | "video", value: string | null): Manifest {
+  if (!isObject(m.brand)) throw brandMissing();
+  const backdrop = without(isObject(m.brand.backdrop) ? m.brand.backdrop : {}, part);
+  const next = value === null ? backdrop : { ...backdrop, [part]: value };
+  const brand = without(m.brand, "backdrop");
+  return { ...m, brand: Object.keys(next).length === 0 ? brand : { ...brand, backdrop: next } };
 }
 
 /** A list of theme.yaml replaced whole; an empty one leaves theme.yaml without the key. */
@@ -104,8 +124,11 @@ export function applyParts(manifest: Manifest, edit: PartsEdit): Manifest {
   if (edit.templates !== undefined) {
     const templates = { ...(isObject(m.templates) ? m.templates : {}) };
     for (const [name, t] of Object.entries(edit.templates)) {
-      if (t === null) Reflect.deleteProperty(templates, name);
-      else templates[name] = t;
+      if (t === null) {
+        Reflect.deleteProperty(templates, name);
+        // A box left naming a template the theme no longer has would be reference_unknown.
+        m.layouts = withoutTemplate(m.layouts, name);
+      } else templates[name] = t;
     }
     if (Object.keys(templates).length === 0) Reflect.deleteProperty(m, "templates");
     else m.templates = templates;
@@ -117,18 +140,13 @@ export function applyParts(manifest: Manifest, edit: PartsEdit): Manifest {
     }
     m.layouts = withLook(m.layouts, type, name);
   }
-  if (edit.backdrop_image !== undefined) {
-    if (!isObject(m.brand)) throw brandMissing();
-    const backdrop = without(isObject(m.brand.backdrop) ? m.brand.backdrop : {}, "image");
-    const next =
-      edit.backdrop_image === null ? backdrop : { ...backdrop, image: edit.backdrop_image };
-    const brand = without(m.brand, "backdrop");
-    m.brand = Object.keys(next).length === 0 ? brand : { ...brand, backdrop: next };
-  }
+  let out = m;
+  if (edit.backdrop_image !== undefined) out = withBackdrop(out, "image", edit.backdrop_image);
+  if (edit.backdrop_video !== undefined) out = withBackdrop(out, "video", edit.backdrop_video);
   const styling = ["css", "fonts", "templates", "looks"].some(
     (k) => edit[k as keyof PartsEdit] !== undefined,
   );
-  return styling ? { ...m, mode: "advanced" } : m;
+  return styling ? { ...out, mode: "advanced" } : out;
 }
 
 export function checkRoutes(app: FastifyInstance, deps: DraftDeps): void {

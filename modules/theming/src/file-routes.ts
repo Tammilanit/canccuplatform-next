@@ -3,7 +3,7 @@
  * Draft, preview, publish). Every upload is checked before any lock is taken (uploads.ts), then
  * stored through the one draft write path with its bytes reserved (stored.ts).
  */
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
 import { requiredVersion } from "./draft-routes.js";
 import type { DraftDeps } from "./draft-routes.js";
@@ -13,14 +13,21 @@ import { removeDraftPath, setDraftPath } from "./package-files.js";
 import type { PathEntry } from "./package-files.js";
 import { MAX_PATH, checkLicence } from "./package.js";
 import { writingFiles } from "./stored.js";
-import { BODY_LIMIT, UPLOAD_FOLDERS, checkUpload } from "./uploads.js";
+import { BODY_LIMIT, UPLOAD_FOLDERS, VIDEO_BODY_LIMIT, checkUpload } from "./uploads.js";
 import type { CheckedUpload } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml. */
-const PACKAGE_PATH = /^(?!.*\.\.)(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
+const PACKAGE_PATH =
+  /^(?!.*\.\.)(css|fonts|images|templates|embeds|videos)\/[A-Za-z0-9._/-]{1,129}$/;
 
 const tooLarge = (): KitError =>
-  new KitError("A file is at most 5 MB.", { status: 413, code: "too_large" });
+  new KitError("A file is at most 5 MB, a video 20 MB.", { status: 413, code: "too_large" });
+
+/** A video's body may reach its own limit; any other file stops at 5 MB before it is all read. */
+const bodyLimit = (request: FastifyRequest): number => {
+  const path = (request.query as { path?: unknown }).path;
+  return typeof path === "string" && path.startsWith("videos/") ? VIDEO_BODY_LIMIT : BODY_LIMIT;
+};
 
 /** The path as the package rules take it: no empty, `.` or `..` part either. */
 function uploadPath(value: unknown): string {
@@ -38,7 +45,7 @@ function uploadPath(value: unknown): string {
   const folder = value.slice(0, value.indexOf("/"));
   if (!UPLOAD_FOLDERS.includes(folder) || (/\.(txt|md)$/i.test(value) && !LICENCE.test(value))) {
     throw invalidRequest(
-      "Only CSS, templates, images, fonts and their licences can be uploaded one by one; embeds come with the package.",
+      "Only CSS, templates, images, videos, fonts and their licences can be uploaded one by one; embeds come with the package.",
     );
   }
   return value;
@@ -60,7 +67,7 @@ interface FileQuery {
 export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
   void app.register((scope, _opts, done) => {
     scope.removeAllContentTypeParsers();
-    scope.addContentTypeParser("*", rawBody(BODY_LIMIT, tooLarge));
+    scope.addContentTypeParser("*", rawBody(bodyLimit, tooLarge));
     const route = { preHandler: needs(deps.rights, WRITE) };
 
     scope.put<FileQuery>("/api/theming/draft/file", route, async (request) => {
@@ -87,8 +94,9 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
                 }
               : { problem: checked.problem };
             unused = await setDraftPath(c, path, entry);
-            // Any file but an image is styling only the advanced mode makes (Advanced mode).
-            return path.startsWith("images/") ? manifest : { ...manifest, mode: "advanced" };
+            // Any file but an image or a video is styling only the advanced mode makes (Advanced
+            // mode); a video is the screen's background, as a picture is.
+            return /^(images|videos)\//.test(path) ? manifest : { ...manifest, mode: "advanced" };
           },
         );
         return { result: draft, unused };

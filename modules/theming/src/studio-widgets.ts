@@ -105,10 +105,29 @@ export function ownFontsView(d: DraftRow, families: string[]): Html {
   </div>`;
 }
 
+/**
+ * A video over the picture (D19), which is its poster: shown only once there is a picture, and
+ * the one in use is named on the form so a new one replaces it only once stored (studio-advanced.js).
+ */
+function videoView(own: boolean, video: unknown): Html {
+  if (!own) {
+    return html`<p class="canccu-small canccu-muted">
+      To play a video behind the boxes, add your picture first: it shows while the screen is calm.
+    </p>`;
+  }
+  const playing = typeof video === "string";
+  // prettier-ignore
+  return html`<form${attrs({ class: "canccu-studio-form", "data-action": "backdrop-video", "data-video": playing ? video : undefined })}>
+      ${fileDrop({ id: "canccu-studio-video", name: "video_file", label: playing ? "Replace the video" : "A video over the picture", accept: ".mp4,.webm,video/mp4,video/webm", title: "Choose a video", hint: "MP4 or WebM, up to 20 MB, played without sound. It plays when the screen is lively; when it is calm, and for viewers who reduce motion, your picture shows.", required: true })}
+      <span class="canccu-studio-row"><button class="canccu-button canccu-button--secondary" type="submit">Use the video</button>${playing ? html`<button${attrs({ type: "button", class: "canccu-button canccu-button--ghost", "data-action": "backdrop-video-off", "data-video": video })}>No video</button>` : ""}</span>
+    </form>`;
+}
+
 /** Behind the boxes (D8): the looks cycle, or the organiser's own picture in its place. */
 export function backdropView(state: StudioState, d: DraftRow, url: string | undefined): Html {
   const brand = isObject(d.manifest.brand) ? d.manifest.brand : {};
   const image = isObject(brand.backdrop) ? brand.backdrop.image : undefined;
+  const video = isObject(brand.backdrop) ? brand.backdrop.video : undefined;
   const own = typeof image === "string";
   if (brandOf(state) === undefined) {
     return html`<p class="canccu-small canccu-muted">
@@ -116,7 +135,7 @@ export function backdropView(state: StudioState, d: DraftRow, url: string | unde
     </p>`;
   }
   const cycle = own
-    ? html`<button type="button" class="canccu-studio-segment" data-action="backdrop-cycle">
+    ? html`<button${attrs({ type: "button", class: "canccu-studio-segment", "data-action": "backdrop-cycle", "data-video": typeof video === "string" ? video : undefined })}>
         The looks cycle
       </button>`
     : html`<span class="canccu-studio-segment" aria-current="true">The looks cycle</span>`;
@@ -133,6 +152,7 @@ export function backdropView(state: StudioState, d: DraftRow, url: string | unde
       ${fileDrop({ id: "canccu-studio-backdrop", name: "backdrop_file", label: own ? "Replace the picture" : "Your picture", accept: ".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp", title: "Choose a picture", hint: "It replaces the cycle of looks, dimmed so text stays readable. The cycle, the game's art, the time of day and the hype are set in Make it yours.", image: own ? url : undefined, required: true })}
       <button class="canccu-button canccu-button--secondary" type="submit">Use the picture</button>
     </form>
+    ${videoView(own, video)}
   </fieldset>`;
 }
 
@@ -172,7 +192,11 @@ export function looksView(d: DraftRow): Html {
   </section>`;
 }
 
-/** The editor (D15): a file of the theme, its lines numbered and checked as you type. */
+/**
+ * The editor (D15): a file of the theme, its lines numbered and checked as you type. The HTML
+ * parser drops one line break right after `<textarea>`, so the page writes one there: a file's
+ * own leading empty line then survives.
+ */
 export function editorView(d: DraftRow, e: Editing): Html {
   const files = [...cssOf(d), ...Object.values(templatesOf(d)).map((t) => t.file)];
   const chips = [...new Set(e.listed ? files : [...files, e.path])].map(
@@ -188,7 +212,8 @@ export function editorView(d: DraftRow, e: Editing): Html {
     <p class="canccu-card__desc">For the last details. Checked as you type; nothing unsafe can reach your pages.</p>
     ${chips.length > 1 ? html`<nav class="canccu-studio-segments" aria-label="Files">${chips}</nav>` : ""}
     <form${attrs({ class: "canccu-studio-form canccu-studio-editor", "data-action": "editor", "data-path": e.path, "data-listed": e.listed ? "1" : undefined, "data-css": JSON.stringify(cssOf(d)), "data-widget": e.widget, "data-name": e.name })}>
-      <div class="canccu-studio-editor__box"><ol class="canccu-studio-editor__gutter" aria-hidden="true">${Array.from({ length: lines }, () => html`<li></li>`)}</ol><textarea${attrs({ class: "canccu-studio-editor__text", name: "text", "aria-label": template ? "The box look's template" : "The theme's CSS", spellcheck: "false", autocomplete: "off", wrap: "off", rows: Math.max(10, Math.min(lines + 1, 30)) })}>${e.text}</textarea></div>
+      <div class="canccu-studio-editor__box"><ol class="canccu-studio-editor__gutter" aria-hidden="true">${Array.from({ length: lines }, () => html`<li></li>`)}</ol><textarea${attrs({ class: "canccu-studio-editor__text", name: "text", "aria-label": template ? "The box look's template" : "The theme's CSS", spellcheck: "false", autocomplete: "off", wrap: "off", rows: Math.max(10, Math.min(lines + 1, 30)) })}>
+${e.text}</textarea></div>
       <ul class="canccu-studio-editor__problems" aria-live="polite"></ul>
       <p class="canccu-studio-row"><span class="canccu-small canccu-muted canccu-studio-editor__state">${icon("check")}Checked as you type</span><button class="canccu-button canccu-button--primary" type="submit">${template ? "Save the look" : "Save CSS"}</button></p>
     </form>
@@ -211,6 +236,21 @@ const unused = (taken: (x: string) => boolean, base: string): string => {
   return n === 1 ? base : `${base}-${n}`;
 };
 
+/** A template name's most characters (theme.schema.json, `name`). */
+const NAME_MAX = 32;
+
+/**
+ * A free template name for a new look of `type`: `<type>_look`, then `_look2` and on, the type cut
+ * so the whole stays within NAME_MAX, as the upload's PATCH checks it.
+ */
+function lookName(type: string, taken: (name: string) => boolean): string {
+  for (let n = 1; ; n++) {
+    const suffix = n === 1 ? "_look" : `_look${n}`;
+    const name = type.slice(0, NAME_MAX - suffix.length) + suffix;
+    if (!taken(name)) return name;
+  }
+}
+
 /**
  * The file the editor shows: `edit` when the theme names it, a new look for the type `fresh` names,
  * else the first CSS file, or a new `css/theme.css`.
@@ -227,10 +267,7 @@ export async function editingOf(
   if (q.new !== undefined && placed(d).has(q.new)) {
     const files = new Set(named);
     const path = `templates/${unused((p) => files.has(`templates/${p}.mustache`), `${q.new.replaceAll("_", "-")}-look`)}.mustache`;
-    const name = unused(
-      (n) => Object.hasOwn(templates, n.replaceAll("-", "_")),
-      `${q.new}_look`,
-    ).replaceAll("-", "_");
+    const name = lookName(q.new, (n) => Object.hasOwn(templates, n));
     const text = `{{! A look for the ${boxName(q.new).toLowerCase()} box. Its fields are in the screen contract, Widgets. }}\n<div class="t-look">\n  <p class="t-look__title">{{title}}</p>\n</div>\n`;
     return { path, text, listed: false, widget: q.new, name };
   }

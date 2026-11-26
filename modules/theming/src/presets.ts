@@ -94,3 +94,14 @@ export function presetManifest(preset: Preset, scheme: Scheme, kept: Kept): Mani
   m.preset = { id: preset.id, scheme: scheme.id };
   return m;
 }
+
+/** A saved preset's manifest (D18) with what the event keeps over it; Reset returns to it. */
+export function mineManifest(saved: Manifest, id: string, kept: Kept): Manifest {
+  const m = structuredClone(saved);
+  m.brand = { ...(isObject(m.brand) ? m.brand : {}), ...kept.brand };
+  const images = { ...(isObject(m.images) ? m.images : {}), ...kept.images };
+  if (Object.keys(images).length > 0) m.images = images;
+  // Its colours are its own, so it has no scheme to choose: `own` fills the field the schema needs.
+  m.preset = { id, scheme: "own" };
+  return m;
+}

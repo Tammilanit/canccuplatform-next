@@ -1,7 +1,8 @@
 /**
  * The screen's background as `GET /api/theming/current` answers it (contracts/theming.md, The two
- * backgrounds; plan issue-784 D8): the brand's backdrop with its defaults filled in, and for the
- * organiser's own picture its served address and the scrim that keeps the text readable on it.
+ * backgrounds; plan issue-784 D8, D19): the brand's backdrop with its defaults filled in, and for
+ * the organiser's own picture (and the video over it) its served address and the scrim that keeps
+ * the text readable on it.
  */
 import { LOOKS } from "./brand.js";
 import { isObject } from "./checks.js";
@@ -14,13 +15,24 @@ export interface BackdropView {
   daylight: boolean;
   hype: boolean;
   image_url?: string;
+  video_url?: string;
   scrim?: number;
 }
 
-/** The package path of the brand's own picture, if it has one. */
-export function backdropImage(manifest: Manifest): string | undefined {
+/** The served addresses of the backdrop's own files. */
+export interface BackdropUrls {
+  image?: string | undefined;
+  video?: string | undefined;
+}
+
+/** The package path of the brand's own picture (or video), if it has one. */
+export function backdropImage(
+  manifest: Manifest,
+  part: "image" | "video" = "image",
+): string | undefined {
   const backdrop = isObject(manifest.brand) ? manifest.brand.backdrop : undefined;
-  return isObject(backdrop) && typeof backdrop.image === "string" ? backdrop.image : undefined;
+  const path = isObject(backdrop) ? backdrop[part] : undefined;
+  return typeof path === "string" ? path : undefined;
 }
 
 const channels = (hex: string): number[] =>
@@ -58,8 +70,9 @@ export function pictureScrim(background: string, text: string): number {
 export function backdropView(
   manifest: Manifest,
   colors: Readonly<Record<string, string>>,
-  imageUrl?: string,
+  urls: BackdropUrls = {},
 ): BackdropView {
+  const imageUrl = urls.image;
   const b =
     isObject(manifest.brand) && isObject(manifest.brand.backdrop) ? manifest.brand.backdrop : {};
   const flag = (v: unknown): boolean => v !== false;
@@ -75,6 +88,8 @@ export function backdropView(
       ? {}
       : {
           image_url: imageUrl,
+          // Only over its picture, which is the video's poster and what shows at calm (D19).
+          ...(urls.video === undefined ? {} : { video_url: urls.video }),
           scrim: pictureScrim(
             (colors.background ?? "#000000").slice(0, 7),
             (colors.text ?? "#ffffff").slice(0, 7),

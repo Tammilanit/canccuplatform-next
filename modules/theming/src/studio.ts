@@ -88,7 +88,8 @@ async function studioPage(
       <script src="${STUDIO}static/studio-previews.js" defer></script>
       <script src="${STUDIO}static/studio-screen.js" defer></script>
       <script src="${STUDIO}static/studio-advanced.js" defer></script>
-      <script src="${STUDIO}static/studio-editor.js" defer></script>`,
+      <script src="${STUDIO}static/studio-editor.js" defer></script>
+      <script src="${STUDIO}static/studio-mine.js" defer></script>`,
   });
   return htmlHeaders(reply, eventPageCsp(nonce, request.hostname, { page: "admin" }))
     .status(o.status ?? 200)
@@ -158,6 +159,7 @@ const STATIC_TYPES: Record<string, string> = {
   "studio-advanced.css": "text/css; charset=utf-8",
   "studio-advanced.js": "text/javascript; charset=utf-8",
   "studio-editor.js": "text/javascript; charset=utf-8",
+  "studio-mine.js": "text/javascript; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
   "studio-previews.js": "text/javascript; charset=utf-8",

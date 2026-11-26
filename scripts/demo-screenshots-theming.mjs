@@ -95,6 +95,20 @@ const cssError = async (page) => {
   await page.locator("#canccu-studio-editor").scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
 };
+/** Save as my preset's dialog, open with a name typed (plan issue-784 D18). */
+const saveDialog = async (page) => {
+  await drawn(page);
+  await page.locator('[data-mine-ask="canccu-studio-mine-save"]:visible').first().click();
+  await page.locator("#canccu-studio-mine-save[open]").waitFor();
+  await page.fill('#canccu-studio-mine-save input[name="name"]', "Autumn look");
+  await page.waitForTimeout(300);
+};
+/** Behind the boxes with the organiser's picture and a video over it (D19). */
+const videoForm = async (page) => {
+  await drawn(page);
+  await page.locator('form[data-action="backdrop-video"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+};
 export const DRAFT = [
   ["theming-studio-pick-1280", DESK, { ready: drawn }],
   ["theming-studio-pick-1920", HD, { ready: drawn }],
@@ -111,6 +125,9 @@ export const DRAFT = [
     DESK,
     { path: ADVANCED, fullPage: false, ready: cssError },
   ],
+  // My presets and video backgrounds (plan issue-784 D18, D19): Your looks heads the gallery above.
+  ["theming-studio-mine-save-1280", DESK, { path: YOURS, fullPage: false, ready: saveDialog }],
+  ["theming-studio-advanced-video-1280", DESK, { path: ADVANCED, fullPage: false, ready: videoForm }],
   [
     "studio-draft-preview",
     // Preview is a phone-width control (sheet 6); at desktop width it is hidden and the click times out.
@@ -202,7 +219,11 @@ export async function draftShots({ demo, shot }) {
     scheme: "dark",
     logo: "images/logo.svg",
   };
+  let mine;
   try {
+    version = await ownBackdrop(demo, version);
+    const saved = await demo.call("POST", "/api/theming/presets", { body: { name: "Spring look" } });
+    mine = expect(saved, 201, "saving Spring look").body.id;
     for (const [name, viewport, o] of DRAFT) {
       await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
     }
@@ -230,6 +251,10 @@ export async function draftShots({ demo, shot }) {
     }
     version = await plateShots({ demo, shot }, version);
   } finally {
+    if (mine !== undefined) {
+      const dropped = await demo.call("DELETE", `/api/theming/presets/${mine}`);
+      expect(dropped, 204, "deleting Spring look");
+    }
     // Left behind, the draft would greet the next run's "studio" shot instead of the start.
     const gone = await demo.call(
       "DELETE",
@@ -237,6 +262,41 @@ export async function draftShots({ demo, shot }) {
     );
     expect(gone, 204, "discarding the draft");
   }
+}
+
+/** A picture, an MP4 of one `ftyp` box (Advanced only names it; nothing plays it), both behind the boxes. */
+const PICTURE = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 16 9"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>',
+);
+const VIDEO = Buffer.concat([
+  Buffer.from([0, 0, 0, 24]),
+  Buffer.from("ftypisom"),
+  Buffer.from([0, 0, 2, 0]),
+  Buffer.from("isomavc1"),
+  Buffer.from([0, 0, 0, 8]),
+  Buffer.from("mdat"),
+]);
+async function ownBackdrop(demo, from) {
+  let version = from;
+  for (const [path, body, type] of [
+    ["images/backdrop.svg", PICTURE, "image/svg+xml"],
+    ["videos/backdrop.mp4", VIDEO, "video/mp4"],
+  ]) {
+    const put = await demo.call(
+      "PUT",
+      `/api/theming/draft/file?path=${path}&draft_version=${version}`,
+      { body, type },
+    );
+    version = expect(put, 200, path).body.draft_version;
+  }
+  const parts = await demo.call("PATCH", "/api/theming/draft/parts", {
+    body: {
+      draft_version: version,
+      backdrop_image: "images/backdrop.svg",
+      backdrop_video: "videos/backdrop.mp4",
+    },
+  });
+  return expect(parts, 200, "the picture and video behind the boxes").body.draft_version;
 }
 
 /** Each preset with the event's black logo, first with no plate, then on the plate the check names. */

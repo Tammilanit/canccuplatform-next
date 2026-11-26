@@ -318,8 +318,9 @@ paths:
       description: |
         Needs right `theming.theme.write`, and `theming.embeds.write` under `embeds/`. The content decides the
         type, never the `Content-Type` sent. Checked at once; problems are listed on the draft. Sets
-        `mode: advanced` for anything but an image. Embed changes are audited. A font's licence
-        (`fonts/…txt` or `fonts/…md`) may come on its own, UTF-8 text, for a font theme.yaml then names.
+        `mode: advanced` for anything but an image or a video. Embed changes are audited. A font's licence
+        (`fonts/…txt` or `fonts/…md`) may come on its own, UTF-8 text, for a font theme.yaml then names. A body
+        is at most 5 MB, under `videos/` 20 MB (413 `too_large`).
       requestBody:
         required: true
         content:
@@ -527,6 +528,8 @@ paths:
           $ref: "#/components/responses/NotFound"
   /api/theming/presets:
     $ref: "theming/presets.openapi.yaml#/~1api~1theming~1presets"
+  /api/theming/presets/{id}:
+    $ref: "theming/presets.openapi.yaml#/~1api~1theming~1presets~1{id}"
   /api/theming/draft/preset:
     $ref: "theming/presets.openapi.yaml#/~1api~1theming~1draft~1preset"
   /api/theming/font-pairs:
@@ -740,7 +743,7 @@ components:
       description: The file's SHA-256 (hex) and its extension.
       schema:
         type: string
-        pattern: "^[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg)$"
+        pattern: "^[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg|mp4|webm)$"
     SandboxEmbed:
       name: embed
       in: path
@@ -880,7 +883,8 @@ components:
     Conflict:
       description: |
         `version_conflict` (stale `draft_version` or `current_revision`), `draft_exists`, `nothing_to_clone`,
-        `brand_missing` (switching to simple without `brand`), or
+        `brand_missing` (switching to simple without `brand`), `preset_limit` (an event keeps at most 24 saved
+        presets), or
         `event_archived` (the event is read-only).
       content:
         application/json:
@@ -938,7 +942,7 @@ components:
     PackagePath:
       type: string
       description: The limits of theme.schema.json, which allows up to 120 characters before the extension.
-      pattern: "^(?!.*\\.\\.)(css|fonts|images|templates|embeds)/[A-Za-z0-9._/-]{1,129}$"
+      pattern: "^(?!.*\\.\\.)(css|fonts|images|templates|embeds|videos)/[A-Za-z0-9._/-]{1,129}$"
     Problem:
       type: object
       required: [severity, code, message]
@@ -1363,6 +1367,11 @@ components:
               type: boolean
             image_url:
               description: The theme's own picture, in place of the cycle; absent without one.
+              type: string
+            video_url:
+              description: |
+                The theme's own video (MP4 or WebM), played muted and looping over `image_url`, its poster, at the
+                `lively` and `party` levels; only with `image_url`, absent without a video.
               type: string
             scrim:
               description: The opacity of `background` over the picture (0.55–1) that keeps `text` at 4.5:1; with `image_url`.

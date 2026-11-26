@@ -51,14 +51,15 @@
   patch:
     tags: [draft]
     operationId: editDraftParts
-    summary: Put uploaded CSS, fonts, templates, box looks or the screen's own picture into theme.yaml
+    summary: Put uploaded CSS, fonts, templates, box looks or the screen's own picture and video into theme.yaml
     description: |
       Needs right `theming.theme.write`. Each field given changes its part of theme.yaml; the files come by
       `PUT /api/theming/draft/file` first. `css` and `fonts` replace their lists whole, `templates` and `looks`
       go by name with `null` taking one away. A look names a template made for its widget type (else 400) and is
-      set on every widget of that type in the draft's layouts. `backdrop_image` is `brand.backdrop.image` (409
-      `brand_missing` without a brand). All but `backdrop_image` set `mode: advanced`. Every check runs on the
-      result; 409 `version_conflict` on a stale `draft_version`.
+      set on every widget of that type in the draft's layouts; taking a template away (`null`) also takes it off
+      every widget that used it. `backdrop_image` is `brand.backdrop.image` and `backdrop_video`
+      `brand.backdrop.video` (409 `brand_missing` without a brand). All but `backdrop_image` and `backdrop_video`
+      set `mode: advanced`. Every check runs on the result; 409 `version_conflict` on a stale `draft_version`.
     requestBody:
       required: true
       content:
@@ -92,6 +93,11 @@
               backdrop_image:
                 oneOf:
                   - $ref: "../theme.schema.json#/$defs/image_path"
+                  - type: "null"
+              backdrop_video:
+                description: The video over the picture (`brand.backdrop.video`), `null` for none.
+                oneOf:
+                  - $ref: "../theme.schema.json#/$defs/video_path"
                   - type: "null"
     responses:
       "200":

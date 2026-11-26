@@ -14,19 +14,23 @@ import { draftBody, loadDraft } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import { WRITE, assertWritable, invalidRequest, needs, notFound } from "./http.js";
 import { replaceDraft } from "./package-routes.js";
-import { PRESETS, presetFiles, presetManifest, schemeColors } from "./presets.js";
+import { MINE, listMine, mineFiles, mineNumber } from "./my-presets.js";
+import { PRESETS, mineManifest, presetFiles, presetManifest, schemeColors } from "./presets.js";
 import type { Kept } from "./presets.js";
 
 interface Apply {
   preset: string;
-  scheme: string;
+  /** A platform preset's scheme; a saved preset (`event:<n>`) has its own colours and needs none. */
+  scheme?: string;
   draft_version?: number;
 }
 
 function applyError(body: unknown): string | undefined {
   if (!isObject(body)) return "The body must be a JSON object.";
   if (typeof body.preset !== "string") return "preset is required.";
-  if (typeof body.scheme !== "string") return "scheme is required.";
+  const mine = body.preset.startsWith(MINE);
+  if (!mine && typeof body.scheme !== "string") return "scheme is required.";
+  if (body.scheme !== undefined && typeof body.scheme !== "string") return "scheme is a text.";
   const v = body.draft_version;
   if (v !== undefined && !(Number.isInteger(v) && (v as number) >= 0)) {
     return "draft_version must be a whole number.";
@@ -80,10 +84,39 @@ async function ownSource(c: SqlClient): Promise<{ owner: string; manifest: Manif
   return row && { owner: `r:${row.revision}`, manifest: row.manifest };
 }
 
+/** What applying `input` replaces the draft with: the files, the manifest and how to keep. */
+interface Source {
+  files: Map<string, Buffer>;
+  manifest: Manifest;
+  apply: (kept: Kept) => Manifest;
+}
+
+async function sourceOf(deps: DraftDeps, input: Apply): Promise<Source> {
+  const n = mineNumber(input.preset);
+  if (n !== undefined) {
+    const saved = await deps.db.tenant((c) => mineFiles(c, (f) => deps.files.read(f), n));
+    if (saved === undefined) throw notFound();
+    return {
+      files: saved.files,
+      manifest: saved.manifest,
+      apply: (kept) => mineManifest(saved.manifest, input.preset, kept),
+    };
+  }
+  const preset = PRESETS.get(input.preset);
+  const scheme = preset?.schemes.find((s) => s.id === input.scheme);
+  if (preset === undefined || scheme === undefined) throw notFound();
+  return {
+    files: await presetFiles(preset),
+    manifest: preset.manifest,
+    apply: (kept) => presetManifest(preset, scheme, kept),
+  };
+}
+
 export function presetRoutes(app: FastifyInstance, deps: DraftDeps & { audit: Audit }): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
-  app.get("/api/theming/presets", writer, () => ({
+  app.get("/api/theming/presets", writer, async () => ({
+    mine: await deps.db.tenant(listMine),
     presets: [...PRESETS.values()].map((p) => ({
       id: p.id,
       name: p.name,
@@ -104,20 +137,18 @@ export function presetRoutes(app: FastifyInstance, deps: DraftDeps & { audit: Au
     const why = applyError(request.body);
     if (why !== undefined) throw invalidRequest(why);
     const input = request.body as Apply;
-    const preset = PRESETS.get(input.preset);
-    const scheme = preset?.schemes.find((s) => s.id === input.scheme);
-    if (preset === undefined || scheme === undefined) throw notFound();
+    const source = await sourceOf(deps, input);
     // Read without a lock: the write checks `draft_version`, so a logo changed meanwhile is a 409.
     const { kept, pictures } = await deps.db.tenant((c) => keptOf(c, deps.files));
-    const files = await presetFiles(preset);
-    const own = isObject(preset.manifest.images) ? preset.manifest.images : {};
+    const files = source.files;
+    const own = isObject(source.manifest.images) ? source.manifest.images : {};
     for (const role of ["logo", "icon"] as const) {
       // The preset's own picture goes when the event's takes its role, so it is not stored unused.
       const theirs = own[role];
       if (kept.images[role] !== undefined && typeof theirs === "string") files.delete(theirs);
     }
     for (const [path, bytes] of pictures) files.set(path, bytes);
-    const manifest = presetManifest(preset, scheme, kept);
+    const manifest = source.apply(kept);
     files.set("theme.yaml", Buffer.from(stringify(manifest, { aliasDuplicateObjects: false })));
     return draftBody(await replaceDraft(deps, request, files, input.draft_version));
   });

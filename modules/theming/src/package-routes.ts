@@ -36,7 +36,7 @@ import type { Place, Reserve, Unused } from "./stored.js";
 import { MAX_UNPACKED, readPackage } from "./zip.js";
 
 const EMBEDS = "theming.embeds.write";
-/** 20 MB unpacked, plus room for the headers of 300 stored files; no body is read past it. */
+/** 40 MB unpacked, plus room for the headers of 300 stored files; no body is read past it. */
 const BODY_LIMIT = MAX_UNPACKED + 1024 * 1024;
 /** The export never compresses a file further than an upload takes back (zip.ts, 100:1). */
 const EXPORT_RATIO = 50;
@@ -46,7 +46,7 @@ const EPOCH = new Date(Date.UTC(1980, 0, 1));
 const refused = (why: string): KitError =>
   new KitError(why, { status: 400, code: "package_refused" });
 const tooLarge = (): KitError =>
-  new KitError("A package zip is at most 20 MB.", { status: 413, code: "too_large" });
+  new KitError("A package zip is at most 40 MB.", { status: 413, code: "too_large" });
 
 /** An owner's embeds as `publish.ts` compares them: the manifest's part and every stored file. */
 interface Embeds {

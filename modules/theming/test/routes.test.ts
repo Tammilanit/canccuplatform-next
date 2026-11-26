@@ -217,6 +217,7 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
         "(key_sha256, expires_at, created_by) VALUES ($1, now() + interval '1 hour', 'u')",
         hex,
       ],
+      ["theming_presets", "(name, manifest, created_by) VALUES ($1, '{}', 'u')", (m) => m],
     ];
     for (const [table, insert, stored] of tables) {
       it(`${table} rows stay in their event`, async () => {

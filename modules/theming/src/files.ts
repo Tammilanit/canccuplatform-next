@@ -5,8 +5,8 @@ import { dirname, join } from "node:path";
 import { requireTenant, tenantFile } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 
-/** The only types the event's hostname serves outside the sandbox (contracts/theming.md, Where files are served). */
-export const CONTENT_TYPES = {
+/** The types of the files pages and the stylesheet link; an embed may hold these too. */
+const PAGE_TYPES = {
   css: "text/css; charset=utf-8",
   woff2: "font/woff2",
   png: "image/png",
@@ -14,11 +14,17 @@ export const CONTENT_TYPES = {
   webp: "image/webp",
   svg: "image/svg+xml",
 } as const;
+
+/** A screen's own background video (plan issue-784 D19): served like an image, never in an embed. */
+export const VIDEO_TYPES = { mp4: "video/mp4", webm: "video/webm" } as const;
+
+/** The only types the event's hostname serves outside the sandbox (contracts/theming.md, Where files are served). */
+export const CONTENT_TYPES = { ...PAGE_TYPES, ...VIDEO_TYPES } as const;
 export type Ext = keyof typeof CONTENT_TYPES;
 
-/** An embed's types: the above plus what only the sandbox serves (contracts/theming.md, The sandbox). */
+/** An embed's types: the page types plus what only the sandbox serves (contracts/theming.md, The sandbox). */
 export const EMBED_TYPES = {
-  ...CONTENT_TYPES,
+  ...PAGE_TYPES,
   html: "text/html; charset=utf-8",
   js: "text/javascript; charset=utf-8",
   json: "application/json",
@@ -32,9 +38,9 @@ export type EmbedExt = keyof typeof EMBED_TYPES;
 export type StoredExt = Ext | "txt" | "md" | "mustache";
 
 /** `<sha256>.<ext>`, the served name: the ServedFile pattern of contracts/theming.openapi.yaml. */
-export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$/;
+export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|mp4|webm)$/;
 export const STORED_NAME =
-  /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json|txt|md|mustache)$/;
+  /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|mp4|webm|html|js|json|txt|md|mustache)$/;
 
 /** A write's temporary name (`write` below): the stored name and a random part. */
 export const TEMP_NAME = /^[0-9a-f]{64}\.[a-z0-9]+\.[0-9a-f]{12}\.tmp$/;

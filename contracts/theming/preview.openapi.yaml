@@ -128,7 +128,7 @@
       description: "`tokens.css`, `theme.css` (the draft's CSS compiled as publish would), or a draft file by its SHA-256 and extension."
       schema:
         type: string
-        pattern: "^(tokens\\.css|theme\\.css|[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg))$"
+        pattern: "^(tokens\\.css|theme\\.css|[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg|mp4|webm))$"
   get:
     tags: [files]
     operationId: getPreviewFile
