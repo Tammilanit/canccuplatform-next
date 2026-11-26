@@ -4,11 +4,15 @@
 // at 1080p and portrait (#787 Q7). The frames stand in for the short video CI cannot capture.
 import { turnsSettled } from "./dashboard.mjs";
 import { TILES } from "./handed.mjs";
+import { momentsStrip, withMoments } from "./living-moments.mjs";
 
 export const LIVING_THEMES = ["default", "level-up"];
 export const LIVING_STRIPS = [
   { view: "living-rotation", frames: 4 },
   { view: "living-slideshow", frames: 2 },
+  // Part B (#787 D7, D8): sheet 02's food moments and sheet 05's step-down.
+  { view: "living-food", frames: 4 },
+  { view: "living-stepdown", frames: 2 },
 ];
 
 const TURN_S = 6;
@@ -91,6 +95,7 @@ let oddRunAt = 0;
 
 /** The state each strip hands the page; worked out once, as the page may ask again. */
 export function withLiving(view) {
+  if (view === "living-food" || view === "living-stepdown") return withMoments(view);
   const now = Date.now();
   const cycle = 2 * RUN_S * 1000;
   let k = Math.ceil((now + 20_000) / cycle);
@@ -169,6 +174,8 @@ async function waitUntil(page, ms) {
  * of the slideshow, clean.
  */
 export async function livingStrip(page, view, shoot) {
+  if (view === "living-food" || view === "living-stepdown")
+    return await momentsStrip(page, view, shoot);
   if (view === "living-rotation") {
     await page.waitForSelector(".canccu-region--hero .canccu-rotation__bar");
     const cycle = 4 * TURN_S * 1000;
