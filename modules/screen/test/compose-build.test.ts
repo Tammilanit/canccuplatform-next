@@ -39,7 +39,8 @@ function facts(over: Partial<ZoneFacts> = {}): ZoneFacts {
 
 function input(over: Partial<BuildInput> = {}): BuildInput {
   return {
-    zone: { key: "main", regions: {}, layoutId: null },
+    // The fixed hub QR card these cases were written with; `rotate` is the default since #787 D14.
+    zone: { key: "main", regions: {}, layoutId: null, hubQr: "always" },
     windowLayoutId: null,
     themeLayouts: [],
     portrait: false,

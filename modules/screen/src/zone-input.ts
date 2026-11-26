@@ -224,8 +224,9 @@ export function zoneInput(value: unknown): ZoneInput {
   }
   const header = value.header ?? null;
   if (header !== null) oneOf(header, HEADERS, "`header`");
-  // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default.
-  const hubQr = value.hub_qr === undefined ? "always" : value.hub_qr;
+  // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default, `rotate` since
+  // #787 D14 (the QR takes turns with the venue rail); a zone that stored `always` keeps it.
+  const hubQr = value.hub_qr === undefined ? "rotate" : value.hub_qr;
   oneOf(hubQr, HUB_QRS, "`hub_qr`");
   const screenName = value.screen_name === undefined ? "auto" : value.screen_name;
   oneOf(screenName, SCREEN_NAMES, "`screen_name`");

@@ -50,6 +50,8 @@ export interface Override {
   keep_ticker: boolean;
   /** `source.module`: a pizza-sourced announcement shows the food box beside it (#780). */
   source_module: string | null;
+  /** The widget types that would repeat it (#787 D7): left out of the other regions meanwhile. */
+  covers: string[];
 }
 
 export interface Effect {
@@ -179,7 +181,8 @@ export function overrideOf(v: unknown): Override | null {
     !nullable(v.steps, Array.isArray) ||
     !(v.on_end === undefined || v.on_end === "resume" || v.on_end === "next") ||
     !nullable(v.hero_min_share, (x) => typeof x === "number" && x >= 0 && x <= 1) ||
-    !(v.keep_ticker === undefined || typeof v.keep_ticker === "boolean")
+    !(v.keep_ticker === undefined || typeof v.keep_ticker === "boolean") ||
+    !(v.covers === undefined || isStrings(v.covers))
   ) {
     return null;
   }
@@ -209,6 +212,7 @@ export function overrideOf(v: unknown): Override | null {
     effect,
     hero_min_share: (v.hero_min_share as number | null | undefined) ?? null,
     keep_ticker: v.keep_ticker === true,
+    covers: (v.covers as string[] | undefined) ?? [],
     // An event carries `source.module`; a stored override is the parsed shape, with `source_module`.
     source_module:
       typeof v.source_module === "string"
@@ -299,6 +303,22 @@ export function placeClaims(
   for (const { o, role, hidden } of placed) {
     const at = regionOf.get(role) as number;
     out[at] = { ...(out[at] as RegionView), claim: claimOf(o, role, hidden) };
+  }
+  // One place at a time (#787 D7): what a drawn claim covers, no other region repeats.
+  for (const { o, role, hidden } of placed) {
+    if (hidden || o.covers.length === 0) continue;
+    const own = regionOf.get(role);
+    out.forEach((r, i) => {
+      if (i === own || !r.widgets.some((w) => o.covers.includes(w.widget))) return;
+      // Out of the turns too, as an empty one is (build.ts): every screen of the zone drops it alike.
+      out[i] = {
+        ...r,
+        order: r.order.filter((n) => !o.covers.includes(r.widgets[n]?.widget ?? "")),
+        widgets: r.widgets.map((w) =>
+          o.covers.includes(w.widget) ? { ...w, view: { ...w.view, empty: true } } : w,
+        ),
+      };
+    });
   }
   return {
     regions: out,

@@ -23,7 +23,8 @@ const facts: ZoneFacts = {
 
 function build(zone: Partial<ZoneSetup> = {}, over: Partial<BuildInput> = {}): RegionView[] {
   return buildRegions({
-    zone: { key: "main", layoutId: null, regions: {}, ...zone },
+    // The fixed hub QR card unless a case says otherwise; `rotate` is the default since #787 D14.
+    zone: { key: "main", layoutId: null, regions: {}, hubQr: "always", ...zone },
     windowLayoutId: null,
     themeLayouts: [],
     portrait: false,
@@ -157,7 +158,7 @@ describe("header", () => {
 });
 
 describe("hub_qr", () => {
-  it("gives the hub QR a fixed place at the venue rail's right edge by default (`always`)", () => {
+  it("gives the hub QR a fixed place at the venue rail's right edge with `always`", () => {
     const regions = build();
     expect(shape(regions).filter(([id]) => String(id).startsWith("venue_rail"))).toEqual([
       ["venue_rail", "venue_rail", [9, 8, 2, 4], ["venue_info", "food_status"]],

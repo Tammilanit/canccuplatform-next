@@ -161,7 +161,7 @@ function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): Reg
   const role = roleOf(source.id, setting.role);
   const modes = {
     header: input.zone.header ?? layout.header ?? "separate",
-    hubQr: input.zone.hubQr ?? "always",
+    hubQr: input.zone.hubQr ?? "rotate",
   };
   const ids = new Set(layout.regions.map((r) => r.id));
   return partsOf(source, entries, role, modes, ids).map((part) =>
