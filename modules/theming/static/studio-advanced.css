@@ -15,6 +15,7 @@
 }
 /* One column that never grows past its track: a long row of chips wraps instead. */
 .canccu-studio-advanced {
+  /* canccu-grid: fixed shell — one column that holds the page sections */
   grid-template-columns: minmax(0, 1fr);
 }
 .canccu-studio-advanced .canccu-studio-segments {
@@ -47,6 +48,7 @@ a.canccu-studio-segment {
   min-width: 0;
 }
 .canccu-studio-control--colour {
+  /* canccu-grid: fixed control — a colour control: swatch, hex and badge */
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
 }
@@ -77,6 +79,7 @@ a.canccu-studio-segment {
 }
 .canccu-studio-control__slide {
   display: grid;
+  /* canccu-grid: fixed control — a slider and its number field */
   grid-template-columns: minmax(0, 1fr) 4rem;
   align-items: center;
   gap: 0.75rem;
@@ -153,6 +156,7 @@ a.canccu-studio-segment {
 }
 .canccu-studio-box__form {
   display: grid;
+  /* canccu-grid: fixed form — a font form lays out its labelled fields */
   grid-template-columns: 8rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
@@ -169,6 +173,7 @@ a.canccu-studio-segment {
 }
 .canccu-studio-editor__box {
   display: grid;
+  /* canccu-grid: fixed row — an editor box lays out its label and field */
   grid-template-columns: auto minmax(0, 1fr);
   font-family: var(--canccu-font-mono);
   font-size: 0.875rem;
@@ -240,9 +245,11 @@ a.canccu-studio-segment {
 /* At 1920 px the controls take two columns (sheet 4 at 1920). */
 @media (min-width: 110rem) {
   .canccu-studio-depth:has(.canccu-studio-advanced) {
+    /* canccu-grid: fixed master-detail — the controls and the preview side by side */
     grid-template-columns: minmax(0, 62rem) minmax(0, 1fr);
   }
   .canccu-studio-advanced .canccu-studio-controls-list {
+    /* canccu-grid: fixed control — the list of controls takes two columns when wide */
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem 2rem;
   }
@@ -253,6 +260,7 @@ a.canccu-studio-segment {
     white-space: pre-wrap;
   }
   .canccu-studio-box__form {
+    /* canccu-grid: fixed form — the form box narrows to two columns on a phone */
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .canccu-studio-box__form select {
