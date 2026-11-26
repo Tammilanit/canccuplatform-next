@@ -5,6 +5,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
+import { readPackage } from "../src/zip.js";
 import { draftFiles } from "./drafting.js";
 import { DATABASE_URL, code, get, send } from "./helpers.js";
 
@@ -123,6 +124,37 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     expect(reset.json<Draft>().manifest.images?.logo).toBe("images/logo.svg");
   });
 
+  it("keeps a scheme's own colours through a brand change that leaves the colours", async () => {
+    const before = await eventDraft();
+    const applied = (
+      await apply({ preset: "terminal", scheme: "cyan", draft_version: before.draft_version })
+    ).json<Draft>();
+    const brand = applied.manifest.brand as Record<string, unknown>;
+    const corners = await send(t.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: applied.draft_version,
+      primary: brand.primary,
+      accent: brand.accent,
+      scheme: brand.scheme,
+      logo: "images/logo.svg",
+      roundness: "round",
+    });
+    expect(corners.statusCode).toBe(200);
+    const after = corners.json<{ draft: Draft }>().draft;
+    expect(after.manifest.brand?.roundness).toBe("round");
+    expect(after.manifest.tokens.colors).toEqual(applied.manifest.tokens.colors);
+    // A new main colour is what makes the colours again.
+    const recoloured = await send(t.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: after.draft_version,
+      primary: "#ff7a45",
+      accent: brand.accent,
+      scheme: brand.scheme,
+      logo: "images/logo.svg",
+    });
+    expect(recoloured.json<{ draft: Draft }>().draft.manifest.tokens.colors).not.toEqual(
+      applied.manifest.tokens.colors,
+    );
+  });
+
   it("refuses a preset with embeds to a session without the embeds right", async () => {
     const before = await eventDraft();
     const res = await apply(
@@ -152,6 +184,29 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     expect(draft.manifest.preset).toEqual({ id: "default", scheme: "contrast" });
     expect(draft.manifest.tokens.colors.background).toBe("#000000");
     expect(draft.manifest.images?.logo).toBe("images/logo.svg");
+  });
+
+  it("keeps the published logo, plate and Discord colour when there is no draft", async () => {
+    const own = await eventDraft();
+    const published = await send(t.h, "POST", "/api/theming/draft/publish", {
+      draft_version: own.draft_version,
+    });
+    expect(published.statusCode).toBe(201);
+    expect((await get(t.h, "/api/theming/draft", { session: "admin" })).statusCode).toBe(404);
+    const logoOf = async (url: string): Promise<Buffer | undefined> => {
+      const read = await readPackage((await get(t.h, url, { session: "admin" })).rawPayload);
+      if (!read.ok) throw new Error(read.why);
+      return read.files.get("images/logo.svg");
+    };
+    const publishedLogo = await logoOf("/api/theming/revisions/1/package");
+    expect(publishedLogo).toBeDefined();
+
+    const res = await apply({ preset: "terminal", scheme: "cyan" });
+    expect(res.statusCode).toBe(200);
+    const draft = res.json<Draft>();
+    expect(draft.manifest.images?.logo).toBe("images/logo.svg");
+    expect(draft.manifest.brand).toMatchObject({ logo_plate: PLATE, embed_color: "#5865f2" });
+    expect(await logoOf("/api/theming/draft/package")).toEqual(publishedLogo);
   });
 
   it("names an unknown preset or scheme as not found", async () => {

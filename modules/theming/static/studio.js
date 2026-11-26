@@ -170,20 +170,32 @@
     await call("PATCH", "/api/theming/draft/tokens", { draft_version: draftVersion(), tokens });
   }
 
+  /** The frames take a look as its apply is sent, and the draft's colours again if refused. */
+  const look = (json) =>
+    document.dispatchEvent(new CustomEvent("canccu-studio-look", { detail: JSON.parse(json) }));
+
   /** A look from the gallery, or Reset to the draft's own (plan issue-784 D11). */
   async function applyPreset(el) {
     const version = draftVersion();
+    // Without a draft the reload below draws the frames.
+    const live = version !== undefined && el.dataset.vars !== undefined;
+    if (live) look(el.dataset.vars);
     const draft = await call("PUT", "/api/theming/draft/preset", {
       preset: el.dataset.preset,
       scheme: el.dataset.scheme,
       ...(version === undefined ? {} : { draft_version: version }),
+    }).catch((err) => {
+      if (live && root.dataset.vars !== undefined) look(root.dataset.vars);
+      throw err;
     });
     el.closest("dialog")?.close();
     for (const b of document.querySelectorAll('[data-action="preset"][aria-pressed]'))
       b.setAttribute("aria-pressed", String(b === el));
     root.dataset.draftVersion = String(draft.draft_version);
-    // Without a draft before, the page has none of a draft's parts yet: it is the one to read.
-    if (version === undefined) throw new Reload();
+    // Without a draft before, the page has none of a draft's parts yet; and Make it yours's form
+    // still holds the old choices, which its next save would send back over the preset's.
+    if (version === undefined || document.querySelector('form[data-action="brand"]') !== null)
+      throw new Reload();
   }
 
   const ACTIONS = {
@@ -251,8 +263,9 @@
   }
 
   /**
-   * The previews show the version the page drew, so Publish waits for the reload. The hold is kept
-   * on the page, so a preview drawn later (studio-previews.js) cannot release it.
+   * The previews show the version the page drew, so Publish waits for the next save's refresh
+   * (studio-live.js clears the hold). The hold is kept on the page, so a preview drawn meanwhile
+   * (studio-previews.js) cannot release it.
    */
   function holdPublish() {
     root.dataset.previewStale = "1";

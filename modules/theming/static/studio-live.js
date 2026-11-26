@@ -96,11 +96,9 @@
     }
     if (el.type === "radio" || el.type === "checkbox") onEdit(event);
   });
-  // A look from the gallery: its colours, before the draft has taken it.
-  document.addEventListener("click", (event) => {
-    const button = event.target.closest('[data-action="preset"][data-vars]');
-    if (button !== null && !button.disabled) post(JSON.parse(button.dataset.vars));
-  });
+  // A look from the gallery as its apply is sent, and the saved colours again if it fails
+  // (studio.js): never on a click alone, which a dialog or a busy save may stop.
+  document.addEventListener("canccu-studio-look", (event) => post(event.detail));
 
   const savedLabel = (text) => {
     for (const el of document.querySelectorAll(".canccu-studio-saved"))
@@ -111,17 +109,33 @@
     savedLabel(state === "saving" ? "Saving…" : state === "saved" ? "Saved" : "Not saved");
   }).observe(root, { attributes: true, attributeFilter: ["data-save-state"] });
 
+  /** Bumped by each refresh, so one that a newer refresh overtook draws nothing. */
+  let latest = 0;
+  const hasFile = (el) =>
+    [...el.querySelectorAll('input[type="file"]')].some((input) => input.files.length > 0);
+
   /** After a save: the page's parts as the server draws them now, and the frames on the saved version. */
   async function refresh() {
+    const seq = ++latest;
     const res = await fetch(location.href, { credentials: "same-origin" }).catch(() => undefined);
+    if (seq !== latest) return;
     // The draft went (discarded meanwhile) or the page cannot be read: the page is the one to read.
     if (res === undefined || !res.ok || res.redirected) return location.reload();
-    const doc = new DOMParser().parseFromString(await res.text(), "text/html");
-    for (const el of document.querySelectorAll("[data-refresh]")) {
-      const next = doc.querySelector(`[data-refresh="${CSS.escape(el.dataset.refresh)}"]`);
-      if (next !== null) el.replaceWith(document.importNode(next, true));
-    }
+    const text = await res.text();
+    if (seq !== latest) return;
+    const doc = new DOMParser().parseFromString(text, "text/html");
     const next = doc.querySelector(".canccu-studio");
+    // A save made after this page was read: its own refresh draws the page, and the version the
+    // next save names never goes back (a 409 would stop every save after it).
+    if (Number(next?.dataset.draftVersion) < Number(root.dataset.draftVersion)) return;
+    for (const el of document.querySelectorAll("[data-refresh]")) {
+      // A file picked and not yet sent stays: the save 400 ms on reads it from this input.
+      if (hasFile(el)) continue;
+      const part = doc.querySelector(`[data-refresh="${CSS.escape(el.dataset.refresh)}"]`);
+      if (part !== null) el.replaceWith(document.importNode(part, true));
+    }
+    // The page now draws the saved version, so Publish no longer waits for a colour put right.
+    Reflect.deleteProperty(root.dataset, "previewStale");
     for (const key of ["draftVersion", "ownWork", "vars"]) {
       if (next?.dataset[key] === undefined) Reflect.deleteProperty(root.dataset, key);
       else root.dataset[key] = next.dataset[key];

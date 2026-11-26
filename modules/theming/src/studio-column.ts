@@ -127,6 +127,8 @@ const discardDialog = html`<dialog
  * The light-scheme warning (design sheet 6; Q11 b of docs/design/README.md: warn only, the dark
  * variant for screens comes later). Asked once, before the publish itself.
  */
+// On every draft page, though only a light draft's Publish opens it: a save without a reload can
+// turn the draft light, and the refreshed Publish then asks.
 const lightDialog = html`<dialog
   class="canccu-studio-dialog"
   id="canccu-studio-light"
@@ -150,8 +152,11 @@ const importControl = html`<form class="canccu-studio-import" data-action="impor
   ><input${attrs({ class: "canccu-studio-file", type: "file", id: "canccu-studio-import", name: "import", accept: ".zip,application/zip" })}>
 </form>`;
 
-/** The title row and the dialogs it opens; on a phone the row sits above the bottom bar too. */
-export function depthFrame(state: StudioState, viewerId: string | undefined) {
+/**
+ * The title row and the dialogs it opens; on a phone the row sits above the bottom bar too.
+ * Without `publishes` (Advanced), no Publish.
+ */
+export function depthFrame(state: StudioState, viewerId: string | undefined, publishes = true) {
   const d = state.draft;
   const description = html`<span data-refresh="status">${status(state, viewerId)}</span>`;
   if (d === undefined) return { description, actions: importControl, extra: html`` };
@@ -181,12 +186,12 @@ export function depthFrame(state: StudioState, viewerId: string | undefined) {
     description,
     // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
     actions: html`<span class="canccu-cluster" data-refresh="actions"
-      >${saved}${exportLink}${importControl}${publish}</span
+      >${saved}${exportLink}${importControl}${publishes ? publish : ""}</span
     >`,
     extra: html`<div class="canccu-studio-pendbar" data-refresh="pendbar">
         ${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${publish}
       </div>
-      ${screenNotice}${discardDialog}${light ? lightDialog : ""}${screenDialog}`,
+      ${screenNotice}${discardDialog}${lightDialog}${screenDialog}`,
   };
 }
 

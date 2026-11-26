@@ -63,8 +63,10 @@ describe("publishing a light look", () => {
   it("publishes a dark look at once", () => {
     const body = page(stateOf(DARK, "dark"));
     expect(body).not.toContain("light-ask");
-    expect(body).not.toContain("canccu-studio-light");
-    expect(body.match(/data-action="publish"/g)).toHaveLength(2);
+    // The dialog is held for a save that turns the draft light; a dark draft never opens it.
+    const dialog = /<dialog[^>]*id="canccu-studio-light"[\s\S]*?<\/dialog>/.exec(body)?.[0] ?? "";
+    expect(dialog).not.toBe("");
+    expect(body.replace(dialog, "").match(/data-action="publish"/g)).toHaveLength(2);
   });
 });
 

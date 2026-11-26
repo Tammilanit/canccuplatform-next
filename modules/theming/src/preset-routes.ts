@@ -8,6 +8,7 @@ import type { SqlClient } from "@canccu/kit";
 import { stringify } from "yaml";
 import type { Audit } from "./audit.js";
 import { isObject } from "./checks.js";
+import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
 import { draftBody, loadDraft } from "./drafts.js";
 import type { FileStore } from "./files.js";
@@ -34,16 +35,20 @@ function applyError(body: unknown): string | undefined {
   return extra === undefined ? undefined : `${extra} is not a field of this body.`;
 }
 
-/** The event's own of the draft (D11), with the bytes of its logo and icon to carry over. */
+/**
+ * The event's own (D11), with the bytes of its logo and icon to carry over: the draft's, or with
+ * no draft the published theme's, since publish removes the draft and the gallery is where the
+ * Studio lands.
+ */
 async function keptOf(
   c: SqlClient,
   files: FileStore,
 ): Promise<{ kept: Kept; pictures: Map<string, Buffer> }> {
   const kept: Kept = { images: {}, brand: {} };
   const pictures = new Map<string, Buffer>();
-  const draft = await loadDraft(c);
-  if (draft === undefined) return { kept, pictures };
-  const m = draft.manifest;
+  const source = await ownSource(c);
+  if (source === undefined) return { kept, pictures };
+  const m = source.manifest;
   const brand = isObject(m.brand) ? m.brand : {};
   if (isObject(brand.logo_plate)) kept.brand.logo_plate = brand.logo_plate as never;
   if (typeof brand.embed_color === "string") kept.brand.embed_color = brand.embed_color;
@@ -52,8 +57,8 @@ async function keptOf(
     const path = images[role];
     if (typeof path !== "string") continue;
     const { rows } = await c.query(
-      `SELECT file FROM theming_package_files WHERE owner = 'draft' AND path = $1 AND file IS NOT NULL`,
-      [path],
+      `SELECT file FROM theming_package_files WHERE owner = $1 AND path = $2 AND file IS NOT NULL`,
+      [source.owner, path],
     );
     const file = (rows[0] as { file: string } | undefined)?.file;
     const bytes = file === undefined ? undefined : await files.read(file);
@@ -62,6 +67,17 @@ async function keptOf(
     pictures.set(path, bytes);
   }
   return { kept, pictures };
+}
+
+/** Whose logo and brand the event has now: the draft, else the current revision, else none. */
+async function ownSource(c: SqlClient): Promise<{ owner: string; manifest: Manifest } | undefined> {
+  const draft = await loadDraft(c);
+  if (draft !== undefined) return { owner: "draft", manifest: draft.manifest };
+  const { rows } = await c.query(
+    `SELECT revision, manifest FROM theming_revisions ORDER BY revision DESC LIMIT 1`,
+  );
+  const row = rows[0] as { revision: number; manifest: Manifest } | undefined;
+  return row && { owner: `r:${row.revision}`, manifest: row.manifest };
 }
 
 export function presetRoutes(app: FastifyInstance, deps: DraftDeps & { audit: Audit }): void {

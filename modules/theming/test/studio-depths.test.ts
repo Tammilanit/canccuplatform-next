@@ -167,5 +167,35 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
         expect(res.body, path).toContain('name="import"');
       }
     });
+
+    it("leaves Publish out of Advanced, which draws no preview to hold it for", async () => {
+      await apply("default", "night");
+      const res = await page("/theming/studio/advanced");
+      expect(res.body).not.toMatch(/data-action="(publish|light-ask)"/);
+    });
+
+    it("holds the light dialog on a dark draft's pages, for a save that turns it light", async () => {
+      await apply("default", "night");
+      for (const path of ["", "yours"]) {
+        const res = await page(`/theming/studio/${path}`);
+        expect(res.body, path).toContain('id="canccu-studio-light"');
+        expect(res.body, path).not.toContain('data-action="light-ask"');
+      }
+    });
+
+    it("asks before a look replaces CSS of the organiser's own under a preset", async () => {
+      const applied = await apply("terminal", "cyan");
+      // The preset's own CSS, fonts and templates are not the organiser's.
+      expect((await page("/theming/studio/")).body).not.toContain("data-own-work");
+      const up = await t.put(
+        "css/extra.css",
+        applied.draft_version,
+        Buffer.from("a { color: red; }"),
+      );
+      expect(up.statusCode).toBe(200);
+      for (const path of ["", "yours"]) {
+        expect((await page(`/theming/studio/${path}`)).body, path).toContain('data-own-work="1"');
+      }
+    });
   });
 });

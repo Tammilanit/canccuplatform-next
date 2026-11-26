@@ -16,7 +16,8 @@ import { draftCssRoutes, eventOf, htmlHeaders, previewRoutes } from "./studio-pr
 import type { StudioDeps } from "./studio-preview.js";
 import { advancedView, historyView } from "./studio-advanced.js";
 import { depthFrame, discardView, previewColumn } from "./studio-column.js";
-import { galleryView, presetOf } from "./studio-gallery.js";
+import { galleryView } from "./studio-gallery.js";
+import { ownWork } from "./own-work.js";
 import { yoursView } from "./studio-yours.js";
 import { logoInfo } from "./logo-info.js";
 import { STUDIO, studioState } from "./studio-views.js";
@@ -92,14 +93,8 @@ async function studioPage(
  * A depth's page: its controls beside the live preview column (D2), in the root every page script
  * reads the draft's version and save state from.
  */
-function depthBody(state: StudioState, controls: Html, extra: Html): Html {
-  const from = presetOf(state);
+function depthBody(state: StudioState, controls: Html, extra: Html, own: boolean): Html {
   const m = state.draft?.manifest;
-  // Work of the organiser's own that applying a preset would drop, so the page asks first (D11).
-  const own =
-    m !== undefined &&
-    from === undefined &&
-    ["css", "fonts", "templates", "embeds"].some((k) => m[k] !== undefined);
   // The colours as saved, which the live preview posts after each save (static/studio-live.js).
   const vars =
     m === undefined
@@ -229,7 +224,11 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
     const toGallery = (reply: FastifyReply): FastifyReply => reply.redirect(STUDIO, 303);
 
     studio.get(STUDIO, reader, async (request, reply) => {
-      const state = await deps.db.tenant((c) => studioState(c, deps.files));
+      // With the organiser's own work that a look would drop, so the page asks first (D11).
+      const { state, own } = await deps.db.tenant(async (c) => {
+        const state = await studioState(c, deps.files);
+        return { state, own: await ownWork(c, state.draft?.manifest) };
+      });
       // The page only offers; applying a preset checks the embeds right itself.
       const embedsAllowed = request.session?.rights.has(EMBEDS) ?? false;
       const frame = depthFrame(state, request.session?.userId);
@@ -238,7 +237,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         tab: "",
         description: frame.description,
         actions: frame.actions,
-        body: depthBody(state, galleryView(state, embedsAllowed), frame.extra),
+        body: depthBody(state, galleryView(state, embedsAllowed), frame.extra, own),
       });
     });
 
@@ -246,7 +245,12 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       const page = await deps.db.tenant(async (c) => {
         const state = await studioState(c, deps.files);
         if (state.draft === undefined) return undefined;
-        return { state, draft: state.draft, info: await logoInfo(c, deps.files, state.draft) };
+        return {
+          state,
+          draft: state.draft,
+          info: await logoInfo(c, deps.files, state.draft),
+          own: await ownWork(c, state.draft.manifest),
+        };
       });
       if (page === undefined) return toGallery(reply);
       const frame = depthFrame(page.state, request.session?.userId);
@@ -255,14 +259,20 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         tab: "yours",
         description: frame.description,
         actions: frame.actions,
-        body: depthBody(page.state, yoursView(page.state, page.draft, page.info), frame.extra),
+        body: depthBody(
+          page.state,
+          yoursView(page.state, page.draft, page.info),
+          frame.extra,
+          page.own,
+        ),
       });
     });
 
     studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
       const state = await deps.db.tenant((c) => studioState(c, deps.files, false));
       if (state.draft === undefined) return toGallery(reply);
-      const frame = depthFrame(state, request.session?.userId);
+      // No Publish here: this page draws no preview to hold it for (#551) and no light dialog.
+      const frame = depthFrame(state, request.session?.userId, false);
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "advanced",

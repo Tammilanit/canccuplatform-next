@@ -8,6 +8,7 @@
 import { readFile } from "node:fs/promises";
 import type { Frame, Page, Route } from "playwright-core";
 import { describe, expect, it } from "vitest";
+import { png } from "./drafting.js";
 import { browser, studioSuite } from "./studio-page.js";
 
 const BLACK_LOGO = new URL("../../../events/demo/images/logo-black.svg", import.meta.url);
@@ -196,5 +197,134 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     expect(await box()).toEqual(at);
     const screen = await frame(page, SCREEN);
     await expect.poll(() => cssVar(screen, "--canccu-font-heading")).toContain("Space Grotesk");
+  });
+  it("keeps the preset's pair and corners through the next edit after Reset", async () => {
+    await eventDraft();
+    const preset = (await draft()).manifest.brand as Record<string, unknown>;
+    const page = await open("/theming/studio/yours");
+    let before = (await draft()).draft_version;
+    await page.click('input[name="font_pair"][value="space-inter"]', { force: true });
+    await page.click('input[name="roundness"][value="round"]', { force: true });
+    await savedAfter(page, before);
+    expect((await draft()).manifest.brand).toMatchObject({
+      font_pair: "space-inter",
+      roundness: "round",
+    });
+    await page.click('[data-action="reset-ask"]');
+    await Promise.all([
+      page.waitForEvent("load"),
+      page.click('#canccu-studio-reset [data-action="preset"]'),
+    ]);
+    before = (await draft()).draft_version;
+    await page.click('[data-action="plate-suggest"]');
+    await savedAfter(page, before);
+    const brand = (await draft()).manifest.brand as Record<string, unknown>;
+    expect(brand.font_pair).toEqual(preset.font_pair);
+    // The form sends its corners on every save: the preset's, or Soft where it names none.
+    expect(brand.roundness).toEqual(preset.roundness ?? "soft");
+  });
+
+  it("asks before Publish when a save without a reload turns the draft light", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/");
+    const before = (await draft()).draft_version;
+    await page.click('[data-action="preset"][data-preset="default"][data-scheme="daylight"]');
+    await savedAfter(page, before);
+    const publish = page.locator('.canccu-pagehead [data-action="light-ask"]');
+    await expect.poll(() => publish.isDisabled()).toBe(false);
+    await publish.click();
+    await expect.poll(() => page.isVisible("#canccu-studio-light")).toBe(true);
+  });
+
+  it("never names an older version than the last save, whatever refresh lands late", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    // The first refresh is answered as the page was then, and only after the next save's.
+    let late: (() => Promise<void>) | undefined;
+    await page.route("**/theming/studio/yours", async (r) => {
+      if (late !== undefined) return r.continue();
+      const answer = await r.fetch();
+      late = () => r.fulfill({ response: answer });
+    });
+    let before = (await draft()).draft_version;
+    await page.click('input[name="roundness"][value="round"]', { force: true });
+    // Its refresh is the one held, so the page is not yet "saved": the draft says it is.
+    await expect.poll(async () => (await draft()).draft_version).toBeGreaterThan(before);
+    await expect.poll(() => late !== undefined).toBe(true);
+    before = (await draft()).draft_version;
+    await page.click('input[name="roundness"][value="square"]', { force: true });
+    await savedAfter(page, before);
+    await late?.();
+    await page.waitForTimeout(300);
+    before = (await draft()).draft_version;
+    await page.click('input[name="font_pair"][value="space-inter"]', { force: true });
+    await savedAfter(page, before);
+    expect(await page.getAttribute(".canccu-studio", "data-save-state")).toBe("saved");
+    expect((await draft()).manifest.brand).toMatchObject({
+      roundness: "square",
+      font_pair: "space-inter",
+    });
+  });
+
+  it("shows the draft's colours again when a look is refused, or kept out by Keep my draft", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/");
+    const screen = await frame(page, SCREEN);
+    const tokens = (await draft()).manifest.tokens as { colors: { background: string } };
+    const night = tokens.colors.background;
+    await expect.poll(() => cssVar(screen, "--canccu-color-background")).toBe(night);
+    await page.route("**/api/theming/draft/preset", (r) =>
+      r.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ error: { code: "missing_right", message: "No." } }),
+      }),
+    );
+    await page.click('[data-action="preset"][data-preset="default"][data-scheme="daylight"]');
+    await expect.poll(() => page.isVisible(".canccu-studio-notice")).toBe(true);
+    await expect.poll(() => cssVar(screen, "--canccu-color-background")).toBe(night);
+
+    // Own CSS under the preset: the look waits for a yes, and the frames with it.
+    await page.unroute("**/api/theming/draft/preset");
+    const css = await fetch(
+      `${s.origin}/api/theming/draft/file?path=css%2Fextra.css&draft_version=${(await draft()).draft_version}`,
+      {
+        method: "PUT",
+        headers: { cookie: "canccu_session=embedder", origin: s.origin },
+        body: "a { color: red; }",
+      },
+    );
+    expect(css.status).toBe(200);
+    const asked = await open("/theming/studio/");
+    const asking = await frame(asked, SCREEN);
+    await expect.poll(() => cssVar(asking, "--canccu-color-background")).toBe(night);
+    await asked.click('[data-action="preset"][data-preset="default"][data-scheme="daylight"]');
+    await expect.poll(() => asked.isVisible("#canccu-studio-replace")).toBe(true);
+    await asked.click('#canccu-studio-replace [data-action="dialog-close"]');
+    await asked.waitForTimeout(300);
+    expect(await cssVar(asking, "--canccu-color-background")).toBe(night);
+    expect((await draft()).manifest.preset).toEqual({ id: "default", scheme: "night" });
+  });
+
+  it("keeps a logo picked just before an earlier save's refresh lands", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    const held: Route[] = [];
+    await page.route("**/theming/studio/yours", (r) =>
+      held.length === 0 ? void held.push(r) : r.continue(),
+    );
+    const before = (await draft()).draft_version;
+    await page.click('input[name="roundness"][value="round"]', { force: true });
+    await expect.poll(() => held.length).toBe(1);
+    await page.setInputFiles('input[name="logo_file"]', {
+      name: "logo.png",
+      mimeType: "image/png",
+      buffer: await png("#ff0000", 64),
+    });
+    // The refresh lands inside the 400 ms before the logo's save.
+    await held[0]?.continue();
+    const logo = async () => ((await draft()).manifest.images as { logo?: string }).logo;
+    await expect.poll(logo, { timeout: 15_000 }).toBe("images/logo.png");
+    await savedAfter(page, before);
   });
 });

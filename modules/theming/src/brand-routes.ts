@@ -160,7 +160,14 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
         const next: Manifest = { ...m, brand };
         if (Object.keys(images).length > 0) next.images = images;
         else delete next.images;
-        return withColors(next, brand);
+        // A scheme's hand-set colours (presets.ts) stay until the organiser changes what the
+        // colours come from; the page sends the whole brand on every change, the corners too.
+        const before = isObject(m.brand) ? m.brand : {};
+        const tokens = isObject(m.tokens) ? m.tokens : {};
+        const same = (["primary", "accent", "scheme"] as const).every(
+          (k) => before[k] === brand[k],
+        );
+        return same && isObject(tokens.colors) ? next : withColors(next, brand);
       }),
     );
     return { draft: draftBody(row), adjusted };
