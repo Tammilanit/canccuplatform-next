@@ -51,9 +51,11 @@ def _row(href: str, ico: str, title: str, about: str, *, external: bool = False)
 
 
 def _section(title: str, body: str) -> str:
+    """A heading over a flush card of links (the list runs to the card's edges)."""
+    key = title.lower().replace(" ", "-")
     return (
-        f'<section class="canccu-card canccu-card--flush"><h2 class="canccu-card__title">'
-        f"{esc(title)}</h2>{body}</section>"
+        f'<section aria-labelledby="home-{key}"><h2 class="canccu-card__title" id="home-{key}">'
+        f'{esc(title)}</h2><div class="canccu-card canccu-card--flush">{body}</div></section>'
     )
 
 

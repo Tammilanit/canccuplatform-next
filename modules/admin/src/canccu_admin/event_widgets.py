@@ -130,7 +130,8 @@ def choice(
         for v, label, text in options
     )
     return (
-        f'<fieldset class="canccu-form"><legend class="canccu-field__label">{esc(title)}'
+        '<fieldset class="canccu-form canccu-fieldset">'
+        f'<legend class="canccu-field__label">{esc(title)}'
         f"</legend>{rows}</fieldset>"
     )
 

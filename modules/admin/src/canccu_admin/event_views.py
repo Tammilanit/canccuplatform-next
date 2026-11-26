@@ -24,7 +24,7 @@ from .event_widgets import (
 )
 from .event_widgets import status as _status
 from .event_widgets import typed as _typed
-from .pages import BASE, part_name
+from .pages import BASE
 from .zones import zone_groups, zone_label
 
 EVENT = f"{BASE}/event"
@@ -35,7 +35,13 @@ ALWAYS_ON = (
     ("tenants", "Sign-in"),
     ("theming", "Look"),
 )
-OTHERS = ("screen", "notify", "moments", "pizza")
+# The others by the names the menu gives them; a `<module>.enabled` flag gives one a switch.
+OTHERS = (
+    ("screen", "Screens"),
+    ("notify", "Notifications"),
+    ("moments", "Moments"),
+    ("pizza", "Food"),
+)
 GB = 1024**3
 
 
@@ -169,8 +175,8 @@ def modules(session: Session, data: EventData, retry: Retry | None) -> str:
 
     for module, name in ALWAYS_ON:
         rows.append(f"<li><strong>{esc(name)}</strong> · Always on{link(module)}</li>")
-    for module in OTHERS:
-        name, key = part_name(module), f"{module}.enabled"
+    for module, name in OTHERS:
+        key = f"{module}.enabled"
         if key not in switches:
             rows.append(f"<li><strong>{esc(name)}</strong> · On{link(module)}</li>")
         elif can:

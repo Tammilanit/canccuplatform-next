@@ -58,7 +58,8 @@ def _wifi_row(i: int, net: Mapping[str, Any], *, new: bool) -> str:
     )
     title = "Add a network" if new else f"Network {i + 1}"
     return (
-        f'<fieldset class="canccu-form"><legend class="canccu-field__label">{title}</legend>'
+        '<fieldset class="canccu-form canccu-fieldset">'
+        f'<legend class="canccu-field__label">{title}</legend>'
         f'<label class="canccu-small" for="ev-wifi-{i}-ssid">Name (SSID)</label>'
         f'<input class="canccu-input" id="ev-wifi-{i}-ssid" name="wifi_{i}_ssid" '
         f'value="{val("ssid")}" maxlength=32>'
