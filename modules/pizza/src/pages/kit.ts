@@ -179,6 +179,8 @@ export async function organiserPage(
     /** The organiser menu's item this page is (Food unless said). */
     current?: string;
     body: Slot;
+    /** What the page is for, in one or two sentences (#782). */
+    description: Slot;
     crumb?: { href: string; label: string };
     actions?: Slot;
     wide?: boolean;
@@ -202,6 +204,7 @@ export async function organiserPage(
     event: await eventOf(request, deps),
     session: { userName: c.session.userName, rights: c.session.rights },
     current: o.current ?? "food",
+    description: o.description,
     ...(o.crumb === undefined ? {} : { crumb: o.crumb }),
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.wide === true ? { width: "wide" as const } : {}),
@@ -241,6 +244,7 @@ export function pageErrors(scope: FastifyInstance, deps: AppDeps): void {
         ? {}
         : { session: { userName: session.userName, rights: session.rights } }),
       plain: true,
+      description: "",
       body: errorView(pageErr, {
         ...(session === null
           ? {}

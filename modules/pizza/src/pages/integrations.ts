@@ -8,7 +8,7 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
-import { html, notice } from "@canccu/ui";
+import { attrs, html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AppDeps } from "../http.js";
 import { INTEGRATIONS_WRITE } from "../policy.js";
@@ -117,6 +117,23 @@ function logView(c: PageCtx, log: ReadLog): Html {
   </section>`;
 }
 
+/** The Console's page where an API key is made (#782 item 6). */
+const CONSOLE_KEYS = "https://console.anthropic.com/settings/keys";
+
+/** How to get the reader's key, step by step (#782 item 6, D5): open until a key is set. */
+function howTo(c: PageCtx, set: boolean): Html {
+  const steps = (
+    ["howto.step1", "howto.step2", "howto.step3", "howto.step4", "howto.step5"] as const
+  ).map((k) => html`<li class="pizza-howto__step">${c.t(k)}</li>`);
+  return html`<details${attrs({ class: "pizza-howto", open: !set })}>
+    <summary>${c.t("howto.title")}</summary>
+    <ol>${steps}</ol>
+    <p>${c.t("howto.cost")}</p>
+    <p class="canccu-muted canccu-small">${c.t("howto.subscription")}</p>
+    <p><a href="${CONSOLE_KEYS}" target="_blank" rel="noopener noreferrer">${c.t("howto.link")}</a></p>
+  </details>`;
+}
+
 function view(c: PageCtx, k: KeyStatus, log: ReadLog, error?: string): Html {
   return html`${flash(error)}
     <section class="pizza-part pizza-stack pizza-key">
@@ -154,6 +171,7 @@ function view(c: PageCtx, k: KeyStatus, log: ReadLog, error?: string): Html {
               </p>`
           : html`<p class="pizza-title">${c.t("integrations.not_set")}</p>`
       }
+      ${howTo(c, k.set)}
       <form method="post" action="${PREFIX}integrations/key" class="pizza-form">
         ${formKey()}
         <label class="canccu-field"
@@ -210,6 +228,7 @@ export function integrationsPages(app: FastifyInstance, deps: AppDeps): void {
     ) as unknown as ReadLog;
     return organiserPage(request, reply, deps, c, {
       title: c.t("integrations.title"),
+      description: c.t("about.integrations"),
       current: "integrations",
       narrow: true,
       body: view(c, k, log, request.query.error),

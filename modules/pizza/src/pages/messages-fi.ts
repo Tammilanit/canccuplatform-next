@@ -7,6 +7,17 @@ import { SETTINGS_FI } from "./settings-messages.js";
 import type { MessageKey } from "./messages.js";
 
 export const FI: Record<MessageKey, string> = {
+  "about.crew": "Päivän ruokatilaukset ja mitä kukin tarvitsee crew'ltä seuraavaksi.",
+  "about.order": "Yksi tilaus: sen pizzat, kuka sitä pitää ja missä vaiheessa se on.",
+  "about.integrations": "Tekoälylukijan avain, miten sen saa ja mitä luvut maksavat tässä kuussa.",
+  "about.import": "Tarkista menu ennen kuin se korvaa pizzerian nykyisen menun.",
+  "about.menus": "Pizzeriat, joista tähän tapahtumaan tilataan, menuineen ja hintoineen.",
+  "about.pizzeria": "Tämän pizzerian tiedot ja menu. Muutos koskee uusia tilauksia.",
+  "about.read": "Lue menu kuvista. Tarkista jokainen rivi ennen tuontia.",
+  "about.record": "Tapahtuman kaikki tilaukset päivittäin ja mitä niistä maksettiin.",
+  "about.hold": "Yksi tilaus sellaisena kuin se meni: pizzat, kuitti ja kuka maksoi mitä.",
+  "about.export": "Lataa tapahtuman tilaukset tiedostona.",
+  "about.settings": "Miten Ruoka toimii tässä tapahtumassa. Muutos tulee voimaan, kun tallennat.",
   "tab.orders": "Tilaukset",
   "tab.pizzerias": "Pizzeriat ja menut",
   "tab.settings": "Asetukset",

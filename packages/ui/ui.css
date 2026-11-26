@@ -1389,6 +1389,81 @@
     background: transparent;
     color: var(--canccu-ink-down);
   }
+  /* The one tooltip (#782, tip.ts): hover and keyboard focus on a PC; shell.js opens it on a tap
+     (an info button, a chip) or a long press (an icon button). Hushed by Esc until the pointer or
+     focus leaves. */
+  .canccu-button--icon {
+    min-width: 2.75rem;
+    padding-inline: 0.5rem;
+  }
+  .canccu-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .canccu-tip__info {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--canccu-color-text-muted);
+    cursor: help;
+  }
+  .canccu-tip__info:focus-visible {
+    color: var(--canccu-color-text);
+  }
+  /* A touch screen keeps :hover on the last element tapped, so there only shell.js's --open
+     class shows or hides a tooltip. */
+  @media (hover: hover) {
+    .canccu-tip__info:hover {
+      color: var(--canccu-color-text);
+    }
+    .canccu-tip:hover > .canccu-tip__text {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+  /* Fixed even while hidden: a hidden absolute box still widens the page's scroll area, so a tip
+     near a phone's right edge made the page pan sideways. Fixed boxes never do, and shell.js
+     measures this box (it stays laid out, only invisible) before it places it. */
+  .canccu-tip__text {
+    position: fixed;
+    inset: 0 auto auto 0;
+    z-index: 60;
+    inline-size: max-content;
+    max-inline-size: min(18rem, 80vw);
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--canccu-radius);
+    background: var(--canccu-color-text);
+    color: var(--canccu-color-background);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: start;
+    white-space: normal;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  /* shell.js fixes a shown tooltip on the screen, inside its edges and below its trigger when
+     there is no room above, so a card that clips its overflow never cuts it. */
+  .canccu-tip__text.canccu-tip__text--placed {
+    inset: auto;
+  }
+  .canccu-tip:has(:focus-visible) > .canccu-tip__text,
+  .canccu-tip.canccu-tip--open > .canccu-tip__text {
+    visibility: visible;
+    opacity: 1;
+  }
+  .canccu-tip.canccu-tip--hushed > .canccu-tip__text {
+    visibility: hidden;
+    opacity: 0;
+  }
   .canccu-button--danger-ghost:hover {
     background: color-mix(in srgb, var(--canccu-color-status-down) 12%, transparent);
   }
@@ -1429,6 +1504,15 @@
   .canccu-field__label {
     font-weight: 600;
     font-size: var(--canccu-text-sm);
+  }
+  /* A label and its "i" on one line; the button's height does not widen the line. */
+  .canccu-field__labelrow {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .canccu-field__labelrow > .canccu-tip {
+    margin-block: -0.375rem;
   }
   .canccu-field--check .canccu-field__label {
     flex: 1 1 0;

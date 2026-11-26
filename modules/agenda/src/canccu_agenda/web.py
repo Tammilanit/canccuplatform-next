@@ -58,6 +58,20 @@ TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
+# What each chip of an item means, in its tooltip (#782).
+VISIBILITY_TIPS = {
+    "public": "Everyone sees it, also guests who have not signed in.",
+    "attendees": "Only attendees who joined the event see it.",
+    "crew": "Only organisers and crew see it.",
+}
+CHIP_TIPS = {
+    "running": "It is on now.",
+    "cancelled": "It was cancelled; it stays in the run of show, marked.",
+    "done": "It is over.",
+    "delayed": "Its time moved from the plan; the plan is kept.",
+    "managed": "The tournament keeps this item's times; change them there.",
+    "kind": "The item's kind, which sets its look and its reminders.",
+}
 CHANNEL_LABELS = {
     "screen": "Screen notice",
     "discord_channel": "Discord channel",

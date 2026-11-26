@@ -54,6 +54,7 @@ export function crewPages(app: FastifyInstance, deps: AppDeps): void {
     const settings = await deps.settings(c.tenant);
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
+      description: c.t("about.crew"),
       tab: "orders",
       wide: true,
       body: ordersView(c, day, orders, settings, now, request.query.error),
@@ -71,6 +72,7 @@ export function crewPages(app: FastifyInstance, deps: AppDeps): void {
       const history = must(await viaApi(app, request, "GET", `/api/pizza/orders/${id}/history`));
       return organiserPage(request, reply, deps, c, {
         title: c.t("order.title", { seq: o.seq, pizzeria: o.pizzeria.name }),
+        description: c.t("about.order"),
         crumb: { href: `${PREFIX}crew?day=${o.day}`, label: c.t("crew.title") },
         wide: true,
         // The holder's pages work for the crew too: call mode, the hand-out list.

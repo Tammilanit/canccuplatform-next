@@ -13,13 +13,13 @@ from typing import Any
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
-from canccu_kit.ui import icon
+from canccu_kit.ui import icon, status_chip
 from starlette.requests import Request
 
 from . import day_view
 from .day_view import state_of
 from .times import day_label, hhmm
-from .web import BASE, esc, folded
+from .web import BASE, CHIP_TIPS, esc, folded
 
 # The filter's choices by the list's For column; empty is every item this person may read.
 AUDIENCES = (
@@ -80,8 +80,8 @@ def _fold(earlier: list[Any], view: View, now: datetime, tz: ZoneInfo) -> str:
     return (
         f'<li class="canccu-agenda-fold">{icon("right")}<span>{count} · last: '
         f"{esc(last['title'])} {hhmm(last['starts_at'], tz)}</span>"
-        f'<span class="canccu-badge">{state}</span>'
-        f'<a href="{esc(view.href(earlier=True))}">Show</a></li>'
+        + status_chip("plain", state, CHIP_TIPS[state.lower()])
+        + f'<a href="{esc(view.href(earlier=True))}">Show</a></li>'
     )
 
 

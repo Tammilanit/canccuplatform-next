@@ -1,0 +1,217 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1540" width="1900" height="1540" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Sheet 02 (#782): Notifications, advanced view, 1280 and 390 px</title>
+<rect x="0" y="0" width="1900" height="1540" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">02 · Notifications → Advanced: grouped, with choices, each field explained (organisers)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Drawn first for the PO (#782 item 4). The advanced view of the same page; 1280 px on the left, 390 px on the right.</text>
+<rect x="32" y="120" width="1280" height="1300" rx="0" fill="#0f172a"/>
+<rect x="32" y="120" width="1280" height="52" rx="0" fill="#121a2e"/>
+<rect x="48" y="133" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="84" y="152" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo LAN</text>
+<text x="168" y="152" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Fri 18:00 – Sun 14:00</text>
+<rect x="32" y="172" width="220" height="1248" rx="0" fill="#111827"/>
+<text x="56" y="210" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="42" y="226" width="200" height="30" rx="6" fill="#3b82f633"/>
+<text x="56" y="246" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">Notifications</text>
+<text x="56" y="282" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Announce</text>
+<text x="56" y="318" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Food</text>
+<text x="56" y="354" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Screen studio</text>
+<text x="56" y="390" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="56" y="426" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Settings</text>
+<text x="56" y="462" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">Health</text>
+<text x="56" y="498" font-size="14" fill="#94a3b8" font-weight="400" text-anchor="start">People</text>
+<text x="284" y="202" font-size="13" fill="#3b82f6" font-weight="600" text-anchor="start">‹ Notifications</text>
+<text x="284" y="232" font-size="28" fill="#f8fafc" font-weight="700" text-anchor="start">Advanced notification settings</text>
+<text x="284" y="260" font-size="15" fill="#94a3b8" font-weight="400" text-anchor="start">Where each kind may go, its timing, and your own kinds. Most events never need this page.</text>
+<circle cx="268" cy="256" r="12" fill="#f59e0b"/>
+<text x="268" y="261" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">1</text>
+<text x="284" y="300" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Run of show</text>
+<circle cx="268" cy="296" r="12" fill="#f59e0b"/>
+<text x="268" y="301" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">2</text>
+<rect x="284" y="310" width="996" height="270" rx="10" fill="#1e293b" stroke="#334155"/>
+<text x="300" y="338" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Schedule</text>
+<text x="394" y="338" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="start">Run of show</text>
+<text x="1264" y="338" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="end">12 sent in the last 24 hours · 48 in all</text>
+<text x="300" y="366" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">To everyone</text>
+<circle cx="402" cy="362" r="8" fill="none" stroke="#94a3b8"/>
+<text x="402" y="366" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="384" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Goes to everyone who switched this kind on.</text>
+<rect x="300" y="396" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="329" cy="407" r="8" fill="#f8fafc"/>
+<text x="348" y="412" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Phone notification</text>
+<circle cx="488" cy="408" r="8" fill="none" stroke="#94a3b8"/>
+<text x="488" y="412" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="536" y="396" width="40" height="22" rx="11" fill="#334155"/>
+<circle cx="547" cy="407" r="8" fill="#f8fafc"/>
+<text x="584" y="412" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Discord message</text>
+<circle cx="703" cy="408" r="8" fill="none" stroke="#94a3b8"/>
+<text x="703" y="412" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="442" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">Reminder lead time</text>
+<circle cx="456" cy="438" r="8" fill="none" stroke="#94a3b8"/>
+<text x="456" y="442" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="460" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">How many minutes before an item starts the reminder goes out.</text>
+<rect x="300" y="472" width="132" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="314" y="494" font-size="18" fill="#f8fafc" font-weight="600" text-anchor="start">−</text>
+<text x="366" y="494" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="middle">10 min</text>
+<text x="418" y="494" font-size="18" fill="#f8fafc" font-weight="600" text-anchor="end">+</text>
+<rect x="448" y="476" width="64" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="480" y="494" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">5 min</text>
+<rect x="520" y="476" width="64" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="552" y="494" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">10 min</text>
+<rect x="592" y="476" width="64" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="624" y="494" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">15 min</text>
+<rect x="664" y="476" width="64" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="696" y="494" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">30 min</text>
+<rect x="300" y="534" width="90" height="34" rx="8" fill="#3b82f6"/>
+<text x="345.0" y="556" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle">Save</text>
+<circle cx="268" cy="402" r="12" fill="#f59e0b"/>
+<text x="268" y="407" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">3</text>
+<rect x="734" y="388" width="470" height="50" rx="6" fill="#f8fafc"/>
+<text x="744" y="408" font-size="13" fill="#0f172a" font-weight="400" text-anchor="start">Sent by the event&#x27;s Discord bot to people who</text>
+<text x="744" y="427" font-size="13" fill="#0f172a" font-weight="400" text-anchor="start">chose it in their hub.</text>
+<text x="284" y="610" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Food</text>
+<rect x="284" y="620" width="996" height="258" rx="10" fill="#1e293b" stroke="#334155"/>
+<text x="300" y="648" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Food</text>
+<text x="350" y="648" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="start">Food</text>
+<text x="1264" y="648" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="end">5 sent in the last 24 hours · 9 in all</text>
+<text x="300" y="676" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">To everyone</text>
+<circle cx="402" cy="672" r="8" fill="none" stroke="#94a3b8"/>
+<text x="402" y="676" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="694" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Orders opening and closing.</text>
+<rect x="300" y="706" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="329" cy="717" r="8" fill="#f8fafc"/>
+<text x="348" y="722" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Phone notification</text>
+<circle cx="488" cy="718" r="8" fill="none" stroke="#94a3b8"/>
+<text x="488" y="722" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="536" y="706" width="40" height="22" rx="11" fill="#334155"/>
+<circle cx="547" cy="717" r="8" fill="#f8fafc"/>
+<text x="584" y="722" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Discord message</text>
+<circle cx="703" cy="718" r="8" fill="none" stroke="#94a3b8"/>
+<text x="703" y="722" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="750" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">Personal</text>
+<circle cx="378" cy="746" r="8" fill="none" stroke="#94a3b8"/>
+<text x="378" y="750" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="768" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">News about the person&#x27;s own order: it&#x27;s here, pay the holder.</text>
+<rect x="300" y="780" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="329" cy="791" r="8" fill="#f8fafc"/>
+<text x="348" y="796" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Phone notification</text>
+<circle cx="488" cy="792" r="8" fill="none" stroke="#94a3b8"/>
+<text x="488" y="796" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="536" y="780" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="565" cy="791" r="8" fill="#f8fafc"/>
+<text x="584" y="796" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Discord message</text>
+<circle cx="703" cy="792" r="8" fill="none" stroke="#94a3b8"/>
+<text x="703" y="796" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="300" y="832" width="90" height="34" rx="8" fill="#3b82f6"/>
+<text x="345.0" y="854" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle">Save</text>
+<text x="284" y="908" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Your own kinds</text>
+<circle cx="268" cy="904" r="12" fill="#f59e0b"/>
+<text x="268" y="909" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">4</text>
+<rect x="284" y="918" width="996" height="330" rx="10" fill="#1e293b" stroke="#334155"/>
+<text x="300" y="946" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Cosplay</text>
+<text x="384" y="946" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="start">Your own kind</text>
+<text x="300" y="976" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="start">Name</text>
+<circle cx="352" cy="972" r="8" fill="none" stroke="#94a3b8"/>
+<text x="352" y="976" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="300" y="984" width="260" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="312" y="1006" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Cosplay</text>
+<text x="584" y="976" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="start">Based on</text>
+<circle cx="672" cy="972" r="8" fill="none" stroke="#94a3b8"/>
+<text x="672" y="976" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="584" y="984" width="220" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="596" y="1006" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Schedule ▾</text>
+<text x="300" y="1048" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">Only when</text>
+<circle cx="384" cy="1044" r="8" fill="none" stroke="#94a3b8"/>
+<text x="384" y="1048" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="300" y="1066" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Leave empty to send everything the base kind sends.</text>
+<rect x="300" y="1078" width="200" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="312" y="1100" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Item kind ▾</text>
+<rect x="512" y="1078" width="120" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="524" y="1100" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">is ▾</text>
+<rect x="644" y="1078" width="200" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="656" y="1100" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Cosplay ▾</text>
+<text x="860" y="1100" font-size="13" fill="#3b82f6" font-weight="600" text-anchor="start">Remove</text>
+<text x="300" y="1138" font-size="13" fill="#3b82f6" font-weight="600" text-anchor="start">+ Add a condition</text>
+<text x="300" y="1172" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">On by default for</text>
+<rect x="300" y="1182" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="329" cy="1193" r="8" fill="#f8fafc"/>
+<text x="348" y="1198" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Phone notification</text>
+<text x="514" y="1198" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Discord message: off in the base kind, so it stays off here.</text>
+<rect x="300" y="1208" width="90" height="34" rx="8" fill="#3b82f6"/>
+<text x="345.0" y="1230" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="402" y="1208" width="110" height="34" rx="8" fill="#1e293b" stroke="#334155"/>
+<text x="457.0" y="1230" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="middle">Remove…</text>
+<circle cx="784" cy="1095" r="12" fill="#f59e0b"/>
+<text x="784" y="1100" font-size="13" fill="#0f172a" font-weight="700" text-anchor="middle">5</text>
+<rect x="284" y="1264" width="180" height="34" rx="8" fill="#1e293b" stroke="#334155"/>
+<text x="374.0" y="1286" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="middle">New kind of your own</text>
+<rect x="1360" y="120" width="390" height="1300" rx="30" fill="#0f172a"/>
+<rect x="1360" y="120" width="390" height="52" rx="0" fill="#121a2e"/>
+<rect x="1376" y="133" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1412" y="152" font-size="15" fill="#f8fafc" font-weight="600" text-anchor="start">Demo LAN</text>
+<text x="1496" y="152" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Fri 18:00 – Sun 14:00</text>
+<text x="1376" y="200" font-size="13" fill="#3b82f6" font-weight="600" text-anchor="start">‹ Notifications</text>
+<text x="1376" y="228" font-size="22" fill="#f8fafc" font-weight="700" text-anchor="start">Advanced notification</text>
+<text x="1376" y="254" font-size="22" fill="#f8fafc" font-weight="700" text-anchor="start">settings</text>
+<text x="1376" y="280" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">Where each kind may go, its timing, and</text>
+<text x="1376" y="299" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">your own kinds. Most events never need</text>
+<text x="1376" y="318" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">this page.</text>
+<text x="1376" y="350" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Run of show</text>
+<rect x="1376" y="362" width="358" height="390" rx="10" fill="#1e293b" stroke="#334155"/>
+<text x="1392" y="390" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Schedule</text>
+<text x="1392" y="410" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="start">12 in 24 h · 48 in all</text>
+<text x="1392" y="438" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">To everyone</text>
+<circle cx="1496" cy="434" r="8" fill="none" stroke="#94a3b8"/>
+<text x="1496" y="438" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="1392" y="452" width="40" height="22" rx="11" fill="#3b82f6"/>
+<circle cx="1421" cy="463" r="8" fill="#f8fafc"/>
+<text x="1440" y="468" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Phone notification</text>
+<circle cx="1580" cy="464" r="8" fill="none" stroke="#94a3b8"/>
+<text x="1580" y="468" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<rect x="1392" y="486" width="40" height="22" rx="11" fill="#334155"/>
+<circle cx="1403" cy="497" r="8" fill="#f8fafc"/>
+<text x="1440" y="502" font-size="13" fill="#f8fafc" font-weight="400" text-anchor="start">Discord message</text>
+<circle cx="1559" cy="498" r="8" fill="none" stroke="#94a3b8"/>
+<text x="1559" y="502" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="1392" y="602" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="start">Reminder lead time</text>
+<circle cx="1542" cy="598" r="8" fill="none" stroke="#94a3b8"/>
+<text x="1542" y="602" font-size="11" fill="#94a3b8" font-weight="700" text-anchor="middle">i</text>
+<text x="1392" y="620" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">How many minutes before an item</text>
+<text x="1392" y="639" font-size="13" fill="#94a3b8" font-weight="400" text-anchor="start">starts the reminder goes out.</text>
+<rect x="1392" y="652" width="132" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="1458" y="674" font-size="14" fill="#f8fafc" font-weight="600" text-anchor="middle">10 min</text>
+<rect x="1536" y="656" width="48" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="1560" y="674" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">5</text>
+<rect x="1592" y="656" width="48" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="1616" y="674" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">15</text>
+<rect x="1648" y="656" width="48" height="26" rx="13" fill="#0f172a" stroke="#334155"/>
+<text x="1672" y="674" font-size="12" fill="#f8fafc" font-weight="400" text-anchor="middle">30</text>
+<rect x="1392" y="702" width="90" height="34" rx="8" fill="#3b82f6"/>
+<text x="1437.0" y="724" font-size="14" fill="#0f172a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="1392" y="534" width="326" height="50" rx="6" fill="#f8fafc"/>
+<text x="1402" y="554" font-size="13" fill="#0f172a" font-weight="400" text-anchor="start">Shows on the lock screen of phones and</text>
+<text x="1402" y="573" font-size="13" fill="#0f172a" font-weight="400" text-anchor="start">PCs that allowed this event&#x27;s hub.</text>
+<text x="1376" y="768" font-size="13" fill="#94a3b8" font-weight="700" text-anchor="start">Your own kinds</text>
+<rect x="1376" y="780" width="358" height="300" rx="10" fill="#1e293b" stroke="#334155"/>
+<text x="1392" y="808" font-size="16" fill="#f8fafc" font-weight="700" text-anchor="start">Cosplay</text>
+<text x="1392" y="836" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="start">Based on</text>
+<rect x="1392" y="844" width="326" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="1404" y="866" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Schedule ▾</text>
+<text x="1392" y="904" font-size="13" fill="#f8fafc" font-weight="600" text-anchor="start">Only when</text>
+<rect x="1392" y="914" width="326" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="1404" y="936" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Item kind ▾</text>
+<rect x="1392" y="956" width="326" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="1404" y="978" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">is ▾</text>
+<rect x="1392" y="998" width="326" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+<text x="1404" y="1020" font-size="14" fill="#f8fafc" font-weight="400" text-anchor="start">Cosplay ▾</text>
+<text x="1392" y="1060" font-size="13" fill="#3b82f6" font-weight="600" text-anchor="start">+ Add a condition</text>
+<rect x="1360" y="1356" width="390" height="64" rx="0" fill="#121a2e"/>
+<text x="1408" y="1394" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="middle">Run of show</text>
+<text x="1506" y="1394" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="middle">Announce</text>
+<text x="1604" y="1394" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="middle">Food</text>
+<text x="1702" y="1394" font-size="12" fill="#94a3b8" font-weight="400" text-anchor="middle">More</text>
+<text x="32" y="1454" font-size="15" fill="#374151" font-weight="400" text-anchor="start">1  The page&#x27;s description. Advanced is reached from the Notifications page; it keeps every setting the old page had.</text>
+<text x="32" y="1474" font-size="15" fill="#374151" font-weight="400" text-anchor="start">2  Grouped by the part of the event the kind comes from; each group&#x27;s kinds in a card with how many went out.</text>
+<text x="32" y="1494" font-size="15" fill="#374151" font-weight="400" text-anchor="start">3  Channels as switches in words (a phone notification, a Discord message), each with a tooltip saying what it means; a lead time as a stepper with quick picks.</text>
+<text x="32" y="1514" font-size="15" fill="#374151" font-weight="400" text-anchor="start">4  Your own kinds: a narrower copy of a kind, e.g. only Schedule items of the kind Cosplay. Choices, not typed fields.</text>
+<text x="32" y="1534" font-size="15" fill="#374151" font-weight="400" text-anchor="start">5  &#x27;Only when&#x27;: a field, a test and a value, each a list to pick from; the value list comes from the event&#x27;s own data (here the run of show&#x27;s item kinds).</text>
+</svg>

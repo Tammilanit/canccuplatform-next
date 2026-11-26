@@ -45,7 +45,7 @@ async function studioPage(
     title: string;
     tab?: string;
     body: Slot;
-    description?: Slot;
+    description: Slot;
     actions?: Slot;
     status?: number;
     plain?: boolean;
@@ -65,7 +65,7 @@ async function studioPage(
     session: request.session ?? undefined,
     current: "theme",
     plain: o.plain ?? false,
-    ...(o.description === undefined ? {} : { description: o.description }),
+    description: o.description,
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.tab === undefined
       ? {}
@@ -93,7 +93,12 @@ async function studioPage(
  * A depth's page: its controls beside the live preview column (D2), in the root every page script
  * reads the draft's version and save state from.
  */
-function depthBody(state: StudioState, controls: Html, extra: Html, own: boolean): Html {
+function depthBody(
+  state: StudioState,
+  controls: Html,
+  frame: { where: Html; extra: Html },
+  own: boolean,
+): Html {
   const m = state.draft?.manifest;
   // The colours as saved, which the live preview posts after each save (static/studio-live.js).
   const vars =
@@ -108,7 +113,7 @@ function depthBody(state: StudioState, controls: Html, extra: Html, own: boolean
           ),
         );
   return html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version, "data-save-state": "saved", "data-own-work": own ? "1" : undefined, "data-vars": vars })}>
-    ${extra}
+    ${frame.where}${frame.extra}
     <div class="canccu-studio-depth">${controls}${previewColumn(state)}</div>
     ${state.draft === undefined ? "" : discardView(state)}${replaceDialog}
   </div>`;
@@ -216,6 +221,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         body: view,
         status: pageErr.status,
         plain: true,
+        description: "",
       });
     });
     const reader = { preHandler: pageNeeds(deps.rights, WRITE) };
@@ -235,9 +241,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "",
-        description: frame.description,
+        description: "The event's look: its colours, fonts and logo on every page and screen.",
         actions: frame.actions,
-        body: depthBody(state, galleryView(state, embedsAllowed), frame.extra, own),
+        body: depthBody(state, galleryView(state, embedsAllowed), frame, own),
       });
     });
 
@@ -257,14 +263,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "yours",
-        description: frame.description,
+        description: "Make the chosen look the event's own: its logo, colours, fonts and corners.",
         actions: frame.actions,
-        body: depthBody(
-          page.state,
-          yoursView(page.state, page.draft, page.info),
-          frame.extra,
-          page.own,
-        ),
+        body: depthBody(page.state, yoursView(page.state, page.draft, page.info), frame, page.own),
       });
     });
 
@@ -276,9 +277,10 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "advanced",
-        description: frame.description,
+        description:
+          "The theme beyond Make it yours: upload a whole theme package, or set each colour, font and size by hand.",
         actions: frame.actions,
-        body: advancedView(state),
+        body: html`${frame.where}${advancedView(state)}`,
       });
     });
 
@@ -293,6 +295,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         return studioPage(request, reply, deps, {
           title: "Theme studio",
           tab: "history",
+          description: "Every look published for this event, newest first.",
           body: historyView(list, HISTORY_PAGE, before),
         });
       },

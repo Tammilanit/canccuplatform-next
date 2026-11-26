@@ -40,6 +40,7 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
     const r = await whole(request);
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
+      description: c.t("about.record"),
       tab: "record",
       body: recordView(c, r, pick(request, r), r.days),
     });
@@ -61,6 +62,7 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
       : "";
     return organiserPage(request, reply, deps, c, {
       title: c.t("hold.order", { seq: o.seq }),
+      description: c.t("about.hold"),
       crumb: { href: `${PREFIX}crew/record?day=${day.day}`, label: c.t("tab.record") },
       body: recordOrderView(
         c,
@@ -83,6 +85,7 @@ export function recordPages(app: FastifyInstance, deps: AppDeps): void {
     ) as unknown as ExportAnswer;
     return organiserPage(request, reply, deps, c, {
       title: c.t("export.title"),
+      description: c.t("about.export"),
       crumb: { href: `${PREFIX}crew/record?day=${picked}`, label: c.t("tab.record") },
       body: exportView(c, e, readCsv(e.csv), picked, r.days),
     });

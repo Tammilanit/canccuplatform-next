@@ -165,7 +165,16 @@ async def topics_page(request: Request) -> Response:
             f'<a class="canccu-button canccu-button--primary" href="{TOPICS}/new">'
             f"{icon('plus')}New topic</a>"
         )
-    return page(request, "Notifications", top + cards, actions=new)
+    return page(
+        request,
+        "Notifications",
+        top + cards,
+        actions=new,
+        description=(
+            "Choose what attendees can be notified about."
+            " Each person picks which of these they want in their hub."
+        ),
+    )
 
 
 def _param_value(p: dict[str, Any], raw: Any) -> Any:
