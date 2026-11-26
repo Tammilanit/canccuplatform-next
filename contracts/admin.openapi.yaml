@@ -279,6 +279,45 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /internal/admin/people/with-role:
+    get:
+      tags: [internal]
+      operationId: getPeopleWithRoleInternal
+      summary: The user ids of the people who hold a role
+      description: |
+        For notify's crew test (contracts/notify.md, Web Push): "Send a test to the crew" reaches everyone with
+        an organiser or crew role and nobody else. User ids only, never names. Only notify may call it, with
+        its service identity (any other module is 403 `service_forbidden`). Admin's roles are one list today;
+        notify sends only to these users' devices at the event it tests. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The role holders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user_ids]
+                properties:
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
   /api/admin/session:
     get:
       tags: [session]

@@ -10,7 +10,19 @@ from typing import Any
 from canccu_kit.rights import Session
 from canccu_kit.ui import esc, notice
 
-from .event_widgets import EventData, Retry, card, save_form, status, text_area, text_input, typed
+from .access_pages import READ_ONLY
+from .event_widgets import (
+    NOT_SET,
+    EventData,
+    Retry,
+    card,
+    save_form,
+    status,
+    text_area,
+    text_input,
+    typed,
+    words,
+)
 from .pages import BASE
 
 EVENT = f"{BASE}/event"
@@ -78,16 +90,36 @@ def _wifi_row(i: int, net: Mapping[str, Any], *, new: bool) -> str:
 def _venue_ref(venue: Mapping[str, Any] | None, code: int = 404) -> str:
     if venue is None:
         if code == 403:
-            return "<p>Only the event's admins see which venue this is.</p>"
+            # Which venue is the event admins' to see; the viewer's rows below need no line.
+            return ""
         if code != 404:
             return "<p>The venue didn't answer.</p>"
         return "<p>No venue: an online event, or the platform admin has not chosen one yet.</p>"
-    addresses = ", ".join(str(a) for a in venue.get("addresses", [])) or "none"
+    addresses = ", ".join(str(a) for a in venue.get("addresses", [])) or NOT_SET
     return (
         f"<p><strong>{esc(venue.get('name'))}</strong>. The platform admin keeps the venue. Its "
         f"network addresses, used only by the venue-only options: <code>{esc(addresses)}</code>."
         "</p>"
     )
+
+
+def _read_only(data: EventData, info: Mapping[str, Any], nets: Sequence[Mapping[str, Any]]) -> str:
+    """The venue as label and value rows, like Basics, for a viewer who may not change it."""
+    rows: list[tuple[str, Any]] = []
+    if data.venue is not None:
+        rows.append(("Venue", data.venue.get("name") or NOT_SET))
+    rows += [
+        ("Address", info.get("address") or NOT_SET),
+        ("Wi-Fi", ", ".join(str(w.get("ssid")) for w in nets) or NOT_SET),
+        ("House rules", info.get("house_rules") or NOT_SET),
+        ("Floor plan", "Set" if info.get("floor_plan") is not None else NOT_SET),
+    ]
+    link = (
+        f'<p><a href="{PLAN}" target="_blank" rel="noopener">Open the floor plan</a></p>'
+        if info.get("floor_plan") is not None
+        else ""
+    )
+    return words(rows) + link + f"<p>{esc(READ_ONLY)}</p>"
 
 
 def _plan(info: Mapping[str, Any], can: bool) -> str:
@@ -112,22 +144,23 @@ def _plan(info: Mapping[str, Any], can: bool) -> str:
 
 
 def venue_section(session: Session, data: EventData, retry: Retry | None) -> str:
-    head = status(data, "venue", retry) + _venue_ref(data.venue, data.venue_status)
     info = data.venue_info
+    ref = _venue_ref(data.venue, data.venue_status)
     if info is None:
-        return card("venue", "Venue", head + notice("warn", "The venue info didn't answer."))
+        body = ref + notice("warn", "The venue info didn't answer.")
+        return card("venue", "Venue", status(data, "venue", retry) + body)
     can = session.has("tenants.venue_info.write")
     form = typed("venue", retry)
     nets: Sequence[Mapping[str, Any]] = (
         wifi_rows(form) if form else [dict(w) for w in info.get("wifi", [])]
     )
     if not can:
-        listed = ", ".join(str(w.get("ssid")) for w in nets) or "none"
-        body = (
-            f"<p>Address: {esc(info.get('address') or 'not set')}</p><p>Wi-Fi: {esc(listed)}</p>"
-            f"<p>House rules: {esc(info.get('house_rules') or 'none')}</p>"
+        # The venue's name is one of the rows; a line stays only where it says what is missing.
+        lead = "" if data.venue is not None else ref
+        return card(
+            "venue", "Venue", status(data, "venue", retry) + lead + _read_only(data, info, nets)
         )
-        return card("venue", "Venue", head + body + _plan(info, False))
+    head = status(data, "venue", retry) + ref
     rows = "".join(_wifi_row(i, n, new=False) for i, n in enumerate(nets))
     if len(nets) < MAX_WIFI:
         rows += _wifi_row(len(nets), {}, new=True)

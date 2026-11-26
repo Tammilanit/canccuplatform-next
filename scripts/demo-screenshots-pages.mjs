@@ -19,6 +19,8 @@ const SHELL = [
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
   ["notify-topics", "/notify/admin/topics"],
+  // Notifications' Advanced view, grouped, with choices and a tooltip on each control (#782).
+  ["notify-topics-advanced", "/notify/admin/topics/advanced"],
 ];
 export const PAGES = [
   ...SHELL.flatMap(([name, path]) => [
@@ -149,7 +151,39 @@ async function typeNight(page) {
   await page.waitForTimeout(200);
 }
 const MISSING = "/agenda/items/00000000-0000-0000-0000-000000000000/delay";
+// A kind's switch saves at once (topics.js) and the notice offers Undo (#782, sheet 01): the
+// first shot switches Schedule off, the next one undoes it, so the event ends as it began.
+const switchKind = (selector, says) => async (page) => {
+  // With a script the switch saves at once, so no Save button may show beside it.
+  if (await page.locator(".canccu-notify-save").first().isVisible()) {
+    throw new Error("the Save button is visible beside a switch");
+  }
+  await Promise.all([page.waitForNavigation(), page.click(selector)]);
+  await page.getByText(says).waitFor({ timeout: 10000 });
+};
 export const OTHERS = [
+  [
+    "notify-topics-switched",
+    "/notify/admin/topics",
+    DESK,
+    {
+      ready: switchKind(
+        "#schedule input[name=enabled]",
+        "Schedule is now off for everyone",
+      ),
+    },
+  ],
+  [
+    "notify-topics-undone-phone",
+    "/notify/admin/topics?switched=schedule",
+    PHONE,
+    {
+      ready: switchKind(
+        ".canccu-notify-undo button",
+        "Schedule is now on",
+      ),
+    },
+  ],
   ["sign-in", SIGN_IN, DESK, { cookie: null }],
   ["sign-in-phone", SIGN_IN, PHONE, { cookie: null }],
   ["error-not-found", MISSING, DESK, { status: 404 }],

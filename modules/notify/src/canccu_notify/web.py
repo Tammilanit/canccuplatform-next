@@ -7,6 +7,7 @@ Caddy serves the pages under /notify/ and strips the prefix, so routes here are 
 
 from __future__ import annotations
 
+import itertools
 import logging
 import os
 from pathlib import Path
@@ -42,8 +43,28 @@ UI_CSS = Path(
 )
 CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/notify.css")
 log = logging.getLogger("canccu.notify")
-CHANNEL_LABELS = {"push": "Push", "discord_dm": "Discord DM"}
-PART_LABELS = {"event": "Everyone", "personal": "Personal"}
+_ids = itertools.count(1).__next__
+# The pages' words for a channel and a part (#782, sheet 02): what a person gets, not the key.
+CHANNEL_LABELS = {"push": "Phone notification", "discord_dm": "Discord message"}
+CHANNEL_TIPS = {
+    "push": "Shows on the lock screen of phones and PCs that allowed this event's hub.",
+    "discord_dm": "Sent by the event's Discord bot to people who chose it in their hub.",
+}
+PART_LABELS = {"event": "To everyone", "personal": "Personal"}
+PART_TIPS = {
+    "event": "Goes to everyone who switched this kind on.",
+    "personal": "Only to the person it is about, such as their own food order.",
+}
+# Which part of the event a kind comes from, by its owner module, as the menu names them.
+OWNER_NAMES = {
+    "agenda": "Run of show",
+    "pizza": "Food",
+    "moments": "Moments",
+    "games": "Games",
+    "screen": "Screens",
+    "admin": "Admin",
+}
+OWN = "Your own"
 
 
 async def page_session(request: Request) -> Session:
@@ -90,6 +111,7 @@ def page(
     actions: str = "",
     description: str = "",
     plain: bool = False,
+    script: bool = False,
 ) -> HTMLResponse:
     """A notifications page in the organiser shell; the topic list carries New topic as its
     action, the other pages a way back to it."""
@@ -102,6 +124,8 @@ def page(
             "Notifications",
         )
     )
+    if script:  # topics.js: save on switch, steppers and quick picks (the page works without)
+        body += f'<script src="{BASE}/static/topics.js" defer></script>'
     doc = ui.shell_page(
         title,
         body,
@@ -167,6 +191,18 @@ def field(label: str, control: str, hint: str = "") -> str:
     )
 
 
+def switch(name: str, label: str, on: bool, tip: str, *, value: str = "on") -> str:
+    """An on/off switch in words, with the tooltip that says what it does (packages/ui)."""
+    fid = f"canccu-sw-{_ids()}"
+    checked = " checked" if on else ""
+    return (
+        f'<div class="canccu-field canccu-field--check canccu-notify-switch">'
+        f'<input class=canccu-switch type=checkbox role=switch id="{fid}" name={name} '
+        f'value="{esc(value)}"{checked}><label for="{fid}">{esc(label)}</label>'
+        f" {ui.info_tip(tip)}</div>"
+    )
+
+
 def check(name: str, label: str, on: bool, *, disabled: bool = False, hint: str = "") -> str:
     attrs = (" checked" if on else "") + (" disabled" if disabled else "")
     hint_html = f' <span class="canccu-field__hint">{esc(hint)}</span>' if hint else ""
@@ -215,5 +251,10 @@ async def static_file(request: Request) -> Response:
     return response
 
 
-_STATIC_TYPES = {"ui.css": "text/css", "notify.css": "text/css", "check-in.js": "text/javascript"}
+_STATIC_TYPES = {
+    "ui.css": "text/css",
+    "notify.css": "text/css",
+    "check-in.js": "text/javascript",
+    "topics.js": "text/javascript",
+}
 ROUTES = [Route("/static/{name}", static_file, methods=["GET"])]
