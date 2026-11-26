@@ -205,6 +205,9 @@
         const push = document.querySelector("input[name=ch_push]");
         if (push && push.checked === pushes(was)) push.checked = pushes(input.value);
         was = input.value;
+        // The server compares the post against the level the organiser last saw (pages.ts).
+        const seen = document.querySelector("input[name=level_was]");
+        if (seen) seen.value = input.value;
       });
   }
 

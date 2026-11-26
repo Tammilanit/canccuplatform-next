@@ -157,6 +157,17 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     expect(own).not.toMatch(/name="ch_push"[^>]*checked/);
   }); // prettier-ignore
 
+  it("keeps Rail and no Push the organiser chose after the script moved the level", async () => {
+    const sent = await w.call("crew", "POST", "/announce", { ...FIELDS, level: "important", level_was: "important", placement: "rail", icon: "info", do: "send" }, form); // prettier-ignore
+    expect(sent.statusCode).toBe(303);
+    const [a] = json(await w.call("crew", "GET", "/api/moments/announcements")).announcements as {
+      placement: string;
+      channels: { push: boolean };
+    }[];
+    expect(a?.placement).toBe("rail");
+    expect(a?.channels.push).toBe(false);
+  }); // prettier-ignore
+
   it("sends the level, the placement and the icon picked, and lists the level in words", async () => {
     const sent = await w.call("crew", "POST", "/announce", { ...FIELDS, level: "important", level_was: "important", placement: "hero", icon: "food", do: "send" }, form); // prettier-ignore
     expect(sent.statusCode).toBe(303);
