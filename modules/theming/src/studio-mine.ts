@@ -1,7 +1,8 @@
 /**
- * My presets in the Studio (plan issue-784 D18): Save as my preset beside Export at every depth,
- * asking only for a name (the one text field the simple depths have), and the gallery's Your looks,
- * each saved preset as a thumbnail that applies it as a preset does, with Delete that asks first.
+ * My presets in the Studio (plan issue-784 D18; pack sheet 5): Save as my look beside Export at
+ * every depth, asking only for a name (the one text field the simple depths have), and the
+ * gallery's Your looks, each saved preset as a thumbnail that applies it as a preset does, with
+ * Delete that asks first.
  * static/studio-mine.js opens the dialogs and sends the name.
  */
 import { attrs, html, icon } from "@canccu/ui";
@@ -18,7 +19,7 @@ export const saveMineButton = html`<button
   class="canccu-button canccu-button--secondary"
   data-mine-ask="canccu-studio-mine-save"
 >
-  ${icon("plus")}Save as my preset…
+  ${icon("plus")}Save as my look…
 </button>`;
 
 export const saveMineDialog = html`<dialog
@@ -27,19 +28,16 @@ export const saveMineDialog = html`<dialog
   aria-labelledby="canccu-studio-mine-save-title"
 >
   <form class="canccu-studio-form" data-mine-save>
-    <h2 id="canccu-studio-mine-save-title" class="canccu-card__title">Save as my preset</h2>
+    <h2 id="canccu-studio-mine-save-title" class="canccu-card__title">Save as my look</h2>
+    <p>Saved looks show under Your looks in Pick a look.</p>
     <label class="canccu-field">
       <span class="canccu-field__label">Name</span>
       <input class="canccu-input" name="name" maxlength="60" required autocomplete="off" />
-      <span class="canccu-field__hint"
-        >For example Spring look. It's kept under Your looks in Pick a look, with this look's
-        colours, fonts, pictures and files.</span
-      >
     </label>
     <p class="canccu-studio-mine-error canccu-field__error" role="alert" hidden></p>
     <div class="canccu-studio-row canccu-studio-dialog__actions">
-      ${actionButton("Cancel", { "data-action": "dialog-close" })}
-      <button type="submit" class="canccu-button canccu-button--primary">Save</button>
+      ${actionButton("Cancel", { "data-action": "dialog-close" }, "ghost")}
+      <button type="submit" class="canccu-button canccu-button--primary">Save look</button>
     </div>
   </form>
 </dialog>`;
@@ -49,7 +47,7 @@ const deleteDialog = html`<dialog
   id="canccu-studio-mine-delete"
   aria-labelledby="canccu-studio-mine-delete-title"
 >
-  <h2 id="canccu-studio-mine-delete-title" class="canccu-card__title">Delete this preset?</h2>
+  <h2 id="canccu-studio-mine-delete-title" class="canccu-card__title">Delete this look?</h2>
   <p>
     <strong class="canccu-studio-mine-name"></strong> goes from Your looks. A draft made from it
     keeps its look.
@@ -86,8 +84,8 @@ export function mineSection(
       ? html`<p class="canccu-field__hint">
           ${
             state.draft === undefined
-              ? html`Pick a look below and make it yours, then save it here with Save as my preset.`
-              : html`Save this draft with <strong>Save as my preset…</strong> at the top of the page
+              ? html`Pick a look below and make it yours, then save it with Save as my look.`
+              : html`Save this draft with <strong>Save as my look…</strong> at the top of the page
                   to use it again later.`
           }
         </p>`

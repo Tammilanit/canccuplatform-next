@@ -1,5 +1,5 @@
 /*
- * My presets (plan issue-784 D18): Save as my preset asks for a name and, once saved, opens Pick a
+ * My presets (plan issue-784 D18): Save as my look asks for a name and, once saved, opens Pick a
  * look at Your looks, where the new preset shows; Delete there asks first, then goes through
  * studio.js like any action (`mine-delete`), which reloads the gallery.
  */
