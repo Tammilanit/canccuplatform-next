@@ -54,6 +54,14 @@ describe("an announcement's card by level", () => {
     expect(
       textOf(card({ level: "emergency", body: "Follow the exit signs." }), "instruction"),
     ).toBe("Follow the exit signs.");
+    // The band says where its text came from, so a body it carries is not drawn twice.
+    expect(
+      card({ level: "emergency" }).querySelector(".canccu-widget__band-from--body"),
+    ).not.toBeNull();
+    expect(
+      card({ level: "urgent", ticker_line: "x" }).querySelector(".canccu-widget__band-from--line"),
+    ).not.toBeNull();
+    expect(card({ level: "info" }).querySelector("[class*=band-from]")).toBeNull();
     expect(card({ level: "info" }).querySelector(".canccu-widget__instruction")).toBeNull();
     expect(card({ level: "important" }).querySelector(".canccu-widget__instruction")).toBeNull();
   });

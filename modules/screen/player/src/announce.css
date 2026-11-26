@@ -240,6 +240,15 @@
     mask-composite: intersect;
   }
 
+  /* hero.css lifts every part of a banded hero card into the flow (position: relative): the art
+     stays a layer behind the block. */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--announcement.canccu-is-claim:has(> .canccu-widget__band--theme)
+    > .canccu-widget__ann-art {
+    position: absolute;
+    z-index: 0;
+  }
+
   .canccu-widget__ann-art:has(.canccu-widget__art-img) {
     background: none;
     mask: linear-gradient(90deg, transparent, #000 45%);
@@ -379,6 +388,11 @@
     .canccu-widget__instruction {
     background: #fff;
     color: #b91c1c;
+  }
+
+  /* A band that carries the body says it once: the block keeps the title (sheet 5). */
+  .canccu-region--_full .canccu-widget__band-from--body > .canccu-widget__body {
+    display: none;
   }
 
   /* Room for the band under the block, so the band never covers the body. */

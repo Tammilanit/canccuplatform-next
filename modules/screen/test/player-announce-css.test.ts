@@ -25,7 +25,9 @@ describe("the announcement's look", () => {
   });
 
   it("never draws a card's title under 6 % of the screen's height, nor its body under 3.5 %", () => {
-    const sized = rulesOf(look).filter((r) => /__(title|body)$/.test(r.selector));
+    const sized = rulesOf(look).filter(
+      (r) => /__(title|body)$/.test(r.selector) && r.body.includes("font-size:"),
+    );
     expect(sized.length).toBeGreaterThanOrEqual(4);
     for (const { selector, body } of sized) {
       expect(selector).not.toContain('data-role="ticker"');

@@ -45,6 +45,8 @@ export function announceView(view: View): View {
     icon: alarm ? "alert" : icon,
     ...(level === "urgent" ? { urgent: true } : {}),
     instruction: alarm ? (text(view.ticker_line) ?? text(view.body)) : null,
+    // Which text the band carries: one taken from the body is not said twice (announce.css).
+    band_from: !alarm ? null : text(view.ticker_line) !== null ? "line" : "body",
     second_line: alarm ? null : text(view.second_line),
     art_kind: kind,
     art_url: url,
@@ -117,7 +119,13 @@ export const ANNOUNCEMENT: TreeNode[] = [
       DETAILS,
       sec("ticker_line", el("p", "ticker-line", [f("ticker_line")])),
     ],
-    { class: [t("canccu-widget__level canccu-widget__level--"), f("level")] },
+    {
+      class: [
+        t("canccu-widget__level canccu-widget__level--"),
+        f("level"),
+        sec("band_from", t(" canccu-widget__band-from--"), f("band_from")),
+      ],
+    },
   ),
   // In the ticker's place at urgent and the emergency (D6), outside the block so it spans the box.
   sec("instruction", el("p", "instruction", [f("instruction")])),
