@@ -94,10 +94,22 @@ export function studioSuite() {
     await Promise.all([page.waitForEvent("load"), page.click(selector)]);
   }
 
-  /** A change the brand kit saves at once (it has no Save), and the reload that follows. */
+  /** A change Make it yours saves by itself (it has no Save), until the page says it is saved. */
   async function change(page: Page, edit: () => Promise<unknown>): Promise<void> {
-    await Promise.all([page.waitForEvent("load"), edit()]);
+    const before = Number(await page.getAttribute(".canccu-studio", "data-draft-version"));
+    await edit();
+    await savedAfter(page, before);
   }
+  /** Waits until the page has saved a version after `version` and drawn itself again. */
+  const savedAfter = (page: Page, version: number) =>
+    page.waitForFunction(
+      (v) => {
+        const root = document.querySelector<HTMLElement>(".canccu-studio");
+        return Number(root?.dataset.draftVersion) > v && root?.dataset.saveState === "saved";
+      },
+      version,
+      { timeout: 15_000 },
+    );
   /** Types a hex colour; leaving the field is what saves it. */
   const typeHex = (page: Page, name: string, value: string) =>
     change(page, async () => {
@@ -117,6 +129,7 @@ export function studioSuite() {
     draft,
     act,
     change,
+    savedAfter,
     typeHex,
   };
 }

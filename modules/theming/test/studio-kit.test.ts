@@ -6,7 +6,8 @@
 import { describe, expect, it } from "vitest";
 import type { Problem } from "../src/checks.js";
 import { historyView } from "../src/studio-advanced.js";
-import { brandKitView } from "../src/studio-kit.js";
+import { depthFrame, discardView, previewColumn } from "../src/studio-column.js";
+import { yoursView } from "../src/studio-yours.js";
 import { status } from "../src/studio-views.js";
 import type { StudioState } from "../src/studio-views.js";
 
@@ -37,7 +38,13 @@ function stateOf(problems: Problem[], current = 1, drafted = true): StudioState 
   };
 }
 
-const body = (s: StudioState): string => String(brandKitView(s, false, undefined).body);
+const yours = (s: StudioState): string => {
+  const f = depthFrame(s, undefined);
+  const view =
+    s.draft === undefined ? "" : String(yoursView(s, s.draft, { advice: undefined, palette: [] }));
+  return `${String(f.actions)}${String(f.extra)}${view}${String(previewColumn(s))}${String(discardView(s))}`;
+};
+const body = yours;
 const input = (html: string, name: string): string =>
   new RegExp(`<input[^>]*name="${name}"[^>]*>`).exec(html)?.[0] ?? "";
 

@@ -14,9 +14,9 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
   const s = studioSuite();
   const { open, api, draft, act, change, context } = s;
 
-  it("starts a draft from a starting point", async () => {
+  it("starts a draft from a look in the gallery", async () => {
     const page = await open("/theming/studio/");
-    await act(page, '[data-action="starter"][data-starter="level-up"]');
+    await act(page, '[data-action="preset"][data-preset="level-up"][data-scheme="sunset"]');
     expect(await page.getAttribute(".canccu-studio", "data-draft-version")).toBe("1");
     expect((await draft()).manifest.mode).toBe("advanced");
   });
@@ -37,16 +37,17 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     await page.route("**/theming/studio/preview/**", (route) => {
       held.push(route);
     });
-    await page.goto(`${s.origin}/theming/studio/`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${s.origin}/theming/studio/yours`, { waitUntil: "domcontentloaded" });
     // Both Publish buttons, the title row's and the phone row's, wait for the previews.
     const publish = page.locator('.canccu-pagehead [data-action="publish"]');
     const phonePublish = page.locator('.canccu-studio-pendbar [data-action="publish"]');
-    await expect.poll(() => held.length).toBe(4);
+    // The screen (the sample, with no zones here), the phone and the hub page.
+    await expect.poll(() => held.length).toBe(3);
     expect(await publish.isDisabled()).toBe(true);
-    await Promise.all(held.slice(0, 3).map((r) => r.continue()));
+    await Promise.all(held.slice(0, 2).map((r) => r.continue()));
     await page.waitForTimeout(200);
     expect(await publish.isDisabled()).toBe(true);
-    await held[3]?.continue();
+    await held[2]?.continue();
     await expect.poll(() => publish.isDisabled()).toBe(false);
     expect(await phonePublish.isDisabled()).toBe(false);
 
@@ -121,7 +122,7 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
 
   it("puts the preview first on a phone, one at a time, and Publish above the bottom bar", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     await page.setViewportSize({ width: 390, height: 844 });
     const top = (sel: string) =>
       page
@@ -135,9 +136,9 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect(await page.locator(".canccu-studio-pendbar [data-action='publish']").isVisible()).toBe(
       true,
     );
-    expect(await page.locator(".canccu-studio-preview--hub").isVisible()).toBe(false);
-    await page.click('.canccu-studio-surfaces input[value="hub"]');
-    expect(await page.locator(".canccu-studio-preview--hub").isVisible()).toBe(true);
+    expect(await page.locator(".canccu-studio-preview--phone").isVisible()).toBe(false);
+    await page.click('.canccu-studio-surfaces input[value="phone"]');
+    expect(await page.locator(".canccu-studio-preview--phone").isVisible()).toBe(true);
     expect(await page.locator(".canccu-studio-preview--screen").isVisible()).toBe(false);
     await page.click('.canccu-studio-surfaces input[value="screen"]');
     // The way to full size sits under the thumbnail, never over the screen it shows (#406).
@@ -176,7 +177,7 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     await act(page, '[data-action="package"] button[type="submit"]');
     expect((await draft()).manifest.mode).toBe("advanced");
     // The colours of simple mode come from a brand, which the terminal theme has none of.
-    await page.goto(`${s.origin}/theming/studio/`);
+    await page.goto(`${s.origin}/theming/studio/yours`);
     await change(page, () => page.check('input[name="scheme"][value="light"]'));
     await page.goto(`${s.origin}/theming/studio/advanced`);
     await page.click('[data-action="simple"] >> xpath=ancestor::details/summary');
@@ -184,25 +185,28 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect((await draft()).manifest.mode).toBe("simple");
   });
 
-  it("says why when the API refuses, after reading the draft again", async () => {
+  it("says why when the API refuses, and saves nothing over another organiser's change", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     // Someone else changes the draft meanwhile.
     const v = (await draft()).draft_version;
     await api("PATCH", "/api/theming/draft/tokens", {
       draft_version: v,
       tokens: { motion: "calm" },
     });
-    await change(page, () => page.check('input[name="scheme"][value="light"]'));
+    await page.check('input[name="scheme"][value="light"]');
+    await expect
+      .poll(() => page.getAttribute(".canccu-studio", "data-save-state"))
+      .toBe("conflict");
     const notice = page.locator(".canccu-studio-notice");
     expect(await notice.isVisible()).toBe(true);
-    expect(await notice.textContent()).toContain("changed by someone else");
-    expect(await page.getAttribute(".canccu-studio", "data-draft-version")).toBe(String(v + 1));
+    expect(await notice.textContent()).toContain("Another organiser changed this draft");
+    expect((await draft()).manifest.brand).toMatchObject({ scheme: "dark" });
   });
 
   it("discards the draft", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
-    const page = await open("/theming/studio/");
+    const page = await open("/theming/studio/yours");
     // Discard asks first, in the page's own dialog.
     await page.click('[data-action="discard-ask"]');
     expect(await page.locator("#canccu-studio-discard").isVisible()).toBe(true);

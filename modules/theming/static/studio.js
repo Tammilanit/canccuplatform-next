@@ -1,9 +1,10 @@
 /*
- * The Studio pages' controls (plan issue-185 D8, D10). Each `data-action` control calls the JSON
- * API, which checks every right itself; the page then reloads, so it always shows the draft as
- * stored. A refusal is carried over the reload and said in words: after a conflict the page is the
- * one to read again, with no native dialog (brief N1). The brand kit saves as it changes, so its
- * previews follow the form (UX audit C2).
+ * The Studio pages' controls (plan issue-185 D8, D10; issue-784 D3). Each `data-action` control
+ * calls the JSON API, which checks every right itself. Make it yours and the gallery's looks save
+ * without a reload: studio-live.js draws the page's parts again and the frames follow; a stale save
+ * (409) says another organiser changed the draft and saves nothing over it. The other actions
+ * reload, so the page shows the draft as stored, and a refusal is carried over the reload and said
+ * in words, with no native dialog (brief N1).
  */
 "use strict";
 
@@ -56,7 +57,8 @@
     const res = await fetch(url, init);
     if (res.status === 204) return undefined;
     const data = await res.json().catch(() => undefined);
-    if (!res.ok) throw new Error(messageOf(data, res.status));
+    if (!res.ok)
+      throw Object.assign(new Error(messageOf(data, res.status)), { status: res.status });
     return data;
   }
 
@@ -83,7 +85,9 @@
     if (problem !== undefined) {
       // Take the refused file out again, or its error would block Publish with no page to remove it.
       const back = query({ path, draft_version: draft.draft_version });
-      await call("DELETE", `/api/theming/draft/file?${back}`);
+      const after = await call("DELETE", `/api/theming/draft/file?${back}`);
+      // The page is not read again, so the next save must name the version this one left.
+      root.dataset.draftVersion = String(after.draft_version);
       throw new Error(`${path}: ${problem.message}`);
     }
     return { path, version: draft.draft_version };
@@ -91,6 +95,8 @@
 
   /** The form's own check failed: nothing was sent, so the page stays with what was typed. */
   class Invalid extends Error {}
+  /** The call went through, but the page must be read again whole. */
+  class Reload extends Error {}
 
   async function saveBrand(form) {
     if (!form.reportValidity()) throw new Invalid("A colour is a # and six or eight hex digits.");
@@ -100,14 +106,16 @@
     const fileInput = f.namedItem("logo_file");
     const file = fileInput.files[0];
     if (file !== undefined) {
-      ({ path: logo, version } = await uploadLogo(file, version));
-      // A save queued behind this one names the stored logo instead of uploading it again.
+      // Taken now: a save behind this one names the stored logo, and a refused file is never
+      // uploaded again by the next change (the page no longer reloads).
       fileInput.value = "";
+      ({ path: logo, version } = await uploadLogo(file, version));
       keepLogo(form, logo);
       root.dataset.draftVersion = String(version);
     }
     const icon = f.namedItem("icon")?.value;
     const embed = f.namedItem("embed_color").value.trim();
+    const choices = window.canccuStudioChoices?.(form) ?? {};
     const saved = await call("PUT", "/api/theming/draft/brand", {
       draft_version: version,
       primary: f.namedItem("primary").value,
@@ -116,6 +124,7 @@
       ...(logo ? { logo } : {}),
       ...(icon ? { icon } : {}),
       ...(embed ? { embed_color: embed } : {}),
+      ...choices,
     });
     // A save queued behind this one sends the version this one made.
     root.dataset.draftVersion = String(saved.draft.draft_version);
@@ -161,17 +170,38 @@
     await call("PATCH", "/api/theming/draft/tokens", { draft_version: draftVersion(), tokens });
   }
 
-  async function starter(name) {
-    const res = await fetch(`/theming/studio/starters/${encodeURIComponent(name)}.zip`, {
-      credentials: "same-origin",
+  /** The frames take a look as its apply is sent, and the draft's colours again if refused. */
+  const look = (json) =>
+    document.dispatchEvent(new CustomEvent("canccu-studio-look", { detail: JSON.parse(json) }));
+
+  /** A look from the gallery, or Reset to the draft's own (plan issue-784 D11). */
+  async function applyPreset(el) {
+    const version = draftVersion();
+    // Without a draft the reload below draws the frames.
+    const live = version !== undefined && el.dataset.vars !== undefined;
+    if (live) look(el.dataset.vars);
+    const draft = await call("PUT", "/api/theming/draft/preset", {
+      preset: el.dataset.preset,
+      scheme: el.dataset.scheme,
+      ...(version === undefined ? {} : { draft_version: version }),
+    }).catch((err) => {
+      if (live && root.dataset.vars !== undefined) look(root.dataset.vars);
+      throw err;
     });
-    if (!res.ok) throw new Error(`The starting point ${name} could not be read.`);
-    await putPackage(await res.blob());
+    el.closest("dialog")?.close();
+    for (const b of document.querySelectorAll('[data-action="preset"][aria-pressed]'))
+      b.setAttribute("aria-pressed", String(b === el));
+    root.dataset.draftVersion = String(draft.draft_version);
+    // Without a draft before, the page has none of a draft's parts yet; and Make it yours's form
+    // still holds the old choices, which its next save would send back over the preset's.
+    if (version === undefined || document.querySelector('form[data-action="brand"]') !== null)
+      throw new Reload();
   }
 
   const ACTIONS = {
     start: () => call("POST", "/api/theming/draft", { from: "current" }),
-    starter: (el) => starter(el.dataset.starter),
+    preset: applyPreset,
+    import: (form) => putPackage(form.elements.namedItem("import").files[0]),
     publish: () => call("POST", "/api/theming/draft/publish", { draft_version: draftVersion() }),
     "font-system": (el) =>
       call("PATCH", "/api/theming/draft/tokens", {
@@ -198,6 +228,10 @@
   let busy = false;
   /** The forms that save as they change: the brand kit has no Save (UX audit C2). */
   const SAVES_AS_CHANGED = new Set([saveBrand, saveFont]);
+  /** What saves without reloading the page: the frames follow it live (studio-live.js, D3). */
+  const LIVE = new Set([saveBrand, saveFont, applyPreset]);
+  /** Set once another organiser's change refused a save: nothing more is saved over it. */
+  let conflicted = false;
   const autoSaved = () => [
     ...document.querySelectorAll('form[data-action="brand"], form[data-action="font"]'),
   ];
@@ -214,7 +248,7 @@
     valuesOf(form) !== sent.get(form) ||
     [...form.elements].some((el) => el.type === "file" && el.files.length > 0);
 
-  /** `true` when the action went through; a refusal is carried over the reload. */
+  /** `true` when the action went through, else what stopped it. */
   async function attempt(action, el) {
     const before = sent.get(el);
     if (SAVES_AS_CHANGED.has(action)) sent.set(el, valuesOf(el));
@@ -222,20 +256,16 @@
       await action(el);
       return true;
     } catch (err) {
-      if (err instanceof Invalid) {
-        // Nothing was sent, so the form still holds its change: a later save's flush tries it
-        // again rather than reload over it.
-        if (SAVES_AS_CHANGED.has(action)) sent.set(el, before);
-        return err;
-      }
-      sessionStorage.setItem(NOTICE_KEY, err instanceof Error ? err.message : String(err));
-      return false;
+      // Nothing was sent, so the form still holds its change: a later save's flush tries it again.
+      if (err instanceof Invalid && SAVES_AS_CHANGED.has(action)) sent.set(el, before);
+      return err instanceof Error ? err : new Error(String(err));
     }
   }
 
   /**
-   * The previews show the version the page drew, so Publish waits for the reload. The hold is kept
-   * on the page, so a preview drawn later (studio-previews.js) cannot release it.
+   * The previews show the version the page drew, so Publish waits for the next save's refresh
+   * (studio-live.js clears the hold). The hold is kept on the page, so a preview drawn meanwhile
+   * (studio-previews.js) cannot release it.
    */
   function holdPublish() {
     root.dataset.previewStale = "1";
@@ -248,29 +278,57 @@
   async function run(el, control) {
     const action = ACTIONS[el.dataset.action];
     // A form changed while a save runs is saved after it, below.
-    if (action === undefined || busy) return;
+    if (action === undefined || busy || conflicted) return;
     busy = true;
     control.disabled = true;
+    const live = LIVE.has(action);
+    if (live) root.dataset.saveState = "saving";
     let outcome = await attempt(action, el);
     let saved = outcome === true;
-    // Before the reload, each form changed meanwhile or still being typed in, so nothing typed is
-    // lost; after a failure the rest wait, so the first failure is the one said.
+    // Each form changed meanwhile or still being typed in is saved too, so nothing typed is lost;
+    // after a failure the rest wait, so the first failure is the one said.
     while (outcome === true && SAVES_AS_CHANGED.has(action)) {
       const form = autoSaved().find(unsaved);
       if (form === undefined) break;
       outcome = await attempt(ACTIONS[form.dataset.action], form);
       saved ||= outcome === true;
     }
+    busy = false;
+    control.disabled = false;
     if (outcome instanceof Invalid) {
       // A reload would drop the browser's message and the value it is about.
       show(outcome.message);
       if (saved) holdPublish();
-      busy = false;
-      control.disabled = false;
+      if (live) root.dataset.saveState = saved ? "saved" : "failed";
       return;
     }
+    if (live && !(outcome instanceof Reload)) {
+      if (outcome === true) return void document.dispatchEvent(new Event("canccu-studio-saved"));
+      // Another organiser's change: say so, and save nothing over it (Review focus 2).
+      if (outcome.status === 409) {
+        conflicted = true;
+        root.dataset.saveState = "conflict";
+        return show(
+          "Another organiser changed this draft meanwhile, so your last change was not saved. Reload the page to see theirs.",
+        );
+      }
+      root.dataset.saveState = "failed";
+      if (saved) document.dispatchEvent(new Event("canccu-studio-saved"));
+      return show(outcome.message);
+    }
+    if (outcome !== true && !(outcome instanceof Reload))
+      sessionStorage.setItem(NOTICE_KEY, outcome.message);
     location.reload();
   }
+
+  /** studio-live.js found a version this page did not write: the same stop as a refused save. */
+  document.addEventListener("canccu-studio-conflict", () => {
+    conflicted = true;
+    root.dataset.saveState = "conflict";
+    show(
+      "Another organiser changed this draft meanwhile, so your last change may not be the latest. Reload the page to see theirs.",
+    );
+  });
 
   document.addEventListener("submit", (event) => {
     const form = event.target.closest("form[data-action]");
@@ -286,48 +344,53 @@
     "light-ask": () => document.getElementById("canccu-studio-light")?.showModal(),
     "dialog-close": (el) => el.closest("dialog")?.close(),
     preview: () => fullSize(true),
+    "reset-ask": () => document.getElementById("canccu-studio-reset")?.showModal(),
+    // The plate check's one click (sheet 2): that plate, saved as any choice is.
+    "plate-suggest": (el) => {
+      const radio = document.querySelector(
+        `input[name="plate_kind"][value="${CSS.escape(el.dataset.plate)}"]`,
+      );
+      if (radio === null) return;
+      radio.checked = true;
+      radio.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    swatch: (el) => {
+      const hex = document.querySelector(`input[name="${CSS.escape(el.dataset.swatchFor)}"]`);
+      const swatch = document.querySelector(
+        `input[data-hex-for="${CSS.escape(el.dataset.swatchFor)}"]`,
+      );
+      if (hex === null || swatch === null) return;
+      hex.value = el.dataset.colour;
+      swatch.value = el.dataset.colour;
+      swatch.dispatchEvent(new Event("input", { bubbles: true }));
+      hex.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    replace: () => {
+      document.getElementById("canccu-studio-replace")?.close();
+      if (pendingLook !== undefined) void run(pendingLook, pendingLook);
+    },
     "preview-close": () => fullSize(false),
   };
 
+  /** A look picked over the organiser's own CSS, fonts, templates or embeds waits for a yes (D11). */
+  let pendingLook;
   document.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
     if (button === null) return;
     const local = LOCAL[button.dataset.action];
-    if (local !== undefined) local(button);
-    else void run(button, button);
+    if (local !== undefined) return local(button);
+    if (
+      button.dataset.action === "preset" &&
+      root?.dataset.ownWork === "1" &&
+      !button.closest("dialog")
+    ) {
+      pendingLook = button;
+      return document.getElementById("canccu-studio-replace")?.showModal();
+    }
+    void run(button, button);
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") fullSize(false);
-  });
-
-  /* A colour's swatch and its hex field show the same colour. */
-  const hexOf = (swatch) => swatch.form?.elements.namedItem(swatch.dataset.hexFor);
-  document.addEventListener("input", (event) => {
-    const el = event.target;
-    if (el.matches("input[data-hex-for]")) {
-      const hex = hexOf(el);
-      if (hex) hex.value = el.value;
-    } else if (el.matches(".canccu-studio-colour__hex") && /^#[0-9a-fA-F]{6}/.test(el.value)) {
-      const swatch = el.form?.querySelector(`input[data-hex-for="${CSS.escape(el.name)}"]`);
-      if (swatch) swatch.value = el.value.slice(0, 7).toLowerCase();
-    }
-  });
-  /*
-   * The logo's drop box takes a dropped file as if it were chosen: left to the browser, a drop opens
-   * the file and leaves the Studio.
-   */
-  document.addEventListener("dragover", (event) => {
-    if (event.target.closest(".canccu-studio-drop") !== null) event.preventDefault();
-  });
-  document.addEventListener("drop", (event) => {
-    const box = event.target.closest(".canccu-studio-drop");
-    if (box === null) return;
-    event.preventDefault();
-    const input = document.getElementById(box.htmlFor);
-    const files = event.dataTransfer?.files;
-    if (input === null || !files || files.length === 0) return;
-    input.files = files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
   });
 
   // The brand kit has no Save: each finished change saves the brand and reloads its previews.
@@ -335,30 +398,12 @@
     const file = event.target.closest(".canccu-studio-file");
     const shown = file?.closest(".canccu-field")?.querySelector(".canccu-studio-drop__name");
     if (shown && file.files[0]) shown.textContent = file.files[0].name;
+    const imported = event.target.closest('form[data-action="import"]');
+    if (imported !== null) return void run(imported, imported);
     const form = event.target.closest('form[data-action="brand"], form[data-action="font"]');
-    if (form !== null) void run(form, form);
+    if (form === null) return;
+    // Saved 400 ms after the last change, so a run of clicks is one save (D3).
+    clearTimeout(form.canccuSave);
+    form.canccuSave = setTimeout(() => void run(form, form), 400);
   });
-
-  /*
-   * On a phone Preview and Publish share a row above the bottom bar (sheet 6); it hides while the
-   * page moves, so the form gets the height, and comes back when it stops.
-   */
-  const pendbar = document.querySelector(".canccu-studio-pendbar");
-  const tabbar = document.querySelector(".canccu-tabbar");
-  if (pendbar !== null) {
-    const above = () =>
-      pendbar.style.setProperty("--canccu-studio-bar", `${tabbar?.offsetHeight ?? 0}px`);
-    above();
-    addEventListener("resize", above);
-    let still;
-    addEventListener(
-      "scroll",
-      () => {
-        pendbar.classList.add("canccu-studio-pendbar--moving");
-        clearTimeout(still);
-        still = setTimeout(() => pendbar.classList.remove("canccu-studio-pendbar--moving"), 400);
-      },
-      { passive: true },
-    );
-  }
 })();

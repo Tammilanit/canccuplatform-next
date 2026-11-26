@@ -5,7 +5,7 @@
  */
 import { isDeepStrictEqual } from "node:util";
 import { deflateRawSync } from "node:zlib";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import { stringify } from "yaml";
@@ -13,7 +13,8 @@ import yazl from "yazl";
 import type { Audit } from "./audit.js";
 import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
-import { draftBody, editDraft, newDraftKey, removeDraftPaths } from "./drafts.js";
+import { draftBody, editDraft, loadDraft, newDraftKey, removeDraftPaths } from "./drafts.js";
+import type { DraftRow } from "./drafts.js";
 import { embedHoldings, putEmbed } from "./embeds.js";
 import { fileName } from "./files.js";
 import {
@@ -21,6 +22,7 @@ import {
   actorOf,
   assertWritable,
   needs,
+  noDraft,
   notFound,
   positiveInt,
   rawBody,
@@ -143,6 +145,55 @@ export async function zipOf(files: [string, Buffer][]): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+/**
+ * Replaces the draft's content with a package's files (by path, `theme.yaml` among them), or
+ * starts the draft with them when `version` is absent: the package upload's write, which applying
+ * a preset shares (preset-routes.ts), so a preset goes through every upload check (D11).
+ */
+export async function replaceDraft(
+  deps: DraftDeps & { audit: Audit },
+  request: FastifyRequest,
+  files: Map<string, Buffer>,
+  version: number | undefined,
+): Promise<DraftRow> {
+  const checked = await checkPackage(files);
+  if (!checked.ok) throw refused(checked.why);
+  const pkg = checked.pkg;
+  const after = packageEmbeds(pkg);
+  const differs = (before: Embeds): boolean =>
+    !isDeepStrictEqual(before.manifest, after.manifest) ||
+    !isDeepStrictEqual(before.files, after.files);
+  // Read without locks, so admin is asked before any are taken (as publish does).
+  const embedsAllowed = await deps.db.tenant(async (c) => differs(await draftEmbeds(c)));
+  if (embedsAllowed) await deps.rights.check(request.headers.cookie, EMBEDS);
+  const actor = actorOf(request);
+  const row = await writingFiles(deps, async (c, place, reserve) => {
+    if (version === undefined) await startDraft(c, actor);
+    let unused: Unused[] = [];
+    let before: Embeds = { manifest: undefined, files: [] };
+    const draft = await editDraft(c, deps.files, version ?? 0, actor, async () => {
+      before = await draftEmbeds(c);
+      // The embeds changed between the right check and the lock.
+      if (differs(before) && !embedsAllowed) throw versionConflict("draft");
+      unused = await storePackage(c, deps, pkg, place, reserve);
+      return pkg.manifest;
+    });
+    if (differs(before)) {
+      // Every embed change is audited (contracts/theming.md, Audit); before the commit, so
+      // none happens unrecorded.
+      await deps.audit({
+        tenant_id: requireTenant(),
+        actor_user_id: actor,
+        action: "theming.draft.embeds_changed",
+        target: { type: "theme_draft", id: "draft" },
+        changes: { embeds: { old: embedNames(before), new: embedNames(after) } },
+      });
+    }
+    return { result: draft, unused };
+  });
+  return row;
+}
+
 export function packageRoutes(app: FastifyInstance, deps: DraftDeps & { audit: Audit }): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -160,81 +211,71 @@ export function packageRoutes(app: FastifyInstance, deps: DraftDeps & { audit: A
         // Every check before any lock, as for one file (file-routes.ts).
         const read = await readPackage(body);
         if (!read.ok) throw refused(read.why);
-        const checked = await checkPackage(read.files);
-        if (!checked.ok) throw refused(checked.why);
-        const pkg = checked.pkg;
-        const after = packageEmbeds(pkg);
-        const differs = (before: Embeds): boolean =>
-          !isDeepStrictEqual(before.manifest, after.manifest) ||
-          !isDeepStrictEqual(before.files, after.files);
-        // Read without locks, so admin is asked before any are taken (as publish does).
-        const embedsAllowed = await deps.db.tenant(async (c) => differs(await draftEmbeds(c)));
-        if (embedsAllowed) await deps.rights.check(request.headers.cookie, EMBEDS);
-        const actor = actorOf(request);
-        const row = await writingFiles(deps, async (c, place, reserve) => {
-          if (version === undefined) await startDraft(c, actor);
-          let unused: Unused[] = [];
-          let before: Embeds = { manifest: undefined, files: [] };
-          const draft = await editDraft(c, deps.files, version ?? 0, actor, async () => {
-            before = await draftEmbeds(c);
-            // The embeds changed between the right check and the lock.
-            if (differs(before) && !embedsAllowed) throw versionConflict("draft");
-            unused = await storePackage(c, deps, pkg, place, reserve);
-            return pkg.manifest;
-          });
-          if (differs(before)) {
-            // Every embed change is audited (contracts/theming.md, Audit); before the commit, so
-            // none happens unrecorded.
-            await deps.audit({
-              tenant_id: requireTenant(),
-              actor_user_id: actor,
-              action: "theming.draft.embeds_changed",
-              target: { type: "theme_draft", id: "draft" },
-              changes: { embeds: { old: embedNames(before), new: embedNames(after) } },
-            });
-          }
-          return { result: draft, unused };
-        });
+        const row = await replaceDraft(deps, request, read.files, version);
         return draftBody(row);
       },
     );
     done();
   });
 
+  /** A zip of `owner`'s manifest and every file it holds at its package path. */
+  async function ownerZip(
+    reply: FastifyReply,
+    name: string,
+    read: (c: SqlClient) => Promise<Manifest>,
+    owner: string,
+  ): Promise<FastifyReply> {
+    const held = await deps.db.tenant(async (c) => {
+      const manifest = await read(c);
+      const files = await c.query(
+        `SELECT path, file FROM theming_package_files WHERE owner = $1 AND file IS NOT NULL
+         UNION ALL SELECT 'embeds/' || embed || '/' || path, file FROM theming_embed_files
+          WHERE owner = $1
+         ORDER BY 1`,
+        [owner],
+      );
+      return { manifest, files: files.rows as { path: string; file: string }[] };
+    });
+    const files: [string, Buffer][] = [];
+    for (const f of held.files) {
+      const bytes = await deps.files.read(f.file);
+      // A held file stays until nothing refers to it: one gone is a broken volume.
+      if (bytes === undefined) throw new Error(`${owner}: ${f.file} is missing`);
+      files.push([f.path, bytes]);
+    }
+    return reply
+      .header("content-type", "application/zip")
+      .header("content-disposition", `attachment; filename="theme-${name}.zip"`)
+      .header("cache-control", "no-store")
+      .header("x-content-type-options", "nosniff")
+      .send(await exportZip(held.manifest, files));
+  }
+
   app.get<{ Params: { revision: string } }>(
     "/api/theming/revisions/:revision/package",
     writer,
     async (request, reply) => {
       const revision = positiveInt(request.params.revision, "revision") ?? 0;
-      const held = await deps.db.tenant(async (c) => {
+      const read = async (c: SqlClient): Promise<Manifest> => {
         const { rows } = await c.query(
           `SELECT manifest FROM theming_revisions WHERE revision = $1`,
           [revision],
         );
         const row = rows[0] as { manifest: Manifest } | undefined;
         if (row === undefined) throw notFound();
-        const files = await c.query(
-          `SELECT path, file FROM theming_package_files WHERE owner = $1 AND file IS NOT NULL
-           UNION ALL SELECT 'embeds/' || embed || '/' || path, file FROM theming_embed_files
-            WHERE owner = $1
-           ORDER BY 1`,
-          [`r:${revision}`],
-        );
-        return { manifest: row.manifest, files: files.rows as { path: string; file: string }[] };
-      });
-      const files: [string, Buffer][] = [];
-      for (const f of held.files) {
-        const bytes = await deps.files.read(f.file);
-        // A revision's files stay until no kept revision holds them: one gone is a broken volume.
-        if (bytes === undefined) throw new Error(`revision ${revision}: ${f.file} is missing`);
-        files.push([f.path, bytes]);
-      }
-      return reply
-        .header("content-type", "application/zip")
-        .header("content-disposition", `attachment; filename="theme-${revision}.zip"`)
-        .header("cache-control", "no-store")
-        .header("x-content-type-options", "nosniff")
-        .send(await exportZip(held.manifest, files));
+        return row.manifest;
+      };
+      return ownerZip(reply, String(revision), read, `r:${revision}`);
     },
   );
+
+  // The draft as a package (D17): what Import takes back, so a look moves between events as it is.
+  app.get("/api/theming/draft/package", writer, async (_request, reply) => {
+    const read = async (c: SqlClient): Promise<Manifest> => {
+      const draft = await loadDraft(c);
+      if (draft === undefined) throw noDraft();
+      return draft.manifest;
+    };
+    return ownerZip(reply, "draft", read, "draft");
+  });
 }

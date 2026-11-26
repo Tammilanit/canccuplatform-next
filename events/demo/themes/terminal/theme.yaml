@@ -2,6 +2,7 @@
 # Format: contracts/theming.md. Fonts: Barlow Semi Condensed, SIL OFL 1.1 (fonts/OFL.txt).
 schema_version: 1
 name: Terminal
+description: "Retro screens: square, sharp, glowing"
 mode: advanced
 tokens:
   colors:
@@ -109,3 +110,101 @@ layouts:
         area: { column: 1, row: 16, columns: 6, rows: 1 }
         widgets:
           - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets), as the Theme studio's accepted pack
+# (docs/design/theme-studio.md) draws them; the first is the colours above.
+schemes:
+  - id: cyan
+    name: Cyan
+    kind: dark
+    brand:
+      primary: "#00d8d8"
+      accent: "#e8c040"
+      scheme: dark
+    colors:
+      background: "#121212"
+      surface: "#1b1b1b"
+      border: "#00d8d8"
+      text: "#d8d8d8"
+      text_muted: "#a8a8a8"
+      primary: "#00d8d8"
+      primary_text: "#121212"
+      accent: "#e8c040"
+      status_ok: "#00ff00"
+      status_degraded: "#e8c040"
+      status_down: "#ff4040"
+  - id: phosphor
+    name: Phosphor
+    kind: accent
+    brand:
+      primary: "#39ff6a"
+      accent: "#e8c040"
+      scheme: dark
+    colors:
+      background: "#121212"
+      surface: "#1b1b1b"
+      border: "#39ff6a"
+      text: "#d8f5dc"
+      text_muted: "#9cc4a4"
+      primary: "#39ff6a"
+      primary_text: "#121212"
+      accent: "#e8c040"
+      status_ok: "#39ff6a"
+      status_degraded: "#e8c040"
+      status_down: "#ff5a5a"
+  - id: amber
+    name: Amber
+    kind: accent
+    brand:
+      primary: "#ffb000"
+      accent: "#00d8d8"
+      scheme: dark
+    colors:
+      background: "#121212"
+      surface: "#1b1b1b"
+      border: "#ffb000"
+      text: "#f0e0c0"
+      text_muted: "#c8b08a"
+      primary: "#ffb000"
+      primary_text: "#121212"
+      accent: "#00d8d8"
+      status_ok: "#4ee36a"
+      status_degraded: "#ffb000"
+      status_down: "#ff5a5a"
+  - id: paper
+    name: Paper
+    kind: light
+    brand:
+      primary: "#006b6b"
+      accent: "#8a5a00"
+      scheme: light
+    colors:
+      background: "#f4f4ef"
+      surface: "#ffffff"
+      border: "#1f6f6f"
+      text: "#141414"
+      text_muted: "#4a4a4a"
+      primary: "#006b6b"
+      primary_text: "#ffffff"
+      accent: "#8a5a00"
+      status_ok: "#1d7a32"
+      status_degraded: "#8a5a00"
+      status_down: "#b3261e"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#00ffff"
+      accent: "#ffff00"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#0a0a0a"
+      border: "#00ffff"
+      text: "#ffffff"
+      text_muted: "#e6e6e6"
+      primary: "#00ffff"
+      primary_text: "#000000"
+      accent: "#ffff00"
+      status_ok: "#00ff00"
+      status_degraded: "#ffff00"
+      status_down: "#ff6060"

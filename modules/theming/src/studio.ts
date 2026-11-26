@@ -1,28 +1,37 @@
 /**
- * The Studio pages (plan issue-185 D8): the brand kit, advanced mode and history, under
- * `/theming/studio/`, linked from admin's "Event" menu. They only read; every change goes through
+ * The Studio pages (plan issue-185 D8, issue-784 D1): Pick a look, Make it yours, Advanced and
+ * History, under `/theming/studio/`, linked from admin's "Event" menu. They only read; every change goes through
  * the JSON API from static/studio.js, so the pages hold no right the API does not check itself.
  */
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, MissingRight, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
-import { errorView, errorTitle, html, shellPage } from "@canccu/ui";
+import { attrs, cssVar, errorView, errorTitle, html, shellPage } from "@canccu/ui";
+import { fillTokens } from "./tokens.js";
 import type { Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, eventOf, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
 import { advancedView, historyView } from "./studio-advanced.js";
-import { brandKitView } from "./studio-kit.js";
-import { STUDIO, status, studioState } from "./studio-views.js";
+import { depthFrame, discardView, previewColumn } from "./studio-column.js";
+import { galleryView } from "./studio-gallery.js";
+import { ownWork } from "./own-work.js";
+import { yoursView } from "./studio-yours.js";
+import { logoInfo } from "./logo-info.js";
+import { STUDIO, studioState } from "./studio-views.js";
+import type { StudioState } from "./studio-views.js";
+import { FONT_PAIRS, pairFontFaces } from "./font-pairs.js";
+import type { Html } from "@canccu/ui";
 
 const SIGN_IN = "/admin/sign-in";
 const HISTORY_PAGE = 20;
 const STATIC = new URL("../static/", import.meta.url);
 
 const TABS: [string, string][] = [
-  ["", "Brand kit"],
+  ["", "Pick a look"],
+  ["yours", "Make it yours"],
   ["advanced", "Advanced"],
   ["history", "History"],
 ];
@@ -49,7 +58,9 @@ async function studioPage(
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
     head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
-      <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />`,
+      <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />
+      <link rel="stylesheet" href="${STUDIO}static/studio-depths.css" />
+      <link rel="stylesheet" href="${STUDIO}static/pairs.css" />`,
     event: await eventOf(request, deps.tenants),
     session: request.session ?? undefined,
     current: "theme",
@@ -68,6 +79,8 @@ async function studioPage(
     body: html`<p class="canccu-studio-notice" role="alert" hidden></p>
       ${o.body}
       <script src="${STUDIO}static/studio.js" defer></script>
+      <script src="${STUDIO}static/studio-form.js" defer></script>
+      <script src="${STUDIO}static/studio-live.js" defer></script>
       <script src="${STUDIO}static/studio-previews.js" defer></script>
       <script src="${STUDIO}static/studio-screen.js" defer></script>`,
   });
@@ -75,6 +88,51 @@ async function studioPage(
     .status(o.status ?? 200)
     .send(doc.toString());
 }
+
+/**
+ * A depth's page: its controls beside the live preview column (D2), in the root every page script
+ * reads the draft's version and save state from.
+ */
+function depthBody(state: StudioState, controls: Html, extra: Html, own: boolean): Html {
+  const m = state.draft?.manifest;
+  // The colours as saved, which the live preview posts after each save (static/studio-live.js).
+  const vars =
+    m === undefined
+      ? undefined
+      : JSON.stringify(
+          Object.fromEntries(
+            Object.entries(fillTokens(m.tokens ?? {}).colors).map(([k, v]) => [
+              cssVar("color", k),
+              v,
+            ]),
+          ),
+        );
+  return html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version, "data-save-state": "saved", "data-own-work": own ? "1" : undefined, "data-vars": vars })}>
+    ${extra}
+    <div class="canccu-studio-depth">${controls}${previewColumn(state)}</div>
+    ${state.draft === undefined ? "" : discardView(state)}${replaceDialog}
+  </div>`;
+}
+
+const replaceDialog = html`<dialog
+  class="canccu-studio-dialog"
+  id="canccu-studio-replace"
+  aria-labelledby="canccu-studio-replace-title"
+>
+  <h2 id="canccu-studio-replace-title" class="canccu-card__title">Use this look instead?</h2>
+  <p>
+    Your draft has its own CSS, fonts, templates or embeds. The look you picked replaces them; your
+    logo and its plate stay. Export the draft first to keep a copy.
+  </p>
+  <div class="canccu-studio-row canccu-studio-dialog__actions">
+    <button type="button" class="canccu-button canccu-button--secondary" data-action="dialog-close">
+      Keep my draft
+    </button>
+    <button type="button" class="canccu-button canccu-button--primary" data-action="replace">
+      Use the look
+    </button>
+  </div>
+</dialog>`;
 
 /** The way back after signing in: this page, with its query. */
 function signIn(request: FastifyRequest, reply: FastifyReply): FastifyReply {
@@ -85,14 +143,33 @@ const STATIC_TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "studio.css": "text/css; charset=utf-8",
   "studio-previews.css": "text/css; charset=utf-8",
+  "studio-depths.css": "text/css; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
   "studio-previews.js": "text/javascript; charset=utf-8",
   "studio-screen.js": "text/javascript; charset=utf-8",
+  "studio-live.js": "text/javascript; charset=utf-8",
+  "studio-form.js": "text/javascript; charset=utf-8",
+  "preview-live.js": "text/javascript; charset=utf-8",
+  "pairs.css": "text/css; charset=utf-8",
 };
+
+/**
+ * The font pairs' faces and a class per pair that draws its name in its heading font (pack sheet
+ * 2): the page policy allows no style attribute, and the gallery's "Aa" uses the same faces.
+ */
+const PAIRS_CSS = Buffer.from(
+  [...FONT_PAIRS.values()]
+    .flatMap((pair) => [
+      ...pairFontFaces(pair),
+      `.canccu-studio-font--${pair.id} .canccu-studio-pair__name { font-family: "${pair.heading.family}", system-ui, sans-serif; }`,
+    ])
+    .join("\n"),
+);
 
 const staticFiles = new Map<string, Promise<Buffer>>();
 function staticFile(name: string): Promise<Buffer> {
+  if (name === "pairs.css") return Promise.resolve(PAIRS_CSS);
   let bytes = staticFiles.get(name);
   if (bytes === undefined) {
     // ui.css is packages/ui's own, so the Studio looks like every other admin page.
@@ -144,23 +221,63 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
     const reader = { preHandler: pageNeeds(deps.rights, WRITE) };
     previewRoutes(studio, deps);
 
+    const toGallery = (reply: FastifyReply): FastifyReply => reply.redirect(STUDIO, 303);
+
     studio.get(STUDIO, reader, async (request, reply) => {
-      const state = await deps.db.tenant((c) => studioState(c, deps.files));
-      // The page only offers; the package upload checks the embeds right itself.
+      // With the organiser's own work that a look would drop, so the page asks first (D11).
+      const { state, own } = await deps.db.tenant(async (c) => {
+        const state = await studioState(c, deps.files);
+        return { state, own: await ownWork(c, state.draft?.manifest) };
+      });
+      // The page only offers; applying a preset checks the embeds right itself.
       const embedsAllowed = request.session?.rights.has(EMBEDS) ?? false;
+      const frame = depthFrame(state, request.session?.userId);
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "",
-        ...brandKitView(state, embedsAllowed, request.session?.userId),
+        description: frame.description,
+        actions: frame.actions,
+        body: depthBody(state, galleryView(state, embedsAllowed), frame.extra, own),
+      });
+    });
+
+    studio.get(`${STUDIO}yours`, reader, async (request, reply) => {
+      const page = await deps.db.tenant(async (c) => {
+        const state = await studioState(c, deps.files);
+        if (state.draft === undefined) return undefined;
+        return {
+          state,
+          draft: state.draft,
+          info: await logoInfo(c, deps.files, state.draft),
+          own: await ownWork(c, state.draft.manifest),
+        };
+      });
+      if (page === undefined) return toGallery(reply);
+      const frame = depthFrame(page.state, request.session?.userId);
+      return studioPage(request, reply, deps, {
+        title: "Theme studio",
+        tab: "yours",
+        description: frame.description,
+        actions: frame.actions,
+        body: depthBody(
+          page.state,
+          yoursView(page.state, page.draft, page.info),
+          frame.extra,
+          page.own,
+        ),
       });
     });
 
     studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
       const state = await deps.db.tenant((c) => studioState(c, deps.files, false));
+      if (state.draft === undefined) return toGallery(reply);
+      // No Publish here: this page draws no preview to hold it for (#551) and no light dialog.
+      const frame = depthFrame(state, request.session?.userId, false);
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "advanced",
-        description: status(state, request.session?.userId),
+        description: frame.description,
+        actions: frame.actions,
         body: advancedView(state),
       });
     });

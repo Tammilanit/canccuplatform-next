@@ -5,7 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clockText, dateText } from "../src/frames.js";
-import { PREVIEW_DRAWN, PREVIEW_MESSAGE, VirtualScreen } from "../src/virtual.js";
+import { LIVE_MESSAGE, PREVIEW_DRAWN, PREVIEW_MESSAGE, VirtualScreen } from "../src/virtual.js";
 import { FakeApi, json, problem, screenState } from "./fake.js";
 
 const T0 = Date.parse("2026-01-01T18:40:00Z");
@@ -209,5 +209,52 @@ describe("the virtual screen", () => {
       { type: PREVIEW_DRAWN, id: 7 },
       here,
     );
+  });
+
+  it("takes a live look from the framing page: token values and the preview's chips (#784)", async () => {
+    const api = streaming(new FakeApi()).on(`GET ${ZONE_STATE}`, () =>
+      json(200, screenState({ device: mirror })),
+    );
+    const zone = setup(api);
+    await zone.start();
+    const parent = { postMessage: vi.fn() };
+    const here = "https://alpha.test";
+    const message = (source: unknown, origin: string, data: unknown): MessageEvent => {
+      const event = new MessageEvent("message", { data, origin });
+      Object.defineProperty(event, "source", { value: source });
+      return event;
+    };
+    const root = document.documentElement;
+    const live = {
+      type: LIVE_MESSAGE,
+      vars: { "--canccu-color-primary": "#ff7a45", "--canccu-radius": "1rem", color: "red" },
+      state: { scene: "building", daypart: "morning" },
+    };
+    // From elsewhere: ignored.
+    zone.preview(message(parent, "https://evil.test", live), parent, here);
+    expect(root.style.getPropertyValue("--canccu-color-primary")).toBe("");
+    zone.preview(message(parent, here, live), parent, here);
+    expect(root.style.getPropertyValue("--canccu-color-primary")).toBe("#ff7a45");
+    expect(root.style.getPropertyValue("--canccu-radius")).toBe("1rem");
+    // Only the platform's custom properties: never a property of the page itself.
+    expect(root.style.getPropertyValue("color")).toBe("");
+    expect(document.body.dataset.canccuScene).toBe("building");
+    expect(document.body.dataset.canccuDaypart).toBe("morning");
+    // A value of null takes a property back; an unknown chip is ignored.
+    zone.preview(
+      message(parent, here, {
+        type: LIVE_MESSAGE,
+        vars: { "--canccu-radius": null },
+        state: { daypart: "noon" },
+      }),
+      parent,
+      here,
+    );
+    expect(root.style.getPropertyValue("--canccu-radius")).toBe("");
+    expect(document.body.dataset.canccuDaypart).toBe("morning");
+    // A live look is not a drawn state: the live zone keeps playing and nothing is answered.
+    expect(zone.live.running).toBe(true);
+    expect(parent.postMessage).not.toHaveBeenCalled();
+    zone.live.stop();
   });
 });

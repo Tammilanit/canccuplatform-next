@@ -131,7 +131,7 @@ describe.skipIf(browser === undefined)(
           }),
         );
       }
-      await page.goto(`${s.origin}/theming/studio/`);
+      await page.goto(`${s.origin}/theming/studio/yours`);
       const posted = (zone: string) =>
         page
           .frame({ url: new RegExp(`/screen/zones/${zone}$`) })
@@ -365,6 +365,26 @@ describe.skipIf(browser === undefined)(
       expect(await page.textContent(".canccu-studio-publish-hint")).toContain(
         "Put the colour right",
       );
+    });
+
+    it("releases Publish once the colour is put right and its save is drawn", async () => {
+      await heldDraft();
+      const family = ((await draft()).manifest.fonts as { family: string }[])[0]?.family ?? "";
+      const { page } = await studio({ main: zoneState("Main", null, []) }, { ack: true });
+      const publish = page.locator('.canccu-pagehead [data-action="publish"]');
+      await expect.poll(() => publish.isDisabled()).toBe(false);
+      const primary = page.locator('input[name="primary"]');
+      await primary.fill("abc");
+      await primary.blur();
+      await page.selectOption('select[name="body"]', family);
+      await expect.poll(() => publish.isDisabled()).toBe(true);
+      // Put right, it saves: the page then draws that version, and the frames show it.
+      await primary.fill("#ff7a45");
+      await primary.blur();
+      await expect
+        .poll(async () => ((await draft()).manifest.brand as { primary?: string }).primary)
+        .toBe("#ff7a45");
+      await expect.poll(() => publish.isDisabled(), { timeout: 15_000 }).toBe(false);
     });
 
     it("unlocks Publish once the player confirms it drew the draft", async () => {

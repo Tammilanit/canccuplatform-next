@@ -101,8 +101,9 @@ cp scripts/demo-screenshots*.mjs "$work/scripts/" \
 # The graphs handed to the page take their scale and hours from the server's own rule (#527).
 mkdir -p "$work/modules/screen/src/compose" \
   && cp modules/screen/src/compose/graph.ts "$work/modules/screen/src/compose/" || exit 2
-# The Theme studio's draft takes the demo logo, as an organiser would upload it.
-cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
+# The Theme studio's draft takes the demo logo, and the black one for the plate shots, as an organiser would upload them.
+cp events/demo/assets/logo.svg "$work/events/demo/assets/" \
+  && mkdir -p "$work/events/demo/images" && cp events/demo/images/logo-black.svg "$work/events/demo/images/" || exit 2
 # The Content page's library uploads a video and a sound (content-fixture.mjs).
 cp "$MEDIA/clip-h264-aac.mp4" "$MEDIA/sound.ogg" "$work/$MEDIA/" || exit 2
 # Premiere on the demo event plays the demo film (demo-screenshots-stories.mjs).

@@ -23,6 +23,26 @@
     inset: 0;
   }
 
+  /*
+   * The time of day the Theme studio's preview picks (theming's plan issue-784 D21), #787's rule:
+   * morning cool and light, late night deep and dim, the day as it is. Behind every box, as the
+   * stage is. #787's daylight layer takes this over for the screens themselves.
+   */
+  body[data-canccu-daypart] .canccu-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transition: background-color 2s ease;
+  }
+
+  body[data-canccu-daypart="morning"] .canccu-stage::after {
+    background-color: rgb(190 225 255 / 0.12);
+  }
+
+  body[data-canccu-daypart="late"] .canccu-stage::after {
+    background-color: rgb(2 4 12 / 0.38);
+  }
+
   .canccu-stage__art {
     background-position: center;
     background-size: cover;

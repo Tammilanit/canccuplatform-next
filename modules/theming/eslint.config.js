@@ -21,6 +21,12 @@ const BROWSER = Object.fromEntries(
     "clearInterval",
     "Option",
     "Event",
+    "CustomEvent",
+    "MutationObserver",
+    "DOMParser",
+    "HTMLIFrameElement",
+    "parent",
+    "window",
   ].map((name) => [name, "readonly"]),
 );
 
