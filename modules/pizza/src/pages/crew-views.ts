@@ -3,7 +3,7 @@
  * the crew, one order's people and pizzas with their comments, its history, and stepping in with a
  * reason. The day's orders are one day schedule by call time, on the desk and on a phone.
  */
-import { attrs, html, timeLabel } from "@canccu/ui";
+import { attrs, html, timeLabel, tooltip } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import type { PizzaSettings } from "../settings.js";
 import type { OrderView } from "./order-view.js";
@@ -42,7 +42,17 @@ export function needs(c: PageCtx, o: OrderView, s: PizzaSettings, now: Date): st
   return null;
 }
 
-export function stateLabel(c: Pick<PageCtx, "t">, o: OrderView): Html {
+/** A state chip in pizza's colours with the kit's tooltip (#782), for a chip outside a link. */
+export function pizzaChip(kind: string, words: string, tip: string): Html {
+  return tooltip(
+    html`<span class="pizza-badge pizza-badge--${kind}" tabindex="0">${words}</span>`,
+    tip,
+  );
+}
+
+/** The order's state; with `tip`, as a chip that says what the state means (never inside a link,
+ * where a tap opens the link and the row's text already carries the state). */
+export function stateLabel(c: Pick<PageCtx, "t">, o: OrderView, tip = false): Html {
   // `holder` is absent for a guest, who is not told who holds it: only null is nobody.
   const nobody = (o.state === "open" || o.state === "closed") && o.holder === null;
   const kind =
@@ -54,6 +64,11 @@ export function stateLabel(c: Pick<PageCtx, "t">, o: OrderView): Html {
           ? "info"
           : "ok";
   const words = c.t(`state.${o.state}` as MessageKey) + (nobody ? ` · ${c.t("hold.nobody")}` : "");
+  if (tip) {
+    const means =
+      c.t(`tip.state.${o.state}` as MessageKey) + (nobody ? ` ${c.t("tip.nobody")}` : "");
+    return pizzaChip(kind, words, means);
+  }
   return html`<span class="pizza-badge pizza-badge--${kind}">${words}</span>`;
 }
 
@@ -121,11 +136,9 @@ export function ordersView(
   const needing = orders.filter((o) => need.get(o.id) !== null);
   const openCount = orders.filter((o) => o.state === "open" || o.state === "closed").length;
   const chips = html`<div class="canccu-chips pizza-chips">
-      <span class="pizza-badge pizza-badge--info">${c.t("crew.today", { n: orders.length })}</span>
-      <span class="pizza-badge pizza-badge--warn"
-        >${c.t("crew.needs_you", { n: needing.length })}</span
-      >
-      <span class="pizza-badge pizza-badge--ok">${c.t("crew.open", { n: openCount })}</span>
+      ${pizzaChip("info", c.t("crew.today", { n: orders.length }), c.t("tip.today"))}
+      ${pizzaChip("warn", c.t("crew.needs_you", { n: needing.length }), c.t("tip.needs_you"))}
+      ${pizzaChip("ok", c.t("crew.open", { n: openCount }), c.t("tip.open"))}
     </div>
     ${dayPicker(c, day)}`;
   if (orders.length === 0)
@@ -268,7 +281,7 @@ export function orderView(c: PageCtx, o: OrderView, history: HistoryEntry[], err
         </form>`;
   return html`${flash(error)}
     <div class="pizza-order-head">
-      ${stateLabel(c, o)}<span class="canccu-muted">${times(c, o)}</span>
+      ${stateLabel(c, o, true)}<span class="canccu-muted">${times(c, o)}</span>
     </div>
     ${o.pickup ? html`<p class="canccu-muted">${c.t("crew.pickup", { pickup: o.pickup })}</p>` : ""}
     ${o.state === "cancelled" && o.cancel_reason ? html`<p class="canccu-muted">${o.cancel_reason}</p>` : ""}

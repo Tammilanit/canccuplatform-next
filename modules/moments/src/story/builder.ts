@@ -8,7 +8,7 @@
  * `packages/ui` classes, static/story-builder.css and static/story-builder.js.
  */
 import type { Html } from "@canccu/ui";
-import { html } from "@canccu/ui";
+import { html, statusChip } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
 import { sharedPlaceholders } from "./describe.js";
 import type { Described } from "./describe.js";
@@ -31,13 +31,14 @@ function sampled(v: unknown, sample: (t: string) => string): unknown {
   return v;
 }
 
-/** The page head's line under the title and its actions (sheet 05, 1): Preset, on or off, then
- * Test-fire and Save, which stay in reach while the page scrolls; on a phone the pending row has
- * them. The test-fire is a form of its own; Save and the switch name the builder's form. */
+/** The page head's line under the title, what the page is for (#782), and its actions (sheet 05,
+ * 1): Preset, on or off, then Test-fire and Save, which stay in reach while the page scrolls; on a
+ * phone the pending row has them. The test-fire is a form of its own; Save and the switch name the
+ * builder's form. */
 export function builderHead(
   o: Pick<BuilderView, "story" | "zones" | "zoneName" | "canWrite" | "canTake">,
 ): {
-  description: Html;
+  description: string;
   actions: Html;
 } {
   const st = o.story;
@@ -52,16 +53,24 @@ export function builderHead(
         </form>`
       : "";
   return {
-    description: html`<span class="moments-builder__status"
-      ><span class="canccu-badge canccu-badge--plain"
-        >${st.preset === null ? "The event's own" : "Preset"}</span
-      >${
-        o.canWrite
-          ? toggle("enabled", "yes", st.enabled, "On for this event", { form: "story-save" })
-          : html`<span>${st.enabled ? "On for this event" : "Off"}</span>`
-      }</span
-    >`,
+    description:
+      "Build what this storyboard shows on the screens, round by round, and preview it before you save.",
     actions: html`<span class="moments-builder__actions">
+      <span class="moments-builder__status"
+        >${
+          st.preset === null
+            ? statusChip("plain", "The event's own", "Made for this event, not from a preset.")
+            : statusChip(
+                "plain",
+                "Preset",
+                "Copied from a preset of the catalogue. Reset to default brings the preset back.",
+              )
+        }${
+          o.canWrite
+            ? toggle("enabled", "yes", st.enabled, "On for this event", { form: "story-save" })
+            : html`<span>${st.enabled ? "On for this event" : "Off"}</span>`
+        }</span
+      >
       ${test}
       <span class="canccu-small canccu-muted" data-builder-unsaved hidden>Not saved yet</span>
       ${

@@ -4,9 +4,9 @@
  * On a phone each row is a card.
  */
 import type { Html } from "@canccu/ui";
-import { emptyState, html } from "@canccu/ui";
+import { emptyState, html, tooltip } from "@canccu/ui";
 import { PREFIX } from "../page-kit.js";
-import { OUTCOMES, cueTitle } from "./names.js";
+import { OUTCOMES, OUTCOME_TIPS, cueTitle } from "./names.js";
 import type { LogRow } from "./store.js";
 
 /** The log's reason codes in words (contracts/moments.md, The sound log). */
@@ -117,10 +117,14 @@ export function logView(o: {
           ><b>${cueTitle(r.cue)}</b> <span class="moments-sub">${r.cue}</span></span
         >
         <span class="moments-logrow__what"
-          ><span class="canccu-badge moments-outcome moments-outcome--${r.outcome}"
-            >${OUTCOMES[r.outcome] ?? r.outcome}</span
-          >
-          <span>${sentence(r, o.title)}</span> <span class="moments-sub">${r.reason}</span></span
+          >${tooltip(
+            html`<span
+              class="canccu-badge moments-outcome moments-outcome--${r.outcome}"
+              tabindex="0"
+              >${OUTCOMES[r.outcome] ?? r.outcome}</span
+            >`,
+            OUTCOME_TIPS[r.outcome] ?? r.outcome,
+          )} <span>${sentence(r, o.title)}</span> <span class="moments-sub">${r.reason}</span></span
         >
       </li>`,
   );

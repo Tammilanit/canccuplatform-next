@@ -1,5 +1,5 @@
 /** The advanced page and the history page (plan issue-185 D8): package, tokens, files, restore. */
-import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS, attrs, html } from "@canccu/ui";
+import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS, attrs, html, statusChip } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { DraftRow } from "./drafts.js";
 import { MOTION_STYLE, fillTokens, motionStyleOf } from "./tokens.js";
@@ -196,7 +196,7 @@ export function historyView(
             "data-action": "restore",
             "data-revision": String(r.revision),
           });
-    return html`<li class="canccu-studio-revision"><span class="canccu-studio-revision__title">Revision ${r.revision}</span> ${r.name ?? ""} · ${r.mode} · <time${attrs({ datetime: r.published_at })}>${r.published_at.slice(0, 16).replace("T", " ")}</time>${r.actor_user_id === null ? "" : ` · ${r.actor_user_id}`}${r.restored_from === undefined ? "" : ` · restored from ${r.restored_from}`}${r.pinned ? html` · <span class="canccu-badge canccu-badge--degraded">Pinned</span>` : ""}
+    return html`<li class="canccu-studio-revision"><span class="canccu-studio-revision__title">Revision ${r.revision}</span> ${r.name ?? ""} · ${r.mode} · <time${attrs({ datetime: r.published_at })}>${r.published_at.slice(0, 16).replace("T", " ")}</time>${r.actor_user_id === null ? "" : ` · ${r.actor_user_id}`}${r.restored_from === undefined ? "" : ` · restored from ${r.restored_from}`}${r.pinned ? html` · ${statusChip("degraded", "Pinned", "Screens are pinned to this revision, so it is kept and not cleaned away.")}` : ""}
 <span class="canccu-studio-row">${restore} <a${attrs({ href: `/api/theming/revisions/${r.revision}/package` })}>Export</a></span></li>`;
   });
   const last = revisions.at(-1);

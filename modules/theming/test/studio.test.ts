@@ -1,6 +1,7 @@
 /** The Studio pages under `/theming/studio/` (plan issue-185 D8, D10): brand kit, advanced, history. */
 import { describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
+import { pageProblems } from "@canccu/ui";
 import { draftFiles, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { DATABASE_URL, OUTSIDE_IP, get, send } from "./helpers.js";
@@ -332,6 +333,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const body = (await page("/theming/studio/history")).body;
       await withTenant("alpha", () => t.h.db.tenant((c) => c.query(`DELETE FROM theming_pins`)));
       expect(body).toContain("Pinned");
+      // #782 B0: the chip says what a pin means.
+      expect(pageProblems(body)).toEqual([]);
+      expect(body).toContain("Screens are pinned to this revision");
     });
 
     it("pages with before", async () => {
