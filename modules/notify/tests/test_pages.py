@@ -12,6 +12,7 @@ from topics import reminder, schedule
 
 STATS = "notify.stats.read"
 LIST = "/admin/topics"
+ADVANCED = "/admin/topics/advanced"  # the full forms and the counts (#782, sheet 02)
 
 
 async def topic_types(env: Env) -> dict[str, Any]:
@@ -78,17 +79,17 @@ async def test_counts_need_the_stats_right_and_show_no_forms_without_the_write_r
     await env.register(schedule())
     await env.emit("ev-a", "agenda.reminder.triggered", reminder(), id="e1")
     async with env.client() as c:
-        stats = await c.get(LIST, headers=env.rights.sign_in("u_stats", STATS))
-        both = await c.get(LIST, headers=env.rights.sign_in("u_both", STATS, TOPICS))
+        stats = await c.get(ADVANCED, headers=env.rights.sign_in("u_stats", STATS))
+        both = await c.get(ADVANCED, headers=env.rights.sign_in("u_both", STATS, TOPICS))
     assert stats.status_code == 200
-    assert TOPIC_FORM not in stats.text and "New topic" not in stats.text
-    assert "1 in the last 24 hours, 1 in all" in stats.text
-    assert TOPIC_FORM in both.text and "1 in the last 24 hours" in both.text
+    assert TOPIC_FORM not in stats.text and "New kind" not in stats.text
+    assert "1 sent in the last 24 hours · 1 in all" in stats.text
+    assert TOPIC_FORM in both.text and "1 sent in the last 24 hours" in both.text
 
 
 async def page_form(c: Any, env: Env, key: str) -> dict[str, str]:
-    """The hidden fields of one topic's form, as the list page renders them now."""
-    text = (await c.get(LIST, headers=env.admin())).text
+    """The hidden fields of one topic's form, as Advanced renders them now."""
+    text = (await c.get(ADVANCED, headers=env.admin())).text
     form = text.split(f'<form method=post action="/notify/admin/topics/{key}">')[1]
     form = form.split("</form>")[0]
     found = re.findall(r'<input type=hidden name="([^"]+)" value="([^"]*)">', form)

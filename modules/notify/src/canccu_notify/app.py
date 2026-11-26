@@ -29,6 +29,7 @@ from . import (
     push,
     registry,
     subscriptions,
+    topic_advanced,
     topic_pages,
     web,
 )
@@ -45,6 +46,7 @@ def create_app(
     # /admin/topics/new before /admin/topics/{topic}: Starlette takes the first route that matches.
     pages = (
         custom_pages.ROUTES
+        + topic_advanced.ROUTES
         + topic_pages.ROUTES
         + web.ROUTES
         + checkin_page.ROUTES

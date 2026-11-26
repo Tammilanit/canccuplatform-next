@@ -170,6 +170,11 @@ class FakeHub:
     live: list[dict[str, Any]] | None = field(default_factory=list)
     """Moments' live announcements (`GET /api/moments/announcements/live`); None: no answer."""
     asked_live: list[tuple[str, str | None]] = field(default_factory=list)
+    kinds: list[dict[str, Any]] | None = field(
+        default_factory=lambda: [{"key": "meal", "name": "Meal"}]
+    )
+    """The agenda's kinds (`GET /api/agenda/kinds`); None: no answer."""
+    asked_kinds: list[tuple[str, str | None]] = field(default_factory=list)
 
     async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]:
         self.asked.append((host, cookie))
@@ -187,6 +192,10 @@ class FakeHub:
     ) -> list[dict[str, Any]] | None:
         self.asked_live.append((host, cookie))
         return self.live
+
+    async def agenda_kinds(self, host: str, cookie: str | None) -> list[dict[str, Any]] | None:
+        self.asked_kinds.append((host, cookie))
+        return self.kinds
 
 
 @dataclass

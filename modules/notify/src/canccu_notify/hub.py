@@ -67,3 +67,12 @@ class HubReader:
         body = await self._get(url, host, cookie, client_ip)
         items = body.get("announcements") if isinstance(body, dict) else None
         return [a for a in items if isinstance(a, dict)] if isinstance(items, list) else None
+
+    async def agenda_kinds(self, host: str, cookie: str | None) -> list[dict[str, Any]] | None:
+        """The event's item kinds as the person reads them (contracts/agenda.md, Kinds), for the
+        custom editor's value list; None when the agenda does not answer."""
+        body = await self._get(f"{self.agenda}/api/agenda/kinds", host, cookie)
+        kinds = body.get("kinds") if isinstance(body, dict) else None
+        if not isinstance(kinds, list):
+            return None
+        return [k for k in kinds if isinstance(k, dict) and isinstance(k.get("key"), str)]

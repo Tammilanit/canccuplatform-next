@@ -143,3 +143,42 @@
   .canccu-front-door__info p { margin: 0; }
   .canccu-front-door__info .canccu-i { color: var(--canccu-color-primary); }
 }
+/* Notifications in plain words and Advanced (#782, sheets 01 and 02): each kind's head, the
+   example of what a phone shows, the switches with their "i", and the groups of Advanced. */
+@layer canccu-module {
+  .canccu-notify-group { font-size: 1.125rem; margin: 1.25rem 0 0.5rem; }
+  .canccu-notify-kinds__head { display: flex; align-items: center; gap: 0.5rem; }
+  .canccu-notify-kinds__head .canccu-notify-group { margin-bottom: 0.25rem; }
+  .canccu-notify-kind { margin-bottom: 0.75rem; }
+  .canccu-notify-kind__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .canccu-notify-example { margin: 0.75rem 0; }
+  .canccu-notify-example__phone {
+    max-width: 22rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: calc(var(--canccu-radius) * 2);
+    background: var(--canccu-raised);
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-notify-example__phone p { margin: 0; }
+  .canccu-notify-example__title { font-weight: 600; }
+  .canccu-notify-example figcaption { margin-top: 0.25rem; }
+  .canccu-notify-switch { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; }
+  .canccu-notify-switch label { cursor: pointer; }
+  .canccu-notify-switchform { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .canccu-notify-undo { display: inline; }
+  .canccu-notify-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    list-style: none;
+    margin: 0.25rem 0;
+    padding: 0;
+  }
+  .canccu-notify-unit { align-self: center; padding: 0 0.25rem; }
+}

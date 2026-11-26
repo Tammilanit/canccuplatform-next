@@ -77,6 +77,8 @@ class Hub(Protocol):
         self, host: str, cookie: str | None, client_ip: str | None = None
     ) -> list[dict[str, Any]] | None: ...
 
+    async def agenda_kinds(self, host: str, cookie: str | None) -> list[dict[str, Any]] | None: ...
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
