@@ -83,14 +83,17 @@ def event_routes(
     async def read_all(request: Request) -> EventData:
         owner = tenants()
         tenant, *rest = await asyncio.gather(
-            owner.read(request), *(owner.read(request, path) for path in READS.values())
+            owner.read(request), *(owner.read_status(request, path) for path in READS.values())
         )
-        got = dict(zip(READS, rest, strict=True))
+        got = {key: answer for key, (answer, _) in zip(READS, rest, strict=True)}
+        codes = {key: code for key, (_, code) in zip(READS, rest, strict=True)}
         hostnames = got["hostnames"]
         return EventData(
             tenant=tenant,
             venue_info=got["venue_info"],
             venue=got["venue"],
+            venue_status=codes["venue"],
+            hostnames_status=codes["hostnames"],
             hostnames=None if hostnames is None else hostnames.get("hostnames", []),
             flags=got["flags"],
             storage=got["storage"],
@@ -128,7 +131,8 @@ def event_routes(
         elif exc.code == "missing_right":
             retry = Retry(section, {}, NOT_SAVED, "Only the event's admins can change this.")
             retry.read_only = True
-        elif exc.status == 400:
+        elif exc.status in (400, 413, 415, 422):
+            # 413/415: a floor plan too big or not a picture. Access refusals (403) stay errors.
             retry = Retry(section, typed, NOT_SAVED, exc.message or "The owner refused it.")
         else:
             raise exc

@@ -21,6 +21,7 @@ class FakeTenants:
     refuse: tuple[int, str] | None = None
     seen: list[httpx.Request] = field(default_factory=list)
     down: set[str] = field(default_factory=set)
+    status_of: dict[str, int] = field(default_factory=dict)
     event: dict[str, object] = field(
         default_factory=lambda: {
             "name": "Demo Event",
@@ -110,6 +111,10 @@ class FakeTenants:
         path = request.url.path
         if path in self.down:
             raise httpx.ConnectError("tenants is down", request=request)
+        if request.method == "GET" and path in self.status_of:
+            return httpx.Response(
+                self.status_of[path], json={"error": {"code": "refused", "message": "x"}}
+            )
         if request.method == "GET":
             found = self.reads(path)
             if found is None:

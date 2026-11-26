@@ -4,6 +4,7 @@ the issue's "the Event page saves each field")."""
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import httpx
@@ -241,3 +242,19 @@ async def test_event_access_now_lives_on_the_event_page(
     browser = await owner(world, caplog)
     r = await browser.get("/admin/access")
     assert r.status_code == 303 and r.headers["location"] == "/admin/event#access"
+
+
+@pytest.mark.parametrize(("status", "code"), [(415, "unsupported_type"), (413, "file_too_large")])
+async def test_a_refused_floor_plan_answers_the_venue_section_not_an_error_page(
+    world: World, caplog: pytest.LogCaptureFixture, status: int, code: str
+) -> None:
+    browser = await owner(world, caplog)
+    world.tenants.refuse = (status, code)
+    r = await browser.post(
+        "/admin/event/floor-plan",
+        files={"floor_plan": ("plan.pdf", b"%PDF-1.4", "application/pdf")},
+        headers=ORIGIN,
+    )
+    assert r.status_code == status
+    venue = re.search(r'<section[^>]*id="venue".*?</section>', r.text, re.S)
+    assert venue and "Not saved" in venue.group(0)

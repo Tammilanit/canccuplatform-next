@@ -75,8 +75,12 @@ def _wifi_row(i: int, net: Mapping[str, Any], *, new: bool) -> str:
     )
 
 
-def _venue_ref(venue: Mapping[str, Any] | None) -> str:
+def _venue_ref(venue: Mapping[str, Any] | None, code: int = 404) -> str:
     if venue is None:
+        if code == 403:
+            return "<p>Only the event's admins see which venue this is.</p>"
+        if code != 404:
+            return "<p>The venue didn't answer.</p>"
         return "<p>No venue: an online event, or the platform admin has not chosen one yet.</p>"
     addresses = ", ".join(str(a) for a in venue.get("addresses", [])) or "none"
     return (
@@ -108,7 +112,7 @@ def _plan(info: Mapping[str, Any], can: bool) -> str:
 
 
 def venue_section(session: Session, data: EventData, retry: Retry | None) -> str:
-    head = status(data, "venue", retry) + _venue_ref(data.venue)
+    head = status(data, "venue", retry) + _venue_ref(data.venue, data.venue_status)
     info = data.venue_info
     if info is None:
         return card("venue", "Venue", head + notice("warn", "The venue info didn't answer."))

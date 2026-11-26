@@ -33,6 +33,8 @@ class EventData:
     tenant: Mapping[str, Any] | None = None
     venue_info: Mapping[str, Any] | None = None
     venue: Mapping[str, Any] | None = None
+    venue_status: int = 200
+    hostnames_status: int = 200
     hostnames: Sequence[Mapping[str, Any]] | None = None
     flags: Mapping[str, Any] | None = None
     storage: Mapping[str, Any] | None = None

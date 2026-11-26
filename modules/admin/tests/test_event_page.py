@@ -132,3 +132,26 @@ def test_without_the_event_right_the_basics_are_read_only() -> None:
     )
     basics = section(event_view(reader, data), "basics")
     assert "Demo Event" in basics and "<form" not in basics
+
+
+async def test_a_refused_read_is_told_apart_from_no_venue_and_from_no_answer(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    paths = ("/api/tenants/current/venue", "/api/tenants/current/hostnames")
+
+    async def page_with(code: int) -> str:
+        world.tenants.status_of = dict.fromkeys(paths, code)
+        r = await world.browser(owner).get("/admin/event")
+        assert r.status_code == 200, r.text
+        return r.text
+
+    page = await page_with(404)
+    assert "No venue" in section(page, "venue")
+    page = await page_with(403)
+    assert "No venue" not in section(page, "venue")
+    assert "Only the event's admins see" in section(page, "venue")
+    assert "Only the event's admins see this" in section(page, "web")
+    page = await page_with(503)
+    assert "The venue didn't answer" in section(page, "venue")
+    assert "didn&#x27;t answer" in section(page, "web")

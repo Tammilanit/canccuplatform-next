@@ -76,11 +76,18 @@ class TenantsApi:
     async def read(self, request: Request, path: str = CURRENT) -> dict[str, Any] | None:
         """A read for a section of a page: None when tenants refuses it or does not answer, so
         that section says so and the rest of the page renders."""
+        return (await self.read_status(request, path))[0]
+
+    async def read_status(
+        self, request: Request, path: str = CURRENT
+    ) -> tuple[dict[str, Any] | None, int]:
+        """`read` with why it came back empty: 404 (nothing there), 403 (not the person's to
+        see) or 503 (no answer); 200 with the answer otherwise."""
         try:
             answer: dict[str, Any] = await self.call(request, "GET", path=path)
-        except KitError:
-            return None
-        return answer
+        except KitError as exc:
+            return None, exc.status
+        return answer, 200
 
 
 class ScreenApi:

@@ -120,6 +120,8 @@ def _when(iso: Any, zone: str) -> str:
 
 def web(data: EventData) -> str:
     if data.hostnames is None:
+        if data.hostnames_status == 403:
+            return card("web", "Web addresses", "<p>Only the event's admins see this.</p>")
         return card("web", "Web addresses", notice("warn", "The web addresses didn't answer."))
     rows = []
     for h in data.hostnames:
