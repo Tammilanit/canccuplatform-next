@@ -1,0 +1,25 @@
+{
+  "name": "Poster",
+  "heading": {
+    "family": "Oswald",
+    "faces": [
+      {
+        "weight": 600,
+        "file": "oswald-600.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Source Sans 3",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "source-sans-3-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "source-sans-3-700.woff2"
+      }
+    ]
+  }
+}

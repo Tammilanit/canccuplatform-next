@@ -14,6 +14,7 @@ import { legacyMotion, motionStyleOf } from "@canccu/ui";
 import { MotionLayer, levelOf } from "./motion.js";
 import { SceneLayer } from "./scene.js";
 import { StageLayer } from "./stage.js";
+import type { BackdropView } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
@@ -224,7 +225,12 @@ export class Screen {
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
-    this.stage.apply(state.display?.stage, level, now);
+    this.stage.apply(
+      state.display?.stage,
+      level,
+      now,
+      state.theme.backdrop as BackdropView | undefined,
+    );
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);

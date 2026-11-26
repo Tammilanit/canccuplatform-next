@@ -1258,6 +1258,9 @@ components:
               type: [string, "null"]
             logo_url:
               type: [string, "null"]
+            backdrop:
+              description: The screen's background as theming answers it (contracts/screen.md, The stage); absent from a theming that predates it.
+              $ref: "theming.openapi.yaml#/components/schemas/ResolvedTheme/properties/backdrop"
         layout:
           type: [object, "null"]
           description: The whole layout, in the shape of contracts/theme.schema.json `layout`; null without a zone.

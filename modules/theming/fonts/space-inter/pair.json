@@ -1,0 +1,25 @@
+{
+  "name": "Modern",
+  "heading": {
+    "family": "Space Grotesk",
+    "faces": [
+      {
+        "weight": 700,
+        "file": "space-grotesk-700.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Inter",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "inter-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "inter-700.woff2"
+      }
+    ]
+  }
+}

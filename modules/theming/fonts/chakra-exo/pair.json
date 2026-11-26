@@ -1,0 +1,25 @@
+{
+  "name": "Game night",
+  "heading": {
+    "family": "Chakra Petch",
+    "faces": [
+      {
+        "weight": 700,
+        "file": "chakra-petch-700.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Exo 2",
+    "faces": [
+      {
+        "weight": 500,
+        "file": "exo-2-500.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "exo-2-700.woff2"
+      }
+    ]
+  }
+}

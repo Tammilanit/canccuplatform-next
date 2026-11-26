@@ -25,6 +25,7 @@ import type { FileStore } from "./files.js";
 import { packageRoutes } from "./package-routes.js";
 import { internalPreviewRoutes, keyRoutes } from "./preview.js";
 import { internalRoutes, revisionRoutes } from "./revision-routes.js";
+import { fontPairRoutes } from "./font-pairs.js";
 import { logoRoutes } from "./logo.js";
 import { themeRoutes } from "./routes.js";
 import { sandboxGuard, sandboxRoutes } from "./sandbox.js";
@@ -101,6 +102,7 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
     installTenancy(event, deps.tenants);
     themeRoutes(event, deps);
     logoRoutes(event, deps);
+    fontPairRoutes(event);
     keyRoutes(event, deps);
     draftRoutes(event, deps);
     brandRoutes(event, deps);

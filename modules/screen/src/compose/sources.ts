@@ -24,6 +24,8 @@ export interface ThemeNow {
   logo_url: string | null;
   layouts: unknown[];
   templates: unknown[];
+  /** The screen's background: its looks and switches, and the theme's own picture with its scrim. */
+  backdrop?: unknown;
   /** Each embed's name and its frame in the sandbox; absent from an older theming. */
   embeds?: { name: string; frame_url: string }[];
 }

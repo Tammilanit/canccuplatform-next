@@ -6,8 +6,14 @@ const read = (file: string) =>
 const css = read("screen.css");
 /** The built-in look's sheets: the frame and unit, each widget's look, the claims. */
 const SHEETS = [
-  "screen.css", "widgets.css", "rail.css", "food.css", "claims.css", "announce.css",
-] as const; // prettier-ignore
+  "screen.css",
+  "widgets.css",
+  "logo.css",
+  "rail.css",
+  "food.css",
+  "claims.css",
+  "announce.css",
+] as const;
 const looks = SHEETS.map(read).join("\n");
 /** The rules alone: the comments name what the rules must not hold. */
 const rules = looks.replace(/\/\*[\s\S]*?\*\//g, "");
