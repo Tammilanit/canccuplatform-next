@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { Problem } from "../src/checks.js";
-import { historyView } from "../src/studio-advanced.js";
+import { historyView } from "../src/studio-history.js";
 import { depthFrame, discardView, previewColumn } from "../src/studio-column.js";
 import { yoursView } from "../src/studio-yours.js";
 import { status } from "../src/studio-views.js";

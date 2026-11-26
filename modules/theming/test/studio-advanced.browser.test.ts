@@ -69,14 +69,15 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
         .poll(() => cssVar(screen, c.cssVar), { timeout: 5_000, message: c.token })
         .not.toBe(before);
     }
-    await page.waitForFunction(
-      () => document.querySelector<HTMLElement>(".canccu-studio")?.dataset.saveState === "saved",
-      undefined,
-      { timeout: 15_000 },
-    );
-    const tokens = (await draft()).manifest.tokens as Record<string, Record<string, string>>;
-    expect(tokens.sizes?.safe_inset).toMatch(/px$/);
-    expect(tokens.motion_style).toBeDefined();
+    // Saved 400 ms after the last change, in as many saves as the changes took.
+    const tokens = async () =>
+      (await draft()).manifest.tokens as Record<string, Record<string, string> | undefined>;
+    await expect
+      .poll(async () => (await tokens()).motion_style?.spotlight, { timeout: 15_000 })
+      .toBeDefined();
+    const saved = await tokens();
+    expect(saved.sizes?.safe_inset).toMatch(/px$/);
+    expect(saved.motion_style?.pack).toBeDefined();
     expect(loads).toBe(0);
   });
 
@@ -144,17 +145,23 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
     await levelUp();
     const page = await open("/theming/studio/advanced");
     const hub = await frame(page, 'iframe[data-surface="page"]');
-    const content = await hub.evaluate(() =>
-      Math.max(
-        ...[...document.body.querySelectorAll("*")].map((e) => e.getBoundingClientRect().bottom),
-      ),
-    );
-    await expect
-      .poll(() =>
-        page
-          .locator('iframe[data-surface="page"]')
-          .evaluate((f: HTMLIFrameElement) => f.clientHeight),
-      )
-      .toBeLessThanOrEqual(Math.ceil(content) + 32);
+    const height = () =>
+      page
+        .locator('iframe[data-surface="page"]')
+        .evaluate((f: HTMLIFrameElement) => f.clientHeight);
+    // The lowest box of the page, leaving out wrappers as tall as the frame.
+    const content = () =>
+      hub.evaluate(() =>
+        Math.max(
+          ...[...document.body.querySelectorAll("*")]
+            .map((e) => e.getBoundingClientRect())
+            .filter((r) => r.height > 0 && r.height < innerHeight - 1)
+            .map((r) => r.bottom),
+        ),
+      );
+    await expect.poll(height).toBeLessThan(800);
+    const lowest = await content();
+    expect(await height()).toBeGreaterThanOrEqual(Math.floor(lowest));
+    expect(await height()).toBeLessThanOrEqual(Math.ceil(lowest) + 32);
   });
 });

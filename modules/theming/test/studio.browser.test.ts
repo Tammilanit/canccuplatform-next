@@ -169,12 +169,15 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
   it("uploads a package and goes back to simple", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/advanced");
-    await page.setInputFiles('input[name="package"]', {
-      name: "theme.zip",
-      mimeType: "application/zip",
-      buffer: await demoZip("terminal"),
-    });
-    await act(page, '[data-action="package"] button[type="submit"]');
+    // Import, in the title row of every depth, replaces the draft with the package.
+    await Promise.all([
+      page.waitForEvent("load"),
+      page.setInputFiles('input[name="import"]', {
+        name: "theme.zip",
+        mimeType: "application/zip",
+        buffer: await demoZip("terminal"),
+      }),
+    ]);
     expect((await draft()).manifest.mode).toBe("advanced");
     // The colours of simple mode come from a brand, which the terminal theme has none of.
     await page.goto(`${s.origin}/theming/studio/yours`);

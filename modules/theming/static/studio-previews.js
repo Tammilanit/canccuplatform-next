@@ -270,12 +270,32 @@
     const hint = document.querySelector(".canccu-studio-publish-hint");
     if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
   }
+  /*
+   * The hub page frame is as tall as its page, not a fixed 800 px half empty below the cards: the
+   * lowest box that is not a full-height wrapper, plus the page's own bottom margin.
+   */
+  function fit(frame) {
+    const doc = frame.contentDocument;
+    if (frame.dataset.surface !== "page" || doc?.body == null) return;
+    const full = frame.contentWindow.innerHeight - 1;
+    const bottoms = [...doc.body.querySelectorAll("*")]
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.height > 0 && r.height < full)
+      .map((r) => r.bottom);
+    if (bottoms.length === 0) return;
+    const h = Math.min(800, Math.max(360, Math.ceil(Math.max(...bottoms)) + 24));
+    const figure = frame.closest(".canccu-studio-preview");
+    figure.style.setProperty("--canccu-studio-h", `${h}px`);
+    figure.style.setProperty("--canccu-studio-aspect", `1280 / ${h}`);
+  }
   for (const frame of frames) {
     if (frame === screenFrame) continue;
     frame.addEventListener("load", () => {
       loading.delete(frame);
+      fit(frame);
       check();
     });
+    if (frame.contentDocument?.readyState === "complete") fit(frame);
   }
 
   /*

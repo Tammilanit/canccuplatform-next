@@ -149,27 +149,6 @@
     field.value = path;
   }
 
-  /** Only what changed: sending a token unchanged would still make the theme advanced. */
-  async function saveTokens(form) {
-    const tokens = {};
-    for (const el of form.elements) {
-      if (el.name === "" || el.type === "submit") continue;
-      const changed =
-        el instanceof HTMLSelectElement
-          ? !el.selectedOptions[0]?.defaultSelected
-          : el.value !== el.defaultValue;
-      if (!changed) continue;
-      if (el.name === "motion") {
-        tokens.motion = el.value;
-        continue;
-      }
-      const [group, name] = el.name.split(".");
-      tokens[group] = { ...tokens[group], [name]: el.value.trim() };
-    }
-    if (Object.keys(tokens).length === 0) throw new Error("Nothing changed.");
-    await call("PATCH", "/api/theming/draft/tokens", { draft_version: draftVersion(), tokens });
-  }
-
   /** The frames take a look as its apply is sent, and the draft's colours again if refused. */
   const look = (json) =>
     document.dispatchEvent(new CustomEvent("canccu-studio-look", { detail: JSON.parse(json) }));
@@ -215,8 +194,6 @@
       }),
     brand: saveBrand,
     font: saveFont,
-    tokens: saveTokens,
-    package: (form) => putPackage(form.elements.namedItem("package").files[0]),
     simple: () =>
       call("POST", "/api/theming/draft/mode", {
         draft_version: draftVersion(),
@@ -225,16 +202,21 @@
       }),
   };
 
+  // Advanced's actions (studio-advanced.js) use the same calls, refusals and reloads.
+  window.canccuStudio = { call, query, draftVersion, Invalid, Reload };
+  /** An action of this page, or one another script of it adds (`autosave` and `live` as below). */
+  const actionOf = (name) => ACTIONS[name] ?? window.canccuStudioActions?.[name];
+
   let busy = false;
   /** The forms that save as they change: the brand kit has no Save (UX audit C2). */
   const SAVES_AS_CHANGED = new Set([saveBrand, saveFont]);
+  const autosaves = (action) => SAVES_AS_CHANGED.has(action) || action?.autosave === true;
   /** What saves without reloading the page: the frames follow it live (studio-live.js, D3). */
   const LIVE = new Set([saveBrand, saveFont, applyPreset]);
   /** Set once another organiser's change refused a save: nothing more is saved over it. */
   let conflicted = false;
-  const autoSaved = () => [
-    ...document.querySelectorAll('form[data-action="brand"], form[data-action="font"]'),
-  ];
+  const AUTO = 'form[data-action="brand"], form[data-action="font"], form[data-autosave]';
+  const autoSaved = () => [...document.querySelectorAll(AUTO)];
   // What the person set, not the stored logo's name a save puts in a hidden field.
   const valuesOf = (form) =>
     JSON.stringify(
@@ -251,13 +233,13 @@
   /** `true` when the action went through, else what stopped it. */
   async function attempt(action, el) {
     const before = sent.get(el);
-    if (SAVES_AS_CHANGED.has(action)) sent.set(el, valuesOf(el));
+    if (autosaves(action)) sent.set(el, valuesOf(el));
     try {
       await action(el);
       return true;
     } catch (err) {
       // Nothing was sent, so the form still holds its change: a later save's flush tries it again.
-      if (err instanceof Invalid && SAVES_AS_CHANGED.has(action)) sent.set(el, before);
+      if (err instanceof Invalid && autosaves(action)) sent.set(el, before);
       return err instanceof Error ? err : new Error(String(err));
     }
   }
@@ -276,21 +258,21 @@
   }
 
   async function run(el, control) {
-    const action = ACTIONS[el.dataset.action];
+    const action = actionOf(el.dataset.action);
     // A form changed while a save runs is saved after it, below.
     if (action === undefined || busy || conflicted) return;
     busy = true;
     control.disabled = true;
-    const live = LIVE.has(action);
+    const live = LIVE.has(action) || action.live === true;
     if (live) root.dataset.saveState = "saving";
     let outcome = await attempt(action, el);
     let saved = outcome === true;
     // Each form changed meanwhile or still being typed in is saved too, so nothing typed is lost;
     // after a failure the rest wait, so the first failure is the one said.
-    while (outcome === true && SAVES_AS_CHANGED.has(action)) {
+    while (outcome === true && autosaves(action)) {
       const form = autoSaved().find(unsaved);
       if (form === undefined) break;
-      outcome = await attempt(ACTIONS[form.dataset.action], form);
+      outcome = await attempt(actionOf(form.dataset.action), form);
       saved ||= outcome === true;
     }
     busy = false;
@@ -400,7 +382,8 @@
     if (shown && file.files[0]) shown.textContent = file.files[0].name;
     const imported = event.target.closest('form[data-action="import"]');
     if (imported !== null) return void run(imported, imported);
-    const form = event.target.closest('form[data-action="brand"], form[data-action="font"]');
+    // `.form`: Advanced's controls belong to their form by its id, wherever they are drawn.
+    const form = event.target.form?.matches(AUTO) ? event.target.form : null;
     if (form === null) return;
     // Saved 400 ms after the last change, so a run of clicks is one save (D3).
     clearTimeout(form.canccuSave);

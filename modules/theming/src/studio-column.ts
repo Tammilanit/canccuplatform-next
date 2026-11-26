@@ -152,11 +152,8 @@ const importControl = html`<form class="canccu-studio-import" data-action="impor
   ><input${attrs({ class: "canccu-studio-file", type: "file", id: "canccu-studio-import", name: "import", accept: ".zip,application/zip" })}>
 </form>`;
 
-/**
- * The title row and the dialogs it opens; on a phone the row sits above the bottom bar too.
- * Without `publishes` (Advanced), no Publish.
- */
-export function depthFrame(state: StudioState, viewerId: string | undefined, publishes = true) {
+/** The title row and the dialogs it opens; on a phone the row sits above the bottom bar too. */
+export function depthFrame(state: StudioState, viewerId: string | undefined) {
   const d = state.draft;
   const description = html`<span data-refresh="status">${status(state, viewerId)}</span>`;
   if (d === undefined) return { description, actions: importControl, extra: html`` };
@@ -186,7 +183,7 @@ export function depthFrame(state: StudioState, viewerId: string | undefined, pub
     description,
     // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
     actions: html`<span class="canccu-cluster" data-refresh="actions"
-      >${saved}${exportLink}${importControl}${publishes ? publish : ""}</span
+      >${saved}${exportLink}${importControl}${publish}</span
     >`,
     extra: html`<div class="canccu-studio-pendbar" data-refresh="pendbar">
         ${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${publish}

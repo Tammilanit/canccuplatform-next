@@ -1,224 +1,221 @@
-/** The advanced page and the history page (plan issue-185 D8): package, tokens, files, restore. */
-import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS, attrs, html } from "@canccu/ui";
-import type { Html } from "@canccu/ui";
-import type { DraftRow } from "./drafts.js";
-import { MOTION_STYLE, fillTokens, motionStyleOf } from "./tokens.js";
-import type { PartialTokens } from "./tokens.js";
-import {
-  COLOUR_NAMES,
-  STUDIO,
-  actionButton,
-  brandOf,
-  card,
-  checkView,
-  colourField,
-  fileDrop,
-  root,
-} from "./studio-views.js";
-import type { StudioState } from "./studio-views.js";
-
-const STYLE_LABELS: Record<keyof typeof MOTION_STYLE, string> = {
-  speed: "Speed",
-  intensity: "Intensity",
-  spotlight: "Spotlight",
-  pack: "Motion pack",
-};
-/** The spotlight's names as Screen studio's Motion card says them. */
-const SPOTLIGHTS: Record<string, string> = {
-  glow_and_trace: "Glow and tracing border",
-  trace: "Tracing border",
-};
-const words = (value: string): string =>
-  SPOTLIGHTS[value] ?? value.charAt(0).toUpperCase() + value.slice(1);
-
 /**
- * The `motion_style` token's four choices (contracts/theming.md, Motion vocabulary). Like
- * `motion`, they are no styling: saving them keeps a simple theme simple.
+ * Advanced (plan issue-784 D14–D16, D22; pack sheet 4): every token as a control, in groups by
+ * what it affects, each with its ⓘ; own fonts and the screen's own picture; box looks; the CSS and
+ * template editor. The controls belong to one form (`form` attribute), which static/studio.js saves
+ * 400 ms after the last change and static/studio-advanced.js posts to the frames as it changes.
  */
-function motionStyleFields(given: unknown): Html {
-  const style = motionStyleOf(given);
-  const fields = (Object.keys(MOTION_STYLE) as (keyof typeof MOTION_STYLE)[]).map((field) => {
-    const id = `canccu-studio-motion-${field}`;
-    const options = MOTION_STYLE[field].map(
-      (v) => html`<option${attrs({ value: v, selected: v === style[field] })}>${words(v)}</option>`,
-    );
-    return html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: id })}>${STYLE_LABELS[field]}</label><select${attrs({ class: "canccu-input", id, name: `motion_style.${field}` })}>${options}</select></div>`;
-  });
-  return html`<fieldset class="canccu-studio-tokens">
-    <legend>Motion style</legend>
-    ${fields}
-    <p class="canccu-field__hint">
-      How the screens' effects feel. The event and each zone choose how lively they are.
-    </p>
-  </fieldset>`;
+import { FONT_TOKENS, attrs, html, icon, motionStyleOf } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
+import { isObject, list } from "./checks.js";
+import type { DraftRow } from "./drafts.js";
+import { FONT_PAIRS } from "./font-pairs.js";
+import { ADVANCED_CONTROLS, GROUPS, pxOf } from "./studio-controls.js";
+import type { Control, ControlGroup } from "./studio-controls.js";
+import { STUDIO, brandOf, card, checkView } from "./studio-views.js";
+import type { StudioState } from "./studio-views.js";
+import { backdropView, editorView, looksView, ownFontsView } from "./studio-widgets.js";
+import type { AdvancedPage } from "./studio-widgets.js";
+import { readsWell, resetView } from "./studio-yours.js";
+import { fillTokens, fontValue, manifestTokens } from "./tokens.js";
+
+const FORM = "canccu-studio-tokens";
+const GENERIC: Record<string, [string, string]> = {
+  mono: ["ui-monospace", "System fixed-width font"],
+};
+
+/** The pairs of colours whose text must read (the "Reads well" badge, 4.5:1). */
+const READS_ON: Record<string, [string, string]> = {
+  background: ["text", "background"],
+  surface: ["text", "surface"],
+  text_muted: ["text_muted", "background"],
+  primary: ["primary_text", "primary"],
+};
+
+/** The ⓘ beside a label: its words open in place, no script needed. */
+const tip = (label: string, hint: string): Html =>
+  html`<details class="canccu-studio-tip">
+    <summary${attrs({ "aria-label": `About ${label}` })}>${icon("info")}</summary>
+    <p class="canccu-studio-tip__text"><strong>${label}</strong><br />${hint}</p>
+  </details>`;
+
+const head = (c: Control, id: string): Html =>
+  html`<span class="canccu-studio-control__head"
+    ><label class="canccu-studio-control__label" ${attrs({ for: id })}>${c.label}</label
+    >${tip(c.label, c.hint)}<span class="canccu-small canccu-muted canccu-studio-control__what"
+      >${c.what}</span
+    ></span
+  >`;
+
+function badge(name: string, colors: Record<string, string>): Html | string {
+  const pair = READS_ON[name];
+  if (pair === undefined) return "";
+  const [text, ground] = pair;
+  const ok = readsWell(colors[text] ?? "#000000", colors[ground] ?? "#ffffff");
+  return html`<span${attrs({ "data-refresh": `reads-${name}` })}
+    >${
+      ok
+        ? html`<span class="canccu-badge canccu-badge--ok">${icon("check")}Reads well</span>`
+        : html`<span class="canccu-badge canccu-badge--degraded">Hard to read</span>`
+    }</span
+  >`;
 }
 
-function tokensForm(draft: DraftRow): Html {
-  const given = draft.manifest.tokens as
-    (PartialTokens & { motion?: unknown; motion_style?: unknown }) | undefined;
-  const tokens = fillTokens(given ?? {});
-  const groups: [keyof typeof tokens, string, object][] = [
-    ["fonts", "Fonts", FONT_TOKENS],
-    ["sizes", "Sizes", SIZE_TOKENS],
+interface Values {
+  colors: Record<string, string>;
+  sizes: Record<string, string>;
+  fonts: Record<string, unknown>;
+  style: Record<string, string>;
+  families: string[];
+  pair: { heading: string; body: string } | undefined;
+}
+
+function valuesOf(d: DraftRow): Values {
+  const m = d.manifest;
+  const given = isObject(m.tokens) ? m.tokens : {};
+  const brand = isObject(m.brand) ? m.brand : {};
+  const pair = typeof brand.font_pair === "string" ? FONT_PAIRS.get(brand.font_pair) : undefined;
+  return {
+    colors: fillTokens(given).colors,
+    sizes: manifestTokens(m).sizes,
+    fonts: isObject(given.fonts) ? given.fonts : {},
+    style: motionStyleOf(given.motion_style) as unknown as Record<string, string>,
+    families: [
+      ...new Set(
+        list(m.fonts)
+          .map((f) => (isObject(f) && typeof f.family === "string" ? f.family : undefined))
+          .filter((f): f is string => f !== undefined),
+      ),
+    ],
+    pair: pair === undefined ? undefined : { heading: pair.heading.family, body: pair.body.family },
+  };
+}
+
+function fontOptions(name: string, v: Values): Html[] {
+  const chosen = typeof v.fonts[name] === "string" ? v.fonts[name] : "";
+  const fromPair = name === "body" ? v.pair?.body : name === "mono" ? undefined : v.pair?.heading;
+  const options: [string, string, string][] = [
+    fromPair === undefined
+      ? ["", "Platform font", fontValue(name, FONT_TOKENS[name as keyof typeof FONT_TOKENS])]
+      : ["", `From the font pair: ${fromPair}`, fontValue(name, fromPair)],
   ];
-  // Colours as swatches with their hex, by name (UX audit C5).
-  const colours = Object.keys(COLOR_TOKENS).map((name) =>
-    colourField({
-      name: `colors.${name}`,
-      label: COLOUR_NAMES[name as keyof typeof COLOUR_NAMES],
-      value: tokens.colors[name],
-    }),
-  );
-  const fieldsets = groups.map(([group, label, names]) => {
-    const fields = Object.keys(names).map((name) => {
-      const id = `canccu-studio-${group}-${name}`;
-      return html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: id })}><code>${name}</code></label><input${attrs({ class: "canccu-input", type: "text", id, name: `${group}.${name}`, value: tokens[group][name] })}></div>`;
-    });
-    return html`<fieldset class="canccu-studio-tokens">
-      <legend>${label}</legend>
-      ${fields}
-    </fieldset>`;
-  });
-  const motion = typeof given?.motion === "string" ? given.motion : "moderate";
-  const motions = ["moderate", "calm", "none"].map(
-    (m) => html`<option${attrs({ value: m, selected: m === motion })}>${m}</option>`,
-  );
-  return card(
-    "Tokens",
-    html`<form class="canccu-studio-form" data-action="tokens">
-      <fieldset class="canccu-studio-tokens">
-        <legend>Colours</legend>
-        <div class="canccu-grid canccu-grid--small canccu-studio-colours">${colours}</div>
-      </fieldset>
-      ${fieldsets}
-      <div class="canccu-field">
-        <label class="canccu-field__label" for="canccu-studio-motion">Motion</label
-        ><select class="canccu-input" id="canccu-studio-motion" name="motion">
-          ${motions}
-        </select>
-      </div>
-      ${motionStyleFields(given?.motion_style)}
-      <p class="canccu-field__hint">
-        Only the tokens you change are saved. Changing a colour, font or size makes the theme
-        advanced.
-      </p>
-      <button class="canccu-button canccu-button--primary" type="submit">Save tokens</button>
-    </form>`,
+  // The system font is the platform's own unless a pair stands in for it.
+  const generic = GENERIC[name] ?? ["system-ui", "System font"];
+  if (fromPair !== undefined) options.push([generic[0], generic[1], fontValue(name, generic[0])]);
+  for (const family of new Set([...v.families, ...(chosen === "" ? [] : [chosen])])) {
+    if (options.some(([value]) => value === family)) continue;
+    options.push([family, family, fontValue(name, family)]);
+  }
+  return options.map(
+    ([value, label, stack]) =>
+      html`<option${attrs({ value, "data-stack": stack, selected: value === chosen })}>${label}</option>`,
   );
 }
 
-function filesView(draft: DraftRow): Html {
-  if (draft.files.length === 0) return html`<p>The draft holds no files.</p>`;
-  const rows = draft.files.map(
-    (f) => html`<li><code>${f.path}</code> ${Math.ceil(f.bytes / 1024)} KB</li>`,
-  );
-  return html`<ul class="canccu-studio-files">
-    ${rows}
-  </ul>`;
+function control(c: Control, v: Values): Html {
+  const [group = "", name = ""] = c.token.split(".");
+  const id = `canccu-studio-${group}-${name}`;
+  const common = { form: FORM, name: c.token, id, "data-var": c.cssVar };
+  if (c.control === "colour") {
+    const value = (v.colors[name] ?? "#000000").slice(0, 7);
+    // prettier-ignore
+    return html`<div class="canccu-studio-control canccu-studio-control--colour"><input${attrs({ ...common, class: "canccu-studio-control__swatch", type: "color", value })}>${head(c, id)}${badge(name, v.colors)}</div>`;
+  }
+  if (c.control === "font") {
+    // prettier-ignore
+    return html`<div class="canccu-studio-control">${head(c, id)}<select${attrs({ ...common, class: "canccu-input canccu-studio-control__font" })}>${fontOptions(name, v)}</select></div>`;
+  }
+  if (c.control === "slider") {
+    const [min, max] = c.range ?? [0, 0];
+    const px = Math.min(max, Math.max(min, Math.round(pxOf(v.sizes[name]) ?? min)));
+    // prettier-ignore
+    return html`<div class="canccu-studio-control canccu-studio-control--slider">${head(c, id)}<span class="canccu-studio-control__slide"><input${attrs({ ...common, class: "canccu-studio-control__range", type: "range", min, max, step: c.step, value: px, "data-unit": "px" })}><output${attrs({ for: id, class: "canccu-small" })}>${px} px</output></span></div>`;
+  }
+  const chosen = v.style[name];
+  // prettier-ignore
+  return html`<fieldset class="canccu-studio-control canccu-studio-control--chips"><legend class="canccu-studio-control__head"><span class="canccu-studio-control__label">${c.label}</span>${tip(c.label, c.hint)}<span class="canccu-small canccu-muted canccu-studio-control__what">${c.what}</span></legend><span class="canccu-studio-segments">${(c.options ?? []).map(([value, label]) => html`<label class="canccu-studio-segment"><input${attrs({ form: FORM, type: "radio", name: c.token, value, checked: value === chosen, "data-var": c.cssVar })}>${label}</label>`)}</span></fieldset>`;
 }
 
-export function advancedView(state: StudioState): Html {
-  const d = state.draft;
-  const upload = card(
-    "Package",
-    html`<form class="canccu-studio-form" data-action="package">
-      ${fileDrop({
-        id: "canccu-studio-package",
-        name: "package",
-        label: "Theme package (zip)",
-        accept: ".zip,application/zip",
-        title: "Choose a package",
-        hint: "It replaces the draft's whole content: theme.yaml, CSS, fonts, images, templates and embeds. Embeds need the embeds right.",
-        required: true,
-      })}
-      <button class="canccu-button canccu-button--primary" type="submit">Upload package</button>
-    </form>`,
-  );
-  if (d === undefined) return root(state, upload);
-  const simple =
-    d.manifest.mode !== "advanced"
-      ? ""
-      : brandOf(state) === undefined
-        ? card(
-            "Back to simple mode",
-            html`<p>
-              Save the brand kit first: simple mode makes its colours from the brand's two colours.
-              <a href="${STUDIO}">Brand kit</a>
-            </p>`,
-          )
-        : card(
-            "Back to simple mode",
-            html`<details class="canccu-studio-confirm">
-              <summary>Remove the advanced parts</summary>
-              <form class="canccu-studio-form" data-action="simple">
-                <p>
-                  This removes the draft's CSS, fonts, templates and embeds, and its font and size
-                  tokens. Images and layouts stay; the colours are made again from the brand kit.
-                </p>
-                <button class="canccu-button canccu-button--danger" type="submit">
-                  Remove them and go back to simple
-                </button>
-              </form>
-            </details>`,
-          );
-  return root(
-    state,
-    html`${card("Before publishing", checkView(state.problems))} ${upload}
-      ${card("Files", filesView(d))} ${tokensForm(d)} ${simple}
-      <p><a href="${STUDIO}">Preview and publish on the brand kit page</a></p>`,
-  );
-}
+const groupId = (g: string): string => `canccu-studio-g-${g}`;
 
-interface RevisionSummary {
-  revision: number;
-  name?: string;
-  mode: string;
-  published_at: string;
-  actor_user_id: string | null;
-  restored_from?: number;
-  pinned: boolean;
-}
-
-/** `list` holds up to `pageSize + 1` rows; the extra one only says that older revisions exist. */
-export function historyView(
-  list: { current_revision: number; revisions: Record<string, unknown>[] },
-  pageSize: number,
-  before: number | undefined,
+function groupView(
+  g: ControlGroup,
+  title: string,
+  intro: string,
+  v: Values,
+  extra: Html | string,
 ): Html {
-  const current = list.current_revision;
-  const all = list.revisions as unknown as RevisionSummary[];
-  const revisions = all.slice(0, pageSize);
-  const rows = revisions.map((r) => {
-    const restore =
-      r.revision === current
-        ? html`<strong>On every screen</strong>`
-        : actionButton("Restore", {
-            "data-action": "restore",
-            "data-revision": String(r.revision),
-          });
-    return html`<li class="canccu-studio-revision"><span class="canccu-studio-revision__title">Revision ${r.revision}</span> ${r.name ?? ""} · ${r.mode} · <time${attrs({ datetime: r.published_at })}>${r.published_at.slice(0, 16).replace("T", " ")}</time>${r.actor_user_id === null ? "" : ` · ${r.actor_user_id}`}${r.restored_from === undefined ? "" : ` · restored from ${r.restored_from}`}${r.pinned ? html` · <span class="canccu-badge canccu-badge--degraded">Pinned</span>` : ""}
-<span class="canccu-studio-row">${restore} <a${attrs({ href: `/api/theming/revisions/${r.revision}/package` })}>Export</a></span></li>`;
-  });
-  const last = revisions.at(-1);
-  const more =
-    all.length > pageSize && last !== undefined
-      ? html`<p><a${attrs({ href: `${STUDIO}history?before=${last.revision}` })}>Older revisions</a></p>`
-      : "";
-  const empty =
-    before === undefined
-      ? html`<p>Nothing published yet: screens show the event profile's look.</p>`
-      : html`<p>No older revisions. <a href="${STUDIO}history">Newest revisions</a></p>`;
-  return html`<div class="canccu-studio" ${attrs({ "data-current-revision": current })}>
-    ${
-      revisions.length === 0
-        ? empty
-        : html`<p>
-              Restore publishes a copy of an earlier revision as a new one; history only grows. The
-              last 20 revisions are kept, and every pinned one.
-            </p>
-            <ol class="canccu-studio-revisions">
-              ${rows}
-            </ol>`
-    }${more}
+  const controls = ADVANCED_CONTROLS.filter((c) => c.group === g).map((c) => control(c, v));
+  return html`<section class="canccu-studio-section" ${attrs({ id: groupId(g) })}>
+    <h2 class="canccu-card__title">${title}</h2>
+    <p class="canccu-card__desc">${intro}</p>
+    <div class="canccu-studio-controls-list">${controls}</div>
+    ${extra}
+  </section>`;
+}
+
+const motionNote = html`<p class="canccu-small canccu-muted canccu-studio-note">
+  ${icon("info")}<span
+    >How much the screens move (still, calm, lively, party) is set for each screen zone in
+    <a href="/admin/screen/zones">Screen settings</a>. A screen rises from calm toward that level as
+    the event gets busy; quiet hours keep it calm.</span
+  >
+</p>`;
+
+/** Back to simple mode: the way out of Advanced, once the draft has a brand to make colours from. */
+function simpleView(state: StudioState, d: DraftRow): Html | string {
+  if (d.manifest.mode !== "advanced") return "";
+  if (brandOf(state) === undefined) {
+    return card(
+      "Back to simple mode",
+      html`<p>
+        Save the brand kit first: simple mode makes its colours from the brand's two colours.
+        <a href="${STUDIO}yours">Make it yours</a>
+      </p>`,
+    );
+  }
+  return card(
+    "Back to simple mode",
+    html`<details class="canccu-studio-confirm">
+      <summary>Remove the advanced parts</summary>
+      <form class="canccu-studio-form" data-action="simple">
+        <p>
+          This removes the draft's CSS, fonts, templates and embeds, and its font and size tokens.
+          Images and layouts stay; the colours are made again from the brand kit.
+        </p>
+        <button class="canccu-button canccu-button--danger" type="submit">
+          Remove them and go back to simple
+        </button>
+      </form>
+    </details>`,
+  );
+}
+
+export function advancedView(state: StudioState, d: DraftRow, page: AdvancedPage): Html {
+  const v = valuesOf(d);
+  const nav = [
+    ...GROUPS.map(([g, title]) => [groupId(g), title] as const),
+    ["canccu-studio-looks", "Box looks"] as const,
+    ["canccu-studio-editor", "Your CSS"] as const,
+  ];
+  const extras: Partial<Record<ControlGroup, Html>> = {
+    type: ownFontsView(d, v.families),
+    screen: backdropView(state, d, page.pictureUrl),
+    motion: motionNote,
+  };
+  return html`<div class="canccu-studio-controls canccu-studio-advanced">
+    <p class="canccu-studio-intro">
+      ${icon("info")}<span
+        >Everything, one control each. Tap the ${icon("info")} beside a setting to read what it
+        changes. Changes are saved as you make them.</span
+      >
+    </p>
+    <nav class="canccu-studio-segments canccu-studio-jump" aria-label="Groups">
+      ${nav.map(([id, title]) => html`<a class="canccu-studio-segment" href="#${id}">${title}</a>`)}
+    </nav>
+    <form id="${FORM}" class="canccu-studio-form" data-action="tokens" data-autosave></form>
+    ${GROUPS.map(([g, title, intro]) => groupView(g, title, intro, v, extras[g] ?? ""))}
+    ${looksView(d)} ${editorView(d, page.editing)}
+    <div data-refresh="check">${checkView(state.problems)}</div>
+    ${resetView(state)} ${simpleView(state, d)}
   </div>`;
 }

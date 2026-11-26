@@ -66,12 +66,15 @@ const brandMissing = (): KitError =>
     code: "brand_missing",
   });
 
+const without = (o: Record<string, unknown>, key: string): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(o).filter(([k]) => k !== key));
+
 /** Each widget of `type` in the draft's layouts with `name` as its template, or none. */
 function withLook(layouts: unknown, type: string, name: string | null): unknown {
   if (!Array.isArray(layouts)) return layouts;
   const widget = (w: unknown): unknown => {
     if (!isObject(w) || w.widget !== type) return w;
-    const { template: _old, ...rest } = w;
+    const rest = without(w, "template");
     return name === null ? rest : { ...rest, template: name };
   };
   return layouts.map((l: unknown) =>
@@ -116,10 +119,10 @@ export function applyParts(manifest: Manifest, edit: PartsEdit): Manifest {
   }
   if (edit.backdrop_image !== undefined) {
     if (!isObject(m.brand)) throw brandMissing();
-    const { image: _old, ...backdrop } = isObject(m.brand.backdrop) ? m.brand.backdrop : {};
+    const backdrop = without(isObject(m.brand.backdrop) ? m.brand.backdrop : {}, "image");
     const next =
       edit.backdrop_image === null ? backdrop : { ...backdrop, image: edit.backdrop_image };
-    const { backdrop: _was, ...brand } = m.brand;
+    const brand = without(m.brand, "backdrop");
     m.brand = Object.keys(next).length === 0 ? brand : { ...brand, backdrop: next };
   }
   const styling = ["css", "fonts", "templates", "looks"].some(

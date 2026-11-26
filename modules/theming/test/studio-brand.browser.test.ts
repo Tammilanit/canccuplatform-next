@@ -278,8 +278,14 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
   it("saves only the tokens that changed", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/advanced");
-    await page.fill('input[name="sizes.radius"]', "0px");
-    await act(page, '[data-action="tokens"] button[type="submit"]');
+    // A slider's drag, which Advanced saves by itself (it has no Save).
+    await change(page, () =>
+      page.locator('input[name="sizes.radius"]').evaluate((el: HTMLInputElement) => {
+        el.value = "0";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }),
+    );
     const saved = await draft();
     expect(saved.manifest.mode).toBe("advanced");
     expect((saved.manifest.tokens as { sizes?: unknown }).sizes).toEqual({ radius: "0px" });

@@ -14,13 +14,16 @@ import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, eventOf, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
-import { advancedView, historyView } from "./studio-advanced.js";
+import { advancedView } from "./studio-advanced.js";
+import { historyView } from "./studio-history.js";
+import { editingOf } from "./studio-widgets.js";
+import { backdropImage } from "./backdrop.js";
 import { depthFrame, discardView, previewColumn } from "./studio-column.js";
 import { galleryView } from "./studio-gallery.js";
 import { ownWork } from "./own-work.js";
 import { yoursView } from "./studio-yours.js";
 import { logoInfo } from "./logo-info.js";
-import { STUDIO, studioState } from "./studio-views.js";
+import { STUDIO, draftFileUrl, studioState } from "./studio-views.js";
 import type { StudioState } from "./studio-views.js";
 import { FONT_PAIRS, pairFontFaces } from "./font-pairs.js";
 import type { Html } from "@canccu/ui";
@@ -60,6 +63,7 @@ async function studioPage(
     head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
       <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />
       <link rel="stylesheet" href="${STUDIO}static/studio-depths.css" />
+      <link rel="stylesheet" href="${STUDIO}static/studio-advanced.css" />
       <link rel="stylesheet" href="${STUDIO}static/pairs.css" />`,
     event: await eventOf(request, deps.tenants),
     session: request.session ?? undefined,
@@ -82,7 +86,9 @@ async function studioPage(
       <script src="${STUDIO}static/studio-form.js" defer></script>
       <script src="${STUDIO}static/studio-live.js" defer></script>
       <script src="${STUDIO}static/studio-previews.js" defer></script>
-      <script src="${STUDIO}static/studio-screen.js" defer></script>`,
+      <script src="${STUDIO}static/studio-screen.js" defer></script>
+      <script src="${STUDIO}static/studio-advanced.js" defer></script>
+      <script src="${STUDIO}static/studio-editor.js" defer></script>`,
   });
   return htmlHeaders(reply, eventPageCsp(nonce, request.hostname, { page: "admin" }))
     .status(o.status ?? 200)
@@ -144,6 +150,9 @@ const STATIC_TYPES: Record<string, string> = {
   "studio.css": "text/css; charset=utf-8",
   "studio-previews.css": "text/css; charset=utf-8",
   "studio-depths.css": "text/css; charset=utf-8",
+  "studio-advanced.css": "text/css; charset=utf-8",
+  "studio-advanced.js": "text/javascript; charset=utf-8",
+  "studio-editor.js": "text/javascript; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
   "studio-previews.js": "text/javascript; charset=utf-8",
@@ -268,19 +277,37 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       });
     });
 
-    studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
-      const state = await deps.db.tenant((c) => studioState(c, deps.files, false));
-      if (state.draft === undefined) return toGallery(reply);
-      // No Publish here: this page draws no preview to hold it for (#551) and no light dialog.
-      const frame = depthFrame(state, request.session?.userId, false);
-      return studioPage(request, reply, deps, {
-        title: "Theme studio",
-        tab: "advanced",
-        description: frame.description,
-        actions: frame.actions,
-        body: advancedView(state),
-      });
-    });
+    studio.get<{ Querystring: { edit?: string; new?: string } }>(
+      `${STUDIO}advanced`,
+      reader,
+      async (request, reply) => {
+        const page = await deps.db.tenant(async (c) => {
+          const state = await studioState(c, deps.files);
+          if (state.draft === undefined) return undefined;
+          return {
+            state,
+            draft: state.draft,
+            own: await ownWork(c, state.draft.manifest),
+            editing: await editingOf(c, deps.files, state.draft, request.query),
+            pictureUrl: await draftFileUrl(c, backdropImage(state.draft.manifest)),
+          };
+        });
+        if (page === undefined) return toGallery(reply);
+        const frame = depthFrame(page.state, request.session?.userId);
+        return studioPage(request, reply, deps, {
+          title: "Theme studio",
+          tab: "advanced",
+          description: frame.description,
+          actions: frame.actions,
+          body: depthBody(
+            page.state,
+            advancedView(page.state, page.draft, page),
+            frame.extra,
+            page.own,
+          ),
+        });
+      },
+    );
 
     studio.get<{ Querystring: { before?: string } }>(
       `${STUDIO}history`,

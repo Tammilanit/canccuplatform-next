@@ -1,0 +1,254 @@
+/* Advanced (plan issue-784 D14–D16; pack sheet 4): one control per row, its ⓘ opening in place,
+   box looks and the editor with its numbered, marked lines. */
+.canccu-studio-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: var(--canccu-tint);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+}
+.canccu-studio-intro .canccu-icon {
+  flex: none;
+}
+.canccu-studio-jump {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.canccu-studio-segment[aria-current="true"] {
+  color: var(--canccu-color-text);
+  font-weight: 600;
+  background: var(--canccu-tint);
+}
+a.canccu-studio-segment {
+  text-decoration: none;
+}
+.canccu-studio-controls-list {
+  display: grid;
+  gap: 1rem;
+}
+
+/* A control: the colour's swatch, or the control under its words. */
+.canccu-studio-control {
+  display: grid;
+  gap: 0.375rem 0.875rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.canccu-studio-control--colour {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+}
+.canccu-studio-control__swatch {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.125rem;
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) - 0.125rem);
+  cursor: pointer;
+}
+.canccu-studio-control__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.375rem;
+  padding: 0;
+}
+.canccu-studio-control__label {
+  font-weight: 600;
+}
+.canccu-studio-control__what {
+  flex-basis: 100%;
+}
+.canccu-studio-control__font {
+  max-width: 20rem;
+}
+.canccu-studio-control__slide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+.canccu-studio-control__slide output {
+  text-align: right;
+}
+.canccu-studio-control__range {
+  width: 100%;
+  accent-color: var(--canccu-ink-primary);
+}
+
+/* The ⓘ: a small button whose words open below the row, no script needed. */
+.canccu-studio-tip {
+  display: contents;
+}
+.canccu-studio-tip summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  color: var(--canccu-ink-muted);
+  list-style: none;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.canccu-studio-tip summary::-webkit-details-marker {
+  display: none;
+}
+.canccu-studio-tip summary:focus-visible {
+  outline: 2px solid var(--canccu-ink-primary);
+}
+.canccu-studio-tip__text {
+  flex-basis: 100%;
+  order: 3;
+  margin: 0.375rem 0 0;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: calc(var(--canccu-radius) - 0.125rem);
+}
+
+/* Own fonts, the screen's own picture and box looks. */
+.canccu-studio-own,
+.canccu-studio-behind {
+  display: grid;
+  gap: 0.75rem;
+}
+.canccu-studio-own p {
+  margin: 0;
+}
+.canccu-studio-add summary {
+  list-style: none;
+  width: fit-content;
+}
+.canccu-studio-add summary::-webkit-details-marker {
+  display: none;
+}
+.canccu-studio-add[open] > form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.canccu-studio-looks-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.canccu-studio-box + .canccu-studio-box {
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+.canccu-studio-box__form {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.625rem;
+}
+.canccu-studio-box__name {
+  font-weight: 600;
+}
+
+/* The editor: line numbers beside the text, a marked line coloured by its problem. */
+.canccu-studio-editor {
+  display: grid;
+  gap: 0.625rem;
+}
+.canccu-studio-editor__box {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  font-family: var(--canccu-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  background: var(--canccu-color-background);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  overflow: hidden;
+}
+.canccu-studio-editor__gutter {
+  margin: 0;
+  padding: 0.625rem 0;
+  overflow: hidden;
+  color: var(--canccu-ink-muted);
+  text-align: right;
+  list-style: none;
+  counter-reset: canccu-line;
+  border-right: var(--canccu-border-width) solid var(--canccu-color-border);
+  user-select: none;
+}
+.canccu-studio-editor__gutter li {
+  min-width: 2.5rem;
+  padding: 0 0.5rem;
+  counter-increment: canccu-line;
+}
+.canccu-studio-editor__gutter li::before {
+  content: counter(canccu-line);
+}
+.canccu-studio-editor__line--error {
+  color: var(--canccu-color-text);
+  background: color-mix(in srgb, var(--canccu-color-status-down) 35%, transparent);
+}
+.canccu-studio-editor__line--warning {
+  color: var(--canccu-color-text);
+  background: color-mix(in srgb, var(--canccu-color-status-degraded) 30%, transparent);
+}
+.canccu-studio-editor__text {
+  min-height: 12rem;
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  font: inherit;
+  color: var(--canccu-color-text);
+  background: transparent;
+  border: 0;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+.canccu-studio-editor__text:focus-visible {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: -2px;
+}
+.canccu-studio-editor__problems {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.canccu-studio-editor__problem--error::before {
+  content: "⚠ ";
+  color: var(--canccu-color-status-down);
+}
+.canccu-studio-editor__problem--warning::before {
+  content: "⚠ ";
+  color: var(--canccu-color-status-degraded);
+}
+
+/* At 1920 px the controls take two columns (sheet 4 at 1920). */
+@media (min-width: 110rem) {
+  .canccu-studio-depth:has(.canccu-studio-advanced) {
+    grid-template-columns: minmax(0, 62rem) minmax(0, 1fr);
+  }
+  .canccu-studio-advanced .canccu-studio-controls-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 2rem;
+  }
+}
+/* On a phone long lines wrap rather than scroll sideways (sheet 4 at 390 px). */
+@media (max-width: 40rem) {
+  .canccu-studio-editor__text {
+    white-space: pre-wrap;
+  }
+  .canccu-studio-box__form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .canccu-studio-box__form select {
+    grid-column: 1 / -1;
+  }
+}

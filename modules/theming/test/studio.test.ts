@@ -1,4 +1,5 @@
 /** The Studio pages under `/theming/studio/` (plan issue-185 D8, D10): brand kit, advanced, history. */
+import { ADVANCED_CONTROLS } from "../src/studio-controls.js";
 import { describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import { draftFiles, png } from "./drafting.js";
@@ -252,23 +253,28 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
   });
 
   describe("the advanced page", () => {
-    it("offers the package upload, the problems and the tokens", async () => {
+    it("offers every token as a control in words, the problems and the editor", async () => {
       const draft = await t.fresh();
       const body = (await page("/theming/studio/advanced")).body;
-      expect(body).toContain('data-action="package"');
-      expect(body).toContain('type="file"');
       expect(body).toContain('data-action="tokens"');
-      expect(body).toContain('name="colors.primary"');
-      // Colours as swatches with their hex, by name (UX audit C5).
-      expect(body).toMatch(/<input[^>]*type="color"[^>]*data-hex-for="colors.text_muted"/);
-      expect(body).toContain("Muted text");
-      expect(body).toContain('name="sizes.radius"');
-      // The motion style's four choices (contracts/theming.md, Motion vocabulary).
-      for (const field of ["speed", "intensity", "spotlight", "pack"])
-        expect(body).toContain(`name="motion_style.${field}"`);
+      for (const c of ADVANCED_CONTROLS) {
+        expect(body, c.token).toContain(`name="${c.token}"`);
+        expect(body, c.token).toContain(`data-var="${c.cssVar}"`);
+      }
+      expect(body).toMatch(/<input[^>]*name="colors.text_muted"[^>]*type="color"/);
+      expect(body).toContain("Quiet text");
+      expect(body).toMatch(/<input[^>]*name="sizes.radius"[^>]*type="range"/);
+      // The level, speed and strength are no theme control (plan issue-784 D22).
+      for (const none of ["motion", "motion_style.speed", "motion_style.intensity"])
+        expect(body).not.toContain(`name="${none}"`);
       expect(body).toContain("Glow and tracing border");
+      expect(body).toContain('class="canccu-studio-editor__text"');
+      expect(body).toContain('data-action="font-add"');
       expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
       expect(body).toContain("Ready to publish");
+      // The preview column, as on every depth (D2).
+      expect(body).toContain("iframe");
+      expect(body).toContain('name="import"');
     });
 
     it("offers the way back to simple only for an advanced draft", async () => {
@@ -282,10 +288,16 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect((await page("/theming/studio/advanced")).body).toContain('data-action="simple"');
     });
 
-    it("lists the draft's files", async () => {
+    it("opens the theme's CSS in the editor, and a new look for a box its layouts place", async () => {
       const res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
       expect(res.statusCode).toBe(200);
-      expect((await page("/theming/studio/advanced")).body).toContain("css/theme.css");
+      const body = (await page("/theming/studio/advanced")).body;
+      expect(body).toContain('data-path="css/theme.css"');
+      expect(body).toContain('data-listed="1"');
+      const fresh = (await page("/theming/studio/advanced?new=clock")).body;
+      expect(fresh).toContain('data-path="templates/clock-look.mustache"');
+      expect(fresh).toContain('data-widget="clock"');
+      expect(fresh).not.toContain('data-listed="1"');
     });
 
     it("asks for the brand kit before the way back to simple, which needs a brand", async () => {
