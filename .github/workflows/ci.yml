@@ -230,8 +230,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Tests of .github/scripts/*.mjs and the weekly accessibility check's rules
-        run: node --test .github/scripts/*.test.mjs scripts/a11y-check.test.mjs
+      - name: Tests of .github/scripts/*.mjs, the weekly accessibility check's rules and the local shots' plan
+        run: node --test .github/scripts/*.test.mjs scripts/a11y-check.test.mjs scripts/shots-local.test.mjs
 
   contracts:
     name: contracts

@@ -113,7 +113,8 @@ const READ_AT_RUNTIME = new Map([
   ["contracts/theme.schema.json", "theming"],
   ["contracts/flags.yaml", "tenants"],
 ]);
-const asModule = (path) =>
+/** A changed path as a module's path when it is a contract file the module reads at runtime. */
+export const asModule = (path) =>
   READ_AT_RUNTIME.has(path)
     ? `modules/${READ_AT_RUNTIME.get(path)}/${path}`
     : path;

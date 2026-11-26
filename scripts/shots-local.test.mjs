@@ -80,14 +80,31 @@ test("an unknown module or option is a usage error", () => {
   assert.equal(sh("--frobnicate").status, 2);
 });
 
-test("without names it takes the modules changed against origin/main", () => {
-  // The branch's own changes decide; the test only holds the plan to the same list.
-  const base = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
-  const paths = execFileSync("git", ["diff", "--name-only", "--no-renames", base], { cwd: ROOT, encoding: "utf8" })
-    .split("\n")
-    .filter(Boolean);
-  const run = sh("--dry-run");
+test("without names it takes the modules the working tree changes against the base", () => {
+  // CANCCU_SHOTS_BASE=HEAD: CI's shallow checkout has no origin/main. The tree's own changes
+  // decide; the test holds the dry run to the same list.
+  const git = (...args) =>
+    execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
+  const changed = modulesOf([
+    ...git("diff", "--name-only", "--no-renames", "HEAD"),
+    ...git("ls-files", "--others", "--exclude-standard"),
+  ]);
+  const run = spawnSync("scripts/shots-local.sh", ["--dry-run"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    env: { ...process.env, CANCCU_SHOTS_BASE: "HEAD" },
+  });
   assert.equal(run.status, 0, run.stderr);
-  for (const m of modulesOf(paths)) assert.match(run.stdout, new RegExp(`\\b${m}\\b`));
-  if (modulesOf(paths).length === 0) assert.match(run.stdout, /no module changed against origin\/main/);
+  for (const m of changed) assert.match(run.stdout, new RegExp(`^(ok   )?${m}[: ]`, "m"));
+  if (changed.length === 0) assert.match(run.stdout, /no module changed against HEAD/);
+});
+
+test("a base git cannot find is a clear error, not an empty run", () => {
+  const run = spawnSync("scripts/shots-local.sh", ["--dry-run"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    env: { ...process.env, CANCCU_SHOTS_BASE: "no-such-ref" },
+  });
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /no-such-ref/);
 });
