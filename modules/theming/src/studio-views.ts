@@ -120,7 +120,7 @@ export async function studioState(
   const logoUrl = draft === undefined ? undefined : await draftFileUrl(c, images.logo);
   return {
     draft,
-    problems: draft === undefined ? [] : await draftProblems(c, draft.manifest),
+    problems: draft === undefined ? [] : await draftProblems(c, files, draft.manifest),
     current: head?.revision ?? 0,
     cssChanged,
     logoUrl,

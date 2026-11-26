@@ -24,7 +24,7 @@ describe.skipIf(!DATABASE_URL)("the logo PNG and the icons", () => {
   /** Puts the files, sets the brand with them and publishes; answers the current theme. */
   async function publishWith(
     files: Record<string, Buffer>,
-    brand: { logo?: string; icon?: string },
+    brand: Record<string, unknown>,
   ): Promise<Current> {
     let version = (await t.fresh()).draft_version;
     for (const [path, bytes] of Object.entries(files)) {
@@ -122,6 +122,56 @@ describe.skipIf(!DATABASE_URL)("the logo PNG and the icons", () => {
     );
     expect(await pixel(await served(current.logo_png_url), 10, 10)).toEqual([255, 0, 0, 255]);
     expect(await pixel(await served(current.icon_urls?.["192"]), 96, 96)).toEqual([0, 255, 0, 255]);
+  });
+
+  it("draws the logo PNG and the icons on a circle plate", async () => {
+    const logo = await png("#ff0000", 16);
+    const current = await publishWith(
+      { "images/logo.png": logo },
+      {
+        logo: "images/logo.png",
+        logo_plate: { kind: "light", shape: "circle", padding: "medium" },
+      },
+    );
+    const logoPng = await served(current.logo_png_url);
+    // A circle is as tall as it is wide; outside it stays transparent.
+    expect(await logoPng.metadata()).toMatchObject({ width: 512, height: 512 });
+    expect(await pixel(logoPng, 0, 0)).toEqual([0, 0, 0, 0]);
+    // The plate rings the logo: inside the circle, above the logo, it is the light plate.
+    expect(await pixel(logoPng, 256, 12)).toEqual([0xf7, 0xf7, 0xf8, 255]);
+    expect(await pixel(logoPng, 256, 256)).toEqual([255, 0, 0, 255]);
+    for (const size of ["192", "512"] as const) {
+      const icon = await served(current.icon_urls?.[size]);
+      const n = Number(size);
+      expect(await pixel(icon, 0, 0)).toEqual([0, 0, 0, 0]);
+      expect(await pixel(icon, n / 2, Math.round(n * 0.03))).toEqual([0xf7, 0xf7, 0xf8, 255]);
+      expect(await pixel(icon, n / 2, n / 2)).toEqual([255, 0, 0, 255]);
+    }
+  });
+
+  it("draws a rounded plate around a wide logo, padded by its height", async () => {
+    const logo = await sharp({
+      create: { width: 64, height: 32, channels: 4, background: "#ff0000" },
+    })
+      .png()
+      .toBuffer();
+    const current = await publishWith(
+      { "images/logo.png": logo },
+      {
+        logo: "images/logo.png",
+        logo_plate: { kind: "dark", shape: "rounded", padding: "large" },
+      },
+    );
+    const logoPng = await served(current.logo_png_url);
+    // 512 wide: the logo w and its padding 0.25 × h on each side, h = w / 2, so w = 512 / 1.25
+    // (410 px), h 205 px and the padding 51 px above and below.
+    const { width, height } = await logoPng.metadata();
+    expect(width).toBe(512);
+    expect(height).toBe(307);
+    // The corner is cut round; the middle of the left edge is the plate; the centre the logo.
+    expect(await pixel(logoPng, 0, 0)).toEqual([0, 0, 0, 0]);
+    expect(await pixel(logoPng, 2, Math.floor(height / 2))).toEqual([0x12, 0x13, 0x17, 255]);
+    expect(await pixel(logoPng, 256, Math.floor(height / 2))).toEqual([255, 0, 0, 255]);
   });
 
   it("answers no logo and no icons for a theme without a logo", async () => {

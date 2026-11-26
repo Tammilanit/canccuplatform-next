@@ -32,6 +32,8 @@ COPY --from=build /repo/modules/theming/package.json modules/theming/
 COPY --from=build /repo/modules/theming/dist modules/theming/dist
 COPY --from=build /repo/modules/theming/migrations modules/theming/migrations
 COPY --from=build /repo/modules/theming/static modules/theming/static
+# The platform's font pairs (src/font-pairs.ts), read from ../fonts/ beside dist/.
+COPY --from=build /repo/modules/theming/fonts modules/theming/fonts
 COPY --from=build /repo/modules/theming/node_modules modules/theming/node_modules
 # The manifest schema, read from the contract itself (src/schema.ts) at the same relative place.
 COPY contracts/theme.schema.json contracts/theme.schema.json

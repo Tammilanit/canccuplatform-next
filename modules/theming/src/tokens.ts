@@ -8,7 +8,13 @@ import {
   resolveTheme,
 } from "@canccu/ui";
 import type { FontToken, MotionStyle } from "@canccu/ui";
+import { brandTokens } from "./brand.js";
+import type { Brand } from "./brand.js";
+import { isObject } from "./checks.js";
+import type { Manifest } from "./checks.js";
 import { contrastFailures } from "./contrast.js";
+import { FONT_PAIRS, pairFontFaces } from "./font-pairs.js";
+import { plateOf, plateVars } from "./logo-plate.js";
 
 export interface Tokens {
   colors: Record<string, string>;
@@ -44,6 +50,45 @@ export function themeTokens(given: unknown): ThemeTokens {
   return tokens;
 }
 
+const brandOf = (manifest: Manifest): Partial<Brand> =>
+  isObject(manifest.brand) ? manifest.brand : {};
+
+/**
+ * A manifest's tokens as a revision keeps them: the brand's choices (its font pair and roundness,
+ * plan issue-784 D6, D7) under the tokens the theme sets, so an advanced token wins over a choice.
+ */
+export function manifestTokens(manifest: Manifest): ThemeTokens {
+  const given = isObject(manifest.tokens) ? manifest.tokens : {};
+  const generated = brandTokens(brandOf(manifest));
+  const group = (name: "fonts" | "sizes"): Record<string, unknown> | undefined => {
+    const own = isObject(given[name]) ? given[name] : undefined;
+    const made = generated[name];
+    return made === undefined ? own : { ...made, ...own };
+  };
+  const fonts = group("fonts");
+  const sizes = group("sizes");
+  return themeTokens({
+    ...given,
+    ...(fonts === undefined ? {} : { fonts }),
+    ...(sizes === undefined ? {} : { sizes }),
+  });
+}
+
+/**
+ * The token CSS of a manifest: `tokensCss` of `tokens` (the theme's, or the admin pages' colours)
+ * with the logo plate's custom properties and the font pair's `@font-face` rules. A theme without
+ * those choices gets exactly the CSS it got before them.
+ */
+export function manifestCss(manifest: Manifest, tokens: ThemeTokens): string {
+  const pairId = brandOf(manifest).font_pair;
+  const pair = typeof pairId === "string" ? FONT_PAIRS.get(pairId) : undefined;
+  return tokensCss(
+    tokens,
+    pair === undefined ? [] : pairFontFaces(pair),
+    plateVars(plateOf(manifest)),
+  );
+}
+
 const GENERIC_FAMILIES = new Set(["system-ui", "ui-monospace", "sans-serif", "serif", "monospace"]);
 
 /**
@@ -76,6 +121,7 @@ export function fontValue(token: string, family: string): string {
 export function tokensCss(
   tokens: Tokens & { motion_style?: unknown },
   fontFaces: readonly string[] = [],
+  extraVars: readonly string[] = [],
 ): string {
   const style = motionStyleOf(tokens.motion_style);
   const lines = [
@@ -84,6 +130,7 @@ export function tokensCss(
     ...Object.entries(tokens.sizes).map(([n, v]) => `  ${cssVar("size", n)}: ${v};`),
     `  --canccu-motion-speed: ${SPEED_FACTOR[style.speed]};`,
     `  --canccu-motion-intensity: ${INTENSITY_FACTOR[style.intensity]};`,
+    ...extraVars,
   ];
   return [`:root {\n${lines.join("\n")}\n}\n`, ...fontFaces].join("\n");
 }

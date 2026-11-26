@@ -1,0 +1,25 @@
+{
+  "name": "Terminal",
+  "heading": {
+    "family": "IBM Plex Mono",
+    "faces": [
+      {
+        "weight": 600,
+        "file": "ibm-plex-mono-600.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "IBM Plex Sans",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "ibm-plex-sans-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "ibm-plex-sans-700.woff2"
+      }
+    ]
+  }
+}

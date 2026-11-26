@@ -5,6 +5,8 @@
 import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ErrorObject, ValidateFunction } from "ajv/dist/2020.js";
+import type { Backdrop, Brand } from "./brand.js";
+import type { LogoPlate } from "./logo-plate.js";
 
 const SCHEMA_URL = new URL("../../../contracts/theme.schema.json", import.meta.url);
 
@@ -87,6 +89,10 @@ const brandInputCheck = ajv.compile({
     accent: { $ref: def("color") },
     scheme: { enum: ["dark", "light"] },
     embed_color: { $ref: def("color") },
+    logo_plate: { $ref: def("logo_plate") },
+    font_pair: { type: "string", pattern: "^[a-z0-9][a-z0-9-]{0,39}$" },
+    roundness: { enum: ["square", "soft", "round"] },
+    backdrop: { $ref: def("backdrop") },
   },
 });
 
@@ -147,6 +153,10 @@ export interface BrandEdit {
   accent: string;
   scheme: "dark" | "light";
   embed_color?: string;
+  logo_plate?: LogoPlate;
+  font_pair?: string;
+  roundness?: Brand["roundness"];
+  backdrop?: Backdrop;
 }
 
 export function brandInputError(body: unknown): string | undefined {

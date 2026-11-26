@@ -7,6 +7,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { isTenantId, withTenant } from "@canccu/kit";
 import type { SqlClient, TenantResolver } from "@canccu/kit";
 import { isObject, list } from "./checks.js";
+import { backdropImage, backdropView } from "./backdrop.js";
 import { compiledCss, parsedTemplates } from "./compile.js";
 import { StyleError } from "./css.js";
 import type { Db } from "./db.js";
@@ -30,7 +31,7 @@ import { referenced, sendFile } from "./routes.js";
 import { SANDBOX } from "./sandbox.js";
 import { SERVED, THEMING_VERSION, colorInt, currentRevision } from "./theme.js";
 import type { ResolvedTheme } from "./theme.js";
-import { themeTokens, tokensCss } from "./tokens.js";
+import { manifestCss, manifestTokens } from "./tokens.js";
 import type { RightsChecker } from "@canccu/kit";
 
 export interface PreviewDeps {
@@ -69,7 +70,7 @@ async function resolvedDraft(
   const v = `?v=${draft.draft_version}`;
   const m = draft.manifest;
   // With `motion` and `motion_style`: a screen previewing the draft moves as the draft says.
-  const tokens = themeTokens(m.tokens);
+  const tokens = manifestTokens(m);
   let templates: unknown[] = [];
   try {
     templates = await parsedTemplates(c, files, "draft", m, base);
@@ -80,6 +81,7 @@ async function resolvedDraft(
   const brand = isObject(m.brand) ? m.brand : {};
   const images = isObject(m.images) ? m.images : {};
   const logo = await draftFile(c, images.logo);
+  const picture = await draftFile(c, backdropImage(m));
   const { rows } = await c.query(`SELECT draft_key FROM theming_drafts`);
   const draftKey = (rows[0] as { draft_key: string }).draft_key;
   return {
@@ -99,6 +101,7 @@ async function resolvedDraft(
     layouts: Array.isArray(m.layouts) ? m.layouts : [],
     templates,
     embeds: await listEmbeds(c, "draft", `${SANDBOX}draft/${draftKey}/`),
+    backdrop: backdropView(m, tokens.colors, picture === undefined ? undefined : base + picture),
   };
 }
 
@@ -155,7 +158,9 @@ export function keyRoutes(app: FastifyInstance, deps: PreviewDeps): void {
       const found = await deps.db.tenant(async (c) => {
         const draft = await draftOfKey(c, key);
         if (draft === undefined) return undefined;
-        if (file === "tokens.css") return tokensCss(themeTokens(draft.manifest.tokens));
+        if (file === "tokens.css") {
+          return manifestCss(draft.manifest, manifestTokens(draft.manifest));
+        }
         if (file !== "theme.css") return null;
         try {
           const css = await compiledCss(

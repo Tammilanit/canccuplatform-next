@@ -1,0 +1,25 @@
+{
+  "name": "Esports",
+  "heading": {
+    "family": "Saira Condensed",
+    "faces": [
+      {
+        "weight": 700,
+        "file": "saira-condensed-700.woff2"
+      }
+    ]
+  },
+  "body": {
+    "family": "Saira",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "saira-400.woff2"
+      },
+      {
+        "weight": 700,
+        "file": "saira-700.woff2"
+      }
+    ]
+  }
+}
