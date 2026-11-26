@@ -5,7 +5,7 @@ import { strict as assert } from "node:assert";
 import { execFileSync, spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { groupsOf, modulesOf, plan } from "./shots-local.mjs";
+import { autoModules, groupsOf, modulesOf, plan } from "./shots-local.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const KNOWN = ["admin", "hello", "moments", "pizza", "screen", "screen-render", "tenants", "theming"];
@@ -59,7 +59,7 @@ test("the dry run names the stack, the platform smoke and CI's check-mode pass f
   const run = sh("--dry-run", "screen");
   assert.equal(run.status, 0, run.stderr);
   const out = run.stdout;
-  assert.match(out, /docker compose -p \S+ -f deploy\/compose\.yml -f deploy\/compose\.ci\.yml -f \S+/);
+  assert.match(out, /docker compose --env-file \/dev\/null -p \S+ -f deploy\/compose\.yml -f deploy\/compose\.ci\.yml -f \S+/);
   assert.match(out, /shard screens \(screens; screen\)/);
   assert.match(out, /shard studio \(screen-studio; screen\)/);
   assert.match(out, /scripts\/demo-stack-test --only "" http:\/\/127\.0\.0\.1:<port>/);
@@ -94,6 +94,8 @@ test("without names it takes the modules the working tree changes against the ba
     encoding: "utf8",
     env: { ...process.env, CANCCU_SHOTS_BASE: "HEAD" },
   });
+  // A tree that changes a path CI runs in full (the scripts it shares, say) stops, loudly.
+  if (run.status === 2) return assert.match(run.stderr, /CI runs every shard/);
   assert.equal(run.status, 0, run.stderr);
   for (const m of changed) assert.match(run.stdout, new RegExp(`^(ok   )?${m}[: ]`, "m"));
   if (changed.length === 0) assert.match(run.stdout, /no module changed against HEAD/);
@@ -107,4 +109,31 @@ test("a base git cannot find is a clear error, not an empty run", () => {
   });
   assert.equal(run.status, 2);
   assert.match(run.stderr, /no-such-ref/);
+});
+
+test("the run never touches a stack it did not start: the host's project names are refused", () => {
+  for (const env of [{ CANCCU_SHOTS_PROJECT: "canccuplatform" }, { CANCCU_SHOTS_PROJECT: "x", COMPOSE_PROJECT_NAME: "x" }]) {
+    const run = spawnSync("scripts/shots-local.sh", ["--dry-run", "screen"], {
+      cwd: ROOT, encoding: "utf8", env: { ...process.env, COMPOSE_PROJECT_NAME: "", ...env },
+    });
+    assert.equal(run.status, 2);
+    assert.match(run.stderr, /host's own stack/);
+  }
+  // COMPOSE_PROJECT_NAME alone does not name the shots project.
+  const run = spawnSync("scripts/shots-local.sh", ["--dry-run", "screen"], {
+    cwd: ROOT, encoding: "utf8", env: { ...process.env, CANCCU_SHOTS_PROJECT: "", COMPOSE_PROJECT_NAME: "mine" },
+  });
+  assert.match(run.stdout, /--env-file \/dev\/null -p canccu-shots-[a-z0-9-]+ /);
+});
+
+test("automatic mode stops for paths CI runs in full or on the dev-seed shard, never 'no module changed'", () => {
+  assert.throws(() => autoModules(["packages/ui/tokens.css"], KNOWN), /full tier.*packages\/ui\/tokens\.css/);
+  assert.throws(() => autoModules(["modules/screen/src/dev-seed.ts"], KNOWN), /dev-seed/);
+  assert.throws(() => autoModules(["modules/screen/player/a.ts", "docs/ci.md"], KNOWN), /player/);
+  assert.deepEqual(autoModules(["modules/theming/src/a.ts", "modules/screen/src/a.ts"], KNOWN), ["screen", "theming"]);
+  assert.deepEqual(autoModules(["docs/ci.md", "scripts/shots-local.sh"], KNOWN), []);
+});
+
+test("automatic mode drops names git lists that are not module directories", () => {
+  assert.deepEqual(autoModules(["modules/gone/src/a.ts", "modules/moments/src/a.ts"], KNOWN), ["moments"]);
 });

@@ -28,6 +28,29 @@ export const modulesOf = (paths) =>
     ),
   ].sort();
 
+/**
+ * The modules of the changed paths, as automatic mode shoots them. CI's own `needsOf` decides for
+ * every path: one that needs the full tier or the dev-seed shard cannot be run here, and saying
+ * "no module changed" for it would be a green light CI then withholds, so it throws. Theming's
+ * own paths are the full tier too, but have their local groups (LOCAL). Names git lists that are
+ * not module directories (a deleted module, say) are dropped.
+ */
+export function autoModules(paths, known) {
+  const blocked = paths.filter((path) => {
+    const needs = needsOf(path);
+    if (Array.isArray(needs)) return needs.includes("dev-seed");
+    if (needs !== "full") return false;
+    const m = asModule(path).match(/^modules\/([^/]+)\//)?.[1];
+    return !(m && LOCAL[m]);
+  });
+  if (blocked.length)
+    throw new Error(
+      `CI runs every shard (the full tier or the dev-seed shard) for: ${blocked.slice(0, 5).join(", ")}` +
+        `${blocked.length > 5 ? ", …" : ""}; a local run cannot stand in for it. Push and let CI run, or name modules.`,
+    );
+  return modulesOf(paths).filter((m) => known.includes(m));
+}
+
 /** The screenshot groups of a module's views; none for a module without pages. */
 export function groupsOf(module) {
   if (LOCAL[module]) return LOCAL[module];
@@ -56,20 +79,20 @@ export function plan(modules, known) {
 
 const git = (...args) =>
   execFileSync("git", args, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
-    .split("\n")
+    .split("\0")
     .filter(Boolean);
 
 /** The paths the branch and its working tree change against `ref`, untracked files too. */
 function changedPaths(ref) {
   let base;
   try {
-    base = git("merge-base", ref, "HEAD")[0];
+    base = git("merge-base", ref, "HEAD")[0].trim();
   } catch {
     throw new Error(`no merge base of ${ref} and HEAD (CANCCU_SHOTS_BASE)`);
   }
   return [
-    ...git("diff", "--name-only", "--no-renames", base),
-    ...git("ls-files", "--others", "--exclude-standard"),
+    ...git("diff", "--name-only", "-z", "--no-renames", base),
+    ...git("ls-files", "-z", "--others", "--exclude-standard"),
   ];
 }
 
@@ -81,7 +104,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   let out;
   try {
     const base = process.env.CANCCU_SHOTS_BASE || "origin/main";
-    out = plan(names.length ? names : modulesOf(changedPaths(base)), known);
+    out = plan(names.length ? names : autoModules(changedPaths(base), known), known);
   } catch (err) {
     console.error(`shots-local: ${err.message}`);
     process.exit(2);

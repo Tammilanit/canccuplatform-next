@@ -10,8 +10,9 @@
 # check mode: every check of modules/screen/test/stack, the screens at 1920×1080 and 1080×1920 only.
 # Prints the failing checks, then one line per module; exits 1 when a check failed. The PNGs and
 # each shard's whole log are in shots-local/<shard>/.
-# The stack is a Compose project of its own (COMPOSE_PROJECT_NAME, default canccu-shots) beside
-# any other: Caddy on a free loopback port, no fixed IPv6 subnet, a deploy-status volume of its
+# The stack is a Compose project of its own (CANCCU_SHOTS_PROJECT, default canccu-shots-<user>;
+# never COMPOSE_PROJECT_NAME, which names the host's own stack) beside any other, and the script
+# refuses a project that already has containers, so its `down -v` removes only what it started: Caddy on a free loopback port, no fixed IPv6 subnet, a deploy-status volume of its
 # own. Images build with Docker's layer cache. It is taken down at the end.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -37,8 +38,14 @@ if [ ${#mods[@]} = 0 ]; then
 fi
 
 OUT=shots-local
-PROJECT=${COMPOSE_PROJECT_NAME:-canccu-shots}
-COMPOSE="docker compose -p $PROJECT -f deploy/compose.yml -f deploy/compose.ci.yml -f $OUT/compose.local.yml"
+PROJECT=${CANCCU_SHOTS_PROJECT:-canccu-shots-$(id -un | tr -c 'a-z0-9\n' - | tr 'A-Z' 'a-z')}
+case "$PROJECT" in
+  canccuplatform | "${COMPOSE_PROJECT_NAME:-}")
+    echo "error: $PROJECT is the host's own stack; set CANCCU_SHOTS_PROJECT to another name" >&2; exit 2 ;;
+  *[!a-z0-9_-]* | [!a-z0-9]*) echo "error: bad project name $PROJECT" >&2; exit 2 ;;
+esac
+# No deploy/.env: CI has none, and the host's secrets and ports must not reach this stack.
+COMPOSE="docker compose --env-file /dev/null -p $PROJECT -f deploy/compose.yml -f deploy/compose.ci.yml -f $OUT/compose.local.yml"
 failed=" "
 
 # One line per module, after its shards: a module fails when a shard taking its groups failed.
@@ -81,6 +88,10 @@ fi
 [ ${#shards[@]} = 0 ] && { report; exit 0; }
 
 command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+if [ -n "$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT")" ]; then
+  echo "error: project $PROJECT already has containers; stop them or set CANCCU_SHOTS_PROJECT" >&2
+  exit 2
+fi
 rm -rf "$OUT" && mkdir -p "$OUT" || exit 2
 # Beside another stack of this host: the shared one holds port 80 and the fixed IPv6 subnet, and
 # deploy-status's fixed name would make `down -v` remove the host's own volume. The platform
