@@ -83,6 +83,18 @@ export const STUDIO = [
 ];
 // The depths (plan issue-784 D1, D2; pack sheets 1 and 2), on Default · Night with the black logo.
 const YOURS = "/theming/studio/yours";
+const ADVANCED = "/theming/studio/advanced";
+/** The editor marks a refused line and a small text as they are typed (D15), nothing saved. */
+const cssError = async (page) => {
+  await drawn(page);
+  const editor = page.locator("textarea.canccu-studio-editor__text");
+  await editor.fill(
+    ".t-flare {\n  color: var(--canccu-color-accent);\n  background: url(https://example.org/flare.png);\n}\n.t-small {\n  font-size: 18px;\n}\n",
+  );
+  await page.waitForSelector(".canccu-studio-editor__line--error", { timeout: 5000 });
+  await page.locator("#canccu-studio-editor").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+};
 export const DRAFT = [
   ["theming-studio-pick-1280", DESK, { ready: drawn }],
   ["theming-studio-pick-1920", HD, { ready: drawn }],
@@ -90,7 +102,15 @@ export const DRAFT = [
   ["theming-studio-yours-1280", DESK, { path: YOURS, ready: boxesStill }],
   ["theming-studio-yours-1920", HD, { path: YOURS, ready: drawn }],
   ["theming-studio-yours-390", PHONE, { path: YOURS, ready: drawn, tall: true }],
-  ["studio-draft-advanced", DESK, { path: "/theming/studio/advanced" }],
+  // Advanced (plan issue-784 D14–D16; pack sheet 4): every control beside the same preview.
+  ["theming-studio-advanced-1280", DESK, { path: ADVANCED, ready: drawn }],
+  ["theming-studio-advanced-1920", HD, { path: ADVANCED, ready: drawn }],
+  ["theming-studio-advanced-390", PHONE, { path: ADVANCED, ready: drawn, tall: true }],
+  [
+    "theming-studio-advanced-css-error-1280",
+    DESK,
+    { path: ADVANCED, fullPage: false, ready: cssError },
+  ],
   [
     "studio-draft-preview",
     // Preview is a phone-width control (sheet 6); at desktop width it is hidden and the click times out.
