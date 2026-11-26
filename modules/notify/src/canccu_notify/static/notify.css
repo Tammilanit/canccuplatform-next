@@ -191,3 +191,7 @@
 @layer canccu-module {
   .canccu-notify-fieldset .canccu-notify-switch { margin: 0; }
 }
+@layer canccu-module {
+  /* ui.css gives .canccu-button display:inline-flex, which beats the browser's [hidden]. */
+  .canccu-notify-save[hidden] { display: none; }
+}

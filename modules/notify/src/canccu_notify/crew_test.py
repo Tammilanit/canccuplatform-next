@@ -111,7 +111,9 @@ async def run(request: Request) -> dict[str, int]:
     return {
         "recipients": len(notes),
         "sent": int(counts.get("sent", 0)),
-        "failed": sum(int(n) for status, n in counts.items() if status != "sent"),
+        "failed": int(counts.get("failed", 0)),
+        # Pending or sending: deliver() takes only the oldest rows, so a backlog can hold ours.
+        "queued": sum(int(n) for status, n in counts.items() if status not in ("sent", "failed")),
     }
 
 
@@ -129,7 +131,9 @@ async def crew_test_page(request: Request) -> Response:
         if exc.status not in (429, 503):
             raise
         return redirect(f"?{urlencode({'tested': 'wait' if exc.status == 429 else 'down'})}#health")
-    query = urlencode({"tested": f"{result['recipients']}-{result['sent']}-{result['failed']}"})
+    query = urlencode(
+        {"tested": f"{result['recipients']}-{result['sent']}-{result['failed']}-{result['queued']}"}
+    )
     return redirect(f"?{query}#health")
 
 
@@ -140,18 +144,20 @@ def tested_words(value: str) -> tuple[str, str] | None:
     if value == "down":
         return "down", "Admin didn't answer, so nobody was tested. Try again shortly."
     try:
-        people, sent, failed = (int(n) for n in value.split("-"))
+        people, sent, failed, queued = (int(n) for n in value.split("-"))
     except ValueError:
         return None
     if people == 0:
         return "warn", "Nobody with a role has allowed notifications on a device here yet."
-    devices = sent + failed
+    devices = sent + failed + queued
     words = (
         f"Test sent to {devices} {'device' if devices == 1 else 'devices'} of {people}"
         f" {'person' if people == 1 else 'people'}."
     )
     if failed:
         return "warn", f"{words} {failed} failed: the health box says why."
+    if queued:
+        return "ok", f"{words} {queued} on its way."
     return "ok", words
 
 
