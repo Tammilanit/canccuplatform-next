@@ -290,7 +290,8 @@ export interface HistoryEntry {
     | "round_skipped"
     | "loop_ended"
     | "not_fired"
-    | "moved";
+    | "moved"
+    | "stepped_down";
   moment_id: string | null;
   class: Class;
   origin: Origin;

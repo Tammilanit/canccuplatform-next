@@ -101,7 +101,8 @@ describe("the airtime scheduler", () => {
   });
 
   it("a lower rank waits for the holder's end", () => {
-    const h = pizza({ moment_id: "card", granted: "hero", on_air_since: 0, queued_since: 0 });
+    // A chain that ends at the hero: one that goes on steps down at the floor (air-step-down).
+    const h = pizza({ moment_id: "card", granted: "hero", on_air_since: 0, chain: ["hero"] });
     const p = planZone(100_000, held, [h, slot("final", { queued_since: 1000 })], DEFAULT_AIR);
     expect(p.zone.holder).toBe("card");
   });

@@ -30,6 +30,7 @@ import type { SlotRow } from "./air-store.js";
 import { overrideChanges, rankOn } from "./arbiter.js";
 import type { SentOverride } from "./arbiter.js";
 import { endOverride, liveOverrides, loadOrders, putOverride } from "./store.js";
+import { condensedSteps, noteStepDown } from "./air-steps.js";
 import type { Actor, MomentRow } from "./store.js";
 import type { EndReason } from "./engine.js";
 
@@ -39,10 +40,7 @@ export interface PassEngine {
   endHere(c: SqlClient, m: MomentRow, reason: EndReason, now: Date, zone: string): Promise<void>;
 }
 
-const STEP_MIN_MS = 8000;
-const STEP_MAX_MS = 60_000;
-
-const onAir = (g: SlotRow["granted"]) => g === "hero" || g === "pass";
+const onAir = (g: SlotRow["granted"]) => g === "hero" || g === "pass" || g === "down";
 
 /** The running moments on `zone` that the scheduler places (every one but the emergency). */
 async function momentsOn(c: SqlClient, zone: string): Promise<MomentRow[]> {
@@ -176,7 +174,9 @@ export async function passZone(
       const restart = condensed?.holder === m.id && steps !== null;
       if (restart)
         s.budget_ms = playedAt(s, now) + steps.reduce((t, x) => t + (x.duration_ms as number), 0);
+      const stepsDown = s.granted === "hero" && out.granted === "down";
       apply(s, out, m, air, now, own.has(m.id) && !restart ? m.starts_at : now);
+      if (stepsDown) await noteStepDown(c, zone, m, out, now);
       await send(
         c,
         engine.outbox,
@@ -231,26 +231,6 @@ function apply(
     : s.on_air_since === null || s.budget_ms === null
       ? null
       : new Date(s.on_air_since.getTime() + s.budget_ms - s.played_ms);
-}
-
-/** A condensed round's steps (rule 6): the holder and the moments inside it, in queue order. */
-function condensedSteps(
-  outs: SlotOut[],
-  out: SlotOut,
-  moments: Map<string, MomentRow>,
-  air: AirSettings,
-): Record<string, unknown>[] | null {
-  if (out.granted !== "hero") return null;
-  const inside = outs
-    .filter((o) => o.inside_of === out.moment_id && o.granted === "inside")
-    .sort((a, b) => a.queued_since - b.queued_since);
-  if (inside.length === 0) return null;
-  const all = [out, ...inside].map((o) => moments.get(o.moment_id) as MomentRow);
-  const ms = Math.min(
-    STEP_MAX_MS,
-    Math.max(STEP_MIN_MS, Math.round(air.min_on_air_ms / all.length)),
-  );
-  return all.map((m) => ({ template: m.template, content: m.content, duration_ms: ms }));
 }
 
 interface Sent extends SentOverride {
