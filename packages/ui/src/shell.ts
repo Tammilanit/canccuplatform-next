@@ -132,7 +132,7 @@ function header(event: EventInfo | undefined, logoUrl: string | undefined, now: 
     src === undefined ? "" : html`<img${attrs({ class: "canccu-header__logo", src, alt: "" })}>`;
   const dates = event === undefined ? "" : dateRange(event);
   const end = event === undefined ? "" : eventClock(event, now);
-  return html`<header class="canccu-header">${logo}<span class="canccu-header__title">${event?.name ?? "Event"}</span>${dates ? html`<span class="canccu-header__sep"></span><span class="canccu-header__meta">${dates}</span>` : ""}${event === undefined ? "" : stateBadge(event, now)}<span class="canccu-header__end">${end}</span></header>`;
+  return html`<header class="canccu-header">${logo}<span class="canccu-header__title">${event?.shortName ? html`<span class="canccu-hide-phone">${event.name ?? "Event"}</span><span class="canccu-show-phone">${event.shortName}</span>` : (event?.name ?? "Event")}</span>${dates ? html`<span class="canccu-header__sep"></span><span class="canccu-header__meta">${dates}</span>` : ""}${event === undefined ? "" : stateBadge(event, now)}<span class="canccu-header__end">${end}</span></header>`;
 }
 
 function document(title: string, o: DocumentOptions, body: Slot): Html {
@@ -268,7 +268,7 @@ function eventPoster(e: EventInfo, logoUrl: string | undefined, now: Date): Html
   const name = e.name ?? "";
   const long = name.length > 28 ? " canccu-poster__name--long" : "";
   const venue = e.venue ? html`<p class="canccu-poster__venue">${icon("pin")}${e.venue}</p>` : "";
-  return html`<div class="canccu-poster"><img${attrs({ class: "canccu-poster__logo", src: logoUrl ?? LOGO_URL, alt: "" })}><div class="canccu-poster__name${long}">${name}</div><p class="canccu-poster__meta">${dateRange(e)}${stateBadge(e, now)}</p>${venue}</div>`;
+  return html`<div class="canccu-poster"><img${attrs({ class: "canccu-poster__logo", src: logoUrl ?? LOGO_URL, alt: "" })}><div class="canccu-poster__name${long}">${name}</div><p class="canccu-poster__meta">${dateRange(e)}${stateBadge(e, now)}</p>${venue}${e.description ? html`<p class="canccu-poster__about">${e.description}</p>` : ""}</div>`;
 }
 
 /**

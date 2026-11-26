@@ -157,6 +157,10 @@ class EventInfo:
     starts_at: str | None = None
     ends_at: str | None = None
     venue: str | None = None
+    short_name: str = ""
+    """For narrow screens: the header on a phone (#782)."""
+    description: str = ""
+    """The poster text on the event's front door (#782)."""
 
     @classmethod
     def from_api(cls, body: Mapping[str, Any]) -> EventInfo:
@@ -168,6 +172,8 @@ class EventInfo:
             starts_at=body.get("starts_at"),
             ends_at=body.get("ends_at"),
             venue=venue.get("name") if isinstance(venue, Mapping) else None,
+            short_name=str(body.get("short_name") or ""),
+            description=str(body.get("description") or ""),
         )
 
 

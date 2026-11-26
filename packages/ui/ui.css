@@ -987,6 +987,11 @@
   .canccu-table tr:last-child td {
     border-bottom: 0;
   }
+  /* What only a phone shows instead, such as the event's short name in the header (#782); the
+     phone rule below comes later, so it wins. */
+  .canccu-show-phone {
+    display: none;
+  }
   @media (max-width: 40rem) {
     .canccu-table th,
     .canccu-table td {
@@ -994,6 +999,9 @@
     }
     .canccu-hide-phone {
       display: none;
+    }
+    .canccu-show-phone {
+      display: inline;
     }
   }
 
@@ -1959,6 +1967,12 @@
   }
   .canccu-poster__venue {
     margin-top: 0.625rem;
+    font-size: var(--canccu-text-lg);
+  }
+  .canccu-poster__about {
+    max-width: 36rem;
+    margin: 0.75rem 0 0;
+    color: var(--canccu-ink-muted);
     font-size: var(--canccu-text-lg);
   }
   .canccu-poster__meta .canccu-badge {

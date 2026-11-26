@@ -380,3 +380,26 @@ def test_shell_page_refuses_an_empty_description() -> None:
 
 def test_plain_page_needs_no_description() -> None:
     assert "canccu-pagehead__desc" not in shell_page("Not found", "x", plain=True)
+
+
+def test_the_short_name_heads_a_phone_and_the_poster_text_the_front_door() -> None:
+    """#782 (Q4): what the Event page's short name and poster text are for."""
+    named = EventInfo.from_api(
+        {
+            "name": "Demo <Event>",
+            "status": "live",
+            "short_name": "Demo",
+            "description": "A weekend of <games>.",
+        }
+    )
+    doc = shell_page("X", "", description_html="d", event=named)
+    assert (
+        '<span class="canccu-header__title"><span class="canccu-hide-phone">Demo &lt;Event&gt;'
+        '</span><span class="canccu-show-phone">Demo</span></span>'
+    ) in doc
+    assert '<span class="canccu-header__title">Demo &lt;Event&gt;</span>' in shell_page(
+        "X", "", description_html="d", event=EVENT
+    )
+    front = front_page("Sign in", "", event=named)
+    assert '<p class="canccu-poster__about">A weekend of &lt;games&gt;.</p>' in front
+    assert "poster__about" not in front_page("Sign in", "", event=EVENT)

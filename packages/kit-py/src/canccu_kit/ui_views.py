@@ -28,8 +28,11 @@ PLATFORM_NAME = "CanccuPlatform"
 
 
 def _event_poster(event: EventInfo, now: datetime | None) -> str:
-    """The event's poster: its logo, name, dates and venue."""
+    """The event's poster: its logo, name, dates, venue and poster text."""
     name = event.name or ""
+    about = (
+        f'<p class="canccu-poster__about">{esc(event.description)}</p>' if event.description else ""
+    )
     long = " canccu-poster__name--long" if len(name) > 28 else ""
     venue = (
         f'<p class="canccu-poster__venue">{icon("pin")}{esc(event.venue)}</p>'
@@ -40,7 +43,7 @@ def _event_poster(event: EventInfo, now: datetime | None) -> str:
         f'<div class="canccu-poster">{logo(event, "canccu-poster__logo")}'
         f'<div class="canccu-poster__name{long}">{esc(name)}</div>'
         f'<p class="canccu-poster__meta">{esc(date_range(event))}{state_badge(event, now)}</p>'
-        f"{venue}</div>"
+        f"{venue}{about}</div>"
     )
 
 

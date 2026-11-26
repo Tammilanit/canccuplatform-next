@@ -398,3 +398,24 @@ describe("the page description (#782)", () => {
     ).not.toContain("canccu-pagehead__desc");
   });
 });
+
+// #782 (Q4): the event's short name in the header on a phone, its poster text on the front door.
+describe("the event's short name and poster text", () => {
+  const named = { ...EVENT, shortName: "Demo", description: "A weekend of <games>." };
+  it("puts the short name in the header for phones and the name for wider screens", () => {
+    const doc = s(shellPage({ title: "X", description: "For X.", event: named, body: "" }));
+    expect(doc).toContain(
+      '<span class="canccu-header__title"><span class="canccu-hide-phone">Demo &lt;Event&gt;</span><span class="canccu-show-phone">Demo</span></span>',
+    );
+    expect(s(shellPage({ title: "X", description: "For X.", event: EVENT, body: "" }))).toContain(
+      '<span class="canccu-header__title">Demo &lt;Event&gt;</span>',
+    );
+  });
+  it("shows the poster text under the event's name on the front door", () => {
+    const front = s(frontPage({ title: "Sign in", event: named, card: "" }));
+    expect(front).toContain('<p class="canccu-poster__about">A weekend of &lt;games&gt;.</p>');
+    expect(s(frontPage({ title: "Sign in", event: EVENT, card: "" }))).not.toContain(
+      "poster__about",
+    );
+  });
+});
