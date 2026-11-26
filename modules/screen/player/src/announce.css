@@ -2,15 +2,15 @@
  * Announcements by level (contracts/screen.md, #780; docs/plans/issue-780.md, sheets 1–5): one
  * block on one left edge (label, title, body, details) in every role but the ticker, also in the
  * hero, where hero.css centres every other claim; no box inside the region's box; the frame in the
- * level's colour. `--canccu-ann-u` is 1 % of the screen's height in landscape and in portrait (the
- * unit is 1 % of the short side, so portrait multiplies it by its height over its width): the
- * title never under 6 of it and the body never under 3.5, the PO's floors across a hall, which
+ * level's colour. `--canccu-ann-u` is 1 % of the screen's height, landscape or portrait, as the PO's
+ * floors are set (the layout's unit is 1 % of its short side, a little under the screen's): the
+ * title never under 6 of it and the body never under 3.5, the floors across a hall, which
  * test/player-announce-css.test.ts holds. Loaded after hero.css and stage.css, whose ties it wins.
  * In `canccu-base` like screen.css, so a theme restyles all of it.
  */
 @layer canccu-base {
   .canccu-widget--announcement {
-    --canccu-ann-u: calc(var(--canccu-u) * max(1, 1 / var(--canccu-layout-ratio, 1.7778)));
+    --canccu-ann-u: 1vh;
     --canccu-ann-ink: var(--canccu-color-primary);
   }
 
@@ -183,6 +183,14 @@
     margin: calc(1 * var(--canccu-ann-u)) 0 0;
     font-size: calc(2.8 * var(--canccu-ann-u));
     color: var(--canccu-color-text-muted);
+  }
+
+  /* An alarm carries no decoration: no time, no bar (the PO's Urgent row). */
+  .canccu-region[data-role]
+    > .canccu-widget--announcement
+    :is(.canccu-widget__level--urgent, .canccu-widget__level--emergency)
+    > .canccu-widget__details {
+    display: none;
   }
 
   .canccu-widget__timebar {

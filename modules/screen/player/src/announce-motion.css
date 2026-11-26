@@ -29,7 +29,7 @@
   .canccu-widget--announcement .canccu-widget__level::after {
     content: "";
     position: absolute;
-    inset: -10% -40%;
+    inset: 0 -40%;
     background: linear-gradient(
       100deg,
       transparent 35%,
@@ -105,12 +105,23 @@
     animation: canccu-ann-pulse 2.8s ease-in-out infinite;
   }
 
-  /* A full screen that stays alive (D11): the drifting ground and the breathing frame. */
-  .canccu-ann--alive::before {
+  /*
+   * A full screen that stays alive (D11): the drifting ground and the breathing frame. The ground
+   * and the particles sit in their own clipped layer, so their moves never count as the card's
+   * overflow, which would step its type down to the floor (fit.ts).
+   */
+  .canccu-widget__ambient {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .canccu-ann--alive > .canccu-widget__ambient::before {
     content: "";
     position: absolute;
     inset: -30%;
-    z-index: 0;
     background:
       radial-gradient(
         circle at 30% 35%,
@@ -123,14 +134,13 @@
         transparent 45%
       );
     animation: canccu-ann-drift 120s ease-in-out var(--canccu-ann-delay) infinite alternate;
-    pointer-events: none;
   }
 
   .canccu-ann--alive::after {
     animation: canccu-ann-breathe 8s ease-in-out var(--canccu-ann-delay) infinite;
   }
 
-  .canccu-motion--calm .canccu-ann--alive::before {
+  .canccu-motion--calm .canccu-ann--alive > .canccu-widget__ambient::before {
     animation-duration: 240s;
   }
 
@@ -165,15 +175,7 @@
   }
 
   /* Soft particles in the accent: 26 at `party`, the first 14 at `lively`, none at `calm`. */
-  .canccu-widget__particles {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .canccu-widget__particles > i {
+  .canccu-widget__ambient > i {
     position: absolute;
     bottom: -4%;
     left: calc(var(--i, 0) * 3.7% + 2%);
@@ -185,18 +187,18 @@
     animation: canccu-ann-rise 19s linear infinite;
   }
 
-  .canccu-widget__particles > i:nth-child(3n) {
+  .canccu-widget__ambient > i:nth-child(3n) {
     width: calc(1.4 * var(--canccu-u));
     height: calc(1.4 * var(--canccu-u));
     animation-duration: 25s;
   }
 
-  .canccu-widget__particles > i:nth-child(4n + 1) {
+  .canccu-widget__ambient > i:nth-child(4n + 1) {
     animation-duration: 15s;
   }
 
-  .canccu-motion--lively .canccu-widget__particles > i:nth-child(n + 15),
-  :is(.canccu-motion--calm, .canccu-motion--none) .canccu-widget__particles {
+  .canccu-motion--lively .canccu-widget__ambient > i:nth-child(n + 15),
+  :is(.canccu-motion--calm, .canccu-motion--none) .canccu-widget__ambient > i {
     display: none;
   }
 }

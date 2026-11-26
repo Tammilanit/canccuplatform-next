@@ -75,6 +75,21 @@
   background: var(--t-grad);
 }
 
+/* An announcement's card is not a widget's heading: it keeps the platform's sizes, its floors
+   across a hall and its one left edge (#780), in the theme's display face. */
+.canccu-widget--announcement .canccu-widget__title {
+  display: revert-layer;
+  margin: revert-layer;
+  font-family: var(--canccu-font-display);
+  font-size: revert-layer;
+  letter-spacing: revert-layer;
+  text-transform: revert-layer;
+  color: var(--canccu-color-text);
+}
+.canccu-widget--announcement .canccu-widget__title::before {
+  content: none;
+}
+
 .t-tag {
   font-family: var(--canccu-font-heading);
   font-size: 1.4rem;

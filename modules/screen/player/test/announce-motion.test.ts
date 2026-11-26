@@ -54,8 +54,7 @@ function mount(level: string, region = "_full", more: Record<string, unknown> = 
   return { root, box };
 }
 const has = (box: HTMLElement, cls: string) => box.classList.contains(`canccu-ann--${cls}`);
-const particles = (box: HTMLElement) =>
-  box.querySelectorAll(".canccu-widget__particles > i").length;
+const particles = (box: HTMLElement) => box.querySelectorAll(".canccu-widget__ambient > i").length;
 
 describe("an announcement's motion on the screen", () => {
   it("breaks Important in, dims the rest, and keeps a full screen alive", () => {
@@ -80,7 +79,7 @@ describe("an announcement's motion on the screen", () => {
       for (const cls of ["entering", "reemphasis", "second", "alive"])
         expect(has(box, cls)).toBe(false);
     }
-    expect(particles(box)).toBe(0);
+    expect(box.querySelector(".canccu-widget__ambient")).toBeNull();
     expect(root.dataset.breakin).toBeUndefined();
     expect(box.querySelector(".canccu-widget__second")?.textContent).toBe("Collect at the café");
   });
@@ -99,6 +98,8 @@ describe("an announcement's motion on the screen", () => {
     animateAnnouncements(calm.root, at(0.5), "calm");
     expect(has(calm.box, "entering")).toBe(true);
     expect(calm.root.dataset.breakin).toBeUndefined();
+    // The drifting ground stays, at half pace; the particles do not.
+    expect(calm.box.querySelector(".canccu-widget__ambient")).not.toBeNull();
     expect(particles(calm.box)).toBe(0);
     for (const [level, region] of [["important", "hero"], ["urgent", "_full"], ["emergency", "_full"]]) {
       const { root, box } = mount(level as string, region);
@@ -123,7 +124,7 @@ describe("an announcement's motion on the screen", () => {
     expect(box.style.getPropertyValue("--canccu-ann-since")).toBe(phase);
     expect(particles(box)).toBe(14 + 12);
     // The particles drawn again carry the phase they have now, not the start's.
-    const first = box.querySelector<HTMLElement>(".canccu-widget__particles > i");
+    const first = box.querySelector<HTMLElement>(".canccu-widget__ambient > i");
     expect(first?.style.animationDelay).toBe("-40s");
   });
 });

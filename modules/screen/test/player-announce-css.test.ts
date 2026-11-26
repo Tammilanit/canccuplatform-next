@@ -21,9 +21,7 @@ const rulesOf = (css: string) =>
 
 describe("the announcement's look", () => {
   it("measures in 1 % of the screen's height, in landscape and in portrait", () => {
-    expect(look).toMatch(
-      /--canccu-ann-u: calc\(var\(--canccu-u\) \* max\(1, 1 \/ var\(--canccu-layout-ratio, 1\.7778\)\)\);/,
-    );
+    expect(look).toMatch(/\.canccu-widget--announcement \{\s*--canccu-ann-u: 1vh;/);
   });
 
   it("never draws a card's title under 6 % of the screen's height, nor its body under 3.5 %", () => {
@@ -74,14 +72,17 @@ describe("the announcement's motion", () => {
     for (const { selector, body } of rulesOf(motion)) {
       if (!/(^|;)\s*animation(-name)?:/.test(body)) continue;
       // `.canccu-ann--alive` is set only off `none` (announce-motion.ts); the particles hide there.
-      const gated = /canccu-motion--(lively|party|calm)|canccu-ann--alive|canccu-widget__particles > i/.test(selector);
+      const gated = /canccu-motion--(lively|party|calm)|canccu-ann--alive|canccu-widget__ambient > i/.test(selector);
       expect(gated, selector).toBe(true);
       expect(selector, selector).not.toContain("canccu-motion--none");
     }
   }); // prettier-ignore
 
   it("counts the endless pictures from the claim's start, so a zone's screens agree", () => {
-    for (const sel of [".canccu-ann--alive::before", ".canccu-ann--alive::after"]) {
+    for (const sel of [
+      ".canccu-ann--alive > .canccu-widget__ambient::before",
+      ".canccu-ann--alive::after",
+    ]) {
       const rule = rulesOf(motion).find((r) => r.selector === sel);
       expect(rule?.body, sel).toContain("var(--canccu-ann-delay)");
     }

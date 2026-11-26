@@ -71,7 +71,7 @@ export function animateAnnouncements(root: HTMLElement, nowMs: number, level: Le
     box.classList.toggle("canccu-ann--alive", alive);
     if (box.style.getPropertyValue("--canccu-ann-since") === "")
       box.style.setProperty("--canccu-ann-since", `${String((nowMs - startsAt) / 1000)}s`);
-    keepParticles(box, alive && level !== "calm", (nowMs - startsAt) / 1000);
+    keepAmbient(box, alive, level === "calm" ? 0 : PARTICLES, (nowMs - startsAt) / 1000);
     // At `none` nothing moves: no class starts a picture, and the second line stays shown.
     const beat = level === "none" ? null : beatAt(startsAt, nowMs);
     const on = [
@@ -103,20 +103,19 @@ function tickDetails(box: HTMLElement, startsAt: number, nowMs: number): void {
 }
 
 /**
- * The soft particles of a living full screen, CSS-drawn (no canvas). Each is given the phase it
- * has at `sinceS`, so ones drawn again after a redraw in place carry on where the others are.
+ * The clipped layer of a living full screen: its drifting ground (announce-motion.css) and its
+ * soft particles, CSS-drawn (no canvas). Each particle is given the phase it has at `sinceS`, so
+ * ones drawn again after a redraw in place carry on where the others are.
  */
-function keepParticles(box: HTMLElement, want: boolean, sinceS: number): void {
-  const held = box.querySelector(":scope > .canccu-widget__particles");
-  if (!want) {
-    held?.remove();
-    return;
-  }
-  if (held !== null) return;
+function keepAmbient(box: HTMLElement, alive: boolean, particles: number, sinceS: number): void {
+  const held = box.querySelector(":scope > .canccu-widget__ambient");
+  if (held !== null && (!alive || held.childElementCount !== particles)) held.remove();
+  else if (held !== null) return;
+  if (!alive) return;
   const layer = document.createElement("div");
-  layer.className = "canccu-widget__particles";
+  layer.className = "canccu-widget__ambient";
   layer.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < PARTICLES; i += 1) {
+  for (let i = 0; i < particles; i += 1) {
     const p = document.createElement("i");
     p.style.setProperty("--i", String(i));
     p.style.animationDelay = `${String(-(sinceS + i * 1.7))}s`;
