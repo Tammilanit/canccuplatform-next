@@ -35,7 +35,11 @@
     submit.disabled = true;
     try {
       await call("POST", "/api/theming/presets", { name: form.elements.namedItem("name").value });
-      window.location.assign("/theming/studio/#canccu-studio-mine");
+      // Already on the gallery, a fragment change alone would neither reload nor list the new look.
+      if (window.location.pathname === "/theming/studio/") {
+        window.location.hash = "canccu-studio-mine";
+        window.location.reload();
+      } else window.location.assign("/theming/studio/#canccu-studio-mine");
     } catch (err) {
       error.textContent = err instanceof Error ? err.message : String(err);
       error.hidden = false;

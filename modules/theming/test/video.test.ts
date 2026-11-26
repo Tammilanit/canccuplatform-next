@@ -146,4 +146,44 @@ describe.skipIf(!DATABASE_URL)("a video in the draft", () => {
       expect.objectContaining({ severity: "error", code: "schema" }),
     );
   });
+  it("keeps the video when Make it yours saves the same picture without naming it", async () => {
+    const fresh = await t.fresh();
+    const video = await t.put("videos/a.mp4", fresh.draft_version, mp4());
+    const still = await t.put(
+      "images/still.png",
+      video.json<DraftBody>().draft_version,
+      await png("#223344", 16),
+    );
+    const brand = await send(t.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: still.json<DraftBody>().draft_version,
+      primary: "#3ddcff",
+      accent: "#b98cff",
+      scheme: "dark",
+    });
+    const parts = await send(t.h, "PATCH", "/api/theming/draft/parts", {
+      draft_version: brand.json<{ draft: DraftBody }>().draft.draft_version,
+      backdrop_image: "images/still.png",
+      backdrop_video: "videos/a.mp4",
+    });
+    // The shape of the Make it yours form (studio-form.js): a backdrop without `video`.
+    const saved = await send(t.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: parts.json<DraftBody>().draft_version,
+      primary: "#ff3d81",
+      accent: "#b98cff",
+      scheme: "dark",
+      backdrop: {
+        looks: ["glows"],
+        game_art: true,
+        daylight: false,
+        hype: true,
+        image: "images/still.png",
+      },
+    });
+    expect(saved.statusCode).toBe(200);
+    const after = saved.json<{
+      draft: { manifest: { brand: { backdrop: Record<string, unknown> } } };
+    }>();
+    expect(after.draft.manifest.brand.backdrop.video).toBe("videos/a.mp4");
+    expect(after.draft.manifest.brand.backdrop.image).toBe("images/still.png");
+  });
 });

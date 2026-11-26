@@ -182,6 +182,13 @@
     await removeFile(el.dataset.video, v);
   }
 
+  /** The looks cycle: the picture and the video over it go, and the video's file with them. */
+  async function cycle(el) {
+    const v = (await parts(draftVersion(), { backdrop_image: null, backdrop_video: null }))
+      .draft_version;
+    if (el.dataset.video) await removeFile(el.dataset.video, v);
+  }
+
   /** A box look (D16): every box of the type uses it, or the platform's look. */
   const useLook = (form) =>
     parts(draftVersion(), {
@@ -219,7 +226,7 @@
     tokens: saveTokens,
     "font-add": addFont,
     "backdrop-image": usePicture,
-    "backdrop-cycle": () => parts(draftVersion(), { backdrop_image: null, backdrop_video: null }),
+    "backdrop-cycle": cycle,
     "backdrop-video": useVideo,
     "backdrop-video-off": videoOff,
     look: useLook,

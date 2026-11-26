@@ -47,4 +47,17 @@ describe.skipIf(browser === undefined)("My presets in Chromium", { timeout: 60_0
     const listed = (await (await api("GET", "/api/theming/presets")).json()) as { mine: unknown[] };
     expect(listed.mine).toEqual([]);
   });
+
+  it("saves from Pick a look itself and lists the new look without a manual reload", async () => {
+    await api("PUT", "/api/theming/draft/preset", { preset: "default", scheme: "night" });
+    const page = await open("/theming/studio/");
+    await page.locator('[data-mine-ask="canccu-studio-mine-save"]:visible').first().click();
+    const dialog = page.locator("#canccu-studio-mine-save[open]");
+    await dialog.waitFor();
+    await dialog.locator('input[name="name"]').fill("Gallery look");
+    await dialog.locator('button[type="submit"]').click();
+    const look = page.locator('#canccu-studio-mine button[data-action="preset"]');
+    await expect.poll(() => look.count()).toBeGreaterThan(0);
+    expect(await look.first().textContent()).toContain("Gallery look");
+  });
 });

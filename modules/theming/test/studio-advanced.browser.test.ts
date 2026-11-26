@@ -220,6 +220,26 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
     ]);
   });
 
+  it("takes the video's file away with the looks cycle", async () => {
+    await levelUp();
+    await putFile("images/still.png", await png("#223344", 32));
+    const v = await putFile("videos/loop.mp4", mp4());
+    await api("PATCH", "/api/theming/draft/parts", {
+      draft_version: v,
+      backdrop_image: "images/still.png",
+      backdrop_video: "videos/loop.mp4",
+    });
+    const page = await open("/theming/studio/advanced");
+    await page.locator('[data-action="backdrop-cycle"]').click();
+    await expect
+      .poll(async () =>
+        ((await draft()).files ?? []).map((f) => f.path).filter((p) => p.startsWith("videos/")),
+      )
+      .toEqual([]);
+    const brand = (await draft()).manifest.brand as { backdrop?: { video?: string } };
+    expect(brand.backdrop?.video).toBeUndefined();
+  });
+
   it("marks a refused line of the CSS as it is typed", async () => {
     await levelUp();
     const page = await open("/theming/studio/advanced");

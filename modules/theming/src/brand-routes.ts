@@ -173,6 +173,18 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
             .map((k) => [k, (m.brand as Record<string, unknown>)[k]]),
         );
         const brand = { ...kept, ...picked };
+        // The Make it yours form never names the video (Advanced owns it): a save that keeps the
+        // same picture keeps the video over it, or the file would stay in the draft unnamed.
+        const stored = isObject(m.brand) && isObject(m.brand.backdrop) ? m.brand.backdrop : {};
+        const sent = input.backdrop;
+        if (
+          sent !== undefined &&
+          sent.video === undefined &&
+          typeof stored.video === "string" &&
+          sent.image === stored.image
+        ) {
+          Object.assign(brand, { backdrop: { ...sent, video: stored.video } });
+        }
         const picture = {
           logo: input.logo,
           icon: input.icon,

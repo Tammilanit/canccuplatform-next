@@ -135,7 +135,7 @@ export function backdropView(state: StudioState, d: DraftRow, url: string | unde
     </p>`;
   }
   const cycle = own
-    ? html`<button type="button" class="canccu-studio-segment" data-action="backdrop-cycle">
+    ? html`<button${attrs({ type: "button", class: "canccu-studio-segment", "data-action": "backdrop-cycle", "data-video": typeof video === "string" ? video : undefined })}>
         The looks cycle
       </button>`
     : html`<span class="canccu-studio-segment" aria-current="true">The looks cycle</span>`;
