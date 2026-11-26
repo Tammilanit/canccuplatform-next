@@ -16,7 +16,7 @@ import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
 import { LIVING_STRIPS, LIVING_THEMES, livingStrip, serveSlide, withLiving } from "./living.mjs";
-import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
+import { publishTheme, saveZone, seedScreens, withQuickVenueRail } from "./fixture.mjs";
 import { storiesOff } from "./stories.mjs";
 import { withFoodClaim } from "./food.mjs";
 import { MOTION_VIEWS, STAGE_VIEWS, withHeroArt, withMotion, withStage } from "./handed-stage.mjs";
@@ -102,7 +102,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     for (const theme of THEMES) {
       await publishTheme(demo, theme);
       for (const size of sizesOf(theme, check)) {
-        await attempt(nameOf(theme, "pulse", size), () => pulse(theme, size));
+        await attempt(nameOf(theme, "pulse", size), () =>
+          withQuickVenueRail(demo, () => pulse(theme, size)),
+        );
         await attempt(nameOf(theme, "unassigned", size), async () => {
           const { page, close } = await open(size, spare.cookie);
           await page.goto(at("/screen/"));
