@@ -114,14 +114,12 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     );
     const { preset } = changed.json<{ draft: Draft }>().draft.manifest;
     const reset = await apply({
-      ...preset,
       preset: preset?.id,
+      scheme: preset?.scheme,
       draft_version: changed.json<{ draft: Draft }>().draft.draft_version,
     });
     expect(reset.statusCode).toBe(200);
-    expect(reset.json<Draft>().manifest.tokens.colors).toEqual(
-      applied.manifest.tokens.colors,
-    );
+    expect(reset.json<Draft>().manifest.tokens.colors).toEqual(applied.manifest.tokens.colors);
     expect(reset.json<Draft>().manifest.images?.logo).toBe("images/logo.svg");
   });
 

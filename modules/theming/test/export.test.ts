@@ -80,8 +80,8 @@ describe.skipIf(!DATABASE_URL)("GET /api/theming/draft/package", () => {
   const d = draftFiles();
 
   /** The stored file of every draft path, by path: the same bytes give the same name. */
-  const held = (host: string) =>
-    withTenant(host.split(".")[0]!, () =>
+  const held = (tenant: string) =>
+    withTenant(tenant, () =>
       d.h.db.tenant(async (c) => {
         const { rows } = await c.query(
           `SELECT path, file FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL
@@ -136,7 +136,7 @@ describe.skipIf(!DATABASE_URL)("GET /api/theming/draft/package", () => {
     });
     expect(upload.statusCode).toBe(200);
     expect(upload.json<{ manifest: unknown }>().manifest).toEqual(draft.manifest);
-    expect(await held("beta.test")).toEqual(await held("alpha.test"));
+    expect(await held("beta")).toEqual(await held("alpha"));
   });
 
   it("is the theme right's, and 404 without a draft", async () => {

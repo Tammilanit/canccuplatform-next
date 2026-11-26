@@ -31,7 +31,9 @@ describe("the presets", () => {
   it("start with the package's own colours", () => {
     for (const preset of PRESETS.values()) {
       const tokens = preset.manifest.tokens as { colors: Record<string, string> };
-      expect(schemeColors(preset.schemes[0]!), preset.id).toEqual(tokens.colors);
+      const [first] = preset.schemes;
+      if (first === undefined) throw new Error(preset.id);
+      expect(schemeColors(first), preset.id).toEqual(tokens.colors);
     }
   });
 
