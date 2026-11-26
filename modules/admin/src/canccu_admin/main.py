@@ -27,7 +27,6 @@ from canccu_kit import (
     valkey_check,
 )
 
-from .access_pages import TenantsApi
 from .app import create_app
 from .auth import Auth, normalize_public_url
 from .auth_db import PgAuthStore
@@ -35,6 +34,7 @@ from .auth_routes import CALLBACK_PATH
 from .db import PgStore
 from .declarations import load_declarations
 from .discord import Discord
+from .event_owners import ScreenApi, TenantsApi
 from .health import HealthWatch
 from .profile import make_validator
 from .service import Service
@@ -74,6 +74,13 @@ def tenants_url() -> str:
     if not url:
         raise SystemExit("missing environment variable(s): CANCCU_TENANTS_URL")
     return url
+
+
+def screen_api(identity: ServiceIdentity) -> ScreenApi | None:
+    """Screen's zone list for the home (#782); without CANCCU_SCREEN_URL the home says that the
+    screens did not answer."""
+    url = os.environ.get("CANCCU_SCREEN_URL", "").strip()
+    return ScreenApi(url, httpx.AsyncClient(timeout=5.0), identity) if url else None
 
 
 def tenant_resolver(version: str, identity: ServiceIdentity) -> TenantResolver:
@@ -153,6 +160,7 @@ async def serve() -> None:
         identity=identity,
         viewer=rights.session,
         tenants_api=TenantsApi(tenants_url(), httpx.AsyncClient(timeout=5.0)),
+        screen_api=screen_api(identity),
     )
 
     async def drop_cached_tenants(event: Event) -> None:

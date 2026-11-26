@@ -20,6 +20,13 @@ MENU: dict[str, Any] = {
             "label": "Run the event",
             "items": [
                 {
+                    "id": "home",
+                    "label": "Home",
+                    "href": "/admin/",
+                    "icon": "home",
+                    "rights": ["*"],
+                },
+                {
                     "id": "agenda",
                     "label": "Run of show",
                     "href": "/agenda/",
@@ -169,6 +176,9 @@ def esc(value: Any) -> str:
 
 
 def _may(item: Mapping[str, Any], viewer: Viewer) -> bool:
+    if item["rights"] == ["*"]:  # Home (#782): whoever may open any other page
+        others = (i for g in MENU["groups"] for i in g["items"] if i is not item)
+        return any(_may(i, viewer) for i in others)
     return any(viewer.has(r) for r in item["rights"])
 
 

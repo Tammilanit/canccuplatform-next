@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
 from canccu_kit import KitError, TenantContext
 from canccu_kit.ui import esc, notice, status_chip
 from starlette.requests import Request
@@ -19,6 +18,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
 
 from .auth_routes import Need
+from .event_owners import TenantsApi
 from .pages import BASE, page
 
 ACCESS = f"{BASE}/access"
@@ -60,37 +60,6 @@ SETTINGS = (
     ("admin_access", "The organiser pages open", CHOICES),
     ("screen_access", "Screens play", SCREEN_CHOICES),
 )
-
-
-class TenantsApi:
-    """`GET` and `PATCH /api/tenants/current` on the request's own hostname, as the person."""
-
-    def __init__(self, url: str, http: httpx.AsyncClient) -> None:
-        self.url = url.rstrip("/")
-        self.http = http
-
-    async def call(self, request: Request, method: str, body: dict[str, Any] | None = None) -> Any:
-        headers = {"host": request.headers.get("host", "")}
-        for name in ("cookie", "x-forwarded-for"):
-            if name in request.headers:
-                headers[name] = request.headers[name]
-        try:
-            response = await self.http.request(
-                method, f"{self.url}/api/tenants/current", headers=headers, json=body
-            )
-            answer = response.json()
-        except (httpx.HTTPError, ValueError) as exc:
-            raise KitError(
-                "tenants did not answer", status=503, code="tenants_unavailable"
-            ) from exc
-        if response.is_success and isinstance(answer, dict):
-            return answer
-        error = answer.get("error", {}) if isinstance(answer, dict) else {}
-        raise KitError(
-            str(error.get("message", "tenants refused")),
-            status=response.status_code if response.status_code >= 400 else 503,
-            code=str(error.get("code", "tenants_unavailable")),
-        )
 
 
 def access_row(ctx: TenantContext | None) -> tuple[str, str, str, str, str, str]:

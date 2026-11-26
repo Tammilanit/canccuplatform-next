@@ -61,9 +61,17 @@ def test_the_menu_is_packages_ui_s_own() -> None:
 def test_menu_lists_only_pages_the_rights_open() -> None:
     groups = menu_for(Viewer("agenda.crew.read", "admin.settings.read"))
     assert [(g["label"], [i["id"] for i in g["items"]]) for g in groups] == [
-        ("Run the event", ["agenda"]),
+        ("Run the event", ["home", "agenda"]),
         ("Admin", ["settings", "health"]),
     ]
+
+
+def test_home_opens_to_whoever_may_open_another_page() -> None:
+    """#782: the admin home leads the menu, for any role that opens any other page."""
+    first = menu_for(Viewer("moments.announce"))[0]["items"][0]
+    assert (first["id"], first["label"], first["href"]) == ("home", "Home", "/admin/")
+    assert menu_for(Viewer("screen.content.write")) == []
+    assert menu_for(Viewer()) == []
 
 
 def test_shell_page() -> None:
@@ -108,7 +116,7 @@ def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
 
 def test_screen_studio_opens_to_a_role_with_content_or_bundle_rights_only() -> None:
     for right in ("screen.content.read", "screen.bundle.write"):
-        assert [i["id"] for g in menu_for(Viewer(right)) for i in g["items"]] == ["screen"]
+        assert [i["id"] for g in menu_for(Viewer(right)) for i in g["items"]] == ["home", "screen"]
     # No Studio tab opens with it alone (#611): Schedule and Content need screen.content.read.
     assert menu_for(Viewer("screen.content.write")) == []
 
@@ -198,7 +206,8 @@ def test_no_access_never_shows_the_right() -> None:
     )
     assert title == "No access"
     assert "the Theme studio" in view and "theming.theme.write" not in view
-    assert 'href="/agenda/"' in view
+    # The way on is the first page the role opens: Home, which lists the others (#782).
+    assert 'href="/admin/"' in view and "Go to Home" in view
 
 
 @pytest.mark.parametrize(

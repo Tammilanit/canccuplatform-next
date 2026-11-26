@@ -30,8 +30,11 @@ export interface Tab {
   current?: boolean;
 }
 
+// Home's `["*"]` (#782): whoever may open any other page.
 const mayOpen = (item: { rights: readonly string[] }, viewer: Viewer): boolean =>
-  item.rights.some((r) => viewer.rights.has(r));
+  item.rights[0] === "*"
+    ? menu.groups.some((g) => g.items.some((i) => i !== item && mayOpen(i, viewer)))
+    : item.rights.some((r) => viewer.rights.has(r));
 
 /** The menu's groups with only the pages this person may open; empty groups are left out. */
 export function menuFor(rights: ReadonlySet<string>): { label: string; items: MenuItem[] }[] {

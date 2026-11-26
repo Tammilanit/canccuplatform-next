@@ -30,14 +30,21 @@ describe("menuFor", () => {
   it("lists only the pages the rights open and drops empty groups", () => {
     const groups = menuFor(new Set(["agenda.crew.read", "admin.settings.read"]));
     expect(groups.map((g) => [g.label, g.items.map((i) => i.id)])).toEqual([
-      ["Run the event", ["agenda"]],
+      ["Run the event", ["home", "agenda"]],
       ["Admin", ["settings", "health"]],
     ]);
+  });
+  // #782: the admin home opens to whoever may open any other page, and leads the menu.
+  it("opens Home to whoever may open another page, and to no one else", () => {
+    const first = menuFor(new Set(["moments.announce"]))[0]?.items[0];
+    expect(first).toMatchObject({ id: "home", label: "Home", href: "/admin/", icon: "home" });
+    expect(menuFor(new Set(["screen.content.write"]))).toEqual([]);
+    expect(menuFor(new Set())).toEqual([]);
   });
   it("opens Screen studio to a role with content or bundle rights only", () => {
     for (const right of ["screen.content.read", "screen.bundle.write"]) {
       const groups = menuFor(new Set([right]));
-      expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["screen"]);
+      expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["home", "screen"]);
     }
     // No Studio tab opens with it alone (#611): Schedule and Content need screen.content.read.
     expect(menuFor(new Set(["screen.content.write"]))).toEqual([]);

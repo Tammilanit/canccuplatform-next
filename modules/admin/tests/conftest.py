@@ -27,7 +27,6 @@ from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from canccu_admin.access_pages import TenantsApi
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
 from canccu_admin.auth_memory import MemoryAuthStore
@@ -35,6 +34,7 @@ from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
 from canccu_admin.discord import Discord
+from canccu_admin.event_owners import ScreenApi, TenantsApi
 from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
@@ -151,7 +151,14 @@ class FakeTenants:
     seen: list[httpx.Request] = field(default_factory=list)
 
     def body(self) -> dict[str, object]:
-        body: dict[str, object] = {"id": "demo", "name": "Demo Event", "status": "live"}
+        body: dict[str, object] = {
+            "id": "demo",
+            "name": "Demo Event",
+            "status": "live",
+            "time_zone": "Europe/Helsinki",
+            "starts_at": "2026-12-04T15:00:00Z",
+            "ends_at": "2026-12-06T12:00:00Z",
+        }
         if self.full:
             body |= {
                 "revision": self.revision,
@@ -178,6 +185,26 @@ class FakeTenants:
 
 
 @dataclass
+class FakeScreen:
+    """Screen's `GET /internal/screen/zones` for the admin home; `down` never answers."""
+
+    zones: list[dict[str, str]] = field(
+        default_factory=lambda: [
+            {"key": "main", "name": "Main hall"},
+            {"key": "stage", "name": "Stage"},
+        ]
+    )
+    down: bool = False
+    seen: list[httpx.Request] = field(default_factory=list)
+
+    def handler(self, request: httpx.Request) -> httpx.Response:
+        self.seen.append(request)
+        if self.down:
+            raise httpx.ConnectTimeout("screen is down", request=request)
+        return httpx.Response(200, json={"zones": self.zones})
+
+
+@dataclass
 class World:
     client: httpx.AsyncClient
     internal: httpx.AsyncClient
@@ -191,6 +218,7 @@ class World:
     checker: RightsChecker
     watch: HealthWatch
     tenants: FakeTenants
+    screen: FakeScreen
     event: dict[str, str] = field(default_factory=dict)
     """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
@@ -258,6 +286,8 @@ def world(tmp_path: Path) -> World:
 
     watch = HealthWatch(Health("admin", "dev", {}), {}, clock=lambda: clock[0])
     tenants = FakeTenants()
+    screen = FakeScreen()
+    identity = ServiceIdentity("admin", SERVICE_KEY)
     app = create_app(
         service,
         watch,
@@ -267,10 +297,15 @@ def world(tmp_path: Path) -> World:
             {"admin.example.test": "demo"}, ids=("other",), archived=("gone",), event=event
         ),
         holder_event(holder),
-        identity=ServiceIdentity("admin", SERVICE_KEY),
+        identity=identity,
         viewer=viewer,  # as main.py reads sessions: through the rights checker
         tenants_api=TenantsApi(
             "http://tenants", httpx.AsyncClient(transport=httpx.MockTransport(tenants.handler))
+        ),
+        screen_api=ScreenApi(
+            "http://screen",
+            httpx.AsyncClient(transport=httpx.MockTransport(screen.handler)),
+            identity,
         ),
     )
     internal = httpx.AsyncClient(
@@ -284,7 +319,19 @@ def world(tmp_path: Path) -> World:
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
     return World(
-        client, internal, service, auth, store, streams, fake, clock, checker, watch, tenants, event
+        client,
+        internal,
+        service,
+        auth,
+        store,
+        streams,
+        fake,
+        clock,
+        checker,
+        watch,
+        tenants,
+        screen,
+        event,
     )
 
 
