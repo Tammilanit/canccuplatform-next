@@ -42,7 +42,12 @@ async function render(width: number, touch: boolean, extra: Html | string = ""):
     hasTouch: touch,
     isMobile: touch,
   });
-  await page.setContent(doc);
+  await page.setContent(
+    doc.replace(
+      "<head>",
+      '<head><meta name="viewport" content="width=device-width, initial-scale=1">',
+    ),
+  );
   await page.evaluate(() => {
     (window as unknown as { acted: number }).acted = 0;
     document.querySelector(".canccu-button--icon")?.addEventListener("click", () => {
@@ -83,6 +88,21 @@ describe.skipIf(browser === undefined)("tooltips (#782)", () => {
     // Esc hushes a tooltip shown by hover too.
     await page.keyboard.press("Escape");
     expect(await shown(page, ".canccu-tip__info")).toBe("hidden");
+    await page.close();
+  });
+
+  it("a hidden tooltip near the right edge does not widen the page at 390 px", async () => {
+    const page = await render(
+      390,
+      true,
+      html`<p style="text-align:end">${raw("A long label that wraps onto more lines")} ${infoTip("A long tip that is wide enough to reach past the right edge of a phone. ".repeat(3))}</p>`,
+    );
+    const widths = await page.evaluate(() => [
+      document.documentElement.scrollWidth,
+      window.innerWidth,
+    ]);
+    // innerWidth would grow with the overflow on a phone, so compare with the width asked for.
+    expect(widths[0]).toBeLessThanOrEqual(390);
     await page.close();
   });
 
