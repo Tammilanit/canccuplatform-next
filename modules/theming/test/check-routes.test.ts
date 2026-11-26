@@ -246,7 +246,7 @@ describe.skipIf(!DATABASE_URL)("the Advanced page's paths", () => {
 
     it("is 409 on a stale version and 403 without the write right", async () => {
       const fresh = await t.fresh();
-      const stale = await parts({ draft_version: fresh.draft_version - 1, css: [] });
+      const stale = await parts({ draft_version: fresh.draft_version + 1, css: [] });
       expect(stale.statusCode).toBe(409);
       expect(code(stale)).toBe("version_conflict");
       const member = await parts({ draft_version: fresh.draft_version, css: [] }, "member");

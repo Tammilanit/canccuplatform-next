@@ -52,7 +52,7 @@ const fail = (
 const isText = (bytes: Buffer): boolean => readText(bytes) !== undefined;
 
 /** A font's licence: stored for the package and its export, never served. */
-function checkLicence(path: string, bytes: Buffer): CheckedPath {
+export function checkLicence(path: string, bytes: Buffer): CheckedPath {
   if (!isText(bytes)) return fail("file_type", path, "A licence file is UTF-8 text.");
   const ext = path.toLowerCase().endsWith(".md") ? "md" : "txt";
   return { bytes, ext, refs: [], warnings: [], sizes: [] };
