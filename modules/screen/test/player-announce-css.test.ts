@@ -56,8 +56,20 @@ describe("the announcement's look", () => {
     expect(look).toMatch(/:has\(\.canccu-widget__level--important\) \{\s*--canccu-ann-ink: var\(--canccu-color-accent\);/);
     expect(look).toMatch(/:has\(\.canccu-widget__level--urgent\) \{\s*--canccu-ann-ink: var\(--canccu-color-status-degraded\);/);
     const band = rulesOf(look).find((r) => r.selector === ".canccu-region--_full > .canccu-widget--announcement .canccu-widget__instruction");
-    expect(band?.body).toContain("position: absolute;");
-    expect(band?.body).toContain("inset: auto 0 0;");
+    // In the card's flow, edge to edge and uncapped, under a block centred in the room it leaves.
+    expect(band?.body).toContain("position: relative;");
+    expect(band?.body).toContain("padding: calc(2.2 * var(--canccu-ann-u)) 0;");
+    expect(band?.body).toContain("border-image: linear-gradient(var(--canccu-ann-band) 0 0) fill 0 / 0 / 0 100vw 100vw;");
+    expect(band?.body).not.toMatch(/line-clamp|overflow:|white-space/);
+    const card = rulesOf(look).find((r) => r.selector.endsWith(":has(> .canccu-widget__instruction)"));
+    expect(card?.body).toContain("padding-bottom: 0;");
+    const block = rulesOf(look).find((r) => r.selector.includes(":has(> .canccu-widget__instruction)") && r.selector.endsWith("> .canccu-widget__level"));
+    expect(block?.body).toContain("margin-block: auto;");
+  }); // prettier-ignore
+
+  it("gives the body its font's own line height, so a theme's taller font pair stays in the box", () => {
+    const body = rulesOf(look).find((r) => r.selector === '.canccu-region:not([data-role="ticker"]) > .canccu-widget--announcement .canccu-widget__body');
+    expect(body?.body).toContain("line-height: normal;");
   }); // prettier-ignore
 });
 

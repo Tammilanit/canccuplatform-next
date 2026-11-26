@@ -132,6 +132,12 @@
     );
   }
 
+  /* The font's own line height: a theme's font pair may stand taller than 1.2 em, and its glyphs
+     would then reach past the box (2–3 px at 4K and in portrait). */
+  .canccu-region:not([data-role="ticker"]) > .canccu-widget--announcement .canccu-widget__body {
+    line-height: normal;
+  }
+
   .canccu-region[data-role="hero"]
     > .canccu-widget--announcement.canccu-is-claim
     .canccu-widget__title {
@@ -324,17 +330,18 @@
     background: #fff;
   }
 
-  /* Portrait stacks the column under the card (sheet 5's screen shape). */
+  /* Portrait stacks the column under the card (sheet 5's screen shape), the seams kept tight: the
+     card, the clock, now and next and the QR take all but about 2 % of a 1080 × 1920 screen. */
   @media (max-aspect-ratio: 1/1) {
     .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__aside) {
       /* canccu-grid: fixed screen — portrait stacks the card over its nearby content */
       grid-template-columns: minmax(0, 1fr);
       align-content: center;
-      row-gap: calc(4 * var(--canccu-ann-u));
+      row-gap: calc(2 * var(--canccu-ann-u));
     }
 
     .canccu-widget__aside {
-      padding: calc(3 * var(--canccu-ann-u)) 0 0;
+      padding: calc(2 * var(--canccu-ann-u)) 0 0;
       border-inline-start: 0;
       border-top: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
     }
@@ -368,30 +375,32 @@
     display: none;
   }
 
+  /* In the card's flow, so the band takes the lines its text needs (a 140-character body wraps to
+     five in portrait) and the block keeps the room above it. Its text starts on the block's left
+     edge whatever padding a theme gives the card; its colour reaches the card's edges through the
+     border image's outset, which only paints, and the card's own clip trims it there. */
   .canccu-region--_full > .canccu-widget--announcement .canccu-widget__instruction {
+    --canccu-ann-band: var(--canccu-color-status-degraded);
     display: block;
-    position: absolute;
-    inset: auto 0 0;
+    position: relative;
     z-index: 2;
+    flex: none;
+    align-self: stretch;
     margin: 0;
-    padding: calc(2.2 * var(--canccu-ann-u)) calc(5.9 * var(--canccu-u));
-    background: var(--canccu-color-status-degraded);
+    padding: calc(2.2 * var(--canccu-ann-u)) 0;
+    background: var(--canccu-ann-band);
+    border-image: linear-gradient(var(--canccu-ann-band) 0 0) fill 0 / 0 / 0 100vw 100vw;
     color: var(--canccu-color-background);
     font-size: calc(4.4 * var(--canccu-ann-u));
     font-weight: 700;
     line-height: 1.2;
-    /* A 140-character body must read whole: wrap, and cap at three lines. */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: clip;
     overflow-wrap: anywhere;
   }
 
   .canccu-region--_full
     > .canccu-widget--announcement:has(.canccu-widget__level--emergency)
     .canccu-widget__instruction {
-    background: #fff;
+    --canccu-ann-band: #fff;
     color: #b91c1c;
   }
 
@@ -400,8 +409,14 @@
     display: none;
   }
 
-  /* Room for the band under the block, so the band never covers the body. */
-  .canccu-region--_full > .canccu-widget--announcement:has(.canccu-widget__instruction) {
-    padding-bottom: calc(22 * var(--canccu-ann-u));
+  /* The band on the card's bottom edge, the block centred in the room the band leaves. */
+  .canccu-region--_full > .canccu-widget--announcement:has(> .canccu-widget__instruction) {
+    padding-bottom: 0;
+  }
+
+  .canccu-region--_full
+    > .canccu-widget--announcement:has(> .canccu-widget__instruction)
+    > .canccu-widget__level {
+    margin-block: auto;
   }
 }
