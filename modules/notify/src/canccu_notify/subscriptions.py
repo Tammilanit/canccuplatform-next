@@ -31,6 +31,16 @@ NUMERIC_LABEL = re.compile(r"(0x[0-9a-f]*|[0-9]+)")
 address in disguise, which ipaddress does not recognise but the resolver does."""
 
 
+PHONE_MARKS = ("Mobi", "Android", "iPhone", "iPad")
+
+
+def device_of(user_agent: str | None) -> str | None:
+    """A phone or a PC, for the health box's count (#782, D15); the User-Agent is never kept."""
+    if not user_agent:
+        return None
+    return "phone" if any(mark in user_agent for mark in PHONE_MARKS) else "pc"
+
+
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
@@ -194,7 +204,7 @@ async def subscribe(request: Request) -> Response:
             await conn.execute("DELETE FROM notify_subscriptions WHERE id = $1", old["id"])
         row = await conn.fetchrow(
             "INSERT INTO notify_subscriptions (id, user_id, token_hash, endpoint, keys_sealed,"
-            " preferences, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+            " preferences, created_at, device) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
             " ON CONFLICT (tenant_id, endpoint) DO NOTHING RETURNING *",
             sub_id,
             session.user_id if session else None,
@@ -203,6 +213,7 @@ async def subscribe(request: Request) -> Response:
             d.secrets.seal(json.dumps(keys), keys_aad(ctx["tenant_id"], sub_id)),
             json.dumps(prefs),
             d.now(),
+            device_of(request.headers.get("user-agent")),
         )
         if row is None:  # a concurrent subscribe of the same endpoint won
             raise KitError("subscribed meanwhile", status=409, code="subscription_exists")

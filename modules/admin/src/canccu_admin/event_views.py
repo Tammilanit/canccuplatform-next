@@ -13,6 +13,7 @@ from canccu_kit.ui import day_label, esc, local_time, notice, status_chip
 from .access_pages import ACCESS, ACCESS_SETTINGS, DEFAULTS, READ_ONLY
 from .event_venue import venue_section
 from .event_widgets import (
+    NOT_SET,
     EventData,
     Retry,
     card,
@@ -60,11 +61,11 @@ def basics(session: Session, data: EventData, retry: Retry | None) -> str:
     if not (session.has("tenants.event.write") and "revision" in tenant):
         rows = [
             ("Name", tenant.get("name")),
-            ("Short name", tenant.get("short_name") or "None"),
+            ("Short name", tenant.get("short_name") or NOT_SET),
             ("Starts", _when(tenant.get("starts_at"), zone)),
             ("Ends", _when(tenant.get("ends_at"), zone)),
             ("Time zone", zone_label(zone)),
-            ("Poster text", tenant.get("description") or "None"),
+            ("Poster text", tenant.get("description") or NOT_SET),
         ]
         return card("basics", "Basics", head + words(rows))
 
@@ -114,28 +115,33 @@ def _local(iso: Any, zone: str) -> str:
 
 def _when(iso: Any, zone: str) -> str:
     if not iso:
-        return "Not set"
+        return NOT_SET
     return f"{day_label(str(iso), zone)} {_local(iso, zone)[11:]}"
 
 
-def web(data: EventData) -> str:
-    if data.hostnames is None:
-        if data.hostnames_status == 403:
-            return card("web", "Web addresses", "<p>Only the event's admins see this.</p>")
-        return card("web", "Web addresses", notice("warn", "The web addresses didn't answer."))
-    rows = []
-    for h in data.hostnames:
-        chip = (
-            " " + status_chip("ok", "Primary", "Links, QR codes and screens use this address.")
-            if h.get("primary")
-            else ""
-        )
-        rows.append(f"<li><code>{esc(h.get('hostname'))}</code>{chip}</li>")
-    body = (
-        f'<ul class="canccu-plain-list">{"".join(rows)}</ul>'
-        '<p class="canccu-card__desc">The platform admin adds and changes these.</p>'
+def _hostname_row(hostname: Any, primary: bool) -> str:
+    chip = (
+        " " + status_chip("ok", "Primary", "Links, QR codes and screens use this address.")
+        if primary
+        else ""
     )
-    return card("web", "Web addresses", body)
+    return f"<li><code>{esc(hostname)}</code>{chip}</li>"
+
+
+def web(data: EventData) -> str:
+    hostnames = data.hostnames
+    note = '<p class="canccu-card__desc">The platform admin adds and changes these.</p>'
+    if hostnames is None and data.hostnames_status == 403:
+        # The full list is the event admins'; the primary address is the event's own, which the
+        # viewer already has, so show it rather than a line about who may see more.
+        primary = data.ctx["primary_hostname"] if data.ctx else None
+        hostnames = [{"hostname": primary, "primary": True}] if primary else []
+    if hostnames is None:
+        return card("web", "Web addresses", notice("warn", "The web addresses didn't answer."))
+    if not hostnames:
+        return card("web", "Web addresses", f"<p>No web addresses yet.</p>{note}")
+    rows = "".join(_hostname_row(h.get("hostname"), bool(h.get("primary"))) for h in hostnames)
+    return card("web", "Web addresses", f'<ul class="canccu-plain-list">{rows}</ul>{note}')
 
 
 def access(session: Session, data: EventData, retry: Retry | None) -> str:
@@ -169,6 +175,7 @@ def modules(session: Session, data: EventData, retry: Retry | None) -> str:
     flags = data.flags
     switches = dict(flags.get("flags", {})) if flags else {}
     can = session.has("tenants.flags.write") and flags is not None
+    typed = _typed("modules", retry)
     rows = []
 
     def link(module: str) -> str:
@@ -182,7 +189,9 @@ def modules(session: Session, data: EventData, retry: Retry | None) -> str:
         if key not in switches:
             rows.append(f"<li><strong>{esc(name)}</strong> · On{link(module)}</li>")
         elif can:
-            checked = " checked" if switches[key] else ""
+            # After a refusal the switches stay as the person left them (an unticked box is absent).
+            on = key in typed if typed else switches[key]
+            checked = " checked" if on else ""
             rows.append(
                 f'<li><input class="canccu-switch" type=checkbox role=switch id="mod-{module}" '
                 f'name="{esc(key)}" value="1"{checked}> <label for="mod-{module}">'
@@ -257,8 +266,12 @@ def privacy(data: EventData) -> str:
 
 
 def series(data: EventData) -> str:
+    own = (data.tenant or {}).get("series_id")
     if data.series and data.series.get("name"):
         body = f"<p>Part of the series {esc(data.series['name'])}.</p>"
+    elif own:
+        # Until the series route answers (#150), the tenant's own reference names it.
+        body = f"<p>Part of the series <code>{esc(own)}</code>. The platform admin keeps it.</p>"
     else:
         body = "<p>Not part of a series. The platform admin adds events to a series.</p>"
     return card("series", "Series", body)

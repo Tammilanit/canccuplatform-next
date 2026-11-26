@@ -33,6 +33,7 @@ from canccu_kit import (
 
 from . import consumer, delivery, lifecycle, quiet
 from .app import create_app
+from .crew_test import CrewReader
 from .db import Db
 from .deps import Deps
 from .hub import HubReader
@@ -185,6 +186,7 @@ async def serve() -> None:
             os.environ.get("CANCCU_MOMENTS_URL", "http://moments:8080"),
         ),
         users=UsersReader(os.environ["CANCCU_TENANTS_URL"], identity),
+        crew=CrewReader(config.admin_url, identity),
     )
 
     async def on_event_tenants(event: Event) -> None:

@@ -1,129 +1,137 @@
-"""The topic list: each topic with this event's configuration as a form, and how many
-notifications it made for those with `notify.stats.read` (docs/plans/issue-188.md, area O).
+"""Notifications in plain words (#782 part C, plan D12, sheet 01): one sentence on what the page
+is for, then each kind of notification with an example of what a phone shows and one switch.
+Advanced (topic_advanced.py) keeps every other setting.
 
-The form sends only what changed, so saving one topic's lead time does not turn its `enabled`
-into the event's own value over admin's setting `topics` (config.effective)."""
+A switch posts only `enabled` (`only=enabled`) with the values the page showed, so it never
+writes a channel or a parameter back, nor turns `enabled` into the event's own value over admin's
+setting `topics` when nothing changed (config.effective)."""
 
 from __future__ import annotations
 
 import json
-from datetime import timedelta
+from datetime import date
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from canccu_kit import VersionConflict
-from canccu_kit.ui import empty_state, icon
+from canccu_kit.ui import empty_state, icon, info_tip, status_chip
+from canccu_kit.ui import notice as ui_notice
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from .access import STATS_READ, TOPICS_WRITE, tenant_of
-from .config import configured, settings_ready, type_channels, write_config
+from .access import TOPICS_WRITE, tenant_of
+from .config import configured, settings_ready, write_config
+from .crew_test import tested_words
 from .deps import deps
+from .examples import example_for
+from .health_box import box_for
 from .registry import bad, not_found
+from .topic_advanced import origin, shown_channels, shown_values
 from .web import (
-    CHANNEL_LABELS,
     TOPICS,
-    button,
-    check,
     esc,
-    field,
     hidden,
     notice,
     page,
     page_session,
     redirect,
-    text_input,
+    switch,
     writer_session,
 )
 
+DESCRIPTION = (
+    "Choose what attendees can be notified about."
+    " Each person picks which of these they want in their hub."
+)
 NOTICES = {
     "saved": "Saved.",
     "unchanged": "Nothing to save: no value changed.",
     "removed": "Removed, with people's choices for it.",
 }
-
-
-def shown_channels(found: dict[str, Any], every: dict[str, dict[str, Any]]) -> list[str]:
-    """The channels a topic's form offers: a custom topic only those its base allows here."""
-    if "custom" in found:
-        base = every.get(found["custom"]["based_on"])
-        return list(base["config"]["channels"]) if base is not None else []
-    return type_channels(found["topic_type"])
-
-
-def _param_input(p: dict[str, Any], value: Any) -> str:
-    name = f"param_{p['key']}"
-    label = p.get("description") or p["key"]
-    if p["type"] == "boolean":
-        return check(name, label, bool(value))
-    if p["type"] == "integer":
-        control = text_input(
-            name, value, "number", min=p.get("min"), max=p.get("max"), required=True
-        )
-        return field(label, control)
-    return field(label, text_input(name, value))
-
-
-def _shown(config: dict[str, Any]) -> str:
-    """The values a form showed, sent back with it: a write in admin's settings does not move
-    `config_version`, so only these tell a stale form from a change."""
-    return json.dumps({k: config[k] for k in ("enabled", "params", "channels")}, sort_keys=True)
-
-
-def _form(found: dict[str, Any], every: dict[str, dict[str, Any]]) -> str:
-    reg, config = found["topic_type"], found["config"]
-    key = reg["key"]
-    channels = "".join(
-        check(f"channel_{c}", CHANNEL_LABELS.get(c, c), c in config["channels"])
-        for c in shown_channels(found, every)
+CREW_TEST = (
+    f'<form method=post action="{TOPICS}/crew-test" class="canccu-notify-actions">'
+    '<button class="canccu-button canccu-button--secondary">Send a test to the crew</button>'
+    + info_tip(
+        "Goes to everyone with an organiser or crew role, never to attendees: to tell everyone,"
+        " announce it."
     )
-    params = "".join(
-        _param_input(p, config["params"].get(p["key"])) for p in reg.get("params") or []
-    )
-    links = ""
-    if "custom" in found:
-        links = (
-            f' <a class="canccu-button canccu-button--secondary" href="{TOPICS}/{esc(key)}/edit">'
-            f'Edit</a> <a class="canccu-button canccu-button--secondary"'
-            f' href="{TOPICS}/{esc(key)}/remove">Remove</a>'
-        )
-    return (
-        f'<form method=post action="{TOPICS}/{esc(key)}">'
-        + hidden({"config_version": config["config_version"], "shown": _shown(config)})
-        + check("enabled", "Offered at this event", config["enabled"])
-        + f'<fieldset class="canccu-notify-fieldset"><legend>Channels</legend>{channels}</fieldset>'
-        + params
-        + f'<p class="canccu-notify-actions">{button("Save")}{links}</p></form>'
-    )
+    + "</form>"
+)
+SWITCH_TIP = (
+    "On: people can choose this kind in their hub. Off: nobody at this event gets it, and"
+    " people's own choices are kept for when it is on again."
+)
 
 
-def _summary(found: dict[str, Any]) -> str:
+def _switch_form(found: dict[str, Any], *, enabled: bool, label: str, undo: bool = False) -> str:
+    """The form one kind's switch saves through; Undo is the same form, sending the old value."""
     config = found["config"]
-    channels = ", ".join(CHANNEL_LABELS.get(c, c) for c in config["channels"]) or "none"
-    params = "".join(f"<li>{esc(k)}: {esc(v)}</li>" for k, v in config["params"].items())
-    state = "Offered" if config["enabled"] else "Not offered"
-    return f"<p>{state} · Channels: {esc(channels)}</p>" + (f"<ul>{params}</ul>" if params else "")
-
-
-def _card(found: dict[str, Any], every: dict[str, Any], counts: Any, writable: bool) -> str:
-    reg = found["topic_type"]
-    if "custom" in found:
-        base = every.get(found["custom"]["based_on"])
-        title = base["topic_type"]["title"] if base else found["custom"]["based_on"]
-        origin = f"Custom, based on {title}"
-    else:
-        origin = f"From {reg['owner']}"
-    meta = f'<p class="canccu-notify-muted">{esc(origin)} · <code>{esc(reg["key"])}</code></p>'
-    if reg.get("description"):
-        meta += f"<p>{esc(reg['description'])}</p>"
-    if counts is not None:
-        day, total = counts.get(reg["key"], (0, 0))
-        meta += f"<p>Notifications: {day} in the last 24 hours, {total} in all</p>"
-    body = _form(found, every) if writable else _summary(found)
+    key = found["topic_type"]["key"]
+    values = {"config_version": config["config_version"], "shown": shown_values(config)}
+    fields = hidden(values | {"only": "enabled"})
+    if undo:
+        on = '<input type=hidden name=enabled value="on">' if enabled else ""
+        return (
+            f'<form method=post action="{TOPICS}/{esc(key)}" class="canccu-notify-undo">{fields}'
+            f'{on}<button class="canccu-button canccu-button--secondary">Undo</button></form>'
+        )
     return (
-        f'<section class="canccu-card canccu-notify-topic" id="{esc(reg["key"])}">'
-        f'<h2 class="canccu-card__title">{esc(reg["title"])}</h2>{meta}{body}</section>'
+        f'<form method=post action="{TOPICS}/{esc(key)}" class="canccu-notify-switchform">'
+        f"{fields}{switch('enabled', label, enabled, SWITCH_TIP)}"
+        '<button class="canccu-button canccu-button--secondary canccu-notify-save">Save</button>'
+        "</form>"
     )
+
+
+def _example(reg: dict[str, Any], zone: str, today: date) -> str:
+    title, body = example_for(reg, zone, today)
+    if not title and not body:
+        return ""
+    return (
+        '<figure class="canccu-notify-example"><div class="canccu-notify-example__phone">'
+        f'<p class="canccu-notify-example__title">{esc(title)}</p><p>{esc(body)}</p>'
+        '<span class="canccu-notify-muted">now</span></div>'
+        "<figcaption class=canccu-notify-muted>Example of what a phone shows</figcaption></figure>"
+    )
+
+
+def _kind(found: dict[str, Any], zone: str, today: date, writable: bool) -> str:
+    reg, enabled = found["topic_type"], found["config"]["enabled"]
+    gid, source = origin(found)
+    where = "Your own kind" if gid == "own" else f"Comes from {source}"
+    chips = (
+        status_chip("plain", source, where + ".")
+        + " "
+        + (
+            status_chip("ok", "On", "People can choose it in their hub.")
+            if enabled
+            else status_chip("plain", "Off", "Nobody at this event gets it.")
+        )
+    )
+    about = f"<p>{esc(reg['description'])}</p>" if reg.get("description") else ""
+    title = reg["title"]
+    control = _switch_form(found, enabled=enabled, label=f"{title} on") if writable else ""
+    return (
+        f'<section class="canccu-card canccu-notify-kind" id="{esc(reg["key"])}">'
+        f'<div class="canccu-notify-kind__head"><h3 class="canccu-card__title">{esc(title)}</h3>'
+        f'<span class="canccu-cluster">{chips}</span></div>{about}'
+        f"{_example(reg, zone, today)}{control}</section>"
+    )
+
+
+def _switched(found: dict[str, Any] | None) -> str:
+    """The notice after a switch, with Undo (sheet 01, marker 5)."""
+    if found is None:
+        return ""
+    title, enabled = found["topic_type"]["title"], found["config"]["enabled"]
+    words = (
+        f"Saved. {title} is now on: people can choose it in their hub."
+        if enabled
+        else f"Saved. {title} is now off for everyone."
+    )
+    undo = _switch_form(found, enabled=not enabled, label="", undo=True)
+    return ui_notice("ok", words, actions=undo)
 
 
 async def topics_page(request: Request) -> Response:
@@ -132,48 +140,56 @@ async def topics_page(request: Request) -> Response:
     ready = await settings_ready(d.settings)
     async with d.db.tenant() as conn:
         every = await configured(conn, d.settings if ready else None)
-        counts = None
-        if session.has(STATS_READ):
-            # Counts only, never recipients (contracts/notify.md, Rights).
-            rows = await conn.fetch(
-                "SELECT topic, count(*) FILTER (WHERE created_at > $1) AS day, count(*) AS total"
-                " FROM notify_notifications GROUP BY topic",
-                d.now() - timedelta(hours=24),
-            )
-            counts = {r["topic"]: (r["day"], r["total"]) for r in rows}
-    archived = tenant_of(request)["status"] == "archived"
+    ctx = tenant_of(request)
+    archived = ctx["status"] == "archived"
     writable = session.has(TOPICS_WRITE) and not archived
+    zone = ctx.get("time_zone") or "UTC"
+    today = d.now().astimezone(ZoneInfo(zone)).date()
     top = "".join(notice(text) for name, text in NOTICES.items() if request.query_params.get(name))
+    if writable:
+        top += _switched(every.get(request.query_params.get("switched") or ""))
+        tested = tested_words(request.query_params.get("tested") or "")
+        if tested is not None:
+            top += ui_notice(*tested)
+        top += await box_for(request, CREW_TEST)
     if archived:
-        top += notice("The event is archived: its topics can be read, not changed.")
+        top += notice("The event is archived: its kinds can be read, not changed.")
     elif not ready:
-        top += notice("Admin is unreachable: the topics show their defaults.", "error")
-    cards = "".join(_card(f, every, counts, writable) for f in every.values())
-    if not cards:
-        cards = (
-            '<section class="canccu-card">'
+        top += notice("Admin is unreachable: the kinds show their defaults.", "error")
+    kinds = "".join(_kind(f, zone, today, writable) for f in every.values())
+    if not kinds:
+        kinds = (
+            '<div class="canccu-card">'
             + empty_state(
                 "bell",
-                "No topics yet",
-                "Topics appear here when a module that sends notifications is switched on.",
+                "No kinds of notification yet",
+                "They appear here when a part that sends notifications is switched on.",
             )
-            + "</section>"
+            + "</div>"
         )
-    new = ""
-    if writable:
-        new = (
-            f'<a class="canccu-button canccu-button--primary" href="{TOPICS}/new">'
-            f"{icon('plus')}New topic</a>"
-        )
+    lead = (
+        '<div class="canccu-notify-kinds__head"><h2 class="canccu-notify-group" id="kinds-title">'
+        f"Kinds of notification</h2>{info_tip(SWITCH_TIP)}</div>"
+        "<p class=canccu-notify-muted>Switch off a kind and nobody at this event gets it."
+        " People's own choices are kept.</p>"
+    )
+    advanced = (
+        f'<a class="canccu-button canccu-button--secondary" href="{TOPICS}/advanced">Advanced</a>'
+    )
+    new = (
+        f'<a class="canccu-button canccu-button--primary" href="{TOPICS}/new">'
+        f"{icon('plus')}New kind</a>"
+        if writable
+        else ""
+    )
+    body = f'{top}<section aria-labelledby="kinds-title">{lead}{kinds}</section>'
     return page(
         request,
         "Notifications",
-        top + cards,
-        actions=new,
-        description=(
-            "Choose what attendees can be notified about."
-            " Each person picks which of these they want in their hub."
-        ),
+        body,
+        actions=new + advanced,
+        description=DESCRIPTION,
+        script=writable,
     )
 
 
@@ -211,13 +227,19 @@ async def save_config(request: Request) -> Response:
         shown = json.loads(str(form.get("shown")))
     except ValueError:
         raise bad("shown: the values the form showed") from None
-    if shown != json.loads(_shown(config)):
+    if shown != json.loads(shown_values(config)):
         raise VersionConflict("changed meanwhile, here or in admin's settings; reload")
+    back = "/advanced" if form.get("back") == "advanced" else ""
     # Only what the person changed on the form: a value they left alone is never written back.
     body: dict[str, Any] = {"config_version": version}
     enabled = form.get("enabled") is not None
     if enabled != shown["enabled"]:
         body["enabled"] = enabled
+    if form.get("only") == "enabled":
+        if len(body) == 1:
+            return redirect(f"?unchanged={key}#{key}")
+        await write_config(d, ctx["tenant_id"], session.user_id, key, body)
+        return redirect(f"?switched={key}#{key}")
     channels = [c for c in shown_channels(found, every) if form.get(f"channel_{c}") is not None]
     if channels != shown["channels"]:
         body["channels"] = channels
@@ -230,9 +252,9 @@ async def save_config(request: Request) -> Response:
     if params:
         body["params"] = params
     if len(body) == 1:
-        return redirect(f"?unchanged={key}#{key}")
+        return redirect(f"{back}?unchanged={key}#{key}")
     await write_config(d, ctx["tenant_id"], session.user_id, key, body)
-    return redirect(f"?saved={key}#{key}")
+    return redirect(f"{back}?saved={key}#{key}")
 
 
 ROUTES = [

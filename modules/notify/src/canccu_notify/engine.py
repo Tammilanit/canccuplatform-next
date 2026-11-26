@@ -87,7 +87,7 @@ def holds(
     return False
 
 
-def _format(value: Any, formatter: str | None, tz: ZoneInfo) -> str:
+def format_value(value: Any, formatter: str | None, tz: ZoneInfo) -> str:
     if value is MISSING or value is None:
         return ""
     if formatter in ("time", "date"):
@@ -112,7 +112,7 @@ def fill(template: str, envelope: dict[str, Any], params: dict[str, Any], tz: Zo
             value = params.get(path.removeprefix("param."), MISSING)
         else:
             value = get(envelope, path)
-        return _format(value, formatter, tz)
+        return format_value(value, formatter, tz)
 
     return TEMPLATE_RE.sub(one, template)
 

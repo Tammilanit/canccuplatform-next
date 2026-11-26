@@ -11,6 +11,8 @@ from canccu_kit import TenantContext
 from canccu_kit.ui import esc, notice, status_chip
 
 SAVED = "Saved. The change applies now."
+# One wording for every value nobody has set (the lead, part B's accept).
+NOT_SET = "Not set"
 
 
 @dataclass

@@ -20,15 +20,18 @@ from . import (
     checkin,
     checkin_page,
     config,
+    crew_test,
     custom_api,
     custom_pages,
     follows,
     front_door,
+    health_box,
     inbox,
     me,
     push,
     registry,
     subscriptions,
+    topic_advanced,
     topic_pages,
     web,
 )
@@ -45,6 +48,8 @@ def create_app(
     # /admin/topics/new before /admin/topics/{topic}: Starlette takes the first route that matches.
     pages = (
         custom_pages.ROUTES
+        + crew_test.PAGE_ROUTES
+        + topic_advanced.ROUTES
         + topic_pages.ROUTES
         + web.ROUTES
         + checkin_page.ROUTES
@@ -59,6 +64,8 @@ def create_app(
         + subscriptions.ROUTES
         + me.ROUTES
         + follows.ROUTES
+        + health_box.ROUTES
+        + crew_test.API_ROUTES
     )
     public = Starlette(routes=api + pages)
     # Starlette's slash redirects would drop the /notify prefix Caddy strips.

@@ -28,7 +28,7 @@ from .event_owners import TenantsApi
 from .event_venue import PLAN, wifi_rows
 from .event_views import EVENT, event_view
 from .event_widgets import EventData, Retry
-from .pages import SETTINGS_TABS, page
+from .pages import BASE, SETTINGS_TABS, page
 from .zones import zone_names
 
 DESCRIPTION = (
@@ -38,6 +38,8 @@ DESCRIPTION = (
 BASIC_FIELDS = ("name", "short_name", "starts_at", "ends_at", "time_zone", "description")
 NOT_SAVED = "Not saved"
 CONFLICT = "Someone changed this meanwhile. What you typed is kept here: save again to use it."
+# A browser never fills a file field again, so a floor plan's conflict asks for the file.
+PLAN_CONFLICT = "Someone changed this meanwhile. Choose the file again to save it."
 READS = {
     "venue_info": "/api/tenants/current/venue-info",
     "venue": "/api/tenants/current/venue",
@@ -114,7 +116,8 @@ def event_routes(
             event_view(session, data, retry),
             status,
             session=session,
-            current="home",
+            # The page is in no menu: nothing is marked, and the crumb leads back to Home.
+            crumb=(f"{BASE}/", "Home"),
             description_html=esc(DESCRIPTION),
         )
 
@@ -122,12 +125,23 @@ def event_routes(
         return RedirectResponse(f"{EVENT}?saved={section}#{section}", status_code=303)
 
     async def refused(
-        request: Request, session: Session, exc: KitError, section: str, typed: Mapping[str, str]
+        request: Request,
+        session: Session,
+        exc: KitError,
+        section: str,
+        typed: Mapping[str, str],
+        *,
+        plan: bool = False,
     ) -> Response:
         """The owner said no: that section again, with what was typed and why."""
-        if exc.code == "version_conflict":
+        if exc.code == "version_conflict" and plan:
+            retry = Retry(section, {}, NOT_SAVED, PLAN_CONFLICT)
+        elif exc.code == "version_conflict":
             now = await tenants().read(request) if section in ("basics", "organisers") else None
-            retry = Retry(section, typed, NOT_SAVED, CONFLICT + _now_words(section, now, typed))
+            names = dict(await people())
+            retry = Retry(
+                section, typed, NOT_SAVED, CONFLICT + _now_words(section, now, typed, names)
+            )
         elif exc.code == "missing_right":
             retry = Retry(section, {}, NOT_SAVED, "Only the event's admins can change this.")
             retry.read_only = True
@@ -160,7 +174,7 @@ def event_routes(
         except ValueError as exc:
             return await show(request, session, Retry("basics", typed, NOT_SAVED, str(exc)), 400)
         current = await tenants().call(request, "GET")
-        patch = {k: v for k, v in wanted.items() if v != current.get(k)}
+        patch = {k: v for k, v in wanted.items() if not _same(k, v, current.get(k))}
         if not patch:
             return saved("basics")
         try:
@@ -195,7 +209,7 @@ def event_routes(
         try:
             await tenants().call(request, "PUT", path=PLAN, content=content, content_type=kind)
         except KitError as exc:
-            return await refused(request, session, exc, "venue", {})
+            return await refused(request, session, exc, "venue", {}, plan=True)
         return saved("venue")
 
     async def save_modules(request: Request) -> Response:
@@ -269,19 +283,44 @@ LABELS = {
 }
 
 
-def _now_words(section: str, now: Mapping[str, Any] | None, typed: Mapping[str, str]) -> str:
-    """The values someone else saved meanwhile that differ from what was typed, in words."""
+def _minute(iso: Any) -> datetime | None:
+    if not iso:
+        return None
+    return datetime.fromisoformat(str(iso).replace("Z", "+00:00")).replace(second=0, microsecond=0)
+
+
+def _same(key: str, wanted: Any, stored: Any) -> bool:
+    """A time is typed to the minute, so it equals a stored time of the same minute: saving
+    another field must not cut the stored seconds."""
+    if key in ("starts_at", "ends_at"):
+        return _minute(wanted) == _minute(stored)
+    return bool(wanted == stored)
+
+
+def _now_words(
+    section: str,
+    now: Mapping[str, Any] | None,
+    typed: Mapping[str, str],
+    names: Mapping[str, str],
+) -> str:
+    """The values someone else saved meanwhile that differ from what was typed, in words: times
+    as the form writes them, the contact person by name."""
     if now is None:
         return ""
     keys = BASIC_FIELDS if section == "basics" else ("contact_user_id",)
     zone = str(now.get("time_zone") or "UTC")
     shown = []
     for key in keys:
-        value = now.get(key) or ""
-        if key in ("starts_at", "ends_at") and value:
-            value = local_time(str(value), zone).strftime("%Y-%m-%d %H:%M")
-        if str(value) != typed.get(key, "").replace("T", " "):
-            shown.append(f"{LABELS[key]} {value or 'empty'}")
+        value = str(now.get(key) or "")
+        mine = typed.get(key, "")
+        if key in ("starts_at", "ends_at"):
+            value = local_time(value, zone).strftime("%Y-%m-%d %H:%M") if value else ""
+            mine = mine.replace("T", " ")
+        if value == mine:
+            continue
+        if key == "contact_user_id" and value:
+            value = names.get(value, "someone without a role now")
+        shown.append(f"{LABELS[key]} {value or 'empty'}")
     return f" Now: {'; '.join(shown)}." if shown else ""
 
 

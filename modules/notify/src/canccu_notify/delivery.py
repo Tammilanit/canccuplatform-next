@@ -221,6 +221,13 @@ async def _claim(
     return jobs, dms, lost, len(due)
 
 
+def push_error(answer: int) -> str:
+    """A failed push's reason in words, at most 200 characters (migration 006)."""
+    if answer == 0:
+        return "the push service didn't answer"
+    return f"the push service refused it ({answer})"
+
+
 async def deliver(d: Deps, tenant: str, *, batch: int = 100) -> int:
     """Send what is pending at one event; returns how many pushes and DMs went out."""
     cap, fallback = await _settings(d)
@@ -254,6 +261,7 @@ async def _pass(d: Deps, tenant: str, batch: int, cap: int, fallback: bool) -> t
     )
     sent = 0
     done: list[tuple[int, str]] = []
+    errors: dict[int, str] = {}
     gone: list[str] = []
     for (row, sub, _), answer in zip(jobs, answers, strict=True):
         if isinstance(answer, BaseException):
@@ -262,6 +270,8 @@ async def _pass(d: Deps, tenant: str, batch: int, cap: int, fallback: bool) -> t
         ok = 200 <= answer < 300
         sent += ok
         done.append((row["id"], "sent" if ok else "failed"))
+        if not ok:  # the health box's last delivery says why (#782, D15)
+            errors[row["id"]] = push_error(answer)
         if not ok:
             failed.append(row["notification_id"])
         if answer in GONE:
@@ -270,9 +280,9 @@ async def _pass(d: Deps, tenant: str, batch: int, cap: int, fallback: bool) -> t
         requested = await dm.request(d, conn, dms, ids)
         sent += sum(status == "sent" for _, status in requested)
         await conn.executemany(
-            "UPDATE notify_deliveries SET status = $2, done_at = $3"
+            "UPDATE notify_deliveries SET status = $2, done_at = $3, error = $4"
             " WHERE id = $1 AND status = 'sending'",
-            [(i, status, now) for i, status in done + requested],
+            [(i, status, now, errors.get(i)) for i, status in done + requested],
         )
         if gone:
             # The push service says the browser unsubscribed: the subscription is gone.

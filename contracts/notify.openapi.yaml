@@ -700,6 +700,114 @@ paths:
                 $ref: "#/components/schemas/Export"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /api/notify/delivery-health:
+    get:
+      tags: [push]
+      operationId: getDeliveryHealth
+      summary: Whether attendees can get notifications at this event
+      description: |
+        The Notifications page's health box (#782): whether the request reached the event over https (as
+        the proxy forwards it; without https phones cannot register), whether the platform's push key is
+        loaded, how many phones and PCs registered here, and how the last push went. Counts only, never who.
+        Right `notify.topics.write`. `/api/notify/health` stays the module's liveness check.
+      responses:
+        "200":
+          description: The event's notification health.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [https, push_key, devices, last_delivery]
+                properties:
+                  https:
+                    type: boolean
+                  push_key:
+                    type: boolean
+                  devices:
+                    type: object
+                    required: [phones, pcs]
+                    description: |
+                      Subscriptions by device, read once from the User-Agent at subscribe (`Mobi`, `Android`,
+                      `iPhone` or `iPad` is a phone, anything else a PC); the User-Agent itself is never stored.
+                      A subscription made before devices were recorded counts as a PC.
+                    properties:
+                      phones:
+                        type: integer
+                        minimum: 0
+                      pcs:
+                        type: integer
+                        minimum: 0
+                  last_delivery:
+                    description: The last push that was sent or failed at this event; `null` when none was.
+                    oneOf:
+                      - type: "null"
+                      - type: object
+                        required: [at, status, error]
+                        properties:
+                          at:
+                            type: string
+                            format: date-time
+                          status:
+                            type: string
+                            enum: [sent, failed]
+                          error:
+                            description: Why it failed, in words, such as "the push service refused it (403)".
+                            type: [string, "null"]
+                            maxLength: 200
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/test/crew:
+    post:
+      tags: [push]
+      operationId: sendCrewTest
+      summary: Send a test notification to the crew
+      description: |
+        An urgent push "Test from <event>" (expires in an hour) to every device at this event of the people
+        admin names as holding a role (`GET /internal/admin/people/with-role`), never to guests or members
+        without a role: telling everyone is an announcement. Each recipient gets a personal notification of
+        topic `crew_test`, which is no topic type: never listed, configured or followed. At most once a minute
+        per event. Right `notify.topics.write`, on an event that is not archived.
+      responses:
+        "200":
+          description: How it went.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [recipients, sent, failed]
+                properties:
+                  recipients:
+                    type: integer
+                    minimum: 0
+                    description: People with a role and at least one device here.
+                  sent:
+                    type: integer
+                    minimum: 0
+                    description: Devices the push service took it for.
+                  failed:
+                    type: integer
+                    minimum: 0
+                    description: Devices it did not reach; the delivery health says why.
+                  queued:
+                    type: integer
+                    minimum: 0
+                    description: Devices still waiting in a backlog; they are sent a few seconds later.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "common.openapi.yaml#/components/responses/TooMany"
+        "503":
+          description: Admin did not answer, so nobody was tested (`unavailable`).
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
 components:
   securitySchemes:
     session:

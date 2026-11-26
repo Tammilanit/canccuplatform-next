@@ -91,12 +91,12 @@ def _screens(session: Session, zones: Sequence[tuple[str, str]] | None) -> str:
     return _section("Screens", f'{warn}<div class="canccu-list">{"".join(rows)}</div>')
 
 
-def _pages(session: Session) -> str:
+def _pages(session: Session, skip: set[str]) -> str:
     rows = [
         _row(item["href"], item["icon"], item["label"], ABOUT.get(item["id"], ""))
         for group in menu_for(session)
         for item in group["items"]
-        if item["id"] != "home"
+        if item["id"] not in skip
     ]
     return _section("Your pages", f'<div class="canccu-list">{"".join(rows)}</div>')
 
@@ -114,9 +114,11 @@ def home_view(
     parts = []
     if event is not None and any(session.has(r) for r in EVENT_RIGHTS):
         parts.append(_event(event))
+    skip = {"home"}
     if may_see_screens(session):
         parts.append(_screens(session, zones))
-    parts.append(_pages(session))
+        skip.add("screen")  # the Screens section lists the Screen studio already
+    parts.append(_pages(session, skip))
     return "".join(parts)
 
 
