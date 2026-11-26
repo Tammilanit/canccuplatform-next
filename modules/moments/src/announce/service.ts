@@ -12,22 +12,25 @@ import { lockMoment } from "../store.js";
 import type { Actor, MomentRow } from "../store.js";
 import { BODY_MAX, TITLE_MAX, cut, fill } from "./text.js";
 import { actorOfRow, insertAnnouncement, runOfShow, saveAnnouncement } from "./store.js";
-import type { AnnouncementRow, Channels, EndReason, Level, RunItem, When } from "./store.js";
+import type { AnnouncementRow, Channels, EndReason, Icon, Level, Placement } from "./store.js";
+import type { RunItem, When } from "./store.js";
+import { chainOf } from "./chain.js";
 
 /** How long the "Updated" chip shows after an edit (L13). */
 export const UPDATED_SECONDS = 60;
 
-/** The card's chain per level (L3); full screen puts `full` first (L2's note). */
-export function chainOf(level: Level, fullScreen: boolean): string[] {
-  const chain = level === "urgent" ? ["rail", "hero", "ticker"] : ["rail", "ticker"];
-  return fullScreen ? ["full", ...chain] : chain;
-}
-
-const CUE: Record<Level, string> = { info: "announce.attention", urgent: "announce.urgent" };
+const CUE: Record<Level, string> = {
+  info: "announce.attention",
+  important: "announce.important",
+  urgent: "announce.urgent",
+};
 
 /** What the composer sends, validated by the route. */
 export interface Draft {
   level: Level;
+  placement: Placement;
+  icon: Icon;
+  /** Kept for old readers: true exactly when `placement` is `full`. */
   full_screen: boolean;
   title_text: string;
   body_text: string;
@@ -156,8 +159,8 @@ export async function send(
       {
         ...base,
         template: "announcement",
-        regions: chainOf(a.level, a.full_screen),
-        content: cardContent(a, text, now),
+        regions: chainOf(a.level, a.placement).regions,
+        content: cardContent(a, text, now, expires, item),
         cue: CUE[a.level],
         ...(item === null ? {} : { source_starts_at: new Date(item.starts_at) }),
       },
@@ -175,12 +178,30 @@ export async function send(
   await emit(c, engine, "moments.announcement.sent", eventData(a));
 }
 
-function cardContent(a: AnnouncementRow, text: Filled, startsAt: Date): Record<string, unknown> {
+/**
+ * The card's view-model (contracts/screen.md, `announcement`). A composed card has no source art,
+ * second line or QR; it counts down only to the item it was timed by.
+ */
+function cardContent(
+  a: AnnouncementRow,
+  text: Filled,
+  startsAt: Date,
+  expires: Date,
+  item: RunItem | null,
+): Record<string, unknown> {
   return {
     title: text.title,
     body: text.body,
     level: a.level,
+    placement: a.placement,
+    icon: a.icon,
+    art: null,
     starts_at: startsAt.toISOString(),
+    expires_at: expires.toISOString(),
+    countdown_at:
+      a.when.mode === "item" && item !== null ? new Date(item.starts_at).toISOString() : null,
+    second_line: null,
+    qr: null,
     updated: false,
     ticker_line: a.channels.ticker ? text.line : null,
   };
@@ -203,6 +224,7 @@ function eventData(a: AnnouncementRow): Record<string, unknown> {
     level: a.level,
     urgent: a.level === "urgent",
     full_screen: a.full_screen,
+    placement: a.placement,
     title: a.title,
     body: a.body,
     channels: a.channels,

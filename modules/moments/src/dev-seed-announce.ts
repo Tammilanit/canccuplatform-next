@@ -85,6 +85,9 @@ function plan(items: readonly AgendaItem[], timeZone: string, now: Date): Planne
 function draftOf(p: Planned, o: { timeZone: string; eventName: string }): Draft {
   return {
     level: p.level,
+    // The rail, as the demo's announcements always were (#780 keeps an explicit rail as it was).
+    placement: "rail",
+    icon: "clock",
     full_screen: false,
     title_text: p.title,
     body_text: p.body,

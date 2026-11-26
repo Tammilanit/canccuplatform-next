@@ -113,6 +113,11 @@
     visibility: hidden;
   }
 
+  /* A full-screen Info or Important keeps the ticker running under it (#780, keep_ticker). */
+  .canccu-layout[data-takeover="ticker"] > .canccu-region[data-role="ticker"] {
+    visibility: visible;
+  }
+
   .canccu-region--_full > .canccu-widget {
     align-items: center;
     justify-content: center;

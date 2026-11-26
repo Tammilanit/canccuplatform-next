@@ -11,7 +11,8 @@ import { invalid } from "../content.js";
 import { ANNOUNCE, SETTINGS, actorOf, archivedError, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { lockSettings } from "../store.js";
-import type { Level } from "./store.js";
+import { ICONS, LEVELS, oneOf } from "./chain.js";
+import type { Icon, Level } from "./chain.js";
 import { checkText, freeVariables } from "./text.js";
 
 export interface Template {
@@ -20,17 +21,20 @@ export interface Template {
   title: string;
   body: string;
   level: Level;
+  /** The composer's icon (#780); an own template saved before it reads as `info`. */
+  icon: Icon;
   builtin: boolean;
   variables: string[];
   revision: number;
 }
 
-const builtin = (key: string, name: string, title: string, body: string): Template => ({
+const builtin = (key: string, name: string, icon: Icon, title: string, body: string): Template => ({
   key,
   name,
   title,
   body,
   level: "info",
+  icon,
   builtin: true,
   variables: freeVariables(title, body),
   revision: 0,
@@ -38,17 +42,25 @@ const builtin = (key: string, name: string, title: string, body: string): Templa
 
 /** Mockup 05's set, in its order. */
 export const BUILTINS: readonly Template[] = [
-  builtin("food", "Food is here", "Food is here", "Pick up at {place}."),
+  builtin("food", "Food is here", "food", "Food is here", "Pick up at {place}."),
   builtin(
     "starting_soon",
     "Starting in 15 minutes",
+    "clock",
     "{item.title} starts in {item.starts_in}",
     "{item.location}",
   ),
-  builtin("lost_found", "Lost and found", "Lost and found: {thing}", "Ask at the info desk."),
+  builtin(
+    "lost_found",
+    "Lost and found",
+    "search",
+    "Lost and found: {thing}",
+    "Ask at the info desk.",
+  ),
   builtin(
     "doors_close",
     "Doors close soon",
+    "door",
     "Doors close at {time}",
     "Thanks for coming to {event.name}.",
   ),
@@ -70,7 +82,8 @@ export const isBuiltin = (key: string): boolean => BUILTINS.some((t) => t.key ==
 
 export async function loadTemplates(c: SqlClient): Promise<Template[]> {
   const { rows } = await c.query(
-    `SELECT key, name, title, body, level, revision FROM moments_announcement_templates ORDER BY name, key`,
+    `SELECT key, name, title, body, level, icon, revision FROM moments_announcement_templates
+     ORDER BY name, key`,
     [],
   );
   const own = rows.map((r) => ({
@@ -79,6 +92,7 @@ export async function loadTemplates(c: SqlClient): Promise<Template[]> {
     title: r.title as string,
     body: r.body as string,
     level: r.level as Level,
+    icon: (r.icon as Icon | null) ?? "info",
     builtin: false,
     variables: freeVariables(r.title as string, r.body as string),
     revision: r.revision as number,
@@ -111,12 +125,14 @@ export function templateRoutes(app: FastifyInstance, deps: AppDeps): void {
       if (isBuiltin(key))
         throw invalid("A built-in template keeps its key: save it under another.");
       const b = bodyOf(request.body);
-      if (b.level !== "info" && b.level !== "urgent") throw invalid("`level` is info or urgent.");
+      if (!LEVELS.includes(b.level as Level))
+        throw invalid("`level` is info, important or urgent.");
       const t = {
         name: str(b.name, "name", 40, true),
         title: str(b.title, "title", 200, true),
         body: str(b.body, "body", 400, false),
-        level: b.level,
+        level: b.level as Level,
+        icon: oneOf(b.icon, ICONS, "icon") ?? "info",
       };
       for (const text of [t.title, t.body]) {
         // A template's free variables are filled in the composer; only their names are checked here.
@@ -127,7 +143,8 @@ export function templateRoutes(app: FastifyInstance, deps: AppDeps): void {
       return deps.db.tenant(async (c) => {
         await lockSettings(c, `template:${key}`);
         const { rows } = await c.query(
-          `SELECT name, title, body, level, revision FROM moments_announcement_templates WHERE key = $1`,
+          `SELECT name, title, body, level, icon, revision FROM moments_announcement_templates
+           WHERE key = $1`,
           [key],
         );
         const old = rows[0] as Body | undefined;
@@ -138,11 +155,11 @@ export function templateRoutes(app: FastifyInstance, deps: AppDeps): void {
           });
         const revision = ((old?.revision as number | undefined) ?? 0) + 1;
         await c.query(
-          `INSERT INTO moments_announcement_templates (key, name, title, body, level, revision)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO moments_announcement_templates (key, name, title, body, level, icon, revision)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (tenant_id, key) DO UPDATE SET name = $2, title = $3, body = $4, level = $5,
-             revision = $6`,
-          [key, t.name, t.title, t.body, t.level, revision],
+             icon = $6, revision = $7`,
+          [key, t.name, t.title, t.body, t.level, t.icon, revision],
         );
         await deps.audit({
           tenant_id: ctx.tenant_id,
