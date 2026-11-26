@@ -379,9 +379,13 @@
     color: var(--canccu-color-background);
     font-size: calc(4.4 * var(--canccu-ann-u));
     font-weight: 700;
-    white-space: nowrap;
+    line-height: 1.2;
+    /* A 140-character body must read whole: wrap, and cap at three lines. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
     overflow: clip;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   .canccu-region--_full
@@ -398,6 +402,6 @@
 
   /* Room for the band under the block, so the band never covers the body. */
   .canccu-region--_full > .canccu-widget--announcement:has(.canccu-widget__instruction) {
-    padding-bottom: calc(14 * var(--canccu-ann-u));
+    padding-bottom: calc(22 * var(--canccu-ann-u));
   }
 }

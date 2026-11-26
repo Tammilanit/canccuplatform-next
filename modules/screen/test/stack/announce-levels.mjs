@@ -136,7 +136,7 @@ export const ANNOUNCE_VIEWS = [
     view: "ann-emergency-portrait",
     layout: null,
     sizes: [PORTRAIT, [2160, 3840]],
-    make: placed("full", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" }),
+    make: placed("full", { title: "Please leave the hall", body: "Leave by the north doors, not the lift, and gather in the car park by the flag. Staff in yellow vests will count everyone. Do not return.", level: "emergency" }),
   },
 ]; // prettier-ignore
 
@@ -176,6 +176,8 @@ export function measureCards() {
     if (px(title) < 0.06 * height - 0.5)
       problems.push(`the title is ${px(title)} px, under 6 % of ${height} px`);
     if (line === null) problems.push("a body neither drawn nor carried by the band");
+    else if (line.scrollWidth > line.clientWidth || line.scrollHeight > line.clientHeight + 1)
+      problems.push("the instruction's text is clipped");
     else if (px(line) < 0.035 * height - 0.5)
       problems.push(`the body is ${px(line)} px, under 3.5 % of ${height} px`);
   }
