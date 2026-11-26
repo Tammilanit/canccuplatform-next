@@ -140,7 +140,7 @@ export interface PageOptions {
   tab?: string;
   body: Slot;
   actions?: Slot;
-  description?: string;
+  description: string;
   crumb?: { href: string; label: string };
   status?: number;
   plain?: boolean;
@@ -190,7 +190,7 @@ export async function studioPage(
     session: request.session ?? undefined,
     current: "screen",
     plain: o.plain ?? false,
-    ...(o.description === undefined ? {} : { description: o.description }),
+    description: o.description,
     ...(o.crumb === undefined ? {} : { crumb: o.crumb }),
     ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.wide === true ? { width: "wide" as const } : {}),

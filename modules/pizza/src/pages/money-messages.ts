@@ -185,6 +185,17 @@ export const MONEY_EN = {
   "settings.ai_reader_monthly_limit_usd_hint":
     "Whole dollars, as the provider's Console sets it; 0 for none. Integrations shows the month's reads against it and warns from 80 %; the provider stops reads itself.",
   "integrations.title": "Integrations",
+  "howto.title": "How to get a key",
+  "howto.step1": "Create an Anthropic Console account at console.anthropic.com.",
+  "howto.step2": "Set up billing in the Console: add a card and buy some credit.",
+  "howto.step3": "Create an API key on the Console's API keys page.",
+  "howto.step4": "Paste it here and save. It is kept encrypted and never shown again.",
+  "howto.step5": "Set a monthly spend limit in the Console's limits; $5 is plenty.",
+  "howto.cost":
+    "Claude Haiku 5.5 reads a receipt for about 0.06 cents; 50 receipts cost about 3 cents.",
+  "howto.subscription":
+    "A Claude subscription cannot be used: the reader needs API billing in the Console.",
+  "howto.link": "Open the Console's API keys page",
   "integrations.reader": "AI reader",
   "integrations.reader_text":
     "Reads receipts and menus from photos for the Food pages; a person confirms every read.",

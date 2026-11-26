@@ -6,6 +6,8 @@ import html
 import re
 from typing import Any
 
+from canccu_kit.ui import info_tip
+
 from . import controls
 from .declarations import Setting
 from .service import BadSettings
@@ -130,14 +132,14 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
             f'<div class="canccu-field canccu-field--check"><input class="canccu-switch" '
             f"type=checkbox role=switch id={fid} name={name}{checked}{marks}>"
             f'<label class="canccu-field__label" for={fid}>{html.escape(s.short or s.label)}'
-            f"</label>{was_html}{_help(s)}</div>"
+            f"</label>{label_tip(s)}{was_html}{_help(s)}</div>"
         )
     label, unit = label_parts(s)
     if s.type == "list" and s.choices:
         listed = value if isinstance(value, list) else []
         if unit:
             label = f"{label} ({unit})"
-        return controls.chips(s, listed, _words, label, marks, was_html + _help(s))
+        return controls.chips(s, listed, _words, label, marks, was_html + _help(s), label_tip(s))
     hint, after = "", ""
     attrs = f"id={fid} name={name}{marks}"
     if s.choices_from == "timezones":
@@ -164,9 +166,11 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
     if required(s) and not (s.choices or s.choices_from):
         why = html.escape(_error(s))
         error = f'<p class="canccu-field__error" data-canccu-error="{why}" hidden>{why}</p>'
+    head = f'<label class="canccu-field__label" for={fid}>{html.escape(label)}</label>'
+    if tip := label_tip(s):
+        head = f'<div class="canccu-field__labelrow">{head}{tip}</div>'
     return (
-        f'<div class="canccu-field"><label class="canccu-field__label" for={fid}>'
-        f"{html.escape(label)}</label>{control}{after}{error}{was_html}{_help(s, hint)}</div>"
+        f'<div class="canccu-field">{head}{control}{after}{error}{was_html}{_help(s, hint)}</div>'
     )
 
 
@@ -197,6 +201,17 @@ def _input(s: Setting, value: Any, fid: str, name: str, marks: str) -> tuple[str
         f'value="{html.escape(str(text))}"{example}{marks}>'
     )
     return control, hint
+
+
+def label_tip(s: Setting) -> str:
+    """The label's tooltip (#782, D4): what the setting is for, its default and an integer's range,
+    so the words are a hover or a tap away wherever the label is."""
+    _, unit = label_parts(s)
+    bounds = ""
+    if s.type == "integer" and s.min is not None and s.max is not None:
+        bounds = f"From {s.min} to {s.max}{f' {unit}' if unit else ''}."
+    words = " ".join(filter(None, (s.help, _default(s), bounds)))
+    return info_tip(words) if words else ""
 
 
 def _help(s: Setting, hint: str = "") -> str:

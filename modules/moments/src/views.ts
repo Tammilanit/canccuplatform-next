@@ -2,7 +2,7 @@
 import type { ZoneQueue } from "./queue-data.js";
 import { queueView } from "./queue-views.js";
 import type { Html } from "@canccu/ui";
-import { html, notice } from "@canccu/ui";
+import { html, notice, statusChip } from "@canccu/ui";
 import type { Class } from "./arbiter.js";
 import type { ScreenImage } from "./cues/screen.js";
 import { PREFIX, formKey } from "./page-kit.js";
@@ -52,6 +52,12 @@ function left(expires: string | null, now: Date): string {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec} left` : `${m}:${sec} left`;
 }
 
+// What a moment's state means, in its chip's tooltip (#782).
+const STATE_TIPS: Record<string, string> = {
+  hidden: "It is on no screen now: something ranked higher holds its place.",
+  unplaced: "It waits for a free place on the screens and starts when one opens.",
+  starting: "It is about to show on the screens.",
+};
 const STATES: Record<string, string> = {
   hidden: "Hidden",
   unplaced: "Queued",
@@ -85,7 +91,7 @@ function momentRow(m: MomentView, zone: string, now: Date, canAct: boolean): Htm
             >`
           : ""
       }
-      ${STATES[state] === undefined ? "" : html`<span class="canccu-badge canccu-badge--late">${STATES[state]}</span>`}
+      ${STATES[state] === undefined ? "" : statusChip("late", STATES[state], STATE_TIPS[state] ?? "")}
     </div>
     <p class="moments-item__title">${m.title}</p>
     <p class="canccu-small canccu-muted">

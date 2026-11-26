@@ -94,6 +94,7 @@ export function settingsPage(app: FastifyInstance, deps: AppDeps): void {
     const s = await read(request);
     return organiserPage(request, reply, deps, c, {
       title: c.t("crew.title"),
+      description: c.t("about.settings"),
       tab: "settings",
       narrow: true,
       body: settingsForm(c, {

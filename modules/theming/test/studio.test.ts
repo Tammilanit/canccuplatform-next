@@ -174,11 +174,16 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).not.toContain('name="body"');
     });
 
-    it("says where the draft stands in words", async () => {
+    it("says what the page is for in its description, and where the draft stands in the body", async () => {
       await t.fresh();
       const body = (await page("/theming/studio/yours")).body;
-      expect(body).toContain("last changed by you");
-      expect(body).toContain("Nothing published yet");
+      const desc = /<p class="canccu-pagehead__desc">([\s\S]*?)<\/p>/.exec(body)?.[1];
+      expect(desc).toBe(
+        "Make the chosen look the event&#39;s own: its logo, colours, fonts and corners.",
+      );
+      const where = /<p class="canccu-studio-status">([\s\S]*?)<\/p>/.exec(body)?.[1] ?? "";
+      expect(where).toContain("last changed by you");
+      expect(where).toContain("Nothing published yet");
       for (const jargon of ["advanced mode", "Revision 0", "u_admin", "Draft version"]) {
         expect(body).not.toContain(jargon);
       }
@@ -269,6 +274,10 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain("Glow and tracing border");
       expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
       expect(body).toContain("Ready to publish");
+      expect(/<p class="canccu-pagehead__desc">([\s\S]*?)<\/p>/.exec(body)?.[1]).toBe(
+        "The theme beyond Make it yours: upload a whole theme package, or set each colour, font and size by hand.",
+      );
+      expect(body).toMatch(/<p class="canccu-studio-status">[\s\S]*Nothing published yet/);
     });
 
     it("offers the way back to simple only for an advanced draft", async () => {

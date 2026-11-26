@@ -1,3 +1,4 @@
+import { SOUND_TIPS } from "./strip.js";
 /**
  * The sound desk's Limits and categories (#626, the step 4 polish sheets 03 and 04): the budget per
  * zone with sliders and a stepper, each zone's use as meters and what is missing in words with
@@ -6,7 +7,7 @@
  * and change nothing.
  */
 import type { Html } from "@canccu/ui";
-import { html } from "@canccu/ui";
+import { html, statusChip } from "@canccu/ui";
 import { PREFIX } from "../page-kit.js";
 import { CALM, CATEGORIES } from "./catalog.js";
 import type { Category, SoundSettings } from "./catalog.js";
@@ -35,12 +36,12 @@ function letsThrough(z: DeskZone): string {
 function soundScreen(z: DeskZone): Html {
   const s = z.sound_screen;
   if (s === null)
-    return html`<span class="canccu-badge canccu-badge--late">None</span> ·
+    return html`${statusChip("late", "None", SOUND_TIPS.none)} ·
       <a class="canccu-small" href="${DEVICES}">Set one in Devices ›</a>`;
   const flag = !s.online
-    ? html` <span class="canccu-badge canccu-badge--down">offline</span>`
+    ? html` ${statusChip("down", "offline", SOUND_TIPS.offline)}`
     : s.audio_unlocked === false
-      ? html` <span class="canccu-badge canccu-badge--late">audio locked</span>`
+      ? html` ${statusChip("late", "audio locked", SOUND_TIPS.locked)}`
       : "";
   return html`${s.name}${flag}`;
 }

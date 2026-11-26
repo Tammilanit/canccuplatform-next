@@ -3,7 +3,7 @@
  * with its live view, where it is and what it shows now, and what to do. On a wide desk (from
  * 1440 px, as Settings' last changes) a Recent panel sits beside it.
  */
-import { attrs, emptyState, html, notice } from "@canccu/ui";
+import { attrs, emptyState, html, notice, statusChip } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { problemsOf, shownZone, uplinkDown } from "./help.js";
 import type { SeenDevice } from "./help.js";
@@ -72,11 +72,10 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet): Html {
     role="img"
     aria-label="${on ? t("device.online") : t("device.offline")}"
   ></span>`;
-  const flags = (h?.flags ?? []).map(
-    (f) =>
-      html`<span class="canccu-badge canccu-badge--degraded"
-        >${f === "clock_drift" ? t("device.flag.clock_drift") : t("device.flag.shared_token")}</span
-      >`,
+  const flags = (h?.flags ?? []).map((f) =>
+    f === "clock_drift"
+      ? statusChip("degraded", t("device.flag.clock_drift"), t("device.flag.clock_drift.tip"))
+      : statusChip("degraded", t("device.flag.shared_token"), t("device.flag.shared_token.tip")),
   );
   const zone = shownZone(d, fleet.all);
   const what = zone === null ? null : nowShowing(t, fleet.states.get(zone), portraitOf(d), c.nowMs);

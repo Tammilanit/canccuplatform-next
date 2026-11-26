@@ -188,14 +188,13 @@ export interface DocumentOptions {
   now?: Date;
 }
 
-export interface ShellOptions extends DocumentOptions {
+interface ShellBase extends DocumentOptions {
   title: string;
   body: Slot;
   /** The menu id of this page, marked as the current one. */
   current?: string;
   /** Without one (a refusal before sign-in) the page has no menu. */
   session?: Viewer | undefined;
-  description?: Slot;
   crumb?: { href: string; label: string };
   /** Actions at the right of the title. */
   actions?: Slot;
@@ -204,9 +203,14 @@ export interface ShellOptions extends DocumentOptions {
   /** `narrow` (40rem) for forms; `wide` (120rem) for a collection, a board or a master–detail
    * editor (amendment 3); other workspaces keep the 64rem default. */
   width?: "narrow" | "wide";
+  /** What the page is for, in one or two sentences under the title (#782, docs/design/README.md
+   * decision 8): required, and only a `plain` page may leave it empty. */
+  description: Slot;
   /** An error page has no title row of its own: its view is the title. */
   plain?: boolean;
 }
+
+export type ShellOptions = ShellBase;
 
 /** Admin's script for the shell: it registers the service worker, which shows the offline page
  * when a signed-in phone loses its connection (#440), and keeps the menu's Health note from
@@ -215,6 +219,11 @@ const SHELL_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>')
 
 /** An organiser page in the shell. */
 export function shellPage(o: ShellOptions): Html {
+  // The rendered value, so a falsy slot (`cond && "…"`) counts as missing, like an empty one.
+  const description = html`${o.description}`.toString().trim();
+  if (!o.plain && description === "") {
+    throw new Error(`page description required: ${o.title}`);
+  }
   const now = o.now ?? new Date();
   const archived =
     o.event?.status === "archived"
@@ -223,7 +232,7 @@ export function shellPage(o: ShellOptions): Html {
   const crumb = o.crumb
     ? html`<a class="canccu-crumb" href="${o.crumb.href}">${icon("left")}${o.crumb.label}</a>`
     : "";
-  const desc = o.description ? html`<p class="canccu-pagehead__desc">${o.description}</p>` : "";
+  const desc = description ? html`<p class="canccu-pagehead__desc">${o.description}</p>` : "";
   const head = o.plain
     ? ""
     : html`<div class="canccu-pagehead"><div>${crumb}<h1 class="canccu-pagehead__title">${o.title}</h1>${desc}</div>${o.actions ? html`<div class="canccu-cluster">${o.actions}</div>` : ""}</div>`;

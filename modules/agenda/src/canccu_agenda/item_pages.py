@@ -36,6 +36,11 @@ from .web import (
     when_inputs,
 )
 
+ITEM_ABOUT = (
+    "An item of the run of show: what happens, when, where and for whom, and who is reminded of it."
+)
+MOVE_ABOUT = "Check what moves and who is told before the new time is saved."
+
 
 def _days(request: Request) -> list[date]:
     return event_days(request, deps(request).now().astimezone(zone_of(request)).date())
@@ -159,7 +164,7 @@ async def new_page(request: Request) -> Response:
     body = (f"<p>Start from a template: {links}</p>" if links else "") + _form(
         request, values, kinds, f"{BASE}/items/new"
     )
-    return page(request, "New item", body)
+    return page(request, "New item", body, description=ITEM_ABOUT)
 
 
 async def add_page(request: Request) -> Response:
@@ -172,7 +177,7 @@ async def add_page(request: Request) -> Response:
         item = await items.add(d, session, _fields(form, tz), inverse=inverse)
     except KitError as exc:
         body = _form(request, _posted(form), await _kinds(d), f"{BASE}/items/new", exc.message)
-        return page(request, "New item", body, status=400)
+        return page(request, "New item", body, status=400, description=ITEM_ABOUT)
     path = f"/?day={_day(item['starts_at'], tz)}&done=added"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item, d.now())
 
@@ -206,7 +211,10 @@ async def edit_page(request: Request) -> Response:
     row, item, kinds = await load_item(d, request.path_params["item_id"])
     action = f"{BASE}/items/{esc(row['id'])}/edit"
     return page(
-        request, f"Edit {row['title']}", _form(request, _values_of(item, tz), kinds, action)
+        request,
+        f"Edit {row['title']}",
+        _form(request, _values_of(item, tz), kinds, action),
+        description=ITEM_ABOUT,
     )
 
 
@@ -242,7 +250,7 @@ async def save_page(request: Request) -> Response:
         if exc.code == "version_conflict":
             raise
         body = _form(request, _posted(form), kinds, action, exc.message)
-        return page(request, f"Edit {row['title']}", body, status=400)
+        return page(request, f"Edit {row['title']}", body, status=400, description=ITEM_ABOUT)
     path = f"/?day={_day(fields.get('starts_at') or item['starts_at'], tz)}&done=saved"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), edited, d.now())
 
@@ -271,7 +279,7 @@ def _clash_page(
         + f'<ul class="canccu-agenda-changes">{changes}</ul>'
         + _form(request, values, kinds, f"{BASE}/items/{esc(item['id'])}/edit")
     )
-    return page(request, f"Edit {item['title']}", body, status=409)
+    return page(request, f"Edit {item['title']}", body, status=409, description=ITEM_ABOUT)
 
 
 def _move_preview(
@@ -300,7 +308,7 @@ def _move_preview(
         + f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/{esc(row["id"])}">'
         "Back</a></form>"
     )
-    return page(request, f"Move {row['title']}", body)
+    return page(request, f"Move {row['title']}", body, description=MOVE_ABOUT)
 
 
 def item_time(value: datetime | None) -> str | None:

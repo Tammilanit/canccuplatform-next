@@ -8,6 +8,8 @@ from __future__ import annotations
 import html
 from typing import Any
 
+from canccu_kit.ui import tooltip
+
 from .declarations import URL_RE, Setting
 from .zones import zone_groups, zone_label
 
@@ -48,7 +50,9 @@ def zone_select(value: str, attrs: str) -> str:
     )
 
 
-def chips(s: Setting, value: list[Any], words: Any, label: str, marks: str, rest: str) -> str:
+def chips(
+    s: Setting, value: list[Any], words: Any, label: str, marks: str, rest: str, tip: str = ""
+) -> str:
     """A list from choices: one chip per choice, ticked when listed. The fieldset is the field,
     and settings.js reads it as the ticked values in the declared order."""
     name = html.escape(s.key)
@@ -57,9 +61,17 @@ def chips(s: Setting, value: list[Any], words: Any, label: str, marks: str, rest
         f"{' checked' if c in value else ''}>{html.escape(words(c))}</label>"
         for c in s.choices
     )
+    legend = f'<legend class="canccu-field__label">{html.escape(label)}</legend>'
+    if tip:
+        # The "i" sits in the legend, beside the label; the group's name stays the label alone.
+        lid = f"canccu-legend-{name}"
+        legend = (
+            f'<legend class="canccu-field__label canccu-field__labelrow">'
+            f'<span id="{lid}">{html.escape(label)}</span>{tip}</legend>'
+        )
+        marks = f'{marks} aria-labelledby="{lid}"'
     return (
-        f'<fieldset class="canccu-field"{marks} data-canccu-chips>'
-        f'<legend class="canccu-field__label">{html.escape(label)}</legend>'
+        f'<fieldset class="canccu-field"{marks} data-canccu-chips>{legend}'
         f'<div class="canccu-chips">{items}</div>{rest}</fieldset>'
     )
 
@@ -95,9 +107,11 @@ def stepper(control: str, fid: str) -> str:
     """Less and More around a whole number: the browser's own steps, inside the bounds."""
 
     def button(step: int, words: str, sign: str) -> str:
-        return (
+        return tooltip(
             f'<button type=button class="canccu-stepper__button" data-canccu-step={step} '
-            f'data-canccu-for="{fid}" aria-label="{words}">{sign}</button>'
+            f'data-canccu-for="{fid}" aria-label="{words}">{sign}</button>',
+            words,
+            repeats_label=True,
         )
 
     less, more = button(-1, "Less", "&minus;"), button(1, "More", "+")

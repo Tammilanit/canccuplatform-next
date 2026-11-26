@@ -5,7 +5,7 @@
  * after a sound check it says in words what each zone did.
  */
 import type { Html } from "@canccu/ui";
-import { html } from "@canccu/ui";
+import { html, statusChip } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
 import type { SoundSettings } from "./catalog.js";
 import { meter, slider, toggle } from "./controls.js";
@@ -13,13 +13,19 @@ import { REASONS } from "./log-view.js";
 import type { LogRow } from "./store.js";
 import type { DeskZone, Sub } from "./views.js";
 
+/** What each sound screen flag means, in its chip's tooltip (#782). */
+export const SOUND_TIPS = {
+  none: "The zone has no sound screen: its sounds play nowhere. Set one in Devices.",
+  offline: "The sound screen does not answer, so the zone's sounds do not play.",
+  locked: "The browser on the sound screen has not allowed sound yet: tap its screen once.",
+};
+
 /** The zone's sound screen when it needs a look: none, offline or locked. */
 export function screenFlag(z: DeskZone): Html {
   const s = z.sound_screen;
-  if (s === null) return html`<span class="canccu-badge canccu-badge--late">no sound screen</span>`;
-  if (!s.online) return html`<span class="canccu-badge canccu-badge--down">offline</span>`;
-  if (s.audio_unlocked === false)
-    return html`<span class="canccu-badge canccu-badge--late">audio locked</span>`;
+  if (s === null) return statusChip("late", "no sound screen", SOUND_TIPS.none);
+  if (!s.online) return statusChip("down", "offline", SOUND_TIPS.offline);
+  if (s.audio_unlocked === false) return statusChip("late", "audio locked", SOUND_TIPS.locked);
   return html``;
 }
 

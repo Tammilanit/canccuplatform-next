@@ -11,6 +11,17 @@ import { SETTINGS_EN } from "./settings-messages.js";
 import { FI } from "./messages-fi.js";
 
 export const EN = {
+  "about.crew": "Today's food orders and what each one needs from the crew next.",
+  "about.order": "One order: its pizzas, who holds it and where it stands.",
+  "about.integrations": "The AI reader's key, how to get one, and what the reads cost this month.",
+  "about.import": "Check the menu before it replaces the pizzeria's current one.",
+  "about.menus": "The pizzerias this event orders from, with their menus and prices.",
+  "about.pizzeria": "This pizzeria's details and menu. A change applies to new orders.",
+  "about.read": "Read a menu from photos. Check every row before you import it.",
+  "about.record": "Every order of the event, day by day, with what was paid.",
+  "about.hold": "One order as it went: its pizzas, its receipt and who paid what.",
+  "about.export": "Download the event's orders as a file.",
+  "about.settings": "How Food works at this event. A change applies when you save it.",
   "tab.orders": "Orders",
   "tab.pizzerias": "Pizzerias and menus",
   "tab.settings": "Settings",

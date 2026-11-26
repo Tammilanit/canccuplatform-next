@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 import shutil
 import subprocess
@@ -126,9 +127,12 @@ def test_a_list_from_choices_is_a_row_of_chips() -> None:
         type="list", label="Channels", choices=["screen", "discord_dm", "push"], default=["screen"]
     )
     html = field_html(channels, ["push", "screen"])
+    # The "i" sits in the legend beside the label; the group is still named by the label alone.
     assert (
-        '<fieldset class="canccu-field" data-canccu-was="screen, push" data-canccu-chips>'
-        '<legend class="canccu-field__label">Channels</legend><div class="canccu-chips">'
+        '<fieldset class="canccu-field" data-canccu-was="screen, push"'
+        ' aria-labelledby="canccu-legend-k" data-canccu-chips>'
+        '<legend class="canccu-field__label canccu-field__labelrow">'
+        '<span id="canccu-legend-k">Channels</span><span class="canccu-tip">'
     ) in html
     assert (
         '<label class="canccu-chip">'
@@ -286,3 +290,41 @@ def test_chips_quote_a_choice_with_a_space_and_hold_only_choices_as_was() -> Non
     html = field_html(s, ["c", "gone"])
     assert 'value="a b"' in html
     assert 'data-canccu-was="c"' in html
+
+
+# Tooltips on every label (#782, D4): the help line stays under the field, and the label's
+# tooltip says it with the default and the range.
+def _tip_of(field: str) -> str:
+    found = re.search(r'role="tooltip" id="[^"]+" class="canccu-tip__text">([^<]*)<', field)
+    return html.unescape(found.group(1)) if found else ""
+
+
+def test_every_declared_setting_s_label_has_a_tooltip() -> None:
+    for module, settings in load_declarations(DECLARATIONS).items():
+        for s in settings.settings:
+            field = field_html(s, None)
+            assert 'class="canccu-tip__info"' in field, f"{module}.{s.key}"
+            assert s.help in _tip_of(field), f"{module}.{s.key}"
+
+
+def test_a_field_s_info_button_sits_beside_its_label() -> None:
+    s = one(type="string", label="Name", help="What attendees see.", default="")
+    assert re.search(
+        r'<div class="canccu-field__labelrow"><label class="canccu-field__label" for=[^>]+>Name'
+        r'</label><span class="canccu-tip"><button type="button" class="canccu-tip__info"',
+        field_html(s, None),
+    )
+
+
+def test_a_number_s_tooltip_says_its_default_and_range() -> None:
+    s = one(
+        type="integer",
+        label="Heartbeat (seconds)",
+        default=30,
+        min=5,
+        max=300,
+        help="How often a screen checks in.",
+    )
+    tip = _tip_of(field_html(s, None))
+    assert tip.startswith("How often a screen checks in.")
+    assert "Default: 30" in tip and "From 5 to 300 seconds." in tip

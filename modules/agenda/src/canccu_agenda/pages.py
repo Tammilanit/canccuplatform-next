@@ -7,7 +7,7 @@ from datetime import date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from canccu_kit.ui import empty_state, icon
+from canccu_kit.ui import empty_state, icon, status_chip
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -25,8 +25,10 @@ from .web import (
     ARCHIVED_ITEM,
     BASE,
     CHANNEL_LABELS,
+    CHIP_TIPS,
     SCRIPT_TAGS,
     VISIBILITY_LABELS,
+    VISIBILITY_TIPS,
     archived,
     esc,
     notice,
@@ -50,6 +52,12 @@ DONE = {
     ),
     "undone": "Undone. People who were told are told again.",
 }
+
+
+ONE_ITEM_ABOUT = (
+    "One item of the run of show: when and where it happens, who sees it and what goes out "
+    "about it."
+)
 
 
 def _day(request: Request, days: list[date], today: date) -> date:
@@ -77,10 +85,8 @@ def chips(row: Any, item: dict[str, Any], now: datetime, tz: ZoneInfo) -> str:
         out.append(("audience", VISIBILITY_LABELS[row["visibility"]]))
     # A badge says it in a word; a delay is the one solid badge (design README, Decisions 3).
     badge = {"running": "primary", "cancelled": "down", "delayed": "late"}
-    return "".join(
-        f'<span class="canccu-badge canccu-badge--{badge.get(k, "plain")}">{esc(t)}</span>'
-        for k, t in out
-    )
+    tips = {**CHIP_TIPS, "over": CHIP_TIPS["done"], "audience": VISIBILITY_TIPS[row["visibility"]]}
+    return "".join(status_chip(badge.get(k, "plain"), t, tips[k]) for k, t in out)
 
 
 async def run_of_show(request: Request) -> Response:
@@ -257,7 +263,7 @@ async def item_page(request: Request) -> Response:
         )
     body += changes_html(log, tz, now.astimezone(tz).date())
     body += _bring_back(request, row, session, now) + _read_only(request)
-    return page(request, row["title"], body, session=session)
+    return page(request, row["title"], body, session=session, description=ONE_ITEM_ABOUT)
 
 
 ROUTES = [
