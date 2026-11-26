@@ -170,6 +170,46 @@ describe.skipIf(!DATABASE_URL)("my presets", () => {
     expect((await mine()).map((p) => p.id)).toEqual([id]);
   });
 
+  it("shows the look under Your looks in the gallery, and Reset to it on Make it yours", async () => {
+    const spring = await springDraft();
+    const id = (await save("Spring look")).json<Mine>().id;
+    const gallery = (await get(t.h, "/theming/studio/", { session: "embedder" })).body;
+    expect(gallery).toContain("Your looks");
+    expect(gallery).toContain(`data-preset="${id}"`);
+    expect(gallery).toContain("Spring look");
+    expect(gallery).toContain('data-mine-ask="canccu-studio-mine-save"');
+    const applied = await apply({ preset: id, draft_version: spring.draft_version });
+    expect(applied.statusCode).toBe(200);
+    const yours = (await get(t.h, "/theming/studio/yours", { session: "embedder" })).body;
+    expect(yours).toContain("Reset to Spring look");
+    expect(yours).toMatch(new RegExp(`data-preset="${id}"[^>]*data-scheme="own"`));
+  });
+
+  it("asks before a replace only once the draft's own work differs from the saved look's", async () => {
+    const fresh = await t.fresh();
+    const levelUp = await apply({
+      preset: "level-up",
+      scheme: "sunset",
+      draft_version: fresh.draft_version,
+    });
+    expect(levelUp.statusCode).toBe(200);
+    const id = (await save("Arcade night")).json<Mine>().id;
+    const applied = await apply({ preset: id, draft_version: levelUp.json<Draft>().draft_version });
+    expect(applied.statusCode).toBe(200);
+    const own = async () =>
+      /data-own-work="1"/.test(
+        (await get(t.h, "/theming/studio/yours", { session: "embedder" })).body,
+      );
+    expect(await own()).toBe(false);
+    const css = await t.put(
+      "css/extra.css",
+      applied.json<Draft>().draft_version,
+      Buffer.from(".t-extra { color: red; }"),
+    );
+    expect(css.statusCode).toBe(200);
+    expect(await own()).toBe(true);
+  });
+
   it("names an unknown look as not found", async () => {
     await springDraft();
     expect((await apply({ preset: "event:999" })).statusCode).toBe(404);

@@ -61,6 +61,15 @@
     opacity: 1;
   }
 
+  /* The theme's video over its picture (D19): it covers the layer, under the same scrim. */
+  .canccu-stage__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .canccu-stage--backdrop .canccu-stage__glow {
     opacity: 0;
   }

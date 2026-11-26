@@ -9,7 +9,8 @@ import type { Entry, ZipFile } from "yauzl";
 
 const MB = 1024 * 1024;
 export const MAX_FILES = 300;
-export const MAX_UNPACKED = 20 * MB;
+// 40 MB: room for one video of 20 MB beside the rest (plan issue-784 D19, Q5).
+export const MAX_UNPACKED = 40 * MB;
 const MAX_RATIO = 100;
 /** Directories do not count as files, but a central directory of millions of them is no package. */
 const MAX_ENTRIES = 1000;
@@ -134,7 +135,7 @@ async function readEntries(zip: ZipFile): Promise<Map<string, Buffer>> {
     compressed += entry.compressedSize;
     // Declared sizes first, so a bomb is refused before it is inflated; yauzl holds every entry
     // to its declared size while inflating.
-    if (unpacked > MAX_UNPACKED) throw new Refused("it unpacks to more than 20 MB");
+    if (unpacked > MAX_UNPACKED) throw new Refused("it unpacks to more than 40 MB");
     if (unpacked > MAX_RATIO * Math.max(compressed, 1)) {
       throw new Refused("its unpacking ratio is over 100:1");
     }

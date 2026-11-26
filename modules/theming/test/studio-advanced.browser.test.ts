@@ -201,8 +201,8 @@ describe.skipIf(browser === undefined)("Advanced in Chromium", { timeout: 60_000
 
   it("keeps the video in use when a new one is refused", async () => {
     await levelUp();
-    let v = await putFile("images/still.png", await png("#223344", 32));
-    v = await putFile("videos/loop.mp4", mp4());
+    await putFile("images/still.png", await png("#223344", 32));
+    const v = await putFile("videos/loop.mp4", mp4());
     const set = await api("PATCH", "/api/theming/draft/parts", {
       draft_version: v,
       backdrop_image: "images/still.png",

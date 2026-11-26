@@ -15,9 +15,10 @@ export interface StageView {
   } | null;
 }
 
-/** The theme's own picture, as theming answers it (`ScreenState.theme.backdrop`). */
+/** The theme's own picture and video, as theming answers them (`ScreenState.theme.backdrop`). */
 export interface BackdropView {
   image_url?: unknown;
+  video_url?: unknown;
   scrim?: unknown;
   [field: string]: unknown;
 }
@@ -26,6 +27,21 @@ const LAYERS = ["backdrop", "art", "glow", "kind", "phase", "tint", "scrim"] as 
 /** A picture the theme serves: a revision's file, or the draft's under its preview key. */
 const PICTURE_URL =
   /^\/theming\/(a|preview\/[A-Za-z0-9_-]{1,128})\/[0-9a-f]{64}\.(png|jpg|webp|svg)$/;
+
+/** A video the theme serves (plan issue-784 D19), as PICTURE_URL. */
+const VIDEO_URL = /^\/theming\/(a|preview\/[A-Za-z0-9_-]{1,128})\/[0-9a-f]{64}\.(mp4|webm)$/;
+
+/**
+ * The theme's video over its picture, or null. Only at lively and party: at calm (quiet hours
+ * included) and at none, which the device's reduced motion makes the level, the picture shows
+ * alone, as the poster it is.
+ */
+export function videoOf(backdrop: BackdropView | undefined, level: Level): string | null {
+  const url = backdrop?.video_url;
+  if (level !== "lively" && level !== "party") return null;
+  if (typeof url !== "string" || !VIDEO_URL.test(url) || pictureOf(backdrop) === null) return null;
+  return url;
+}
 
 /** The theme's own picture and its scrim (0.55–1), or null: it replaces the background's cycle. */
 export function pictureOf(
@@ -91,6 +107,28 @@ function setImage(layer: HTMLElement, url: string): void {
   if (layer.style.backgroundImage !== image) layer.style.backgroundImage = image;
 }
 
+/**
+ * The video in `layer`: started once and kept playing while its address stays, so a tick never
+ * restarts it; taken out (and so stopped) when the level drops or the theme drops it.
+ */
+function setVideo(layer: HTMLElement, url: string | null, poster: string | undefined): void {
+  const playing = layer.querySelector("video");
+  if (playing !== null && playing.getAttribute("src") === url) return;
+  playing?.remove();
+  if (url === null) return;
+  const video = layer.ownerDocument.createElement("video");
+  video.className = "canccu-stage__video";
+  // Muted before src: browsers only autoplay a muted video, and a screen has no one to click play.
+  video.muted = true;
+  video.loop = true;
+  video.autoplay = true;
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
+  if (poster !== undefined) video.setAttribute("poster", poster);
+  video.setAttribute("src", url);
+  layer.append(video);
+}
+
 export class StageLayer {
   private el: HTMLElement | null = null;
 
@@ -100,8 +138,10 @@ export class StageLayer {
     const el = this.element();
     const { classes, art } = stageLook(stage, level, now);
     const picture = pictureOf(backdrop);
+    const video = videoOf(backdrop, level);
     // At every level: the picture is the theme's ground, as the glows are, not a moment's tint.
     if (picture !== null) classes.push("canccu-stage--backdrop");
+    if (video !== null) classes.push("canccu-stage--video");
     const name = classes.join(" ");
     if (el.className !== name) el.className = name;
     const layerOf = (part: string): HTMLElement =>
@@ -109,6 +149,7 @@ export class StageLayer {
     // The art stays drawn while it fades out (stage.css), so it only changes, never clears.
     if (art !== null) setImage(layerOf("art"), art.url);
     if (picture !== null) setImage(layerOf("backdrop"), picture.url);
+    setVideo(layerOf("backdrop"), video, picture?.url);
     // One scrim over both: the larger one keeps the text readable on each.
     const scrims = [art?.scrim, picture?.scrim].filter((v) => v !== undefined);
     if (scrims.length > 0)

@@ -93,7 +93,11 @@ interface RevisionRow {
   templates: unknown[];
 }
 
-function fromRevision(row: RevisionRow, embeds: EmbedRef[], picture?: string): ResolvedTheme {
+function fromRevision(
+  row: RevisionRow,
+  embeds: EmbedRef[],
+  own: { image?: string | undefined; video?: string | undefined } = {},
+): ResolvedTheme {
   return {
     revision: row.revision,
     published_at: row.published_at.toISOString(),
@@ -118,11 +122,10 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[], picture?: string): R
     layouts: row.manifest.layouts ?? [],
     templates: row.templates,
     embeds,
-    backdrop: backdropView(
-      row.manifest,
-      row.tokens.colors,
-      picture === undefined ? undefined : SERVED + picture,
-    ),
+    backdrop: backdropView(row.manifest, row.tokens.colors, {
+      image: own.image === undefined ? undefined : SERVED + own.image,
+      video: own.video === undefined ? undefined : SERVED + own.video,
+    }),
   };
 }
 
@@ -144,19 +147,19 @@ export async function resolvedRevision(
   const row = rows[0] as RevisionRow | undefined;
   if (row === undefined) return undefined;
   const base = `${SANDBOX}${row.revision}/`;
-  const path = backdropImage(row.manifest);
-  const picture =
-    path === undefined
-      ? undefined
-      : (
-          (
-            await client.query(
-              `SELECT file FROM theming_package_files WHERE owner = $1 AND path = $2 AND file IS NOT NULL`,
-              [`r:${row.revision}`, path],
-            )
-          ).rows[0] as { file: string } | undefined
-        )?.file;
-  return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base), picture);
+  const fileAt = async (path: string | undefined): Promise<string | undefined> => {
+    if (path === undefined) return undefined;
+    const { rows } = await client.query(
+      `SELECT file FROM theming_package_files WHERE owner = $1 AND path = $2 AND file IS NOT NULL`,
+      [`r:${row.revision}`, path],
+    );
+    return (rows[0] as { file: string } | undefined)?.file;
+  };
+  const own = {
+    image: await fileAt(backdropImage(row.manifest)),
+    video: await fileAt(backdropImage(row.manifest, "video")),
+  };
+  return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base), own);
 }
 
 /**

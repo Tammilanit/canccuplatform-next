@@ -4,6 +4,7 @@
  * a video backdrop only over its picture, which is its poster.
  */
 import { describe, expect, it } from "vitest";
+import { defaultManifest } from "../src/drafts.js";
 import { schemaErrors } from "../src/schema.js";
 import { checkUpload } from "../src/uploads.js";
 import { draftFiles, png } from "./drafting.js";
@@ -42,9 +43,7 @@ describe("a video upload", () => {
 
   it("needs the picture as the video's poster", () => {
     const manifest = (backdrop: Record<string, unknown>) => ({
-      name: "Video",
-      platform: ">=0.1",
-      mode: "simple",
+      ...defaultManifest(),
       brand: { primary: "#3ddcff", accent: "#b98cff", scheme: "dark", backdrop },
     });
     expect(schemaErrors(manifest({ video: "videos/loop.mp4" })).length).toBeGreaterThan(0);

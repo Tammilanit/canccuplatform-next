@@ -102,14 +102,14 @@ describe("readPackage", () => {
       expect(await refused(files(301))).toMatch(/300 files/);
     });
 
-    it("refuses more than 20 MB unpacked (a bomb by size)", async () => {
-      // Stored, not deflated: a ratio of 1:1, so only the size can refuse it.
+    it("takes 40 MB unpacked and refuses more (a bomb by size)", async () => {
+      // Stored, not deflated: a ratio of 1:1, so only the size can refuse it. 40 MB leaves room
+      // for a video of 20 MB beside the rest (plan issue-784 D19).
       const chunk = randomBytes(5 * MB);
-      const zip = rawZip([
-        ...[0, 1, 2, 3].map((i) => ({ name: `images/${i}.png`, data: chunk })),
-        { name: "images/4.png", data: randomBytes(1024) },
-      ]);
-      expect(await refused(zip)).toMatch(/20 MB/);
+      const eight = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ name: `images/${i}.png`, data: chunk }));
+      expect((await readPackage(rawZip(eight))).ok).toBe(true);
+      const zip = rawZip([...eight, { name: "images/8.png", data: randomBytes(1024) }]);
+      expect(await refused(zip)).toMatch(/40 MB/);
     });
 
     it("refuses an unpacking ratio over 100:1 (a bomb by ratio), before inflating it", async () => {

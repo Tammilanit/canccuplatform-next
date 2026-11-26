@@ -162,6 +162,8 @@ describe("the theme's own picture (theming.md, The two backgrounds)", () => {
 
     it("stops it when the level drops, and keeps the one playing while it stays", () => {
       const { root, layer } = fresh();
+      // In the document, as the player's body is: the stage is then kept between ticks.
+      document.body.append(root);
       layer.apply(undefined, "party", T0, withVideo);
       const first = videoOf(root);
       layer.apply(undefined, "lively", T0 + 1000, withVideo);
@@ -169,6 +171,7 @@ describe("the theme's own picture (theming.md, The two backgrounds)", () => {
       layer.apply(undefined, "calm", T0 + 2000, withVideo);
       expect(videoOf(root)).toBeNull();
       expect(stageOf(root).classList.contains("canccu-stage--video")).toBe(false);
+      root.remove();
     });
 
     it("plays none from anywhere else, or without its picture", () => {
