@@ -232,10 +232,11 @@
     inset: 0 0 0 auto;
     width: 46%;
     z-index: 0;
-    opacity: 0.85;
+    /* A picture behind the words, never as loud as the title it may sit under. */
+    opacity: 0.45;
     background: var(--canccu-ann-ink);
     mask:
-      var(--canccu-ann-picture) right 12% center / 70% auto no-repeat,
+      var(--canccu-ann-picture) right 10% center / 60% auto no-repeat,
       linear-gradient(90deg, transparent, #000 40%);
     mask-composite: intersect;
   }
