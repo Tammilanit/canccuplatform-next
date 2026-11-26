@@ -16,6 +16,7 @@ import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
+import { storiesOff } from "./stories.mjs";
 import { withFoodClaim } from "./food.mjs";
 import {
   CLAIM_OF,
@@ -69,7 +70,8 @@ import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announc
 export { THEMES, planned } from "./screen-views.mjs";
 
 export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
-  await seedScreens(demo);
+  // Before the run of show, whose items start Moments' stories (stories.mjs says why).
+  const storiesBack = await storiesOff(demo);
   const devices = [];
   const pair = async (name, zone) => {
     const device = await demo.pair(name, zone);
@@ -96,6 +98,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
 
   let threw = false;
   try {
+    await seedScreens(demo);
     const main = await pair("Hall left", "main");
     const spare = await pair("Café TV", undefined);
     const entrance = await pair("Entrance", "entrance");
@@ -380,9 +383,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     threw = true;
     throw err;
   } finally {
-    await cleanUp(
-      devices.map((device) => () => demo.revoke(device.id)),
-      threw,
-    );
+    await cleanUp([...devices.map((device) => () => demo.revoke(device.id)), storiesBack], threw);
   }
 }
