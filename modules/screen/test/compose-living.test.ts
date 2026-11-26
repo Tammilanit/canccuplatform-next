@@ -297,3 +297,37 @@ describe("the slideshow's turn (D6a)", () => {
     expect(dwellOf(null)).toBe(45);
   });
 });
+
+describe("one place for the rotation's items (D7, addition of 2026-11-26)", () => {
+  const played = (f: ZoneFacts, zone: Partial<BuildInput["zone"]>, id = "hero") => {
+    const region = buildRegions({
+      ...input(),
+      zone: { ...input().zone, ...zone },
+      facts: f,
+    }).regions.find((r) => r.id === id);
+    return region?.order.map((i) => region.widgets[i]?.widget);
+  };
+  const counted = facts({
+    agenda: { current: [], next: [item("a1", "Semi-finals", "2026-03-14T19:30:00Z", null)] },
+    stats: { checked_in: 164 },
+  });
+
+  it("skips the hero's numbers while the Dashboard's Right now box shows them as its only item", () => {
+    expect(played(counted, { layoutId: "dashboard" }, "right_now")).toEqual(["stats"]);
+    expect(played(counted, { layoutId: "dashboard" })).toEqual(["countdown"]);
+  });
+
+  it("keeps the hero's numbers where no other box shows only them", () => {
+    expect(played(counted, { layoutId: "pulse" })).toEqual(["countdown", "stats"]);
+  });
+
+  it("keeps the hero's food item when a box shows only food: the food box steps aside", () => {
+    const f = facts({ food: { orders: [order()], names: false } });
+    const zone = {
+      layoutId: "pulse",
+      regions: { venue_rail: { widgets: [{ widget: "food_status" }] } },
+    };
+    expect(played(f, zone, "venue_rail")).toEqual(["food_status"]);
+    expect(played(f, zone)).toContain("food_status");
+  });
+});

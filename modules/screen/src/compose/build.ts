@@ -303,6 +303,25 @@ function roomFor(
   return filledByHero(kept, waiting, input);
 }
 
+/**
+ * The types with one event-wide source that the player keeps in one place (player/src/turns.ts,
+ * `ONE_SOURCE`), less food: the hero's food item wins and the food box steps aside (#787 D7).
+ */
+const ONE_PLACE = new Set(["agenda_timeline", "leaderboard", "now_playing", "stats"]);
+
+/**
+ * The types another box plays as its only item (#787 D7, addition of 2026-11-26): the hero skips
+ * them, as a box with nothing else to show would otherwise give its turn to its idle logo (the
+ * Dashboard's Right now box during the hero's numbers).
+ */
+function soleElsewhere(regions: readonly RegionView[]): string[] {
+  const types = regions
+    .filter((r) => r.role !== "hero")
+    .map((r) => new Set(r.order.map((i) => r.widgets[i]?.widget)))
+    .flatMap((t) => (t.size === 1 ? [...t] : []));
+  return [...new Set(types)].filter((t): t is string => t !== undefined && ONE_PLACE.has(t));
+}
+
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
   const layout = chooseLayout({
     windowLayoutId: input.windowLayoutId,
@@ -323,7 +342,14 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     input,
   );
   const placed = growth ?? handedOver(swapped, waiting);
-  const regions = placed.flatMap((r) => regionsOf(r, layout, input));
+  const built = placed.flatMap((r) => regionsOf(r, layout, input));
+  const sole = soleElsewhere(built);
+  const regions =
+    sole.length === 0
+      ? built
+      : placed.flatMap((r) =>
+          regionsOf(r, layout, { ...input, heroOff: [...(input.heroOff ?? []), ...sole] }),
+        );
   return {
     layout,
     regions: [
