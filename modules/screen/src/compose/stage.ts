@@ -55,7 +55,9 @@ function hotGames(views: Views): { region_id: string; view: Record<string, unkno
         if (content !== null) out.push({ region_id: r.id, view: content });
       }
       for (const w of r.widgets) {
-        if (w.widget === "hot_game" && !w.view.empty) out.push({ region_id: r.id, view: w.view });
+        // One the organiser switched off (#787 D3) is in no turn, so it asks for no tint either.
+        if (w.widget === "hot_game" && !w.view.empty && w.enabled !== false)
+          out.push({ region_id: r.id, view: w.view });
       }
     }
   }

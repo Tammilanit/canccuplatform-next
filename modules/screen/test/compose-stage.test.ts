@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RegionView } from "../src/compose/build.js";
 import type { Claim } from "../src/compose/claims.js";
+import { isShowcase } from "../src/compose/showcase.js";
 import { TINT_MS, kindOf, stageOf, tintAsked } from "../src/compose/stage.js";
 import { countdownFields } from "../src/compose/widgets.js";
 import type { AgendaItem, ZoneFacts } from "../src/compose/widgets.js";
@@ -73,6 +74,26 @@ describe("the stage", () => {
     expect(tintAsked(v, NOW - 10_000 + TINT_MS)).toBeNull();
     // A surge stamped after now asks nothing yet.
     expect(tintAsked(v, NOW - 20_000)).toBeNull();
+  });
+
+  // Review note on #812: an item the organiser switched off (#787 D3) asks for nothing.
+  it("takes no tint from a hot game switched off in its list", () => {
+    const off = (enabled?: false) => ({
+      widget: "hot_game",
+      template: null,
+      embed: null,
+      dwell_seconds: 15,
+      stale_after_seconds: null,
+      view: { qr: null, stale: false, empty: false, ...hot("g_1", NOW - 10_000) },
+      ...(enabled === false ? { enabled } : {}),
+    });
+    const on = views([region("hero", { widgets: [off()] })]);
+    expect(tintAsked(on, NOW)).not.toBeNull();
+    expect(tintAsked(views([region("hero", { widgets: [off(false)] })]), NOW)).toBeNull();
+    expect(isShowcase([{ ...region("hero", { widgets: [off(false)] }), role: "hero" }])).toBe(
+      false,
+    );
+    expect(isShowcase([{ ...region("hero", { widgets: [off()] }), role: "hero" }])).toBe(true);
   });
 
   it("counts a since a few seconds ahead of Screen's clock as now", () => {

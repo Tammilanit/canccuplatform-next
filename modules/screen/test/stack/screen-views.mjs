@@ -2,7 +2,7 @@
 // name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
 import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs";
-import { STAGE_VIEWS } from "./handed.mjs";
+import { STAGE_VIEWS } from "./handed-stage.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];

@@ -19,13 +19,9 @@ import { LIVING_STRIPS, LIVING_THEMES, livingStrip, serveSlide, withLiving } fro
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import { storiesOff } from "./stories.mjs";
 import { withFoodClaim } from "./food.mjs";
+import { MOTION_VIEWS, STAGE_VIEWS, withHeroArt, withMotion, withStage } from "./handed-stage.mjs";
 import {
   CLAIM_OF,
-  MOTION_VIEWS,
-  STAGE_VIEWS,
-  withHeroArt,
-  withMotion,
-  withStage,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
