@@ -31,6 +31,9 @@ const port = base.port ? `:${base.port}` : "";
 const DESK = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
 const NO_ROLE = "canccu_session=demo-no-role"; // demo-screenshots-front.sql
+// Holds the tenants rights the Event page edits with (deploy/compose.ci.yml), so its sections
+// are forms; demo-ci reads them only.
+const EVENT_ADMIN = "canccu_session=demo-event-admin";
 const ARCHIVED = "demo-archived.localhost";
 const SOON = "demo-soon.localhost";
 const ELSEWHERE = "demo-elsewhere.localhost";
@@ -260,6 +263,13 @@ const SHOTS = [
       ],
     ].map(([name, ...rest]) => [`${name}${phone}`, ...rest]);
   }),
+  // The Event page as an event admin sees it: Basics, Venue and Modules open for editing (#782).
+  ...[DESK, PHONE].map((viewport) => [
+    `admin-event-edit${viewport === PHONE ? "-phone" : ""}`,
+    "/admin/event",
+    viewport,
+    { cookie: EVENT_ADMIN, text: "Type to search" },
+  ]),
   [
     "privacy-phone",
     "/notify/privacy",

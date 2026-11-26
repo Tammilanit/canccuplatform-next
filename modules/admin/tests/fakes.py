@@ -28,6 +28,7 @@ class FakeTenants:
             "short_name": "Demo",
             "description": "A weekend of games.",
             "contact_user_id": None,
+            "series_id": None,
             "time_zone": "Europe/Helsinki",
             "starts_at": "2026-12-04T15:00:00Z",
             "ends_at": "2026-12-06T12:00:00Z",
@@ -58,7 +59,7 @@ class FakeTenants:
         body: dict[str, object] = {"id": "demo", "status": "live"} | {
             k: v
             for k, v in self.event.items()
-            if k not in ("contact_user_id", "presence_delete_at")
+            if k not in ("contact_user_id", "presence_delete_at", "series_id")
         }
         if self.full:
             body |= {
@@ -67,6 +68,7 @@ class FakeTenants:
                 "screen_access": self.screen_access,
                 "contact_user_id": self.event["contact_user_id"],
                 "presence_delete_at": self.event["presence_delete_at"],
+                "series_id": self.event["series_id"],
             }
         return body
 
