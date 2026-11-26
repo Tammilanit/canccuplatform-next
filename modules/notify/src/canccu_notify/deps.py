@@ -80,6 +80,13 @@ class Hub(Protocol):
     async def agenda_kinds(self, host: str, cookie: str | None) -> list[dict[str, Any]] | None: ...
 
 
+class Crew(Protocol):
+    """Admin's `GET /internal/admin/people/with-role`: the role holders' user ids
+    (crew_test.CrewReader)."""
+
+    async def role_holders(self, tenant_id: str) -> list[str]: ...
+
+
 def utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -99,6 +106,8 @@ class Deps:
     users: Users
     hub: Hub | None = None
     """None leaves the check-in's done page without its Wi-Fi and "Now" rows."""
+    crew: Crew | None = None
+    """Admin's list of role holders, for the crew test (crew_test.py); None answers 503."""
     now: Callable[[], datetime] = field(default=utc_now)
     check_in_keys: dict[str, bytes | None] = field(default_factory=dict)
     """Each event's opened check-in key, by tenant id: a key never changes once made, only its

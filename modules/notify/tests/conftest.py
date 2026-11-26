@@ -155,6 +155,22 @@ class FakeUsers:
 
 
 @dataclass
+class FakeCrew:
+    """Admin's `GET /internal/admin/people/with-role`: the role holders' user ids; `down` never
+    answers."""
+
+    user_ids: list[str] = field(default_factory=lambda: ["u_crew", "u_org"])
+    down: bool = False
+    asked: list[str] = field(default_factory=list)
+
+    async def role_holders(self, tenant_id: str) -> list[str]:
+        self.asked.append(tenant_id)
+        if self.down:
+            raise httpx.ConnectError("admin unreachable")
+        return list(self.user_ids)
+
+
+@dataclass
 class FakeHub:
     """What the check-in's done page and the front door read as the person: the venue's Wi-Fi,
     what is on now and the live announcements (`GET /api/tenants/current/venue-info`,
@@ -215,6 +231,7 @@ class Env:
     hub: FakeHub = field(default_factory=FakeHub)
     events: dict[str, dict[str, Any]] = field(default_factory=dict)
     """What `GET /api/tenants/current` adds for an event's poster, by hostname."""
+    crew: FakeCrew = field(default_factory=FakeCrew)
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -316,7 +333,7 @@ async def env() -> AsyncIterator[Env]:
     bus = Bus(store, "notify")
     vapid = Vapid(load_private_key(keygen()))
     fake = FakePushService(vapid.public_key)
-    agenda, users, hub = FakeAgenda(), FakeUsers(), FakeHub()
+    agenda, users, hub, crew = FakeAgenda(), FakeUsers(), FakeHub(), FakeCrew()
     pusher = Pusher(vapid, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)))
     d = Deps(
         db=db,
@@ -331,6 +348,7 @@ async def env() -> AsyncIterator[Env]:
         agenda=agenda,
         users=users,
         hub=hub,
+        crew=crew,
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
@@ -349,6 +367,7 @@ async def env() -> AsyncIterator[Env]:
         users,
         hub,
         events,
+        crew,
     )
     await db.close()
 

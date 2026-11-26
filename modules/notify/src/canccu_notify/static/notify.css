@@ -182,3 +182,9 @@
   }
   .canccu-notify-unit { align-self: center; padding: 0 0.25rem; }
 }
+/* The health box (#782, sheet 01): one row per check, its chip beside its name. */
+@layer canccu-module {
+  .canccu-notify-health__rows { list-style: none; margin: 0.5rem 0; padding: 0; display: grid; gap: 0.5rem; }
+  .canccu-notify-health__row p { margin: 0.125rem 0 0; }
+  .canccu-notify-health__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+}

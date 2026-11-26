@@ -22,8 +22,10 @@ from starlette.routing import Route
 
 from .access import TOPICS_WRITE, tenant_of
 from .config import configured, settings_ready, write_config
+from .crew_test import tested_words
 from .deps import deps
 from .examples import example_for
+from .health_box import box_for
 from .registry import bad, not_found
 from .topic_advanced import origin, shown_channels, shown_values
 from .web import (
@@ -47,6 +49,15 @@ NOTICES = {
     "unchanged": "Nothing to save: no value changed.",
     "removed": "Removed, with people's choices for it.",
 }
+CREW_TEST = (
+    f'<form method=post action="{TOPICS}/crew-test" class="canccu-notify-actions">'
+    '<button class="canccu-button canccu-button--secondary">Send a test to the crew</button>'
+    + info_tip(
+        "Goes to everyone with an organiser or crew role, never to attendees: to tell everyone,"
+        " announce it."
+    )
+    + "</form>"
+)
 SWITCH_TIP = (
     "On: people can choose this kind in their hub. Off: nobody at this event gets it, and"
     " people's own choices are kept for when it is on again."
@@ -137,6 +148,10 @@ async def topics_page(request: Request) -> Response:
     top = "".join(notice(text) for name, text in NOTICES.items() if request.query_params.get(name))
     if writable:
         top += _switched(every.get(request.query_params.get("switched") or ""))
+        tested = tested_words(request.query_params.get("tested") or "")
+        if tested is not None:
+            top += ui_notice(*tested)
+        top += await box_for(request, CREW_TEST)
     if archived:
         top += notice("The event is archived: its kinds can be read, not changed.")
     elif not ready:
