@@ -193,6 +193,7 @@ describe("the coming hours (`agenda_timeline`)", () => {
       starts_text: "19:30",
       col: 10,
       cols: 9,
+      row: 2,
     });
     expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 3 });
     expect([view.from_text, view.to_text]).toEqual(["18:00", "21:00"]);
@@ -207,6 +208,29 @@ describe("the coming hours (`agenda_timeline`)", () => {
     expect(view.marks).toEqual([
       { label: "Pizza order closes", at: "2026-03-14T18:30:00Z", at_text: "18:30", col: 4 },
     ]);
+  });
+
+  it("draws the first five items by start, so a small box never cuts a row's text", () => {
+    const many = Array.from({ length: 8 }, (_, i) =>
+      item(
+        `m${String(i)}`,
+        `Talk ${String(i)}`,
+        `2026-03-14T${String(18 + (i % 3))}:${i < 3 ? "20" : "40"}:00Z`,
+        "2026-03-14T20:50:00Z",
+      ),
+    );
+    const names = (
+      viewOf("agenda_timeline", {}, facts({ timeline: many, zoneKey: "main" })).items as {
+        name: string;
+      }[]
+    ).map((i) => i.name);
+    expect(names).toHaveLength(5);
+    expect(names).toEqual(
+      [...many]
+        .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+        .slice(0, 5)
+        .map((i) => i.title),
+    );
   });
 
   it("is empty when nothing runs or starts in the coming hours", () => {

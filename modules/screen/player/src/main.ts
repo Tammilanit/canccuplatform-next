@@ -16,6 +16,7 @@ import "./cues.css";
 import "./layouts.css";
 import "./dashboard.css";
 import "./wall.css";
+import "./hero-fill.css";
 import "./motion.css";
 import "./stage.css";
 import "./scene.css";

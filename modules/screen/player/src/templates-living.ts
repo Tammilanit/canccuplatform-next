@@ -18,6 +18,8 @@ const SPAN = el(
   "div",
   null,
   [
+    // The bar's own box, empty: a tall bar then counts as drawn in the hero's fill check.
+    el("i", "fill", []),
     el("strong", "name", [f("name")]),
     el("span", "starts", [f("starts_text")]),
     sec("place", el("span", "where", [f("place")])),
@@ -28,6 +30,8 @@ const SPAN = el(
       f("col"),
       t(" canccu-widget__span--cols-"),
       f("cols"),
+      t(" canccu-widget__span--row-"),
+      f("row"),
       t(" canccu-widget__span--"),
       f("kind"),
     ],

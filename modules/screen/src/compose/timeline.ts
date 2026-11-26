@@ -13,6 +13,9 @@ const SPAN_MS = 3 * 3600_000;
 const COLUMN_MS = 10 * 60_000;
 const COLUMNS = SPAN_MS / COLUMN_MS;
 
+/** The most items the line draws: the first by start. */
+export const MAX_ITEMS = 5;
+
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
 /** The 1-based column a time falls in on the line from `from`. */
 const columnOf = (atMs: number, from: number): number =>
@@ -38,7 +41,9 @@ export function timelineFields(
         Date.parse(i.starts_at) < to &&
         Date.parse(i.ends_at ?? i.starts_at) >= o.nowMs,
     )
-    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+    // Rows share the hero's height (timeline.css): more than this and a small box cuts their text.
+    .slice(0, MAX_ITEMS);
   if (shown.length === 0) return null;
   const marks = o.orders
     .filter((x) => x.state === "open" && x.closes_at !== null)
@@ -59,7 +64,7 @@ export function timelineFields(
     now: new Date(o.nowMs).toISOString(),
     from_text: o.time(new Date(from).toISOString()),
     to_text: o.time(new Date(to).toISOString()),
-    items: shown.map((i) => {
+    items: shown.map((i, n) => {
       const start = Date.parse(i.starts_at);
       const col = columnOf(start, from);
       // An item with no end takes one column; one that runs on past the line ends at its edge.
@@ -74,6 +79,8 @@ export function timelineFields(
         starts_text: o.time(i.starts_at),
         col,
         cols: last - col + 1,
+        // Its own row, so a bar that grows past its columns to fit its name covers no other.
+        row: n + 1,
       };
     }),
     marks,

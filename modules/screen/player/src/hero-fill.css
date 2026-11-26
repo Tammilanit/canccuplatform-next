@@ -1,0 +1,44 @@
+/*
+ * The idle rotation's hero items fill their region (#787 D1, the clear-screen check in
+ * test/stack/clear.mjs: no empty band over a quarter of the hero). The coming hours do it in
+ * timeline.css; this is the statistics: one row a number, the rows sharing the box, each number as
+ * large as its row allows. In `canccu-base` like widgets.css, so a theme restyles it.
+ */
+@layer canccu-base {
+  .canccu-region[data-role="hero"] > .canccu-widget--stats {
+    container-type: size;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stats {
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    margin: 0;
+    min-height: 0;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--stats .canccu-widget__stat {
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    text-align: center;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat
+    .canccu-widget__big {
+    font-size: min(calc(16 * var(--canccu-u)), 22cqh);
+    line-height: 1;
+  }
+
+  /* One number alone is the hero: as large as the box holds, as wall.css's lone number is. */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__big {
+    font-size: min(calc(36 * var(--canccu-u)), 46cqh);
+  }
+}
