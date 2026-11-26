@@ -89,6 +89,21 @@
 .canccu-widget--announcement .canccu-widget__title::before {
   content: none;
 }
+/* The nearby content beside a full-screen announcement (#780): its clock and now and next lie in
+   the card's column, not in panels of their own, so they take their content's height. */
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget {
+  container-type: normal;
+  height: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget::before {
+  content: none;
+}
 
 .t-tag {
   font-family: var(--canccu-font-heading);

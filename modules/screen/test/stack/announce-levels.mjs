@@ -164,14 +164,20 @@ export function measureCards() {
       problems.push("a card without its label, title or body");
       continue;
     }
-    const lefts = [kicker, title, body].map((el) => Math.round(el.getBoundingClientRect().left));
+    // A body the alarm's band carries is drawn once, in the band (announce.css): the band's type
+    // then holds the body's floor.
+    const shown = body.getClientRects().length > 0;
+    const line = shown ? body : box.querySelector(".canccu-widget__instruction");
+    const edge = shown ? [kicker, title, body] : [kicker, title];
+    const lefts = edge.map((el) => Math.round(el.getBoundingClientRect().left));
     if (Math.max(...lefts) - Math.min(...lefts) > 2)
       problems.push(`label, title and body start at ${lefts.join(", ")} px, not one left edge`);
     const px = (el) => parseFloat(getComputedStyle(el).fontSize);
     if (px(title) < 0.06 * height - 0.5)
       problems.push(`the title is ${px(title)} px, under 6 % of ${height} px`);
-    if (px(body) < 0.035 * height - 0.5)
-      problems.push(`the body is ${px(body)} px, under 3.5 % of ${height} px`);
+    if (line === null) problems.push("a body neither drawn nor carried by the band");
+    else if (px(line) < 0.035 * height - 0.5)
+      problems.push(`the body is ${px(line)} px, under 3.5 % of ${height} px`);
   }
   return problems;
 }
