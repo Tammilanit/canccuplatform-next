@@ -187,7 +187,7 @@ export class Screen {
     // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
     const full = claimOf(state.regions.find((r) => r.role === "full")?.claim);
     const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
-    if (takeover) this.root.dataset.takeover = "";
+    if (takeover) this.root.dataset.takeover = full.keep_ticker === true ? "ticker" : "";
     else delete this.root.dataset.takeover;
     const drawns = [...this.regions.values()];
     const regions = drawns.map((d) => d.state);

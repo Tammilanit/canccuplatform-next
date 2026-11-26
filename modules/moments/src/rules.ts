@@ -13,6 +13,7 @@ import { lockRunningByKey } from "./store.js";
 import type { Binding } from "./store.js";
 import { loadStories } from "./story/store.js";
 import { rulesOff } from "./story/presets.js";
+import { chainOf } from "./announce/chain.js";
 
 export interface RuleSettings {
   enabled: boolean;
@@ -295,7 +296,9 @@ async function pizzaIsHere(
   }
   if (e.type !== "pizza.order.arrived" || !s.enabled) return;
   const seq = typeof o.seq === "number" ? String(o.seq) : "ready";
-  const body = `Order ${seq} · Collect at ${str(o.pickup) ?? "the pickup point"}`;
+  const pickup = `Collect at ${str(o.pickup) ?? "the pickup point"}`;
+  const body = `Order ${seq} · ${pickup}`;
+  const expires = new Date(now.getTime() + PIZZA_HERE_TTL_SECONDS * 1000);
   await engine.request(
     c,
     {
@@ -304,14 +307,24 @@ async function pizzaIsHere(
       content: {
         title: "Pizza is here",
         body,
-        level: "info",
+        level: "important",
+        placement: "hero",
+        icon: "food",
+        art: { kind: "food", url: null },
         starts_at: now.toISOString(),
+        expires_at: expires.toISOString(),
+        countdown_at: null,
+        // The second beat of a full screen: where to go, apart from the order's number.
+        second_line: pickup,
+        // A path: Screen makes it whole on the event's hostname, which a rule does not know.
+        qr: { url: `/pizza/orders/${id}`, label: "Your order" },
+        updated: false,
         ticker_line: `Pizza is here · ${body}`,
       },
       origin: "rule",
       rule_id: "pizza",
       why: `rule: ${e.type}`,
-      regions: ["hero", "rail", "ticker"],
+      regions: chainOf("important", "hero").regions,
       ttl_seconds: PIZZA_HERE_TTL_SECONDS,
       zones: s.zones,
       source: { module: e.source, event_id: e.id, ref: id },

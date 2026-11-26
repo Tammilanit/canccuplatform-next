@@ -40,7 +40,7 @@ live("the cues and sound API", () => {
     expect(r.statusCode).toBe(200);
     const body = json(r);
     // The legacy's 25 and the storyboards' two (#114).
-    expect((body.cues as Row[]).filter((c) => c.builtin)).toHaveLength(33);
+    expect((body.cues as Row[]).filter((c) => c.builtin)).toHaveLength(34);
     expect((body.categories as Row[]).map((c) => c.name)).toEqual([
       "urgent",
       "result",
