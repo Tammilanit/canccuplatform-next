@@ -199,7 +199,7 @@ describe("a story's countdown and the urgent card", () => {
     expect(none?.view.description).toBeUndefined();
   });
 
-  it("says URGENT on an urgent announcement and Announcement on another, from the crew neither", () => {
+  it("says URGENT on an urgent announcement and its level on another, from the crew neither", () => {
     const card = (level: string, more: Record<string, unknown> = {}) =>
       drawWidget(
         "announcement",
@@ -211,9 +211,7 @@ describe("a story's countdown and the urgent card", () => {
     expect(
       urgent.querySelector(".canccu-widget__level--urgent .canccu-widget__urgent")?.textContent,
     ).toBe("Urgent");
-    expect(card("info").querySelector(".canccu-widget__kicker")?.textContent).toContain(
-      "Announcement",
-    );
+    expect(card("info").querySelector(".canccu-widget__kicker")?.textContent).toContain("Info");
     expect(card("urgent", { from_crew: true }).querySelector(".canccu-widget__urgent")).toBeNull();
   });
 });

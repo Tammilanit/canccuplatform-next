@@ -75,6 +75,36 @@
   background: var(--t-grad);
 }
 
+/* An announcement's card is not a widget's heading: it keeps the platform's sizes, its floors
+   across a hall and its one left edge (#780), in the theme's display face. */
+.canccu-widget--announcement .canccu-widget__title {
+  display: revert-layer;
+  margin: revert-layer;
+  font-family: var(--canccu-font-display);
+  font-size: revert-layer;
+  letter-spacing: revert-layer;
+  text-transform: revert-layer;
+  color: var(--canccu-color-text);
+}
+.canccu-widget--announcement .canccu-widget__title::before {
+  content: none;
+}
+/* The nearby content beside a full-screen announcement (#780): its clock and now and next lie in
+   the card's column, not in panels of their own, so they take their content's height. */
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget {
+  container-type: normal;
+  height: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget::before {
+  content: none;
+}
+
 .t-tag {
   font-family: var(--canccu-font-heading);
   font-size: 1.4rem;

@@ -94,4 +94,52 @@
     border-top: var(--canccu-border-width) solid var(--canccu-color-border);
   }
   .canccu-front-door__crew .canccu-overline { margin: 0; }
+  /* The live announcements by level (#780, sheet 6): an urgent one a full-width banner pinned on
+     top until the crew lifts it, an Important one a large card, an Info one a quiet row; each one
+     block on one left edge, its label, title and line under each other. */
+  .canccu-front-door__urgent {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem;
+    border-radius: var(--canccu-radius);
+    background: var(--canccu-color-status-degraded);
+    color: var(--canccu-color-background);
+  }
+  .canccu-front-door__urgent h2 { margin: 0; font-size: var(--canccu-text-2xl); }
+  .canccu-front-door__urgent p { margin: 0; }
+  .canccu-front-door__urgent .canccu-overline { display: flex; gap: 0.375rem; align-items: center; color: inherit; }
+  .canccu-front-door__announcements { display: grid; gap: 0.5rem; }
+  .canccu-front-door__important {
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 2px solid var(--canccu-color-accent);
+    border-radius: var(--canccu-radius);
+  }
+  .canccu-front-door__important h2 { margin: 0; font-size: var(--canccu-text-xl); }
+  .canccu-front-door__important p { margin: 0; }
+  .canccu-front-door__important .canccu-i { color: var(--canccu-color-accent); }
+  .canccu-front-door__important .canccu-overline { display: flex; gap: 0.375rem; align-items: center; }
+  .canccu-front-door__left { display: grid; gap: 0.25rem; font-size: var(--canccu-text-sm); }
+  .canccu-front-door__left progress {
+    width: 100%;
+    height: 0.375rem;
+    accent-color: var(--canccu-color-accent);
+  }
+  .canccu-front-door__info {
+    display: grid;
+    /* canccu-grid: fixed row — lays out one item's own parts: its icon beside its title and line */
+    grid-template-columns: auto 1fr;
+    column-gap: 0.75rem;
+    align-items: start;
+    padding: 0.75rem 1rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+  }
+  .canccu-front-door__info .canccu-i { margin-top: 0.125rem; grid-row: span 2; }
+  .canccu-front-door__info p { margin: 0; }
+  .canccu-front-door__info .canccu-i { color: var(--canccu-color-primary); }
 }
