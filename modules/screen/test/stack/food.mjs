@@ -195,7 +195,13 @@ export async function roomReady(page, step) {
       .locator(HERO_CARD)
       .waitFor({ timeout: 45_000 })
       .catch(() => undefined);
-  const box = page.locator(".canccu-widget--food_status .canccu-widget__row").first();
+  // Not the ticker's one line: it is drawn all along and would end the wait while the hero
+  // still covers the box.
+  const box = page
+    .locator(
+      '.canccu-region:not([data-role="ticker"]) > .canccu-widget--food_status .canccu-widget__row',
+    )
+    .first();
   // Pizza is here covers the food box while it holds the hero (#787 D7): the box is back when it
   // steps down, after its floor (90 s by default).
   const boxWait = step === "arrived" ? 150_000 : 60_000;
