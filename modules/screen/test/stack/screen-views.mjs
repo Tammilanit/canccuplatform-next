@@ -120,7 +120,9 @@ export function attemptOf(name) {
   if (!m) return name;
   let [, head, view, size] = m;
   if (OVER_PULSE.includes(view)) view = "pulse";
-  const surge = STAGE_VIEWS.find((v) => v.surge && SURGE_FRAMES.some((f) => view === `${v.view}-${f}`));
+  const surge = STAGE_VIEWS.find(
+    (v) => v.surge && SURGE_FRAMES.some((f) => view === `${v.view}-${f}`),
+  );
   if (surge) view = surge.view;
   return `${head}${view}-${size}`;
 }

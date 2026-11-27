@@ -181,7 +181,7 @@ if [ "$mode" != modules ]; then
   load_env
   # Down at the end unless this call keeps it; a kept stack stays up whatever this call does.
   if [ "$keep" = 0 ] || [ "$warm" = 0 ]; then
-    trap '"${C[@]}" down -v --remove-orphans >/dev/null 2>&1; rm -f "$KEPT"' EXIT
+    trap '"${C[@]}" down -v --remove-orphans >/dev/null 2>&1; rm -f "$KEPT" "$OUT/stack.env"' EXIT
   fi
   if ! "${C[@]}" build > "$OUT/shots/build.log" 2>&1; then
     echo "FAIL the module images did not build: see $OUT/shots/build.log"; exit 1
@@ -276,7 +276,7 @@ rm -rf "$OUT" && mkdir -p "$OUT" || exit 2
 write_compose
 (umask 077 && fresh_env > "$OUT/stack.env") || exit 2
 load_env
-trap '"${C[@]}" down -v --remove-orphans >/dev/null 2>&1' EXIT
+trap '"${C[@]}" down -v --remove-orphans >/dev/null 2>&1; rm -f "$OUT/stack.env"' EXIT
 
 if ! "${C[@]}" build > "$OUT/build.log" 2>&1; then
   echo "FAIL the module images did not build: see $OUT/build.log"

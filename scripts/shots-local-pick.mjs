@@ -96,9 +96,12 @@ export function changedShots(paths, list) {
       continue;
     }
     const word = wordOf(path);
-    const hit = screens.filter(({ name }) =>
-      viewWords(name).some((w) => w === word || `${w}s` === word),
-    );
+    // The module's own name is in many of its files' names and says nothing of a view.
+    const hit = ["screen", "screens"].includes(word)
+      ? []
+      : screens.filter(({ name }) =>
+          viewWords(name).some((w) => w === word || `${w}s` === word),
+        );
     if (hit.length === 0) notes.push(`${path}: names no screen shot; it may change any of them`);
     for (const { name } of hit) shots.add(name);
   }

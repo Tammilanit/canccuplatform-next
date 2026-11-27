@@ -223,6 +223,12 @@ test("--changed picks the screen shots a changed file is named for, and says wha
   const generic = run(["modules/screen/player/src/main.ts"]);
   assert.deepEqual(generic.shots, []);
   assert.match(generic.notes.join("\n"), /modules\/screen\/player\/src\/main\.ts/);
+  // The module's own name names no view (`pulse-one-screen` is not what screen-pages.mjs draws).
+  for (const path of ["modules/screen/test/stack/screen-pages.mjs", "modules/screen/test/stack/screens.mjs"]) {
+    const own = run([path]);
+    assert.deepEqual(own.shots, [], path);
+    assert.match(own.notes.join("\n"), /names no screen shot/);
+  }
   // Another module's views are not picked shot by shot.
   const admin = run(["modules/admin/src/canccu_admin/app.py"]);
   assert.deepEqual(admin.shots, []);

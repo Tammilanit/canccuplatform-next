@@ -70,7 +70,7 @@ import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announc
 
 export { THEMES, planned } from "./screen-views.mjs";
 
-export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false, only }) {
+export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check, only }) {
   // Before the run of show, whose items start Moments' stories (stories.mjs says why).
   const storiesBack = await storiesOff(demo);
   const devices = [];
