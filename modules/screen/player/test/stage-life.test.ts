@@ -150,6 +150,19 @@ describe("the living stage", () => {
     );
   });
 
+  it("shows the look at once on the first draw, and fades it from then on", () => {
+    const el = draw();
+    expect(el.style.getPropertyValue("--canccu-look-fade")).toBe("0s");
+    const layer = new StageLayer(document.body);
+    layer.apply({ phase: "peak" }, "lively", T0, { looks: ALL }, life());
+    layer.apply({ phase: "peak" }, "lively", T0 + 1000, { looks: ALL }, life());
+    expect(
+      document
+        .querySelector<HTMLElement>(".canccu-stage")
+        ?.style.getPropertyValue("--canccu-look-fade"),
+    ).toBe("");
+  });
+
   it("holds an own picture still, with no cycle", () => {
     const el = draw({
       backdrop: { image_url: `/theming/a/${"c".repeat(64)}.png`, scrim: 0.7 },

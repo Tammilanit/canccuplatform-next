@@ -219,6 +219,8 @@ function setParticles(layer: HTMLElement, count: number): void {
 
 export class StageLayer {
   private el: HTMLElement | null = null;
+  /** The stage's first draw: a screen that just loaded shows its look at once, not over 40 s. */
+  private fresh = true;
 
   constructor(private readonly body: HTMLElement) {}
 
@@ -230,6 +232,9 @@ export class StageLayer {
     life: StageLife = { zone: "", timeZone: "UTC", hype: null },
   ): void {
     const el = this.element();
+    if (this.fresh) el.style.setProperty("--canccu-look-fade", "0s");
+    else el.style.removeProperty("--canccu-look-fade");
+    this.fresh = false;
     const { classes, art } = stageLook(stage, level, now);
     const picture = pictureOf(backdrop);
     const video = videoOf(backdrop, level);

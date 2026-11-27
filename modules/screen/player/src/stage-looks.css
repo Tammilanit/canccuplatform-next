@@ -10,7 +10,8 @@
   .canccu-stage__glow,
   .canccu-stage__look > * {
     opacity: 0;
-    transition: opacity 40s ease-in-out;
+    /* At once on the stage's first draw (stage.ts), so a screen that just loaded has its look. */
+    transition: opacity var(--canccu-look-fade, 40s) ease-in-out;
   }
 
   .canccu-stage__look > * {

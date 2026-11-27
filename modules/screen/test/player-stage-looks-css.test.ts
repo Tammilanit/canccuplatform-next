@@ -26,7 +26,9 @@ describe("stage-looks.css", () => {
   });
 
   it("fades from one look to the next over 40 s at every level", () => {
-    expect(css).toMatch(/\.canccu-stage__look > \* \{\s*opacity: 0;\s*transition: opacity 40s/);
+    expect(css).toMatch(
+      /\.canccu-stage__look > \* \{\s*opacity: 0;[\s\S]*?transition: opacity var\(--canccu-look-fade, 40s\)/,
+    );
   });
 });
 
