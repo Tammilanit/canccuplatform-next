@@ -19,6 +19,7 @@ from canccu_kit import (
     Event,
     Health,
     IpMode,
+    Outbox,
     RightsChecker,
     SecretBox,
     ServiceIdentity,
@@ -31,21 +32,22 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import store
+from . import lifecycle, store
+from .access import SeriesReader, TenantsAudit, UsersReader
 from .app import create_app
 from .checks import discord_checks
 from .client import DiscordClient
-from .config import DiscordConfig, discord_config
+from .config import DiscordConfig, Hosts, discord_config
 from .db import Db
 from .deps import Deps
+from .discord_api import DiscordApi
 from .lease import ValkeyKeys
 from .pool import Pool
+from .router import INTENTS, Directory, Router
 from .status import ClientEvents, StatusBoard
 from .transport import connect_gateway
 
 log = logging.getLogger("canccu_bot.main")
-
-INTENTS = 1  # GUILDS. The feeds' intents and their flags come with the guild binding (link 2).
 
 
 def settings() -> tuple[Any, DiscordConfig, ServiceIdentity, SecretBox]:
@@ -77,24 +79,50 @@ async def serve() -> None:
     keys = ValkeyKeys.from_url(config.valkey_url)
     board = StatusBoard(keys)
     rights = RightsChecker(AdminClient(config.admin_url))
-    own_hosts = ("CANCCU_SIGNIN_HOSTNAME", "CANCCU_SUPERADMIN_HOSTNAME")
+    hosts = Hosts(
+        signin=os.environ.get("CANCCU_SIGNIN_HOSTNAME") or None,
+        superadmin=os.environ.get("CANCCU_SUPERADMIN_HOSTNAME") or None,
+        public_url=os.environ.get("CANCCU_PUBLIC_URL") or None,
+    )
     ip_mode = config.version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
+    tenants_url = os.environ["CANCCU_TENANTS_URL"]
     resolver = TenantResolver(
-        os.environ["CANCCU_TENANTS_URL"],
-        platform_hosts=[os.environ[n] for n in own_hosts if os.environ.get(n)],
+        tenants_url,
+        platform_hosts=[h for h in (hosts.signin, hosts.superadmin) if h],
         ip_mode=IpMode(config.version) if ip_mode else None,
         service=identity,
     )
+    d = Deps(
+        db=db,
+        rights=rights,
+        board=board,
+        shared=discord.shared,
+        secrets=box,
+        discord=DiscordApi(httpx.AsyncClient(timeout=15.0), discord.api_url),
+        outbox=Outbox(bus, db),
+        keys=keys,
+        tenants=resolver,
+        users=UsersReader(tenants_url, identity),
+        audit=TenantsAudit(tenants_url, identity),
+        hosts=hosts,
+        series=SeriesReader(tenants_url),
+    )
+    directory = Directory(d)
 
     async def on_admin(event: Event) -> None:
         await rights.handle_event(event)
 
-    async def on_tenants(event: Event) -> None:
+    async def on_platform(event: Event) -> None:
+        resolver.handle_event(event)
+        await lifecycle.on_platform(d, event)
+
+    async def on_tenant(event: Event) -> None:
         resolver.handle_event(event)  # a status change (archived) reaches the next request
+        await lifecycle.on_tenant(d, directory, event)
 
     bus.subscribe(["admin"], on_admin)
-    bus.subscribe(["tenants"], on_tenants)
-    bus.subscribe_tenants(["tenants"], on_tenants)
+    bus.subscribe(["tenants"], on_platform)
+    bus.subscribe_tenants(["tenants"], on_tenant)
 
     events = ClientEvents(bus, lambda app_id: store.tenants_served(db, app_id))
     reports: set[asyncio.Task[None]] = set()
@@ -111,12 +139,11 @@ async def serve() -> None:
         reports.add(task)
         task.add_done_callback(reports.discard)
 
-    async def on_dispatch(event: str, data: dict[str, Any]) -> None:
-        # Nothing is stored yet: routing by guild to its event comes with the binding (link 2).
-        return None
-
     async def open_client(application_id: str, token: str) -> DiscordClient:
-        return DiscordClient(
+        # No feed has a handler yet: the presence, members, voice and message feeds are routed
+        # and gated by their flags here, and stored by the links that read them.
+        router = Router(d, application_id, directory)
+        client = DiscordClient(
             application_id,
             token,
             http=httpx.AsyncClient(timeout=15.0),
@@ -124,8 +151,11 @@ async def serve() -> None:
             connector=connect_gateway,
             intents=INTENTS,
             on_status=on_status,
-            on_dispatch=on_dispatch,
+            on_dispatch=router.dispatch,
+            on_stop=router.close,
         )
+        router.rest = client.rest
+        return client
 
     async def wanted() -> dict[str, str]:
         tokens = await store.own_applications(db, box)
@@ -141,6 +171,7 @@ async def serve() -> None:
         open_client=open_client,
     )
     running = asyncio.create_task(pool.run())
+    sending = asyncio.create_task(d.outbox.run())  # what a write's own flush left
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -153,7 +184,6 @@ async def serve() -> None:
         config.version,
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams), **checks},
     )
-    d = Deps(db=db, rights=rights, board=board, shared=discord.shared, secrets=box)
     app = create_app(d, health, resolver)
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")
     server = uvicorn.Server(
@@ -171,6 +201,7 @@ async def serve() -> None:
     finally:
         await pool.close()  # hands the leases over at once instead of after 30 s
         running.cancel()
+        sending.cancel()
         await events.close()
         await keys.close()
 

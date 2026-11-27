@@ -8,6 +8,7 @@ from typing import Any
 
 from canccu_kit import SecretBox, SecretUndecryptable
 
+from .config import SharedApp
 from .db import Db
 
 log = logging.getLogger("canccu_bot.store")
@@ -15,6 +16,10 @@ log = logging.getLogger("canccu_bot.store")
 
 def token_aad(tenant_id: str, application_id: str) -> str:
     return f"bot:token:{tenant_id}:{application_id}"
+
+
+def secret_aad(tenant_id: str, application_id: str) -> str:
+    return f"bot:secret:{tenant_id}:{application_id}"
 
 
 async def connection(conn: Any) -> Any:
@@ -73,3 +78,22 @@ async def tenants_served(db: Db, application_id: str) -> list[str]:
             application_id,
         )
     return [r["tenant_id"] for r in rows]
+
+
+async def bot_token(
+    shared: SharedApp | None, box: SecretBox, conn: Any, tenant: str, app_id: str
+) -> str | None:
+    """The token of the application serving a guild, read in the tenant's transaction: the
+    shared one from the environment, an own one opened from its row."""
+    if shared is not None and app_id == shared.application_id:
+        return shared.token
+    sealed = await conn.fetchval(
+        "SELECT bot_token FROM bot_connections WHERE mode = 'own' AND application_id = $1", app_id
+    )
+    if sealed is None:
+        return None
+    try:
+        return box.open_text(sealed, token_aad(tenant, app_id))
+    except SecretUndecryptable:
+        log.error("the bot token of application %s does not open", app_id)
+        return None

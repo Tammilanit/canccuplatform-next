@@ -57,3 +57,10 @@ async def test_a_status_is_kept_for_its_time(keys: ValkeyKeys) -> None:
     assert await keys.get(key) == '{"status": "ready"}'
     await asyncio.sleep(0.1)
     assert await keys.get(key) is None
+
+
+async def test_a_bind_state_is_taken_once_by_racing_callbacks(keys: ValkeyKeys) -> None:
+    key = f"bot:bind:test-{uuid.uuid4()}"
+    await keys.put(key, '{"tenant": "ev-a"}', 30_000)
+    taken = await asyncio.gather(*(keys.take(key) for _ in range(5)))
+    assert sorted(taken, key=str) == [None, None, None, None, '{"tenant": "ev-a"}']

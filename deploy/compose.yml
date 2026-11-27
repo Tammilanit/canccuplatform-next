@@ -451,6 +451,8 @@ services:
       CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
       CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
       CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
+      # Where Discord sends a bind back without a sign-in host: admin's public origin (bot README).
+      CANCCU_PUBLIC_URL: ${CANCCU_PUBLIC_URL:-}
       # Only stack containers reach this one; the edge Caddy (#51) narrows it to Caddy alone.
       CANCCU_TRUSTED_PROXIES: "*"
     depends_on:

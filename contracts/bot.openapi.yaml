@@ -128,7 +128,9 @@ paths:
         `bot`, `applications.commands`, `identify` and `guilds`, the redirect URI on the central sign-in host and a
         single-use `state` valid for 10 minutes, kept server-side with the event, the caller and the application.
         409 `guild_bound` (the event already has a guild), `connection_incomplete` (an own application without
-        both credentials), `event_archived`.
+        both credentials), `event_archived`. 503 `discord_not_configured` for an event on the shared bot when the
+        platform runs none, or when the platform has no address for Discord to come back to (no sign-in host
+        and no public URL).
       requestBody:
         required: false
         content:
@@ -150,6 +152,12 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          description: "`discord_not_configured`: no shared bot for an event on it, or no callback address."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
   /api/bot/install/callback:
     get:
       tags: [guild]
