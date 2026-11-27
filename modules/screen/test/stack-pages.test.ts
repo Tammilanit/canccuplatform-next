@@ -80,8 +80,8 @@ describe("the screen shots' pages", () => {
       fail: () => undefined,
       only: new Set(["a"]),
     });
-    await attempt("a", async () => void ran.push("a"));
-    await attempt("b", async () => void ran.push("b"));
+    await attempt("a", () => Promise.resolve(void ran.push("a")));
+    await attempt("b", () => Promise.resolve(void ran.push("b")));
     expect(ran).toEqual(["a"]);
   });
 
