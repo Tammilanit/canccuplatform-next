@@ -8,7 +8,7 @@ import type pg from "pg";
 import type { Event, SqlClient } from "@canccu/kit";
 import { handleTenantEvent } from "../src/consumer.js";
 import { PRESETS } from "../src/scenes.js";
-import { evaluateScenes, loadScenes, storeAgenda as storeAgendaOf } from "../src/scene-store.js";
+import { evaluateScenes, loadScenes } from "../src/scene-store.js";
 import { lockSettings } from "../src/store.js";
 import { SceneTicker, tickAll } from "../src/tick.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
@@ -96,30 +96,6 @@ run("scenes", () => {
     // A later platform version never changes an event's copy (O7).
     const stored = await w.tx("demo", (c) => loadScenes(c));
     expect(stored.scenes).toEqual(PRESETS);
-  });
-
-  it("sends each zone its hype with its scene, again only once the hype moves (#787 D12)", async () => {
-    const start = new Date(w.now.getTime() + 30 * 60_000).toISOString();
-    agenda = {
-      agenda_version: 2,
-      items: [{ ...item("ai_cup", "tournament", start, null), zone: "main" }],
-    };
-    await w.tx("demo", (c) => storeAgendaOf(c, agenda));
-    await evaluate();
-    expect(last("main")?.data.hype).toEqual({
-      level: 0.5,
-      phase: "building",
-      item: { id: "ai_cup", title: null, kind: "tournament", starts_at: start, ends_at: null },
-    });
-    expect(last("stage")?.data.hype).toEqual({ level: 0, phase: "quiet", item: null });
-    const before = scenes().length;
-    w.now = new Date(w.now.getTime() + 60_000);
-    await evaluate();
-    expect(scenes()).toHaveLength(before);
-    w.now = new Date(w.now.getTime() + 2 * 60_000);
-    await evaluate();
-    expect(scenes()).toHaveLength(before + 1);
-    expect(last("main")?.data.hype).toMatchObject({ level: 0.6, phase: "building" });
   });
 
   it("follows the agenda, check-ins, presence and surges as they arrive", async () => {

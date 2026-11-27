@@ -7,6 +7,7 @@
  */
 import { MOTION_LEVELS } from "@canccu/ui";
 import type { MotionLevel, MotionStyle } from "@canccu/ui";
+import { ChangeGlow } from "./change-glow.js";
 
 // The level names and the style's choices are the shared vocabulary's (packages/ui, motion.ts).
 export type Level = MotionLevel;
@@ -78,11 +79,15 @@ export class MotionLayer {
    */
   private burst = new Set<number>();
   private partyTurn = 0;
+  private readonly glow = new ChangeGlow();
+  /** The hype's phase (#787 D13), or undefined from a server that sends none: the level alone. */
+  private hype: string | undefined;
 
   constructor(private readonly body: HTMLElement) {}
 
   /** Once per tick, after the regions are drawn and the countdowns filled. */
-  apply(root: ParentNode, level: Level, style: MotionStyle, now: number): void {
+  apply(root: ParentNode, level: Level, style: MotionStyle, now: number, hype?: string): void {
+    this.hype = hype;
     this.mark(level, style);
     // A box still waiting to fade in is not shown yet: its spotlight starts when it is.
     const boxes = [
@@ -90,9 +95,20 @@ export class MotionLayer {
         ".canccu-region > .canccu-widget.canccu-is-active:not(.canccu-slot--in)",
       ),
     ];
-    for (const box of boxes) this.changes(box, level, style);
+    for (const box of boxes) this.changes(box, level, style, now);
     this.spotlightCountdown(boxes, level, style, now);
     this.sweep(level, style, now);
+    this.glow.apply(now);
+  }
+
+  /**
+   * What the hype lets through within the level (#787 D13): numbers roll at any hype, the sweep
+   * while it builds, the pop, tilt and ring burst only while the big item is live.
+   */
+  private allows(effect: "sweep" | "pop"): boolean {
+    const h = this.hype;
+    if (h === undefined) return true;
+    return effect === "sweep" ? h === "building" || h === "live" : h === "live";
   }
 
   private mark(level: Level, style: MotionStyle): void {
@@ -104,13 +120,16 @@ export class MotionLayer {
   }
 
   /** A box drawn again with new data: rolls and flaps on the changed values, a sweep queued. */
-  private changes(box: Element, level: Level, style: MotionStyle): void {
+  private changes(box: Element, level: Level, style: MotionStyle, at: number): void {
     const now = leaves(box);
     const texts = now.map((el) => el.textContent.trim());
     const before = this.seen.get(box);
     this.seen.set(box, texts);
-    if (before === undefined || level === "none" || LIVE.has(typeOf(box))) return;
+    if (before === undefined || LIVE.has(typeOf(box))) return;
     if (before.join("\u0000") === texts.join("\u0000")) return;
+    // The glow shows at none too, as a still outline (#787 D11); nothing else moves there.
+    this.glow.mark(box, at);
+    if (level === "none") return;
     if (before.length === texts.length) {
       for (const [i, text] of texts.entries()) {
         if (text === before[i]) continue;
@@ -119,7 +138,7 @@ export class MotionLayer {
         if (kind !== null && el !== undefined) this.play(el, [kind], FX_MS[kind], style);
       }
     }
-    if (level === "lively" || level === "party") this.pending = box;
+    if ((level === "lively" || level === "party") && this.allows("sweep")) this.pending = box;
   }
 
   /** The queued sweep, once no spotlight holds and the last one started 10 seconds ago. */
@@ -134,7 +153,7 @@ export class MotionLayer {
     this.pending = null;
     this.lastSpotlight = now;
     this.layer(box, "sweep", FX_MS.sweep, style);
-    if (level === "party") {
+    if (level === "party" && this.allows("pop")) {
       // A small move of the whole box after the sweep, pop and tilt in turn.
       const move = this.partyTurn++ % 2 === 0 ? "pop" : "tilt";
       this.play(box, [move], FX_MS.sweep + FX_MS[move], style);
@@ -169,7 +188,9 @@ export class MotionLayer {
       // An in-place redraw (screen.ts) resets the box's classes: then the parts go on again.
       return;
     }
-    const parts = spotlightParts(level, style);
+    const parts = spotlightParts(level, style).filter(
+      (p) => (p !== "pop" && p !== "burst") || this.allows("pop"),
+    );
     box.classList.remove(...SPOTLIGHT_PARTS.map(part));
     box.classList.add("canccu-spotlight", ...parts.map(part));
     // The ring burst at the 5-minute mark is a layer of its own, gone once played.

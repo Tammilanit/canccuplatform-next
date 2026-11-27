@@ -4,9 +4,16 @@
  */
 import { DEFAULT_MOTION_STYLE, legacyMotion, motionStyleOf } from "@canccu/ui";
 import type { MotionStyle } from "@canccu/ui";
-import { eventMotion, phaseItems, sceneLevel, themeMotionOf, zoneMotion } from "./motion.js";
+import {
+  eventMotion,
+  hypedLevel,
+  phaseItems,
+  sceneLevel,
+  themeMotionOf,
+  zoneMotion,
+} from "./motion.js";
 import type { LegacyMotion, MotionLevel, MotionPhase, ZoneMotion } from "./motion.js";
-import type { ZoneScene } from "./scenes.js";
+import type { ZoneHype, ZoneScene } from "./scenes.js";
 import type { Stage } from "./stage.js";
 import type { AgendaItem, AgendaNow } from "./widgets.js";
 
@@ -21,6 +28,8 @@ export interface Display {
   stage?: Stage;
   /** The zone's scene as the player draws it; absent while none is known (D5). */
   scene?: SceneLook;
+  /** The zone's hype as Moments sent it (#787 D12); absent while none is known. */
+  hype?: ZoneHype;
 }
 
 /** What of a scene the player draws itself: its palette, the heartbeat and the blend. */
@@ -60,6 +69,22 @@ export interface DisplayInput {
   at: number;
   /** The zone's scene, which takes the phase's place where known (D5). */
   scene?: ZoneScene | null;
+  /** The zone's hype, which moves the level under the ceiling (#787 D13). */
+  hype?: ZoneHype | null;
+}
+
+/**
+ * The level the screen draws: the hype's step under the ceiling the other steps compose, while
+ * Follow the day is on and nothing is pinned (a pinned zone keeps its level all day, as it skips
+ * the day's phase). Without a hype, as a Moments that predates it sends none, the ceiling itself.
+ */
+export function levelWithHype(
+  ceiling: MotionLevel,
+  hype: ZoneHype | null | undefined,
+  o: { followTheDay: boolean; pin: MotionLevel | null },
+): MotionLevel {
+  if (hype == null || !o.followTheDay || o.pin !== null) return ceiling;
+  return hypedLevel(ceiling, hype.level);
 }
 
 /** The stage's mood: the scene's, else the day's phase. */
@@ -74,15 +99,21 @@ export function displayOf(input: DisplayInput): { display: Display; motion: Zone
   };
   const byPhase = zoneMotion(levels, input.items, input.at);
   const scene = input.scene ?? null;
-  // Moments says when a scene changes: the phase's next change no longer moves the level.
-  const motion =
+  const hype = input.hype ?? null;
+  // Moments says when a scene or the hype changes: the phase's next change no longer moves the level.
+  const ceiling =
     scene === null ? byPhase : { ...byPhase, level: sceneLevel(levels, scene), next: null };
+  const motion =
+    hype === null || !levels.followTheDay || levels.pin !== null
+      ? ceiling
+      : { ...ceiling, level: levelWithHype(ceiling.level, hype, levels), next: null };
   return {
     display: {
       motion_level: motion.level,
       motion_style: motionStyleOf(input.tokens?.motion_style),
       motion: legacyMotion(motion.level),
       drift: input.settings.get("burn_in_drift", false) === true,
+      ...(hype === null ? {} : { hype }),
       ...(scene === null
         ? {}
         : {

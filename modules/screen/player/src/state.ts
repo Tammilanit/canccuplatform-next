@@ -73,6 +73,8 @@ export interface ScreenState {
     stage?: StageView;
     /** Absent while the zone has no scene, and from a server that predates scenes. */
     scene?: SceneView;
+    /** The zone's hype (#787 D12); absent until Moments sends one. */
+    hype?: { level: number; phase: string; item: unknown };
   };
   /** A preview on a screen runs on the device (contracts/screen.md, Zones and assignments). */
   preview?: { until: string | null; at: string | null; theme: boolean } | null;

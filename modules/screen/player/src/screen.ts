@@ -13,7 +13,8 @@ import type { Motion } from "./display.js";
 import { legacyMotion, motionStyleOf } from "@canccu/ui";
 import { MotionLayer, levelOf } from "./motion.js";
 import { SceneLayer } from "./scene.js";
-import { StageLayer } from "./stage.js";
+import { LevelGate } from "./level-gate.js";
+import { StageLayer, lifeOf } from "./stage.js";
 import type { BackdropView } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
@@ -68,6 +69,9 @@ export class Screen {
   private readonly stage = new StageLayer(document.body);
   private readonly scene = new SceneLayer(document.body);
   private readonly pace = new Choreographer();
+  /** A new level waits for the hero's next turn (#787 D13); the turn the hero showed last tick. */
+  private readonly gate = new LevelGate();
+  private heroTurn: string | null = null;
 
   constructor(private readonly host: ScreenHost) {}
 
@@ -161,7 +165,11 @@ export class Screen {
     const state = this.state;
     if (state === null) return;
     const now = this.host.serverNow();
-    const level = levelOf(state.display, this.host.reducedMotion());
+    const level = this.gate.level(
+      levelOf(state.display, this.host.reducedMotion()),
+      this.heroTurn,
+      now,
+    );
     const motion = legacyMotion(level);
     this.root.dataset.motion = motion;
     // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
@@ -202,17 +210,16 @@ export class Screen {
       const zone = state.zone?.key ?? "";
       const turn = turnIndexOf(next);
       drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turn, zone, now);
-      if (drawn.state.role === "hero")
+      if (drawn.state.role === "hero") {
+        this.heroTurn = turn === null ? null : String(turn);
         syncLowerThird(drawn.el, takeover ? null : lowerThirdAt(drawn.state, state, now, turn));
+      }
     }
     fillCountdowns(this.root, now);
-    this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
-    this.stage.apply(
-      state.display?.stage,
-      level,
-      now,
-      state.theme.backdrop as BackdropView | undefined,
-    );
+    const life = lifeOf(state);
+    const style = motionStyleOf(state.display?.motion_style);
+    this.motion.apply(this.root, level, style, now, life.hype?.phase as string | undefined);
+    this.stage.apply(state.display?.stage, level, now, state.theme.backdrop as BackdropView, life);
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);

@@ -29,6 +29,8 @@ export interface Stage {
   phase: MotionPhase;
   kind: string | null;
   tint: Tint | null;
+  /** The current game's blurred art, the stage's steady layer while the hype builds (#787 D10). */
+  game: { url: string; scrim: number } | null;
 }
 
 /** A box that asks for a tint, before its art is read. */
@@ -120,6 +122,23 @@ function coversOf(views: Views, tint: TintAsk | null): string[] {
   return [...urls];
 }
 
+/**
+ * The current game's cover (#787 D10): the game of the item a box counts down to, the hero's idle
+ * countdown too; null where no countdown names a game. The first found, the same on every screen.
+ */
+function gameCover(views: Views): string | null {
+  for (const { regions } of Object.values(views)) {
+    for (const r of regions) {
+      const shown = r.widgets.filter((w) => w.enabled !== false).map((w) => w.view);
+      for (const view of r.idle_view === null ? shown : [...shown, r.idle_view.view]) {
+        const url = coverOf("countdown", view);
+        if (typeof url === "string") return url;
+      }
+    }
+  }
+  return null;
+}
+
 type Art = ReadonlyMap<string, ArtInfo>;
 
 function withCard<V extends Record<string, unknown>>(
@@ -205,6 +224,8 @@ export async function stageOf(input: StageInput): Promise<{ stage: Stage; covers
     ask !== null && input.stageArt && typeof ask.cover_url === "string"
       ? art.get(ask.cover_url)
       : undefined;
+  const cover = input.stageArt ? gameCover(input.views) : null;
+  const gameArt = cover === null ? undefined : art.get(cover);
   return {
     stage: {
       phase: input.phase,
@@ -223,6 +244,13 @@ export async function stageOf(input: StageInput): Promise<{ stage: Stage; covers
                       url: `/api/screen/art/${tintArt.id}.webp`,
                       scrim: scrimOf(input.colors, tintArt.art),
                     },
+            },
+      game:
+        gameArt === undefined
+          ? null
+          : {
+              url: `/api/screen/art/${gameArt.id}.webp`,
+              scrim: scrimOf(input.colors, gameArt.art),
             },
     },
     // The art ids drawn: a cover read only later changes what screens draw, so it moves the version.

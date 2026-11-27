@@ -56,7 +56,7 @@ describe("the stage", () => {
     expect(stageLook(undefined, "party", T0).classes).toEqual(["canccu-stage"]);
   });
 
-  it("puts one stage with its seven layers first in the body, and sets the art and scrim", () => {
+  it("puts one stage with its ten layers first in the body, and sets the art and scrim", () => {
     const layer = new StageLayer(document.body);
     document.body.append(document.createElement("main"));
     layer.apply(stage, "lively", T0);
@@ -64,7 +64,7 @@ describe("the stage", () => {
     const el = document.body.firstElementChild as HTMLElement;
     expect(document.querySelectorAll(".canccu-stage")).toHaveLength(1);
     expect([...el.children].map((c) => c.className)).toEqual(
-      ["backdrop", "art", "glow", "kind", "phase", "tint", "scrim"].map(
+      ["look", "backdrop", "glow", "daylight", "game", "art", "kind", "phase", "tint", "scrim"].map(
         (l) => `canccu-stage__${l}`,
       ),
     );

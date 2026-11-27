@@ -89,7 +89,7 @@ describe("the level follows the hype", () => {
       ends_at: "2026-03-13T12:00:00Z",
       delay_minutes: 0,
       location: null,
-    } as AgendaItem;
+    };
     expect(level(sent(1), { items: [night] })).toBe("calm");
     const quiet = sceneOf({ scene: { key: "quiet", quiet: true, motion: null } });
     expect(level(sent(1), { scene: quiet })).toBe("calm");
