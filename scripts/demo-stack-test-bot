@@ -1,0 +1,21 @@
+# shellcheck shell=bash
+# The bot's tests of scripts/demo-stack-test (#121), which sources this file after its helpers
+# (call, check, want, body_is) and its variables: the shared client connects to the CI overlay's
+# fake Discord (deploy/compose.ci.yml) once the pool's first tick takes its lease, and the event's
+# connection reads its status from the board any container answers from.
+
+if want bot; then
+  # shellcheck disable=SC2329
+  bot_ready() {
+    local _
+    for _ in $(seq 1 30); do
+      call GET /api/bot/connection -H "cookie: $COOKIE"
+      body_is 200 '.mode == "shared" and .application_id == "100000000000000002"
+        and .client.status == "ready" and .bot_user.name == "Demo Bot" and .credentials == null
+        and .guild == null' && return 0
+      sleep 1
+    done
+    return 1
+  }
+  check "${TESTS[38]}" bot_ready
+fi

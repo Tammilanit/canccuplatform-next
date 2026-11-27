@@ -28,6 +28,7 @@ DOES = {
     "tenants": "Events and their addresses",
     "games": "Games and surges",
     "tournament": "Matches and brackets",
+    "bot": "The Discord bot and its servers",
 }
 # What a part that is down means for the event, so the crew knows how urgent it is.
 MEANS = {
@@ -37,6 +38,7 @@ MEANS = {
     "screen-render": "New decks wait to be drawn; slides already drawn keep playing.",
     "theming": "Screens and pages keep the look they have.",
     "tenants": "Pages may not find their event, and signing in may fail.",
+    "bot": "Discord commands and posts wait; screens and pages keep working.",
 }
 DEVICES = f"{BASE}/screen/devices"
 

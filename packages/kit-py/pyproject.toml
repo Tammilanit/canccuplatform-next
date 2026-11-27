@@ -16,9 +16,12 @@ dependencies = [
 
 [project.optional-dependencies]
 starlette = ["starlette==1.10.0"]
+# The fake Discord as a container (canccu_kit.testing.discord, deploy/compose.ci.yml).
+fake-discord = ["starlette==1.10.0", "uvicorn==0.38.0", "websockets==15.0.1"]
 dev = [
   "starlette==1.10.0",
   "asyncpg==0.30.0",
+  "uvicorn==0.38.0",
   "pytest==9.2.0",
   "pytest-asyncio==1.4.1.post1",
   "ruff==0.17.3",

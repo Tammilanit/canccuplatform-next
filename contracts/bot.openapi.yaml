@@ -34,7 +34,9 @@ paths:
       tags: [connection]
       operationId: getConnection
       summary: The event's connection, client status and binding
-      description: Right `bot.connection.read`. Never returns a credential's value.
+      description: |
+        Right `bot.connection.read`. Never returns a credential's value. 503 `discord_not_configured` for an
+        event on the shared bot when the platform runs none (no `CANCCU_BOT_*`).
       responses:
         "200":
           description: The connection.
@@ -46,6 +48,12 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "503":
+          description: "`discord_not_configured`: the event is on the shared bot and the platform runs none."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
     put:
       tags: [connection]
       operationId: setConnection

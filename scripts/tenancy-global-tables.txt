@@ -34,3 +34,6 @@ pizza pizza_tenants every event pizza served, a plain tenant reference, so a del
 moments moments_migrations which migration files ran (created by runMigrations before the files); no event data
 moments moments_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 moments moments_tenants every event moments served and when it was archived, a plain tenant reference, so the tick, the venue-wide emergency and retention find them without a tenant set
+bot bot_migrations    which migration files ran (created by db.py before the files); no event data
+bot bot_guild_routes  guild id to its event and application, a plain tenant reference, read before a tenant is set to route a gateway event or an interaction (contracts/bot.md, Tables)
+bot bot_application_routes own application id to its event, a plain tenant reference, so each own application serves one event and the pool finds the clients to open without a tenant set

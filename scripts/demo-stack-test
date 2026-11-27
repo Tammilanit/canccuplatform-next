@@ -74,6 +74,7 @@ TESTS=(
   "a pizza order shows in the main zone's food box and its arrival reaches a subscribed member's phone"
   "an upgrade from a stack older than a module's rights brings up this commit's CI session stub"
   "a final's card holds the hero its floor while Pizza is here waits in the rail, then comes back with its time left"
+  "the bot's shared client is ready on the fake Discord, and the event's connection names it"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -81,7 +82,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform "pizza notify" "pizza screen notify" platform moments
+  moments moments platform "pizza notify" "pizza screen notify" platform moments bot
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -285,7 +286,7 @@ fi
 # shellcheck disable=SC2329
 all_healthy() {
   local m
-  for m in hello admin tenants screen theming agenda notify moments pizza; do
+  for m in hello admin tenants screen theming agenda notify moments pizza bot; do
     call GET "/api/$m/health"
     body_is 200 ".status == \"ok\" and .module == \"$m\"" || { echo "$m" >> "$TMP/body"; return 1; }
   done
@@ -388,6 +389,9 @@ check "${TESTS[33]}" health_timing
 
 # shellcheck source=scripts/demo-stack-test-food
 . scripts/demo-stack-test-food
+
+# shellcheck source=scripts/demo-stack-test-bot
+. scripts/demo-stack-test-bot
 
 # shellcheck source=scripts/demo-stack-test-stub
 . scripts/demo-stack-test-stub

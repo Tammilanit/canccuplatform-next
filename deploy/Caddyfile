@@ -90,6 +90,17 @@
 		import proxy theming:8080
 	}
 
+	# The bot contract's paths are /api/bot/... too; it has no pages yet (the Discord page, #121's
+	# link 6) and /internal/bot/ is never routed.
+	handle /api/bot/health {
+		rewrite * /health
+		import proxy bot:8080
+	}
+
+	handle /api/bot/* {
+		import proxy bot:8080
+	}
+
 	# The agenda contract's paths are /api/agenda/... too.
 	handle /api/agenda/health {
 		rewrite * /health
