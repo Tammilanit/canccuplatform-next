@@ -31,7 +31,7 @@ The plan from today to the full new platform: **a commercial-scale, polished and
 - **Steps follow their dependencies,** not a strict one-after-another rule. An issue starts when the issues it is blocked by are closed, so issues from different steps can run at once. The tracker's blocked-by links are the source for the order; this file names them.
 - **The tracker:** each step is an epic in the milestone of the same number (milestones have no due dates); its epic closes when its children close. Step 2 is one milestone with the epics #36, #46 and #47.
 - **Step 0's product-owner tasks** (#43, #44, #45) run alongside and block only the issues that name them: #43 (domain) blocks #5 and #51; #45 (backup target) blocks #55. #44 (test Discord) is done; it blocked #10 and #52.
-- **The parallel tracks** (Finals, Games, Cast, App; milestone "Parallel tracks"; epics #161, #66, #67 and #160) start after the tenancy foundation (#47); the tracker has no blocked-by link for this yet. Like a step, a track builds only once its own plan is accepted ([0026](decisions/0026-briefs-are-research-packs.md)). The App track's privacy center lands before the dress rehearsal (step 11).
+- **The parallel tracks** (Finals, Games, Cast, App; milestone "Parallel tracks"; epics #161, #66, #67 and #160) start after the tenancy foundation (#47); the tracker has no blocked-by link for this yet. The Themes track (#785) starts after the theme studio (#784), which has landed. Like a step, a track builds only once its own plan is accepted ([0026](decisions/0026-briefs-are-research-packs.md)). The App track's privacy center lands before the dress rehearsal (step 11).
 - **No fixed dates:** no freeze and no target date ([0021](decisions/0021-no-fixed-dates.md)). Work goes as fast as it goes; a release freeze before an event, if ever wanted, is decided then in its own record.
 
 ## How the roadmap changes
@@ -42,6 +42,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
+- 2026-11-27: the Themes track: five new preset themes (Esports, Synthwave, Arcade, Cozy LAN, Daylight) on the theme studio, designed first in a script-built pack for the PO; its plan and pack stand in for the track's brief (#785).
 - 2026-11-21: the In short section names the hub (a PWA) on PC and phone, not a phone hub, matching the App track's goal and 0032's Known limits ([0032](decisions/0032-hub-equal-on-pc-and-phone.md), #713).
 - 2026-11-21: the hub and every attendee page are equal on PC and phone: the App track's goal and its Play item name the PC beside the phone, and alerts reach either device by app push or browser notification ([0032](decisions/0032-hub-equal-on-pc-and-phone.md), #707).
 - 2026-11-21: mini tournaments for any game wait until after version 1: step 7 keeps the official tournament on the fully general core, its exit loses the mini tournament, the Games track loses each game's competition rules, and both move to Not scheduled yet; THE FINALS mini tourney is still integrated from day 1 (the Finals track is unchanged) ([0031](decisions/0031-mini-tournaments-after-v1-day-schedules.md), #695).
@@ -227,6 +228,14 @@ Games, Cast and App are new builds with their own contracts, and Finals integrat
 - **Rules:** no CDN proxy at the start; the hub opens to the public only after a go-public checklist.
 - **Exit criteria:** set when the track is planned.
 - **Issues:** epic #160; the track is planned separately.
+
+### Themes
+- **Goal:** organisers who stick with presets get good ones: eight looks in the Theme studio's Pick a look, from neutral to bold, each with schemes that pass the contrast rules.
+- **In it:** five new presets beside Default, Level up and Terminal: Esports (bold, angular, broadcast), Synthwave (pink and purple neon, a horizon grid), Arcade (pixel type, CRT glow), Cozy LAN (warm, soft, very round) and Daylight (light, with a sky). Each has 3–5 colour schemes, a platform font pair, corners, a background, a motion style and, for the advanced three, screen effects and widget templates. Cozy LAN and Daylight stay in the simple mode. The presets live with the others in `events/demo/themes/`.
+- **How it runs:** design first. A script-built pack ([docs/design/themes.md](design/themes.md)) goes to the PO before any build. The [plan](plans/issue-785.md) and the pack stand in for the track's research pack and brief, because the PO chose the directions in the issue (2026-11-23). Then two build packages: Esports and Arcade, then Synthwave, Cozy LAN and Daylight.
+- **Builds on:** the theme studio (#784): presets with schemes, font pairs, roundness, the background's looks and motion styles. It adds no migration. Its contract change is additive: a box opacity in the brand kit, two background looks and one more roundness (plan D11, D12).
+- **Exit criteria:** the eight presets are in Pick a look; every scheme passes the contrast rules; the shots show each new preset on the screen, the hub and the phone.
+- **Issues:** #785.
 
 <a id="porting-plan"></a>
 ## Building on the legacy

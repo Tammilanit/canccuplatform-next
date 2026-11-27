@@ -1,0 +1,165 @@
+/* Esports (#785, plan D6): bold, angular, high contrast, broadcast style. The first draft of the
+   package's css/esports.css (plan D9). Stable classes and t-esports- classes only; every rule that
+   does more than colour is scoped to the screen, so hub and phone pages stay plain. Motion: one
+   sheen, only at lively and party, transform and opacity only. Boxes take the box opacity (D11). */
+.canccu-surface--screen .canccu-widget {
+  /* Cut corners: a broadcast slab, never round, whatever the roundness. */
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  border-radius: 0;
+  border-left: 6px solid var(--canccu-color-primary);
+  /* The slab's ground at the box opacity (D11), so the background shows through a little. */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, color-mix(in srgb, var(--canccu-color-surface) 92%, var(--canccu-color-primary)) calc(var(--canccu-box-opacity, 1) * 100%), transparent),
+    color-mix(in srgb, var(--canccu-color-surface) calc(var(--canccu-box-opacity, 1) * 100%), transparent));
+}
+
+/* The announcement (#780) keeps the slab and the primary edge, and adds a broadcast frame: a thick
+   accent rule below and a slanted "Important" tab above the headline in capitals. */
+.canccu-surface--screen .canccu-widget--announcement {
+  border-left-width: 14px;
+  border-bottom: 10px solid var(--canccu-color-accent);
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__kicker {
+  padding: 4px 44px 4px 36px;
+  border-radius: 0;
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  background: var(--canccu-color-primary);
+  clip-path: polygon(16px 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+/* Titles as skewed tabs: the tab is skewed, its letters are not. An announcement's headline keeps
+   the platform's sizes and floors across a hall (#780), as in Level up. */
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+  margin: 0 0 10px -6px;
+  padding: 2px 22px 2px 18px;
+  font-family: var(--canccu-font-heading);
+  font-size: 1.875rem;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary-text);
+  isolation: isolate;
+}
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: skewX(-12deg);
+  background: var(--canccu-color-primary);
+}
+
+/* A thin rule under the header row, like a broadcast's top bar. */
+.canccu-surface--screen .canccu-region--brand,
+.canccu-surface--screen .canccu-region--clock {
+  border-bottom: 3px solid var(--canccu-color-primary);
+}
+
+.canccu-surface--screen .canccu-widget--clock {
+  font-family: var(--canccu-font-heading);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The scoreboard (templates/scoreboard.mustache): rank chip, name, points. */
+.t-esports-score {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.t-esports-score__row {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 14px;
+  font-size: 2rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--canccu-color-background) 55%, var(--canccu-color-surface));
+}
+.t-esports-score__row:nth-child(even) {
+  background: var(--canccu-color-surface);
+}
+.t-esports-score__rank {
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  text-align: center;
+  color: var(--canccu-color-primary-text);
+  background: var(--canccu-color-primary);
+  transform: skewX(-12deg);
+}
+.t-esports-score__row:first-child .t-esports-score__rank {
+  background: var(--canccu-color-accent);
+}
+.t-esports-score__points {
+  font-family: var(--canccu-font-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--canccu-color-primary);
+}
+
+/* The lower third (templates/lower-third.mustache): a "Live" tab, then the line. */
+.canccu-surface--screen .canccu-widget--ticker {
+  clip-path: none;
+  border-left: 0;
+  padding: 0;
+}
+.t-esports-lower {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.t-esports-lower__tab {
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary-text);
+  background: var(--canccu-color-accent);
+}
+.t-esports-lower__line {
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  white-space: nowrap;
+}
+
+/* The sheen: a light band crosses the countdown, the match clock, once every 12 s (7 s at party). Decoration
+   over the box's ground, never strong enough to change the text's contrast (opacity ≤ 0.18). */
+.canccu-surface--screen .canccu-widget--countdown::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--canccu-color-text) 60%, transparent), transparent);
+}
+.canccu-motion--lively .canccu-widget--countdown::after {
+  animation: t-esports-sheen 12s linear infinite;
+}
+.canccu-motion--party .canccu-widget--countdown::after {
+  animation: t-esports-sheen 7s linear infinite;
+}
+@keyframes t-esports-sheen {
+  0% { transform: translateX(-110%); opacity: 0; }
+  4% { opacity: 0.18; }
+  14% { transform: translateX(380%); opacity: 0.18; }
+  15%, 100% { transform: translateX(380%); opacity: 0; }
+}

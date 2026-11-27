@@ -1,0 +1,4 @@
+/* The pack's stand-in boxes (style.mjs) in the esports look. Not part of the package CSS: the real
+   boxes are the screen player's own, which Parts 1 and 2 dress with the same ideas. */
+.canccu-surface--screen .t-pack-pill { border-radius: 0; clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%); padding: 2px 26px; }
+.canccu-surface--screen .t-pack-block { border-radius: 0; }
