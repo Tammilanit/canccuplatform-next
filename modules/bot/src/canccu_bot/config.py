@@ -5,8 +5,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
-from canccu_kit import ConfigError
+from canccu_kit import ConfigError, KitError
+from canccu_kit.resolve import normalize_host
+from starlette.requests import Request
 
 DISCORD_API = "https://discord.com/api/v10"
 SHARED_VARS = ("CANCCU_BOT_APPLICATION_ID", "CANCCU_BOT_TOKEN", "CANCCU_BOT_CLIENT_SECRET")
@@ -44,3 +47,32 @@ def discord_config(env: Mapping[str, str]) -> DiscordConfig:
     # The CI stack points it at the fake Discord (deploy/compose.ci.yml).
     api_url = (env.get("CANCCU_DISCORD_API_URL") or DISCORD_API).rstrip("/")
     return DiscordConfig(shared, api_url)
+
+
+@dataclass(frozen=True)
+class Hosts:
+    """The platform's own hostnames, from the environment, never from a request."""
+
+    signin: str | None
+    superadmin: str | None
+    public_url: str | None
+    """`CANCCU_PUBLIC_URL`: admin's public origin, the one host in IP mode."""
+
+    def callback_origin(self) -> str | None:
+        """Seam: the install callback is on the central sign-in host (#52); until a stack has
+        one, on admin's public origin, where the IP-mode stack serves everything."""
+        if self.signin:
+            return f"https://{self.signin}"
+        return self.public_url.rstrip("/") if self.public_url else None
+
+    def is_callback_host(self, request: Request) -> bool:
+        origin = self.callback_origin()
+        if origin is None:
+            return False
+        return normalize_host(urlsplit(origin).hostname) == normalize_host(request.url.hostname)
+
+    def require_superadmin_host(self, request: Request) -> None:
+        """Superadmin paths exist only on the superadmin hostname: 404 elsewhere."""
+        host = normalize_host(request.url.hostname)
+        if self.superadmin is None or host != normalize_host(self.superadmin):
+            raise KitError("not found", status=404, code="not_found")

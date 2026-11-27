@@ -17,6 +17,10 @@ def token_aad(tenant_id: str, application_id: str) -> str:
     return f"bot:token:{tenant_id}:{application_id}"
 
 
+def secret_aad(tenant_id: str, application_id: str) -> str:
+    return f"bot:secret:{tenant_id}:{application_id}"
+
+
 async def connection(conn: Any) -> Any:
     """The current tenant's connection row, or None (the shared bot)."""
     return await conn.fetchrow(

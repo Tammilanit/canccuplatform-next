@@ -7,44 +7,27 @@ from datetime import UTC, datetime
 from typing import Any
 
 from canccu_kit import KitError
-from canccu_kit.access import TenantContext, check_admin_access, tailscale_cidrs
+from canccu_kit.access import check_admin_access, tailscale_cidrs
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import store
+from .access import client_ip, deps, tenant_of
 from .client import iso
 from .deps import Deps
 
 READ = "bot.connection.read"
 
 
-def deps(request: Request) -> Deps:
-    found: Deps = request.app.state.deps
-    return found
-
-
-def tenant_of(request: Request) -> TenantContext:
-    ctx: TenantContext | None = request.state.tenant
-    if ctx is None:  # a platform hostname names no event
-        raise KitError("not found", status=404, code="not_found")
-    return ctx
-
-
 def _time(value: datetime | None) -> str | None:
     return None if value is None else iso(value)
 
 
-async def get_connection(request: Request) -> Response:
-    d = deps(request)
-    ctx = tenant_of(request)
-    await d.rights.check(request.headers.get("cookie"), READ)
-    # uvicorn sets the client from X-Forwarded-For only for the proxies it trusts (main.py).
-    client_ip = request.client.host if request.client else None
-    check_admin_access(ctx, client_ip, tailscale_cidrs())  # 403 admin_access_restricted
-    async with d.db.tenant() as conn:
-        row = await store.connection(conn)
-        bound = await store.binding(conn)
+async def view(d: Deps, conn: Any) -> dict[str, Any]:
+    """The current tenant's `Connection`, read in the caller's transaction."""
+    row = await store.connection(conn)
+    bound = await store.binding(conn)
     own = row is not None and row["mode"] == "own"
     if own:
         application_id = row["application_id"]
@@ -70,20 +53,27 @@ async def get_connection(request: Request) -> Response:
             "updated_at": _time(row["updated_at"]),
             "updated_by": row["updated_by"],
         }
-    return JSONResponse(
-        {
-            "mode": "own" if own else "shared",
-            "application_id": application_id,
-            "bot_user": None if seen is None else seen.get("bot_user"),
-            "credentials": credentials,
-            "client": client,
-            "guild": None if bound is None else _binding(bound),
-            "revision": 0 if row is None else row["revision"],
-        }
-    )
+    return {
+        "mode": "own" if own else "shared",
+        "application_id": application_id,
+        "bot_user": None if seen is None else seen.get("bot_user"),
+        "credentials": credentials,
+        "client": client,
+        "guild": None if bound is None else binding_view(bound),
+        "revision": 0 if row is None else row["revision"],
+    }
 
 
-def _binding(row: Any) -> dict[str, Any]:
+async def get_connection(request: Request) -> Response:
+    d = deps(request)
+    ctx = tenant_of(request)
+    await d.rights.check(request.headers.get("cookie"), READ)
+    check_admin_access(ctx, client_ip(request), tailscale_cidrs())  # 403 admin_access_restricted
+    async with d.db.tenant() as conn:
+        return JSONResponse(await view(d, conn))
+
+
+def binding_view(row: Any) -> dict[str, Any]:
     return {
         "guild_id": row["guild_id"],
         "guild_name": row["guild_name"],

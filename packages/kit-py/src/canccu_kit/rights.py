@@ -22,6 +22,9 @@ class Session:
     user_name: str
     rights: frozenset[str]
     expires_at: datetime
+    superadmin: bool = False
+    """Admin's word that this is a superadmin's platform session with two-factor
+    (contracts/admin.md, Session and rights); a missing field is false."""
 
     def has(self, right: str) -> bool:
         return right in self.rights
@@ -96,6 +99,7 @@ class RightsChecker:
             user_name=str(body["user"]["name"]),
             rights=frozenset(str(r) for r in body["rights"]),
             expires_at=parse_time(str(body["expires_at"])),
+            superadmin=body.get("superadmin") is True,
         )
         self._remember(session_id, session)
         return session
@@ -105,6 +109,15 @@ class RightsChecker:
         session = await self.session(cookie_header)
         if not session.has(right):
             raise MissingRight(f"needs right {right}")
+        return session
+
+    async def require_superadmin(self, cookie_header: str | None) -> Session:
+        """The session if admin says it is the superadmin's; raises NotSignedIn, MissingRight or
+        AdminUnavailable. The caller still answers its superadmin paths only on the superadmin
+        hostname (contracts/admin.md)."""
+        session = await self.session(cookie_header)
+        if not session.superadmin:
+            raise MissingRight("superadmins only")
         return session
 
     def forget_session(self, session_id: str) -> None:

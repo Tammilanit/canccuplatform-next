@@ -161,3 +161,23 @@ async def test_admin_down_is_503(admin: FakeAdmin) -> None:
     admin.handler = lambda r: httpx.Response(502)
     with pytest.raises(AdminUnavailable):
         await make(admin, Clock()).check("canccu_session=s1", "a.b")
+
+
+async def test_superadmin_comes_from_admins_answer_and_missing_counts_as_false(
+    admin: FakeAdmin,
+) -> None:
+    body = {**session_body([]), "superadmin": True}
+    admin.handler = lambda r: json_response(200, body)
+    rights = make(admin, Clock())
+    session = await rights.require_superadmin("canccu_session=s1")
+    assert session.superadmin is True
+    admin.handler = lambda r: json_response(200, session_body(["admin.rights.write"]))
+    with pytest.raises(MissingRight):
+        await rights.require_superadmin("canccu_session=s2")
+    assert (await rights.session("canccu_session=s2")).superadmin is False
+
+
+async def test_only_a_literal_true_makes_a_superadmin(admin: FakeAdmin) -> None:
+    admin.handler = lambda r: json_response(200, {**session_body([]), "superadmin": "true"})
+    with pytest.raises(MissingRight):
+        await make(admin, Clock()).require_superadmin("canccu_session=s1")

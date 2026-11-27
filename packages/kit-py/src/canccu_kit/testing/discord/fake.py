@@ -12,7 +12,15 @@ from typing import Any
 import httpx
 
 from .gateway import FakeGateway
-from .model import FakeApplication, FakeGuild, FakeRequest, Intents, ScriptedFailure
+from .model import (
+    FakeApplication,
+    FakeGrant,
+    FakeGuild,
+    FakeRequest,
+    FakeUser,
+    Intents,
+    ScriptedFailure,
+)
 
 
 @dataclass
@@ -42,6 +50,10 @@ class FakeDiscord:
         self.messages: dict[str, list[dict[str, Any]]] = {}
         self.requests: list[FakeRequest] = []
         self.failures: list[ScriptedFailure] = []
+        self.users: dict[str, FakeUser] = {}
+        self.codes: dict[str, FakeGrant] = {}
+        self.bearers: dict[str, FakeGrant] = {}
+        self.interaction_answers: list[tuple[str, Any]] = []
         self._windows: dict[tuple[str, str, str], _Window] = {}
         self._ids = itertools.count(100000000000000100)
         self.gateway = FakeGateway(lambda: self.applications, lambda: self.guilds, gateway_url)
@@ -71,14 +83,39 @@ class FakeDiscord:
         self.applications[app.id] = app
         return app
 
-    def add_guild(self, name: str, *, bots: list[str] | None = None) -> FakeGuild:
+    def add_guild(
+        self, name: str, *, bots: list[str] | None = None, owner_id: str | None = None
+    ) -> FakeGuild:
         guild_id = self.snowflake()
         everyone = {"id": guild_id, "name": "@everyone", "position": 0, "permissions": "0"}
-        guild = FakeGuild(
-            guild_id, name, self.snowflake(), set(bots or []), roles={guild_id: everyone}
-        )
+        owner = owner_id or self.snowflake()
+        guild = FakeGuild(guild_id, name, owner, set(bots or []), roles={guild_id: everyone})
         self.guilds[guild.id] = guild
         return guild
+
+    def add_user(self, username: str) -> FakeUser:
+        user = FakeUser(self.snowflake(), username)
+        self.users[user.id] = user
+        return user
+
+    def add_member(self, guild_id: str, user_id: str, *, permissions: int = 0) -> None:
+        user = self.users[user_id]
+        self.guilds[guild_id].members[user_id] = {
+            "user": {"id": user.id, "username": user.username},
+            "roles": [],
+            "permissions": str(permissions),
+        }
+
+    def authorize(
+        self, application_id: str, user_id: str, guild_id: str | None, *, add_bot: bool = True
+    ) -> str:
+        """The person said yes on Discord's authorize page: the code Discord sends back, with the
+        bot added to the guild they picked, as a bot install does."""
+        if guild_id is not None and add_bot:
+            self.guilds[guild_id].bots.add(application_id)
+        code = secrets.token_urlsafe(16)
+        self.codes[code] = FakeGrant(application_id, user_id, guild_id)
+        return code
 
     def add_channel(self, guild_id: str, name: str, *, type: int = 0) -> str:
         channel_id = self.snowflake()

@@ -43,6 +43,11 @@ class KeyStore(Protocol):
 
     async def get(self, key: str) -> str | None: ...
 
+    async def take(self, key: str) -> str | None:
+        """Read and delete in one step: a single-use value is used once, also by racing
+        containers."""
+        ...
+
 
 class ValkeyKeys:
     def __init__(self, client: valkey.Valkey) -> None:
@@ -66,6 +71,10 @@ class ValkeyKeys:
 
     async def get(self, key: str) -> str | None:
         value = await self._client.get(key)
+        return None if value is None else str(value)
+
+    async def take(self, key: str) -> str | None:
+        value = await self._client.getdel(key)
         return None if value is None else str(value)
 
     async def close(self) -> None:
