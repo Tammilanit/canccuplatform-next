@@ -13,14 +13,21 @@ import type { BrandEdit } from "../src/schema.js";
 const contract = (file: string): string =>
   readFileSync(new URL(`../../../contracts/${file}`, import.meta.url), "utf8");
 
+interface Properties {
+  properties: Record<string, unknown>;
+}
 const schema = JSON.parse(contract("theme.schema.json")) as {
-  $defs: Record<string, { properties: Record<string, unknown> }>;
+  $defs: { brand: Properties; backdrop: Properties };
 };
 const openapi = parse(contract("theming.openapi.yaml")) as {
   components: { schemas: { BrandInput: { properties: Record<string, unknown> } } };
 };
 
 const keys = (o: object): string[] => Object.keys(o).sort();
+
+/** `o` without the fields `gone`. */
+const without = <T extends object>(o: T, ...gone: string[]): Partial<T> =>
+  Object.fromEntries(Object.entries(o).filter(([k]) => !gone.includes(k))) as Partial<T>;
 
 /** Every field set, so a field added to the brand without a value here does not compile. */
 const STORED_BACKDROP: Required<Backdrop> = {
@@ -43,7 +50,12 @@ const STORED: Required<Brand> = {
 };
 
 /** The Theme studio's kit form: the colours, and nothing else of the brand. */
-const COLOURS: BrandEdit = { draft_version: 1, primary: "#0f766e", accent: "#e11d48", scheme: "light" };
+const COLOURS: BrandEdit = {
+  draft_version: 1,
+  primary: "#0f766e",
+  accent: "#e11d48",
+  scheme: "light",
+};
 
 /** The Make it yours form: the whole backdrop but its video, which Advanced owns. */
 const yours = (backdrop: Backdrop): BrandEdit => ({
@@ -56,8 +68,8 @@ const yours = (backdrop: Backdrop): BrandEdit => ({
 
 describe("nextBrand: the brand a save stores", () => {
   it("has a rule for every brand and backdrop field of theme.schema.json", () => {
-    expect(keys(BRAND_LEFT_OUT)).toEqual(keys(schema.$defs.brand!.properties));
-    expect(keys(BACKDROP_LEFT_OUT)).toEqual(keys(schema.$defs.backdrop!.properties));
+    expect(keys(BRAND_LEFT_OUT)).toEqual(keys(schema.$defs.brand.properties));
+    expect(keys(BACKDROP_LEFT_OUT)).toEqual(keys(schema.$defs.backdrop.properties));
   });
 
   it("takes from the body only the brand fields BrandInput names", () => {
@@ -67,8 +79,16 @@ describe("nextBrand: the brand a save stores", () => {
     expect(input).toEqual(keys(BRAND_LEFT_OUT));
   });
 
+  it("drops a left-out field only where the contract says so: the embed colour", () => {
+    // contracts/theming.md, Brand kit: "a body that leaves a choice out keeps the stored one".
+    const dropped = Object.entries(BRAND_LEFT_OUT).filter(([, rule]) => rule === "drop");
+    expect(dropped.map(([field]) => field)).toEqual(["embed_color"]);
+    const kept = Object.entries(BACKDROP_LEFT_OUT).filter(([, rule]) => rule !== "drop");
+    expect(kept.map(([field]) => field)).toEqual(["video"]);
+  });
+
   it("keeps every field a body leaves out, but what its rule drops", () => {
-    const next = nextBrand(STORED, COLOURS) as Record<string, unknown>;
+    const next: Record<string, unknown> = { ...nextBrand(STORED, COLOURS) };
     for (const [field, rule] of Object.entries(BRAND_LEFT_OUT)) {
       if (rule === "body") expect(next[field], field).toBe(COLOURS[field as keyof BrandEdit]);
       else if (rule === "keep") expect(next[field], field).toEqual(STORED[field as keyof Brand]);
@@ -80,31 +100,29 @@ describe("nextBrand: the brand a save stores", () => {
     const body: BrandEdit = {
       ...COLOURS,
       embed_color: "#abcdef",
-      logo_plate: { kind: "dark" },
+      logo_plate: { kind: "dark", shape: "rounded", padding: "small" },
       font_pair: "bebas-source",
       roundness: "square",
       backdrop: { looks: ["glows"] },
     };
-    const { draft_version: _version, ...brand } = body;
-    expect(nextBrand(STORED, body)).toEqual(brand);
+    expect(nextBrand(STORED, body)).toEqual(without(body, "draft_version"));
   });
 
   it("takes a field away that the body sends as null", () => {
     expect(nextBrand(STORED, { ...COLOURS, font_pair: null })).not.toHaveProperty("font_pair");
   });
 
-  it("keeps a stored field it has no rule for, as from a newer platform", () => {
+  it("takes away a stored field the schema does not allow, so the draft can publish", () => {
     const stored = { ...STORED, later: { kept: true } };
-    expect(nextBrand(stored, COLOURS)).toHaveProperty("later", { kept: true });
+    expect(nextBrand(stored, COLOURS)).not.toHaveProperty("later");
   });
 
   it("starts the brand from the body when none is stored", () => {
-    const { draft_version: _version, ...brand } = COLOURS;
-    expect(nextBrand(undefined, COLOURS)).toEqual(brand);
+    expect(nextBrand(undefined, COLOURS)).toEqual(without(COLOURS, "draft_version"));
   });
 
   describe("a backdrop the body names", () => {
-    const { video: _video, ...shown } = STORED_BACKDROP;
+    const shown = without(STORED_BACKDROP, "video");
 
     it("replaces the stored one, but what its rule keeps", () => {
       const next = nextBrand(STORED, yours({ ...shown, looks: ["glows"], hype: true }));
@@ -118,7 +136,7 @@ describe("nextBrand: the brand a save stores", () => {
     it("drops the video with a new picture or without one", () => {
       const other = nextBrand(STORED, yours({ ...shown, image: "images/other.png" }));
       expect(other.backdrop).not.toHaveProperty("video");
-      const { image: _image, ...cycle } = shown;
+      const cycle = without(shown, "image");
       expect(nextBrand(STORED, yours(cycle)).backdrop).toEqual(cycle);
     });
 

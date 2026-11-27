@@ -7,6 +7,7 @@ import { KitError, requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { generateColors } from "./brand.js";
+import { nextBrand } from "./brand-edit.js";
 import type { Brand } from "./brand.js";
 import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
@@ -25,18 +26,6 @@ export interface BrandDeps extends DraftDeps {
 }
 
 const EMBEDS = "theming.embeds.write";
-
-/** What the brand keeps of the input: all but the version and the images, which go to `images`. */
-const BRAND_FIELDS = [
-  "primary",
-  "accent",
-  "scheme",
-  "embed_color",
-  "logo_plate",
-  "font_pair",
-  "roundness",
-  "backdrop",
-] as const;
 
 /** The folders of advanced files, which the switch back to simple removes with the embeds. */
 const ADVANCED_FOLDERS = ["css", "fonts", "templates"] as const;
@@ -155,36 +144,11 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     if (typeof input.font_pair === "string" && !FONT_PAIRS.has(input.font_pair)) {
       throw invalidRequest("font_pair must be one of GET /api/theming/font-pairs.");
     }
-    const picked = Object.fromEntries(
-      // A field sent as null is taken away: neither picked nor kept.
-      BRAND_FIELDS.filter((k) => input[k] !== undefined && input[k] !== null).map((k) => [
-        k,
-        input[k],
-      ]),
-    ) as unknown as Brand;
-    const { adjusted } = generateColors(picked);
+    const { primary, accent, scheme } = input;
+    const { adjusted } = generateColors({ primary, accent, scheme });
     const row = await deps.db.tenant((c) =>
       editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
-        // The Studio's kit form sends only the colours and pictures: the stored plate, pair,
-        // roundness and backdrop stay unless the body names them (a plate goes with `kind: none`).
-        const kept = Object.fromEntries(
-          (["logo_plate", "font_pair", "roundness", "backdrop"] as const)
-            .filter((k) => input[k] === undefined && isObject(m.brand) && m.brand[k] !== undefined)
-            .map((k) => [k, (m.brand as Record<string, unknown>)[k]]),
-        );
-        const brand = { ...kept, ...picked };
-        // The Make it yours form never names the video (Advanced owns it): a save that keeps the
-        // same picture keeps the video over it, or the file would stay in the draft unnamed.
-        const stored = isObject(m.brand) && isObject(m.brand.backdrop) ? m.brand.backdrop : {};
-        const sent = input.backdrop;
-        if (
-          sent !== undefined &&
-          sent.video === undefined &&
-          typeof stored.video === "string" &&
-          sent.image === stored.image
-        ) {
-          Object.assign(brand, { backdrop: { ...sent, video: stored.video } });
-        }
+        const brand = nextBrand(isObject(m.brand) ? m.brand : undefined, input);
         const picture = {
           logo: input.logo,
           icon: input.icon,
@@ -196,7 +160,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
             throw invalidRequest(`${role} must name a file already in the draft.`);
           }
         }
-        // The brand is replaced whole, the logo and icon with it: they are the theme's only ones.
+        // The logo and icon are the theme's only ones, so the body names them on every save.
         const images = isObject(m.images) ? { ...m.images } : {};
         delete images.logo;
         delete images.icon;
