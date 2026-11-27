@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 from canccu_kit import Bus, Event, KitError, NotSignedIn
 from canccu_kit.rights import Session
 
+from .acting import Acting
 from .auth_db import AuthStore, Flow, Person, User
 from .discord import Discord, DiscordFailed
 from .roles import ROLE_RIGHTS
@@ -128,8 +129,11 @@ class Auth:
         *,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         on_session_end: Callable[[str], None] = lambda session_id: None,
+        acting: Acting | None = None,
     ) -> None:
         self.store = store
+        self.acting = acting
+        """The acting tokens of commands in Discord (acting.py)."""
         self.bus = bus
         self.public_url = normalize_public_url(public_url) if public_url else None
         self.discord = discord

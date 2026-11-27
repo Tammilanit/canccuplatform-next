@@ -27,6 +27,8 @@ from canccu_kit.testing import MemoryStreamStore
 from fakes import FakeScreen, FakeTenants
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from canccu_admin.acting import Acting
+from canccu_admin.acting_db import MemoryActingStore
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
 from canccu_admin.auth_memory import MemoryAuthStore
@@ -45,6 +47,7 @@ SERVICE_KEY = b"admin-tests-service-key-0123456789ab"
 CALLBACK = "/admin/sign-in/callback"
 START = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
 SIGNIN_HOST = "signin.example.test"
+BOT_ADMIN_KEY = "admin-tests-bot-admin-key-0123456789abcdef"
 
 
 def tenant_context(tenant_id: str) -> TenantContext:
@@ -153,6 +156,7 @@ class World:
     watch: HealthWatch
     tenants: FakeTenants
     screen: FakeScreen
+    acting: Acting
     event: dict[str, str] = field(default_factory=dict)
     """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
@@ -202,6 +206,7 @@ def world(tmp_path: Path) -> World:
         httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)),
     )
     store = MemoryAuthStore()
+    acting = Acting(MemoryActingStore(store), BOT_ADMIN_KEY.encode(), lambda: clock[0])
     holder: list[RightsChecker] = []
     auth = Auth(
         store,
@@ -210,6 +215,9 @@ def world(tmp_path: Path) -> World:
         discord,
         now=lambda: clock[0],
         on_session_end=lambda session_id: holder[0].forget_session(session_id),
+        acting=(
+            acting := Acting(MemoryActingStore(store), BOT_ADMIN_KEY.encode(), lambda: clock[0])
+        ),
     )
 
     async def authorize(cookie: str | None, right: str) -> Session:
@@ -265,6 +273,7 @@ def world(tmp_path: Path) -> World:
         watch,
         tenants,
         screen,
+        acting,
         event,
     )
 

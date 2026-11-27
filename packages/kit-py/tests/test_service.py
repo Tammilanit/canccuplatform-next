@@ -14,6 +14,7 @@ from canccu_kit import (
     ServiceForbidden,
     ServiceIdentity,
     ServiceUnauthenticated,
+    bot_admin_key_from_env,
     service_has_right,
     service_key_from_env,
 )
@@ -156,3 +157,16 @@ def test_api_rights_accept_a_module_for_its_own_rights_only(admin: FakeAdmin) ->
     assert response.json()["error"]["code"] == "missing_right"
     # Without the header the session check runs as before.
     assert client.get("/api/tenants/audit").status_code == 401
+
+
+def test_the_bot_admin_key_is_optional_long_and_never_the_placeholder_on_a_release() -> None:
+    key = "b" * 40
+    assert bot_admin_key_from_env({}) is None
+    assert bot_admin_key_from_env({"CANCCU_BOT_ADMIN_KEY": key}) == key.encode()
+    with pytest.raises(ConfigError):
+        bot_admin_key_from_env({"CANCCU_BOT_ADMIN_KEY": "short"})
+    placeholder = "canccu-local-only-bot-admin-key-change-me"
+    with pytest.raises(ConfigError):
+        bot_admin_key_from_env({"CANCCU_BOT_ADMIN_KEY": placeholder, "CANCCU_VERSION": "v1.0.0"})
+    dev = {"CANCCU_BOT_ADMIN_KEY": placeholder, "CANCCU_VERSION": "dev"}
+    assert bot_admin_key_from_env(dev) == placeholder.encode()

@@ -60,6 +60,23 @@ def service_key_from_env(env: Mapping[str, str] | None = None) -> bytes:
     return key.encode("utf-8")
 
 
+def bot_admin_key_from_env(env: Mapping[str, str] | None = None) -> bytes | None:
+    """`CANCCU_BOT_ADMIN_KEY`, the second key of the acting token's mint (contracts/admin.md, The
+    acting token), held by the admin and bot containers only. None when unset: then no acting
+    token is minted. A `local-only` placeholder runs only while the version is dev."""
+    source = os.environ if env is None else env
+    key = source.get("CANCCU_BOT_ADMIN_KEY", "")
+    if not key:
+        return None
+    if len(key) < SERVICE_KEY_MIN_LENGTH:
+        raise ConfigError(
+            f"CANCCU_BOT_ADMIN_KEY must be at least {SERVICE_KEY_MIN_LENGTH} characters"
+        )
+    if _PLACEHOLDER in key and source.get("CANCCU_VERSION") != "dev":
+        raise ConfigError("CANCCU_BOT_ADMIN_KEY is the local placeholder; set a real key")
+    return key.encode("utf-8")
+
+
 def service_has_right(caller: str, right: str) -> bool:
     """A module acting as itself holds only its own rights, never another module's."""
     return right.startswith(f"{caller}.") and len(right) > len(caller) + 1

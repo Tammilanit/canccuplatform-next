@@ -75,6 +75,7 @@ from .service import (
     ServiceForbidden,
     ServiceIdentity,
     ServiceUnauthenticated,
+    bot_admin_key_from_env,
     service_has_right,
     service_key_from_env,
 )
@@ -160,6 +161,7 @@ __all__ = [
     "ValkeyStreamStore",
     "VenueIpRefused",
     "VersionConflict",
+    "bot_admin_key_from_env",
     "check_admin_access",
     "check_app_role",
     "check_info_access",

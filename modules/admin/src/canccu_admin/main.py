@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -20,6 +21,7 @@ from canccu_kit import (
     ServiceIdentity,
     TenantResolver,
     ValkeyStreamStore,
+    bot_admin_key_from_env,
     create_logger,
     load_config,
     postgres_check,
@@ -27,6 +29,8 @@ from canccu_kit import (
     valkey_check,
 )
 
+from .acting import Acting
+from .acting_db import PgActingStore
 from .app import create_app
 from .auth import Auth, normalize_public_url
 from .auth_db import PgAuthStore
@@ -38,6 +42,8 @@ from .event_owners import ScreenApi, TenantsApi
 from .health import HealthWatch
 from .profile import make_validator
 from .service import Service
+
+log = logging.getLogger("canccu.admin")
 
 
 def parse_targets(raw: str) -> dict[str, str]:
@@ -110,8 +116,11 @@ async def serve() -> None:
     public = public_url()
     try:
         identity = ServiceIdentity(config.module, service_key_from_env())
+        bot_admin_key = bot_admin_key_from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
+    if bot_admin_key is None:
+        log.warning("CANCCU_BOT_ADMIN_KEY is not set: commands in Discord cannot act for anyone")
     resolver = tenant_resolver(config.version, identity)
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     store = await PgStore.connect(
@@ -126,6 +135,7 @@ async def serve() -> None:
         public,
         discord(public),
         on_session_end=rights.forget_session,
+        acting=Acting(PgActingStore(store.pool), bot_admin_key, lambda: datetime.now(UTC)),
     )
     await auth.issue_first_run_code()
     contracts = Path(os.environ.get("CANCCU_CONTRACTS_DIR", "/repo/contracts"))

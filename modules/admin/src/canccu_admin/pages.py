@@ -204,8 +204,9 @@ def way_back(session: Session | None, section: str) -> tuple[str, str]:
 
 
 async def not_signed_in(request: Request, exc: Exception) -> Response:
-    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
-    if request.url.path.startswith("/api/"):
+    """The API and the internal paths answer 401 (contracts/admin.md); a page sends the browser to
+    sign in."""
+    if request.url.path.startswith(("/api/", "/internal/")):
         assert isinstance(exc, NotSignedIn)
         return JSONResponse(exc.to_body(), status_code=exc.status)
     return RedirectResponse(f"{BASE}/sign-in", status_code=303)
