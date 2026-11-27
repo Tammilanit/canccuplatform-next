@@ -20,6 +20,27 @@ class Intents:
     PRIVILEGED = GUILD_MEMBERS | GUILD_PRESENCES | MESSAGE_CONTENT
 
 
+MANAGE_GUILD = 1 << 5
+ADMINISTRATOR = 1 << 3
+
+
+@dataclass
+class FakeUser:
+    """A person on Discord, who signs in to an application with OAuth2."""
+
+    id: str
+    username: str
+
+
+@dataclass
+class FakeGrant:
+    """What one OAuth2 code or bearer token stands for."""
+
+    application_id: str
+    user_id: str
+    guild_id: str | None
+
+
 @dataclass
 class FakeApplication:
     id: str
@@ -41,6 +62,7 @@ class FakeGuild:
     channels: dict[str, dict[str, Any]] = field(default_factory=dict)
     roles: dict[str, dict[str, Any]] = field(default_factory=dict)
     members: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """By user id; `permissions` is the member's guild permissions, as a user's guild list says."""
     commands: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     """Registered commands per application id."""
 

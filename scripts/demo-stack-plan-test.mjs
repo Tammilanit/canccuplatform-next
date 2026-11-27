@@ -19,8 +19,9 @@ import {
   groupOf,
   needsOf,
 } from "./demo-screenshots-groups.mjs";
+import { shotChecks } from "./demo-stack-plan-shots-test.mjs";
 
-export function selftest({ plan, format, changedPaths }) {
+export function selftest({ plan, format, summary, changedPaths }) {
   let failed = 0;
   const check = (name, run) => {
     try {
@@ -33,7 +34,15 @@ export function selftest({ plan, format, changedPaths }) {
       );
     }
   };
-  const pr = (...paths) => plan({ event: "pull_request", paths });
+  // The tier and the shards' groups; demo-stack-plan-shots-test.mjs checks the screens' choice.
+  const core = ({ tier, api, soak, check, shards }) => ({
+    tier,
+    api,
+    soak,
+    check,
+    shards: shards.map(({ shard, groups }) => ({ shard, groups })),
+  });
+  const pr = (...paths) => core(plan({ event: "pull_request", paths }));
   const FULL = {
     tier: "full",
     api: "all",
@@ -43,6 +52,15 @@ export function selftest({ plan, format, changedPaths }) {
       shard,
       groups: groups.join(","),
     })),
+  };
+  // The full run cuts the screens in two.
+  const FULL_RUN = {
+    ...FULL,
+    shards: FULL.shards.flatMap((s) =>
+      s.shard === "screens"
+        ? [1, 2].map((i) => ({ ...s, shard: `screens-${i}` }))
+        : [s],
+    ),
   };
 
   check("docs, contracts, ADRs and any .md need no stack", () =>
@@ -192,7 +210,6 @@ export function selftest({ plan, format, changedPaths }) {
     "packages/kit-ts/src/index.ts",
     "packages/kit-py/canccu_kit/x.py",
     "modules/theming/src/x.ts",
-    "modules/screen/player/player.js",
     "modules/screen/test/stack/screens.mjs",
     "deploy/compose.yml",
     "events/demo/profile.yaml",
@@ -209,15 +226,22 @@ export function selftest({ plan, format, changedPaths }) {
     "a path the map does not know is the full run, never a skipped one",
     () => assert.deepEqual(pr("setup/install.sh"), FULL),
   );
-  for (const event of ["push", "schedule", "workflow_dispatch"])
+  for (const event of ["schedule", "workflow_dispatch"])
     check(`${event} is the full run whatever changed`, () =>
-      assert.deepEqual(plan({ event, paths: ["docs/ci.md"] }), FULL),
+      assert.deepEqual(core(plan({ event, paths: ["docs/ci.md"] })), FULL_RUN),
     );
+  check("a push to main runs what its changes affect, as its PR did", () => {
+    assert.deepEqual(core(plan({ event: "push", paths: ["docs/ci.md"] })).tier, "docs");
+    assert.deepEqual(
+      core(plan({ event: "push", paths: ["modules/agenda/x.py"] })),
+      pr("modules/agenda/x.py"),
+    );
+  });
   check("the merge queue checks the shots but captures none", () => {
-    const queued = plan({
+    const queued = core(plan({
       event: "merge_group",
       paths: ["modules/agenda/x.py"],
-    });
+    }));
     assert.equal(queued.check, true);
     assert.deepEqual(queued.shards, [{ shard: "pages", groups: "agenda" }]);
     assert.equal(
@@ -260,114 +284,6 @@ export function selftest({ plan, format, changedPaths }) {
           assert.ok(GROUPS.includes(g), `${path}: ${g}`);
     },
   );
-  const shots = (script, ...args) =>
-    execFileSync(
-      "node",
-      [new URL(script, import.meta.url).pathname, "--dry-run", ...args],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    )
-      .split("\n")
-      .filter((l) => /^ {2}\S+\.png /.test(l))
-      .map((l) => l.trim().split(/\s+/)[0]);
-  for (const script of [
-    "demo-screenshots.mjs",
-    "demo-screenshots-front.mjs",
-    "demo-screenshots-dev-seed.mjs",
-  ]) {
-    check(
-      `the shards of ${script} take every shot of the full run, each once`,
-      () => {
-        const all = shots(script);
-        const sharded = SHARDS.flatMap(({ groups }) =>
-          shots(script, "--groups", groups.join(",")),
-        );
-        assert.ok(all.length > 0);
-        assert.deepEqual([...sharded].sort(), [...all].sort());
-      },
-    );
-    check(`${script} refuses a group it does not know`, () =>
-      assert.throws(
-        () => shots(script, "--groups", "agenda,nope"),
-        /unknown group nope/,
-      ),
-    );
-  }
-  check(
-    "only the dev-seed shard runs the dev seed's pass, and a seed change runs it",
-    () => {
-      assert.ok(
-        shots("demo-screenshots-dev-seed.mjs", "--groups", "dev-seed").length >
-          0,
-      );
-      assert.deepEqual(
-        shots("demo-screenshots-dev-seed.mjs", "--groups", "agenda,pizza"),
-        [],
-      );
-      assert.deepEqual(
-        shots("demo-screenshots.mjs", "--groups", "dev-seed"),
-        [],
-      );
-      assert.deepEqual(needsOf("modules/pizza/src/dev-seed.ts"), [
-        "pizza",
-        "dev-seed",
-      ]);
-      assert.deepEqual(needsOf("modules/pizza/src/menus.ts"), ["pizza"]);
-    },
-  );
-  // The weekly run takes every group on one stack: its first pass changes the demo event, which
-  // the seeds refuse as made by hand, so the run of show stayed empty there (#751).
-  const seeds = (...args) =>
-    execFileSync(
-      new URL("demo-screenshots", import.meta.url).pathname,
-      ["--dry-run", ...args],
-      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-    )
-      .split("\n")
-      .filter((l) => /^ {2}(admin|agenda|pizza|moments) /.test(l))
-      .map((l) => l.trim());
-  check(
-    "the dev seeds reset the demo event only after a pass on the same stack changed it",
-    () => {
-      const alone = seeds("--groups", "dev-seed");
-      assert.equal(alone.length, 4, alone.join("\n"));
-      assert.ok(alone.every((l) => !l.endsWith("--force")), alone.join("\n"));
-      const after = seeds();
-      assert.equal(after.length, 4, after.join("\n"));
-      assert.ok(after.every((l) => l.endsWith("--force")), after.join("\n"));
-      assert.deepEqual(seeds("--groups", "agenda"), []);
-    },
-  );
-  check("one group takes only its own shots", () => {
-    const agenda = shots("demo-screenshots.mjs", "--groups", "agenda");
-    assert.ok(
-      agenda.includes("agenda-wide.png") &&
-        agenda.includes("error-not-found.png"),
-    );
-    assert.ok(
-      !agenda.some((n) => /^(settings|studio|screen-|theming-)/.test(n)),
-      agenda.join(" "),
-    );
-  });
-  check(
-    "the merge queue's check skips the 4K screens and keeps every theme",
-    () => {
-      const checked = shots(
-        "demo-screenshots.mjs",
-        "--check",
-        "--groups",
-        "screens",
-      );
-      assert.ok(!checked.some((n) => /3840|2160x/.test(n)));
-      for (const theme of ["terminal", "level-up", "default"])
-        assert.ok(
-          checked.includes(`theming-${theme}-screen-pulse-1920x1080.png`),
-          theme,
-        );
-    },
-  );
   check("a file moved out of a shared path into one module runs full", () => {
     const dir = mkdtempSync(join(tmpdir(), "canccu-plan-"));
     const git = (...args) =>
@@ -394,17 +310,18 @@ export function selftest({ plan, format, changedPaths }) {
         "modules/admin/x.ts",
         "packages/ui/x.ts",
       ]);
-      assert.deepEqual(plan({ event: "pull_request", paths }), FULL);
+      assert.deepEqual(core(plan({ event: "pull_request", paths })), FULL);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });
   check("the output is one KEY=value line each, the shards as JSON", () =>
     assert.equal(
-      format(pr("modules/agenda/x.py")),
-      'tier=module\napi=agenda\nsoak=false\ncheck=false\nshards=[{"shard":"pages","groups":"agenda"}]',
+      format(plan({ event: "pull_request", paths: ["modules/agenda/x.py"] })),
+      'tier=module\napi=agenda\nsoak=false\ncheck=false\nrun=affected\ngroups=agenda\nselect=\nshards=[{"shard":"pages","groups":"agenda","select":""}]',
     ),
   );
+  shotChecks({ check, plan, summary });
   if (failed) {
     console.log(`demo-stack-plan: ${failed} failed`);
     process.exit(1);

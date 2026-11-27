@@ -76,3 +76,53 @@ class MemoryKeys:
 
     async def get(self, key: str) -> str | None:
         return self._live(key)
+
+    async def take(self, key: str) -> str | None:
+        value = self._live(key)
+        self.values.pop(key, None)
+        return value
+
+
+@dataclass
+class FakeAudit:
+    entries: list[dict[str, Any]] = field(default_factory=list)
+
+    async def append(
+        self,
+        tenant_id: str,
+        actor_user_id: str | None,
+        action: str,
+        target: dict[str, str],
+        changes: dict[str, object] | None = None,
+        reason: str | None = None,
+    ) -> None:
+        self.entries.append(
+            {
+                "tenant_id": tenant_id,
+                "actor_user_id": actor_user_id,
+                "action": action,
+                "target": target,
+                "changes": changes or {},
+                "reason": reason,
+            }
+        )
+
+
+@dataclass
+class FakeUsers:
+    """The users seam: a user's Discord id, or None as while #150 does not serve it."""
+
+    discord_ids: dict[str, str] = field(default_factory=dict)
+
+    async def discord_id(self, user_id: str) -> str | None:
+        return self.discord_ids.get(user_id)
+
+
+@dataclass
+class FakeSeries:
+    """The series seam: the events whose admin the caller is, in this event's series."""
+
+    admin_of: set[str] = field(default_factory=set)
+
+    async def admin_of_both(self, host: str, cookie: str | None, source: str, target: str) -> bool:
+        return {source, target} <= self.admin_of

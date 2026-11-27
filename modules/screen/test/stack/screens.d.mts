@@ -9,5 +9,6 @@ export function screenShots(run: {
   fail: (what: string) => void;
   ok: (what: string) => void;
   cookieOn: (pair: string) => unknown;
-  check?: boolean;
+  /** The views to take (screen-views.mjs `attemptOf` names), or every view. */
+  only?: Set<string> | null;
 }): Promise<void>;

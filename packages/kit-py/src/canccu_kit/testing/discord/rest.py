@@ -14,6 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
+from . import oauth
 from .model import FakeApplication, FakeRequest
 
 if TYPE_CHECKING:
@@ -88,6 +89,13 @@ async def put_commands(
     return JSONResponse(commands)
 
 
+async def answer_interaction(
+    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
+) -> Response:
+    fake.interaction_answers.append((p["interaction_id"], body))
+    return Response(status_code=204)
+
+
 ROUTES: list[tuple[str, str, Handler]] = [
     ("GET", "/users/@me", users_me),
     ("GET", "/oauth2/applications/@me", application_me),
@@ -96,6 +104,7 @@ ROUTES: list[tuple[str, str, Handler]] = [
     ("GET", "/guilds/{guild_id}", get_guild),
     ("DELETE", "/users/@me/guilds/{guild_id}", leave_guild),
     ("PUT", "/applications/{application_id}/guilds/{guild_id}/commands", put_commands),
+    ("POST", "/interactions/{interaction_id}/{token}/callback", answer_interaction),
 ]
 _COMPILED = [
     (method, template, re.compile("^" + re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", template) + "$"), h)
@@ -138,6 +147,16 @@ def _scripted(status: int, global_: bool, retry_after: float) -> Response:
 def rest_app(fake: FakeDiscord) -> Starlette:
     async def endpoint(request: Request) -> Response:
         path = "/" + request.path_params["path"]
+        if path == "/oauth2/token" and request.method == "POST":
+            response = await oauth.token(fake, request)
+            fake.requests.append(FakeRequest(None, "POST", path, None, response.status_code))
+            return response
+        if request.headers.get("authorization", "").startswith("Bearer "):
+            response = await oauth.bearer(fake, request, path)
+            fake.requests.append(
+                FakeRequest(None, request.method, path, None, response.status_code)
+            )
+            return response
         raw = await request.body()
         body = json.loads(raw) if raw else None
         auth = request.headers.get("authorization", "")

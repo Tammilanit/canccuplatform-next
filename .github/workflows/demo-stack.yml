@@ -1,8 +1,9 @@
 name: Demo stack
 
-# Tiered (#461, docs/ci.md#tiers): a pull request or merge-queue entry runs what its changed paths
-# need; push to main, the nightly run and a manual run (the screenshot book at a checkpoint) run
-# everything.
+# Tiered (#461, #835, docs/ci.md#tiers): a pull request, a merge-queue entry and a push to main run
+# what their changed paths need, the screens only the views they affect at 1920×1080 in one theme;
+# the nightly run and a manual run take every view in every theme, and a manual run with
+# `book=true` (the screenshot book at a checkpoint) portrait and one 4K shot per layout too.
 on:
   pull_request:
   merge_group:
@@ -11,6 +12,11 @@ on:
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      book:
+        description: "The screenshot book: portrait and one 4K shot per layout too"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,28 +41,35 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
     steps:
       # The planner diffs two trees, so it needs those two commits, not the history: a pull
-      # request's merge commit and its first parent (depth 2), a queue entry's head and its base.
+      # request's merge commit and its first parent (depth 2), a queue entry's head and its base, a
+      # push's head and the commit main was at before it.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - name: The queue entry's base
-        if: github.event_name == 'merge_group'
+      - name: The queue entry's or the push's base
+        if: github.event_name == 'merge_group' || github.event_name == 'push'
         env:
-          BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
         run: git fetch --no-tags --depth=1 origin "$BASE_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Self-test the planner, the path map and the screenshot groups
         run: node scripts/demo-stack-plan.mjs --self-test
-      - name: The tier, from the event and the changed paths
+      # The run's summary says what runs and why.
+      - name: The tier and the shots, from the event and the changed paths
         id: plan
         env:
           EVENT: ${{ github.event_name }}
           # A pull request's checkout is its merge commit, whose first parent is the base it merges
-          # into; a queue entry names its base.
-          BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'HEAD^1' }}
-        run: node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE" | tee -a "$GITHUB_OUTPUT"
+          # into; a queue entry names its base, a push the commit before it. (A pull request's own
+          # `before` is its previous head, not its base.)
+          BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event_name == 'push' && github.event.before || 'HEAD^1' }}
+          BOOK: ${{ github.event_name == 'workflow_dispatch' && inputs.book }}
+        run: |
+          args=(--event "$EVENT" --base "$BASE" --summary "$GITHUB_STEP_SUMMARY")
+          if [ "$BOOK" = true ]; then args+=(--book); fi
+          node scripts/demo-stack-plan.mjs "${args[@]}" | tee -a "$GITHUB_OUTPUT"
 
   api:
     name: demo-stack (api)
@@ -116,9 +129,10 @@ jobs:
     needs: plan
     if: needs.plan.outputs.shards != '[]'
     runs-on: ubuntu-latest
-    # The screens shard already ran 22–24 min on main with the living strips; the stage's two
-    # strips (#787) add about 4 more, so 25 cut it off at its last shots.
-    timeout-minutes: 35
+    # The screens shard of one ran 22–28 min with the living strips and the stage's two (#787);
+    # it is now cut in two (#835), each part under 20 min, so 25 leaves room and a hang still
+    # ends here. It supersedes the 35- and 40-minute raises of #833 and #834.
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -131,14 +145,28 @@ jobs:
       # It also imports the demo event, which the shots show.
       - name: Platform smoke
         run: scripts/demo-stack-test --only "" http://127.0.0.1
+      # The shard's groups and the run's choice of screen shots (the plan's summary says why);
+      # what the shard took goes to the run's summary.
       - name: Screenshots of this shard's groups
         env:
+          SHARD: ${{ matrix.shard }}
           SHARD_GROUPS: ${{ matrix.groups }}
+          SELECT: ${{ matrix.select }}
           CHECK: ${{ needs.plan.outputs.check }}
         run: |
-          args=(--groups "$SHARD_GROUPS")
+          set -o pipefail
+          read -ra select <<< "$SELECT"
+          args=(--groups "$SHARD_GROUPS" "${select[@]}")
           if [ "$CHECK" = true ]; then args+=(--check); fi
-          scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots
+          status=0
+          scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots 2>&1 | tee "$RUNNER_TEMP/shots.log" || status=1
+          {
+            echo "<details><summary>shots $SHARD: $(grep -c '^ok ' "$RUNNER_TEMP/shots.log") taken, $(grep -c '^FAIL ' "$RUNNER_TEMP/shots.log") failed</summary>"
+            echo
+            grep -E '^(ok|FAIL) ' "$RUNNER_TEMP/shots.log" | sed 's/^/    /' || true
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
       - name: Upload screenshots
         if: always() && needs.plan.outputs.check != 'true'
         uses: actions/upload-artifact@v4

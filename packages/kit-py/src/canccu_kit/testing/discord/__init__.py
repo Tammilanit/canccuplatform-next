@@ -3,14 +3,25 @@
 
 from .fake import FakeDiscord
 from .gateway import FakeGateway, GatewayClosed, MemoryTransport, Transport
-from .model import FakeApplication, FakeGuild, FakeRequest, Intents
+from .model import (
+    ADMINISTRATOR,
+    MANAGE_GUILD,
+    FakeApplication,
+    FakeGuild,
+    FakeRequest,
+    FakeUser,
+    Intents,
+)
 
 __all__ = [
+    "ADMINISTRATOR",
+    "MANAGE_GUILD",
     "FakeApplication",
     "FakeDiscord",
     "FakeGateway",
     "FakeGuild",
     "FakeRequest",
+    "FakeUser",
     "GatewayClosed",
     "Intents",
     "MemoryTransport",

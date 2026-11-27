@@ -7,3 +7,8 @@ flags:
   screen.web: {default: true}
   # contracts/pizza.md, Feature flags
   pizza.enabled: {default: true}
+  # contracts/bot.md, Privileged intents and data per event: one flag per feed of gateway data
+  bot.presence: {default: true}
+  bot.members: {default: true}
+  bot.voice: {default: true}
+  bot.messages: {default: true}

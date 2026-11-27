@@ -16,3 +16,10 @@ jq -e '.status != "down"' "$t/r.json"
 echo "-- the connection needs a session"
 code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/bot/connection"); echo "$code"
 [ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
+echo "-- writing the connection and binding need a session"
+for call in "PUT /api/bot/connection" "POST /api/bot/guild/bind" "DELETE /api/bot/guild"; do
+  method=${call%% *} path=${call#* }
+  code=$(curl -sS -o "$t/r.json" -w '%{http_code}' -X "$method" \
+    -H 'content-type: application/json' -d '{}' "$base$path"); echo "$call $code"
+  [ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
+done
