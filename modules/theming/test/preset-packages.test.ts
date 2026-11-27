@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse, walk } from "css-tree";
-import type { CssNode, Declaration, Rule } from "css-tree";
+import type { CssNode, Declaration } from "css-tree";
 import { describe, expect, it } from "vitest";
 import { checkCss } from "../src/css.js";
 import { BOX_OPACITY, boxContrastFailures, contrastRatio } from "../src/contrast.js";
