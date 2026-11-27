@@ -93,8 +93,8 @@ describe("the coming hours (`agenda_timeline`)", () => {
       row: 2,
       align: "start",
     });
-    // Begun before the line: it starts at the line's edge, in the first lane.
-    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 3, row: 1 });
+    // Begun before the line: it starts at the line's edge, in the first lane, as wide as its label.
+    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 5, row: 1 });
     expect([view.from_text, view.to_text]).toEqual(["18:00", "00:00"]);
   });
 
@@ -143,8 +143,9 @@ describe("the coming hours (`agenda_timeline`)", () => {
       align: string;
     }[];
     expect(items.map((i) => i.row)).toEqual([1, 2, 3, 1]);
-    // No end: one column and its start alone.
-    expect(items[3]).toMatchObject({ cols: 1, range_text: "21:30" });
+    // No end: its start alone, in a box as wide as its label needs.
+    expect(items[3]).toMatchObject({ range_text: "21:30" });
+    expect(items[3]?.cols).toBeGreaterThan(1);
   });
 
   it("reaches a late block's label back from the line's end", () => {
@@ -156,12 +157,16 @@ describe("the coming hours (`agenda_timeline`)", () => {
     const [late] = view.items as {
       align: string;
       col: number;
+      cols: number;
       label_col: number;
       label_cols: number;
     }[];
-    expect(late).toMatchObject({ col: 35, align: "end" });
-    expect((late?.label_col ?? 0) + (late?.label_cols ?? 0) - 1).toBe(36);
-    expect(late?.label_col).toBeLessThan(35);
+    // The box reaches back from the line's end with its label, and the label is the box's own.
+    expect(late).toMatchObject({ align: "end" });
+    expect((late?.col ?? 0) + (late?.cols ?? 0) - 1).toBe(36);
+    expect(late?.col).toBeLessThan(35);
+    expect(late?.label_col).toBe(late?.col);
+    expect(late?.label_cols).toBe(late?.cols);
   });
 
   it("keeps every label clear of the other blocks of its lane, and leaves out one with no room", () => {

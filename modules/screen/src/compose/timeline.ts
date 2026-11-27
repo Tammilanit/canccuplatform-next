@@ -176,6 +176,10 @@ export function timelineFields(
       const place = places[n];
       if (place === undefined) return [];
       const startsText = o.time(i.starts_at);
+      // The block is at least as wide as its label's own width, and the label stays inside it
+      // (wrapping, or ending in an ellipsis): a short item still says its name, in its block.
+      const first = Math.min(r.col, r.labelCol);
+      const last = Math.max(r.last, r.labelLast);
       return [
         {
           name: i.title,
@@ -186,11 +190,11 @@ export function timelineFields(
           starts_text: startsText,
           range_text:
             i.ends_at === null ? startsText : `${startsText ?? ""}–${o.time(i.ends_at) ?? ""}`,
-          col: r.col,
-          cols: r.last - r.col + 1,
+          col: first,
+          cols: last - first + 1,
           row: place.lane,
-          label_col: place.labelCol,
-          label_cols: place.labelCols,
+          label_col: first,
+          label_cols: last - first + 1,
           align: place.labelCol < r.col ? "end" : "start",
         },
       ];

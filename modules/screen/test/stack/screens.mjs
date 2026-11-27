@@ -12,6 +12,7 @@
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
 import { cleanUp } from "./cleanup.mjs";
 import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
+import { timelineFits } from "./timeline-fit.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
@@ -227,6 +228,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await tickerFitted(page, theme === "default" && size === HD[0]);
       await agendaSettled(page);
       await panelFilled(page);
+      await timelineFits(page);
       if (theme === "default") await venueOnOneLine(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(

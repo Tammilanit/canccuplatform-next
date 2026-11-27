@@ -178,6 +178,15 @@
     white-space: nowrap;
   }
 
+  /* An hour whose time would touch its neighbour's (timeline-fit.ts): its tick stays, its time goes. */
+  .canccu-widget--agenda_timeline .canccu-widget__tick--off {
+    visibility: hidden;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__tick--off::before {
+    visibility: visible;
+  }
+
   .canccu-widget--agenda_timeline .canccu-widget__tick:first-child {
     justify-content: flex-start;
   }
