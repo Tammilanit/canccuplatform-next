@@ -26,8 +26,8 @@ export const PREVIEW_DRAWN = "canccu-screen-preview-drawn";
 /**
  * A live look from theming's Studio (theming's plan issue-784 D3, D21): token values the
  * organiser is changing, shown before the draft saves, and the preview's chips (how busy, the time
- * of day). The chips are only marked on the body: #787's stage answers the scene; the daypart's
- * tint is drawn here (stage.css) until it does.
+ * of day). The chips are only marked on the body; the stage (stage.ts) reads them in place of the
+ * zone's hype and the clock's time of day (#787 D10).
  */
 export const LIVE_MESSAGE = "canccu-theme-live";
 const LIVE_VAR = /^--canccu-[a-z0-9-]{1,48}$/;
