@@ -2,6 +2,7 @@
 // living.mjs hands its own: the background over a day (morning, the evening's peak, late night)
 // and the hype low and high. Each frame is its own state, the page reloaded for it: the time of
 // day comes from the event's time zone, handed so that its clock reads the frame's hour now.
+import { turnsSettled } from "./dashboard.mjs";
 import { keyArt } from "./handed.mjs";
 
 /** The game's art as the server sends it, blurred; the demo cover stands in (handed-stage.mjs). */
@@ -61,6 +62,8 @@ export async function stageStrip(page, view, shoot) {
     await page.evaluate(() => document.fonts.ready);
     // The daylight's 2 s and the game art's 3 s fades.
     await page.waitForTimeout(3500);
+    // Never mid-turn: a frame caught in a crossfade shows two items over each other.
+    await turnsSettled(page);
     await shoot(`f${i + 1}`);
   }
 }

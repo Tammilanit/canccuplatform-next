@@ -82,12 +82,25 @@ export class MotionLayer {
   private readonly glow = new ChangeGlow();
   /** The hype's phase (#787 D13), or undefined from a server that sends none: the level alone. */
   private hype: string | undefined;
+  /** The state version last drawn, and whether this tick drew a newer one. */
+  private version: number | undefined;
+  private newState = true;
 
   constructor(private readonly body: HTMLElement) {}
 
   /** Once per tick, after the regions are drawn and the countdowns filled. */
-  apply(root: ParentNode, level: Level, style: MotionStyle, now: number, hype?: string): void {
+  apply(
+    root: ParentNode,
+    level: Level,
+    style: MotionStyle,
+    now: number,
+    hype?: string,
+    version?: number,
+  ): void {
     this.hype = hype;
+    // A change the screen's own clock makes (a rotation's text, a time that ticks) is no news.
+    this.newState = version === undefined || version !== this.version;
+    this.version = version;
     this.mark(level, style);
     // A box still waiting to fade in is not shown yet: its spotlight starts when it is.
     const boxes = [
@@ -128,7 +141,7 @@ export class MotionLayer {
     if (before === undefined || LIVE.has(typeOf(box))) return;
     if (before.join("\u0000") === texts.join("\u0000")) return;
     // The glow shows at none too, as a still outline (#787 D11); nothing else moves there.
-    this.glow.mark(box, at);
+    if (this.newState) this.glow.mark(box, at);
     if (level === "none") return;
     if (before.length === texts.length) {
       for (const [i, text] of texts.entries()) {

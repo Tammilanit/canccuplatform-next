@@ -84,10 +84,11 @@
     position: absolute;
     bottom: -2%;
     left: var(--canccu-particle-x, 50%);
-    width: 0.5vmin;
-    height: 0.5vmin;
+    width: 0.9vmin;
+    height: 0.9vmin;
     border-radius: 50%;
-    background-color: color-mix(in srgb, var(--canccu-color-accent) 55%, transparent);
+    background-color: color-mix(in srgb, var(--canccu-color-accent) 75%, transparent);
+    box-shadow: 0 0 1.2vmin color-mix(in srgb, var(--canccu-color-accent) 45%, transparent);
     opacity: 0;
     animation: canccu-look-rise 24s linear infinite;
     animation-delay: calc(var(--canccu-particle, 0) * -1.9s);

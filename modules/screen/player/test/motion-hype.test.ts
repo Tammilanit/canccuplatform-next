@@ -69,6 +69,17 @@ describe("the change glow", () => {
     expect(box.classList.contains("canccu-changed")).toBe(true);
   });
 
+  it("glows only for a change a new state brings, never for one the screen's clock makes", () => {
+    const { root, box } = stage("<b>12</b>");
+    layer.apply(root, "calm", STYLE, T0, undefined, 7);
+    box.innerHTML = "<b>13</b>";
+    layer.apply(root, "calm", STYLE, T0 + 1000, undefined, 7);
+    expect(box.classList.contains("canccu-changed")).toBe(false);
+    box.innerHTML = "<b>14</b>";
+    layer.apply(root, "calm", STYLE, T0 + 2000, undefined, 8);
+    expect(box.classList.contains("canccu-changed")).toBe(true);
+  });
+
   it("never glows on the first draw or on a clock", () => {
     const { root, box } = stage("<b>19:30</b>", "clock");
     layer.apply(root, "lively", STYLE, T0);

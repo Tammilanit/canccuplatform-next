@@ -218,7 +218,8 @@ export class Screen {
     fillCountdowns(this.root, now);
     const life = lifeOf(state);
     const style = motionStyleOf(state.display?.motion_style);
-    this.motion.apply(this.root, level, style, now, life.hype?.phase as string | undefined);
+    const hype = life.hype?.phase as string | undefined;
+    this.motion.apply(this.root, level, style, now, hype, state.state_version);
     this.stage.apply(state.display?.stage, level, now, state.theme.backdrop as BackdropView, life);
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now, speedOf(state.ticker));
