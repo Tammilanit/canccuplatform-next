@@ -89,4 +89,5 @@ def main() -> None:
     import uvicorn
 
     _, app = create_server(os.environ)
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="warning")
+    # The sans-I/O implementation: uvicorn's default one uses websockets' deprecated legacy API.
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="warning", ws="websockets-sansio")

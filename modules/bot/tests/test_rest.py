@@ -65,6 +65,25 @@ async def test_events_are_served_in_turn(fake: FakeDiscord, rest: RestClient) ->
     assert sent.index("b") <= 1, sent
 
 
+async def test_a_burst_waiting_on_its_bucket_never_holds_every_worker() -> None:
+    fake = FakeDiscord(bucket_limit=1, bucket_window_s=0.3)
+    async for rest in make(fake, workers=3):
+        app = next(iter(fake.applications.values()))
+        guild = fake.add_guild("G", bots=[app.id])
+        busy, quiet = fake.add_channel(guild.id, "busy"), fake.add_channel(guild.id, "quiet")
+        burst = [
+            asyncio.create_task(
+                rest.request("POST", f"/channels/{busy}/messages", tenant="a", json={})
+            )
+            for _ in range(4)
+        ]
+        await asyncio.sleep(0.05)
+        started = asyncio.get_running_loop().time()
+        await rest.request("POST", f"/channels/{quiet}/messages", tenant="b", json={})
+        assert asyncio.get_running_loop().time() - started < 0.1
+        await asyncio.gather(*burst)
+
+
 async def test_a_full_queue_refuses_only_that_event(fake: FakeDiscord) -> None:
     async for rest in make(fake, workers=1, queue_cap=2):
         results = await asyncio.gather(
@@ -95,13 +114,15 @@ async def test_a_429_is_waited_out_and_sent_again(fake: FakeDiscord, rest: RestC
 async def test_a_global_429_shows_as_rate_limited_while_it_lasts(fake: FakeDiscord) -> None:
     seen: list[bool] = []
     async for rest in make(fake, workers=1):
-        rest.on_change = lambda: seen.append(rest.rate_limited)
+        rest.on_change = lambda r=rest: seen.append(r.rate_limited)  # type: ignore[misc]
         fake.fail_next(429, global_=True, retry_after=0.05)
         await rest.request("GET", "/users/@me")
     assert seen == [True, False]
 
 
-async def test_a_429_that_keeps_coming_fails_the_request(fake: FakeDiscord, rest: RestClient) -> None:
+async def test_a_429_that_keeps_coming_fails_the_request(
+    fake: FakeDiscord, rest: RestClient
+) -> None:
     fake.fail_next(429, retry_after=0.01, times=10)
     with pytest.raises(RestError) as refused:
         await rest.request("GET", "/users/@me")
@@ -112,7 +133,7 @@ async def test_a_429_that_keeps_coming_fails_the_request(fake: FakeDiscord, rest
 async def test_a_token_that_stops_working_stops_the_client(fake: FakeDiscord) -> None:
     changes: list[str | None] = []
     async for rest in make(fake, workers=1):
-        rest.on_change = lambda: changes.append(rest.stopped)
+        rest.on_change = lambda r=rest: changes.append(r.stopped)  # type: ignore[misc]
         fake.applications.clear()  # the token was reset in the developer portal
         with pytest.raises(RestError) as first:
             await rest.request("GET", "/users/@me")

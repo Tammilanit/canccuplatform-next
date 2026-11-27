@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Health, SecretBox, ServiceIdentity, TenantResolver
+from canccu_kit import Health, SecretBox, TenantResolver
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
@@ -30,9 +30,8 @@ from canccu_bot.status import StatusBoard
 
 URL = os.environ.get("CANCCU_DATABASE_URL")
 NOW = datetime(2026, 11, 27, 10, 0, tzinfo=UTC)
-KEY = b"k" * 32
 SHARED_ID = "100000000000000002"
-HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b"}
+HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b", "r.example.test": "ev-r"}
 TABLES = "bot_connections, bot_bindings, bot_guild_routes, bot_application_routes"
 
 
@@ -106,7 +105,10 @@ def resolver() -> TenantResolver:
         tid = HOSTS.get(request.url.params.get("host", ""))
         if tid is None:
             return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
-        return httpx.Response(200, json=context(tid))
+        ctx = context(tid)
+        if tid == "ev-r":  # organiser paths only from the venue or Tailscale
+            ctx["admin_access"] = "restricted"
+        return httpx.Response(200, json=ctx)
 
     return TenantResolver(
         "http://tenants",
@@ -138,5 +140,5 @@ async def env(db: Db) -> Env:
         shared=SharedApp(SHARED_ID, "shared-token", "shared-secret"),
         secrets=SecretBox({1: b"s" * 32}, 1),
     )
-    app = create_app(deps, Health("bot", "dev", {}), resolver(), ServiceIdentity("bot", KEY))
+    app = create_app(deps, Health("bot", "dev", {}), resolver())
     return Env(db, rights, keys, deps, app)

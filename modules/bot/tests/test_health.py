@@ -3,6 +3,8 @@ that names no event, and never `down` for Discord's sake (contracts/bot.md, Stat
 
 from __future__ import annotations
 
+from typing import Any
+
 from canccu_kit import Health
 from fakes import MemoryKeys
 
@@ -16,11 +18,12 @@ def status(value: str, error: str | None = None) -> dict[str, str | None]:
     return {"status": value, "error_code": error, "since": "2026-11-27T10:00:00Z"}
 
 
-async def run(board: StatusBoard, shared: str | None, own: list[str]) -> dict[str, object]:
+async def run(board: StatusBoard, shared: str | None, own: list[str]) -> dict[str, Any]:
     async def own_ids() -> list[str]:
         return own
 
-    health = Health("bot", "dev", discord_checks(board, shared, own_ids))
+    checks: dict[str, Any] = discord_checks(board, shared, own_ids)
+    health = Health("bot", "dev", checks)
     result = await health.run()
     assert result.http_status == 200, "Discord never takes the module down"
     return result.body
@@ -42,17 +45,20 @@ async def test_a_failed_shared_client_degrades_the_module() -> None:
     await board.publish(SHARED, status("failed", "token_invalid"), None)
     body = await run(board, SHARED, [])
     assert body["status"] == "degraded"
-    assert body["checks"]["discord_shared"] == {"status": "degraded", "detail": "failed: token_invalid"}  # type: ignore[index]
+    assert body["checks"]["discord_shared"] == {
+        "status": "degraded",
+        "detail": "failed: token_invalid",
+    }
 
 
 async def test_no_status_yet_is_connecting() -> None:
     body = await run(StatusBoard(MemoryKeys()), SHARED, [])
-    assert body["checks"]["discord_shared"] == {"status": "degraded", "detail": "connecting"}  # type: ignore[index]
+    assert body["checks"]["discord_shared"] == {"status": "degraded", "detail": "connecting"}
 
 
 async def test_no_shared_application_says_so() -> None:
     body = await run(StatusBoard(MemoryKeys()), None, [])
-    assert body["checks"]["discord_shared"] == {"status": "degraded", "detail": "not configured"}  # type: ignore[index]
+    assert body["checks"]["discord_shared"] == {"status": "degraded", "detail": "not configured"}
 
 
 async def test_failing_own_clients_are_counted_and_never_degrade() -> None:
@@ -65,4 +71,4 @@ async def test_failing_own_clients_are_counted_and_never_degrade() -> None:
         board, SHARED, ["100000000000000003", "100000000000000005", "100000000000000006"]
     )
     assert body["status"] == "ok"
-    assert body["checks"]["discord_own"] == {"status": "ok", "detail": "2 of 3 own clients failing"}  # type: ignore[index]
+    assert body["checks"]["discord_own"] == {"status": "ok", "detail": "2 of 3 own clients failing"}

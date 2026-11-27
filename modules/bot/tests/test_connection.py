@@ -27,6 +27,11 @@ async def test_without_the_right_is_403(env: Env) -> None:
     assert (r.status_code, r.json()["error"]["code"]) == (403, "missing_right")
 
 
+async def test_a_restricted_event_answers_only_its_admin_network(env: Env) -> None:
+    r = await get(env, env.reader(), "r.example.test")
+    assert (r.status_code, r.json()["error"]["code"]) == (403, "admin_access_restricted")
+
+
 async def test_an_event_starts_on_the_shared_bot(env: Env) -> None:
     await env.deps.board.publish(SHARED_ID, READY, {"id": "100000000000000004", "name": "Demo Bot"})
     r = await get(env, env.reader())

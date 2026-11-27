@@ -15,7 +15,9 @@ from canccu_bot.client import DiscordClient
 API = "https://discord.test/api/v10"
 
 
-def make(fake: FakeDiscord, app_id: str, token: str, **rest: Any) -> tuple[DiscordClient, list[str]]:
+def make(
+    fake: FakeDiscord, app_id: str, token: str, **rest: Any
+) -> tuple[DiscordClient, list[str]]:
     seen: list[str] = []
     events: list[str] = []
 

@@ -23,7 +23,11 @@ class FakeClient:
     started: bool = False
     stopped: bool = False
     status: dict[str, Any] = field(
-        default_factory=lambda: {"status": "ready", "error_code": None, "since": "2026-11-27T10:00:00Z"}
+        default_factory=lambda: {
+            "status": "ready",
+            "error_code": None,
+            "since": "2026-11-27T10:00:00Z",
+        }
     )
     bot_user: dict[str, str] | None = None
 
