@@ -21,6 +21,7 @@
 }
 .canccu-surface--screen .canccu-widget--announcement .canccu-widget__kicker {
   padding: 4px 44px 4px 36px;
+  color: var(--canccu-color-primary-text);
   border-radius: 0;
   font-family: var(--canccu-font-heading);
   font-style: italic;
@@ -33,14 +34,14 @@
   text-transform: uppercase;
 }
 
-/* Titles as skewed tabs: the tab is skewed, its letters are not. An announcement's headline keeps
-   the platform's sizes and floors across a hall (#780), as in Level up. */
+/* Titles as slanted tabs: the tab is the title's own ground cut on a slant, its letters upright, so
+   the readability check reads the text on it. An announcement's headline keeps the platform's
+   sizes and floors across a hall (#780), as in Level up. */
 .canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
-  position: relative;
   display: inline-block;
   align-self: flex-start;
   margin: 0 0 10px -6px;
-  padding: 2px 22px 2px 18px;
+  padding: 2px 26px 2px 22px;
   font-family: var(--canccu-font-heading);
   font-size: 1.875rem;
   font-weight: 700;
@@ -48,21 +49,20 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--canccu-color-primary-text);
-  isolation: isolate;
-}
-.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  transform: skewX(-12deg);
   background: var(--canccu-color-primary);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
 
 /* A thin rule under the header row, like a broadcast's top bar. */
 .canccu-surface--screen .canccu-region--brand,
 .canccu-surface--screen .canccu-region--clock {
   border-bottom: 3px solid var(--canccu-color-primary);
+}
+
+/* The statistics in the condensed face, numbers and labels: three fit on one line of a Dashboard
+   box, as the platform's design wants, where Saira's wider labels wrapped the third. */
+.canccu-surface--screen .canccu-widget--stats {
+  font-family: var(--canccu-font-heading);
 }
 
 .canccu-surface--screen .canccu-widget--clock {

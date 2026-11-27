@@ -5,7 +5,8 @@
     "faces": [
       {
         "weight": 400,
-        "file": "press-start-2p-400.woff2"
+        "file": "press-start-2p-400.woff2",
+        "size_adjust": 70
       }
     ]
   },

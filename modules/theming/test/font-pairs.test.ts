@@ -23,11 +23,13 @@ describe("the font pairs in the image", () => {
     });
   });
 
-  it("scales a face that sets small for its size, so its text reads as large as the others'", () => {
+  it("scales a face that sets small or wide for its size, so its text fits as the others' does", () => {
     const pair = FONT_PAIRS.get("press-jersey");
     if (pair === undefined) throw new Error("no press-jersey");
     const [heading, body] = pairFontFaces(pair);
-    expect(heading).not.toContain("size-adjust");
+    // Press Start 2P's square digits are half again as wide as other faces': it is set smaller.
+    expect(heading).toContain('font-family: "Press Start 2P"');
+    expect(heading).toContain("size-adjust: 70%;");
     expect(body).toContain('font-family: "Jersey 10"');
     expect(body).toContain("size-adjust: 130%;");
   });

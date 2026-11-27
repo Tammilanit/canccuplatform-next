@@ -12,8 +12,9 @@ export interface Face {
   weight: number;
   file: string;
   /**
-   * A face whose glyphs set small for their size (Jersey 10, plan issue-785 D14) scales them, in
-   * percent, so a page's sizes read as large in it as in the other pairs, hub and phone included.
+   * A face whose glyphs set small or wide for their size (Jersey 10, Press Start 2P; plan
+   * issue-785 D14) scales them, in percent, so a page's sizes read and fit in it as in the other
+   * pairs, hub and phone included.
    */
   size_adjust?: number;
 }
