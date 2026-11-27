@@ -10,6 +10,7 @@ import type { Condition, Mood, Scene } from "./scenes.js";
 /** An agenda item as `GET /internal/agenda/items` answers it (contracts/agenda.md). */
 export interface AgendaItem {
   id: string;
+  title?: string | null;
   kind: string;
   zone?: string | null;
   visibility: string;

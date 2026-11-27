@@ -231,7 +231,7 @@ test("--changed picks the screen shots a changed file is named for, and says wha
     "ann-important-dashboard", "dashboard", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
   ]);
   assert.deepEqual(views(run(["modules/screen/test/stack/living.mjs"])), [
-    "living-food", "living-rotation", "living-slideshow", "living-stepdown",
+    "living-day", "living-food", "living-hype", "living-rotation", "living-slideshow", "living-stepdown",
   ]);
   assert.ok(views(run(["modules/screen/player/src/claims.ts"])).includes("claim-rail"), "claims names the claim views");
   assert.ok(run(["modules/screen/player/src/claims.ts"]).shots.every((s) => s.group === "screens"));

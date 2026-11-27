@@ -1,0 +1,168 @@
+/*
+ * The living stage (#787 D10, D12; contracts/theming.md, The two backgrounds): the generated looks
+ * the stage cycles through, the time of day over them, the hype's energy and the current game's
+ * art. All of it is the stage's, under every box and the header. The looks fade over 40 s, a pace
+ * neither the hype nor the level changes; how fast each one drifts follows the level, still at
+ * none. The hype (`--canccu-hype`, 0 to 1, 0.5 where the theme switches it off) sets how bright a
+ * look is. Only opacity and transform move. In `canccu-base`, so a theme's layer restyles it.
+ */
+@layer canccu-base {
+  .canccu-stage__glow,
+  .canccu-stage__look > * {
+    opacity: 0;
+    /* At once on the stage's first draw (stage.ts), so a screen that just loaded has its look. */
+    transition: opacity var(--canccu-look-fade, 40s) ease-in-out;
+  }
+
+  .canccu-stage__look > * {
+    position: absolute;
+    inset: -20%;
+  }
+
+  .canccu-stage--look-glows .canccu-stage__glow,
+  .canccu-stage--look-gradient .canccu-stage__gradient,
+  .canccu-stage--look-particles .canccu-stage__particles,
+  .canccu-stage--look-waves .canccu-stage__waves {
+    opacity: calc(0.55 + 0.45 * var(--canccu-hype, 0.5));
+  }
+
+  /* A slow diagonal that turns. */
+  .canccu-stage__gradient {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--canccu-color-primary) 20%, transparent),
+      transparent 45%,
+      color-mix(in srgb, var(--canccu-color-accent) 14%, transparent)
+    );
+  }
+
+  body.canccu-motion--calm .canccu-stage__gradient {
+    animation: canccu-look-turn 240s linear infinite;
+  }
+
+  body.canccu-motion--lively .canccu-stage__gradient {
+    animation: canccu-look-turn 120s linear infinite;
+  }
+
+  body.canccu-motion--party .canccu-stage__gradient {
+    animation: canccu-look-turn 60s linear infinite;
+  }
+
+  /* Soft colour bands. */
+  .canccu-stage__waves {
+    background-image:
+      radial-gradient(
+        ellipse 110% 22% at 50% 32%,
+        color-mix(in srgb, var(--canccu-color-primary) 16%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 110% 22% at 50% 70%,
+        color-mix(in srgb, var(--canccu-color-accent) 11%, transparent),
+        transparent 70%
+      );
+  }
+
+  body.canccu-motion--calm .canccu-stage__waves {
+    animation: canccu-drift 120s ease-in-out infinite;
+  }
+
+  body.canccu-motion--lively .canccu-stage__waves {
+    animation: canccu-drift 45s ease-in-out infinite;
+  }
+
+  body.canccu-motion--party .canccu-stage__waves {
+    animation: canccu-drift 20s ease-in-out infinite;
+  }
+
+  /* Rising points; stage.ts draws more of them the louder the hype, none at none. */
+  .canccu-stage__particles {
+    inset: 0;
+  }
+
+  .canccu-stage__particles > i {
+    position: absolute;
+    bottom: -2%;
+    left: var(--canccu-particle-x, 50%);
+    width: 0.9vmin;
+    height: 0.9vmin;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--canccu-color-accent) 75%, transparent);
+    box-shadow: 0 0 1.2vmin color-mix(in srgb, var(--canccu-color-accent) 45%, transparent);
+    opacity: 0;
+    animation: canccu-look-rise 24s linear infinite;
+    animation-delay: calc(var(--canccu-particle, 0) * -1.9s);
+  }
+
+  body.canccu-motion--lively .canccu-stage__particles > i {
+    animation-duration: 16s;
+  }
+
+  body.canccu-motion--party .canccu-stage__particles > i {
+    animation-duration: 10s;
+  }
+
+  body.canccu-motion--none .canccu-stage__particles {
+    display: none;
+  }
+
+  /*
+   * The time of day: morning cool and light, late night deep and dim, the day as the scene has it.
+   * The Theme studio's preview chips mark the same classes (stage.ts), so its frame shows them.
+   */
+  .canccu-stage__daylight {
+    opacity: 0;
+    transition:
+      opacity 2s ease,
+      background-color 2s ease;
+  }
+
+  .canccu-stage--daylight-morning .canccu-stage__daylight {
+    background-color: rgb(190 225 255 / 0.12);
+    opacity: 1;
+  }
+
+  .canccu-stage--daylight-late .canccu-stage__daylight {
+    background-color: rgb(2 4 12 / 0.38);
+    opacity: 1;
+  }
+
+  /* The current game's blurred art, a steady layer while the hype builds and while it is live. */
+  .canccu-stage__game {
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+    transition: opacity 3s ease;
+  }
+
+  .canccu-stage--game .canccu-stage__game {
+    opacity: 1;
+  }
+
+  @keyframes canccu-look-turn {
+    from {
+      transform: rotate(0deg) scale(1.2);
+    }
+
+    to {
+      transform: rotate(360deg) scale(1.2);
+    }
+  }
+
+  @keyframes canccu-look-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+
+    10%,
+    80% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-105vh);
+    }
+  }
+}
