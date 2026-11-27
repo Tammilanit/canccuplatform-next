@@ -88,7 +88,8 @@ export function presetManifest(preset: Preset, scheme: Scheme, kept: Kept): Mani
   const m = structuredClone(preset.manifest);
   const tokens = isObject(m.tokens) ? m.tokens : {};
   m.tokens = { ...tokens, colors: schemeColors(scheme) };
-  m.brand = { ...scheme.brand, ...kept.brand };
+  // Over the package's own brand, not a rebuilt one: its font pair, corners and backdrop stay (#823).
+  m.brand = { ...(isObject(m.brand) ? m.brand : {}), ...scheme.brand, ...kept.brand };
   const images = { ...(isObject(m.images) ? m.images : {}), ...kept.images };
   if (Object.keys(images).length > 0) m.images = images;
   m.preset = { id: preset.id, scheme: scheme.id };
