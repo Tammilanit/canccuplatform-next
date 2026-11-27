@@ -137,7 +137,10 @@ const { values: opts } = parseArgs({
 });
 const list = (value) => value?.split(",").filter(Boolean);
 const part = opts.part && /^(\d+)\/(\d+)$/.exec(opts.part)?.slice(1).map(Number);
-if (opts.part && !part) throw new Error(`--part ${opts.part}: want I/N`);
+if (opts.part && !part) {
+  console.error(`demo-screenshots: --part ${opts.part}: want I/N`);
+  process.exit(2);
+}
 // The screen shots this run takes, and the views that take them (screen-views.mjs `attemptOf`).
 const screenNames = chosen({
   themes: list(opts.themes),

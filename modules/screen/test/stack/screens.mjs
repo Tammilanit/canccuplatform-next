@@ -10,8 +10,7 @@
 // takeover, which keeps its fixed red there too. Dashboard is handed sample statistics (#416),
 // and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
-// A run takes only the views `only` names: the themes, sizes and views scripts/demo-screenshots
-// chose (screen-views.mjs `chosen`; docs/ci.md#tiers).
+// A run takes only the views `only` names, as chosen (screen-views.mjs `chosen`, docs/ci.md#tiers).
 import { cleanUp } from "./cleanup.mjs";
 import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";

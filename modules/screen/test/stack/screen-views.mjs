@@ -148,7 +148,13 @@ const themeOf = (name) => /^theming-(.+?)-screen-/.exec(name)?.[1];
  * runs of the rest, cut in order where each holds about as much (a screens shard each). Whole
  * attempts always: a view that takes several shots is taken with all of them.
  */
-export function chosen({ themes = THEMES, strips = false, book = false, shots = null, part = null } = {}) {
+export function chosen({
+  themes = THEMES,
+  strips = false,
+  book = false,
+  shots = null,
+  part = null,
+} = {}) {
   for (const t of themes) if (!THEMES.includes(t)) throw new Error(`unknown theme ${t}`);
   const all = planned();
   const sized = (n) =>
