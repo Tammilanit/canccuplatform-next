@@ -5,7 +5,7 @@ import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs
 import { MOTION_VIEWS, STAGE_VIEWS } from "./handed.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
-export const THEMES = ["terminal", "level-up", "default"];
+export const THEMES = ["terminal", "level-up", "esports", "default"];
 export const HD = [
   [1920, 1080],
   [1080, 1920],

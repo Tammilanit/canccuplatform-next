@@ -15,6 +15,7 @@ import { FONT_PAIRS } from "../src/font-pairs.js";
 import { PRESETS, schemeColors } from "../src/presets.js";
 import type { Preset } from "../src/presets.js";
 import { textSmallProblems } from "../src/readability.js";
+import { parseTemplate } from "../src/template.js";
 
 /** Black over the whole screen at its darkest point, by preset: Arcade's scanlines (arcade.css). */
 const OVERLAY: Readonly<Record<string, number>> = { arcade: 0.3 };
@@ -128,6 +129,16 @@ describe("every preset", () => {
           ok: true,
           warnings: [],
         });
+      }
+    }
+  });
+
+  it("has templates that pass the checks", () => {
+    for (const p of presets) {
+      const templates = (p.manifest.templates ?? {}) as Record<string, { file: string }>;
+      for (const { file } of Object.values(templates)) {
+        const result = parseTemplate(file, readFileSync(join(p.dir, file)));
+        expect(result.ok ? "ok" : result.problem.message, `${p.id}/${file}`).toBe("ok");
       }
     }
   });

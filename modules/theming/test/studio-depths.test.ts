@@ -4,6 +4,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
+import { PRESETS } from "../src/presets.js";
 import { readsWell } from "../src/studio-yours.js";
 import { draftFiles } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
@@ -67,7 +68,8 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
       await apply("level-up", "sunset");
       const res = await page("/theming/studio/");
       const choices = [...res.body.matchAll(/data-action="preset"[^>]*>/g)].map((m) => m[0]);
-      expect(choices).toHaveLength(13);
+      const schemes = [...PRESETS.values()].reduce((n, p) => n + p.schemes.length, 0);
+      expect(choices).toHaveLength(schemes);
       const chosen = choices.filter((c) => c.includes('aria-pressed="true"'));
       expect(chosen).toHaveLength(1);
       expect(chosen[0]).toContain('data-scheme="sunset"');
