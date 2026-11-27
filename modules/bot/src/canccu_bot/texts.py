@@ -36,7 +36,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "sign_in_button": {"en": "Sign in", "fi": "Kirjaudu"},
     "no_right": {
         "en": "You need the {right} right for /{command}. Ask an event admin.",
-        "fi": "Tarvitset oikeuden {right} komentoon /{command}. Kysy tapahtuman ylläpitäjältä.",
+        "fi": "Tarvitset {right}-oikeuden komentoon /{command}. Kysy tapahtuman ylläpitäjältä.",
+    },
+    "no_right_unnamed": {
+        "en": "/{command} needs a right you do not have yet. Ask an event admin.",
+        "fi": "/{command} vaatii oikeuden, jota sinulla ei vielä ole. Kysy tapahtuman"
+        " ylläpitäjältä.",
     },
     "too_slow": {
         "en": "{event} did not answer in time. Nothing was sent. Try again in a moment.",

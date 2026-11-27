@@ -20,6 +20,7 @@ from trial import FLAG, TRIAL
 
 from canccu_bot.acting import ActingClient
 from canccu_bot.components import ComponentKeys
+from canccu_bot.framework import Command
 from canccu_bot.interactions import Interactions
 from canccu_bot.look import Look
 from canccu_bot.providers import secret_aad
@@ -84,31 +85,7 @@ class World:
 
     def interactions(self) -> Interactions:
         """A fresh container: nothing of an earlier one survives but the database and the keys."""
-        http = httpx.AsyncClient(transport=httpx.MockTransport(self.outside))
-        d = replace(
-            self.env.deps,
-            commands=(TRIAL,),
-            components=ComponentKeys.from_service_key(KEY),
-            acting=ActingClient(
-                "http://admin",
-                ServiceIdentity("bot", KEY),
-                BOT_ADMIN,
-                http,
-                lambda m: f"http://{m}",
-            ),
-            look=FakeLook(),
-            http=http,
-        )
-        app = self.env.discord.applications[SHARED_ID]
-        rest = RestClient(app.token, http=self.env.discord.http_client(), api_url=API)
-
-        async def context(tenant: str) -> Any:
-            return self.env.contexts.get(tenant)
-
-        async def sleep(seconds: float) -> None:
-            self.waits.append(seconds)
-
-        return Interactions(d, SHARED_ID, context, lambda: rest, deadline_s=0.3, sleep=sleep)
+        return interactions_with(self, TRIAL)
 
     @property
     def answers(self) -> list[dict[str, Any]]:
@@ -118,6 +95,34 @@ class World:
     def shown(self) -> dict[str, Any]:
         """What the person sees now: the last edit of an answer."""
         return dict(self.env.discord.interaction_edits[-1][1])
+
+
+def interactions_with(world: World, trial: Command) -> Interactions:
+    http = httpx.AsyncClient(transport=httpx.MockTransport(world.outside))
+    d = replace(
+        world.env.deps,
+        commands=(trial,),
+        components=ComponentKeys.from_service_key(KEY),
+        acting=ActingClient(
+            "http://admin",
+            ServiceIdentity("bot", KEY),
+            BOT_ADMIN,
+            http,
+            lambda m: f"http://{m}",
+        ),
+        look=FakeLook(),
+        http=http,
+    )
+    app = world.env.discord.applications[SHARED_ID]
+    rest = RestClient(app.token, http=world.env.discord.http_client(), api_url=API)
+
+    async def context(tenant: str) -> Any:
+        return world.env.contexts.get(tenant)
+
+    async def sleep(seconds: float) -> None:
+        world.waits.append(seconds)
+
+    return Interactions(d, SHARED_ID, context, lambda: rest, deadline_s=0.3, sleep=sleep)
 
 
 @pytest.fixture
@@ -287,10 +292,21 @@ async def test_someone_without_an_account_gets_a_sign_in_link(world: World) -> N
     assert world.outside.module_calls == []
 
 
-async def test_someone_without_the_right_is_told_which(world: World) -> None:
+async def test_someone_without_the_right_is_told_which_in_words(world: World) -> None:
+    await run(world, command("announce", {"text": "x"}))
+    assert world.shown["content"] == "You need the Announce right for /trial. Ask an event admin."
+    await run(world, command("announce", {"text": "x"}, locale="fi"))
+    assert world.shown["content"] == (
+        "Tarvitset Tiedotus-oikeuden komentoon /trial. Kysy tapahtuman ylläpitäjältä."
+    )
+
+
+async def test_a_right_the_command_did_not_name_is_never_shown_as_an_id(world: World) -> None:
+    unnamed = replace(TRIAL, right_names={})
+    world.interactions = lambda: interactions_with(world, unnamed)  # type: ignore[method-assign]
     await run(world, command("announce", {"text": "x"}))
     assert world.shown["content"] == (
-        "You need the moments.announce right for /trial. Ask an event admin."
+        "/trial needs a right you do not have yet. Ask an event admin."
     )
 
 

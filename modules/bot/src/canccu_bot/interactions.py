@@ -224,7 +224,12 @@ class Interactions:
         except NeedsSignIn:
             reply = self._sign_in(ctx, command, context)
         except NoRight as exc:
-            reply = Reply(text("no_right", locale, right=exc.right, command=command.name))
+            named = command.right_names.get(exc.right)
+            reply = Reply(
+                text("no_right", locale, right=pick(named, locale), command=command.name)
+                if named
+                else text("no_right_unnamed", locale, command=command.name)
+            )
         except Unreachable:
             reply = Reply(text("unreachable", locale, event=context.event_name))
         except Refused as exc:

@@ -18,6 +18,7 @@ The Discord side of the platform. The `bot` module is one module with a pool of 
 | bot bindings | per tenant | The guild id and name, the application that serves it, who bound it and when, the command registration state |
 | bot guild routes | global | Guild id → tenant id and application id. Read before a tenant is set, to route a gateway event or an interaction to its event. A plain tenant reference, nothing else (0013 item 6) |
 | bot application routes | global | Own application id → tenant id. Keeps each own application to one event |
+| bot provider secrets | per tenant | An outside provider's bearer secret, encrypted (Provider secrets) |
 
 The two route tables are added to the kit's allow-list of global tables ([tenants.md](tenants.md#tables-global-and-per-tenant)) when the module is built. They hold no secret and no tenant data beyond the reference, like hostnames. Everything else the bot stores is per tenant under row-level security.
 
@@ -88,11 +89,30 @@ The binding (`Binding` in the OpenAPI file): `guild_id`, `guild_name`, `applicat
 ## Slash commands per guild
 - Commands are registered **per guild** only, never globally, so a guild sees only its own event's commands (0013 item 15).
 - Each command belongs to one feature flag (`bot.<feature>`, or another module's flag for its commands, such as a pizza command under a pizza flag). The set registered in a guild is exactly the commands whose flags are on for its event, written in one bulk overwrite.
+- **Written only when it changed:** the bot keeps a hash of the set last written to each guild and writes only a set whose hash differs, so a deploy or a flag change that leaves a guild's set as it was spends nothing of Discord's daily limit on command writes (O4). A failed write forgets the hash, so the next one writes again; `POST /api/bot/guild/commands/sync` writes whatever the hash says, for a guild whose commands someone removed by hand.
 - **Re-registered** on `tenants.flags.changed` for that event, on bind, on a new platform version that changes the commands, when an archived event's commands are removed, and on `POST /api/bot/guild/commands/sync` (the event-admin role) for an admin who wants to retry now.
 - **Handlers check the flag too**, at the moment of the interaction: a command registered before a flag went off answers privately that it is not on at this event, and does nothing.
 - A failed registration (Discord's daily limit on command writes, a rate limit, a missing `applications.commands` scope) is retried with back-off for that guild only, and shows as `commands.status: failed` with its `error_code`. It never blocks another guild's registration.
 - Admin checks happen in the handler with the person's platform rights; Discord's default command permissions are not used for access ([legacy inventory](../docs/legacy-inventory/canccubot.md)).
 - The flags and commands themselves are declared here by the port (step 6), additively. Each flag's default is in that list; until then the bot declares no flag.
+
+## The command framework
+How every command answers, whichever feature owns it (step 6, link 3; the commands themselves come with their features).
+- **Private and deferred:** every answer is private (only the person sees it). A command, or a button that does not open a form, is deferred at once (Discord shows "thinking…"), so Discord's 3-second limit never decides. The handler then has **10 seconds**; after that the person reads "<event> did not answer in time. Nothing was sent. Try again in a moment." (E5) and the handler is stopped.
+- **Idempotent:** every call a command makes to a module carries the interaction id in the header `Idempotency-Key`, so a call that did land is not made twice when the person tries again.
+- **As the person:** a command acts in a module only with the person's acting token ([admin.md](admin.md#the-acting-token)), beside the bot's service identity, never with rights of the bot's own. Someone without an account, or no member of the event, gets "Sign in to <event> once to use /<command>. Then your roles bring the rights." with a Sign in link to the event's sign-in page (U6, U7); someone without the right is told which right it needs, in words the command gives it, never a right's id. Admin checks happen there, with the person's platform rights; Discord's own command permissions are not used.
+- **The flag again:** a command, or a button of one, whose flag went off answers "/<command> is not on at <event>. Ask the crew; the command goes away within a minute." and does nothing.
+- **Components keep no state in the container:** a button, a Yes or No and a form carry what their handler needs in their custom id, signed for the event and dated (`c1.<command>.<step>.<args>.<issued>.<mac>`, at most 100 characters). They work after a restart and on any copy of the container. One older than 15 minutes, of another event, or forged answers "This button is old. Run the command again."
+- **Link buttons:** a link is a button, never a long URL in the text. A link that comes with a provider's `expires_at` lives as long as that: the answer is then edited to "This link has expired. Run /<command> again."; the platform's own links stay.
+- **Errors as replies:** a module's or a provider's error code becomes the command's own short sentence, any other refusal "That did not work. Try again later.", a module or provider that does not answer "<event> is not reachable right now. Try again in a moment."; never the raw error.
+- **The guard:** every message the bot sends pings nobody (`allowed_mentions` empty), whatever its text holds; the one exception is an urgent announcement's role the event picked, for that send alone (L3). Text built from other people's words keeps only links to the event's own hosts.
+- **The event's voice:** the bot's nickname in the event's server is the event's name (at most 32 characters), set after a bind and when the name changes (L6); embeds take the event's Discord embed colour ([theming.md](theming.md)) (L8). Answers are in the person's Discord language when the platform speaks it (`en`, `fi`), otherwise English (U5).
+- **Not connected:** an interaction in a server bound to no event answers "This server is not connected to an event yet. Ask an event admin to connect it on the event's Discord page."
+
+### Provider secrets
+An outside provider that wants a bearer secret (the standalone Finals app, [finals.md](finals.md)) gets one per event; the platform's own modules take the acting token instead. Which provider an event uses is that feature's setting.
+- `PUT /api/bot/providers/{provider}/secret` with `{"secret"}` (1–512 characters) sets it; `DELETE` clears it (also on an archived event). Both 204, the event-admin role itself; an archived event's `PUT` is 409 `event_archived`. `provider` is lowercase `snake_case`, at most 32 characters (otherwise 404).
+- Write-only: no read answers it. It is encrypted with the platform secrets key, bound to the event and the provider, and is never in a reply, a log or an event. Audited (`bot.provider_secret.set`, `bot.provider_secret.cleared`) without the value. A deleted event's secrets go with it.
 
 ## Privileged intents and data per event
 - Privileged intents (members, presence, message content) are set per application, not per guild (0013 item 16). The shared application holds the union the platform's features need: **presence and members**, never message content (step 6, D5). Every client asks for the intents `GUILDS`, `GUILD_MEMBERS` and `GUILD_PRESENCES` (privileged), `GUILD_VOICE_STATES` and `GUILD_MESSAGES` (not privileged), and never `MESSAGE_CONTENT`: nothing the platform does reads message text. An own application without the two privileged ones in its portal connects without them (Missing intents, above).
@@ -139,7 +159,7 @@ The bot's part of clone-the-last-event ([tenants.md](tenants.md#series-and-clone
 - Audited in both events; emits `bot.connection.changed` and `bot.guild.unbound` (`reason: moved`) on the source's stream and `bot.connection.changed` and `bot.guild.bound` on the new event's.
 
 ## Rights
-`bot.connection.read` (see the connection, the client's status and the binding), `bot.presence.read` (read who plays what without being a member of the event). Writing the connection, binding, unbinding, syncing commands and cloning need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
+`bot.connection.read` (see the connection, the client's status and the binding), `bot.presence.read` (read who plays what without being a member of the event). Writing the connection, binding, unbinding, syncing commands, cloning and a provider's secret need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
 
 ## Events (version 1)
 Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catalog: [events.md](events.md#bot-connections). On the event's stream `t:<tenant>:events:bot`, with `tenant` set. Events carry ids, never a token, a client secret or a person's Discord id.
@@ -161,4 +181,4 @@ Consumers: admin (the event's bot status), notify (Discord DMs are possible only
 ```
 
 ## Not in this contract
-The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; its commands and their flags, what it keeps of each feed, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
+The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; the commands and their flags (#122 and the Finals track, on the framework above), what it keeps of each feed, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).

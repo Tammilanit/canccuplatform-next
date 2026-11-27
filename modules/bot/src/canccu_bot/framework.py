@@ -153,6 +153,8 @@ class Command:
     """Its buttons and submitted forms, with the form's values by field id."""
     forms: dict[str, FormOpener] = field(default_factory=dict)
     """Steps whose component opens a form at once."""
+    right_names: dict[str, Texts] = field(default_factory=dict)
+    """The rights it needs, in words ("Announce"): a person never reads a right's id."""
     errors: dict[str, Texts] = field(default_factory=dict)
     """A module's or a provider's error code in words; any other is "That did not work"."""
 

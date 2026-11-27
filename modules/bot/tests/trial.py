@@ -75,6 +75,7 @@ TRIAL = Command(
     ),
     on_component=on_component,
     forms={"rename": name_form},
+    right_names={"moments.announce": {"en": "Announce", "fi": "Tiedotus"}},
     errors={
         "registration_closed": {
             "en": "Registration is closed.",

@@ -5,7 +5,7 @@ How modules talk to each other and what an event profile looks like. Modules use
 ## Files
 | File | What it is |
 |---|---|
-| [admin.md](admin.md) | Admin contract: settings, health (shared by all modules), session and rights (the superadmin flag, granting a member's rights, presets), sign-in providers, event naming and envelope, admin events |
+| [admin.md](admin.md) | Admin contract: settings, health (shared by all modules), session and rights (the superadmin flag, the acting token, granting a member's rights, presets), sign-in providers, event naming and envelope, admin events |
 | [admin.openapi.yaml](admin.openapi.yaml) | Machine-readable admin API (OpenAPI 3.1) |
 | [agenda.md](agenda.md) | Agenda contract: the run-of-show, edited live, each event's own kinds, notification channels per event, kind and item, tournament sessions kept as items, its reminders, clone with an event, agenda events |
 | [agenda.openapi.yaml](agenda.openapi.yaml) | Machine-readable agenda API (OpenAPI 3.1) |
