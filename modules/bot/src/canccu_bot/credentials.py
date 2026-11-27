@@ -103,6 +103,8 @@ async def _check_own(d: Deps, tenant: str, want: dict[str, Any]) -> list[str]:
             raise conflict("guild_bound", "unbind the guild before changing the application")
         if "bot_token" not in want or "client_secret" not in want:
             raise bad("a new application needs bot_token and client_secret")
+    if same and "bot_token" not in want and "client_secret" not in want:
+        raise bad("bot_token, client_secret or both: nothing else changes")
     changed = [] if same else ["mode", "application_id"]
     if row is not None and row["mode"] == "own" and not same:
         changed = ["application_id"]

@@ -127,6 +127,13 @@ async def test_a_rotation_checks_and_replaces_only_the_credential_it_brings(env:
     assert env.events("ev-a")[-1]["data"]["changed"] == ["client_secret"]
 
 
+async def test_the_same_application_with_no_credential_is_400(env: Env) -> None:
+    app = env.discord.add_application("Own Bot")
+    await put(env, own_body(app))
+    body = {"mode": "own", "application_id": app.id, "revision": 1}
+    assert code(await put(env, body)) == (400, "invalid_request")
+
+
 async def test_a_new_application_needs_both_credentials(env: Env) -> None:
     app = env.discord.add_application("Own Bot")
     body = {"mode": "own", "application_id": app.id, "bot_token": app.token, "revision": 0}

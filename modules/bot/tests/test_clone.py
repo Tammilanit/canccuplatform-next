@@ -79,6 +79,28 @@ async def test_a_target_with_its_own_guild_is_already_connected(env: Env) -> Non
     assert await env.fetch("ev-b", "SELECT 1 FROM bot_bindings") != []  # rolled back
 
 
+async def test_a_binding_does_not_move_onto_a_target_with_its_own_application(env: Env) -> None:
+    env.series.admin_of = {"ev-a", "ev-b"}
+    env.contexts["ev-b"]["status"] = "archived"
+    await bound(env, "ev-b")
+    await own(env, "ev-a")
+    r = await clone(env)
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "already_connected")
+    assert await env.fetch("ev-b", "SELECT 1 FROM bot_bindings") != []  # rolled back
+    assert await env.fetch("ev-a", "SELECT 1 FROM bot_bindings") == []
+
+
+async def test_an_own_application_does_not_move_onto_a_target_with_a_guild(env: Env) -> None:
+    env.series.admin_of = {"ev-a", "ev-b"}
+    env.contexts["ev-b"]["status"] = "archived"
+    await own(env, "ev-b")
+    await bound(env, "ev-a")
+    r = await clone(env)
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "already_connected")
+    [src] = await env.fetch("ev-b", "SELECT mode FROM bot_connections")
+    assert src["mode"] == "own"  # rolled back
+
+
 async def test_without_the_role_on_both_events_it_is_403(env: Env) -> None:
     env.series.admin_of = {"ev-a"}
     env.contexts["ev-b"]["status"] = "archived"

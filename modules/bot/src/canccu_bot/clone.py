@@ -91,8 +91,10 @@ async def _give(
     actor: str | None,
 ) -> None:
     mine = await conn.fetchrow("SELECT mode, revision FROM bot_connections FOR UPDATE")
-    if (row is not None and mine is not None and mine["mode"] == "own") or (
-        bound is not None and await store.binding(conn) is not None
+    # The target must have neither an own application nor a guild, whichever of the two moves:
+    # a guild served by an application that is not its connection's is a state no bind allows.
+    if (row is not None or bound is not None) and (
+        (mine is not None and mine["mode"] == "own") or await store.binding(conn) is not None
     ):
         raise conflict("already_connected", "this event already has its own bot or guild")
     if row is not None:
