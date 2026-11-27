@@ -97,8 +97,29 @@ class Interactions:
         self._sleep = sleep
         self._commands: dict[str, Command] = {c.name: c for c in d.commands}
         self._expiring: set[asyncio.Task[None]] = set()
+        self._running: set[asyncio.Task[None]] = set()
 
     async def __call__(self, event: str, data: dict[str, Any]) -> None:
+        """Starts the interaction as its own task and returns at once: the gateway's receive loop
+        must read the next interaction while this one's handler runs, or a slow command would make
+        every other one on the shard miss Discord's 3-second deferral. The task copies the
+        router's tenant scope (contextvars) when it is created."""
+        if current_tenant() is None:
+            return
+        task = asyncio.create_task(self._handle(data))
+        self._running.add(task)
+        task.add_done_callback(self._finished)
+
+    def _finished(self, task: asyncio.Task[None]) -> None:
+        self._running.discard(task)
+        if not task.cancelled() and task.exception() is not None:
+            log.error("an interaction failed", exc_info=task.exception())
+
+    async def settled(self) -> None:
+        while self._running:
+            await asyncio.wait(set(self._running))
+
+    async def _handle(self, data: dict[str, Any]) -> None:
         tenant = current_tenant()  # the router's: the guild's route, never a field of Discord's
         if tenant is None:
             return
@@ -332,5 +353,5 @@ class Interactions:
             log.warning("expiring /%s's link failed", command.name, exc_info=True)
 
     def close(self) -> None:
-        for task in self._expiring:
+        for task in (*self._expiring, *self._running):
             task.cancel()

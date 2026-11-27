@@ -82,6 +82,7 @@ class World:
     env: Env
     outside: Outside
     waits: list[float]
+    expire: asyncio.Event = field(default_factory=asyncio.Event)
 
     def interactions(self) -> Interactions:
         """A fresh container: nothing of an earlier one survives but the database and the keys."""
@@ -121,6 +122,7 @@ def interactions_with(world: World, trial: Command) -> Interactions:
 
     async def sleep(seconds: float) -> None:
         world.waits.append(seconds)
+        await world.expire.wait()  # a link's expiry runs only when a test lets time pass
 
     return Interactions(d, SHARED_ID, context, lambda: rest, deadline_s=0.3, sleep=sleep)
 
@@ -178,7 +180,9 @@ def submit(custom_id: str, values: dict[str, str]) -> dict[str, Any]:
 
 async def run(w: World, data: dict[str, Any], interactions: Interactions | None = None) -> None:
     with tenant_scope("ev-a"):
-        await (interactions or w.interactions())("INTERACTION_CREATE", data)
+        started = interactions or w.interactions()
+        await started("INTERACTION_CREATE", data)
+        await started.settled()
 
 
 def buttons(shown: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -338,10 +342,10 @@ async def test_errors_become_short_private_sentences(
 async def test_a_provider_link_expires_with_the_providers_time(world: World) -> None:
     interactions = world.interactions()
     await run(world, command("status"), interactions)
-    await asyncio.sleep(0)  # the expiry's own task
-    for _ in range(3):
-        await asyncio.sleep(0)
     assert world.waits == [600.0]
+    world.expire.set()
+    for _ in range(5):
+        await asyncio.sleep(0)
     assert world.shown == {
         "content": "This link has expired. Run /trial again.",
         "embeds": [],
@@ -357,3 +361,19 @@ def test_the_command_registers_with_subcommands_and_its_languages() -> None:
     assert payload["description_localizations"] == {"fi": "Kokeile kehystä"}
     announce = payload["options"][1]
     assert announce["type"] == 1 and announce["options"][0]["required"] is True
+
+
+async def test_a_slow_command_does_not_hold_the_next_interaction(world: World) -> None:
+    """The gateway reads the next interaction while a handler runs: both are deferred at once."""
+    world.outside.slow = True
+    interactions = world.interactions()
+    first = command("announce", {"text": "slow"}, user=CREW)
+    second = command("status")
+    with tenant_scope("ev-a"):
+        await interactions("INTERACTION_CREATE", first)
+        await asyncio.sleep(0.05)  # the first one's handler is inside its module call now
+        assert world.outside.module_calls and not world.env.discord.interaction_edits
+        await interactions("INTERACTION_CREATE", second)
+        await asyncio.sleep(0.05)
+    assert [a["type"] for a in world.answers] == [5, 5]
+    await interactions.settled()
