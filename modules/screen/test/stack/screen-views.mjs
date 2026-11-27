@@ -2,7 +2,7 @@
 // name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
 import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs";
-import { STAGE_VIEWS } from "./handed.mjs";
+import { MOTION_VIEWS, STAGE_VIEWS } from "./handed.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
@@ -91,6 +91,7 @@ export function planned(check = false) {
   for (const view of FOOD_VIEWS)
     for (const size of foodSizes(check)) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
+  for (const { view } of MOTION_VIEWS) out.push(...stripNames(nameOf("default", view, HD[0]), 4));
   out.push(nameOf("default", "pulse-one-screen", HD[0]));
   out.push(nameOf("default", "portrait-right-now", HD[1]));
   out.push(nameOf("default", "portrait-showcase", HD[1]));

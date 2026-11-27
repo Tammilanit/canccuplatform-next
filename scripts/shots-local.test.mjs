@@ -180,6 +180,7 @@ test("CI's shot list is the merge queue's check, each shot in its one group", as
   assert.equal(group.get("theming-default-screen-pulse-1920x1080"), "screens");
   assert.equal(group.get("admin-home"), "admin");
   assert.equal(group.get("dev-seed-agenda"), "dev-seed");
+  assert.equal(group.get("theming-default-screen-motion-party-arcade-1920x1080-f4"), "screens", "the motion strips");
   assert.ok(!group.has("theming-default-screen-pulse-3840x2160"), "no 4K: the check takes 1080p only");
 });
 
@@ -203,6 +204,17 @@ test("names and globs pick from CI's list, in its order; a pattern matching noth
     "theming-default-screen-pulse-1920x1080",
   ]);
   assert.deepEqual(names(pick(["admin-hom?"], list)), ["admin-home"]);
+  // A FAIL line of a view that failed as a whole names the view, not a shot: it picks its shots.
+  const p = "theming-default-screen-";
+  const strip = [
+    { name: `${p}stage-surge-before-1920x1080`, group: "screens" },
+    { name: `${p}stage-surge-during-1920x1080`, group: "screens" },
+    { name: `${p}living-rotation-1920x1080-f1`, group: "screens" },
+    { name: `${p}living-rotation-1920x1080-f2`, group: "screens" },
+    { name: `${p}pulse-1920x1080`, group: "screens" },
+  ];
+  assert.deepEqual(names(pick([`${p}stage-surge-1920x1080:`], strip)), [strip[0].name, strip[1].name]);
+  assert.deepEqual(names(pick([`${p}living-rotation-1920x1080:`], strip)), [strip[2].name, strip[3].name]);
   assert.throws(() => pick(["theming-default-screen-pulse-3840x2160", "admin-home"], list), /pulse-3840x2160/);
   assert.throws(() => pick(["admin.home"], list), /admin\.home/, "a dot is a dot, not any character");
 });
@@ -262,6 +274,17 @@ test("a named shot the run never reached is reported, not passed", async () => {
     ),
     [`${p}split-1920x1080`, "admin-home-phone"],
   );
+});
+
+test("the screens' dry run with --shots lists exactly the Pulse attempt's four shots", () => {
+  const run = spawnSync(
+    "node",
+    ["scripts/demo-screenshots.mjs", "--dry-run", "--check", "--groups", "screens", "--shots", "theming-default-screen-identify-1920x1080"],
+    { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8" },
+  );
+  assert.equal(run.status, 0, run.stderr);
+  const listed = [...run.stdout.matchAll(/^ +(\S+)\.png +/gm)].map((m) => m[1]);
+  assert.deepEqual(listed, ["pulse", "identify", "test-pattern", "offline"].map((v) => `theming-default-screen-${v}-1920x1080`));
 });
 
 test("the per-shot dry run hands CI's check-mode pass the named shots of their groups", () => {

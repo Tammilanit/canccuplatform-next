@@ -54,15 +54,22 @@ const matcher = (pattern) => {
   return new RegExp(`^${re}$`);
 };
 
-/** The shots of `list` the patterns match, in its order; a pattern matching none throws. */
+/**
+ * The shots of `list` the patterns match, in its order; a pattern matching none throws. A name no
+ * shot has may be a FAIL line's view (a strip or the surge that failed as a whole): it picks every
+ * shot that view takes.
+ */
 export function pick(patterns, list) {
   const res = patterns.map((p) => [p, matcher(p)]);
-  const missed = res.filter(([, re]) => !list.some(({ name }) => re.test(name)));
+  const hits = ([, re], shot) => re.test(shot.name) || re.test(attemptOf(shot.name));
+  const byName = ([, re]) => list.some(({ name }) => re.test(name));
+  const used = res.map((r) => (byName(r) ? (s) => r[1].test(s.name) : (s) => hits(r, s)));
+  const missed = res.filter((r, i) => !list.some(used[i]));
   if (missed.length)
     throw new Error(
       `not in CI's shot list (the merge queue's check, 1080p): ${missed.map(([p]) => p).join(", ")}`,
     );
-  return list.filter(({ name }) => res.some(([, re]) => re.test(name)));
+  return list.filter((s) => used.some((u) => u(s)));
 }
 
 // A screen shot's view and the words in it (screen-views.mjs `nameOf`).
