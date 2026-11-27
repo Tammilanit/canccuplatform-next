@@ -85,6 +85,12 @@ describe("hero first, then a smaller box", () => {
     expect(planZone(100_000, held, [only], DEFAULT_AIR).zone.holder).toBe("result");
   });
 
+  it("keeps a full-screen holder whose chain has no hero where it is", () => {
+    const full = result({ chain: ["full", "ticker"] });
+    expect(planZone(100_000, held, [full], DEFAULT_AIR).zone.holder).toBe("result");
+    expect(of(planZone(100_000, held, [full], DEFAULT_AIR), "result")?.granted).toBe("hero");
+  });
+
   it("counts its own budget when that is under the floor", () => {
     const short = result({ budget_ms: 60_000 });
     expect(planZone(60_000, held, [short], DEFAULT_AIR).ends).toEqual([

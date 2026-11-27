@@ -105,6 +105,21 @@ run("airtime edges (#777)", () => {
     expect(secondsLeft(`${p.id}.main`, 1900)).toBeCloseTo(170, 0);
   });
 
+  it("a holder Screen hides past its floor steps down with its clock running, and a hidden one pauses", async () => {
+    const p = await start(pizza, 0);
+    const id = `${p.id}.main`;
+    await report(0, [[id, "hero"]], [], []);
+    await report(100, [], [], [id]);
+    const down = await row(p.id);
+    expect(down).not.toBeNull();
+    // Stepped down, its clock runs: it has an end of its own, so it can never freeze for good.
+    expect(lastOverride(id)?.expires_at).not.toBeNull();
+    await report(110, [], [], [id]);
+    expect(lastOverride(id)?.expires_at).toBeNull();
+    await report(120, [[id, "ticker"]], [], []);
+    expect(lastOverride(id)?.expires_at).not.toBeNull();
+  });
+
   it("a ticker-only moment Screen leaves unplaced, or never places, goes stale", async () => {
     const ticker = (key: string): MomentRequest => ({
       ...pizza,

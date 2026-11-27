@@ -93,8 +93,10 @@ const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id
  * The roles its chain goes on to after the hero, smaller boxes only: an Important's chain lists
  * `full` after `hero` for a layout with no hero, and stepping "down" into a takeover would be up.
  */
-const afterHero = (s: SlotIn): string[] =>
-  s.chain.slice(s.chain.indexOf("hero") + 1).filter((r) => r !== "full");
+const afterHero = (s: SlotIn): string[] => {
+  const i = s.chain.indexOf("hero");
+  return i === -1 ? [] : s.chain.slice(i + 1).filter((r) => r !== "full");
+};
 /**
  * Keeps the hero until it ends (#787 D7, the PO's Q6): a stream, a person's action, a story round,
  * and a moment with steps, which plays as one piece and never waits in the rail either.

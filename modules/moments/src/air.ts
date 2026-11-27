@@ -220,6 +220,8 @@ function apply(
   const is = onAir(out.granted);
   if (was && !is) pause(s, now);
   if (!was && is) resume(s, from);
+  // A hero holder Screen hid was paused; stepping down must not leave its clock stopped for good.
+  if (was && is && s.granted === "hero" && out.granted === "down") resume(s, now);
   s.granted = out.granted;
   s.inside_of = out.inside_of;
   s.queued_since = new Date(out.queued_since);
