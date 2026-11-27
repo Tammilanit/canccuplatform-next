@@ -1,0 +1,10 @@
+/* The pack's stand-in boxes (style.mjs) in the arcade look. Not part of the package CSS: the real
+   boxes are the screen player's own, which Parts 1 and 2 dress with the same ideas. */
+.canccu-surface--screen .t-pack-name { font-size: 3.5rem; }
+.canccu-surface--screen .t-pack-hero-box .t-pack-big { font-size: 7.5rem; }
+.canccu-surface--screen .t-pack-pill { border-radius: 0; font-family: var(--canccu-font-heading); font-size: 1.7rem; }
+.canccu-surface--screen .t-pack-word { font-size: 2rem; }
+.canccu-surface--screen .t-pack-rows li { grid-template-columns: 9rem 1fr; }
+.canccu-surface--screen .t-pack-rows .t-pack-when { font-size: 1.7rem; }
+.canccu-surface--screen .canccu-widget--details .t-pack-clock { font-size: 3.5rem; }
+.canccu-surface--screen .t-pack-block { border-radius: 0; }

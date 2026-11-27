@@ -231,9 +231,9 @@ Games, Cast and App are new builds with their own contracts, and Finals integrat
 
 ### Themes
 - **Goal:** organisers who stick with presets get good ones: eight looks in the Theme studio's Pick a look, from neutral to bold, each with schemes that pass the contrast rules.
-- **In it:** five new presets beside Default, Level up and Terminal: Esports (bold, angular, broadcast), Synthwave (pink and purple neon, a horizon grid), Arcade (pixel type, CRT glow), Cozy LAN (warm, soft, rounded) and Daylight (light, for bright venues). Each has 3–5 colour schemes, a platform font pair, corners, a background, a motion style and, for the advanced three, screen effects and widget templates. Cozy LAN and Daylight stay in the simple mode. The presets live with the others in `events/demo/themes/`.
+- **In it:** five new presets beside Default, Level up and Terminal: Esports (bold, angular, broadcast), Synthwave (pink and purple neon, a horizon grid), Arcade (pixel type, CRT glow), Cozy LAN (warm, soft, very round) and Daylight (light, with a sky). Each has 3–5 colour schemes, a platform font pair, corners, a background, a motion style and, for the advanced three, screen effects and widget templates. Cozy LAN and Daylight stay in the simple mode. The presets live with the others in `events/demo/themes/`.
 - **How it runs:** design first. A script-built pack ([docs/design/themes.md](design/themes.md)) goes to the PO before any build. The [plan](plans/issue-785.md) and the pack stand in for the track's research pack and brief, because the PO chose the directions in the issue (2026-11-23). Then two build packages: Esports and Arcade, then Synthwave, Cozy LAN and Daylight.
-- **Builds on:** the theme studio (#784): presets with schemes, font pairs, roundness, the background's looks and motion styles. It adds no contract and no migration.
+- **Builds on:** the theme studio (#784): presets with schemes, font pairs, roundness, the background's looks and motion styles. It adds no migration. Its contract change is additive: a box opacity in the brand kit, two background looks and one more roundness (plan D11, D12).
 - **Exit criteria:** the eight presets are in Pick a look; every scheme passes the contrast rules; the shots show each new preset on the screen, the hub and the phone.
 - **Issues:** #785.
 

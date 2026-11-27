@@ -7,6 +7,8 @@
 //        node build.mjs --render [--html DIR]  render the PNGs next to this file (needs
 //                                              playwright-core; run it in the Playwright image,
 //                                              see docs/design/themes.md, Rebuild)
+//        node build.mjs --clips [--html DIR]   write the effects clips (GIF, needs gifenc and pngjs:
+//                                              CANCCU_GIF_DIR names a folder with both installed)
 import { createRequire } from "node:module";
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,7 +17,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { GALLERY, checkSchemes } from "./data.mjs";
 import { hubDoc, screenDoc } from "./frames.mjs";
-import { effects, overview } from "./sheets.mjs";
+import { FX, LEVELS, effects, fonts, overview } from "./sheets.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -36,14 +38,14 @@ export function renders() {
       { name: `${n}-${p.id}-phone-390`, doc: hubDoc(p, p.schemes[0]) },
     );
   });
-  out.push({ name: "06-effects-1280", doc: effects() });
+  out.push({ name: "06-effects-1280", doc: effects() }, { name: "07-arcade-fonts-1280", doc: fonts() });
   return out;
 }
 
-/** The frames the effects sheet holds: each advanced look's hero at three levels. */
+/** The frames the effects sheet holds: each advanced look's hero at four levels, frozen in its motion. */
 function effectFrames() {
   return GALLERY.filter((p) => p.css).flatMap((p) =>
-    ["none", "calm", "lively"].map((lvl) => ({ name: `fx-${p.id}-${lvl}`, doc: screenDoc(p, p.schemes[0], "hero", lvl) })),
+    LEVELS.map((lvl) => ({ name: `fx-${p.id}-${lvl}`, doc: screenDoc(p, p.schemes[0], "hero", lvl, FX[p.id].t[lvl]) })),
   );
 }
 
@@ -84,10 +86,56 @@ async function render(dir) {
   }
 }
 
+/** One GIF a look: the four levels side by side, 3 s at 8 frames a second, each frame set to its
+ *  moment with the Web Animations API, so the clip is the same on every run. */
+async function clips(dir) {
+  const need = createRequire(join(process.env.CANCCU_GIF_DIR ?? process.cwd(), "noop.js"));
+  const { GIFEncoder, quantize, applyPalette } = need("gifenc");
+  const { PNG } = need("pngjs");
+  const pw = createRequire(join(process.env.CANCCU_PLAYWRIGHT_DIR ?? process.cwd(), "noop.js"));
+  const browser = await pw("playwright-core").chromium.launch();
+  const W = 262;
+  try {
+    for (const p of GALLERY.filter((x) => x.css)) {
+      const [cx, cy, cw, ch] = FX[p.id].crop;
+      const scale = W / cw;
+      const H = Math.round(ch * scale);
+      const pages = [];
+      for (const lvl of LEVELS) {
+        const file = join(dir, `clip-${p.id}-${lvl}.html`);
+        writeFileSync(file, screenDoc(p, p.schemes[0], "hero", lvl, 0));
+        const pg = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: scale });
+        await pg.goto(pathToFileURL(file).href);
+        await pg.evaluate(() => document.fonts.ready);
+        await pg.evaluate(() => document.head.lastElementChild.remove());
+        pages.push(pg);
+      }
+      const gif = GIFEncoder();
+      for (let f = 0; f < 24; f++) {
+        const out = new PNG({ width: W * 2 + 6, height: H * 2 + 6 });
+        out.data.fill(255);
+        for (const [i, pg] of pages.entries()) {
+          await pg.evaluate((ms) => document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms; }), (f / 8) * 1000);
+          const shot = PNG.sync.read(await pg.screenshot({ clip: { x: cx, y: cy, width: cw, height: ch } }));
+          PNG.bitblt(shot, out, 0, 0, Math.min(W, shot.width), Math.min(H, shot.height), (i % 2) * (W + 6), Math.floor(i / 2) * (H + 6));
+        }
+        const palette = quantize(out.data, 64);
+        gif.writeFrame(applyPalette(out.data, palette), out.width, out.height, { palette, delay: 125 });
+      }
+      gif.finish();
+      writeFileSync(join(HERE, `06-effects-${p.id}-clip.gif`), gif.bytes());
+      await Promise.all(pages.map((pg) => pg.close()));
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { values } = parseArgs({ options: { html: { type: "string" }, render: { type: "boolean" }, "check-only": { type: "boolean" } } });
+  const { values } = parseArgs({ options: { html: { type: "string" }, render: { type: "boolean" }, clips: { type: "boolean" }, "check-only": { type: "boolean" } } });
   const dir = values.html ?? join(process.env.TMPDIR ?? tmpdir(), "themes-html");
   if (values["check-only"]) console.log(`${checkSchemes()} new schemes pass`);
   else if (values.render) await render(dir);
+  else if (values.clips) await clips(dir);
   else writeHtml(dir);
 }

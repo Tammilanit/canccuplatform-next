@@ -2,9 +2,9 @@
 // looks, beside the three existing ones as the theme studio's pack draws them. Every scheme is
 // checked against the contrast rules of contracts/theming.md (Brand kit), so a failing proposal
 // stops the build instead of reaching the PO.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PRESETS as EXISTING, ROOT, contrastFailures } from "../theme-studio/data.mjs";
+import { PRESETS as EXISTING, ROOT, contrast, contrastFailures } from "../theme-studio/data.mjs";
 
 export { ROOT, contrastFailures };
 
@@ -15,16 +15,19 @@ const swap = (k, primary, accent) => ({ ...k, primary, accent });
 const ARENA = c("#0a0e17 #131a2a #2c3a57 #f4f7ff #a9b6d3 #00e0ff #0a0e17 #ff3b5c #3ee39a #ffd23f #ff5a6e");
 const CABINET = c("#0b0b1a #16163a #3a3a8a #ffffff #c4c4f0 #ffd400 #0b0b1a #ff3df0 #38f27a #ffd400 #ff4d4d");
 
-/** The font pairs the new presets name (modules/theming/fonts/<id>/pair.json holds the faces). */
+/** The font pairs the new presets name: the platform's (modules/theming/fonts/<id>/pair.json holds
+ *  the faces) or, for a pair Part 1 adds, the pack's own folder (themes/fonts/<id>/). */
 export function pair(id) {
-  const p = JSON.parse(readFileSync(join(ROOT, "modules/theming/fonts", id, "pair.json"), "utf8"));
-  return { id, name: p.name, heading: p.heading, body: p.body };
+  const own = join(ROOT, "docs/design/themes/fonts", id);
+  const dir = existsSync(join(own, "pair.json")) ? own : join(ROOT, "modules/theming/fonts", id);
+  const p = JSON.parse(readFileSync(join(dir, "pair.json"), "utf8"));
+  return { id, dir, name: p.name, heading: p.heading, body: p.body };
 }
 
 /** The five new presets (plan D5 and D6); `css` names the pack's draft of the package CSS (D9). */
 export const NEW_PRESETS = [
   {
-    id: "esports", name: "Esports", feel: "Bold, angular, high contrast: broadcast style",
+    id: "esports", boxOpacity: 0.88, name: "Esports", feel: "Bold, angular, high contrast: broadcast style",
     mode: "advanced", pair: "saira", roundness: "square", looks: ["gradient", "glows"], pack: "broadcast", css: "esports.css",
     templates: ["Scoreboard (the leaderboard)", "Lower third (the ticker)"],
     schemes: [
@@ -36,7 +39,7 @@ export const NEW_PRESETS = [
     ],
   },
   {
-    id: "synthwave", name: "Synthwave", feel: "Pink and purple neon, a grid to the horizon: the 80s",
+    id: "synthwave", band: true, boxOpacity: 0.8, name: "Synthwave", feel: "Pink and purple neon, a grid to the horizon: the 80s",
     mode: "advanced", pair: "audiowide-titillium", roundness: "soft", looks: ["glows", "gradient"], pack: "standard", css: "synthwave.css",
     templates: [],
     schemes: [
@@ -48,8 +51,8 @@ export const NEW_PRESETS = [
     ],
   },
   {
-    id: "arcade", name: "Arcade", feel: "Pixel type, CRT glow, chunky colours",
-    mode: "advanced", pair: "pixelify-plex", roundness: "square", looks: ["particles", "glows"], pack: "arcade", css: "arcade.css",
+    id: "arcade", overlay: 0.3, boxOpacity: 1, name: "Arcade", feel: "Pixel type, CRT glow, chunky colours",
+    mode: "advanced", pair: "press-jersey", roundness: "square", looks: ["particles", "glows"], pack: "arcade", css: "arcade.css",
     templates: ["High-score table (the leaderboard)", "Big digits (the clock)"],
     schemes: [
       { id: "cabinet", name: "Cabinet", kind: "dark", colors: CABINET },
@@ -60,8 +63,8 @@ export const NEW_PRESETS = [
     ],
   },
   {
-    id: "cozy-lan", name: "Cozy LAN", feel: "Warm, soft, rounded: small or family events",
-    mode: "simple", pair: "fredoka-nunito", roundness: "round", looks: ["particles", "glows"], pack: "standard", css: null,
+    id: "cozy-lan", boxOpacity: 0.9, name: "Cozy LAN", feel: "Warm, soft, rounded: small or family events",
+    mode: "simple", pair: "fredoka-nunito", roundness: "pill", looks: ["hearth", "particles"], pack: "standard", css: null,
     templates: [],
     schemes: [
       { id: "fireside", name: "Fireside", kind: "dark", colors: c("#1d1612 #2a201a #5a4636 #fff4e8 #d8c2ac #f0a35e #1d1612 #8fc7a0 #86d6a0 #f2c94c #ff7a6b") },
@@ -72,8 +75,8 @@ export const NEW_PRESETS = [
     ],
   },
   {
-    id: "daylight", name: "Daylight", feel: "Light and calm: daytime or bright venues",
-    mode: "simple", pair: "space-inter", roundness: "soft", looks: ["gradient", "waves"], pack: "standard", css: null,
+    id: "daylight", boxOpacity: 0.9, name: "Daylight", feel: "Light and calm: daytime or bright venues",
+    mode: "simple", pair: "space-inter", roundness: "soft", looks: ["sky", "waves"], pack: "standard", css: null,
     templates: [],
     schemes: [
       { id: "morning", name: "Morning", kind: "light", colors: c("#f6f8fb #ffffff #cfd6e2 #111827 #4b5563 #0b63ce #ffffff #b4235a #1a7f4b #8a6100 #c2283d") },
@@ -85,9 +88,45 @@ export const NEW_PRESETS = [
   },
 ];
 
+/** The platform's default box opacity (D11): a subtle transparency, so the background shows through. */
+export const BOX_DEFAULT = 0.9;
+
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const toHex = (v) => `#${v.map((x) => Math.round(x).toString(16).padStart(2, "0")).join("")}`;
+/** A box colour at `alpha` over a ground, as the screen draws it (sRGB, like color-mix). */
+export const over = (box, ground, alpha) => toHex(hex(box).map((c, i) => c * alpha + hex(ground)[i] * (1 - alpha)));
+
+/** Text and status colours against the box over the three colours the stage draws behind it
+ *  (the background, and the primary and accent of its glows, particles, sun and grid): D11. */
+export function boxFailures(k, alpha) {
+  const bad = [];
+  for (const g of ["background", "primary", "accent"]) {
+    const box = over(k.surface, k[g], alpha);
+    for (const [f, min] of [["text", 4.5], ["text_muted", 4.5], ["status_ok", 3], ["status_degraded", 3], ["status_down", 3]])
+      if (contrast(k[f], box) < min) bad.push(`${f} on the box over ${g} at ${alpha}: ${contrast(k[f], box).toFixed(2)} < ${min}`);
+  }
+  return bad;
+}
+
+/** A black overlay of `alpha` (Arcade's scanlines, at their darkest) over the text and its box: the
+ *  rules of the contrast check still hold on the darkened pair, and the status colours on the box. */
+export function overlayFailures(k, alpha) {
+  const dark = (c) => over("#000000", c, alpha);
+  const bad = [];
+  for (const [f, b, min] of [["text", "surface", 4.5], ["text_muted", "surface", 4.5], ["status_ok", "surface", 3], ["status_degraded", "surface", 3], ["status_down", "surface", 3]])
+    if (contrast(dark(k[f]), dark(k[b])) < min) bad.push(`${f} on ${b} under the scanlines at ${alpha}: ${contrast(dark(k[f]), dark(k[b])).toFixed(2)} < ${min}`);
+  return bad;
+}
+
+/** The lowest opacity (steps of 0.05, up to 1) at which a scheme's boxes pass boxFailures. */
+export function minBoxOpacity(k) {
+  for (let a = 0.5; a < 1; a += 0.05) if (!boxFailures(k, Math.round(a * 100) / 100).length) return Math.round(a * 100) / 100;
+  return 1;
+}
+
 const existing = (id) => {
   const p = EXISTING.find((x) => x.id === id);
-  return { ...p, existing: true, roundness: null, looks: null, pack: id === "terminal" ? "broadcast" : "standard" };
+  return { ...p, boxOpacity: BOX_DEFAULT, existing: true, roundness: null, looks: null, pack: id === "terminal" ? "broadcast" : "standard" };
 };
 
 /** All eight presets in the gallery's order (plan D2): from neutral to bold. */
@@ -102,7 +141,7 @@ export function schemeProblems(presets = NEW_PRESETS) {
     const kinds = p.schemes.map((s) => s.kind);
     if (p.schemes.length < 3 || p.schemes.length > 5) bad.push(`${p.id}: ${p.schemes.length} schemes`);
     if (!kinds.includes("dark") || !kinds.includes("light")) bad.push(`${p.id}: needs a dark and a light scheme`);
-    for (const s of p.schemes) for (const f of contrastFailures(s.colors)) bad.push(`${p.id}/${s.id}: ${f}`);
+    for (const s of p.schemes) for (const f of [...contrastFailures(s.colors), ...boxFailures(s.colors, p.boxOpacity), ...(p.overlay ? overlayFailures(s.colors, p.overlay) : [])]) bad.push(`${p.id}/${s.id}: ${f}`);
   }
   return bad;
 }

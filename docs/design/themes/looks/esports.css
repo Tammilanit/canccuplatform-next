@@ -1,13 +1,36 @@
 /* Esports (#785, plan D6): bold, angular, high contrast, broadcast style. The first draft of the
    package's css/esports.css (plan D9). Stable classes and t-esports- classes only; every rule that
    does more than colour is scoped to the screen, so hub and phone pages stay plain. Motion: one
-   sheen, only at lively and party, transform and opacity only. */
+   sheen, only at lively and party, transform and opacity only. Boxes take the box opacity (D11). */
 .canccu-surface--screen .canccu-widget {
   /* Cut corners: a broadcast slab, never round, whatever the roundness. */
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   border-radius: 0;
   border-left: 6px solid var(--canccu-color-primary);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--canccu-color-surface) 92%, var(--canccu-color-primary)), var(--canccu-color-surface));
+  /* The slab's ground at the box opacity (D11), so the background shows through a little. */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, color-mix(in srgb, var(--canccu-color-surface) 92%, var(--canccu-color-primary)) calc(var(--canccu-box-opacity, 1) * 100%), transparent),
+    color-mix(in srgb, var(--canccu-color-surface) calc(var(--canccu-box-opacity, 1) * 100%), transparent));
+}
+
+/* The announcement (#780) keeps the slab and the primary edge, and adds a broadcast frame: a thick
+   accent rule below and a slanted "Important" tab above the headline in capitals. */
+.canccu-surface--screen .canccu-widget--announcement {
+  border-left-width: 14px;
+  border-bottom: 10px solid var(--canccu-color-accent);
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__kicker {
+  padding: 4px 44px 4px 36px;
+  border-radius: 0;
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  background: var(--canccu-color-primary);
+  clip-path: polygon(16px 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-style: italic;
+  text-transform: uppercase;
 }
 
 /* Titles as skewed tabs: the tab is skewed, its letters are not. An announcement's headline keeps
@@ -15,6 +38,7 @@
 .canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
   position: relative;
   display: inline-block;
+  align-self: flex-start;
   margin: 0 0 10px -6px;
   padding: 2px 22px 2px 18px;
   font-family: var(--canccu-font-heading);
@@ -116,7 +140,7 @@
   white-space: nowrap;
 }
 
-/* The sheen: a light band crosses the countdown, the match clock, once every 12 s. Decoration
+/* The sheen: a light band crosses the countdown, the match clock, once every 12 s (7 s at party). Decoration
    over the box's ground, never strong enough to change the text's contrast (opacity ≤ 0.18). */
 .canccu-surface--screen .canccu-widget--countdown::after {
   content: "";
@@ -127,9 +151,11 @@
   pointer-events: none;
   background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--canccu-color-text) 60%, transparent), transparent);
 }
-.canccu-motion--lively .canccu-widget--countdown::after,
-.canccu-motion--party .canccu-widget--countdown::after {
+.canccu-motion--lively .canccu-widget--countdown::after {
   animation: t-esports-sheen 12s linear infinite;
+}
+.canccu-motion--party .canccu-widget--countdown::after {
+  animation: t-esports-sheen 7s linear infinite;
 }
 @keyframes t-esports-sheen {
   0% { transform: translateX(-110%); opacity: 0; }
