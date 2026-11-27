@@ -116,7 +116,9 @@ jobs:
     needs: plan
     if: needs.plan.outputs.shards != '[]'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # The screens shard already ran 22–24 min on main with the living strips; the stage's two
+    # strips (#787) add about 4 more, so 25 cut it off at its last shots.
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
