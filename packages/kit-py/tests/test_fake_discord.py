@@ -246,3 +246,14 @@ async def test_a_closed_client_connection_ends_its_session_for_dispatch() -> Non
     await ws.close(1000)
     await asyncio.sleep(0)
     assert fake.gateway.sessions_of(app.id) == 0
+
+
+async def test_heartbeats_go_unanswered_when_told() -> None:
+    fake = FakeDiscord()
+    fake.gateway.ack_heartbeats = False
+    app = fake.add_application("Demo Bot")
+    ws, _ = await identify(fake, app.token)
+    await ws.send({"op": 1, "d": 1})
+    await asyncio.sleep(0.01)  # the gateway has read the heartbeat
+    await fake.gateway.dispatch(app.id, "GUILD_UPDATE", {"id": "1"})
+    assert (await ws.recv())["t"] == "GUILD_UPDATE"

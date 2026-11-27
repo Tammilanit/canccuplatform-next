@@ -120,6 +120,8 @@ class FakeGateway:
     guilds: Callable[[], dict[str, FakeGuild]]
     url: str
     heartbeat_interval_ms: int = 41250
+    ack_heartbeats: bool = True
+    """False: heartbeats go unanswered, as on a zombie connection the bot must close."""
     sessions: dict[str, Session] = field(default_factory=dict)
     sent: list[tuple[str, dict[str, Any]]] = field(default_factory=list)
     """Every payload sent to a bot, with its application id: the transcript's gateway side."""
@@ -149,7 +151,7 @@ class FakeGateway:
             while True:
                 message = await conn.recv()
                 op, d = message.get("op"), message.get("d")
-                if op == 1:
+                if op == 1 and self.ack_heartbeats:
                     await conn.send(payload(11, None))
                 elif op == 2 and isinstance(d, dict):
                     session = await self._identify(conn, d)
