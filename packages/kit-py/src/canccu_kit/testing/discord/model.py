@@ -65,6 +65,8 @@ class FakeGuild:
     """By user id; `permissions` is the member's guild permissions, as a user's guild list says."""
     commands: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     """Registered commands per application id."""
+    nicks: dict[str, str] = field(default_factory=dict)
+    """Each bot's own nickname in the guild, by application id."""
 
     def as_payload(self) -> dict[str, Any]:
         """The guild as GUILD_CREATE carries it."""

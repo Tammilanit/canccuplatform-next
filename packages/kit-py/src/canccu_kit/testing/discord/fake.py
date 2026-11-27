@@ -54,6 +54,8 @@ class FakeDiscord:
         self.codes: dict[str, FakeGrant] = {}
         self.bearers: dict[str, FakeGrant] = {}
         self.interaction_answers: list[tuple[str, Any]] = []
+        self.interaction_edits: list[tuple[str, Any]] = []
+        """(interaction token, body) of every edit of an answer, in order."""
         self._windows: dict[tuple[str, str, str], _Window] = {}
         self._ids = itertools.count(100000000000000100)
         self.gateway = FakeGateway(lambda: self.applications, lambda: self.guilds, gateway_url)

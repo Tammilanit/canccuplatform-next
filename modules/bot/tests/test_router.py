@@ -12,7 +12,8 @@ from canccu_kit import current_tenant
 from conftest import API, SHARED_ID, Env
 
 from canccu_bot.rest import RestClient
-from canccu_bot.router import ENDED, NOT_CONNECTED, OUTSIDE, Directory, Router
+from canccu_bot.router import Directory, Router
+from canccu_bot.texts import text
 
 GUILD = "100000000000000501"
 
@@ -124,7 +125,25 @@ async def test_an_interaction_in_an_unbound_guild_gets_a_private_answer(env: Env
     )
     [(interaction, body)] = env.discord.interaction_answers
     assert interaction == "100000000000000801"
-    assert body == {"type": 4, "data": {"content": NOT_CONNECTED, "flags": 64}}
+    # The product owner's final wording (mockup 07): what to do, and who can do it.
+    said = (
+        "This server is not connected to an event yet. Ask an event admin to connect it on the"
+        " event's Discord page."
+    )
+    assert body == {
+        "type": 4,
+        "data": {"content": said, "flags": 64, "allowed_mentions": {"parse": []}},
+    }
+
+
+async def test_the_no_answers_speak_the_persons_language(env: Env) -> None:
+    r, _ = router(env)
+    await r.dispatch(
+        "INTERACTION_CREATE",
+        {"id": "100000000000000805", "token": "t1", "guild_id": GUILD, "locale": "fi"},
+    )
+    said = env.discord.interaction_answers[-1][1]["data"]["content"]
+    assert said.startswith("Tätä palvelinta ei ole vielä yhdistetty tapahtumaan.")
 
 
 async def test_a_dm_to_the_shared_bot_gets_a_note_and_an_own_bots_goes_to_its_event(
@@ -132,7 +151,7 @@ async def test_a_dm_to_the_shared_bot_gets_a_note_and_an_own_bots_goes_to_its_ev
 ) -> None:
     r, _ = router(env)
     await r.dispatch("INTERACTION_CREATE", {"id": "100000000000000802", "token": "t"})
-    assert env.discord.interaction_answers[-1][1]["data"]["content"] == OUTSIDE
+    assert env.discord.interaction_answers[-1][1]["data"]["content"] == text("outside", None)
     app = env.discord.add_application("Own Bot")
     await env.platform_sql("INSERT INTO bot_application_routes VALUES ($1, 'ev-b')", app.id)
     seen = Recorder()
@@ -148,7 +167,7 @@ async def test_an_interaction_of_an_archived_event_says_it_ended(env: Env) -> No
     await r.dispatch(
         "INTERACTION_CREATE", {"id": "100000000000000804", "token": "t", "guild_id": GUILD}
     )
-    assert env.discord.interaction_answers[-1][1]["data"]["content"] == ENDED
+    assert env.discord.interaction_answers[-1][1]["data"]["content"] == text("ended", "en-GB")
 
 
 async def test_the_shared_bot_leaves_an_unbound_guild_after_15_minutes(env: Env) -> None:
