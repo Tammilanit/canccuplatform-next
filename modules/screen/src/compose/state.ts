@@ -204,7 +204,7 @@ export async function composeZone(
       showName: await showsName(c, zone),
       play: await zonePlay(c, zone.key, real.getTime()),
       prefetch: await zonePrefetch(c, zone.key),
-      scene: await loadScene(c, zone.key),
+      told: await loadScene(c, zone.key),
       food: await loadFood(c),
     };
   });
@@ -232,7 +232,8 @@ export async function composeZone(
     pin: read.zone.motion_level ?? null,
     settings: deps.settings,
     at: at.getTime(),
-    scene: read.scene,
+    scene: read.told.scene,
+    hype: read.told.hype,
   });
   const facts: ZoneFacts = {
     now: at,
@@ -263,8 +264,8 @@ export async function composeZone(
           heroRegion: read.zone.hero_region,
         },
         windowLayoutId: read.windowLayout,
-        sceneLayoutId: read.scene?.layout ?? null,
-        heroOff: read.scene?.hero_off ?? [],
+        sceneLayoutId: read.told.scene?.layout ?? null,
+        heroOff: read.told.scene?.hero_off ?? [],
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
@@ -294,7 +295,7 @@ export async function composeZone(
   const { stage, covers } = withContent
     ? await stageOf({
         views,
-        phase: moodOf(read.scene, motion.phase),
+        phase: moodOf(read.told.scene, motion.phase),
         agenda,
         nowMs: at.getTime(),
         stageArt: deps.settings.get("stage_art", true) !== false,
@@ -335,7 +336,7 @@ export async function composeZone(
       showName: read.showName,
       art: covers,
       play: read.play,
-      scene: read.scene,
+      scene: read.told.scene,
       prefetch: read.prefetch,
     }),
     zone: read.zone,
@@ -352,7 +353,7 @@ export async function composeZone(
     play: read.play,
     prefetch: read.prefetch,
     phase: motion.phase,
-    scene: read.scene,
+    scene: read.told.scene,
   };
 }
 

@@ -27,6 +27,47 @@ export interface ZoneScene {
   heartbeat_bpm: number;
 }
 
+export type HypePhase = "quiet" | "building" | "live" | "after";
+
+/** The zone's hype as Moments sends it with the scene (#787 D12): Screen composes, never computes it. */
+export interface ZoneHype {
+  level: number;
+  phase: HypePhase;
+  item: {
+    id: string;
+    title: string | null;
+    kind: string;
+    starts_at: string;
+    ends_at: string | null;
+  } | null;
+}
+
+const HYPE_PHASES = new Set(["quiet", "building", "live", "after"]);
+
+const textOr = (v: unknown): string | null => (typeof v === "string" ? v : null);
+
+/** The hype from an event's `hype`, or null when it is not one. */
+export function hypeOf(v: unknown): ZoneHype | null {
+  if (!isObj(v) || typeof v.level !== "number" || !Number.isFinite(v.level)) return null;
+  if (!HYPE_PHASES.has(v.phase as string)) return null;
+  const i = v.item;
+  const item =
+    isObj(i) && typeof i.id === "string" && typeof i.starts_at === "string"
+      ? {
+          id: i.id,
+          title: textOr(i.title),
+          kind: textOr(i.kind) ?? "other",
+          starts_at: i.starts_at,
+          ends_at: textOr(i.ends_at),
+        }
+      : null;
+  return {
+    level: Math.round(Math.min(1, Math.max(0, v.level)) * 100) / 100,
+    phase: v.phase as HypePhase,
+    item,
+  };
+}
+
 const MOODS = new Set(["build_up", "doors", "peak", "wind_down", "quiet_hours"]);
 const COLOUR = /^#[0-9a-fA-F]{6}$/;
 const KEY = /^[a-z][a-z0-9_-]{0,63}$/;
@@ -77,19 +118,31 @@ export async function applySceneEvent(db: Db, event: Event): Promise<void> {
   const zone = event.data.zone_key;
   if (typeof zone !== "string") return;
   const scene = sceneOf(event.data);
+  const hype = hypeOf(event.data.hype);
   await db.tenant((c) =>
     c.query(
-      `INSERT INTO screen_scenes (zone_key, scene, event_id) VALUES ($1, $2, $3)
+      `INSERT INTO screen_scenes (zone_key, scene, hype, event_id) VALUES ($1, $2, $3, $4)
        ON CONFLICT (tenant_id, zone_key) DO UPDATE SET scene = EXCLUDED.scene,
-         event_id = EXCLUDED.event_id
+         hype = EXCLUDED.hype, event_id = EXCLUDED.event_id
        WHERE screen_scenes.event_id < EXCLUDED.event_id`,
-      [zone, scene === null ? null : JSON.stringify(scene), event.id],
+      [
+        zone,
+        scene === null ? null : JSON.stringify(scene),
+        hype === null ? null : JSON.stringify(hype),
+        event.id,
+      ],
     ),
   );
 }
 
-/** The zone's scene as last told, or null: the day's phase then. */
-export async function loadScene(c: SqlClient, zone: string): Promise<ZoneScene | null> {
-  const { rows } = await c.query(`SELECT scene FROM screen_scenes WHERE zone_key = $1`, [zone]);
-  return (rows[0]?.scene as ZoneScene | null | undefined) ?? null;
+/** The zone's scene as last told, or null: the day's phase then; and its hype, or null. */
+export async function loadScene(
+  c: SqlClient,
+  zone: string,
+): Promise<{ scene: ZoneScene | null; hype: ZoneHype | null }> {
+  const { rows } = await c.query(`SELECT scene, hype FROM screen_scenes WHERE zone_key = $1`, [
+    zone,
+  ]);
+  const row = rows[0] as { scene: ZoneScene | null; hype: ZoneHype | null } | undefined;
+  return { scene: row?.scene ?? null, hype: row?.hype ?? null };
 }

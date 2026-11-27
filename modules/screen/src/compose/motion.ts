@@ -123,6 +123,21 @@ export function sceneLevel(
   return capped(scene.quiet ? atMost(level, "calm") : level, input.themeMotion);
 }
 
+/** Where the hype moves the level up (#787 D13): calm below the first, lively below the second. */
+export const HYPE_BANDS = [0.35, 0.7] as const;
+
+/**
+ * The hype's step of the level (#787 D13): the level steps 1–4 compose is the ceiling, and the
+ * hype moves the screen from `calm` up to it. `none` never moves. Moments' band rule keeps the
+ * hype in one band 5 minutes at least, so the level never flickers.
+ */
+export function hypedLevel(ceiling: MotionLevel, hype: number): MotionLevel {
+  if (ceiling === "none") return "none";
+  const band: MotionLevel =
+    hype >= HYPE_BANDS[1] ? "party" : hype >= HYPE_BANDS[0] ? "lively" : "calm";
+  return atMost(band, ceiling);
+}
+
 /** Every time the phase may change after `at`: each item's start and end, and an hour before quiet hours. */
 function boundaries(items: readonly AgendaItem[], at: number, until: number): number[] {
   const times = new Set<number>();

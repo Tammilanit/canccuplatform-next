@@ -1351,6 +1351,37 @@ components:
               description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
             stage:
               $ref: "#/components/schemas/Stage"
+            hype:
+              type: object
+              description: |
+                The zone's hype from `moments.scene.changed` (contracts/screen.md, Motion and burn-in drift; #787 D12);
+                absent until Moments sends one.
+              required: [level, phase, item]
+              properties:
+                level:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                phase:
+                  type: string
+                  enum: [quiet, building, live, after]
+                item:
+                  type: [object, "null"]
+                  description: The big item the hype is about.
+                  required: [id, title, kind, starts_at, ends_at]
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: [string, "null"]
+                    kind:
+                      type: string
+                    starts_at:
+                      type: string
+                      format: date-time
+                    ends_at:
+                      type: [string, "null"]
+                      format: date-time
             scene:
               type: object
               description: |
@@ -1447,6 +1478,21 @@ components:
                   type: number
                   minimum: 0.55
                   maximum: 1
+        game:
+          type: [object, "null"]
+          description: |
+            The current game's art, blurred by Screen's server, the stage's steady layer while the hype builds (#787 D10);
+            null while the event's `stage_art` is false, no countdown names a game or no art could be read. Absent from a
+            state composed before it.
+          required: [url, scrim]
+          properties:
+            url:
+              type: string
+              description: "`/api/screen/art/{art_id}.webp`."
+            scrim:
+              type: number
+              minimum: 0.55
+              maximum: 1
     MotionLevel:
       type: string
       description: The energy level (contracts/screen.md, Motion and burn-in drift).
@@ -1491,7 +1537,7 @@ components:
           type: array
           items:
             type: object
-            required: [key, name, motion_level, level, phase, next]
+            required: [key, name, motion_level, level, ceiling, phase, next]
             properties:
               key:
                 $ref: "#/components/schemas/ZoneKey"
@@ -1503,6 +1549,9 @@ components:
                   - $ref: "#/components/schemas/MotionLevel"
                   - type: "null"
               level:
+                $ref: "#/components/schemas/MotionLevel"
+              ceiling:
+                description: The level without the hype (steps 1–4), under which the hype moves it (#787 D13).
                 $ref: "#/components/schemas/MotionLevel"
               phase:
                 $ref: "#/components/schemas/MotionPhase"
