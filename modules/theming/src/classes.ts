@@ -37,17 +37,40 @@ const STABLE = new Set([
   "canccu-widget__title",
   "canccu-widget__body",
   "canccu-widget__footer",
+  "canccu-widget__art",
+  "canccu-widget__kicker",
   "canccu-embed",
   "canccu-is-active",
   "canccu-is-empty",
   "canccu-is-stale",
   "canccu-is-offline",
+  ...["", "--none", "--calm", "--lively", "--party"].map((m) => `canccu-motion${m}`),
+  ...["", "--standard", "--broadcast", "--arcade"].map((m) => `canccu-motion-pack${m}`),
+  ...["", "--roll", "--flap", "--sweep", "--pop", "--tilt"].map((m) => `canccu-fx${m}`),
+  ...["", "--outline", "--glow", "--trace", "--pop", "--burst"].map((m) => `canccu-spotlight${m}`),
+  ...[
+    "",
+    "__backdrop",
+    "__video",
+    "__art",
+    "__glow",
+    "__kind",
+    "__phase",
+    "__tint",
+    "__scrim",
+    "--tinted",
+    "--art",
+    "--backdrop",
+    "--video",
+  ].map((m) => `canccu-stage${m}`),
 ]);
 
 /** `--<layout id>`, `--<region id>`, `--<widget type>`: modifiers named by the theme's own data. */
 const OPEN_MODIFIER = /^canccu-(layout|region|widget)--[a-z0-9][a-z0-9_-]*$/;
+/** The stage's `--kind-<kind key>` and `--phase-<phase>`: named by the event's data. */
+const OPEN_STAGE = /^canccu-stage--(kind|phase)-[a-z0-9][a-z0-9_-]*$/;
 
 export const isThemeClass = (name: string): boolean => name.startsWith("t-");
 
 export const isStableClass = (name: string): boolean =>
-  STABLE.has(name) || OPEN_MODIFIER.test(name);
+  STABLE.has(name) || OPEN_MODIFIER.test(name) || OPEN_STAGE.test(name);

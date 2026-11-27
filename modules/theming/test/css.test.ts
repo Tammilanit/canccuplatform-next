@@ -121,6 +121,15 @@ describe("checkCss", () => {
     expect(big).toMatchObject({ ok: false, problem: { code: "file_too_large" } });
   });
 
+  it("takes the contract's motion, stage and announcement classes as stable", () => {
+    const result = check(`
+      .canccu-motion--lively .canccu-stage__glow::before { opacity: 0.5; }
+      .canccu-motion-pack--arcade .canccu-spotlight--glow { opacity: 1; }
+      .canccu-stage--kind-match .canccu-widget__art, .canccu-stage--phase-final { opacity: 1; }
+      .canccu-fx--roll .canccu-widget__kicker { opacity: 1; }`);
+    expect(result).toMatchObject({ ok: true, warnings: [] });
+  });
+
   it("warns, never refuses, for classes neither stable nor t-", () => {
     const result = check(`
       .canccu-widget--agenda_now .canccu-widget__title, .canccu-layout--main, .t-own { color: red; }
