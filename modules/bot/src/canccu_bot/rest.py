@@ -72,6 +72,11 @@ def route_key(method: str, path: str) -> str:
     return f"{method} {'/'.join(parts)}"
 
 
+def _fail(job: _Job, exc: RestError) -> None:
+    if not job.future.done():
+        job.future.set_exception(exc)
+
+
 class RestClient:
     def __init__(
         self,
@@ -143,8 +148,10 @@ class RestClient:
             raise RestError(401 if reason == "token_invalid" else 503, reason, "the client stopped")
 
     def _start_workers(self) -> None:
-        if not self._workers:
-            self._workers = [asyncio.create_task(self._work()) for _ in range(self._worker_count)]
+        # a worker that ended is replaced, so one bad answer never leaves the client without any
+        alive = [w for w in self._workers if not w.done()]
+        alive += [asyncio.create_task(self._work()) for _ in range(self._worker_count - len(alive))]
+        self._workers = alive
 
     def _next(self) -> _Job | None:
         """The next event's next job. An event has one job in flight at a time, so its burst
@@ -195,11 +202,14 @@ class RestClient:
             await asyncio.sleep(retry.after)
             self._requeue(job)
         except RestError as exc:
-            job.future.set_exception(exc)
+            _fail(job, exc)
         except httpx.HTTPError as exc:
-            job.future.set_exception(RestError(0, "discord_unavailable", str(exc)))
+            _fail(job, RestError(0, "discord_unavailable", str(exc)))
+        except Exception as exc:  # an unreadable body or header: the caller still gets an answer
+            _fail(job, RestError(0, "discord_unavailable", f"unreadable answer: {exc}"))
         else:
-            job.future.set_result(result)
+            if not job.future.done():  # the caller may have cancelled while the request flew
+                job.future.set_result(result)
 
     async def _send(self, job: _Job) -> Any:
         self._refuse_if_stopped()

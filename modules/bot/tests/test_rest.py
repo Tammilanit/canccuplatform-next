@@ -196,3 +196,23 @@ def test_a_route_key_keeps_only_the_major_parameter() -> None:
     assert route_key("POST", "/interactions/100000000000000005/tok/callback") == (
         "POST /interactions/{id}/{token}/callback"
     )
+
+
+async def test_an_unreadable_answer_fails_the_call_and_keeps_the_worker() -> None:
+    import httpx
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/bad"):
+            return httpx.Response(200, content=b"<html>not json</html>")
+        return httpx.Response(200, json={"ok": True})
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(answer))
+    client = RestClient("token", http=http, api_url=API, workers=1)
+    try:
+        with pytest.raises(RestError) as caught:
+            await asyncio.wait_for(client.request("GET", "/bad"), 2)
+        assert caught.value.code == "discord_unavailable"
+        assert await asyncio.wait_for(client.request("GET", "/good"), 2) == {"ok": True}
+    finally:
+        await client.close()
+        await http.aclose()

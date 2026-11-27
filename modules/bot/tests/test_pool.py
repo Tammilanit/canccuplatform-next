@@ -174,3 +174,42 @@ async def test_a_status_nobody_refreshes_runs_out(world: World) -> None:
     await world.pool("c1").tick()
     world.keys.now_ms += 60_001
     assert await StatusBoard(world.keys).read(SHARED) is None
+
+
+async def test_leases_are_renewed_even_when_postgres_is_away(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pool = world.pool("c1")
+    await pool.tick()
+    renewed: list[str] = []
+    real = world.keys.renew
+
+    async def renew(key: str, holder: str, ttl_ms: int) -> bool:
+        renewed.append(key)
+        return await real(key, holder, ttl_ms)
+
+    async def broken() -> dict[str, str]:
+        raise ConnectionError("postgres is away")
+
+    monkeypatch.setattr(world.keys, "renew", renew)
+    monkeypatch.setattr(pool, "_wanted", broken)
+    with pytest.raises(ConnectionError):
+        await pool.tick()
+    assert renewed == [f"bot:lease:{SHARED}"]
+
+
+async def test_a_client_whose_lease_cannot_be_confirmed_for_a_ttl_stops(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pool = world.pool("c1")
+    await pool.tick()
+
+    async def valkey_away(key: str, holder: str, ttl_ms: int) -> bool:
+        raise ConnectionError("valkey is away")
+
+    monkeypatch.setattr(world.keys, "renew", valkey_away)
+    await pool.tick()
+    assert pool.held() == [SHARED]  # inside the TTL: the lease is still ours
+    pool._confirmed[SHARED] -= 31
+    await pool.tick()
+    assert pool.held() == [] and world.opened[0].stopped

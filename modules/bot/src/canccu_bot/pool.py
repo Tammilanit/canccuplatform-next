@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
@@ -54,6 +55,7 @@ class Pool:
         self._open_client = open_client
         self._clients: dict[str, tuple[str, Client]] = {}
         self._stopped = asyncio.Event()
+        self._confirmed: dict[str, float] = {}  # when each held lease was last renewed
 
     def held(self) -> list[str]:
         return list(self._clients)
@@ -62,14 +64,30 @@ class Pool:
         found = self._clients.get(application_id)
         return None if found is None else found[1]
 
+    async def _renew_held(self) -> None:
+        """Renewal comes first and never waits on Postgres: a database outage must not let a
+        lease lapse under a running client, or another container would open the same token."""
+        for app_id in list(self._clients):
+            try:
+                renewed = await self._keys.renew(lease_key(app_id), self._holder, LEASE_TTL_MS)
+            except Exception:
+                log.exception("could not renew the lease of application %s", app_id)
+                age = time.monotonic() - self._confirmed.get(app_id, 0.0)
+                if age >= LEASE_TTL_MS / 1000:  # it may have expired: stop before another opens it
+                    await self._close(app_id, release=False)
+                continue
+            if renewed:
+                self._confirmed[app_id] = time.monotonic()
+            else:
+                log.warning("lost the lease of application %s; closing its client", app_id)
+                await self._close(app_id, release=False)
+
     async def tick(self) -> None:
+        await self._renew_held()
         wanted = await self._wanted()
         for app_id, (token, _) in list(self._clients.items()):
             if wanted.get(app_id) != token:  # gone, or a rotated token opens a new client
                 await self._close(app_id, release=True)
-            elif not await self._keys.renew(lease_key(app_id), self._holder, LEASE_TTL_MS):
-                log.warning("lost the lease of application %s; closing its client", app_id)
-                await self._close(app_id, release=False)
         for app_id, token in wanted.items():
             if app_id not in self._clients:
                 await self._take(app_id, token)
@@ -87,9 +105,11 @@ class Pool:
             await self._keys.release(lease_key(app_id), self._holder)
             return
         self._clients[app_id] = (token, client)
+        self._confirmed[app_id] = time.monotonic()
 
     async def _close(self, app_id: str, *, release: bool) -> None:
         _, client = self._clients.pop(app_id)
+        self._confirmed.pop(app_id, None)
         try:
             await client.stop()
         except Exception:
