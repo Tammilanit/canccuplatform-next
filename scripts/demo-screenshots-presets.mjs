@@ -9,7 +9,10 @@ const HD = { width: 1920, height: 1080 };
 const PREVIEW = "/theming/studio/preview/";
 
 /** Each new preset: its id, its first scheme and its light scheme. */
-const NEW_PRESETS = [["esports", "arena", "studio"]];
+const NEW_PRESETS = [
+  ["esports", "arena", "studio"],
+  ["arcade", "cabinet", "handheld"],
+];
 
 export const PRESET_LOOKS = NEW_PRESETS.flatMap(([preset, first, light]) => [
   [

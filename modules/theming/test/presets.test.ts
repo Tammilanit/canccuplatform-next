@@ -8,8 +8,26 @@ import { PRESETS, schemeColors } from "../src/presets.js";
 
 describe("the presets", () => {
   it("are the demo themes the image holds, in the gallery's order", () => {
-    expect([...PRESETS.keys()]).toEqual(["default", "esports", "level-up", "terminal"]);
+    expect([...PRESETS.keys()]).toEqual(["default", "esports", "level-up", "arcade", "terminal"]);
     expect(PRESETS.get("level-up")?.name).toBe("Level up");
+  });
+
+  it("hold Arcade with its five schemes, its pixel pair and fully opaque boxes", () => {
+    const arcade = PRESETS.get("arcade");
+    expect(arcade?.schemes.map((s) => s.id)).toEqual([
+      "cabinet",
+      "player-two",
+      "green-screen",
+      "handheld",
+      "contrast",
+    ]);
+    expect(arcade?.manifest.brand).toMatchObject({
+      font_pair: "press-jersey",
+      roundness: "square",
+      backdrop: { looks: ["particles", "glows"] },
+      box_opacity: 1,
+    });
+    expect(arcade?.manifest.tokens).toMatchObject({ motion_style: { pack: "arcade" } });
   });
 
   it("hold Esports with its five schemes, its pair, square corners and broadcast motion", () => {

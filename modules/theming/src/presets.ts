@@ -17,7 +17,7 @@ import { schemaErrors } from "./schema.js";
 
 export const THEMES_DIR = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
 /** The gallery's order. The Themes step (#785) adds its presets here and to the folder. */
-export const PRESET_IDS = ["default", "esports", "level-up", "terminal"] as const;
+export const PRESET_IDS = ["default", "esports", "level-up", "arcade", "terminal"] as const;
 
 export interface Scheme {
   id: string;

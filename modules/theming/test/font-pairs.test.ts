@@ -14,9 +14,22 @@ import { DATABASE_URL, get, send } from "./helpers.js";
 describe("the font pairs in the image", () => {
   const folders = readdirSync(FONTS_DIR, { withFileTypes: true }).filter((d) => d.isDirectory());
 
-  it("holds the 14 pairs the PO kept, each one listed", () => {
+  it("holds the 14 pairs the PO kept and Arcade's pixel pair, each one listed", () => {
     expect(folders.map((d) => d.name).sort()).toEqual([...FONT_PAIRS.keys()].sort());
-    expect(FONT_PAIRS.size).toBe(14);
+    expect(FONT_PAIRS.size).toBe(15);
+    expect(FONT_PAIRS.get("press-jersey")).toMatchObject({
+      heading: { family: "Press Start 2P" },
+      body: { family: "Jersey 10" },
+    });
+  });
+
+  it("scales a face that sets small for its size, so its text reads as large as the others'", () => {
+    const pair = FONT_PAIRS.get("press-jersey");
+    if (pair === undefined) throw new Error("no press-jersey");
+    const [heading, body] = pairFontFaces(pair);
+    expect(heading).not.toContain("size-adjust");
+    expect(body).toContain('font-family: "Jersey 10"');
+    expect(body).toContain("size-adjust: 130%;");
   });
 
   it("gives every pair a pair.json, the SIL Open Font License, and real WOFF2 files", () => {
@@ -97,7 +110,7 @@ describe.skipIf(!DATABASE_URL)("the font pairs over HTTP", () => {
         heading: { family: string; faces: { weight: number; url: string }[] };
       }[];
     }>();
-    expect(pairs).toHaveLength(14);
+    expect(pairs).toHaveLength(FONT_PAIRS.size);
     const space = pairs.find((p) => p.id === "space-inter");
     expect(space?.heading).toEqual({
       family: "Space Grotesk",

@@ -1,0 +1,166 @@
+/* Arcade (#785, plan D6, D14): pixel type, CRT glow, chunky colours; the pack's accepted look
+   (docs/design/themes/looks/arcade.css). Stable classes and t-arcade- names only; effects only on
+   the screen. One type family on the whole screen: Press Start 2P for titles, digits and ranks,
+   Jersey 10 for every line of text. The pair scales Jersey 10 up (its size_adjust), so the sizes
+   here are the pack's divided by that and still 27 px or more at 1080p, and the hub's text reads
+   as large as in the other presets. The boxes are fully opaque (brand.box_opacity 1).
+   The CRT sits over the whole screen, the way a tube does: scanlines, a dark vignette and, at lively
+   and party, a faint roll band. They are still and light enough that every text colour keeps its
+   contrast under them (test/preset-packages.test.ts); pointer-events are off. Motion: the roll
+   band only, by transform and opacity. */
+
+.canccu-surface--screen {
+  font-family: var(--canccu-font-body);
+}
+
+/* Scanlines (a 4 px period) and the vignette, over everything. */
+.canccu-surface--screen::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgb(0 0 0 / 0.6) 100%),
+    repeating-linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0.3) 0 2px,
+      rgb(255 255 255 / 0.035) 2px 4px
+    );
+}
+
+/* The roll band: a faint light bar moves down the screen once every 9 s (6 s at party). */
+.canccu-surface--screen::before {
+  content: "";
+  position: fixed;
+  top: -14vh;
+  left: 0;
+  right: 0;
+  height: 14vh;
+  z-index: 9;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--canccu-color-text) 40%, transparent),
+    transparent
+  );
+}
+.canccu-motion--lively.canccu-surface--screen::before {
+  animation: t-arcade-roll 9s linear infinite;
+}
+.canccu-motion--party.canccu-surface--screen::before {
+  animation: t-arcade-roll 6s linear infinite;
+}
+@keyframes t-arcade-roll {
+  from {
+    transform: translateY(0);
+    opacity: 0.1;
+  }
+  to {
+    transform: translateY(114vh);
+    opacity: 0.1;
+  }
+}
+
+/* Chunky boxes: a 4 px border with stepped corners drawn by shadows, never round. */
+.canccu-surface--screen .canccu-widget {
+  border: 4px solid var(--canccu-color-border);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 0 var(--canccu-color-background),
+    8px 8px 0 0 color-mix(in srgb, var(--canccu-color-primary) 70%, var(--canccu-color-background));
+}
+
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+  text-shadow: 3px 3px 0 var(--canccu-color-background);
+}
+
+.canccu-surface--screen .canccu-widget__kicker {
+  border-radius: 0;
+  font-family: var(--canccu-font-heading);
+  font-size: 1.7rem;
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-size: 5rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__body {
+  font-size: 2.125rem;
+}
+
+/* The high-score table (templates/hiscore.mustache): rank, name, dotted leaders, score. The list
+   fills the box's height and wraps: a row that does not fit goes whole into a second column, which
+   the box hides, so no row is ever cut at any size. */
+.t-arcade-hiscore {
+  display: flex;
+  flex: 1 1 auto;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  gap: 10px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  font-size: 1.75rem;
+}
+.t-arcade-hiscore__row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 5rem auto 1fr auto;
+  align-items: baseline;
+  gap: 14px;
+}
+.t-arcade-hiscore__rank,
+.t-arcade-hiscore__score {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.7rem;
+}
+.t-arcade-hiscore__rank {
+  color: var(--canccu-color-accent);
+}
+.t-arcade-hiscore__row:first-child {
+  color: var(--canccu-color-primary);
+}
+.t-arcade-hiscore__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.t-arcade-hiscore__dots {
+  border-bottom: 4px dotted color-mix(in srgb, var(--canccu-color-text-muted) 70%, transparent);
+  transform: translateY(-0.3em);
+}
+.t-arcade-hiscore__score {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Big digits (templates/clock.mustache). */
+.t-arcade-clock {
+  font-family: var(--canccu-font-heading);
+  font-size: 3.5rem;
+  line-height: 1;
+  text-align: right;
+  color: var(--canccu-color-primary);
+  text-shadow: 4px 4px 0 var(--canccu-color-background);
+}
+.t-arcade-clock__time {
+  display: block;
+}
+.t-arcade-clock__day {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.7rem;
+  color: var(--canccu-color-text-muted);
+}

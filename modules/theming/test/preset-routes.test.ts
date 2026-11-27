@@ -64,7 +64,13 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     const res = await get(t.h, "/api/theming/presets", { session: "admin" });
     expect(res.statusCode).toBe(200);
     const { presets } = res.json<Listed>();
-    expect(presets.map((p) => p.id)).toEqual(["default", "esports", "level-up", "terminal"]);
+    expect(presets.map((p) => p.id)).toEqual([
+      "default",
+      "esports",
+      "level-up",
+      "arcade",
+      "terminal",
+    ]);
     const levelUp = presets.find((p) => p.id === "level-up");
     expect(levelUp?.embeds).toBe(true);
     expect(presets.find((p) => p.id === "default")?.embeds).toBe(false);

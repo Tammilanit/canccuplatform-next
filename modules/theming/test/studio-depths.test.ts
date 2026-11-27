@@ -4,6 +4,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
+import { FONT_PAIRS } from "../src/font-pairs.js";
 import { PRESETS } from "../src/presets.js";
 import { readsWell } from "../src/studio-yours.js";
 import { draftFiles } from "./drafting.js";
@@ -104,7 +105,9 @@ describe.skipIf(!DATABASE_URL)("the Theme studio's depths", () => {
       for (const kind of ["none", "light", "dark", "surface"]) {
         expect(res.body).toContain(`name="plate_kind" value="${kind}"`);
       }
-      expect([...res.body.matchAll(/name="font_pair" value="[a-z-]+"/g)]).toHaveLength(14);
+      expect([...res.body.matchAll(/name="font_pair" value="[a-z-]+"/g)]).toHaveLength(
+        FONT_PAIRS.size,
+      );
       expect(res.body).toContain('name="font_pair" value=""');
       for (const r of ["square", "soft", "round"]) {
         expect(res.body).toContain(`name="roundness" value="${r}"`);
