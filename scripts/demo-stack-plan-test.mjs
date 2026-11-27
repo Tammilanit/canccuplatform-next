@@ -21,7 +21,7 @@ import {
 } from "./demo-screenshots-groups.mjs";
 import { shotChecks } from "./demo-stack-plan-shots-test.mjs";
 
-export function selftest({ plan, format, summary, changedPaths }) {
+export function selftest({ plan, format, summary, changedPaths, forGroups, groupsAt }) {
   let failed = 0;
   const check = (name, run) => {
     try {
@@ -321,7 +321,7 @@ export function selftest({ plan, format, summary, changedPaths }) {
       'tier=module\napi=agenda\nsoak=false\ncheck=false\nrun=affected\ngroups=agenda\nselect=\nshards=[{"shard":"pages","groups":"agenda","select":""}]',
     ),
   );
-  shotChecks({ check, plan, summary });
+  shotChecks({ check, plan, summary, forGroups, groupsAt });
   if (failed) {
     console.log(`demo-stack-plan: ${failed} failed`);
     process.exit(1);
