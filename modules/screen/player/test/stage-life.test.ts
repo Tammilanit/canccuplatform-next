@@ -182,6 +182,30 @@ describe("the living stage", () => {
     expect(at(1, "none")).toBe(0);
   });
 
+  it("keeps the particles through the 40 s fade out and does not restart them on a hype step", () => {
+    const looks = ["particles", "glows"];
+    let t = T0;
+    while (!(lookAt("main", looks, t, "lively").from === "particles")) t += 10_000;
+    const now = lookAt("main", looks, t, "lively");
+    expect(now.look).not.toBe("particles");
+    const dots = (hype: number) =>
+      draw({ now: t, backdrop: { looks }, life: life({ hype: { level: hype, phase: "building" } }) })
+        .querySelectorAll(".canccu-stage__particles > i").length;
+    expect(dots(0.5)).toBeGreaterThan(0);
+
+    const first = draw({ now: t, backdrop: { looks }, life: life({ hype: { level: 0.5, phase: "building" } }) });
+    const layer = first.querySelector(".canccu-stage__particles") as HTMLElement;
+    const dot = layer.firstElementChild;
+    new StageLayer(document.body).apply(
+      { phase: "peak", kind: null, tint: null },
+      "lively",
+      t,
+      { looks, game_art: true, daylight: true, hype: true },
+      life({ hype: { level: 0.6, phase: "building" } }),
+    );
+    expect(layer.firstElementChild).toBe(dot);
+  }); // prettier-ignore
+
   it("shows the game's art while the hype builds or is live, if the theme lets it", () => {
     const game = { url: ART, scrim: 0.75 };
     const shown = (phase: string, o: { game_art?: boolean } = {}) =>

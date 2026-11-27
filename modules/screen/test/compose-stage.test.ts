@@ -216,6 +216,24 @@ describe("the stage", () => {
   });
 });
 
+describe("the stage's game", () => {
+  it("takes only a countdown's game, never a hot game's", async () => {
+    const covers = ["/games/covers/g_1.webp", "/games/covers/g_3.webp"];
+    const v = views([
+      region("rail", { widgets: [widget("hot_game", hot("g_1", NOW - 10_000))] }),
+      region("hero", {
+        widgets: [widget("countdown", { title: "Demo Cup", game: game("g_3") })],
+      }),
+    ]);
+    const { stage } = await stageOf({ ...base, views: v, art: cache(covers) });
+    expect(stage.game).not.toBeNull();
+    const only = views([
+      region("rail", { widgets: [widget("hot_game", hot("g_1", NOW - 10_000))] }),
+    ]);
+    expect((await stageOf({ ...base, views: only, art: cache(covers) })).stage.game).toBeNull();
+  });
+});
+
 describe("the Pulse hero's countdown", () => {
   const item = (id: string, starts: string, extra: Partial<AgendaItem> = {}): AgendaItem => ({
     id,

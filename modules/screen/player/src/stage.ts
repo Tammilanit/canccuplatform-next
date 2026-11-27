@@ -205,16 +205,16 @@ function gameOf(
 const particlesOf = (level: Level, hype: number): number =>
   level === "none" ? 0 : 8 + Math.round(hype * 16);
 
+/** Adds or removes only the difference, so the dots already rising keep their place. */
 function setParticles(layer: HTMLElement, count: number): void {
-  if (layer.childElementCount === count) return;
-  const dots = Array.from({ length: count }, (_, i) => {
+  while (layer.childElementCount > count) layer.lastElementChild?.remove();
+  for (let i = layer.childElementCount; i < count; i++) {
     const dot = layer.ownerDocument.createElement("i");
     dot.style.setProperty("--canccu-particle", String(i));
     // Spread across the width without a pattern the eye picks up: 41 and 97 share no factor.
     dot.style.setProperty("--canccu-particle-x", `${String(((i * 41) % 97) + 1)}%`);
-    return dot;
-  });
-  layer.replaceChildren(...dots);
+    layer.append(dot);
+  }
 }
 
 export class StageLayer {
@@ -266,10 +266,9 @@ export class StageLayer {
     if (hype === null) el.style.removeProperty("--canccu-hype");
     else el.style.setProperty("--canccu-hype", String(hype.level));
     const particles = layerOf("particles");
-    setParticles(
-      particles,
-      look?.look === "particles" ? particlesOf(level, hype?.level ?? 0.5) : 0,
-    );
+    // The dots stay through the 40 s the look fades out, or the fade would show an empty layer.
+    const dotsShown = look?.look === "particles" || look?.from === "particles";
+    setParticles(particles, dotsShown ? particlesOf(level, hype?.level ?? 0.5) : 0);
     // One scrim over them all: the larger one keeps the text readable on each.
     const scrims = [art?.scrim, picture?.scrim, game?.scrim].filter((v) => v !== undefined);
     if (scrims.length > 0)

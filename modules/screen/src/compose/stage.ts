@@ -129,7 +129,10 @@ function coversOf(views: Views, tint: TintAsk | null): string[] {
 function gameCover(views: Views): string | null {
   for (const { regions } of Object.values(views)) {
     for (const r of regions) {
-      const shown = r.widgets.filter((w) => w.enabled !== false).map((w) => w.view);
+      // Countdowns only: a hot game's view carries a cover too, but it is not the day's game.
+      const shown = r.widgets
+        .filter((w) => w.enabled !== false && w.widget === "countdown")
+        .map((w) => w.view);
       for (const view of r.idle_view === null ? shown : [...shown, r.idle_view.view]) {
         const url = coverOf("countdown", view);
         if (typeof url === "string") return url;
