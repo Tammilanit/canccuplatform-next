@@ -24,8 +24,16 @@
     flex: 1 1 auto;
     min-height: 0;
     margin-top: calc(1 * var(--canccu-u));
-    /* Room for the now pill above the lanes. */
-    --canccu-line-top: max(4.6vmin, min(calc(5 * var(--canccu-u)), 8cqh));
+    --canccu-pill-font: max(2.6vmin, min(calc(2.4 * var(--canccu-u)), 3.4cqh));
+    --canccu-pill-pad: calc(0.3 * var(--canccu-u));
+    --canccu-now-width: calc(0.35 * var(--canccu-u));
+    /* Room for the now pill above the lanes: never less than the pill's own height, or a box
+       that clips cuts its top off. */
+    --canccu-line-top: max(
+      4.6vmin,
+      min(calc(5 * var(--canccu-u)), 8cqh),
+      calc(1.25 * var(--canccu-pill-font) + 2 * var(--canccu-pill-pad))
+    );
     padding-top: var(--canccu-line-top);
   }
 
@@ -196,25 +204,32 @@
     top: var(--canccu-line-top);
     /* Down to the axis: its time's line and the gap above it. */
     bottom: calc(1.4 * var(--canccu-u) + 1.2em);
-    left: calc(var(--canccu-progress, 0) * 100%);
+    /* Its own width off the run, so at the line's end it still stands inside the track. */
+    left: calc(var(--canccu-progress, 0) * (100% - var(--canccu-now-width)));
     z-index: 2;
-    width: calc(0.35 * var(--canccu-u));
+    width: var(--canccu-now-width);
     margin: 0;
     background: var(--canccu-color-text, #fff);
   }
 
+  /*
+   * The pill slides along the line as the clock does: its left edge on the line at the start, its
+   * middle at the middle, its right edge at the end, so it never leaves the track (a box that
+   * clips would cut it).
+   */
   .canccu-widget--agenda_timeline .canccu-widget__now-pill {
     position: absolute;
     top: 0;
-    left: 50%;
-    padding: calc(0.3 * var(--canccu-u)) calc(1.2 * var(--canccu-u));
+    left: calc(var(--canccu-progress, 0) * 100%);
+    padding: var(--canccu-pill-pad) calc(1.2 * var(--canccu-u));
     border-radius: 999px;
     background: var(--canccu-color-text, #fff);
     color: var(--canccu-color-background, #000);
-    font-size: max(2.6vmin, min(calc(2.4 * var(--canccu-u)), 3.4cqh));
+    font-size: var(--canccu-pill-font);
     font-weight: 700;
+    line-height: 1.25;
     white-space: nowrap;
-    transform: translate(-50%, -100%);
+    transform: translate(calc(var(--canccu-progress, 0) * -100%), -100%);
   }
 
   /*

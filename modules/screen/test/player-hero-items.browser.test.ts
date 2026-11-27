@@ -164,3 +164,48 @@ describe.skipIf(browser === undefined)(
           });
   },
 );
+
+/*
+ * The now pill at the line's two ends: centred on the line, half of it stood outside the track and
+ * the box clipped it (CI's portrait step-down shot, a clock just past the hour).
+ */
+describe.skipIf(browser === undefined)("the coming hours' now pill", { timeout: 60_000 }, () => {
+  for (const [kind, size] of SIZES)
+    for (const area of AREAS)
+      for (const end of ["from", "to"] as const)
+        it(`stays in its track at the line's ${end === "from" ? "start" : "end"}, ${kind} ${size.join("×")}, ${String(area.columns)} columns wide`, async () => {
+          if (browser === undefined || code === undefined) throw new Error("no browser");
+          const state = structuredClone(STATES[kind]);
+          const hero = state.regions.find((r) => r.id === "hero");
+          if (hero === undefined) throw new Error("the fixture has no hero");
+          const view = timeline(Date.parse(state.time), kind, area) as Record<string, unknown>;
+          hero.area = area;
+          hero.rotation = "director";
+          hero.order = [0];
+          hero.widgets = [
+            {
+              widget: "agenda_timeline",
+              template: null,
+              embed: null,
+              dwell_seconds: 45,
+              stale_after_seconds: null,
+              view: { qr: null, stale: false, empty: false, ...view },
+            },
+          ];
+          const page = await screenPage(browser, code, size, Date.parse(view[end] as string), "");
+          await draw(page, state);
+          await tick(page, 0);
+          const box = (sel: string) =>
+            page.$eval(sel, (el) => {
+              const r = el.getBoundingClientRect();
+              return { left: r.left, top: r.top, right: r.right };
+            });
+          const track = await box(".canccu-widget__track");
+          const pill = await box(".canccu-widget__now-pill");
+          expect(pill.left).toBeGreaterThanOrEqual(track.left - 0.5);
+          expect(pill.top).toBeGreaterThanOrEqual(track.top - 0.5);
+          expect(pill.right).toBeLessThanOrEqual(track.right + 0.5);
+          expect(judgePage(await page.evaluate(collectSamples))).toEqual([]);
+          await page.close();
+        });
+});
