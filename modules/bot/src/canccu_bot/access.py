@@ -108,3 +108,25 @@ class TenantsAudit:
             self._url, json=body, headers=self._identity.headers("tenants")
         )
         response.raise_for_status()
+
+
+class SeriesReader:
+    """Seam: whether the caller is an event admin of both events of one series, from
+    `GET /api/tenants/current/series` on the request's hostname with the caller's cookie, the read
+    the tenants contract names for a module's clone. Until #150 serves it the answer is 404, read
+    as no, so a clone fails closed with 403 `missing_right`."""
+
+    def __init__(self, base_url: str) -> None:
+        self._url = base_url.rstrip("/") + "/api/tenants/current/series"
+        self._http = httpx.AsyncClient(timeout=5.0)
+
+    async def admin_of_both(self, host: str, cookie: str | None, source: str, target: str) -> bool:
+        headers = {"host": host} if cookie is None else {"host": host, "cookie": cookie}
+        response = await self._http.get(self._url, headers=headers)
+        if response.status_code != 200:
+            return False
+        events = response.json().get("events")
+        if not isinstance(events, list):
+            return False
+        admin_of = {e.get("id") for e in events if isinstance(e, dict) and e.get("caller_is_admin")}
+        return source in admin_of and target in admin_of

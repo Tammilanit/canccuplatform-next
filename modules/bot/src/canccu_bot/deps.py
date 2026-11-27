@@ -35,4 +35,6 @@ class Deps:
     audit: Any
     """access.TenantsAudit, or a test's fake."""
     hosts: Hosts
+    series: Any
+    """access.SeriesReader, or a test's fake."""
     now: Callable[[], datetime] = field(default=lambda: datetime.now(UTC))

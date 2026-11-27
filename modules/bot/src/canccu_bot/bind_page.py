@@ -13,7 +13,11 @@ CSS = ("/admin/static/ui.css",)
 START_AGAIN = "Start connecting the server again from the event's Discord page."
 WORDS: dict[str, tuple[str, str, str]] = {
     "ok": ("ok", "Discord server connected", "The bot now serves the event's server."),
-    "state_invalid": ("warn", "This link has run out", f"It works once, for 10 minutes. {START_AGAIN}"),
+    "state_invalid": (
+        "warn",
+        "This link has run out",
+        f"It works once, for 10 minutes. {START_AGAIN}",
+    ),
     "access_denied": ("info", "Discord was closed before it said yes", START_AGAIN),
     "discord_user_mismatch": (
         "warn",

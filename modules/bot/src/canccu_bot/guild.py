@@ -56,7 +56,7 @@ async def unbind(
             data = {"guild_id": guild, "reason": reason, "actor_user_id": actor}
             await d.outbox.add(conn, "bot.guild.unbound", data, version=1)
         await d.outbox.flush(tenant)
-    await audit(d, tenant, actor, "bot.guild.unbound", guild, {"reason": reason}, why)
+    await audit(d, tenant, actor, "bot.guild.unbound", {"reason": reason}, "guild", guild, why)
     if reason != "bot_removed" and token is not None:
         await leave(d, token, app_id, guild)
     return True
@@ -79,15 +79,18 @@ async def audit(
     tenant: str,
     actor: str | None,
     action: str,
-    guild: str,
     changes: dict[str, Any],
+    target: str,
+    target_id: str | None = None,
     reason: str | None = None,
 ) -> None:
+    """One audit entry after the change committed; `target_id` defaults to the event."""
+    entry = {"type": target, "id": target_id or tenant}
     try:
-        await d.audit.append(tenant, actor, action, {"type": "guild", "id": guild}, changes, reason)
+        await d.audit.append(tenant, actor, action, entry, changes, reason)
     except Exception:
         # The change is committed; a missing entry is logged rather than reported as a failure.
-        log.exception("could not audit %s of guild %s", action, guild)
+        log.exception("could not audit %s of %s", action, tenant)
 
 
 async def delete_guild(request: Request) -> Response:

@@ -112,7 +112,12 @@ async def test_a_rotation_checks_and_replaces_only_the_credential_it_brings(env:
     app.client_secret = "rotated-secret-value-1"
     r = await put(
         env,
-        {"mode": "own", "application_id": app.id, "client_secret": app.client_secret, "revision": 1},
+        {
+            "mode": "own",
+            "application_id": app.id,
+            "client_secret": app.client_secret,
+            "revision": 1,
+        },
     )
     assert r.status_code == 200
     [after] = await env.fetch("ev-a", "SELECT bot_token, client_secret FROM bot_connections")

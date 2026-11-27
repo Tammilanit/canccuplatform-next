@@ -116,3 +116,13 @@ class FakeUsers:
 
     async def discord_id(self, user_id: str) -> str | None:
         return self.discord_ids.get(user_id)
+
+
+@dataclass
+class FakeSeries:
+    """The series seam: the events whose admin the caller is, in this event's series."""
+
+    admin_of: set[str] = field(default_factory=set)
+
+    async def admin_of_both(self, host: str, cookie: str | None, source: str, target: str) -> bool:
+        return {source, target} <= self.admin_of

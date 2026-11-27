@@ -107,9 +107,7 @@ class DiscordApi:
         response = await self._call("GET", f"/guilds/{guild_id}", auth=f"Bot {token}")
         return response.status_code == 200
 
-    async def as_bot(
-        self, token: str, method: str, path: str, json: Any = None
-    ) -> httpx.Response:
+    async def as_bot(self, token: str, method: str, path: str, json: Any = None) -> httpx.Response:
         """A platform call outside any event's queue: leaving a guild, writing its commands."""
         try:
             return await self._http.request(

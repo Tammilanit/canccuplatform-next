@@ -9,12 +9,13 @@ from canccu_kit import Health, TenantResolver
 from canccu_kit.starlette import install, install_tenancy
 from starlette.applications import Starlette
 
-from . import bind, connection, credentials, guild
+from . import bind, clone, connection, credentials, guild
 from .deps import Deps
 
 
 def create_app(d: Deps, health: Health, resolver: TenantResolver) -> Starlette:
-    app = Starlette(routes=[*connection.ROUTES, *credentials.ROUTES, *bind.ROUTES, *guild.ROUTES])
+    routes = [*connection.ROUTES, *credentials.ROUTES, *bind.ROUTES, *guild.ROUTES, *clone.ROUTES]
+    app = Starlette(routes=routes)
     app.state.deps = d
     install(app, health)
     install_tenancy(app, resolver, platform_hosts="serve")

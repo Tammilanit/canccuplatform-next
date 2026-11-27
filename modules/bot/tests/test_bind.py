@@ -22,7 +22,7 @@ async def callback(env: Env, query: dict[str, str], host: str = SIGNIN) -> Any:
 
 
 def state_of(r: Any) -> str:
-    return parse_qs(urlsplit(r.json()["authorize_url"]).query)["state"][0]
+    return str(parse_qs(urlsplit(r.json()["authorize_url"]).query)["state"][0])
 
 
 def organiser(env: Env, guild_name: str = "Demo Community") -> tuple[FakeUser, FakeGuild]:
@@ -51,7 +51,9 @@ async def test_the_start_names_discords_page_for_the_events_application(env: Env
     assert len(query["state"][0]) >= 32
     assert r.json()["expires_at"] == "2026-11-27T10:10:00Z"
     # Only a digest of the state is kept, never the value the browser carries.
-    assert not any(query["state"][0] in k or query["state"][0] in v[0] for k, v in env.keys.values.items())
+    assert not any(
+        query["state"][0] in k or query["state"][0] in v[0] for k, v in env.keys.values.items()
+    )
 
 
 async def test_a_bind_binds_routes_audits_and_emits(env: Env) -> None:
@@ -60,7 +62,9 @@ async def test_a_bind_binds_routes_audits_and_emits(env: Env) -> None:
     assert r.status_code == 200 and "Discord server connected" in r.text
     [row] = await env.fetch("ev-a", "SELECT guild_id, guild_name, bound_by FROM bot_bindings")
     assert tuple(row) == (guild.id, "Demo Community", "u_org")
-    routes = await env.fetch(None, "SELECT guild_id, tenant_id, application_id FROM bot_guild_routes")
+    routes = await env.fetch(
+        None, "SELECT guild_id, tenant_id, application_id FROM bot_guild_routes"
+    )
     assert [tuple(x) for x in routes] == [(guild.id, "ev-a", SHARED_ID)]
     assert env.events("ev-a") == [
         {
@@ -186,7 +190,7 @@ async def test_a_deleted_event_is_state_invalid(env: Env) -> None:
 
 
 async def test_a_used_code_is_code_exchange_failed(env: Env) -> None:
-    user, guild = organiser(env)
+    organiser(env)
     state = state_of(await start(env))
     r = await callback(env, {"state": state, "code": "never-issued"})
     assert "did not confirm" in r.text
@@ -210,7 +214,9 @@ async def test_an_own_application_binds_with_its_own_secret(env: Env) -> None:
         "revision": 0,
     }
     async with env.client() as c:
-        assert (await c.put("/api/bot/connection", json=body, headers=env.admin())).status_code == 200
+        assert (
+            await c.put("/api/bot/connection", json=body, headers=env.admin())
+        ).status_code == 200
     user, guild = organiser(env)
     r = await bind(env, user, guild, app.id)
     assert "connected" in r.text

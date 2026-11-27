@@ -230,7 +230,7 @@ async def finish(d: Deps, ctx: TenantContext, started: dict[str, Any], query: Qu
     outcome = await _bind(d, tenant, started, guild)
     if outcome == "ok":
         changes = {"application_id": started["application_id"]}
-        await audit(d, tenant, started["user"], "bot.guild.bound", guild["id"], changes)
+        await audit(d, tenant, started["user"], "bot.guild.bound", changes, "guild", guild["id"])
         await commands.register(d, ctx)
     return outcome
 

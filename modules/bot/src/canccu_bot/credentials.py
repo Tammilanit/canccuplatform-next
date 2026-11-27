@@ -23,6 +23,7 @@ from .access import deps, event_admin
 from .connection import view
 from .deps import Deps
 from .discord_api import DiscordRefused
+from .guild import audit
 
 log = logging.getLogger("canccu_bot.credentials")
 
@@ -114,7 +115,9 @@ async def _check_own(d: Deps, tenant: str, want: dict[str, Any]) -> list[str]:
             changed.append("client_secret")
     except DiscordRefused as refused:
         if refused.code == "discord_unavailable":
-            raise KitError("Discord did not answer", status=503, code="discord_unavailable") from None
+            raise KitError(
+                "Discord did not answer", status=503, code="discord_unavailable"
+            ) from None
         raise bad("Discord refused the credential", refused.code) from None
     return changed
 
@@ -219,22 +222,6 @@ async def to_shared(d: Deps, conn: Any, revision: int, actor: str | None) -> lis
     return changed
 
 
-async def _audit(d: Deps, tenant: str, actor: str, changed: list[str]) -> None:
-    if not changed:
-        return
-    try:
-        await d.audit.append(
-            tenant,
-            actor,
-            "bot.connection.changed",
-            {"type": "connection", "id": tenant},
-            {"changed": changed},
-        )
-    except Exception:
-        # The change is committed; a missing entry is logged rather than reported as a failure.
-        log.exception("could not audit the connection change of %s", tenant)
-
-
 async def put_connection(request: Request) -> Response:
     d = deps(request)
     body = await _json(request)
@@ -264,7 +251,10 @@ async def delete_connection(request: Request) -> Response:
 
 
 async def _done(d: Deps, tenant: str, session: Session, changed: list[str]) -> Response:
-    await _audit(d, tenant, session.user_id, changed)
+    if changed:
+        await audit(
+            d, tenant, session.user_id, "bot.connection.changed", {"changed": changed}, "connection"
+        )
     await d.outbox.flush(tenant)
     async with d.db.tenant() as conn:
         return JSONResponse(await view(d, conn))

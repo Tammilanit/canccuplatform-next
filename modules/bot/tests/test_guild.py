@@ -103,9 +103,7 @@ async def test_the_superadmin_path_is_404_elsewhere_and_403_for_others(env: Env)
         )
     async with env.client(SUPERADMIN) as c:
         owner = await c.post(path, json={"reason": "x"}, headers=env.admin())
-        no_reason = await c.post(
-            path, json={}, headers=env.rights.sign_in("u_s", superadmin=True)
-        )
+        no_reason = await c.post(path, json={}, headers=env.rights.sign_in("u_s", superadmin=True))
         unknown = await c.post(
             "/api/bot/guilds/100000000000000999/unbind",
             json={"reason": "x"},
@@ -132,7 +130,9 @@ async def test_sync_registers_the_commands_again_in_the_background(env: Env) -> 
     assert r.json()["commands"]["status"] == "pending"
     await asyncio.gather(*guild_paths._tasks)
     assert guild.commands[SHARED_ID] == []
-    [row] = await env.fetch("ev-a", "SELECT commands_status, commands_flags_version FROM bot_bindings")
+    [row] = await env.fetch(
+        "ev-a", "SELECT commands_status, commands_flags_version FROM bot_bindings"
+    )
     assert tuple(row) == ("registered", 0)
 
 
@@ -148,7 +148,9 @@ async def test_a_failed_registration_shows_on_the_binding(env: Env) -> None:
 
 async def test_sync_is_404_without_a_binding_and_409_when_archived(env: Env) -> None:
     async with env.client() as c:
-        assert (await c.post("/api/bot/guild/commands/sync", headers=env.admin())).status_code == 404
+        assert (
+            await c.post("/api/bot/guild/commands/sync", headers=env.admin())
+        ).status_code == 404
         env.contexts["ev-a"]["status"] = "archived"
         r = await c.post("/api/bot/guild/commands/sync", headers=env.admin())
     assert (r.status_code, r.json()["error"]["code"]) == (409, "event_archived")

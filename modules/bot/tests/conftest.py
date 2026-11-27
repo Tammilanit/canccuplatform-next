@@ -22,7 +22,7 @@ from canccu_kit.errors import MissingRight, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore, require_test_database_url
 from canccu_kit.testing.discord import FakeDiscord
-from fakes import FakeAudit, FakeUsers, MemoryKeys
+from fakes import FakeAudit, FakeSeries, FakeUsers, MemoryKeys
 
 from canccu_bot.app import create_app
 from canccu_bot.config import Hosts, SharedApp
@@ -102,6 +102,7 @@ class Env:
     contexts: dict[str, TenantContext]
     audit: FakeAudit
     users: FakeUsers
+    series: FakeSeries
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -181,7 +182,7 @@ async def env(db: Db) -> Env:
     contexts = {t: context(t) for t in HOSTS.values()}
     contexts["ev-r"]["admin_access"] = "restricted"  # organiser paths only from the venue
     streams = MemoryStreamStore()
-    audit, users = FakeAudit(), FakeUsers()
+    audit, users, series = FakeAudit(), FakeUsers(), FakeSeries()
     tenants = resolver(contexts)
     deps = Deps(
         db=db,
@@ -196,7 +197,8 @@ async def env(db: Db) -> Env:
         users=users,
         audit=audit,
         hosts=Hosts(signin=SIGNIN, superadmin=SUPERADMIN, public_url=None),
+        series=series,
         now=lambda: NOW,
     )
     app = create_app(deps, Health("bot", "dev", {}), tenants)
-    return Env(db, rights, keys, deps, app, fake, streams, contexts, audit, users)
+    return Env(db, rights, keys, deps, app, fake, streams, contexts, audit, users, series)

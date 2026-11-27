@@ -37,6 +37,7 @@ class DiscordClient:
         on_status: Callable[[DiscordClient], None],
         on_dispatch: Dispatch,
         rest_options: dict[str, Any] | None = None,
+        on_stop: Callable[[], None] = lambda: None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
@@ -47,6 +48,7 @@ class DiscordClient:
         self._intents = intents
         self._on_status = on_status
         self._on_dispatch = on_dispatch
+        self._on_stop = on_stop
         self._now = now
         self._sleep = sleep
         self.rest = RestClient(token, http=http, api_url=api_url, **(rest_options or {}))
@@ -148,6 +150,7 @@ class DiscordClient:
             log.exception("status listener failed")
 
     async def stop(self) -> None:
+        self._on_stop()
         for shard in self._shards:
             await shard.stop()
         for task in self._tasks:
