@@ -103,7 +103,16 @@
     overflow: hidden;
     border: var(--canccu-border-width) solid var(--canccu-color-border);
     border-radius: var(--canccu-card-radius);
-    background: var(--canccu-color-surface);
+    /*
+     * The theme's box opacity lets the stage show through (plan issue-785 D11): a plain alpha,
+     * never a backdrop filter, which TV hardware cannot afford. Theming raises it to what the
+     * colours allow; a sheet without it (an old revision) keeps the box opaque.
+     */
+    background: color-mix(
+      in srgb,
+      var(--canccu-color-surface) calc(var(--canccu-box-opacity, 1) * 100%),
+      transparent
+    );
     color: var(--canccu-color-text);
     font-family: var(--canccu-font-body);
     font-size: calc(3.4 * var(--canccu-u));

@@ -33,6 +33,8 @@ export interface Brand {
   font_pair?: string;
   roundness?: keyof typeof ROUNDNESS;
   backdrop?: Backdrop;
+  /** The screen's boxes, 0.5 to 1 (plan issue-785 D11); the platform's 0.9 when absent. */
+  box_opacity?: number;
 }
 
 /**

@@ -6,8 +6,8 @@
  */
 import { attrs, html, icon, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
-import { LOOKS, ROUNDNESS } from "./brand.js";
-import type { Backdrop, Brand } from "./brand.js";
+import { ROUNDNESS } from "./brand.js";
+import type { Brand } from "./brand.js";
 import { isObject, list } from "./checks.js";
 import { matchesFor } from "./colour-match.js";
 import { contrastRatio } from "./contrast.js";
@@ -16,6 +16,7 @@ import { FONT_PAIRS } from "./font-pairs.js";
 import { plateOf } from "./logo-plate.js";
 import type { LogoInfo } from "./logo-info.js";
 import { presetOf } from "./studio-gallery.js";
+import { backgroundSection, field, section } from "./studio-yours-background.js";
 import { fillTokens } from "./tokens.js";
 import {
   STUDIO,
@@ -41,18 +42,6 @@ function chips(name: string, options: [string, string][], checked: string): Html
     )}</span
   >`;
 }
-
-const field = (label: string, body: Html, hint = ""): Html =>
-  html`<fieldset class="canccu-field canccu-studio-choice">
-    <legend class="canccu-field__label">${label}</legend>
-    ${hint === "" ? "" : html`<p class="canccu-field__hint">${hint}</p>`}${body}
-  </fieldset>`;
-
-const section = (title: string, intro: string, body: Html): Html =>
-  html`<section class="canccu-studio-section">
-    <h2 class="canccu-card__title">${title}</h2>
-    ${intro === "" ? "" : html`<p class="canccu-card__desc">${intro}</p>`}${body}
-  </section>`;
 
 const PLATES: [string, string][] = [
   ["none", "None"],
@@ -241,53 +230,6 @@ function roundnessOf(brand: Brand | undefined, draft: DraftRow): string {
   );
 }
 
-const LOOK_NAMES: Record<(typeof LOOKS)[number], string> = {
-  glows: "Glows",
-  gradient: "Gradient",
-  particles: "Particles",
-  waves: "Waves",
-};
-const SWITCHES: [keyof Backdrop, string, string][] = [
-  [
-    "game_art",
-    "Show the game's art when a game is on",
-    "Its art replaces the cycle while a game is building or live, then the cycle comes back.",
-  ],
-  ["daylight", "Follow the time of day", "Cooler light in the morning, darker late at night."],
-  [
-    "hype",
-    "More life when something big is near",
-    "Particles and glow grow with the hype, and settle after.",
-  ],
-];
-
-function backgroundSection(brand: Brand | undefined): Html {
-  const b: Backdrop = brand?.backdrop ?? {};
-  const looks = new Set(b.looks ?? LOOKS);
-  // Prettier would close these lone inputs with an end tag repeating the attributes.
-  // prettier-ignore
-  const tiles = LOOKS.map((look) => html`<label${attrs({ class: `canccu-studio-look canccu-studio-look--${look}` })}><input${attrs({ type: "checkbox", name: "looks", value: look, checked: looks.has(look) })}><span>${LOOK_NAMES[look]}</span></label>`);
-  // prettier-ignore
-  const switches = SWITCHES.map(([key, label, hint]) => html`<label class="canccu-studio-switch"><input${attrs({ type: "checkbox", class: "canccu-check", name: key, value: "true", checked: b[key] !== false })}><span><span>${label}</span><span class="canccu-small canccu-muted">${hint}</span></span></label>`);
-  // prettier-ignore
-  const image = typeof b.image === "string" ? html`<input${attrs({ type: "hidden", name: "backdrop_image", value: b.image })}>` : "";
-  return section(
-    "Screen background",
-    "Alive, never busy: it changes slowly between the looks you leave on, at random, with a long fade every few minutes.",
-    html`${field("Looks in the cycle", html`<div class="canccu-studio-looks">${tiles}</div>`)}
-      ${switches}${image}
-      <p class="canccu-small canccu-muted canccu-studio-note">
-        ${icon("info")}<span
-          >How much the screens move is set for each screen zone in
-          <a href="/admin/screen/zones">Screen settings</a>, not here. A screen starts calm and
-          rises toward that level as the event gets busy (quiet, building, live), and quiet hours
-          keep it calm. Try it with the chips in the preview.</span
-        >
-      </p>`,
-  );
-}
-
-/** Reset to the preset the draft came from (D11), or the way back to the gallery without one. */
 export function resetView(state: StudioState): Html {
   const from = presetOf(state);
   if (from === undefined) {

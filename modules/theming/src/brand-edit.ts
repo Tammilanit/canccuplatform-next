@@ -22,6 +22,7 @@ export const BRAND_LEFT_OUT: { readonly [K in keyof Brand]-?: LeftOut } = {
   font_pair: "keep",
   roundness: "keep",
   backdrop: "keep",
+  box_opacity: "keep",
 };
 
 /**

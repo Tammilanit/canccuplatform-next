@@ -7,6 +7,7 @@ import { KitError, requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { generateColors } from "./brand.js";
+import { minBoxOpacity } from "./contrast.js";
 import { nextBrand } from "./brand-edit.js";
 import type { Brand } from "./brand.js";
 import { isObject } from "./checks.js";
@@ -131,6 +132,20 @@ function withoutOverriddenChoices(
   return { ...manifest, tokens };
 }
 
+/**
+ * A box opacity under what the colours allow is raised to it (plan issue-785 D11), so the stored
+ * value is the one the screens draw (tokens.ts raises on generation too); true when it was.
+ */
+function raiseBoxOpacity(manifest: Manifest): boolean {
+  const brand = manifest.brand as Brand;
+  const colors = isObject(manifest.tokens) ? manifest.tokens.colors : undefined;
+  if (brand.box_opacity === undefined || !isObject(colors)) return false;
+  const min = minBoxOpacity(colors as Record<string, string>);
+  if (brand.box_opacity >= min) return false;
+  brand.box_opacity = min;
+  return true;
+}
+
 export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -146,6 +161,8 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     }
     const { primary, accent, scheme } = input;
     const { adjusted } = generateColors({ primary, accent, scheme });
+    // Set inside the write, which TypeScript cannot see from here.
+    const box = { raised: false };
     const row = await deps.db.tenant((c) =>
       editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
         const brand = nextBrand(isObject(m.brand) ? m.brand : undefined, input);
@@ -177,10 +194,14 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
           (k) => before[k] === brand[k],
         );
         const colored = same && isObject(tokens.colors) ? next : withColors(next, brand);
+        box.raised = raiseBoxOpacity(colored);
         return withoutOverriddenChoices(colored, before, input);
       }),
     );
-    return { draft: draftBody(row), adjusted };
+    return {
+      draft: draftBody(row),
+      adjusted: box.raised ? [...adjusted, "box_opacity"] : adjusted,
+    };
   });
 
   app.post("/api/theming/draft/mode", writer, async (request) => {

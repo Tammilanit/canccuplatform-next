@@ -34,6 +34,8 @@ const STORED_BODY = {
   logo_plate: { kind: "light", shape: "circle", padding: "large" },
   font_pair: "space-inter",
   roundness: "round",
+  // Fully opaque: a value the colours never raise, so the round trip keeps it as sent.
+  box_opacity: 1,
   backdrop: {
     looks: ["waves"],
     game_art: false,

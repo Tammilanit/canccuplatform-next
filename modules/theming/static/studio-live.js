@@ -69,6 +69,8 @@
       };
     }
     if (el.name === "roundness") return { "--canccu-radius": RADIUS[el.value] ?? "0.5rem" };
+    // The value as asked: the save answers with it raised where the colours need it.
+    if (el.name === "box_opacity") return { "--canccu-box-opacity": el.value };
     if (el.name === "font_pair") {
       const { heading, body } = el.dataset;
       const stack = (f) => (f === undefined ? null : family(f));

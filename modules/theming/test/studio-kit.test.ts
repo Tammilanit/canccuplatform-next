@@ -65,6 +65,17 @@ describe("the brand kit's markup", () => {
     expect(html).toContain('data-token="primary_text"');
   });
 
+  it("offers the box transparency as a slider at the brand's value, else the platform's 0.9", () => {
+    const slider = (html: string) => input(html, "box_opacity");
+    expect(slider(body(stateOf([])))).toMatch(/type="range"/);
+    expect(slider(body(stateOf([])))).toMatch(/min="0\.5"[^>]*max="1"[^>]*step="0\.05"/);
+    expect(slider(body(stateOf([])))).toContain('value="0.9"');
+    const opaque = stateOf([]);
+    const brand = { primary: "#3ddcff", accent: "#b98cff", scheme: "dark", box_opacity: 1 };
+    if (opaque.draft !== undefined) opaque.draft.manifest.brand = brand;
+    expect(slider(body(opaque))).toContain('value="1"');
+  });
+
   it("names the event profile's look while nothing is published", () => {
     const profile = /screens show the event profile(&#39;|')s look/;
     expect(String(status(stateOf([], 0, false), undefined))).toMatch(profile);

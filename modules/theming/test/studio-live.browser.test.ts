@@ -178,6 +178,17 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     await expect.poll(() => publish.isDisabled()).toBe(false);
   });
 
+  it("saves the box transparency and shows it on the screen frame before the save answers", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    const before = (await draft()).draft_version;
+    await page.locator('input[name="box_opacity"]').fill("1");
+    const screen = await frame(page, SCREEN);
+    await expect.poll(() => cssVar(screen, "--canccu-box-opacity")).toBe("1");
+    await savedAfter(page, before);
+    expect((await draft()).manifest.brand).toMatchObject({ box_opacity: 1 });
+  });
+
   it("keeps the screen frame in place over a save: the page never reloads it", async () => {
     await eventDraft();
     const page = await open("/theming/studio/yours");
