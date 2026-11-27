@@ -2,8 +2,10 @@
 // The demo stack's first job (#461, docs/ci.md#tiers): which tier a run needs, from the event and
 // the changed paths, and so which of the API tests, the soak and the screenshot shards run, and
 // which screen shots (#835).
-// Usage: node demo-stack-plan.mjs --event EVENT [--base REV] [--book] [--summary FILE]
-//          KEY=value lines for $GITHUB_OUTPUT; with --summary, what runs and why as Markdown
+// Usage: node demo-stack-plan.mjs --event EVENT [--base REV] [--book] [--known-at REV]
+//          [--summary FILE]
+//          KEY=value lines for $GITHUB_OUTPUT; with --summary, what runs and why as Markdown;
+//          with --known-at, only the groups the scripts at REV know (the weekly run's step tag)
 //        node demo-stack-plan.mjs --self-test
 // The changed paths are `git diff --name-only --no-renames REV HEAD`, read for a pull request, a
 // merge queue entry and a push to main: each runs what its changes affect. The nightly run and a
@@ -164,6 +166,40 @@ export function summary(event, out) {
   ].join("\n");
 }
 
+/**
+ * The run for an older version's scripts (the weekly run's step tag, #838), which refuse a group
+ * added since: only the groups in `known`, the others named as new. Its screen-diff then lists the
+ * head's shots of those as added.
+ */
+export function forGroups(out, known, rev) {
+  const keep = (list) => list.split(",").filter((g) => known.includes(g)).join(",");
+  const dropped = out.groups.split(",").filter((g) => g && !known.includes(g));
+  if (!dropped.length) return out;
+  return {
+    ...out,
+    groups: keep(out.groups),
+    shards: out.shards.flatMap((s) => (keep(s.groups) ? [{ ...s, groups: keep(s.groups) }] : [])),
+    why: [...out.why, `new since ${rev}: ${dropped.join(", ")} (its scripts know no such group)`],
+  };
+}
+
+/**
+ * The groups of scripts/demo-screenshots-groups.mjs at a revision, from its own GROUPS. Run in a
+ * node of its own, as the file is read from git, not from disk.
+ */
+export function groupsAt(rev, cwd) {
+  const file = execFileSync("git", ["show", `${rev}:scripts/demo-screenshots-groups.mjs`], {
+    cwd,
+    encoding: "utf8",
+  });
+  return JSON.parse(
+    execFileSync(process.execPath, ["--input-type=module"], {
+      input: `${file}\nprocess.stdout.write(JSON.stringify(GROUPS));\n`,
+      encoding: "utf8",
+    }),
+  );
+}
+
 // --no-renames: git lists a moved file only under its new path, so a file moved out of a shared
 // path into one module would plan that module's tier; both paths must be mapped.
 export const changedPaths = (base, cwd) =>
@@ -180,16 +216,17 @@ const { values: opts } = parseArgs({
     event: { type: "string" },
     base: { type: "string" },
     book: { type: "boolean", default: false },
+    "known-at": { type: "string" },
     summary: { type: "string" },
   },
 });
 if (opts["self-test"]) {
   const { selftest } = await import("./demo-stack-plan-test.mjs");
-  selftest({ plan, format, summary, changedPaths });
+  selftest({ plan, format, summary, changedPaths, forGroups, groupsAt });
 } else {
   if (!opts.event) {
     console.error(
-      "usage: demo-stack-plan.mjs --event EVENT [--base REV] [--book] [--summary FILE] | --self-test",
+      "usage: demo-stack-plan.mjs --event EVENT [--base REV] [--book] [--known-at REV] [--summary FILE] | --self-test",
     );
     process.exit(2);
   }
@@ -201,7 +238,9 @@ if (opts["self-test"]) {
     }
     paths = changedPaths(opts.base);
   }
-  const out = plan({ event: opts.event, paths, book: opts.book });
+  let out = plan({ event: opts.event, paths, book: opts.book });
+  if (opts["known-at"])
+    out = forGroups(out, groupsAt(opts["known-at"]), opts["known-at"]);
   if (opts.summary) appendFileSync(opts.summary, summary(opts.event, out));
   console.error(
     `demo-stack-plan: ${opts.event}, ${paths.length} changed paths, tier ${out.tier}`,

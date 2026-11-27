@@ -4,12 +4,12 @@
 // theme, the nightly run every theme in two shards, the book portrait and 4K too.
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { SHARDS, needsOf } from "./demo-screenshots-groups.mjs";
+import { GROUPS, SHARDS, needsOf } from "./demo-screenshots-groups.mjs";
 import { bookOnly } from "./demo-screenshots-shot.mjs";
 
 const BIG = /3840|2160x|x1920|-4k|portrait/;
 
-export function shotChecks({ check, plan, summary }) {
+export function shotChecks({ check, plan, summary, forGroups, groupsAt }) {
   const shots = (script, ...args) =>
     execFileSync(
       "node",
@@ -196,6 +196,24 @@ export function shotChecks({ check, plan, summary }) {
     assert.equal(bookOnly({ width: 3840, height: 2160 }), true);
     assert.equal(bookOnly({ width: 1080, height: 1920 }), true);
   });
+  // The weekly run's base side runs the newest step tag's scripts, which refuse a group added
+  // since (#838): it takes the groups the tag knows and names the rest as new.
+  check("a step tag's run takes only the groups its scripts know, and names the new ones", () => {
+    const out = pr("modules/bot/src/bind.ts", "modules/agenda/x.py");
+    assert.equal(out.groups, "agenda,bot");
+    const old = GROUPS.filter((g) => g !== "bot");
+    const base = forGroups(out, old, "step-5");
+    assert.equal(base.groups, "agenda");
+    assert.deepEqual(base.shards, [{ shard: "pages", groups: "agenda", select: "" }]);
+    assert.match(summary("pull_request", base), /- new since step-5: bot\b/);
+    const none = forGroups(pr("modules/bot/src/bind.ts"), old, "step-5");
+    assert.equal(none.groups, "");
+    assert.deepEqual(none.shards, []);
+    assert.deepEqual(forGroups(out, GROUPS, "step-6"), out);
+  });
+  check("a revision's groups are the ones its own scripts list", () =>
+    assert.deepEqual(groupsAt("HEAD"), GROUPS),
+  );
   check("the summary says what runs and why", () => {
     const text = summary("pull_request", pr("modules/screen/player/src/claims.css", "modules/agenda/x.py"));
     assert.match(text, /affected run \(pull_request\)/);
