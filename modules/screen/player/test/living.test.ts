@@ -187,4 +187,38 @@ describe("one place at a time for the rotation's own items (D7)", () => {
     expect(shows("hero", "food_status")).toBe(true);
     expect(shows("venue_rail", "food_status")).toBe(false);
   });
+
+  // #787 D14: one QR on screen at a time; the hub QR waits while the hero shows the order's.
+  it("skips the hub QR's turn while the hero shows a QR, and gives it back after", () => {
+    const join = { url: "https://demo.example/pizza/orders/po_1", label: "Join the order", image_url: "data:image/png;base64,AA==" }; // prettier-ignore
+    const order = widget("food_status", { title: "Food", orders: [], big_text: "18:30", join });
+    const hub = widget("qr", { url: "https://demo.example/notify/", label: "The event hub", image_url: "data:image/png;base64,AA==" }); // prettier-ignore
+    const hero = region("hero", { order: [0, 1], widgets: [order, ticker("h")] });
+    const venue = region("venue_rail", {
+      order: [0, 1],
+      widgets: [
+        { ...hub, dwell_seconds: 5 },
+        { ...wifi, dwell_seconds: 5 },
+      ],
+    });
+    const screen = new Screen(host);
+    const root = screen.draw(state([hero, venue]));
+    const shows = (type: string) =>
+      [
+        ...(box(root, "venue_rail")?.querySelectorAll(":scope > .canccu-widget.canccu-is-active") ??
+          []),
+      ]
+        .at(-1)
+        ?.classList.contains(`canccu-widget--${type}`) === true;
+    // 0–5 s: the venue rail's turn is the hub QR, but the hero shows the order's QR.
+    expect(shows("qr")).toBe(false);
+    expect(shows("venue_info")).toBe(true);
+    // 10–15 s: the hero has turned to a line without a QR: the hub QR has its turn.
+    vi.setSystemTime(T0 + 11_500);
+    screen.tick();
+    // One notable change per 3 s (the choreographer): the rail's comes after the hero's.
+    vi.setSystemTime(T0 + 14_500);
+    screen.tick();
+    expect(shows("qr")).toBe(true);
+  });
 });

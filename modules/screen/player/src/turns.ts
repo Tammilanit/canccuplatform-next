@@ -7,7 +7,7 @@ import { agendaOf, heroCountdownOf, joinHeroAndRail } from "./hero-rail.js";
 import { idleOf, zoneNameOf } from "./idle.js";
 import { lowerThirdAt } from "./lower-third.js";
 import type { Shown } from "./idle.js";
-import type { Region, ScreenState } from "./state.js";
+import type { Region, ScreenState, WidgetState } from "./state.js";
 import { dimsOffline, identity, liveView, shownView } from "./widget.js";
 
 /** What a box shows: a widget, a claim or its idle choice; `collapse` gives its cells away. */
@@ -75,9 +75,30 @@ const ONE_SOURCE = new Set([
   "stats",
 ]);
 
+/** A QR the box shows now: its own QR handoff, or an order's join code (the food item, a claim). */
+function showsQr(c: Choice | undefined): boolean {
+  if (typeof c !== "object" || c === null) return false;
+  const code = (v: unknown) =>
+    typeof v === "object" &&
+    v !== null &&
+    typeof (v as { image_url?: unknown }).image_url === "string";
+  return code(c.view.qr) || code(c.view.join);
+}
+
+/** The hub QR: a `qr` whose code leads to the hub's /notify/ (contracts/screen.md). */
+function isHubQr(w: WidgetState | undefined): boolean {
+  const url = w?.view.url;
+  return (
+    w?.widget === "qr" &&
+    typeof url === "string" &&
+    new URL(url, "http://x").pathname === "/notify/"
+  );
+}
+
 /**
- * One place at a time for the rotation's own items (#787 D7): a box whose turn shows what the
- * hero's turn shows (the food item) goes on to its next item of another type, or its idle choice.
+ * One place at a time (#787 D7): a box whose turn shows what the hero shows (the food item) goes
+ * on to its next item of another type, or its idle choice. A QR shows once too (D14): while the
+ * hero shows one, the hub QR leaves its turn to the next item.
  */
 function onePlace(
   regions: readonly Region[],
@@ -87,24 +108,31 @@ function onePlace(
 ): Choice[] {
   const h = regions.findIndex((r) => r.role === "hero");
   const hero = choices[h];
-  if (h === -1 || typeof hero !== "object" || hero === null || turnIndexOf(hero) === null) {
-    return [...choices];
+  if (h === -1 || typeof hero !== "object" || hero === null) return [...choices];
+  const heroQr = showsQr(hero);
+  const left = new Set<string>();
+  if (turnIndexOf(hero) !== null) {
+    // The slideshow's band says the food for its 15 s, so the food box leaves meanwhile (D6a).
+    const band =
+      hero.type === "playlist"
+        ? lowerThirdAt(regions[h] as Region, state, now, turnIndexOf(hero))
+        : null;
+    const shows = band?.kind.startsWith("food_") === true ? "food_status" : hero.type;
+    if (ONE_SOURCE.has(shows)) left.add(shows);
   }
-  // The slideshow's band says the food for its 15 s, so the food box leaves meanwhile (D6a).
-  const band =
-    hero.type === "playlist"
-      ? lowerThirdAt(regions[h] as Region, state, now, turnIndexOf(hero))
-      : null;
-  const shows = band?.kind.startsWith("food_") === true ? "food_status" : hero.type;
-  if (!ONE_SOURCE.has(shows)) return [...choices];
+  if (left.size === 0 && !heroQr) return [...choices];
   return choices.map((c, i) => {
     const r = regions[i];
     const at = turnIndexOf(c);
-    if (i === h || r === undefined || at === null || typeof c !== "object" || c?.type !== shows)
-      return c;
+    if (i === h || r === undefined || at === null || typeof c !== "object" || c === null) return c;
+    // Only the hub QR, and only where it takes turns: a part of nothing else keeps its fixed QR.
+    const skipsQr = heroQr && isHubQr(r.widgets[at]) && r.order.some((j) => !isHubQr(r.widgets[j]));
+    if (!left.has(c.type) && !skipsQr) return c;
     const from = r.order.indexOf(at);
     const rest = [...r.order.slice(from + 1), ...r.order.slice(0, from)];
-    const other = rest.find((j) => r.widgets[j]?.widget !== shows);
+    const gone = (j: number) =>
+      left.has(r.widgets[j]?.widget ?? "") || (heroQr && isHubQr(r.widgets[j]));
+    const other = rest.find((j) => !gone(j));
     return (other === undefined ? undefined : turnShown(r, other, state, now)) ?? idleOf(r, state);
   });
 }

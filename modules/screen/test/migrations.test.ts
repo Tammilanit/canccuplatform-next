@@ -74,6 +74,19 @@ describe.skipIf(!DATABASE_URL)("migrations", () => {
     ).rejects.toThrow();
   });
 
+  // #787 D14: 020 changes the default only; a stored `always` is the zone's own and stays.
+  it("gives new zones the hub QR's turns and keeps every stored zone's choice", async () => {
+    await admin.query(
+      "INSERT INTO screen_zones (tenant_id, key, name, epoch) VALUES ('alpha', 'lounge', 'Lounge', 'e2')",
+    );
+    const rows = await admin.query("SELECT key, hub_qr FROM screen_zones ORDER BY key");
+    expect(rows.rows).toEqual([
+      { key: "hall", hub_qr: "always" },
+      { key: "lounge", hub_qr: "rotate" },
+    ]);
+    await admin.query("DELETE FROM screen_zones WHERE key = 'lounge'");
+  });
+
   // The same zone shows what 010 gives existing zones.
   it("gives existing zones the contract's defaults for `hero_region` and `grow_for_showcase`", async () => {
     const kept = await admin.query("SELECT key, hero_region, grow_for_showcase FROM screen_zones");

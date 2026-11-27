@@ -8,8 +8,11 @@ import type { AirSettings } from "./air-settings.js";
 import type { Class } from "./arbiter.js";
 import type { Origin } from "./store.js";
 
-/** hero: holds it; rail: the waiting room; pass: no hero in its chain; inside: in a condensed round. */
-export type Grant = "hero" | "rail" | "pass" | "inside" | null;
+/**
+ * hero: holds it; rail: the waiting room; pass: no hero in its chain; inside: in a condensed
+ * round; down: stepped down from the hero to the rest of its chain (#787 D7).
+ */
+export type Grant = "hero" | "rail" | "pass" | "inside" | "down" | null;
 
 export interface SlotIn {
   moment_id: string;
@@ -78,13 +81,28 @@ export const usedUpAt = (s: SlotIn, now: number): number =>
     : Math.min(now, s.on_air_since + s.budget_ms - s.played_ms);
 
 const claimant = (s: SlotIn) => s.chain.includes("hero") || s.chain.includes("full");
-const onAir = (s: SlotIn) => s.granted === "hero" || s.granted === "pass" || s.granted === "inside";
+const onAir = (s: SlotIn) =>
+  s.granted === "hero" || s.granted === "pass" || s.granted === "inside" || s.granted === "down";
 /**
  * Waiting, so it can go stale: off air, or passed through but never seen (Screen never placed it; one placed once and
  * hidden since keeps its time, rule 2), which nothing else would ever end.
  */
 const waiting = (s: SlotIn) => !onAir(s) || (s.granted === "pass" && !s.placed);
 const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id);
+/**
+ * The roles its chain goes on to after the hero, smaller boxes only: an Important's chain lists
+ * `full` after `hero` for a layout with no hero, and stepping "down" into a takeover would be up.
+ */
+const afterHero = (s: SlotIn): string[] => {
+  const i = s.chain.indexOf("hero");
+  return i === -1 ? [] : s.chain.slice(i + 1).filter((r) => r !== "full");
+};
+/**
+ * Keeps the hero until it ends (#787 D7, the PO's Q6): a stream, a person's action, a story round,
+ * and a moment with steps, which plays as one piece and never waits in the rail either.
+ */
+const staysOn = (s: SlotIn) =>
+  s.class === "stream" || s.origin === "crew" || s.segment !== null || s.has_steps;
 
 /** Moved forward first (latest first), then rank, then the longest wait. */
 function queueOrder(a: SlotIn, b: SlotIn): number {
@@ -153,7 +171,14 @@ export function planZone(
       s.moment_id,
       {
         moment_id: s.moment_id,
-        granted: claimant(s) ? (s.granted === "inside" ? "inside" : null) : "pass",
+        granted:
+          s.granted === "down"
+            ? "down"
+            : claimant(s)
+              ? s.granted === "inside"
+                ? "inside"
+                : null
+              : "pass",
         regions: claimant(s) ? null : [...s.chain],
         inside_of: s.granted === "inside" ? s.inside_of : null,
         queued_since: s.queued_since,
@@ -184,7 +209,13 @@ export function planZone(
   }
   const queue = () =>
     live
-      .filter((s) => claimant(s) && s !== holder && out.get(s.moment_id)?.granted !== "inside")
+      .filter(
+        (s) =>
+          claimant(s) &&
+          s !== holder &&
+          out.get(s.moment_id)?.granted !== "inside" &&
+          out.get(s.moment_id)?.granted !== "down",
+      )
       .sort(queueOrder);
   const pushAside = (h: SlotIn) => {
     const o = out.get(h.moment_id);
@@ -204,7 +235,23 @@ export function planZone(
             !s.shown &&
             s.rank >= (holder as SlotIn).rank,
         );
-  if (holder !== null && cut !== undefined) {
+  const condensedHolder = (h: SlotIn) =>
+    [...out.values()].some((o) => o.granted === "inside" && o.inside_of === h.moment_id);
+  if (
+    holder !== null &&
+    cut === undefined &&
+    !staysOn(holder) &&
+    afterHero(holder).length > 0 &&
+    !condensedHolder(holder) &&
+    playedNow(holder, now) - holder.tenure_from_ms >=
+      Math.min(air.min_on_air_ms, holder.budget_ms ?? Infinity)
+  ) {
+    // Its hero time is over: on to the next box of its chain, its clock running (#787 D7).
+    const o = out.get(holder.moment_id);
+    if (o !== undefined) o.granted = "down";
+    holder = null;
+    free_since = now;
+  } else if (holder !== null && cut !== undefined) {
     pushAside(holder);
     holder = cut;
     free_since = null;
@@ -251,6 +298,14 @@ export function planZone(
     const o = out.get(room.moment_id);
     if (o !== undefined)
       Object.assign(o, { granted: "rail", regions: room.chain.slice(room.chain.indexOf("rail")) });
+  }
+  // The waiting room comes first in the rail: a stepped-down moment that finds it taken goes on
+  // to the next role of its chain, where there is one.
+  for (const s of live) {
+    const o = out.get(s.moment_id);
+    if (o?.granted !== "down") continue;
+    const rest = afterHero(s);
+    o.regions = rest[0] === "rail" && room !== undefined && rest.length > 1 ? rest.slice(1) : rest;
   }
   return {
     zone: { holder: holder?.moment_id ?? null, free_since },

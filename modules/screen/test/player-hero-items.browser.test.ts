@@ -11,10 +11,22 @@ import { afterAll, describe, expect, it } from "vitest";
 import { panelFilled } from "./stack/clear.mjs";
 import { collectSamples, judgePage } from "./stack/readability.mjs";
 import { bundle, draw, launch, screenPage, tick } from "./player-browser.js";
+import type { FoodOrder } from "../src/compose/food.js";
+import { unitsWide } from "../src/compose/layouts.js";
+import type { Area, Layout } from "../src/compose/layouts.js";
+import { viewOf } from "../src/compose/widgets.js";
+import type { AgendaItem, ZoneFacts } from "../src/compose/widgets.js";
 
 const STATES = JSON.parse(
   await readFile(new URL("fixtures/pulse-states.json", import.meta.url), "utf8"),
-) as Record<"landscape" | "portrait", { time: string; regions: Region[] }>;
+) as Record<
+  "landscape" | "portrait",
+  {
+    time: string;
+    regions: Region[];
+    layout: { aspect: string; grid: { columns: number; rows: number } };
+  }
+>;
 interface Region {
   id: string;
   area: unknown;
@@ -36,24 +48,40 @@ const NAMES = [
   "Quiz",
   "Karaoke",
 ];
-const timeline = {
-  title: "The coming hours",
-  from: "2026-11-25T11:00:00Z",
-  to: "2026-11-25T14:00:00Z",
-  now: "2026-11-25T11:40:00Z",
-  from_text: "11:00",
-  to_text: "14:00",
-  items: NAMES.map((name, i) => ({
-    name,
+/** Five items an hour apart from the state's next half hour, with an order closing in 20 minutes. */
+function timeline(nowMs: number, kind: "landscape" | "portrait", area: { columns: number }) {
+  const layout = STATES[kind].layout;
+  const first = Math.ceil(nowMs / 1_800_000) * 1_800_000;
+  const at = (ms: number) => new Date(ms).toISOString();
+  const items = NAMES.map((title, i) => ({
+    id: `t${String(i)}`,
+    title,
     kind: "tournament",
-    starts_text: `1${i}:30`,
-    place: "Main stage",
-    col: 1 + i * 3,
-    cols: 3,
-    row: i + 1,
-  })),
-  marks: [{ label: "Pizza order closes", at_text: "11:30", col: 4 }],
-};
+    starts_at: at(first + i * 3_600_000),
+    ends_at: at(first + (i + 1) * 3_600_000),
+    delay_minutes: 0,
+    location: "Main stage",
+    visibility: "public",
+    status: "scheduled",
+    zone: null,
+  })) as AgendaItem[];
+  const order = { id: "po_1", state: "open", closes_at: at(nowMs + 20 * 60_000) } as FoodOrder;
+  const facts = {
+    now: new Date(nowMs),
+    timeZone: "UTC",
+    origin: "https://demo.example",
+    eventName: "Demo Event",
+    logoUrl: null,
+    agenda: { current: [], next: [] },
+    venue: null,
+    ticker: { text: null, until: null, source: null },
+    timeline: items,
+    food: { orders: [order], names: false },
+  } as ZoneFacts;
+  // The server sizes the line for the box (src/compose/timeline.ts): its hours and labels' room.
+  const box = { ...area, columns: Math.min(area.columns, layout.grid.columns) } as Area;
+  return viewOf("agenda_timeline", {}, facts, null, unitsWide(box, layout as Layout));
+}
 const peaks = {
   online_peak: { count: 231, at: "2026-11-20T23:30:00Z", time_text: "01:30" },
   in_voice_peak: { count: 64, at: "2026-11-20T21:00:00Z", time_text: "23:00" },
@@ -97,9 +125,9 @@ describe.skipIf(browser === undefined)(
   "a hero's coming hours and numbers",
   { timeout: 60_000 },
   () => {
-    for (const [widget, label, view] of [
+    for (const [widget, label, viewFor] of [
       ["agenda_timeline", "coming hours", timeline],
-      ...Object.entries(STATS).map(([name, v]) => ["stats", name, v] as const),
+      ...Object.entries(STATS).map(([name, v]) => ["stats", name, () => v] as const),
     ] as const)
       for (const [kind, size] of SIZES)
         for (const area of AREAS)
@@ -118,7 +146,12 @@ describe.skipIf(browser === undefined)(
                 embed: null,
                 dwell_seconds: 45,
                 stale_after_seconds: null,
-                view: { qr: null, stale: false, empty: false, ...view },
+                view: {
+                  qr: null,
+                  stale: false,
+                  empty: false,
+                  ...viewFor(Date.parse(state.time), kind, area),
+                },
               },
             ];
             const page = await screenPage(browser, code, size, Date.parse(state.time), "");
@@ -131,3 +164,48 @@ describe.skipIf(browser === undefined)(
           });
   },
 );
+
+/*
+ * The now pill at the line's two ends: centred on the line, half of it stood outside the track and
+ * the box clipped it (CI's portrait step-down shot, a clock just past the hour).
+ */
+describe.skipIf(browser === undefined)("the coming hours' now pill", { timeout: 60_000 }, () => {
+  for (const [kind, size] of SIZES)
+    for (const area of AREAS)
+      for (const end of ["from", "to"] as const)
+        it(`stays in its track at the line's ${end === "from" ? "start" : "end"}, ${kind} ${size.join("×")}, ${String(area.columns)} columns wide`, async () => {
+          if (browser === undefined || code === undefined) throw new Error("no browser");
+          const state = structuredClone(STATES[kind]);
+          const hero = state.regions.find((r) => r.id === "hero");
+          if (hero === undefined) throw new Error("the fixture has no hero");
+          const view = timeline(Date.parse(state.time), kind, area) as Record<string, unknown>;
+          hero.area = area;
+          hero.rotation = "director";
+          hero.order = [0];
+          hero.widgets = [
+            {
+              widget: "agenda_timeline",
+              template: null,
+              embed: null,
+              dwell_seconds: 45,
+              stale_after_seconds: null,
+              view: { qr: null, stale: false, empty: false, ...view },
+            },
+          ];
+          const page = await screenPage(browser, code, size, Date.parse(view[end] as string), "");
+          await draw(page, state);
+          await tick(page, 0);
+          const box = (sel: string) =>
+            page.$eval(sel, (el) => {
+              const r = el.getBoundingClientRect();
+              return { left: r.left, top: r.top, right: r.right };
+            });
+          const track = await box(".canccu-widget__track");
+          const pill = await box(".canccu-widget__now-pill");
+          expect(pill.left).toBeGreaterThanOrEqual(track.left - 0.5);
+          expect(pill.top).toBeGreaterThanOrEqual(track.top - 0.5);
+          expect(pill.right).toBeLessThanOrEqual(track.right + 0.5);
+          expect(judgePage(await page.evaluate(collectSamples))).toEqual([]);
+          await page.close();
+        });
+});

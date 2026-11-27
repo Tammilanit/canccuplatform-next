@@ -110,7 +110,8 @@ export function isShowcase(regions: readonly RegionView[]): boolean {
   const hero = regions.find((r) => r.role === "hero");
   return (
     hero !== undefined &&
-    (hero.claim !== null || hero.widgets.some((w) => w.widget === "hot_game" && !w.view.empty))
+    (hero.claim !== null ||
+      hero.widgets.some((w) => w.widget === "hot_game" && !w.view.empty && w.enabled !== false))
   );
 }
 

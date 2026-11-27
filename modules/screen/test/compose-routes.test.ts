@@ -294,10 +294,11 @@ describe.skipIf(!DATABASE_URL)("the composed state after review", () => {
           cookies: { canccu_device: screen.token },
         })
       ).json<State>();
-    const first = await read();
     const ids = (s: State) => s.regions.map((r) => r.id);
-    expect(ids(first)).toEqual(expect.arrayContaining(["header-2", "venue_rail-2"]));
-    expect(first.layout).toMatchObject({ id: "pulse" });
+    // The event's own main zone takes turns (#787 D14): the fixed card is a zone's `always`.
+    const rotates = await read();
+    expect(ids(rotates)).not.toContain("venue_rail-2");
+    expect(rotates.layout).toMatchObject({ id: "pulse" });
     const save = async (options: Record<string, string>) => {
       const zone = (
         await call(h, "GET", "/api/screen/zones/main", { host, session: "admin" })
@@ -309,6 +310,9 @@ describe.skipIf(!DATABASE_URL)("the composed state after review", () => {
       });
       expect(res.statusCode).toBe(200);
     };
+    await save({ hub_qr: "always" });
+    const first = await read();
+    expect(ids(first)).toEqual(expect.arrayContaining(["header-2", "venue_rail-2"]));
     await save({ header: "shared" });
     const shared = await read();
     expect(shared.state_version).toBe(first.state_version + 1);

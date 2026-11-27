@@ -284,7 +284,7 @@ export async function composeZone(
   // version at each count for nothing.
   if (facts.phase !== "wind_down") used.delete("today_numbers");
   const lineUsed = used.has("agenda_timeline");
-  if (lineUsed) facts.timelineFrom = windowFrom(at.getTime());
+  if (lineUsed) facts.timelineFrom = windowFrom(at.getTime(), ctx.time_zone);
   const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
@@ -314,7 +314,7 @@ export async function composeZone(
   const soundEnds = read.play === null ? null : Date.parse(read.play.catch_up_until);
   const changes = [
     content.changesAt,
-    lineUsed ? windowChangeAt(at.getTime()) : null,
+    lineUsed ? windowChangeAt(at.getTime(), ctx.time_zone) : null,
     motion.next?.at,
     ...day,
     tintEnds,

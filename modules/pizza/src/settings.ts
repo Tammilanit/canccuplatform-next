@@ -52,7 +52,7 @@ export const DEFAULT_SETTINGS: PizzaSettings = {
   max_open_orders: 3,
   max_items_per_person: 5,
   settle_to_payer: false,
-  last_call_minutes: 10,
+  last_call_minutes: 5,
   auto_close: true,
   remind_holder_minutes: 30,
   remind_crew_minutes: 60,

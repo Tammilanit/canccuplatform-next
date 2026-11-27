@@ -12,8 +12,6 @@ import {
   CLOSING_TIME,
   GOOD_MORNING,
   MEAL_SERVED,
-  PIZZA_LAST_CALL,
-  PIZZA_ORDER_OPEN,
   QUIET_HOURS_SOON,
   ROUND_START,
 } from "./presets-every.js";
@@ -36,7 +34,6 @@ export const PRESETS: readonly Story[] = [
   QUIET_HOURS_SOON,
   GOOD_MORNING,
   CHECKIN_OPEN,
-  PIZZA_ORDER_OPEN,
   CLOSING_TIME,
   ARRIVAL_CHECKIN,
   HOT_GAME,
@@ -46,7 +43,6 @@ export const PRESETS: readonly Story[] = [
   GROUP_PHOTO,
   VENUE_INFO,
   STAGE_BREAK,
-  PIZZA_LAST_CALL,
   ROUND_START,
   PREMIERE,
   CHAMPION_REPLAY,
@@ -73,9 +69,15 @@ export const RULE_OF_PRESET: Readonly<Record<string, { rule: string; on?: readon
 /**
  * Presets the platform no longer has: an event's stored copy is ignored (never deleted, so a
  * revert brings it back). Pizza orders ready went with #777: Pizza is here is the `pizza` rule's
- * announcement, one path for the hall's biggest food moment.
+ * announcement, one path for the hall's biggest food moment; the order open and its last call went
+ * the same way with #787.
  */
-export const RETIRED_PRESETS: ReadonlySet<string> = new Set(["pizza_arrived"]);
+export const RETIRED_PRESETS: ReadonlySet<string> = new Set([
+  "pizza_arrived",
+  // #787 (the PO's Q2): the `pizza` rule's own hero moments show the open order and its last call.
+  "pizza_order_open",
+  "pizza_last_call",
+]);
 
 /** The rules the event's presets that are on take over for an event of this type. */
 export function rulesOff(stories: readonly Story[], type: string): Set<string> {

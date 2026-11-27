@@ -798,7 +798,7 @@ components:
         hub_qr:
           type: string
           enum: [always, rotate]
-          default: always
+          default: rotate
           description: |
             `always`: the hub QR (a `qr` widget with `props.url` `/notify/`) has a fixed place beside its region's
             rotating widgets; `rotate`: it is one of them (contracts/screen.md, Header and hub QR).

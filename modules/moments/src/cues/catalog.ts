@@ -184,6 +184,8 @@ export const BUILTIN_CUES: readonly Cue[] = [
   seed("strip.finals_open", "something_new", ["chime-bright"], ONCE),
   seed("strip.finals_start", "something_new", ["gong"], ONCE),
   seed("pizza.open", "something_new", ["bicycle-bell"], ONCE),
+  // The last call (#787 D8): its own sound, on the phone and the screen at once.
+  seed("pizza.last_call", "attention", ["chime-bright", "bicycle-bell"], ONCE),
   seed("pizza.closed", "ended", ["airplane-chime"], ONCE),
   seed("pizza.placed", "result", ["bicycle-bell", "ding"], { ...ONCE, effects: ["pop", "ripple"] }),
   // The storyboards' own (#114, #602): Doors open's sting and Midnight's countdown, one sound of

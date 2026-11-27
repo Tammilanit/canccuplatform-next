@@ -16,40 +16,70 @@ const draw = (type: string, view: Record<string, unknown>): HTMLElement => {
 describe("the coming hours", () => {
   const view = {
     title: "The coming hours",
+    subtitle: "Tonight from now to midnight",
     from: "2026-03-14T18:00:00.000Z",
-    to: "2026-03-14T21:00:00.000Z",
-    from_text: "18:00",
-    to_text: "21:00",
+    to: "2026-03-15T00:00:00.000Z",
+    hours: 6,
+    span_seconds: 21600,
+    ticks: ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00"].map((text) => ({ text })),
     items: [
-      { name: "Dinner", kind: "food", starts_text: "17:30", place: "Café", col: 1, cols: 3 },
-      { name: "Semi-finals", kind: "tournament", starts_text: "19:30", place: "Main stage", col: 10, cols: 9 },
+      { name: "Dinner", kind: "food", range_text: "18:00–19:30", place: "Café", col: 1, cols: 9, row: 1, label_col: 1, label_cols: 14, align: "start" },
+      { name: "Finals", kind: "tournament", range_text: "22:15–00:00", place: "Main stage", col: 34, cols: 3, row: 2, label_col: 31, label_cols: 6, align: "end" },
     ],
-    marks: [{ label: "Pizza order closes", at_text: "18:30", col: 4 }],
+    marks: [{ label: "Pizza order closes", at_text: "18:30", col: 4, align: "start" }],
   }; // prettier-ignore
 
-  it("places each item on the line by its start and length, with its time and place", () => {
+  it("draws each item as a block in its lane, by its start and length, with its time range", () => {
     const box = draw("agenda_timeline", view);
     expect(box.querySelector(".canccu-widget__kicker")?.textContent).toBe("The coming hours");
-    const spans = [...box.querySelectorAll(".canccu-widget__span")];
+    expect(box.querySelector(".canccu-widget__subtitle")?.textContent).toBe(
+      "Tonight from now to midnight",
+    );
+    expect(box.querySelector(".canccu-widget__track")?.className).toContain(
+      "canccu-widget__track--h6",
+    );
+    const spans = [...box.querySelectorAll(".canccu-widget__lanes .canccu-widget__span")];
     expect(spans.map((s) => s.querySelector(".canccu-widget__name")?.textContent)).toEqual([
       "Dinner",
-      "Semi-finals",
+      "Finals",
     ]);
-    expect(spans[1]?.className).toContain("canccu-widget__span--col-10");
-    expect(spans[1]?.className).toContain("canccu-widget__span--cols-9");
-    expect(spans[1]?.textContent).toContain("19:30");
-    expect(spans[1]?.textContent).toContain("Main stage");
-    const mark = box.querySelector(".canccu-widget__mark");
-    expect(mark?.className).toContain("canccu-widget__mark--col-4");
-    expect(mark?.textContent).toBe("Pizza order closes18:30");
+    // The label takes the room the server gave it; the box beside it, the item's own columns.
+    expect(spans[1]?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "canccu-widget__col-31",
+        "canccu-widget__cols-6",
+        "canccu-widget__lane-2",
+        "canccu-widget__span--end",
+        "canccu-widget__span--tournament",
+      ]),
+    );
+    const boxes = [...box.querySelectorAll(".canccu-widget__lanes .canccu-widget__block")];
+    expect(boxes[1]?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "canccu-widget__col-34",
+        "canccu-widget__cols-3",
+        "canccu-widget__lane-2",
+      ]),
+    );
+    expect(spans[1]?.querySelector(".canccu-widget__range")?.textContent).toBe("22:15–00:00");
   });
 
-  it("moves its now line with the clock, across the three hours", () => {
+  it("draws the hour axis, and the food mark small on it, apart from the lanes", () => {
+    const box = draw("agenda_timeline", view);
+    const ticks = [...box.querySelectorAll(".canccu-widget__axis .canccu-widget__tick")];
+    expect(ticks.map((t) => t.textContent)).toEqual(view.ticks.map((t) => t.text));
+    const mark = box.querySelector(".canccu-widget__marks .canccu-widget__mark");
+    expect(mark?.className).toContain("canccu-widget__col-4");
+    expect(mark?.textContent).toBe("Pizza order closes18:30");
+    expect(mark?.closest(".canccu-widget__lanes")).toBeNull();
+  });
+
+  it("moves its now line and pill with the clock, across the whole line", () => {
     const box = draw("agenda_timeline", view);
     const now = box.querySelector<HTMLElement>(".canccu-widget__now");
-    fillCountdowns(box, Date.parse("2026-03-14T19:30:00Z"));
+    fillCountdowns(box, Date.parse("2026-03-14T21:00:00Z"));
     expect(now?.style.getPropertyValue("--canccu-progress")).toBe("0.5");
-    expect(now?.textContent).toBe("");
+    expect(now?.querySelector(".canccu-widget__now-pill")?.textContent).toBe("now");
   });
 });
 

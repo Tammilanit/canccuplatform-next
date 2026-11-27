@@ -44,7 +44,7 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         layout_id: null,
         regions: { hero: { idle: "next" } },
         header: null,
-        hub_qr: "always",
+        hub_qr: "rotate",
         screen_name: "auto",
         hero_region: null,
         grow_for_showcase: true,
@@ -84,7 +84,7 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     expect(added.json()).toEqual({
       ...zone,
       header: null,
-      hub_qr: "always",
+      hub_qr: "rotate",
       screen_name: "auto",
       hero_region: null,
       grow_for_showcase: true,
@@ -163,11 +163,12 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       ...admin(),
       body: { key: "lobby", name: "Lobby", revision: 2 },
     });
-    expect(defaults.json()).toMatchObject({ header: null, hub_qr: "always", revision: 3 });
-    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({ changed: ["header", "hub_qr"] });
+    // `rotate` since #787 D14, so only the header changes back.
+    expect(defaults.json()).toMatchObject({ header: null, hub_qr: "rotate", revision: 3 });
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({ changed: ["header"] });
     expect((await zones()).find((z) => z.key === "lobby")).toMatchObject({
       header: null,
-      hub_qr: "always",
+      hub_qr: "rotate",
     });
     await call(h, "DELETE", "/api/screen/zones/lobby", admin());
   });

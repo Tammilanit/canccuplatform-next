@@ -228,7 +228,9 @@ test("--changed picks the screen shots a changed file is named for, and says wha
   assert.deepEqual(views(run(["modules/screen/player/src/dashboard.css"])), [
     "ann-important-dashboard", "dashboard", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
   ]);
-  assert.deepEqual(views(run(["modules/screen/test/stack/living.mjs"])), ["living-rotation", "living-slideshow"]);
+  assert.deepEqual(views(run(["modules/screen/test/stack/living.mjs"])), [
+    "living-food", "living-rotation", "living-slideshow", "living-stepdown",
+  ]);
   assert.ok(views(run(["modules/screen/player/src/claims.ts"])).includes("claim-rail"), "claims names the claim views");
   assert.ok(run(["modules/screen/player/src/claims.ts"]).shots.every((s) => s.group === "screens"));
   // A file every view draws on names no shot: the run says so rather than pass on nothing.

@@ -108,7 +108,11 @@ export async function applyClaims(
   await placementRows(c, report, now);
   if (engine === undefined) return;
   for (const slot of await slotsOn(c, report.zone_key)) {
-    if (slot.override_id === null || (slot.granted !== "hero" && slot.granted !== "pass")) continue;
+    if (
+      slot.override_id === null ||
+      (slot.granted !== "hero" && slot.granted !== "pass" && slot.granted !== "down")
+    )
+      continue;
     if (report.hidden.includes(slot.override_id) || report.unplaced.includes(slot.override_id))
       pause(slot, now);
     else if (report.placed.some((p) => p.override_id === slot.override_id)) resume(slot, now);

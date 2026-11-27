@@ -30,6 +30,7 @@ import type { SlotRow } from "./air-store.js";
 import { overrideChanges, rankOn } from "./arbiter.js";
 import type { SentOverride } from "./arbiter.js";
 import { endOverride, liveOverrides, loadOrders, putOverride } from "./store.js";
+import { condensedSteps, noteStepDown } from "./air-steps.js";
 import type { Actor, MomentRow } from "./store.js";
 import type { EndReason } from "./engine.js";
 
@@ -39,10 +40,7 @@ export interface PassEngine {
   endHere(c: SqlClient, m: MomentRow, reason: EndReason, now: Date, zone: string): Promise<void>;
 }
 
-const STEP_MIN_MS = 8000;
-const STEP_MAX_MS = 60_000;
-
-const onAir = (g: SlotRow["granted"]) => g === "hero" || g === "pass";
+const onAir = (g: SlotRow["granted"]) => g === "hero" || g === "pass" || g === "down";
 
 /** The running moments on `zone` that the scheduler places (every one but the emergency). */
 async function momentsOn(c: SqlClient, zone: string): Promise<MomentRow[]> {
@@ -176,7 +174,9 @@ export async function passZone(
       const restart = condensed?.holder === m.id && steps !== null;
       if (restart)
         s.budget_ms = playedAt(s, now) + steps.reduce((t, x) => t + (x.duration_ms as number), 0);
+      const stepsDown = s.granted === "hero" && out.granted === "down";
       apply(s, out, m, air, now, own.has(m.id) && !restart ? m.starts_at : now);
+      if (stepsDown) await noteStepDown(c, zone, m, out, now);
       await send(
         c,
         engine.outbox,
@@ -220,6 +220,8 @@ function apply(
   const is = onAir(out.granted);
   if (was && !is) pause(s, now);
   if (!was && is) resume(s, from);
+  // A hero holder Screen hid was paused; stepping down must not leave its clock stopped for good.
+  if (was && is && s.granted === "hero" && out.granted === "down") resume(s, now);
   s.granted = out.granted;
   s.inside_of = out.inside_of;
   s.queued_since = new Date(out.queued_since);
@@ -231,26 +233,6 @@ function apply(
     : s.on_air_since === null || s.budget_ms === null
       ? null
       : new Date(s.on_air_since.getTime() + s.budget_ms - s.played_ms);
-}
-
-/** A condensed round's steps (rule 6): the holder and the moments inside it, in queue order. */
-function condensedSteps(
-  outs: SlotOut[],
-  out: SlotOut,
-  moments: Map<string, MomentRow>,
-  air: AirSettings,
-): Record<string, unknown>[] | null {
-  if (out.granted !== "hero") return null;
-  const inside = outs
-    .filter((o) => o.inside_of === out.moment_id && o.granted === "inside")
-    .sort((a, b) => a.queued_since - b.queued_since);
-  if (inside.length === 0) return null;
-  const all = [out, ...inside].map((o) => moments.get(o.moment_id) as MomentRow);
-  const ms = Math.min(
-    STEP_MAX_MS,
-    Math.max(STEP_MIN_MS, Math.round(air.min_on_air_ms / all.length)),
-  );
-  return all.map((m) => ({ template: m.template, content: m.content, duration_ms: ms }));
 }
 
 interface Sent extends SentOverride {
@@ -382,6 +364,9 @@ function wire(m: MomentRow, s: Sent): Record<string, unknown> {
     regions: s.regions,
     // From the chain this zone is granted: one held in the rail asks for no hero share.
     ...overrideHints({ template: s.template, content: s.content, regions: s.regions }),
+    // One place at a time (#787 D7): the food box leaves the zone's other regions while a pizza
+    // moment holds the hero, as it would repeat the moment.
+    ...(m.rule_id === "pizza" ? { covers: ["food_status"] } : {}),
     expires_at: s.expires_at,
     source: m.source,
     effect: m.effect,

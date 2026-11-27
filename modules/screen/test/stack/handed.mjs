@@ -49,7 +49,7 @@ export const holdStream = (page) =>
  * light streak, an emblem), so its card art and the stage's wash read as a game, not as the
  * person placeholder the photos use. `blur` is the stage's blurred copy of it.
  */
-const keyArt = (blur = 0) =>
+export const keyArt = (blur = 0) =>
   `data:image/svg+xml;base64,${Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x2="0" y2="1"><stop offset="0" stop-color="#1d2142"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient><radialGradient id="g" cx=".62" cy=".36" r=".45"><stop offset="0" stop-color="#b98cff" stop-opacity=".9"/><stop offset=".5" stop-color="#b98cff" stop-opacity=".3"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="l" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff" stop-opacity="0"/><stop offset=".55" stop-color="#3ddcff"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="${blur}"/></filter></defs><rect width="320" height="180" fill="#0b0d1a"/><g filter="${blur ? "url(#b)" : "none"}"><rect width="320" height="180" fill="url(#s)"/><rect width="320" height="180" fill="url(#g)"/><path d="M0 124 46 94l32 16 44-42 36 30 40-40 38 36 34-18 50 32v72H0Z" fill="#343c66"/><path d="M0 150 58 116l38 22 54-36 46 34 50-26 74 34v36H0Z" fill="#161a2e"/><path d="M20 180 296 18l8 8L44 180Z" fill="url(#l)"/><path d="M198 30l20 28-20 28-20-28Z" fill="none" stroke="#3ddcff" stroke-width="4"/><path d="M198 46l9 12-9 12-9-12Z" fill="#f3f5ff"/><circle cx="62" cy="34" r="1.6" fill="#f3f5ff"/><circle cx="118" cy="22" r="1.2" fill="#f3f5ff"/><circle cx="272" cy="40" r="1.4" fill="#f3f5ff"/></g></svg>`,
   ).toString("base64")}`;
@@ -289,120 +289,4 @@ function holdRail(r, pick, what) {
 export function withTakeover(s) {
   const [role, placed] = CLAIM_OF["claim-takeover"];
   return { ...s, regions: s.regions.map((r) => (r.role === role ? { ...r, claim: placed } : r)) };
-}
-
-/**
- * The energy levels and packs at the countdown's 5-minute mark (sheet 11, #445): the hero counts
- * down to an item 4 m 50 s away, so its spotlight holds, and the frames show how each level draws it.
- */
-export const MOTION_VIEWS = [
-  ["none", "standard"],
-  ["calm", "standard"],
-  ["lively", "standard"],
-  ["party", "standard"],
-  ["lively", "broadcast"],
-  ["lively", "arcade"],
-  ["party", "arcade"],
-].map(([level, pack]) => ({ view: `motion-${level}-${pack}`, level, pack }));
-
-export function withMotion(level, pack) {
-  const target_at = new Date(Date.now() + 290_000).toISOString();
-  const soon = (v) => ({ ...v, view: { ...v.view, target_at } });
-  // With a tournament or ceremony ahead the hero plays tonight's highlight, a countdown, rather
-  // than its idle view (#447): that countdown then counts down, and holds the hero.
-  const hero = (r) => {
-    const widgets = r.widgets.map((w) => (w.widget === "countdown" && !w.view.empty ? soon(w) : w));
-    const counting = widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
-    const idle_view = r.idle_view === null ? null : soon(r.idle_view);
-    return { ...r, widgets, idle_view, ...(counting < 0 ? {} : { order: [counting] }) };
-  };
-  return (s) => ({
-    ...s,
-    display: { ...s.display, motion_level: level, motion_style: { ...s.display?.motion_style, pack } },
-    regions: s.regions.map((r) => (r.role === "hero" ? hero(r) : r)),
-  }); // prettier-ignore
-}
-
-/**
- * The two backgrounds (sheet 15, #446). The stage's art as the server sends it is a blurred WebP
- * of a game's cover; here the demo cover, blurred as data, stands in for it, so the frame is the
- * player's own. Its `scrim` and the cards' `veil` are fixed values, not what the server would
- * compute for this cover (src/stage/scrim.ts, from the art's lightest and darkest colour, which
- * only the server reads): the shots show how the player draws a scrim and a veil it is handed.
- */
-const blurred = keyArt(18);
-
-/** Each stage view's level, the item's kind and the day's phase; `surge` adds a box's tint. */
-export const STAGE_VIEWS = [
-  { view: "stage-calm", level: "calm", surge: false },
-  { view: "stage-lively", level: "lively", surge: false },
-  { view: "stage-party", level: "party", surge: false },
-  { view: "stage-surge", level: "lively", surge: true },
-];
-
-/** The hot game's claim in the hero, its surge just started, with its card art. */
-function surgeClaim() {
-  return claim("hero", "hot_game", {
-    game: GAME,
-    players: 14,
-    since: ago(1000),
-    card_art: { url: COVER, veil: 0.75 },
-  });
-}
-
-/**
- * The stage at a level: the current item a tournament at the evening's peak. A surge puts the hot
- * game's claim in the hero and tints the stage with its art for `tintMs` from the first state.
- */
-export function withStage(level, surge, tintMs = 0) {
-  // From the first state handed, so the page's later polls keep the same end.
-  let until;
-  return (s) => ({
-    ...s,
-    display: {
-      ...s.display,
-      motion_level: level,
-      stage: {
-        phase: "peak",
-        kind: "tournament",
-        tint: surge
-          ? {
-              region_id: "hero",
-              widget: "hot_game",
-              until: (until ??= new Date(Date.now() + tintMs).toISOString()),
-              art: { url: blurred, scrim: 0.7 },
-            }
-          : null,
-      },
-    },
-    regions: surge
-      ? s.regions.map((r) => (r.role === "hero" ? { ...r, claim: surgeClaim() } : r))
-      : s.regions,
-  });
-}
-
-/**
- * The Pulse hero of sheets 9–10: tonight's final with its game's band and card art, the teams
- * still in, its description, and the chip of the semis, which start first.
- */
-export function withHeroArt(s) {
-  const hour = 3_600_000;
-  const extra = {
-    target_at: new Date(Date.now() + 2.5 * hour).toISOString(),
-    label: "Demo Game Cup grand final",
-    kind: "tournament",
-    description: "Bring your own headset. Seats open 20:30.",
-    game: GAME,
-    teams_left: 8,
-    chip: { label: "Semis", target_at: new Date(Date.now() + hour).toISOString() },
-    card_art: { url: COVER, veil: 0.8 },
-  };
-  return {
-    ...withStage("lively", false)(s),
-    regions: s.regions.map((r) =>
-      r.role !== "hero" || r.idle_view === null
-        ? r
-        : { ...r, idle_view: { ...r.idle_view, view: { ...r.idle_view.view, ...extra } } },
-    ),
-  };
 }

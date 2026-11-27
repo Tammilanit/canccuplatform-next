@@ -94,6 +94,22 @@ const showEvent = async (n, waitMs) => {
     });
   }
 };
+let gap = null;
+/** Sets the airtime's gap and answers the one it had (the contract's default, 10, if none is stored). */
+const setGap = async (seconds) => {
+  const now = await moments("GET", "/api/moments/priorities");
+  if (now.status !== 200) throw new Error(`priorities: HTTP ${now.status}`);
+  const { order, zones, airtime, revision } = now.body;
+  const put = await moments("PUT", "/api/moments/priorities", {
+    order,
+    zones,
+    airtime: { gap_seconds: seconds },
+    revision,
+  });
+  if (put.status !== 200)
+    throw new Error(`priorities: HTTP ${put.status} ${JSON.stringify(put.body)}`);
+  return airtime?.gap_seconds ?? 10;
+};
 const show = async (n, waitMs) => {
   const started = performance.now();
   const r = await moments("POST", "/api/moments/spotlight", {
@@ -123,6 +139,10 @@ try {
     times.push(await show(i));
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
+  // The pizza rule's moments take the hero first (#787 D8), so each waits out the breathing gap
+  // after the one before it (10 s, rule 10): a gap, not the bus path this times. Gap 0 while the
+  // events run; the finally puts the stored one back.
+  gap = await setGap(0);
   // Moments reads every stream of an event it knows, pizza's too before its first entry: no
   // warm-up. A miss fails the p95 rather than the run, so the line still shows the others.
   for (let i = 0; i < ROUNDS; i++) {
@@ -130,6 +150,7 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
 } finally {
+  if (gap !== null) await setGap(gap).catch(() => {});
   sse.close();
   await demo.revoke(screen.id);
 }
