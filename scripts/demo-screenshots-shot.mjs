@@ -12,6 +12,17 @@ export const PHONE = { width: 390, height: 844 };
 // Settings' Last changes sit beside the list only from 1440 px (docs/design/mockups.html, sheet 2).
 export const WIDE = { width: 1440, height: 900 };
 
+/**
+ * A window only the screenshot book takes (#835, docs/ci.md#tiers): a screen at 4K or a screen in
+ * portrait. A phone is narrower than any screen.
+ */
+export const bookOnly = ({ width, height }) =>
+  Math.max(width, height) > 1920 || (height > width && width >= 1080);
+
+/** The book's window outside the book: a list demo-screenshots.mjs does not cut (BOOK_ONLY). */
+const outsideBook = (name, { width, height }) =>
+  `${name}: ${width}×${height} is the screenshot book's; add its list to BOOK_ONLY (demo-screenshots.mjs)`;
+
 export const firstLine = (err) =>
   String(err?.message ?? err)
     .split("\n")[0]
@@ -44,8 +55,9 @@ export function descriptionProblem(path, seen) {
 /**
  * `shot(name, path, viewport, cookie, options)`: one page in a fresh context, written to
  * `out/<name>.png` unless `check`. A failure is handed to `fail`, never thrown, so the run goes on.
+ * Without `book`, a window only the book takes fails.
  */
-export function shooter({ browser, at, out, check, fail, ok }) {
+export function shooter({ browser, at, out, check, book = false, fail, ok }) {
   return async function shot(
     name,
     path,
@@ -60,6 +72,7 @@ export function shooter({ browser, at, out, check, fail, ok }) {
       touch = false,
     } = {},
   ) {
+    if (!book && bookOnly(viewport)) return fail(outsideBook(name, viewport));
     const url = at(path);
     // A touch screen has no hover, so a phone page's `(hover: none)` rules apply.
     const finger = touch ? { hasTouch: true, isMobile: true } : {};
@@ -153,10 +166,11 @@ async function judged(page) {
  * `sequence(name, path, viewport, cookie, start, frames)`: one page, kept open while a storyboard
  * plays on it, `start(page)` once it has drawn, then each frame `[suffix, ready]` written to
  * `out/<name>-<suffix>.png` once `ready(page)` answers, and judged for readability. A failure is
- * handed to `fail`; the frames after it are not taken.
+ * handed to `fail`; the frames after it are not taken. Without `book`, as `shooter`.
  */
-export function sequencer({ browser, at, out, check, fail, ok }) {
+export function sequencer({ browser, at, out, check, book = false, fail, ok }) {
   return async function sequence(name, path, viewport, cookie, start, frames) {
+    if (!book && bookOnly(viewport)) return fail(outsideBook(name, viewport));
     const url = at(path);
     const context = await browser.newContext({ viewport });
     try {

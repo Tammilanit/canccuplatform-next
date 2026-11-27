@@ -19,6 +19,8 @@ on:
       - .github/actions/demo-stack-up/**
       - scripts/demo-screenshots-pages.mjs
       - scripts/demo-screenshots-shot.mjs
+      - scripts/demo-stack-plan.mjs
+      - scripts/demo-stack-shots.mjs
       - modules/screen/test/stack/**
       - scripts/a11y-check
       - scripts/a11y-check.mjs
@@ -134,7 +136,10 @@ jobs:
           retention-days: 30
 
   # Every screenshot, once at the last step tag and once at this commit, each on a stack of its own
-  # version; screen-diff compares them.
+  # version; screen-diff compares them. On Sunday this commit takes the screenshot book (every view
+  # in every theme, the strips, portrait and one 4K shot per layout); a pull request takes only the
+  # shots its changes affect, as its demo-stack run does (#835), and the tag's own scripts know
+  # only the groups.
   screens:
     name: screens (${{ matrix.side }})
     runs-on: ubuntu-latest
@@ -147,6 +152,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        if: github.event_name == 'pull_request'
+        with:
+          node-version: 22
+      # From this commit's planner, before the base side checks out the tag. A pull request's
+      # checkout is its merge commit, whose first parent is its base.
+      - name: The shots a pull request's changes affect
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: node scripts/demo-stack-plan.mjs --event pull_request --base HEAD^1 --summary "$GITHUB_STEP_SUMMARY" | tee -a "$GITHUB_OUTPUT"
       - name: The last step tag, for the base
         if: matrix.side == 'base'
         run: |
@@ -160,8 +175,23 @@ jobs:
           browser: "true"
       - name: Platform smoke, with the demo event
         run: scripts/demo-stack-test --only "" http://127.0.0.1
-      - name: Every screenshot
-        run: scripts/demo-screenshots http://127.0.0.1 screenshots
+      - name: The screenshots
+        env:
+          EVENT: ${{ github.event_name }}
+          SIDE: ${{ matrix.side }}
+          GROUPS: ${{ steps.plan.outputs.groups }}
+          SELECT: ${{ steps.plan.outputs.select }}
+        run: |
+          args=()
+          if [ "$EVENT" = pull_request ]; then
+            test -n "$GROUPS" || { echo "::notice::no screenshot group affected"; exit 0; }
+            args=(--groups "$GROUPS")
+            if [ "$SIDE" = head ]; then read -ra select <<< "$SELECT"; args+=("${select[@]}"); fi
+          elif [ "$SIDE" = head ] || grep -q -- --book scripts/demo-screenshots; then
+            # The base's tag may predate these options: then it gets none, as it needs.
+            args=(--strips --book)
+          fi
+          scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots
       # Even when a shot fails, so screen-diff still names the tag it compared with.
       - name: The base's tag beside its shots
         if: always() && matrix.side == 'base'

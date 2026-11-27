@@ -142,10 +142,6 @@ export const ANNOUNCE_VIEWS = [
 
 export const ANNOUNCE_THEMES = ["level-up", "default"];
 
-/** The merge queue's check reads 1080p and portrait only (screen-views.mjs, `sizesOf`). */
-export const annSizes = (v, check) =>
-  check ? v.sizes.filter(([w, h]) => Math.max(w, h) === 1920) : v.sizes;
-
 /**
  * Runs in the page: every claimed card drawn outside the ticker, and how it measures against the
  * floors. Returns the problems, none when it reads across a hall.

@@ -10,6 +10,7 @@
 // takeover, which keeps its fixed red there too. Dashboard is handed sample statistics (#416),
 // and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
+// A run takes only the views `only` names, as chosen (screen-views.mjs `chosen`, docs/ci.md#tiers).
 import { cleanUp } from "./cleanup.mjs";
 import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";
@@ -46,7 +47,7 @@ import {
   LAYOUTS,
   DEFAULT_LAYOUT_VIEWS,
   FOOD_VIEWS,
-  foodSizes,
+  FOOD_SIZES,
   landscapeOf,
   NEW_VIEWS,
   SURGE_MS,
@@ -62,11 +63,11 @@ import {
   settle,
 } from "./screen-waits.mjs";
 
-import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announce-levels.mjs";
+import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled } from "./announce-levels.mjs";
 
 export { THEMES, planned } from "./screen-views.mjs";
 
-export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check, only }) {
+export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, only }) {
   // Before the run of show, whose items start Moments' stories (stories.mjs says why).
   const storiesBack = await storiesOff(demo);
   const devices = [];
@@ -101,7 +102,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     const entrance = await pair("Entrance", "entrance");
     for (const theme of THEMES) {
       await publishTheme(demo, theme);
-      for (const size of sizesOf(theme, check)) {
+      for (const size of sizesOf(theme)) {
         await attempt(nameOf(theme, "pulse", size), () =>
           withQuickVenueRail(demo, () => pulse(theme, size)),
         );
@@ -126,7 +127,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
             );
       }
       try {
-        for (const size of landscapeOf(theme, check))
+        for (const size of landscapeOf(theme))
           for (const view of LAYOUTS)
             await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
@@ -137,7 +138,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
             await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
         // The announcement's levels (#780): handed as Screen places them, measured, then shot.
         for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
-          for (const size of annSizes(v, check))
+          for (const size of v.sizes)
             await attempt(nameOf(theme, v.view, size), async () => {
               await saveZone(demo, "main", { layout_id: v.layout });
               await handed(theme, v.view, size, v.make(Date.now()));
@@ -174,7 +175,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       }
     }
     for (const view of FOOD_VIEWS)
-      for (const size of foodSizes(check))
+      for (const size of FOOD_SIZES)
         await attempt(nameOf("default", view, size), () =>
           handed("default", view, size, withFoodClaim(view)),
         );
