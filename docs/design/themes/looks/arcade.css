@@ -44,7 +44,7 @@
     8px 8px 0 0 color-mix(in srgb, var(--canccu-color-primary) 70%, var(--canccu-color-background));
 }
 
-.canccu-surface--screen .canccu-widget__title {
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
   font-family: var(--canccu-font-heading);
   font-size: 1.875rem;
   letter-spacing: 0.04em;

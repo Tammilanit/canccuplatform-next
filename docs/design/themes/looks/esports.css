@@ -10,8 +10,9 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--canccu-color-surface) 92%, var(--canccu-color-primary)), var(--canccu-color-surface));
 }
 
-/* Titles as skewed tabs: the tab is skewed, its letters are not. */
-.canccu-surface--screen .canccu-widget__title {
+/* Titles as skewed tabs: the tab is skewed, its letters are not. An announcement's headline keeps
+   the platform's sizes and floors across a hall (#780), as in Level up. */
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
   position: relative;
   display: inline-block;
   margin: 0 0 10px -6px;
@@ -25,7 +26,7 @@
   color: var(--canccu-color-primary-text);
   isolation: isolate;
 }
-.canccu-surface--screen .canccu-widget__title::before {
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title::before {
   content: "";
   position: absolute;
   inset: 0;
