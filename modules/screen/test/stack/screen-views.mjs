@@ -2,7 +2,7 @@
 // name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
 import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
 import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSizes } from "./announce-levels.mjs";
-import { STAGE_VIEWS } from "./handed.mjs";
+import { MOTION_VIEWS, STAGE_VIEWS } from "./handed.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
@@ -91,6 +91,7 @@ export function planned(check = false) {
   for (const view of FOOD_VIEWS)
     for (const size of foodSizes(check)) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
+  for (const { view } of MOTION_VIEWS) out.push(...stripNames(nameOf("default", view, HD[0]), 4));
   out.push(nameOf("default", "pulse-one-screen", HD[0]));
   out.push(nameOf("default", "portrait-right-now", HD[1]));
   out.push(nameOf("default", "portrait-showcase", HD[1]));
@@ -102,4 +103,27 @@ export function planned(check = false) {
   for (const { view, frames } of DIRECTOR_STRIPS)
     out.push(...stripNames(nameOf("default", view, HD[0]), frames));
   return out;
+}
+
+// A screen shot's name taken apart: `theming-<theme>-screen-<view>-<w>x<h>`, and a strip's frame
+// after the size (director.mjs's `stripNames`).
+const SHOT = /^(theming-.+?-screen-)(.+)-(\d+x\d+)(?:-f\d+)?$/;
+/** The Pulse's attempt takes these frames over it too (screens.mjs, `pulse`). */
+const OVER_PULSE = ["identify", "test-pattern", "offline"];
+
+/**
+ * The view screens.mjs `attempt`s to take the shot `name`, by its own name: the Pulse's attempt
+ * takes identify, the test pattern and offline; a strip's takes its frames; the surge's its three
+ * stages. Any other name is its own attempt, a page's name too.
+ */
+export function attemptOf(name) {
+  const m = SHOT.exec(name);
+  if (!m) return name;
+  let [, head, view, size] = m;
+  if (OVER_PULSE.includes(view)) view = "pulse";
+  const surge = STAGE_VIEWS.find(
+    (v) => v.surge && SURGE_FRAMES.some((f) => view === `${v.view}-${f}`),
+  );
+  if (surge) view = surge.view;
+  return `${head}${view}-${size}`;
 }

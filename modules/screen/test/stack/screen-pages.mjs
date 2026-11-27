@@ -2,8 +2,12 @@
 // is closed when the view ends, also when it failed: a page left open polls on as the device, and
 // the views after it timed out one by one (#549).
 
-/** `open` a page of a size, signed in as a device; `attempt` a view, failing only that view. */
-export function screenPages({ browser, cookieOn, fail }) {
+/**
+ * `open` a page of a size, signed in as a device; `attempt` a view, failing only that view. With
+ * `only` (a set of attempt names, screen-views.mjs `attemptOf`), the other views are not taken:
+ * the local per-shot run (scripts/shots-local.sh --shots).
+ */
+export function screenPages({ browser, cookieOn, fail, only = null }) {
   const opened = new Set();
   const open = async ([width, height], cookie) => {
     const context = await browser.newContext({ viewport: { width, height } });
@@ -32,6 +36,7 @@ export function screenPages({ browser, cookieOn, fail }) {
     return { page, close };
   };
   const attempt = async (name, run) => {
+    if (only && !only.has(name)) return;
     try {
       await run();
     } catch (err) {

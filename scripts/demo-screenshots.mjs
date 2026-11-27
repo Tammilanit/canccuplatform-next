@@ -14,6 +14,9 @@
 //   --groups  only these screenshot groups (scripts/demo-screenshots-groups.mjs; default all): a
 //             shard of CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers).
 //   --check   the merge queue's pass: every check, no 4K screen, no PNG of a page.
+//   --shots   only these screen shots (a comma list of names; the local per-shot run,
+//             scripts/shots-local.sh --shots): the screens take only the views that take them,
+//             every other group runs whole.
 import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -33,6 +36,7 @@ import {
   planned,
   screenShots,
 } from "../modules/screen/test/stack/screens.mjs";
+import { attemptOf } from "../modules/screen/test/stack/screen-views.mjs";
 import {
   PLAYLIST_PAGES,
   LAYOUT_PAGES,
@@ -99,8 +103,14 @@ const { values: opts } = parseArgs({
     "agenda-down": { type: "boolean", default: false },
     groups: { type: "string", default: GROUPS.join(",") },
     check: { type: "boolean", default: false },
+    shots: { type: "string" },
   },
 });
+// The screens' attempts the named shots need (screen-views.mjs says which view takes which shot).
+const attempts = opts.shots
+  ? new Set(opts.shots.split(",").filter(Boolean).map(attemptOf))
+  : null;
+const taken = (name) => !attempts || attempts.has(attemptOf(name));
 const wanted = pickGroups(opts.groups);
 const want = (group) => wanted.has(group);
 const base = new URL(opts.base);
@@ -143,7 +153,7 @@ if (opts["dry-run"]) {
       : []),
     ...(want("pizza") ? pizzaListed(at) : []),
   ];
-  for (const name of want("screens") ? planned(opts.check) : []) {
+  for (const name of want("screens") ? planned(opts.check).filter(taken) : []) {
     lines.push(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
   }
   const studioLists = [
@@ -252,6 +262,7 @@ try {
         check: opts.check,
         fail,
         ok,
+        only: attempts,
       });
     } catch (err) {
       fail(`screens: ${firstLine(err)}`);
