@@ -83,7 +83,7 @@ const git = (...args) =>
     .filter(Boolean);
 
 /** The paths the branch and its working tree change against `ref`, untracked files too. */
-function changedPaths(ref) {
+export function changedPaths(ref) {
   let base;
   try {
     base = git("merge-base", ref, "HEAD")[0].trim();

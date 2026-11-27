@@ -103,3 +103,24 @@ export function planned(check = false) {
     out.push(...stripNames(nameOf("default", view, HD[0]), frames));
   return out;
 }
+
+// A screen shot's name taken apart: `theming-<theme>-screen-<view>-<w>x<h>`, and a strip's frame
+// after the size (director.mjs's `stripNames`).
+const SHOT = /^(theming-.+?-screen-)(.+)-(\d+x\d+)(?:-f\d+)?$/;
+/** The Pulse's attempt takes these frames over it too (screens.mjs, `pulse`). */
+const OVER_PULSE = ["identify", "test-pattern", "offline"];
+
+/**
+ * The view screens.mjs `attempt`s to take the shot `name`, by its own name: the Pulse's attempt
+ * takes identify, the test pattern and offline; a strip's takes its frames; the surge's its three
+ * stages. Any other name is its own attempt, a page's name too.
+ */
+export function attemptOf(name) {
+  const m = SHOT.exec(name);
+  if (!m) return name;
+  let [, head, view, size] = m;
+  if (OVER_PULSE.includes(view)) view = "pulse";
+  const surge = STAGE_VIEWS.find((v) => v.surge && SURGE_FRAMES.some((f) => view === `${v.view}-${f}`));
+  if (surge) view = surge.view;
+  return `${head}${view}-${size}`;
+}

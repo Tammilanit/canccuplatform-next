@@ -212,8 +212,9 @@ test("--changed picks the screen shots a changed file is named for, and says wha
   const list = await shotList();
   const run = (paths) => changedShots(paths, list);
   const views = (out) => [...new Set(out.shots.map((s) => s.name.replace(/^theming-.+?-screen-|-\d+x\d+.*$/g, "")))].sort();
+  // The announcement drawn on the Dashboard is a dashboard view too.
   assert.deepEqual(views(run(["modules/screen/player/src/dashboard.css"])), [
-    "dashboard", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
+    "ann-important-dashboard", "dashboard", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
   ]);
   assert.deepEqual(views(run(["modules/screen/test/stack/living.mjs"])), ["living-rotation", "living-slideshow"]);
   assert.ok(views(run(["modules/screen/player/src/claims.ts"])).includes("claim-rail"), "claims names the claim views");
@@ -260,7 +261,7 @@ test("a named shot the run never reached is reported, not passed", async () => {
 test("the per-shot dry run hands CI's check-mode pass the named shots of their groups", () => {
   const run = sh("--dry-run", "--shots", "theming-default-screen-identify-1920x1080", "admin-home.png");
   assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /scripts\/demo-screenshots --groups admin,screens --shots theming-default-screen-identify-1920x1080,admin-home --check http:\/\/127\.0\.0\.1 shots-local\/shots/);
+  assert.match(run.stdout, /scripts\/demo-screenshots --groups admin,screens --shots admin-home,theming-default-screen-identify-1920x1080 --check http:\/\/127\.0\.0\.1 shots-local\/shots/);
   assert.match(run.stdout, /admin-home \(admin: its whole group runs\)/);
   assert.equal(sh("--dry-run", "--shots", "no-such-shot").status, 2);
   assert.equal(sh("--dry-run", "--shots").status, 2);
