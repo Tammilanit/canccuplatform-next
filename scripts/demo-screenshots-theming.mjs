@@ -11,10 +11,7 @@ import { presetShots } from "./demo-screenshots-presets.mjs";
 
 const SCREEN_PREVIEW = "iframe[data-screen-preview]";
 // The synthetic black mark on transparent (docs/plans/issue-784.md D20).
-const BLACK_LOGO = new URL(
-  "../events/demo/images/logo-black.svg",
-  import.meta.url,
-);
+const BLACK_LOGO = new URL("../events/demo/images/logo-black.svg", import.meta.url);
 const HD = { width: 1920, height: 1080 };
 const drawn = async (page) => {
   await page.waitForFunction(
@@ -43,9 +40,7 @@ const boxes = (page) =>
     .evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
-        const id = [...el.classList].find((c) =>
-          c.startsWith("canccu-region--"),
-        );
+        const id = [...el.classList].find((c) => c.startsWith("canccu-region--"));
         return `${id} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}×${Math.round(r.height)}`;
       }),
     );
@@ -60,26 +55,19 @@ const boxesStill = async (page) => {
   const same = async (when) => {
     const now = (await boxes(page)).sort();
     if (JSON.stringify(now) !== JSON.stringify(first)) {
-      throw new Error(
-        `a box of the screen preview moved ${when}: ${first} → ${now}`,
-      );
+      throw new Error(`a box of the screen preview moved ${when}: ${first} → ${now}`);
     }
   };
   for (const turn of [1, 2, 3]) {
     await page.waitForTimeout(10000);
     await same(`by turn ${turn} of the rotation`);
   }
-  const version = Number(
-    await page.getAttribute(".canccu-studio", "data-draft-version"),
-  );
+  const version = Number(await page.getAttribute(".canccu-studio", "data-draft-version"));
   await page.click('input[name="roundness"][value="round"]', { force: true });
   await page.waitForFunction(
     (v) => {
       const root = document.querySelector(".canccu-studio");
-      return (
-        Number(root?.dataset.draftVersion) > v &&
-        root?.dataset.saveState === "saved"
-      );
+      return Number(root?.dataset.draftVersion) > v && root?.dataset.saveState === "saved";
     },
     version,
     { timeout: 15000 },
@@ -104,19 +92,14 @@ const cssError = async (page) => {
   await editor.fill(
     ".t-flare {\n  color: var(--canccu-color-accent);\n  background: url(https://example.org/flare.png);\n}\n.t-small {\n  font-size: 18px;\n}\n",
   );
-  await page.waitForSelector(".canccu-studio-editor__line--error", {
-    timeout: 5000,
-  });
+  await page.waitForSelector(".canccu-studio-editor__line--error", { timeout: 5000 });
   await page.locator("#canccu-studio-editor").scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
 };
 /** Save as my preset's dialog, open with a name typed (plan issue-784 D18). */
 const saveDialog = async (page) => {
   await drawn(page);
-  await page
-    .locator('[data-mine-ask="canccu-studio-mine-save"]:visible')
-    .first()
-    .click();
+  await page.locator('[data-mine-ask="canccu-studio-mine-save"]:visible').first().click();
   await page.locator("#canccu-studio-mine-save[open]").waitFor();
   await page.fill('#canccu-studio-mine-save input[name="name"]', "Autumn look");
   await page.waitForTimeout(300);
@@ -124,9 +107,7 @@ const saveDialog = async (page) => {
 /** Behind the boxes with the organiser's picture and a video over it (D19). */
 const videoForm = async (page) => {
   await drawn(page);
-  await page
-    .locator('form[data-action="backdrop-video"]')
-    .scrollIntoViewIfNeeded();
+  await page.locator('form[data-action="backdrop-video"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
 };
 export const DRAFT = [
@@ -135,35 +116,19 @@ export const DRAFT = [
   ["theming-studio-pick-390", PHONE, { ready: drawn, tall: true }],
   ["theming-studio-yours-1280", DESK, { path: YOURS, ready: boxesStill }],
   ["theming-studio-yours-1920", HD, { path: YOURS, ready: drawn }],
-  [
-    "theming-studio-yours-390",
-    PHONE,
-    { path: YOURS, ready: drawn, tall: true },
-  ],
+  ["theming-studio-yours-390", PHONE, { path: YOURS, ready: drawn, tall: true }],
   // Advanced (plan issue-784 D14–D16; pack sheet 4): every control beside the same preview.
   ["theming-studio-advanced-1280", DESK, { path: ADVANCED, ready: drawn }],
   ["theming-studio-advanced-1920", HD, { path: ADVANCED, ready: drawn }],
-  [
-    "theming-studio-advanced-390",
-    PHONE,
-    { path: ADVANCED, ready: drawn, tall: true },
-  ],
+  ["theming-studio-advanced-390", PHONE, { path: ADVANCED, ready: drawn, tall: true }],
   [
     "theming-studio-advanced-css-error-1280",
     DESK,
     { path: ADVANCED, fullPage: false, ready: cssError },
   ],
   // My presets and video backgrounds (plan issue-784 D18, D19): Your looks heads the gallery above.
-  [
-    "theming-studio-mine-save-1280",
-    DESK,
-    { path: YOURS, fullPage: false, ready: saveDialog },
-  ],
-  [
-    "theming-studio-advanced-video-1280",
-    DESK,
-    { path: ADVANCED, fullPage: false, ready: videoForm },
-  ],
+  ["theming-studio-mine-save-1280", DESK, { path: YOURS, fullPage: false, ready: saveDialog }],
+  ["theming-studio-advanced-video-1280", DESK, { path: ADVANCED, fullPage: false, ready: videoForm }],
   [
     "studio-draft-preview",
     // Preview is a phone-width control (sheet 6); at desktop width it is hidden and the click times out.
@@ -187,11 +152,7 @@ export const LIGHT = [
 
 /** The black logo in each preset (AC 2 of #784): with no plate, then on the light plate. */
 const PRESETS = ["default", "terminal", "level-up"];
-const FIRST_SCHEME = {
-  default: "night",
-  terminal: "cyan",
-  "level-up": "sunset",
-};
+const FIRST_SCHEME = { default: "night", terminal: "cyan", "level-up": "sunset" };
 const SURFACES = [
   ["screen", HD],
   ["hub", PHONE],
@@ -202,11 +163,7 @@ export const PLATES = PRESETS.flatMap((preset) =>
     SURFACES.map(([surface, viewport]) => [
       `theming-${preset}-logo-black-${plate}-${surface}`,
       viewport,
-      {
-        preset,
-        plate,
-        path: `/theming/studio/preview/${surface}?canccu_theme=draft`,
-      },
+      { preset, plate, path: `/theming/studio/preview/${surface}?canccu_theme=draft` },
     ]),
   ),
 );
@@ -221,9 +178,7 @@ export function themingListed(at) {
   }
   for (const [name, { width, height }, o] of DRAFT) {
     const path = o.path ?? "/theming/studio/";
-    lines.push(
-      `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
-    );
+    lines.push(`  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`);
   }
   for (const [name, { width, height }] of LIGHT) {
     lines.push(
@@ -231,9 +186,7 @@ export function themingListed(at) {
     );
   }
   for (const [name, { width, height }, o] of PLATES) {
-    lines.push(
-      `  ${name}.png  ${at(o.path)}  (${width}×${height}, ${o.preset}, the black logo)`,
-    );
+    lines.push(`  ${name}.png  ${at(o.path)}  (${width}×${height}, ${o.preset}, the black logo)`);
   }
   return lines;
 }
@@ -254,8 +207,7 @@ export async function draftShots({ demo, shot }) {
   const draft = await demo.call("PUT", "/api/theming/draft/preset", {
     body: { preset: "default", scheme: "night" },
   });
-  let version = expect(draft, 200, "a draft from Default · Night").body
-    .draft_version;
+  let version = expect(draft, 200, "a draft from Default · Night").body.draft_version;
   const logo = await demo.call(
     "PUT",
     `/api/theming/draft/file?path=images/logo.svg&draft_version=${version}`,
@@ -271,9 +223,7 @@ export async function draftShots({ demo, shot }) {
   let mine;
   try {
     version = await ownBackdrop(demo, version);
-    const saved = await demo.call("POST", "/api/theming/presets", {
-      body: { name: "Spring look" },
-    });
+    const saved = await demo.call("POST", "/api/theming/presets", { body: { name: "Spring look" } });
     mine = expect(saved, 201, "saving Spring look").body.id;
     for (const [name, viewport, o] of DRAFT) {
       await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
@@ -348,8 +298,7 @@ async function ownBackdrop(demo, from) {
       backdrop_video: "videos/backdrop.mp4",
     },
   });
-  return expect(parts, 200, "the picture and video behind the boxes").body
-    .draft_version;
+  return expect(parts, 200, "the picture and video behind the boxes").body.draft_version;
 }
 
 /** Each preset with the event's black logo, first with no plate, then on the plate the check names. */
@@ -374,8 +323,7 @@ async function plateShots({ demo, shot }, from) {
           logo_plate: { kind, shape: "rounded", padding: "medium" },
         },
       });
-      version = expect(set, 200, `the ${preset} plate`).body.draft
-        .draft_version;
+      version = expect(set, 200, `the ${preset} plate`).body.draft.draft_version;
       for (const [name, viewport, o] of PLATES.filter(
         ([, , p]) => p.preset === preset && p.plate === plate,
       )) {
