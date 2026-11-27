@@ -132,7 +132,9 @@ test("the run never touches a stack it did not start: the host's project names a
 test("automatic mode stops for paths CI runs in full or on the dev-seed shard, never 'no module changed'", () => {
   assert.throws(() => autoModules(["packages/ui/tokens.css"], KNOWN), /full tier.*packages\/ui\/tokens\.css/);
   assert.throws(() => autoModules(["modules/screen/src/dev-seed.ts"], KNOWN), /dev-seed/);
-  assert.throws(() => autoModules(["modules/screen/player/a.ts", "docs/ci.md"], KNOWN), /player/);
+  assert.throws(() => autoModules(["modules/screen/test/stack/a.mjs", "docs/ci.md"], KNOWN), /stack/);
+  // The player is the screens' own page since #835, no longer the full tier.
+  assert.deepEqual(autoModules(["modules/screen/player/a.ts"], KNOWN), ["screen"]);
   assert.deepEqual(autoModules(["modules/theming/src/a.ts", "modules/screen/src/a.ts"], KNOWN), ["screen", "theming"]);
   assert.deepEqual(autoModules(["docs/ci.md", "scripts/shots-local.sh"], KNOWN), []);
 });
@@ -292,7 +294,7 @@ test("the screens' dry run with --shots lists exactly the Pulse attempt's four s
 test("the per-shot dry run hands CI's check-mode pass the named shots of their groups", () => {
   const run = sh("--dry-run", "--shots", "theming-default-screen-identify-1920x1080", "admin-home.png");
   assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /scripts\/demo-screenshots --groups admin,screens --shots admin-home,theming-default-screen-identify-1920x1080 --check http:\/\/127\.0\.0\.1 shots-local\/shots/);
+  assert.match(run.stdout, /scripts\/demo-screenshots --groups admin,screens --shots admin-home,theming-default-screen-identify-1920x1080 --strips --check http:\/\/127\.0\.0\.1 shots-local\/shots/);
   assert.match(run.stdout, /admin-home \(admin: its whole group runs\)/);
   assert.equal(sh("--dry-run", "--shots", "no-such-shot").status, 2);
   assert.equal(sh("--dry-run", "--shots").status, 2);

@@ -8,35 +8,36 @@
 //        node shots-local-pick.mjs unreached NAME... < LOG   the names the run's log never reached
 import { execFile } from "node:child_process";
 import { realpathSync } from "node:fs";
-import { basename, dirname } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { GROUPS, asModule, needsOf } from "./demo-screenshots-groups.mjs";
-import { attemptOf } from "../modules/screen/test/stack/screen-views.mjs";
+import { attemptOf, chosen } from "../modules/screen/test/stack/screen-views.mjs";
 import { changedPaths } from "./shots-local.mjs";
+import { screensFor, viewWords, wordOf } from "./demo-stack-shots.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const run = promisify(execFile);
 
 // The passes of scripts/demo-screenshots and the groups each can take; the dev-seed pass takes its
-// own group only.
+// own group only. The main pass alone takes the screens, so it alone knows `--strips`.
 const PASSES = [
-  ["demo-screenshots.mjs", GROUPS.filter((g) => g !== "dev-seed")],
-  ["demo-screenshots-front.mjs", GROUPS.filter((g) => g !== "dev-seed")],
-  ["demo-screenshots-dev-seed.mjs", ["dev-seed"]],
+  ["demo-screenshots.mjs", GROUPS.filter((g) => g !== "dev-seed"), ["--strips"]],
+  ["demo-screenshots-front.mjs", GROUPS.filter((g) => g !== "dev-seed"), []],
+  ["demo-screenshots-dev-seed.mjs", ["dev-seed"], []],
 ];
 
 /**
- * CI's shot list in the merge queue's check, which the local run takes: every shot's name and
- * group, from the passes' own dry runs, one group at a time.
+ * CI's shot list, which the local run names from: every shot's name and group at 1920×1080 in
+ * every theme, the strips too, from the passes' own dry runs in the merge queue's check, one group
+ * at a time.
  */
 export async function shotList() {
   const lists = await Promise.all(
-    PASSES.flatMap(([script, groups]) =>
+    PASSES.flatMap(([script, groups, own]) =>
       groups.map(async (group) => {
         const { stdout } = await run(
           "node",
-          [`scripts/${script}`, "--dry-run", "--check", "--groups", group],
+          [`scripts/${script}`, "--dry-run", "--check", ...own, "--groups", group],
           { cwd: ROOT, maxBuffer: 16 << 20 },
         );
         return [...stdout.matchAll(/^ +(\S+)\.png +/gm)].map(([, name]) => ({ name, group }));
@@ -67,28 +68,21 @@ export function pick(patterns, list) {
   const missed = res.filter((r, i) => !list.some(used[i]));
   if (missed.length)
     throw new Error(
-      `not in CI's shot list (the merge queue's check, 1080p): ${missed.map(([p]) => p).join(", ")}`,
+      `not in CI's shot list (1920×1080, every theme, the strips): ${missed.map(([p]) => p).join(", ")}`,
     );
   return list.filter((s) => used.some((u) => u(s)));
 }
 
-// A screen shot's view and the words in it (screen-views.mjs `nameOf`).
-const viewWords = (name) =>
-  /^theming-.+?-screen-(.+)-\d+x\d+(?:-f\d+)?$/.exec(name)?.[1].split("-") ?? [];
-
-/** The word a changed file is named for: its name's first word, or its folder's for an index. */
-const wordOf = (path) => {
-  const stem = basename(path).replace(/\..*$/, "");
-  return (stem === "index" ? basename(dirname(path)) : stem).split(/[-_]/)[0].toLowerCase();
-};
-
 /**
  * The screen shots a branch's changed files are named for (`dashboard.css`: the dashboard views,
- * `claims.ts`: the claim views), and a note for each file with views whose shots it cannot name:
+ * `claims.ts`: the claim views), in the themes and with the strips CI's run of the same paths
+ * takes (demo-stack-shots.mjs), and a note for each file with views whose shots it cannot name:
  * a file every screen draws on, or another group's pages, which run whole.
  */
 export function changedShots(paths, list) {
-  const screens = list.filter((s) => s.group === "screens");
+  const ci = screensFor(paths);
+  const allowed = new Set(ci ? chosen({ themes: ci.themes, strips: ci.strips }) : []);
+  const screens = list.filter((s) => s.group === "screens" && allowed.has(s.name));
   const shots = new Set();
   const notes = [];
   for (const path of paths) {

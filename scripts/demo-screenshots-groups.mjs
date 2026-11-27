@@ -51,9 +51,8 @@ export function groupOf(path) {
   return hit[1];
 }
 
-// Each shard runs on a stack of its own. Balanced on the last full run (2026-11-13): the pages
-// with the front and trouble passes about 3 min, the screens of every theme 4.5, the Screen
-// studio 2.5.
+// Each shard runs on a stack of its own. The full run cuts the screens in two (demo-stack-plan.mjs,
+// SCREEN_PARTS): their every theme ran 20–26 minutes in one shard (#835).
 export const SHARDS = [
   {
     shard: "pages",
@@ -69,7 +68,8 @@ export const SHARDS = [
 ];
 
 // What a changed path needs, first match wins (a `*` also matches `/`): `docs` (no stack),
-// `full` (everything, as on main), or the screenshot groups of a module (none: its API tests and
+// `full` (every API test, the soak and every group; the screens still only the views the paths
+// affect, demo-stack-shots.mjs), or the screenshot groups of a module (none: its API tests and
 // the platform smoke only). A path no line matches is the full run, so a new kind of file is never
 // skipped by mistake.
 const MAP = [
@@ -81,7 +81,6 @@ const MAP = [
   ["deploy/*", "full"],
   ["events/demo/*", "full"],
   ["modules/theming/*", "full"],
-  ["modules/screen/player/*", "full"],
   ["modules/screen/test/stack/*", "full"],
   [".github/workflows/demo-stack.yml", "full"],
   [".github/actions/demo-stack-up/*", "full"],
@@ -104,6 +103,9 @@ const MAP = [
   ["modules/moments/*", ["moments"]],
   ["modules/pizza/*", ["pizza"]],
   ["modules/screen-render/*", ["screens"]],
+  // The player: the screens' own page, whose shots a file is named for (demo-stack-shots.mjs).
+  // The Moments and Theme studio pages that show it run nightly (#835).
+  ["modules/screen/player/*", ["screens"]],
   ["modules/screen/*", ["screens", "screen-studio"]],
   ["modules/*", []],
 ];

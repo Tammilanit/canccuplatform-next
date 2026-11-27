@@ -10,7 +10,7 @@
 # the modules' groups (scripts/shots-local.mjs) gets a fresh demo stack, as in CI, since one
 # shard's shots change what another's show. On it run the platform smoke, which imports the demo
 # event the shots show, and scripts/demo-screenshots in the merge queue's check mode: every check
-# of modules/screen/test/stack, the screens at 1920×1080 and 1080×1920 only. Prints the failing
+# of modules/screen/test/stack, the screens at 1920×1080 in every theme. Prints the failing
 # checks, then one line per module; exits 1 when a check failed. The PNGs and each shard's whole
 # log are in shots-local/<shard>/.
 # The per-shot run (#825) fits a worker's 10-minute command: only the shots named (CI's names,
@@ -150,7 +150,8 @@ if [ "$mode" != modules ]; then
   fi
   list=$(IFS=,; echo "${names[*]}")
   glist=$(IFS=,; echo "${groups[*]}" | tr , '\n' | sort | paste -sd,)
-  shoot=(scripts/demo-screenshots --groups "$glist" --shots "$list" --check http://127.0.0.1 "$OUT/shots")
+  # --strips: a strip named is taken; the list names only 1920×1080 shots, as CI's packages take.
+  shoot=(scripts/demo-screenshots --groups "$glist" --shots "$list" --strips --check http://127.0.0.1 "$OUT/shots")
   if command -v docker >/dev/null && [ -n "$(containers)" ]; then
     kept || { echo "error: $PROJECT already has containers shots-local did not keep; stop them or set CANCCU_SHOTS_PROJECT" >&2; exit 2; }
     warm=1

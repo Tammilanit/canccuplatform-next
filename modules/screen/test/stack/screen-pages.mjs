@@ -5,7 +5,7 @@
 /**
  * `open` a page of a size, signed in as a device; `attempt` a view, failing only that view. With
  * `only` (a set of attempt names, screen-views.mjs `attemptOf`), the other views are not taken:
- * the local per-shot run (scripts/shots-local.sh --shots).
+ * the run's choice of themes, sizes and views (screen-views.mjs `chosen`).
  */
 export function screenPages({ browser, cookieOn, fail, only = null }) {
   const opened = new Set();

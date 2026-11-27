@@ -11,12 +11,20 @@
 // modules/screen/test/stack/.
 // This file picks the groups and keeps the order, which the shots depend on.
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST] [--check]
+//          [--themes LIST] [--strips] [--book] [--shots LIST] [--part I/N]
 //   --groups  only these screenshot groups (scripts/demo-screenshots-groups.mjs; default all): a
 //             shard of CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers).
-//   --check   the merge queue's pass: every check, no 4K screen, no PNG of a page.
-//   --shots   only these screen shots (a comma list of names; the local per-shot run,
-//             scripts/shots-local.sh --shots): the screens take only the views that take them,
-//             every other group runs whole.
+//   --check   the merge queue's pass: every check, no PNG of a page.
+//   The screens' choice (modules/screen/test/stack/screen-views.mjs `chosen`; docs/ci.md#tiers):
+//   every view at 1920×1080 in every theme, without the frame strips, unless
+//   --themes  only these demo themes (a comma list),
+//   --strips  with the frame strips,
+//   --book    the screenshot book: portrait 1080×1920 and one 4K shot per layout too, and the
+//             pages' screens at 4K and in portrait (BOOK_ONLY),
+//   --shots   only the views that take these screen shots (a comma list of names: a package's
+//             affected views, or the local per-shot run, scripts/shots-local.sh),
+//   --part    the I-th of N cuts of the rest (a screens shard of the full run).
+//   Every other group runs whole.
 import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -33,10 +41,12 @@ import {
 } from "../modules/screen/test/stack/fixture.mjs";
 import {
   THEMES,
-  planned,
   screenShots,
 } from "../modules/screen/test/stack/screens.mjs";
-import { attemptOf } from "../modules/screen/test/stack/screen-views.mjs";
+import {
+  attemptOf,
+  chosen,
+} from "../modules/screen/test/stack/screen-views.mjs";
 import {
   PLAYLIST_PAGES,
   LAYOUT_PAGES,
@@ -58,9 +68,23 @@ import {
   removeMade,
 } from "./demo-screenshots-agenda.mjs";
 import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
-import { momentsListed, momentsShots } from "./demo-screenshots-moments.mjs";
-import { announceListed, announceShots } from "./demo-screenshots-announce.mjs";
-import { storiesListed, storiesShots } from "./demo-screenshots-stories.mjs";
+import {
+  MOMENTS_PAGES,
+  momentsListed,
+  momentsShots,
+} from "./demo-screenshots-moments.mjs";
+import {
+  ANNOUNCE_PAGES,
+  URGENT_PAGES,
+  announceListed,
+  announceShots,
+} from "./demo-screenshots-announce.mjs";
+import {
+  PHOTO_PAGES,
+  SEQUENCES,
+  storiesListed,
+  storiesShots,
+} from "./demo-screenshots-stories.mjs";
 import { gridsListed, gridsShots } from "./demo-screenshots-grids.mjs";
 import { pizzaListed, pizzaShots } from "./demo-screenshots-pizza.mjs";
 import {
@@ -79,6 +103,7 @@ import {
   troubleListed,
 } from "./demo-screenshots-pages.mjs";
 import {
+  bookOnly,
   cookieOn,
   firstLine,
   sequencer,
@@ -103,14 +128,25 @@ const { values: opts } = parseArgs({
     "agenda-down": { type: "boolean", default: false },
     groups: { type: "string", default: GROUPS.join(",") },
     check: { type: "boolean", default: false },
+    themes: { type: "string" },
+    strips: { type: "boolean", default: false },
+    book: { type: "boolean", default: false },
     shots: { type: "string" },
+    part: { type: "string" },
   },
 });
-// The screens' attempts the named shots need (screen-views.mjs says which view takes which shot).
-const attempts = opts.shots
-  ? new Set(opts.shots.split(",").filter(Boolean).map(attemptOf))
-  : null;
-const taken = (name) => !attempts || attempts.has(attemptOf(name));
+const list = (value) => value?.split(",").filter(Boolean);
+const part = opts.part && /^(\d+)\/(\d+)$/.exec(opts.part)?.slice(1).map(Number);
+if (opts.part && !part) throw new Error(`--part ${opts.part}: want I/N`);
+// The screen shots this run takes, and the views that take them (screen-views.mjs `attemptOf`).
+const screenNames = chosen({
+  themes: list(opts.themes),
+  strips: opts.strips,
+  book: opts.book,
+  shots: list(opts.shots),
+  part,
+});
+const attempts = new Set(screenNames.map(attemptOf));
 const wanted = pickGroups(opts.groups);
 const want = (group) => wanted.has(group);
 const base = new URL(opts.base);
@@ -130,6 +166,11 @@ only(OTHERS, ([, path]) => groupOf(path));
 for (const list of [STUDIO, DRAFT, LIGHT, PLATES]) only(list, () => "theming");
 for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED])
   only(list, () => "agenda");
+// The pages' screens at 4K and in portrait are the book's (#835), as the screens' own sizes are.
+const BOOK_ONLY = [MOMENTS_PAGES, ANNOUNCE_PAGES, URGENT_PAGES, PHOTO_PAGES, SEQUENCES];
+if (!opts.book)
+  for (const entries of BOOK_ONLY)
+    entries.splice(0, entries.length, ...entries.filter(([, , size]) => !bookOnly(size)));
 // The Screen studio's lists are studio-shots.mjs's own, and taken all or none.
 const studio = (list) => (want("screen-studio") ? list : []);
 
@@ -153,7 +194,7 @@ if (opts["dry-run"]) {
       : []),
     ...(want("pizza") ? pizzaListed(at) : []),
   ];
-  for (const name of want("screens") ? planned(opts.check).filter(taken) : []) {
+  for (const name of want("screens") ? screenNames : []) {
     lines.push(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
   }
   const studioLists = [
@@ -198,6 +239,7 @@ const shot = shooter({
   at,
   out: opts.out,
   check: opts.check,
+  book: opts.book,
   fail,
   ok,
 });
@@ -206,6 +248,7 @@ const sequence = sequencer({
   at,
   out: opts.out,
   check: opts.check,
+  book: opts.book,
   fail,
   ok,
 });
@@ -259,7 +302,6 @@ try {
         at,
         out: opts.out,
         cookieOn,
-        check: opts.check,
         fail,
         ok,
         only: attempts,
