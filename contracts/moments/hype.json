@@ -1,0 +1,93 @@
+{
+  "about": "The hype curve (#787 D12, D13; contracts/moments.md, Scenes, The hype). Each case is a zone of the demo event at a moment: `hype` is what Moments sends with the zone's scene (`level` 0 to 1 in steps of 0.05, `phase`, and the item's `id`, or null), and `levels` maps each ceiling (the level Screen composes without the hype) to the level the screen then draws. Moments' tests prove it sends `hype`; Screen's prove the level it composes from `hype` under each ceiling.",
+  "time_zone": "UTC",
+  "items": [
+    {
+      "id": "ai_doors",
+      "title": "Doors open",
+      "kind": "doors",
+      "zone": null,
+      "visibility": "public",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T16:00:00Z",
+      "ends_at": null
+    },
+    {
+      "id": "ai_cup",
+      "title": "Demo Cup",
+      "kind": "tournament",
+      "zone": "main",
+      "visibility": "public",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T18:00:00Z",
+      "ends_at": "2026-03-13T20:00:00Z"
+    },
+    {
+      "id": "ai_awards",
+      "title": "Awards",
+      "kind": "ceremony",
+      "zone": "stage",
+      "visibility": "public",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T21:00:00Z",
+      "ends_at": null
+    },
+    {
+      "id": "ai_semis",
+      "title": "Demo Cup semi-finals",
+      "kind": "tournament",
+      "zone": "arena",
+      "visibility": "public",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T19:00:00Z",
+      "ends_at": "2026-03-13T20:00:00Z"
+    },
+    {
+      "id": "ai_final",
+      "title": "Demo Cup final",
+      "kind": "tournament",
+      "zone": "arena",
+      "visibility": "public",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T20:30:00Z",
+      "ends_at": "2026-03-13T21:30:00Z"
+    },
+    {
+      "id": "ai_crew",
+      "title": "Crew match",
+      "kind": "tournament",
+      "zone": null,
+      "visibility": "crew",
+      "status": "scheduled",
+      "starts_at": "2026-03-13T12:00:00Z",
+      "ends_at": "2026-03-13T13:00:00Z"
+    },
+    {
+      "id": "ai_off",
+      "title": "Called off",
+      "kind": "tournament",
+      "zone": null,
+      "visibility": "public",
+      "status": "cancelled",
+      "starts_at": "2026-03-13T14:00:00Z",
+      "ends_at": "2026-03-13T15:00:00Z"
+    }
+  ],
+  "cases": [
+    { "zone": "main", "at": "2026-03-13T11:30:00Z", "hype": { "level": 0, "phase": "quiet", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "calm", "party": "calm" } },
+    { "zone": "main", "at": "2026-03-13T12:30:00Z", "hype": { "level": 0, "phase": "quiet", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "calm", "party": "calm" } },
+    { "zone": "main", "at": "2026-03-13T17:00:00Z", "hype": { "level": 0, "phase": "building", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "calm", "party": "calm" } },
+    { "zone": "main", "at": "2026-03-13T17:30:00Z", "hype": { "level": 0.5, "phase": "building", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "lively" } },
+    { "zone": "main", "at": "2026-03-13T17:45:00Z", "hype": { "level": 0.75, "phase": "building", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } },
+    { "zone": "main", "at": "2026-03-13T18:00:00Z", "hype": { "level": 1, "phase": "live", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } },
+    { "zone": "main", "at": "2026-03-13T19:59:00Z", "hype": { "level": 1, "phase": "live", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } },
+    { "zone": "main", "at": "2026-03-13T20:00:00Z", "hype": { "level": 1, "phase": "after", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } },
+    { "zone": "main", "at": "2026-03-13T20:10:00Z", "hype": { "level": 0.5, "phase": "after", "item": "ai_cup" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "lively" } },
+    { "zone": "main", "at": "2026-03-13T20:20:00Z", "hype": { "level": 0, "phase": "quiet", "item": null }, "levels": { "none": "none", "calm": "calm", "lively": "calm", "party": "calm" } },
+    { "zone": "stage", "at": "2026-03-13T20:30:00Z", "hype": { "level": 0.5, "phase": "building", "item": "ai_awards" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "lively" } },
+    { "zone": "stage", "at": "2026-03-13T21:30:00Z", "hype": { "level": 1, "phase": "live", "item": "ai_awards" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } },
+    { "zone": "stage", "at": "2026-03-13T22:10:00Z", "hype": { "level": 0.5, "phase": "after", "item": "ai_awards" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "lively" } },
+    { "zone": "arena", "at": "2026-03-13T20:10:00Z", "hype": { "level": 0.65, "phase": "building", "item": "ai_final" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "lively" } },
+    { "zone": "arena", "at": "2026-03-13T20:15:00Z", "hype": { "level": 0.75, "phase": "building", "item": "ai_final" }, "levels": { "none": "none", "calm": "calm", "lively": "lively", "party": "party" } }
+  ]
+}

@@ -5,6 +5,7 @@
 import { turnsSettled } from "./dashboard.mjs";
 import { TILES } from "./handed.mjs";
 import { momentsStrip, withMoments } from "./living-moments.mjs";
+import { STAGE_FRAMES, stageStrip, withStageLife } from "./living-stage.mjs";
 
 export const LIVING_THEMES = ["default", "level-up"];
 export const LIVING_STRIPS = [
@@ -13,6 +14,8 @@ export const LIVING_STRIPS = [
   // Part B (#787 D7, D8): sheet 02's food moments and sheet 05's step-down.
   { view: "living-food", frames: 4 },
   { view: "living-stepdown", frames: 2 },
+  // Part C (#787 D10–D13): sheet 03's day and sheet 04's hype, low and high.
+  ...Object.entries(STAGE_FRAMES).map(([view, frames]) => ({ view, frames: frames.length })),
 ];
 
 const TURN_S = 6;
@@ -96,6 +99,7 @@ let oddRunAt = 0;
 /** The state each strip hands the page; worked out once, as the page may ask again. */
 export function withLiving(view) {
   if (view === "living-food" || view === "living-stepdown") return withMoments(view);
+  if (view in STAGE_FRAMES) return withStageLife(view);
   const now = Date.now();
   const cycle = 2 * RUN_S * 1000;
   let k = Math.ceil((now + 20_000) / cycle);
@@ -176,6 +180,7 @@ async function waitUntil(page, ms) {
 export async function livingStrip(page, view, shoot) {
   if (view === "living-food" || view === "living-stepdown")
     return await momentsStrip(page, view, shoot);
+  if (view in STAGE_FRAMES) return await stageStrip(page, view, shoot);
   if (view === "living-rotation") {
     await page.waitForSelector(".canccu-region--hero .canccu-rotation__bar");
     const cycle = 4 * TURN_S * 1000;

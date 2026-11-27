@@ -72,6 +72,7 @@ describe.skipIf(!DATABASE_URL)("the energy level", () => {
       name: "Hall",
       motion_level: null,
       level: "lively",
+      ceiling: "lively",
       phase: "build_up",
       next: null,
     });

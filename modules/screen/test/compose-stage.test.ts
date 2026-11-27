@@ -187,7 +187,50 @@ describe("the stage", () => {
 
   it("has no tint while no box asks", async () => {
     const { stage } = await stageOf({ ...base, views: views([region("hero")]), art: cache([]) });
-    expect(stage).toEqual({ phase: "peak", kind: null, tint: null });
+    expect(stage).toEqual({ phase: "peak", kind: null, tint: null, game: null });
+  });
+
+  it("carries the current game's art for the stage's steady layer (#787 D10)", async () => {
+    const next = { title: "Demo Cup", game: game("g_3") };
+    const v = views([region("hero", { widgets: [widget("countdown", next)] })]);
+    const { stage, covers } = await stageOf({
+      ...base,
+      views: v,
+      art: cache(["/games/covers/g_3.webp"]),
+    });
+    expect(stage.game).toEqual({
+      url: `/api/screen/art/${INFO.id}.webp`,
+      scrim: stage.game?.scrim,
+    });
+    expect(stage.game?.scrim).toBeGreaterThanOrEqual(0.55);
+    expect(covers).toEqual([`/games/covers/g_3.webp=${INFO.id}`]);
+    const off = await stageOf({
+      ...base,
+      stageArt: false,
+      views: v,
+      art: cache(["/games/covers/g_3.webp"]),
+    });
+    expect(off.stage.game).toBeNull();
+    const unread = await stageOf({ ...base, views: v, art: cache([]) });
+    expect(unread.stage.game).toBeNull();
+  });
+});
+
+describe("the stage's game", () => {
+  it("takes only a countdown's game, never a hot game's", async () => {
+    const covers = ["/games/covers/g_1.webp", "/games/covers/g_3.webp"];
+    const v = views([
+      region("rail", { widgets: [widget("hot_game", hot("g_1", NOW - 10_000))] }),
+      region("hero", {
+        widgets: [widget("countdown", { title: "Demo Cup", game: game("g_3") })],
+      }),
+    ]);
+    const { stage } = await stageOf({ ...base, views: v, art: cache(covers) });
+    expect(stage.game).not.toBeNull();
+    const only = views([
+      region("rail", { widgets: [widget("hot_game", hot("g_1", NOW - 10_000))] }),
+    ]);
+    expect((await stageOf({ ...base, views: only, art: cache(covers) })).stage.game).toBeNull();
   });
 });
 

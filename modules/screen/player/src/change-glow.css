@@ -1,0 +1,36 @@
+/*
+ * The soft glow on a box that just changed (#787 D11; contracts/theming.md, Motion vocabulary):
+ * change-glow.ts sets `--canccu-changed` from 1, through the hold, down to 0 over 10 s. A still
+ * outline at none; a still frame glow at calm; a wider glow at lively and party, scaled by the
+ * theme's intensity. Nothing in it moves but its fade: an animated shadow would repaint the box.
+ */
+@layer canccu-base {
+  .canccu-widget.canccu-changed {
+    outline: calc(0.3 * var(--canccu-u, 4px)) solid
+      color-mix(
+        in srgb,
+        var(--canccu-color-accent) calc(var(--canccu-changed, 0) * 100%),
+        transparent
+      );
+    outline-offset: calc(-0.3 * var(--canccu-u, 4px));
+  }
+
+  body.canccu-motion--calm .canccu-widget.canccu-changed {
+    box-shadow: 0 0 calc(2 * var(--canccu-u, 4px)) calc(0.3 * var(--canccu-u, 4px))
+      color-mix(
+        in srgb,
+        var(--canccu-color-accent) calc(var(--canccu-changed, 0) * 40%),
+        transparent
+      );
+  }
+
+  body:is(.canccu-motion--lively, .canccu-motion--party) .canccu-widget.canccu-changed {
+    box-shadow: 0 0 calc(4 * var(--canccu-u, 4px) * var(--canccu-fx-intensity, 1))
+      calc(0.6 * var(--canccu-u, 4px) * var(--canccu-fx-intensity, 1))
+      color-mix(
+        in srgb,
+        var(--canccu-color-accent) calc(var(--canccu-changed, 0) * 55%),
+        transparent
+      );
+  }
+}
