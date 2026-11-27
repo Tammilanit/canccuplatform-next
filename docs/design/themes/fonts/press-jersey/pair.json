@@ -1,0 +1,5 @@
+{
+  "name": "Arcade",
+  "heading": { "family": "Press Start 2P", "faces": [{ "weight": 400, "file": "PressStart2P-Regular.ttf" }] },
+  "body": { "family": "Jersey 10", "faces": [{ "weight": 400, "file": "Jersey10-Regular.ttf" }] }
+}

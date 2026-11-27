@@ -66,7 +66,7 @@ import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS, annSettled, annSizes } from "./announc
 
 export { THEMES, planned } from "./screen-views.mjs";
 
-export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
+export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check, only }) {
   // Before the run of show, whose items start Moments' stories (stories.mjs says why).
   const storiesBack = await storiesOff(demo);
   const devices = [];
@@ -75,7 +75,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     devices.push(device);
     return device;
   };
-  const { open, attempt } = screenPages({ browser, cookieOn, fail });
+  const { open, attempt } = screenPages({ browser, cookieOn, fail, only });
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
     // Taken in the merge queue's check too: without it the next view of the same screen did not

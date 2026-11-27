@@ -5,7 +5,7 @@
 # scripts/demo-screenshots.mjs and modules/screen/test/stack/screens.mjs). CI runs it in the
 # `demo-stack` check and uploads OUT_DIR as an artifact, which a user-visible PR's reviewer holds
 # against the mockups (AGENTS.md, A package run).
-# Usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [BASE_URL] [OUT_DIR]
+# Usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [--shots LIST] [BASE_URL] [OUT_DIR]
 #          (defaults http://127.0.0.1, screenshots)
 #        demo-screenshots --install   pulls the Playwright image (CI)
 #   --groups LIST  only these screenshot groups (scripts/demo-screenshots-groups.mjs): one shard of
@@ -14,6 +14,8 @@
 #                  notify and the last pass's stopped agenda happen only where their shots are
 #                  taken.
 #   --check        the merge queue's pass: every check, no 4K screen, no PNG of a page.
+#   --shots LIST   only these screen shots, names in a comma list; the other groups run whole
+#                  (scripts/demo-screenshots.mjs; the local per-shot run, scripts/shots-local.sh).
 # BASE_URL is Caddy's address as seen from inside the Caddy container (so not a remote or
 # host-published address); the pages open on the demo event's hostname CANCCU_DEMO_HOST (default
 # demo.localhost; the CI stack has two events, so IP mode serves none) at its port.
@@ -33,18 +35,21 @@ PLAYWRIGHT=1.64.1
 IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
 STACK=modules/screen/test/stack
 
-usage() { echo "usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
+usage() { echo "usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [--shots LIST] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
 if [ "${1:-}" = "--install" ]; then
   [ $# = 1 ] || usage
   exec docker pull "$IMAGE"
 fi
 dry=0
 picks=()
+# The main pass's own: the front and dev-seed passes take whole groups.
+only=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) dry=1; shift ;;
     --groups) [ -n "${2:-}" ] || usage; picks+=(--groups "$2"); shift 2 ;;
     --check) picks+=(--check); shift ;;
+    --shots) [ -n "${2:-}" ] || usage; only=(--shots "$2"); shift 2 ;;
     -*) usage ;;
     *) break ;;
   esac
@@ -67,7 +72,7 @@ first_seed() { if [ "$1" = 1 ]; then echo --force; fi; }
 if [ "$dry" = 1 ]; then
   command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
   echo "(chromium in $IMAGE, in Caddy's network namespace)"
-  listed=$(node scripts/demo-screenshots.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT") || exit 1
+  listed=$(node scripts/demo-screenshots.mjs --dry-run "${picks[@]}" "${only[@]}" --base "$BASE" --out "$OUT") || exit 1
   [ -z "$listed" ] || printf '%s\n' "$listed"
   shot=0; grep -q -- '\.png ' <<< "$listed" && shot=1
   listed=$(node scripts/demo-screenshots-dev-seed.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT") || exit 1
@@ -134,7 +139,7 @@ takes() {
   grep -q -- "$2" <<< "$listed"
 }
 shot=0; takes demo-screenshots.mjs '\.png ' && shot=1
-shoot demo-screenshots.mjs
+shoot demo-screenshots.mjs "${only[@]}"
 status=$?
 # The dev server's demo content (#715) on its own shard: the modules' seed commands as
 # setup/deploy runs them, each twice, the second time changing nothing; then its pass.

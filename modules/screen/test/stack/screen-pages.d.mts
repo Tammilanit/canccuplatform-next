@@ -7,6 +7,7 @@ export function screenPages<P>(deps: {
   browser: { newContext: (options: object) => Promise<unknown> };
   cookieOn: (cookie: string) => object;
   fail: (message: string) => void;
+  only?: Set<string> | null;
 }): {
   open: (size: [number, number], cookie?: string | null) => Promise<ScreenPage<P>>;
   attempt: (name: string, run: () => Promise<unknown>) => Promise<void>;

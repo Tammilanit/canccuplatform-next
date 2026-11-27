@@ -71,6 +71,20 @@ describe("the screen shots' pages", () => {
     expect(contexts.map((c) => c.closed)).toEqual([1]);
   });
 
+  it("runs only the attempts named by `only`", async () => {
+    const { browser } = fakeBrowser();
+    const ran: string[] = [];
+    const { attempt } = screenPages({
+      browser,
+      cookieOn: () => ({}),
+      fail: () => undefined,
+      only: new Set(["a"]),
+    });
+    await attempt("a", () => Promise.resolve(void ran.push("a")));
+    await attempt("b", () => Promise.resolve(void ran.push("b")));
+    expect(ran).toEqual(["a"]);
+  });
+
   it("closes a page once when the view and the run close it together", async () => {
     const { browser, contexts } = fakeBrowser();
     const { open } = screenPages({ browser, cookieOn: () => ({}), fail: () => undefined });
