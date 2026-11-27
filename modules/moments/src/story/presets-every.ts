@@ -12,7 +12,6 @@ import {
   card,
   domain,
   every,
-  food,
   hub,
   item,
   offsets,
@@ -86,28 +85,6 @@ export const CHECKIN_OPEN = preset({
   end: { ...NO_END, until_event: { kind: "domain", type: "tournament.checkin.closed" } },
 });
 
-export const PIZZA_ORDER_OPEN = preset({
-  key: "pizza_order_open",
-  name: "Pizza order open",
-  triggers: [domain("pizza.order.opened")],
-  steps: [
-    step(
-      "title_card",
-      {
-        title: "Pizza order open",
-        subtitle: "Order in the hub before {order.target_at|it closes}",
-        image_url: null,
-        ...food("Order pizza in the hub"),
-      },
-      20,
-      { message: true, cue: "pizza.open" },
-    ),
-  ],
-  rounds: every(10),
-  end: { ...NO_END, rounds: 6, until_event: { kind: "domain", type: "pizza.order.closed" } },
-  finale: [card("Order closed", "Thanks for ordering", 8, { cue: "pizza.closed" })],
-});
-
 export const CLOSING_TIME = preset({
   key: "closing_time",
   name: "Closing time",
@@ -124,29 +101,6 @@ export const CLOSING_TIME = preset({
   rounds: offsets(-60, -30, -10),
   end: { ...NO_END, rounds: 3 },
   sound: "first_and_last",
-});
-
-export const PIZZA_LAST_CALL = preset({
-  key: "pizza_last_call",
-  name: "Pizza last call",
-  triggers: [domain("pizza.order.closing"), TAKE],
-  steps: [
-    sting("Last call", 3, { cue: "pizza.open" }),
-    step(
-      "title_card",
-      {
-        title: "Last call: pizza order closes at {order.closes_at|any minute}",
-        subtitle: "Order in the hub now",
-        image_url: null,
-        ...food("Order pizza in the hub"),
-      },
-      20,
-      { message: true },
-    ),
-  ],
-  // `pizza.order.closing` comes 10 minutes before the close: these are −10 and −2 of it.
-  rounds: offsets(0, 8),
-  end: { ...NO_END, until_event: { kind: "domain", type: "pizza.order.closed" } },
 });
 
 export const ROUND_START = preset({

@@ -88,6 +88,20 @@ const at = (regions: Region[], ms: number, drawn: number | null = 0) =>
   lowerThirdAt(regions[0] as Region, state(regions), ms, drawn);
 
 describe("the lower third over the slideshow", () => {
+  // Review note on #812: offline the state keeps the item it last had; the screen goes on to
+  // `next_item` by itself, and the band follows the slide it shows.
+  it("follows the slide the screen shows, also when the state has not caught up (offline)", () => {
+    const stale = region("hero", {
+      rotation: "director",
+      order: [0, 1],
+      widgets: [
+        widget("playlist", { item: slide(T0 + 110_000), next_item: slide(T0 + 120_000) }),
+        widget("ticker", { text: "h" }),
+      ],
+    });
+    expect(at([stale, venue(openOrder)], T0 + 125_000)).toMatchObject({ kind: "food_open" });
+  });
+
   it("leaves every second run clean, from its first slide to its last", () => {
     expect(at([hero(T0), venue(openOrder)], T0 + 5_000)).toBeNull();
     expect(at([hero(T0 + 120_000), venue(openOrder)], T0 + 125_000)).toMatchObject({

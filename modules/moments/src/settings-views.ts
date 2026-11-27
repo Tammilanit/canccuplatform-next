@@ -243,7 +243,17 @@ function airtime(air: AirSettings, canWrite: boolean, revision: number): Html {
 }
 
 const ORIGINS = ["rule", "crew", "emergency", "module"];
-const ACTIONS = ["started", "refused", "placed", "hidden", "queued", "back", "changed", "ended"];
+const ACTIONS = [
+  "started",
+  "refused",
+  "placed",
+  "hidden",
+  "queued",
+  "back",
+  "stepped_down",
+  "changed",
+  "ended",
+];
 const REGIONS = ["full", "hero", "rail", "venue_rail", "ticker", "overlay"];
 
 export function historyView(o: {

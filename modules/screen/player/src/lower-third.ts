@@ -8,6 +8,7 @@
  */
 import { shownAt } from "./rotation.js";
 import type { Region, ScreenState } from "./state.js";
+import { liveView } from "./widget.js";
 
 export interface LowerThird {
   kind: "food_open" | "food_placed" | "next";
@@ -97,7 +98,9 @@ export function lowerThirdAt(
   const cycleMs = hero.order.reduce((s, i) => s + (hero.widgets[i]?.dwell_seconds ?? 0), 0) * 1000;
   const runStart = turn.until - w.dwell_seconds * 1000;
   if (cycleMs <= 0 || Math.floor(runStart / cycleMs) % 2 === 0) return null;
-  if (!inWindow(w.view.item, runStart, turn.until, nowMs)) return null;
+  // The slide the screen shows: it goes on to `next_item` by itself, also offline (widget.ts).
+  const live = liveView("playlist", w.view, nowMs, state.tenant.time_zone).item;
+  if (!isObject(live) || !inWindow(live, runStart, turn.until, nowMs)) return null;
   return food(state) ?? next(state, nowMs);
 }
 

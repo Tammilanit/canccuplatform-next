@@ -178,9 +178,10 @@ const HERO_HERE = '.canccu-region[data-role="hero"] > .canccu-widget--announceme
  * at `arrived`, Pizza is here must be on air in it (#775; since #777 the `pizza` rule's
  * announcement, which may wait in the rail behind what holds the hero); Moments puts the open
  * order's 20 s card on air some 20–30 s after the order opens (its round starts on a tick), so
- * that shot has it when it comes within that time and goes without it if not. Then the box: the
- * rail takes turns (venue info, the food box), so it is shot once the box has faded in, again
- * from its next turn when the rail moved on meanwhile, and checked to fit.
+ * that shot has it when it comes within that time and goes without it if not. Then the box (but
+ * at `arrived`, where Pizza is here covers it): the rail takes turns (venue info, the food box),
+ * so it is shot once the box has faded in, again from its next turn when the rail moved on
+ * meanwhile, and checked to fit.
  */
 export async function roomReady(page, step) {
   // 150 s: it may wait out the holder's floor (90 s) and the gap (10 s), and on the full run's
@@ -195,7 +196,20 @@ export async function roomReady(page, step) {
       .locator(HERO_CARD)
       .waitFor({ timeout: 45_000 })
       .catch(() => undefined);
-  const box = page.locator(".canccu-widget--food_status .canccu-widget__row").first();
+  // Not the ticker's one line: it is drawn all along and would end the wait while the hero
+  // still covers the box.
+  const box = page
+    .locator(
+      '.canccu-region:not([data-role="ticker"]) > .canccu-widget--food_status .canccu-widget__row',
+    )
+    .first();
+  // Pizza is here covers the food box for its whole time on air, in the hero and in the rail it
+  // steps down to (#787 D7, one place at a time): the shot is the hero, and no box repeats it.
+  if (step === "arrived") {
+    await page.waitForTimeout(1500);
+    if (await box.isVisible()) throw new Error("the food box repeats Pizza is here");
+    return;
+  }
   for (let turn = 0; turn < 4; turn++) {
     await box.waitFor({ timeout: 60_000 });
     await page.waitForTimeout(900);

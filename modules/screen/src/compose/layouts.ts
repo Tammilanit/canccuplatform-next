@@ -79,7 +79,10 @@ const HERO: WidgetEntry[] = w(
   "playlist",
   "stats",
 );
-/** 30–60 s a turn (#787 D4): long enough to read a hero item across the hall. */
+/**
+ * 30–60 s a turn (#787 D4): long enough to read a hero item across the hall. The venue rail turns
+ * with it, so with `hub_qr: rotate` its three items give the hub QR a turn every 2:15 (D14).
+ */
 const HERO_SECONDS = 45;
 const RAIL = w("agenda_now", "countdown");
 
@@ -110,7 +113,7 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
     HEADER(),
     { id: "hero", area: at(1, 2, 8, 10), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "rail", area: at(9, 2, 4, 6), widgets: RAIL },
-    { id: "venue_rail", area: at(9, 8, 4, 4), widgets: VENUE_RAIL },
+    { id: "venue_rail", area: at(9, 8, 4, 4), rotate_seconds: HERO_SECONDS, widgets: VENUE_RAIL },
     TICKER(),
   ]),
   landscape("dashboard", "Dashboard", [
@@ -132,7 +135,7 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
     HEADER(),
     { id: "hero", area: at(1, 2, 7, 10), rotate_seconds: HERO_SECONDS, widgets: HERO },
     { id: "rail", area: at(8, 2, 5, 5), widgets: RAIL },
-    { id: "venue_rail", area: at(8, 7, 5, 5), widgets: VENUE_RAIL },
+    { id: "venue_rail", area: at(8, 7, 5, 5), rotate_seconds: HERO_SECONDS, widgets: VENUE_RAIL },
     TICKER(),
   ]),
   // Its `online` box is one line, "N still online" (layouts.css), and waits for the bot's counts.
@@ -153,7 +156,12 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
       { id: "hero", area: at(1, 3, 6, 6), rotate_seconds: HERO_SECONDS, widgets: HERO },
       { id: "rail", area: at(1, 9, 6, 3), widgets: RAIL },
       { id: "right_now", area: at(1, 12, 6, 2), widgets: w("stats") },
-      { id: "venue_rail", area: at(1, 14, 6, 2), widgets: VENUE_RAIL },
+      {
+        id: "venue_rail",
+        area: at(1, 14, 6, 2),
+        rotate_seconds: HERO_SECONDS,
+        widgets: VENUE_RAIL,
+      },
       { id: "ticker", area: at(1, 16, 6, 1), widgets: w("ticker") },
     ],
   },

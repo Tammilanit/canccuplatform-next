@@ -58,6 +58,23 @@ export async function saveZone(demo, key, fields) {
   if (answer.status !== 200 && answer.status !== 201) expect(answer, 200, `saving the zone ${key}`);
 }
 
+/**
+ * `fn` run with the main zone's venue rail turning every 10 s (`Zone.regions.<id>.dwell_seconds`),
+ * then its regions as they were. Since #787 D14 the rail turns with the hero (45 s) and gives the
+ * hub QR a turn; its turns are anchored on the epoch, so the venue card can be off the screen for
+ * 90 s, past the 30 s its check waits (clear.mjs, `venueOnOneLine`). At 10 s it is back within 20.
+ */
+export async function withQuickVenueRail(demo, fn) {
+  const { regions } = expect(await demo.call("GET", "/api/screen/zones/main"), 200, "the main zone").body; // prettier-ignore
+  const venue = { ...regions.venue_rail, dwell_seconds: 10 };
+  await saveZone(demo, "main", { regions: { ...regions, venue_rail: venue } });
+  try {
+    return await fn();
+  } finally {
+    await saveZone(demo, "main", { regions });
+  }
+}
+
 /** Publishes a demo theme as the Theme studio's starting points do (contracts/theming.md). */
 export async function publishTheme(demo, theme) {
   const zip = expect(

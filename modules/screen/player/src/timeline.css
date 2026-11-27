@@ -1,85 +1,98 @@
 /*
- * The coming hours (`agenda_timeline`, #787 D1, sheet 01): three hours on one line, ten minutes a
- * column (src/compose/timeline.ts), each item a bar in its row from its start for its length, an
- * open order's close as a mark, and the now line moving along the track (widget.ts,
- * fillCountdowns). In `canccu-base` like widgets.css, so a theme restyles any of it.
+ * The coming hours (`agenda_timeline`, #787 D1, sheet 01): tonight's hours on one line, ten
+ * minutes a column (src/compose/timeline.ts, timeline-cols.css). Each item is a block the height
+ * of its content in its lane, the hour axis with its ticks under the lanes, an open order's close
+ * as a small mark on the axis in a band of its own (so its label never meets a block), and the now
+ * line with its pill moving along the whole line (widget.ts, fillCountdowns). In `canccu-base`
+ * like widgets.css, so a theme restyles any of it.
  */
 @layer canccu-base {
   .canccu-widget--agenda_timeline {
     container-type: size;
   }
 
+  .canccu-widget--agenda_timeline .canccu-widget__subtitle {
+    margin: calc(0.4 * var(--canccu-u)) 0 0;
+    color: var(--canccu-color-text-muted, currentColor);
+    font-size: max(2.6vmin, min(calc(3 * var(--canccu-u)), 4cqh));
+  }
+
   .canccu-widget--agenda_timeline .canccu-widget__track {
     position: relative;
-    display: grid;
-    /* canccu-grid: fixed screen — the player's own grid: ten-minute columns of three hours */
-    grid-template-columns: repeat(18, minmax(0, 1fr));
-    /* The rows share the box's height, so a hero holding one item or six is never left bare. */
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-    grid-auto-rows: minmax(min-content, 1fr);
-    row-gap: min(calc(1 * var(--canccu-u)), 0.8cqh);
-    margin-top: calc(1.6 * var(--canccu-u));
-    padding-top: calc(4.4 * var(--canccu-u));
+    margin-top: calc(1 * var(--canccu-u));
+    --canccu-pill-font: max(2.6vmin, min(calc(2.4 * var(--canccu-u)), 3.4cqh));
+    --canccu-pill-pad: calc(0.3 * var(--canccu-u));
+    --canccu-now-width: calc(0.35 * var(--canccu-u));
+    /* Room for the now pill above the lanes: never less than the pill's own height, or a box
+       that clips cuts its top off. */
+    --canccu-line-top: max(
+      4.6vmin,
+      min(calc(5 * var(--canccu-u)), 8cqh),
+      calc(1.25 * var(--canccu-pill-font) + 2 * var(--canccu-pill-pad))
+    );
+    padding-top: var(--canccu-line-top);
   }
 
-  .canccu-widget--agenda_timeline .canccu-widget__hours {
-    position: absolute;
-    inset: 0 0 auto;
-    display: flex;
-    justify-content: space-between;
-    color: var(--canccu-color-text-muted, currentColor);
-    font-size: calc(2.8 * var(--canccu-u));
+  .canccu-widget--agenda_timeline :is(.canccu-widget__lanes, .canccu-widget__marks) {
+    display: grid;
+    /* canccu-grid: fixed screen — the player's own line: ten-minute columns of tonight's hours */
+    grid-template-columns: repeat(var(--canccu-line-columns, 36), minmax(0, 1fr));
   }
 
-  .canccu-widget--agenda_timeline .canccu-widget__span {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    align-content: center;
-    position: relative;
-    gap: 0 calc(1.2 * var(--canccu-u));
-    /*
-     * At least its columns, at most its text: an item with no end takes one column, too narrow
-     * for its name. It then grows past its columns, to the right, or to the left from column 14
-     * on, where the right edge is near. A long name wraps at 60 % of the box.
-     */
-    width: max-content;
-    min-width: 100%;
-    max-width: 60cqw;
-    justify-self: start;
-    padding: min(calc(1 * var(--canccu-u)), 0.8cqh) calc(1.4 * var(--canccu-u));
-    border-left: calc(0.6 * var(--canccu-u)) solid var(--canccu-color-accent);
+  /* The lanes take the box's height and hold their blocks in the middle of it. */
+  .canccu-widget--agenda_timeline .canccu-widget__lanes {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-content: space-evenly;
+    row-gap: min(calc(2 * var(--canccu-u)), 2.4cqh);
+  }
+
+  /* An item's box: as long as it runs, the height of its label. */
+  .canccu-widget--agenda_timeline .canccu-widget__block {
+    --canccu-line-kind: var(--canccu-color-accent);
+    align-self: stretch;
+    border-left: calc(0.6 * var(--canccu-u)) solid var(--canccu-line-kind);
     border-radius: var(--canccu-card-radius);
-    background: color-mix(in srgb, var(--canccu-color-accent) 14%, transparent);
-    /* Never under the screen's size floor (2.5 % of the short side, test/stack/readability.mjs). */
-    font-size: max(2.6vmin, min(calc(3.4 * var(--canccu-u)), 3.6cqh));
-    overflow: hidden;
+    background: color-mix(in srgb, var(--canccu-line-kind) 22%, transparent);
   }
 
-  .canccu-widget--agenda_timeline .canccu-widget__fill {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
+  /* The starter kinds' colours, as the stage's (stage.css); a theme styles any other. */
   .canccu-widget--agenda_timeline
-    :is(
-      .canccu-widget__span--col-9,
-      .canccu-widget__span--col-10,
-      .canccu-widget__span--col-11,
-      .canccu-widget__span--col-12,
-      .canccu-widget__span--col-13,
-      .canccu-widget__span--col-14,
-      .canccu-widget__span--col-15,
-      .canccu-widget__span--col-16,
-      .canccu-widget__span--col-17,
-      .canccu-widget__span--col-18
-    ) {
+    .canccu-widget__block:is(.canccu-widget__span--tournament, .canccu-widget__span--ceremony) {
+    --canccu-line-kind: var(--canccu-color-primary);
+  }
+
+  /*
+   * Its label, over the box from its start and on into the room the server gave it, so a short
+   * item still says its name; it wraps there, and never reaches another block.
+   */
+  .canccu-widget--agenda_timeline .canccu-widget__span {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: min(calc(1.2 * var(--canccu-u)), 1.6cqh) calc(1.6 * var(--canccu-u));
+    border-left: calc(0.6 * var(--canccu-u)) solid transparent;
+    /* Never under the screen's size floor (2.5 % of the short side, test/stack/readability.mjs). */
+    font-size: max(2.6vmin, min(calc(3.4 * var(--canccu-u)), 5cqh));
+  }
+
+  /* A late label reaches back from the line's end and ends there. */
+  .canccu-widget--agenda_timeline .canccu-widget__span--end {
+    align-items: flex-end;
+    text-align: end;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark--end {
     justify-self: end;
   }
 
-  /* Two lines at most: a long name never pushes the rows past the box. */
+  /* Two lines at most: a long name never pushes the lanes past the box. */
   .canccu-widget--agenda_timeline .canccu-widget__name {
     display: -webkit-box;
     min-width: 0;
@@ -88,300 +101,157 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     font-size: inherit;
-    line-height: 1.3;
+    line-height: 1.25;
   }
 
-  .canccu-widget--agenda_timeline .canccu-widget__starts,
-  .canccu-widget--agenda_timeline .canccu-widget__where {
-    font-size: max(2.6vmin, min(calc(2.8 * var(--canccu-u)), 3cqh));
+  .canccu-widget--agenda_timeline .canccu-widget__range {
+    font-size: max(2.6vmin, min(calc(2.8 * var(--canccu-u)), 4cqh));
     /* No opacity: fading the text drops it under the 4.5:1 the check holds it to. */
     color: inherit;
+    white-space: nowrap;
+  }
+
+  /* The sheet's blocks say what and when; the run of show beside them says where. */
+  .canccu-widget--agenda_timeline .canccu-widget__where {
+    display: none;
+  }
+
+  /* The food mark: a small tick on the axis, its label beside it, under the lanes. */
+  .canccu-widget--agenda_timeline .canccu-widget__marks {
+    margin-top: min(calc(1.2 * var(--canccu-u)), 1.6cqh);
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark {
+    position: relative;
+    width: max-content;
+    margin: 0;
+    padding-left: calc(1.4 * var(--canccu-u));
+    color: var(--canccu-color-accent);
+    font-size: max(2.6vmin, min(calc(2.6 * var(--canccu-u)), 3.6cqh));
+    white-space: nowrap;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    border-block: calc(0.6 * var(--canccu-u)) solid transparent;
+    border-right: calc(0.9 * var(--canccu-u)) solid currentColor;
+    transform: translateY(-50%);
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark--end {
+    padding: 0 calc(1.4 * var(--canccu-u)) 0 0;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark--end::before {
+    left: auto;
+    right: 0;
+    border-right: 0;
+    border-left: calc(0.9 * var(--canccu-u)) solid currentColor;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__mark-time {
+    margin-left: calc(0.6 * var(--canccu-u));
+    font-weight: 700;
+  }
+
+  /* The hour axis: a tick and its time at each hour, from the line's start to its end. */
+  .canccu-widget--agenda_timeline .canccu-widget__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: min(calc(1 * var(--canccu-u)), 1.4cqh);
+    padding-top: calc(1.4 * var(--canccu-u));
+    border-top: calc(0.25 * var(--canccu-u)) solid
+      color-mix(in srgb, var(--canccu-color-text, #fff) 35%, transparent);
+    color: var(--canccu-color-text-muted, currentColor);
+    font-size: max(2.6vmin, min(calc(2.6 * var(--canccu-u)), 3.6cqh));
+  }
+
+  /* Each tick has no width, so its time stands centred on its hour; the two ends stay inside. */
+  .canccu-widget--agenda_timeline .canccu-widget__tick {
+    position: relative;
+    width: 0;
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__tick:first-child {
+    justify-content: flex-start;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__tick:last-child {
+    justify-content: flex-end;
+  }
+
+  .canccu-widget--agenda_timeline .canccu-widget__tick::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    height: calc(1 * var(--canccu-u));
+    margin-bottom: calc(0.3 * var(--canccu-u));
+    border-left: calc(0.25 * var(--canccu-u)) solid currentColor;
+  }
+
+  /* The now line: where the clock is along the line, with its pill at the top. */
+  .canccu-widget--agenda_timeline .canccu-widget__now {
+    position: absolute;
+    height: auto;
+    border-radius: 0;
+    top: var(--canccu-line-top);
+    /* Down to the axis: its time's line and the gap above it. */
+    bottom: calc(1.4 * var(--canccu-u) + 1.2em);
+    /* Its own width off the run, so at the line's end it still stands inside the track. */
+    left: calc(var(--canccu-progress, 0) * (100% - var(--canccu-now-width)));
+    z-index: 2;
+    width: var(--canccu-now-width);
+    margin: 0;
+    background: var(--canccu-color-text, #fff);
   }
 
   /*
-   * A box under half the screen's short side (the Dashboard's hero) cannot hold five items of two
-   * lines at the size floor: one line a name, and the place left to the other boxes.
+   * The pill slides along the line as the clock does: its left edge on the line at the start, its
+   * middle at the middle, its right edge at the end, so it never leaves the track (a box that
+   * clips would cut it).
+   */
+  .canccu-widget--agenda_timeline .canccu-widget__now-pill {
+    position: absolute;
+    top: 0;
+    left: calc(var(--canccu-progress, 0) * 100%);
+    padding: var(--canccu-pill-pad) calc(1.2 * var(--canccu-u));
+    border-radius: 999px;
+    background: var(--canccu-color-text, #fff);
+    color: var(--canccu-color-background, #000);
+    font-size: var(--canccu-pill-font);
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    transform: translate(calc(var(--canccu-progress, 0) * -100%), -100%);
+  }
+
+  /*
+   * A box under half the screen's short side (the Dashboard's hero) holds two lanes of one line at
+   * the size floor: each item's name, its times on the axis under it. A third lane's items are
+   * left to the run of show beside it.
    */
   @container (height < 50vmin) {
+    .canccu-widget--agenda_timeline :is(.canccu-widget__subtitle, .canccu-widget__range) {
+      display: none;
+    }
+
+    .canccu-widget--agenda_timeline .canccu-widget__lane-3 {
+      display: none;
+    }
+
     .canccu-widget--agenda_timeline .canccu-widget__span {
-      flex-wrap: nowrap;
+      padding-block: calc(0.6 * var(--canccu-u));
     }
 
     .canccu-widget--agenda_timeline .canccu-widget__name {
       -webkit-line-clamp: 1;
     }
-
-    .canccu-widget--agenda_timeline .canccu-widget__starts {
-      flex: none;
-    }
-
-    .canccu-widget--agenda_timeline .canccu-widget__where {
-      display: none;
-    }
-  }
-
-  .canccu-widget__span--col-1 {
-    grid-column-start: 1;
-  }
-
-  .canccu-widget__span--col-2 {
-    grid-column-start: 2;
-  }
-
-  .canccu-widget__span--col-3 {
-    grid-column-start: 3;
-  }
-
-  .canccu-widget__span--col-4 {
-    grid-column-start: 4;
-  }
-
-  .canccu-widget__span--col-5 {
-    grid-column-start: 5;
-  }
-
-  .canccu-widget__span--col-6 {
-    grid-column-start: 6;
-  }
-
-  .canccu-widget__span--col-7 {
-    grid-column-start: 7;
-  }
-
-  .canccu-widget__span--col-8 {
-    grid-column-start: 8;
-  }
-
-  .canccu-widget__span--col-9 {
-    grid-column-start: 9;
-  }
-
-  .canccu-widget__span--col-10 {
-    grid-column-start: 10;
-  }
-
-  .canccu-widget__span--col-11 {
-    grid-column-start: 11;
-  }
-
-  .canccu-widget__span--col-12 {
-    grid-column-start: 12;
-  }
-
-  .canccu-widget__span--col-13 {
-    grid-column-start: 13;
-  }
-
-  .canccu-widget__span--col-14 {
-    grid-column-start: 14;
-  }
-
-  .canccu-widget__span--col-15 {
-    grid-column-start: 15;
-  }
-
-  .canccu-widget__span--col-16 {
-    grid-column-start: 16;
-  }
-
-  .canccu-widget__span--col-17 {
-    grid-column-start: 17;
-  }
-
-  .canccu-widget__span--col-18 {
-    grid-column-start: 18;
-  }
-
-  .canccu-widget__span--row-1 {
-    grid-row: 1;
-  }
-
-  .canccu-widget__span--row-2 {
-    grid-row: 2;
-  }
-
-  .canccu-widget__span--row-3 {
-    grid-row: 3;
-  }
-
-  .canccu-widget__span--row-4 {
-    grid-row: 4;
-  }
-
-  .canccu-widget__span--row-5 {
-    grid-row: 5;
-  }
-
-  .canccu-widget__span--cols-1 {
-    grid-column-end: span 1;
-  }
-
-  .canccu-widget__span--cols-2 {
-    grid-column-end: span 2;
-  }
-
-  .canccu-widget__span--cols-3 {
-    grid-column-end: span 3;
-  }
-
-  .canccu-widget__span--cols-4 {
-    grid-column-end: span 4;
-  }
-
-  .canccu-widget__span--cols-5 {
-    grid-column-end: span 5;
-  }
-
-  .canccu-widget__span--cols-6 {
-    grid-column-end: span 6;
-  }
-
-  .canccu-widget__span--cols-7 {
-    grid-column-end: span 7;
-  }
-
-  .canccu-widget__span--cols-8 {
-    grid-column-end: span 8;
-  }
-
-  .canccu-widget__span--cols-9 {
-    grid-column-end: span 9;
-  }
-
-  .canccu-widget__span--cols-10 {
-    grid-column-end: span 10;
-  }
-
-  .canccu-widget__span--cols-11 {
-    grid-column-end: span 11;
-  }
-
-  .canccu-widget__span--cols-12 {
-    grid-column-end: span 12;
-  }
-
-  .canccu-widget__span--cols-13 {
-    grid-column-end: span 13;
-  }
-
-  .canccu-widget__span--cols-14 {
-    grid-column-end: span 14;
-  }
-
-  .canccu-widget__span--cols-15 {
-    grid-column-end: span 15;
-  }
-
-  .canccu-widget__span--cols-16 {
-    grid-column-end: span 16;
-  }
-
-  .canccu-widget__span--cols-17 {
-    grid-column-end: span 17;
-  }
-
-  .canccu-widget__span--cols-18 {
-    grid-column-end: span 18;
-  }
-
-  .canccu-widget--agenda_timeline .canccu-widget__mark {
-    position: absolute;
-    top: calc(4.4 * var(--canccu-u));
-    bottom: 0;
-    margin: 0;
-    padding-left: calc(0.8 * var(--canccu-u));
-    border-left: calc(0.3 * var(--canccu-u)) dashed var(--canccu-color-accent);
-    font-size: calc(2.8 * var(--canccu-u));
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  .canccu-widget--agenda_timeline .canccu-widget__mark-time {
-    margin-left: calc(0.8 * var(--canccu-u));
-    font-weight: 700;
-  }
-
-  .canccu-widget__mark--col-1 {
-    left: 0%;
-  }
-
-  .canccu-widget__mark--col-2 {
-    left: 5.556%;
-  }
-
-  .canccu-widget__mark--col-3 {
-    left: 11.111%;
-  }
-
-  .canccu-widget__mark--col-4 {
-    left: 16.667%;
-  }
-
-  .canccu-widget__mark--col-5 {
-    left: 22.222%;
-  }
-
-  .canccu-widget__mark--col-6 {
-    left: 27.778%;
-  }
-
-  .canccu-widget__mark--col-7 {
-    left: 33.333%;
-  }
-
-  .canccu-widget__mark--col-8 {
-    left: 38.889%;
-  }
-
-  .canccu-widget__mark--col-9 {
-    left: 44.444%;
-  }
-
-  .canccu-widget__mark--col-10 {
-    left: 50%;
-  }
-
-  .canccu-widget__mark--col-11 {
-    left: 55.556%;
-  }
-
-  .canccu-widget__mark--col-12 {
-    left: 61.111%;
-  }
-
-  .canccu-widget__mark--col-13 {
-    left: 66.667%;
-  }
-
-  .canccu-widget__mark--col-14 {
-    left: 72.222%;
-  }
-
-  .canccu-widget__mark--col-15 {
-    left: 77.778%;
-  }
-
-  .canccu-widget__mark--col-16 {
-    left: 83.333%;
-  }
-
-  .canccu-widget__mark--col-17 {
-    left: 88.889%;
-  }
-
-  .canccu-widget__mark--col-18 {
-    left: 94.444%;
-  }
-
-  /* The now line: where the clock is along the three hours. */
-  .canccu-widget--agenda_timeline .canccu-widget__now {
-    position: absolute;
-    top: calc(4.4 * var(--canccu-u));
-    bottom: 0;
-    left: calc(var(--canccu-progress, 0) * 100%);
-    width: calc(0.4 * var(--canccu-u));
-    margin: 0;
-    background: var(--canccu-color-accent);
-    box-shadow: 0 0 calc(1.5 * var(--canccu-u)) var(--canccu-color-accent);
   }
 }

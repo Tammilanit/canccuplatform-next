@@ -4,11 +4,15 @@
 // at 1080p and portrait (#787 Q7). The frames stand in for the short video CI cannot capture.
 import { turnsSettled } from "./dashboard.mjs";
 import { TILES } from "./handed.mjs";
+import { momentsStrip, withMoments } from "./living-moments.mjs";
 
 export const LIVING_THEMES = ["default", "level-up"];
 export const LIVING_STRIPS = [
   { view: "living-rotation", frames: 4 },
   { view: "living-slideshow", frames: 2 },
+  // Part B (#787 D7, D8): sheet 02's food moments and sheet 05's step-down.
+  { view: "living-food", frames: 4 },
+  { view: "living-stepdown", frames: 2 },
 ];
 
 const TURN_S = 6;
@@ -30,41 +34,51 @@ function qrImage(s) {
   return qr.view.image_url;
 }
 
-/** An open order closing in 12 minutes, with its join QR, as the food box's view says it. */
-function openOrder(s, now) {
-  const closes = at(now + 12 * 60_000);
+/** `HH:MM` in the event's time zone, as the server words a time. */
+const hm = (s, ms) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: s.tenant.time_zone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(ms);
+
+/** An open order closing 12 minutes after the frame's clock, with its join QR, as the food box's view says it. */
+function openOrder(s, closes) {
+  const text = hm(s, closes);
   return {
     title: "Food",
     big_label: "Open · closes",
-    big_text: "18:30",
+    big_text: text,
     state: "open",
     pizzeria_name: "Demo Pizzeria",
     orders: [
-      { state: "open", seq: 3, pizzeria_name: "Demo Pizzeria", closes_at: closes, status_text: "Open · closes 18:30 · 9 pizzas", join_url: "https://demo.example/pizza/orders/po_1" },
+      { state: "open", seq: 3, pizzeria_name: "Demo Pizzeria", closes_at: at(closes), status_text: `Open · closes ${text} · 9 pizzas`, join_url: "https://demo.example/pizza/orders/po_1" },
     ],
-    countdown_at: closes,
+    countdown_at: at(closes),
     join: { url: "https://demo.example/pizza/orders/po_1", label: "Join the order", image_url: qrImage(s) },
   }; // prettier-ignore
 }
 
-/** The coming hours from the demo's next item, with the order's close marked on the line. */
-function timeline(next, now) {
-  const from = Math.floor(now / 1_800_000) * 1_800_000;
-  const starts = Date.parse(next.target_at);
-  const col = (ms) => Math.min(18, Math.max(1, Math.floor((ms - from) / 600_000) + 1));
-  return {
-    title: "The coming hours",
-    from: at(from),
-    to: at(from + 3 * 3_600_000),
-    now: at(now),
-    from_text: "18:00",
-    to_text: "21:00",
-    items: [
-      { name: "Dinner", kind: "food", starts_text: "17:30", place: "Café", col: 1, cols: 4 },
-      { name: next.label, kind: next.kind ?? "tournament", starts_text: "19:30", place: "Main stage", col: col(starts), cols: 6 },
-    ],
-    marks: [{ label: "Pizza order closes", at_text: "18:30", col: 4 }],
-  }; // prettier-ignore
+/**
+ * The coming hours as the server composed them for the demo's run of show at the frame's clock,
+ * with the strip's order's close marked as src/compose/timeline.ts marks one: its ten-minute
+ * column, and growing to the left from the line's second half.
+ */
+function timeline(s, closes) {
+  const line = s.regions
+    .filter((r) => r.role === "hero")
+    .flatMap((r) => r.widgets)
+    .find((w) => w.widget === "agenda_timeline");
+  if (line === undefined || line.view.empty)
+    throw new Error("the demo zone's hero composed no coming hours");
+  const columns = line.view.hours * 6;
+  const col = Math.min(
+    columns,
+    Math.max(1, Math.floor((closes - Date.parse(line.view.from)) / 600_000) + 1),
+  );
+  const mark = { label: "Pizza order closes", at: at(closes), at_text: hm(s, closes), col, align: col > columns / 2 ? "end" : "start" }; // prettier-ignore
+  return { ...line.view, marks: [...line.view.marks, mark] };
 }
 
 const STATS = {
@@ -81,6 +95,7 @@ let oddRunAt = 0;
 
 /** The state each strip hands the page; worked out once, as the page may ask again. */
 export function withLiving(view) {
+  if (view === "living-food" || view === "living-stepdown") return withMoments(view);
   const now = Date.now();
   const cycle = 2 * RUN_S * 1000;
   let k = Math.ceil((now + 20_000) / cycle);
@@ -90,12 +105,13 @@ export function withLiving(view) {
     const hero = s.regions.find((r) => r.role === "hero");
     const next = hero?.idle_view?.view;
     if (next === undefined) throw new Error("the demo zone's hero has no next item");
-    const food = openOrder(s, now);
+    const closes = now + 12 * 60_000;
+    const food = openOrder(s, closes);
     const widgets =
       view === "living-rotation"
         ? [
             item("countdown", { ...next, chip: null }, TURN_S),
-            item("agenda_timeline", timeline(next, now), TURN_S),
+            item("agenda_timeline", timeline(s, closes), TURN_S),
             item("food_status", food, TURN_S),
             item("stats", STATS, TURN_S),
           ]
@@ -158,6 +174,8 @@ async function waitUntil(page, ms) {
  * of the slideshow, clean.
  */
 export async function livingStrip(page, view, shoot) {
+  if (view === "living-food" || view === "living-stepdown")
+    return await momentsStrip(page, view, shoot);
   if (view === "living-rotation") {
     await page.waitForSelector(".canccu-region--hero .canccu-rotation__bar");
     const cycle = 4 * TURN_S * 1000;

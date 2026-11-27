@@ -26,7 +26,8 @@ const facts: ZoneFacts = {
 
 function build(zone: Partial<ZoneSetup> = {}, over: Partial<BuildInput> = {}): RegionView[] {
   return buildRegions({
-    zone: { key: "main", layoutId: "dashboard", regions: {}, ...zone },
+    // The fixed hub QR card unless a case says otherwise; `rotate` is the default since #787 D14.
+    zone: { key: "main", layoutId: "dashboard", regions: {}, hubQr: "always", ...zone },
     windowLayoutId: null,
     themeLayouts: [],
     portrait: false,

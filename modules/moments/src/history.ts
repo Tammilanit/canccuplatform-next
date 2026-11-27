@@ -28,7 +28,17 @@ export interface HistoryRow {
 }
 
 const ORIGINS = ["rule", "crew", "emergency", "module"];
-const ACTIONS = ["started", "refused", "placed", "hidden", "queued", "back", "changed", "ended"];
+const ACTIONS = [
+  "started",
+  "refused",
+  "placed",
+  "hidden",
+  "queued",
+  "back",
+  "stepped_down",
+  "changed",
+  "ended",
+];
 const ROLES = ["full", "hero", "rail", "venue_rail", "ticker", "overlay"];
 
 /** The filters of a query string; an unknown value is refused, never ignored. */

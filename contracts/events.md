@@ -190,7 +190,7 @@ An **Order**:
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
 | `pizza.order.opened` | A group order opened: people can add pizzas | event-wide, `public` | notify (`food`), screen, moments, bot (channel post) | `order` (Order), `actor_user_id` |
-| `pizza.order.closing` | The open order closes in 10 minutes: the last call. Once per order, 10 minutes before `closes_at`; not sent for an order closed earlier. Added for Moments' Pizza last call story (#602); the pizza module emits it from step 5 | event-wide, `public` | moments | `order` (Order), `closes_at` (string, time): when the order is due to close |
+| `pizza.order.closing` | The open order closes soon: the last call. Once per order, the pizza setting `last_call_minutes` (5 by default) before `closes_at`; not sent for an order closed earlier. Added for Moments' Pizza last call story (#602); the pizza module emits it from step 5 | event-wide, `public` | moments | `order` (Order), `closes_at` (string, time): when the order is due to close |
 | `pizza.order.claimed` | Someone became the holder (a claim, or a take-over of an order nobody held) | event-wide, `public` | screen, bot | `order` (Order), `previous_holder` (Person or null), `actor_user_id` |
 | `pizza.order.released` | The holder let go of the order, an admin released it, or it timed out | event-wide, `public` | screen, bot | `order` (Order), `previous_holder` (Person), `reason` (string: `released`, `forced`, `timeout`), `actor_user_id` |
 | `pizza.order.closed` | No more pizzas: the holder calls the pizzeria | event-wide, `public` | notify (`food`), screen, moments, bot | `order` (Order), `actor_user_id` |

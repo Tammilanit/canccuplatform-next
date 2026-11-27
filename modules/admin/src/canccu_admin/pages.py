@@ -46,6 +46,7 @@ PART_NAMES = {
     "tenants": "Events",
     "games": "Games",
     "tournament": "Tournament",
+    "bot": "Discord",
     "hello": "Test module",
 }
 SETTINGS_NAMES = {"admin": "General"}

@@ -160,7 +160,7 @@ const EN = {
   "zone.header.shared": "Shared with the hero",
   "zone.hub_qr": "Hub QR",
   "zone.hub_qr.always": "Always shown",
-  "zone.hub_qr.rotate": "Takes turns with the venue rail",
+  "zone.hub_qr.rotate": "Takes turns with the venue rail, at least every 2¼ minutes (default)",
   "zone.sound": "Sound",
   "zone.sound_on": "Play sound",
   "zone.sound_device": "Sound from",

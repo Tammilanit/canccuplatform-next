@@ -23,11 +23,12 @@ import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers, speedOf } from "./ticker.js";
 import { fitAnnouncements } from "./fit.js";
-import type { Layout, Region, ScreenState } from "./state.js";
+import type { Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
 import { heldShown, joinedShown, turnIndexOf, turnShown } from "./turns.js";
 import type { Choice } from "./turns.js";
 import { drawWidget, fillCountdowns, liveView } from "./widget.js";
+import { layoutKey, outFirst, ratioOf, rotationKey } from "./screen-keys.js";
 
 export interface ScreenHost {
   /** This device's clock corrected to the server's. */
@@ -55,30 +56,6 @@ interface Drawn {
 }
 
 const grid = (n: number): string => `repeat(${String(n)}, minmax(0, 1fr))`;
-
-/** `16:9` → 16/9; anything else the built-in shape. */
-function ratioOf(aspect: string): number {
-  const [w, h] = aspect.split(":").map(Number);
-  return w !== undefined && h !== undefined && w > 0 && h > 0 ? w / h : 16 / 9;
-}
-
-const layoutKey = (l: Layout): string =>
-  JSON.stringify([l.id, l.aspect, l.grid.columns, l.grid.rows]);
-
-/** What `shownAt` reads of a region, not the widgets' data, which every push may renew. */
-const rotationKey = (r: Region): string =>
-  JSON.stringify([r.rotation, r.order, r.widgets.map((w) => w.dwell_seconds)]);
-
-/**
- * A storyboard's step hands over to the next by leaving first, then the next fades in: crossfaded,
- * two steps' text lay over each other ("Midnight!" through "Night 2 at …", S2, #625). A claim's
- * step key is `claim:<id>:<n>` (claims.ts).
- */
-const isStep = (key: string | undefined): boolean =>
-  key?.startsWith("claim:") === true && key.split(":").length === 3;
-const outFirst = (from: string | undefined, to: string | undefined): boolean =>
-  (isStep(from) && to?.startsWith("claim:") === true) ||
-  (isStep(to) && from?.startsWith("claim:") === true);
 
 export class Screen {
   root: HTMLElement = document.createElement("main");

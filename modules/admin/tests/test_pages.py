@@ -183,6 +183,18 @@ async def test_a_part_in_trouble_says_what_it_means_and_offers_a_way_on(
     assert 'href="/admin/screen/devices">Open devices</a>' in text
 
 
+async def test_the_bot_is_discord_and_says_what_its_trouble_means(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = Check(
+        START, (Part("bot", "down", down_since=START - timedelta(minutes=3)),)
+    )
+    text = (await world.browser(owner).get("/admin/health-view")).text
+    assert "<b>Discord</b>" in text and "The Discord bot and its servers" in text
+    assert "Discord commands and posts wait; screens and pages keep working." in text
+
+
 async def test_check_now_checks_again(world: World, caplog: pytest.LogCaptureFixture) -> None:
     owner, _ = await owner_and_member(world, caplog)
     world.watch.latest = TROUBLE

@@ -1,0 +1,10 @@
+# The fake Discord for the CI stack only (deploy/compose.ci.yml): never part of a real install.
+# Build context: the repo root.
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /repo
+COPY packages/kit-py/ packages/kit-py/
+RUN pip install './packages/kit-py[fake-discord]'
+USER nobody
+EXPOSE 8080
+CMD ["python", "-m", "canccu_kit.testing.discord"]

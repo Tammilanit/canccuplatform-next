@@ -1,0 +1,322 @@
+/*
+ * The coming hours' places on the line (timeline.css): a template cannot compute, so the server
+ * sends each block's and mark's ten-minute column, its length and its lane as classes
+ * (src/compose/timeline.ts), and the track the line's hours, three to six.
+ */
+@layer canccu-base {
+  .canccu-widget__track--h3 {
+    --canccu-line-columns: 18;
+  }
+
+  .canccu-widget__track--h4 {
+    --canccu-line-columns: 24;
+  }
+
+  .canccu-widget__track--h5 {
+    --canccu-line-columns: 30;
+  }
+
+  .canccu-widget__track--h6 {
+    --canccu-line-columns: 36;
+  }
+
+  .canccu-widget__lane-1 {
+    grid-row: 1;
+  }
+
+  .canccu-widget__lane-2 {
+    grid-row: 2;
+  }
+
+  .canccu-widget__lane-3 {
+    grid-row: 3;
+  }
+
+  .canccu-widget__col-1 {
+    grid-column-start: 1;
+  }
+
+  .canccu-widget__col-2 {
+    grid-column-start: 2;
+  }
+
+  .canccu-widget__col-3 {
+    grid-column-start: 3;
+  }
+
+  .canccu-widget__col-4 {
+    grid-column-start: 4;
+  }
+
+  .canccu-widget__col-5 {
+    grid-column-start: 5;
+  }
+
+  .canccu-widget__col-6 {
+    grid-column-start: 6;
+  }
+
+  .canccu-widget__col-7 {
+    grid-column-start: 7;
+  }
+
+  .canccu-widget__col-8 {
+    grid-column-start: 8;
+  }
+
+  .canccu-widget__col-9 {
+    grid-column-start: 9;
+  }
+
+  .canccu-widget__col-10 {
+    grid-column-start: 10;
+  }
+
+  .canccu-widget__col-11 {
+    grid-column-start: 11;
+  }
+
+  .canccu-widget__col-12 {
+    grid-column-start: 12;
+  }
+
+  .canccu-widget__col-13 {
+    grid-column-start: 13;
+  }
+
+  .canccu-widget__col-14 {
+    grid-column-start: 14;
+  }
+
+  .canccu-widget__col-15 {
+    grid-column-start: 15;
+  }
+
+  .canccu-widget__col-16 {
+    grid-column-start: 16;
+  }
+
+  .canccu-widget__col-17 {
+    grid-column-start: 17;
+  }
+
+  .canccu-widget__col-18 {
+    grid-column-start: 18;
+  }
+
+  .canccu-widget__col-19 {
+    grid-column-start: 19;
+  }
+
+  .canccu-widget__col-20 {
+    grid-column-start: 20;
+  }
+
+  .canccu-widget__col-21 {
+    grid-column-start: 21;
+  }
+
+  .canccu-widget__col-22 {
+    grid-column-start: 22;
+  }
+
+  .canccu-widget__col-23 {
+    grid-column-start: 23;
+  }
+
+  .canccu-widget__col-24 {
+    grid-column-start: 24;
+  }
+
+  .canccu-widget__col-25 {
+    grid-column-start: 25;
+  }
+
+  .canccu-widget__col-26 {
+    grid-column-start: 26;
+  }
+
+  .canccu-widget__col-27 {
+    grid-column-start: 27;
+  }
+
+  .canccu-widget__col-28 {
+    grid-column-start: 28;
+  }
+
+  .canccu-widget__col-29 {
+    grid-column-start: 29;
+  }
+
+  .canccu-widget__col-30 {
+    grid-column-start: 30;
+  }
+
+  .canccu-widget__col-31 {
+    grid-column-start: 31;
+  }
+
+  .canccu-widget__col-32 {
+    grid-column-start: 32;
+  }
+
+  .canccu-widget__col-33 {
+    grid-column-start: 33;
+  }
+
+  .canccu-widget__col-34 {
+    grid-column-start: 34;
+  }
+
+  .canccu-widget__col-35 {
+    grid-column-start: 35;
+  }
+
+  .canccu-widget__col-36 {
+    grid-column-start: 36;
+  }
+
+  .canccu-widget__cols-1 {
+    grid-column-end: span 1;
+  }
+
+  .canccu-widget__cols-2 {
+    grid-column-end: span 2;
+  }
+
+  .canccu-widget__cols-3 {
+    grid-column-end: span 3;
+  }
+
+  .canccu-widget__cols-4 {
+    grid-column-end: span 4;
+  }
+
+  .canccu-widget__cols-5 {
+    grid-column-end: span 5;
+  }
+
+  .canccu-widget__cols-6 {
+    grid-column-end: span 6;
+  }
+
+  .canccu-widget__cols-7 {
+    grid-column-end: span 7;
+  }
+
+  .canccu-widget__cols-8 {
+    grid-column-end: span 8;
+  }
+
+  .canccu-widget__cols-9 {
+    grid-column-end: span 9;
+  }
+
+  .canccu-widget__cols-10 {
+    grid-column-end: span 10;
+  }
+
+  .canccu-widget__cols-11 {
+    grid-column-end: span 11;
+  }
+
+  .canccu-widget__cols-12 {
+    grid-column-end: span 12;
+  }
+
+  .canccu-widget__cols-13 {
+    grid-column-end: span 13;
+  }
+
+  .canccu-widget__cols-14 {
+    grid-column-end: span 14;
+  }
+
+  .canccu-widget__cols-15 {
+    grid-column-end: span 15;
+  }
+
+  .canccu-widget__cols-16 {
+    grid-column-end: span 16;
+  }
+
+  .canccu-widget__cols-17 {
+    grid-column-end: span 17;
+  }
+
+  .canccu-widget__cols-18 {
+    grid-column-end: span 18;
+  }
+
+  .canccu-widget__cols-19 {
+    grid-column-end: span 19;
+  }
+
+  .canccu-widget__cols-20 {
+    grid-column-end: span 20;
+  }
+
+  .canccu-widget__cols-21 {
+    grid-column-end: span 21;
+  }
+
+  .canccu-widget__cols-22 {
+    grid-column-end: span 22;
+  }
+
+  .canccu-widget__cols-23 {
+    grid-column-end: span 23;
+  }
+
+  .canccu-widget__cols-24 {
+    grid-column-end: span 24;
+  }
+
+  .canccu-widget__cols-25 {
+    grid-column-end: span 25;
+  }
+
+  .canccu-widget__cols-26 {
+    grid-column-end: span 26;
+  }
+
+  .canccu-widget__cols-27 {
+    grid-column-end: span 27;
+  }
+
+  .canccu-widget__cols-28 {
+    grid-column-end: span 28;
+  }
+
+  .canccu-widget__cols-29 {
+    grid-column-end: span 29;
+  }
+
+  .canccu-widget__cols-30 {
+    grid-column-end: span 30;
+  }
+
+  .canccu-widget__cols-31 {
+    grid-column-end: span 31;
+  }
+
+  .canccu-widget__cols-32 {
+    grid-column-end: span 32;
+  }
+
+  .canccu-widget__cols-33 {
+    grid-column-end: span 33;
+  }
+
+  .canccu-widget__cols-34 {
+    grid-column-end: span 34;
+  }
+
+  .canccu-widget__cols-35 {
+    grid-column-end: span 35;
+  }
+
+  .canccu-widget__cols-36 {
+    grid-column-end: span 36;
+  }
+}
