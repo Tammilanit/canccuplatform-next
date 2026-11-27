@@ -187,7 +187,32 @@ describe("the stage", () => {
 
   it("has no tint while no box asks", async () => {
     const { stage } = await stageOf({ ...base, views: views([region("hero")]), art: cache([]) });
-    expect(stage).toEqual({ phase: "peak", kind: null, tint: null });
+    expect(stage).toEqual({ phase: "peak", kind: null, tint: null, game: null });
+  });
+
+  it("carries the current game's art for the stage's steady layer (#787 D10)", async () => {
+    const next = { title: "Demo Cup", game: game("g_3") };
+    const v = views([region("hero", { widgets: [widget("countdown", next)] })]);
+    const { stage, covers } = await stageOf({
+      ...base,
+      views: v,
+      art: cache(["/games/covers/g_3.webp"]),
+    });
+    expect(stage.game).toEqual({
+      url: `/api/screen/art/${INFO.id}.webp`,
+      scrim: stage.game?.scrim,
+    });
+    expect(stage.game?.scrim).toBeGreaterThanOrEqual(0.55);
+    expect(covers).toEqual([`/games/covers/g_3.webp=${INFO.id}`]);
+    const off = await stageOf({
+      ...base,
+      stageArt: false,
+      views: v,
+      art: cache(["/games/covers/g_3.webp"]),
+    });
+    expect(off.stage.game).toBeNull();
+    const unread = await stageOf({ ...base, views: v, art: cache([]) });
+    expect(unread.stage.game).toBeNull();
   });
 });
 
