@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { generateColors } from "../src/brand.js";
+import { raiseBoxOpacity } from "../src/brand-routes.js";
 import { BOX_OPACITY, boxContrastFailures, minBoxOpacity } from "../src/contrast.js";
 import { PRESETS, schemeColors } from "../src/presets.js";
 import { fillTokens, manifestCss, manifestTokens, tokensCss } from "../src/tokens.js";
@@ -67,6 +68,19 @@ describe("the token CSS", () => {
     expect(opacityVar(css)).toBe(String(minBoxOpacity(COLORS)));
     const opaque = { ...manifest, brand: { ...BRAND, box_opacity: 1 } };
     expect(opacityVar(manifestCss(opaque, manifestTokens(opaque)))).toBe("1");
+  });
+});
+
+describe("raiseBoxOpacity", () => {
+  it("judges the filled colours: a partial tokens.colors keeps the 0.9 the token CSS draws", () => {
+    const manifest = {
+      brand: { ...BRAND, box_opacity: 0.9 },
+      tokens: { colors: { primary: COLORS.primary, accent: COLORS.accent } },
+    };
+    const css = manifestCss(manifest, manifestTokens(manifest));
+    expect(opacityVar(css)).toBe("0.9");
+    expect(raiseBoxOpacity(manifest)).toBe(false);
+    expect(manifest.brand.box_opacity).toBe(0.9);
   });
 });
 

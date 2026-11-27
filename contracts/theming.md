@@ -62,7 +62,7 @@ These are the contract every surface keeps and every theme may rely on (theming 
 | `canccu-badge` | `--ok`, `--degraded`, `--down` | Health badge |
 | `canccu-layout` | `--<layout id>` | A screen layout |
 | `canccu-region` | `--<region id>` | A layout region |
-| `canccu-widget` | `--<widget type>`, `__title`, `__body`, `__footer`, `__art`, `__kicker` | A widget in a region, on the screen or the hub; `__art` is its card background (The two backgrounds); `__kicker` the small line above an announcement's or a hero's headline |
+| `canccu-widget` | `--<widget type>`, `__title`, `__body`, `__footer`, `__art`, `__kicker`, `__level`, `__level--<level>` | A widget in a region, on the screen or the hub; `__art` is its card background (The two backgrounds); `__kicker` the small line above an announcement's or a hero's headline; additive (#785): `__level` is an announcement's level line, with `--info`, `--important`, `--urgent` or `--emergency`, so a theme can leave the emergency's fixed red alone |
 | `canccu-embed` | — | The frame of an embed |
 | `canccu-is-active`, `canccu-is-empty`, `canccu-is-stale`, `canccu-is-offline` | — | State: the widget now shown in a rotation; a widget with nothing to show; data older than its widget allows; a screen without uplink |
 | `canccu-motion` | `--none`, `--calm`, `--lively`, `--party` | `<body>` of a screen: the energy level it draws now (Motion vocabulary) |

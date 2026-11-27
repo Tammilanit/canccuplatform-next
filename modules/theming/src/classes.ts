@@ -39,6 +39,8 @@ const STABLE = new Set([
   "canccu-widget__footer",
   "canccu-widget__art",
   "canccu-widget__kicker",
+  "canccu-widget__level",
+  ...["info", "important", "urgent", "emergency"].map((l) => `canccu-widget__level--${l}`),
   "canccu-embed",
   "canccu-is-active",
   "canccu-is-empty",

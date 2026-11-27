@@ -197,4 +197,18 @@ describe("every preset", () => {
     }
     expect(bad.filter((x) => !KNOWN.has(x.replace(/ \((no level|fast)\)$/, "")))).toEqual([]);
   });
+
+  it("Esports keeps the emergency's red and the countdown's spotlight trace", () => {
+    const esports = presets.find((p) => p.id === "esports");
+    if (esports === undefined) throw new Error("no esports preset");
+    const css = cssPaths(esports)
+      .map((path) => cssOf(esports, path).toString("utf8"))
+      .join("\n");
+    // The slab ground is a theme-layer rule and would beat the base layer's fixed red.
+    expect(css).toContain(".canccu-widget:not(:has(.canccu-widget__level--emergency)) {");
+    // The sheen takes ::after, which the spotlight's trace draws on.
+    const sheens = css.match(/\.canccu-widget--countdown[^{]*::after/g) ?? [];
+    expect(sheens.length).toBe(3);
+    for (const s of sheens) expect(s, s).toContain(":not(.canccu-spotlight--trace)");
+  });
 });

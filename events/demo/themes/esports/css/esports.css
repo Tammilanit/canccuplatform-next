@@ -2,7 +2,8 @@
    (docs/design/themes/looks/esports.css). Stable classes and t-esports- classes only; every rule
    that does more than colour is scoped to the screen, so hub and phone pages stay plain. Motion:
    one sheen, only at lively and party, transform and opacity only. Boxes take the box opacity. */
-.canccu-surface--screen .canccu-widget {
+/* Not the emergency: its fixed red ground and white text (contracts/screen.md) stay, whatever the scheme. */
+.canccu-surface--screen .canccu-widget:not(:has(.canccu-widget__level--emergency)) {
   /* Cut corners: a broadcast slab, never round, whatever the roundness. */
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   border-radius: 0;
@@ -134,8 +135,8 @@
 }
 
 /* The sheen: a light band crosses the countdown, the match clock, once every 12 s (7 s at party). Decoration
-   over the box's ground, never strong enough to change the text's contrast (opacity ≤ 0.18). */
-.canccu-surface--screen .canccu-widget--countdown::after {
+   over the box's ground (and off while the spotlight's trace holds the ::after), never strong enough to change the text's contrast (opacity ≤ 0.18). */
+.canccu-surface--screen .canccu-widget--countdown:not(.canccu-spotlight--trace)::after {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
@@ -144,10 +145,10 @@
   pointer-events: none;
   background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--canccu-color-text) 60%, transparent), transparent);
 }
-.canccu-motion--lively .canccu-widget--countdown::after {
+.canccu-motion--lively .canccu-widget--countdown:not(.canccu-spotlight--trace)::after {
   animation: t-esports-sheen 12s linear infinite;
 }
-.canccu-motion--party .canccu-widget--countdown::after {
+.canccu-motion--party .canccu-widget--countdown:not(.canccu-spotlight--trace)::after {
   animation: t-esports-sheen 7s linear infinite;
 }
 @keyframes t-esports-sheen {

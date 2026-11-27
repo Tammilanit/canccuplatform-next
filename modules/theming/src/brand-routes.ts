@@ -19,6 +19,7 @@ import { WRITE, actorOf, assertWritable, invalidRequest, needs, versionConflict 
 import { draftEmbedNames, removeDraftFolders } from "./package-files.js";
 import { brandInputError, modeSwitchError } from "./schema.js";
 import type { BrandEdit } from "./schema.js";
+import { fillTokens } from "./tokens.js";
 import { writingFiles } from "./stored.js";
 import type { Unused } from "./stored.js";
 
@@ -136,11 +137,11 @@ function withoutOverriddenChoices(
  * A box opacity under what the colours allow is raised to it (plan issue-785 D11), so the stored
  * value is the one the screens draw (tokens.ts raises on generation too); true when it was.
  */
-function raiseBoxOpacity(manifest: Manifest): boolean {
+export function raiseBoxOpacity(manifest: Manifest): boolean {
   const brand = manifest.brand as Brand;
-  const colors = isObject(manifest.tokens) ? manifest.tokens.colors : undefined;
-  if (brand.box_opacity === undefined || !isObject(colors)) return false;
-  const min = minBoxOpacity(colors as Record<string, string>);
+  if (brand.box_opacity === undefined) return false;
+  // The filled set, as tokens.ts judges it: a partial `tokens.colors` must not force 1.
+  const min = minBoxOpacity(fillTokens(isObject(manifest.tokens) ? manifest.tokens : {}).colors);
   if (brand.box_opacity >= min) return false;
   brand.box_opacity = min;
   return true;
