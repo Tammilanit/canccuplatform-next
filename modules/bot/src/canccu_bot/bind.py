@@ -33,6 +33,7 @@ from .credentials import SNOWFLAKE, bad, conflict
 from .deps import Deps
 from .discord_api import DiscordRefused, manages
 from .guild import audit
+from .look import set_nickname
 
 log = logging.getLogger("canccu_bot.bind")
 
@@ -232,6 +233,7 @@ async def finish(d: Deps, ctx: TenantContext, started: dict[str, Any], query: Qu
         changes = {"application_id": started["application_id"]}
         await audit(d, tenant, started["user"], "bot.guild.bound", changes, "guild", guild["id"])
         await commands.register(d, ctx)
+        await set_nickname(d, ctx)
     return outcome
 
 

@@ -25,6 +25,7 @@ from canccu_kit import (
     ServiceIdentity,
     TenantResolver,
     ValkeyStreamStore,
+    bot_admin_key_from_env,
     create_logger,
     load_config,
     postgres_check,
@@ -32,16 +33,20 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import lifecycle, store
+from . import commands, lifecycle, store
 from .access import SeriesReader, TenantsAudit, UsersReader
+from .acting import ActingClient, module_url
 from .app import create_app
 from .checks import discord_checks
 from .client import DiscordClient
+from .components import ComponentKeys
 from .config import DiscordConfig, Hosts, discord_config
 from .db import Db
 from .deps import Deps
 from .discord_api import DiscordApi
+from .interactions import Interactions
 from .lease import ValkeyKeys
+from .look import EventLook
 from .pool import Pool
 from .router import INTENTS, Directory, Router
 from .status import ClientEvents, StatusBoard
@@ -50,25 +55,30 @@ from .transport import connect_gateway
 log = logging.getLogger("canccu_bot.main")
 
 
-def settings() -> tuple[Any, DiscordConfig, ServiceIdentity, SecretBox]:
+def settings() -> tuple[Any, DiscordConfig, ServiceIdentity, SecretBox, bytes, bytes | None]:
     config = load_config()
     create_logger(config.module)
     missing = [n for n in ("CANCCU_DATABASE_URL", "CANCCU_TENANTS_URL") if not os.environ.get(n)]
     if missing:
         raise SystemExit(f"missing environment variable(s): {', '.join(missing)}")
     try:
+        key = service_key_from_env()
         return (
             config,
             discord_config(os.environ),
-            ServiceIdentity(config.module, service_key_from_env()),
+            ServiceIdentity(config.module, key),
             SecretBox.from_env(),
+            key,
+            bot_admin_key_from_env(),
         )
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
 
 
 async def serve() -> None:
-    config, discord, identity, box = settings()
+    config, discord, identity, box, service_key, bot_admin_key = settings()
+    if bot_admin_key is None:
+        log.warning("CANCCU_BOT_ADMIN_KEY is not set: commands cannot act for anyone")
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],
@@ -86,6 +96,7 @@ async def serve() -> None:
     )
     ip_mode = config.version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
     tenants_url = os.environ["CANCCU_TENANTS_URL"]
+    outside = httpx.AsyncClient(timeout=8.0)
     resolver = TenantResolver(
         tenants_url,
         platform_hosts=[h for h in (hosts.signin, hosts.superadmin) if h],
@@ -106,6 +117,12 @@ async def serve() -> None:
         audit=TenantsAudit(tenants_url, identity),
         hosts=hosts,
         series=SeriesReader(tenants_url),
+        commands=commands.COMMANDS,
+        components=ComponentKeys.from_service_key(service_key),
+        # Below the framework's 10 s, so a slow module ends in its sentence, not in a hang.
+        acting=ActingClient(config.admin_url, identity, bot_admin_key, outside),
+        look=EventLook(tenants_url, module_url("theming"), identity, outside),
+        http=outside,
     )
     directory = Directory(d)
 
@@ -140,9 +157,16 @@ async def serve() -> None:
         task.add_done_callback(reports.discard)
 
     async def open_client(application_id: str, token: str) -> DiscordClient:
-        # No feed has a handler yet: the presence, members, voice and message feeds are routed
-        # and gated by their flags here, and stored by the links that read them.
-        router = Router(d, application_id, directory)
+        # The feeds have no handler yet: the presence, members, voice and message feeds are
+        # routed and gated by their flags here, and stored by the links that read them.
+        holder: list[DiscordClient] = []
+        interactions = Interactions(d, application_id, directory.context, lambda: holder[0].rest)
+        router = Router(d, application_id, directory, handlers={"interaction": interactions})
+
+        def stop() -> None:
+            router.close()
+            interactions.close()
+
         client = DiscordClient(
             application_id,
             token,
@@ -152,8 +176,9 @@ async def serve() -> None:
             intents=INTENTS,
             on_status=on_status,
             on_dispatch=router.dispatch,
-            on_stop=router.close,
+            on_stop=stop,
         )
+        holder.append(client)
         router.rest = client.rest
         return client
 

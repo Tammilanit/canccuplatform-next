@@ -12,6 +12,7 @@ from canccu_kit import Event, is_tenant_id
 from . import commands, store
 from .deps import Deps
 from .guild import leave
+from .look import set_nickname
 from .router import Directory
 
 log = logging.getLogger("canccu_bot.lifecycle")
@@ -66,8 +67,11 @@ async def on_platform(d: Deps, event: Event) -> None:
 
 async def on_tenant(d: Deps, directory: Directory, event: Event) -> None:
     """An event's own tenants events: a status or flags change reaches the routers at once, and
-    the guild's commands follow (an archived event's are removed)."""
+    the guild's commands follow (an archived event's are removed); a new name renames the bot."""
     tenant = event.tenant
+    if tenant is not None and event.type == "tenants.tenant.changed":
+        await renamed(d, tenant, event)
+        return
     if tenant is None or event.type not in ("tenants.status.changed", "tenants.flags.changed"):
         return
     directory.forget(tenant)
@@ -76,3 +80,15 @@ async def on_tenant(d: Deps, directory: Directory, event: Event) -> None:
     ctx = await d.tenants.by_id(tenant)
     if ctx is not None:
         await commands.register(d, ctx)
+
+
+async def renamed(d: Deps, tenant: str, event: Event) -> None:
+    if d.look is None:
+        return
+    d.look.forget(tenant)
+    changed = event.data.get("changed")
+    if not isinstance(changed, list) or "name" not in changed:
+        return
+    ctx = await d.tenants.by_id(tenant)
+    if ctx is not None:
+        await set_nickname(d, ctx)
