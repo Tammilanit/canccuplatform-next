@@ -156,19 +156,28 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           node-version: 22
-      # From this commit's planner, before the base side checks out the tag. A pull request's
-      # checkout is its merge commit, whose first parent is its base.
-      - name: The shots a pull request's changes affect
-        id: plan
-        if: github.event_name == 'pull_request'
-        run: node scripts/demo-stack-plan.mjs --event pull_request --base HEAD^1 --summary "$GITHUB_STEP_SUMMARY" | tee -a "$GITHUB_OUTPUT"
       - name: The last step tag, for the base
         if: matrix.side == 'base'
         run: |
           tag=$(git tag -l 'step-*' | sort -V | tail -n1)
           test -n "$tag" || { echo "::error::no step-<n> tag to compare with"; exit 1; }
-          git checkout -q "$tag"
           echo "$tag" > "$RUNNER_TEMP/tag"
+      # From this commit's planner, before the base side checks out the tag. A pull request's
+      # checkout is its merge commit, whose first parent is its base. The tag's scripts refuse a
+      # group added since (#838): the base takes the groups they know, and the summary names the
+      # rest, whose head shots screen-diff lists as added.
+      - name: The shots a pull request's changes affect
+        id: plan
+        if: github.event_name == 'pull_request'
+        env:
+          SIDE: ${{ matrix.side }}
+        run: |
+          known=()
+          if [ "$SIDE" = base ]; then known=(--known-at "$(cat "$RUNNER_TEMP/tag")"); fi
+          node scripts/demo-stack-plan.mjs --event pull_request --base HEAD^1 "${known[@]}" --summary "$GITHUB_STEP_SUMMARY" | tee -a "$GITHUB_OUTPUT"
+      - name: The base's tag checked out
+        if: matrix.side == 'base'
+        run: git checkout -q "$(cat "$RUNNER_TEMP/tag")"
       # The action and the scripts are the checked-out version's own.
       - uses: ./.github/actions/demo-stack-up
         with:
