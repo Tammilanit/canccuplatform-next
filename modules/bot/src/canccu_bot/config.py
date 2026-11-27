@@ -65,6 +65,16 @@ class Hosts:
             return f"https://{self.signin}"
         return self.public_url.rstrip("/") if self.public_url else None
 
+    def callback_uri(self) -> str | None:
+        origin = self.callback_origin()
+        return None if origin is None else f"{origin}/api/bot/install/callback"
+
+    def event_url(self, hostname: str, path: str) -> str:
+        """A page on an event's own hostname: https, or the public origin's scheme on a stack
+        that serves plain http."""
+        scheme = urlsplit(self.public_url).scheme if self.public_url else "https"
+        return f"{scheme}://{hostname}{path}"
+
     def is_callback_host(self, request: Request) -> bool:
         origin = self.callback_origin()
         if origin is None:
