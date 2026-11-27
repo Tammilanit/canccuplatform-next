@@ -14,7 +14,7 @@ import type { TenantContext } from "../access.js";
 import type { Health } from "../health.js";
 import { UnknownHost } from "../resolve.js";
 import type { TenantResolver } from "../resolve.js";
-import type { RightsChecker, Session } from "../rights.js";
+import { ACTING_HEADER, type RightsChecker, type Session } from "../rights.js";
 import { SERVICE_HEADER, serviceHasRight } from "../service.js";
 import type { ServiceIdentity } from "../service.js";
 import { withTenant } from "../tenant.js";
@@ -119,14 +119,16 @@ export function requireRight(
 ): preHandlerAsyncHookHandler {
   return async (request) => {
     const token = header(request, SERVICE_HEADER);
-    if (options.service !== undefined && token !== undefined) {
+    // An acting token is the person's call, carried by the bot: never the bot's own rights.
+    const acting = header(request, ACTING_HEADER) !== undefined;
+    if (options.service !== undefined && token !== undefined && !acting) {
       const caller = options.service.verify(token);
       if (!serviceHasRight(caller, right)) throw new MissingRight(`needs right ${right}`);
       request.service = caller;
       request.session = null;
       return;
     }
-    request.session = await checker.check(request.headers.cookie, right);
+    request.session = await checker.checkHeaders((name) => header(request, name), right);
   };
 }
 

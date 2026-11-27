@@ -68,7 +68,7 @@ from .resolve import (
     UnknownHost,
     normalize_host,
 )
-from .rights import CACHE_SECONDS, RightsChecker, Session, session_id_from_cookie
+from .rights import ACTING_HEADER, CACHE_SECONDS, RightsChecker, Session, session_id_from_cookie
 from .secrets import SecretBox, SecretUndecryptable
 from .service import (
     SERVICE_HEADER,
@@ -99,6 +99,7 @@ from .tenant import (
 from .web_security import OriginRefused, check_origin, event_page_csp, new_nonce
 
 __all__ = [
+    "ACTING_HEADER",
     "CACHE_SECONDS",
     "CURRENT_TENANT_SQL",
     "DEFAULT_TAILSCALE_CIDRS",

@@ -1,10 +1,24 @@
-/** Rights check through GET /api/admin/session, cached for at most 30 s (contracts/admin.md). */
-import { AdminClient } from "./admin.js";
+/**
+ * Rights check through GET /api/admin/session, cached for at most 30 s (contracts/admin.md).
+ *
+ * A command in Discord acts for its person with an acting token (contracts/admin.md, The acting
+ * token): `fromHeaders` takes it only beside the bot's service identity, which a browser cannot
+ * make, so a token copied out of a log opens nothing on its own.
+ */
+import { type AdminResponse, AdminClient } from "./admin.js";
 import type { Event } from "./bus.js";
 import { MissingRight, NotSignedIn } from "./errors.js";
+import { SERVICE_HEADER, type ServiceIdentity } from "./service.js";
+import { currentTenant } from "./tenant.js";
 
 export const SESSION_COOKIE = "canccu_session";
 export const CACHE_MS = 30_000;
+export const ACTING_HEADER = "x-canccu-acting";
+/** The only module that may bring an acting token: the bot gains no rights of its own (D2). */
+const ACTING_CALLER = "bot";
+
+/** A request's header by its lower-case name. */
+export type HeaderOf = (name: string) => string | null | undefined;
 
 export interface Session {
   userId: string;
@@ -42,12 +56,15 @@ export class RightsChecker {
   private readonly cache = new Map<string, { until: number; session: Session }>();
   private readonly byUser = new Map<string, Set<string>>();
   private readonly now: () => number;
+  /** This module's own identity: checks the bot's header and signs the call to admin. */
+  private readonly service: ServiceIdentity | undefined;
 
   constructor(
     private readonly admin: AdminClient,
-    options: { now?: () => number } = {},
+    options: { now?: () => number; service?: ServiceIdentity } = {},
   ) {
     this.now = options.now ?? Date.now;
+    this.service = options.service;
   }
 
   private cached(sessionId: string): Session | undefined {
@@ -86,17 +103,37 @@ export class RightsChecker {
     const cached = this.cached(sessionId);
     if (cached !== undefined) return cached;
     const response = await this.admin.request("GET", "/api/admin/session", { sessionId });
-    if (response.status === 401) throw new NotSignedIn("sign in first");
-    AdminClient.raiseForError(response);
-    const body = response.body as SessionBody;
-    const session: Session = {
-      userId: body.user.id,
-      userName: body.user.name,
-      rights: new Set(body.rights.map(String)),
-      expiresAt: new Date(body.expires_at),
-      superadmin: body.superadmin === true,
-    };
+    const session = parse(response);
     this.remember(sessionId, session);
+    return session;
+  }
+
+  /**
+   * The person an acting token stands for, in the tenant in scope; throws ServiceUnauthenticated
+   * or ServiceForbidden when the bot did not send it, NotSignedIn for a token admin refuses. Never
+   * cached: a token lives a minute and names one module.
+   */
+  async acting(serviceHeader: string | null | undefined, token: string): Promise<Session> {
+    const tenant = currentTenant();
+    if (this.service === undefined || tenant === undefined) throw new NotSignedIn("sign in first");
+    this.service.require(serviceHeader, [ACTING_CALLER]);
+    const response = await this.admin.request("GET", "/internal/admin/acting-session", {
+      params: { tenant_id: tenant },
+      headers: { ...this.service.headers("admin"), [ACTING_HEADER]: token },
+    });
+    return parse(response);
+  }
+
+  /** The session a request stands for: its acting token when it carries one, else its cookie's. */
+  async fromHeaders(header: HeaderOf): Promise<Session> {
+    const token = header(ACTING_HEADER);
+    if (token !== null && token !== undefined) return this.acting(header(SERVICE_HEADER), token);
+    return this.session(header("cookie"));
+  }
+
+  async checkHeaders(header: HeaderOf, right: string): Promise<Session> {
+    const session = await this.fromHeaders(header);
+    if (!session.rights.has(right)) throw new MissingRight(`needs right ${right}`);
     return session;
   }
 
@@ -125,4 +162,17 @@ export class RightsChecker {
     if (typeof userId !== "string") return;
     for (const sessionId of [...(this.byUser.get(userId) ?? [])]) this.forget(sessionId);
   }
+}
+
+function parse(response: AdminResponse): Session {
+  if (response.status === 401) throw new NotSignedIn("sign in first");
+  AdminClient.raiseForError(response);
+  const body = response.body as SessionBody;
+  return {
+    userId: body.user.id,
+    userName: body.user.name,
+    rights: new Set(body.rights.map(String)),
+    expiresAt: new Date(body.expires_at),
+    superadmin: body.superadmin === true,
+  };
 }
