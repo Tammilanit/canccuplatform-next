@@ -1,0 +1,99 @@
+/* Arcade (#785, plan D6): pixel type, CRT glow, chunky colours. The first draft of the package's
+   css/arcade.css (plan D9). Stable classes and t-arcade- names only; effects only on the screen.
+   Scanlines and the vignette are still and sit behind every box, so text is never striped. Motion: one soft roll band, only at lively and party, transform and opacity only. */
+
+/* Scanlines, the CRT vignette and the roll band hang on the stage's glow layer, whose box is the
+   screen grown by 20 % on every side (the platform's stage.css): they hide under the event's own
+   picture or a game's art as the glows do, and leave the platform's other stage layers alone. */
+.canccu-surface--screen .canccu-stage__glow::before {
+  content: "";
+  position: absolute;
+  inset: 20vh 20vw;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.55) 100%),
+    repeating-linear-gradient(180deg, rgb(0 0 0 / 0.1) 0 2px, transparent 2px 4px);
+}
+
+/* The roll band: a faint light bar moves down the screen once every 9 s. */
+.canccu-surface--screen .canccu-stage__glow::after {
+  content: "";
+  position: absolute;
+  top: 8vh;
+  left: 20vw;
+  right: 20vw;
+  height: 12vh;
+  opacity: 0;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--canccu-color-text) 40%, transparent), transparent);
+}
+.canccu-motion--lively .canccu-stage__glow::after,
+.canccu-motion--party .canccu-stage__glow::after {
+  animation: t-arcade-roll 9s linear infinite;
+}
+@keyframes t-arcade-roll {
+  from { transform: translateY(0); opacity: 0.1; }
+  to { transform: translateY(124vh); opacity: 0.1; }
+}
+
+/* Chunky boxes: a 4 px border with stepped corners drawn by shadows, never round. */
+.canccu-surface--screen .canccu-widget {
+  border: 4px solid var(--canccu-color-border);
+  border-radius: 0;
+  background: var(--canccu-color-surface);
+  box-shadow:
+    4px 4px 0 0 var(--canccu-color-background),
+    8px 8px 0 0 color-mix(in srgb, var(--canccu-color-primary) 70%, var(--canccu-color-background));
+}
+
+.canccu-surface--screen .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+  text-shadow: 3px 3px 0 var(--canccu-color-background);
+}
+
+/* The high-score table (templates/hiscore.mustache): 1ST, 2ND, … with dotted leaders. */
+.t-arcade-hiscore {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--canccu-font-heading);
+  font-size: 2rem;
+}
+.t-arcade-hiscore__row {
+  display: grid;
+  grid-template-columns: 4.5rem auto 1fr auto;
+  align-items: baseline;
+  gap: 14px;
+}
+.t-arcade-hiscore__rank {
+  color: var(--canccu-color-accent);
+}
+.t-arcade-hiscore__row:first-child {
+  color: var(--canccu-color-primary);
+}
+.t-arcade-hiscore__dots {
+  border-bottom: 4px dotted color-mix(in srgb, var(--canccu-color-text-muted) 70%, transparent);
+  transform: translateY(-0.3em);
+}
+.t-arcade-hiscore__score {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Big digits (templates/clock.mustache). */
+.t-arcade-clock {
+  font-family: var(--canccu-font-heading);
+  font-size: 4rem;
+  line-height: 1;
+  text-align: right;
+  color: var(--canccu-color-primary);
+  text-shadow: 4px 4px 0 var(--canccu-color-background);
+}
+.t-arcade-clock__day {
+  display: block;
+  font-size: 1.75rem;
+  color: var(--canccu-color-text-muted);
+}

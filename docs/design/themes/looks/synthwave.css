@@ -1,0 +1,90 @@
+/* Synthwave (#785, plan D6): pink and purple neon, a grid to the horizon, the 80s. The first draft
+   of the package's css/synthwave.css (plan D9). Stable classes and t-synth- names only; effects
+   only on the screen. The grid and the sun sit behind every box, never under text directly.
+   Motion: the grid scrolls at calm, lively and party, by transform only; at none and under reduced
+   motion it stands still. */
+
+/* The grid and the sun hang on the stage's glow layer, whose box is the screen grown by 20 % on
+   every side (the platform's stage.css): so they drift with the glows, hide under the event's own
+   picture or a game's art as the glows do, and leave the platform's other stage layers alone. A
+   screen point at y vh sits at (y + 20) vh in that box. The horizon is at 62 % of the screen. */
+
+/* The sun: a striped disc rising from the horizon. */
+.canccu-surface--screen .canccu-stage__glow::after {
+  content: "";
+  position: absolute;
+  top: 49vh;
+  left: calc(70vw - 22vh);
+  width: 44vh;
+  height: 44vh;
+  border-radius: 50%;
+  opacity: 0.55;
+  background: linear-gradient(180deg, var(--canccu-color-accent), var(--canccu-color-primary));
+  -webkit-mask: linear-gradient(180deg, #000 0 75%, transparent 75%), repeating-linear-gradient(180deg, #000 0 7%, transparent 7% 9.5%);
+  mask: linear-gradient(180deg, #000 0 75%, transparent 75%), repeating-linear-gradient(180deg, #000 0 7%, transparent 7% 9.5%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* The grid: lines in the accent colour, tilted back to the horizon. */
+.canccu-surface--screen .canccu-stage__glow::before {
+  content: "";
+  position: absolute;
+  top: 82vh;
+  left: -30vw;
+  right: -30vw;
+  height: 90vh;
+  opacity: 0.5;
+  transform: perspective(60vh) rotateX(62deg);
+  transform-origin: 50% 0;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--canccu-color-accent) 80%, transparent) 0 3px, transparent 3px 8vh),
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--canccu-color-accent) 80%, transparent) 0 3px, transparent 3px 8vh);
+}
+.canccu-motion--calm .canccu-stage__glow::before {
+  animation: t-synth-grid 20s linear infinite;
+}
+.canccu-motion--lively .canccu-stage__glow::before {
+  animation: t-synth-grid 8s linear infinite;
+}
+.canccu-motion--party .canccu-stage__glow::before {
+  animation: t-synth-grid 4s linear infinite;
+}
+/* One cell a turn, so the loop has no seam. */
+@keyframes t-synth-grid {
+  from { transform: perspective(60vh) rotateX(62deg) translateY(0); }
+  to { transform: perspective(60vh) rotateX(62deg) translateY(8vh); }
+}
+
+/* Neon edges: a static glow in the primary colour around an opaque box, so the grid and the sun
+   never show through behind text (light schemes would stripe it). */
+.canccu-surface--screen .canccu-widget {
+  border: 2px solid color-mix(in srgb, var(--canccu-color-primary) 75%, transparent);
+  background: var(--canccu-color-surface);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--canccu-color-primary) 30%, transparent),
+    0 0 28px color-mix(in srgb, var(--canccu-color-primary) 35%, transparent);
+}
+
+.canccu-surface--screen .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--canccu-color-primary) 55%, transparent);
+}
+
+/* Big numbers in the heading face, with the chrome of the sun's two colours. */
+.canccu-surface--screen .canccu-widget--countdown .canccu-widget__body,
+.canccu-surface--screen .canccu-widget--clock {
+  font-family: var(--canccu-font-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--canccu-color-text);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--canccu-color-accent) 45%, transparent);
+}
+
+.canccu-surface--screen .canccu-widget--ticker {
+  border-width: 2px 0 0;
+  box-shadow: 0 -6px 24px color-mix(in srgb, var(--canccu-color-accent) 30%, transparent);
+}

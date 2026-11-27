@@ -10,7 +10,7 @@
 
 **Spec:** [issue #785](https://github.com/Tammilanit/canccuplatform-next/issues/785) (Why, Scope) and the lead's comment of 2026-11-27 ("Design first: the pack (sheets and mockups) goes to the PO before any build"). It builds on [contracts/theming.md](../../contracts/theming.md) (Presets; Brand kit; Motion vocabulary; The two backgrounds; Stable classes), [theme.schema.json](../../contracts/theme.schema.json), the [plan of #784](issue-784.md) (D6–D10, D22, and its Q2, which it leaves to this issue) and the [design guideline](../design/README.md).
 
-**Status:** proposed, waiting for the lead's and the PO's answers to Q1–Q5. Nothing is built.
+**Status:** accepted by the lead on 2026-11-27, with Q1–Q3 as recommended. Q4 and Q5 go to the PO at the top of the pack. Part 0 is built in the plan's own PR (branch `785-themes-step-design-and`, not `pkg-785-pack`), because the dispatcher asked for that. **Rulings made while building Part 0** (2026-11-27): D7 takes Level up's layouts, because Default's have no leaderboard; D8 names the free stage slots; Part 0 renders one PNG per view; and Part 1 gains Task 1b, because the module's class list lacks classes the contract calls stable.
 
 ## Why a plan first
 1. **The roadmap.** The issue asks for a Themes step or a parallel track. The lead and the PO set its place (Q1). Part 0 writes the result into `docs/roadmap.md`.
@@ -50,8 +50,8 @@
 | D4 | **Simple or advanced.** Esports, Synthwave and Arcade are `mode: advanced` (CSS, and templates for two of them). **Cozy LAN and Daylight are `mode: simple`**: brand, font pair, roundness, backdrop and motion style only, and no CSS | Their feel comes from colour, type, corners and a calm background, which the simple mode already draws. An organiser who picks them stays in Make it yours. That is the path the issue's "organisers who stick with presets" need |
 | D5 | **The schemes** (below), each with all eleven colour tokens in `colors`. All 25 pass the contract's contrast rules. The PO may rename or drop schemes in the pack (Q4) | Scope: "3–5 colour schemes … contrast rules pass in every scheme". Hand-tuned colours keep each preset's character; generated ones drift towards the same look |
 | D6 | **Per preset** (below): the font pair, roundness, the backdrop looks, the motion pack, the effects and the templates | Scope: "a font pair, a background, a motion style and screen effects that fit, and widget templates where the look needs them" |
-| D7 | **Layouts:** each new preset holds the Default preset's `main` (16:9) and `portrait` (9:16) layouts. Advanced presets put their templates on those layouts' widgets. Each preset holds a copy of the Default preset's demo logo, `images/logo.svg`, as the three existing presets do | One proven layout set keeps the presets comparable and the shots stable. A fresh event shows a logo in every preset. Applying a preset keeps the event's own logo anyway (#784 D11) |
-| D8 | **Effects hang on classes that exist today:** `canccu-surface--screen`, `canccu-stage` and its `::before`/`::after`, `canccu-stage__glow`, `canccu-widget`, `__title`, `canccu-motion--*` and `canccu-motion-pack--*`. They do not use the stage's `__look` layer, which #787 Part C has not built yet | The presets do not wait for #787. When `__look` lands, they still work: an effect sits over whatever look the cycle shows |
+| D7 | **Layouts:** each new preset holds Level up's `main` (16:9) and `portrait` (9:16) layouts, without their `backdrop` embed region: the region ids `brand`, `food`, `clock`, `now`, `ladder`, `countdown`, `spotlight`, `ticker`. (Ruling, 2026-11-27: Default's layouts have no leaderboard, so the templates would have had no widget.) Advanced presets put their templates on those layouts' widgets. Each preset holds a copy of the Default preset's demo logo, `images/logo.svg`, as the three existing presets do | One proven layout set keeps the presets comparable and the shots stable. A fresh event shows a logo in every preset. Applying a preset keeps the event's own logo anyway (#784 D11) |
+| D8 | **Effects hang on classes that exist today:** `canccu-surface--screen`, `canccu-stage__glow` with its `::before` and `::after`, `canccu-widget` and `canccu-widget--<type>`, `__title`, and `canccu-motion--*`. They do not use `canccu-stage::before` or `::after`, because the player draws the scene's heartbeat and the time of day there (`scene.css`, `stage.css`). They do not use the player's own `canccu-region--_full`, which the class check does not accept. They do not use the stage's `__look` layer, which #787 Part C has not built yet | The presets do not wait for #787. On the glow layer, the effects hide under the event's picture or a game's art just as the glows do. When `__look` lands, they still work |
 | D9 | **The pack draws with the presets' real CSS.** Part 0 writes each advanced preset's CSS against the stable classes and keeps it in the pack's folder (`docs/design/themes/looks/<id>.css`). The sheets are static HTML in the screen's and the hub's class markup, on packages/ui's `ui.css`, with the font pairs from `modules/theming/fonts/` (local files, no download). Parts 1 and 2 move that CSS into the packages and adapt it | What the PO accepts is what ships. Local font files make the build offline and exact |
 | D10 | **One test pins the preset rules** for every preset, old and new: `modules/theming/test/preset-packages.test.ts` (see Part 1, Task 2) | The constraints above become checks. A later preset cannot break them without a red test |
 
@@ -118,7 +118,7 @@ Each scheme's `brand` is `{primary, accent, scheme}` from its colours: `scheme` 
 ## Part 0: the pack and the track (branch `pkg-785-pack`)
 **Files:**
 - Create: `docs/design/themes.md` (the pack text: what the PO decides, the schemes table, the looks table, the **Every mockup** table)
-- Create: `docs/design/themes/build.mjs`, `data.mjs`, `sheets.mjs`, `style.mjs` (each under 400 lines), and `looks/esports.css`, `looks/synthwave.css`, `looks/arcade.css`
+- Create: `docs/design/themes/build.mjs`, `data.mjs`, `frames.mjs`, `sheets.mjs`, `style.mjs` (each under 400 lines), and `looks/esports.css`, `looks/synthwave.css`, `looks/arcade.css`
 - Create: `docs/design/themes/*.png` (renders)
 - Modify: `docs/roadmap.md` (the track per Q1, the Order section's list of tracks, a Change log line)
 
@@ -130,9 +130,9 @@ Each scheme's `brand` is `{primary, accent, scheme}` from its colours: `scheme` 
 - [ ] **Step 3:** Write `looks/<id>.css` for Esports, Synthwave and Arcade under the Global constraints (screen-scoped, `transform`/`opacity` keyframes, animations only under the level classes). Run `checkCss` on each from a scratch vitest file in `modules/theming/test/` (not committed). Expected: `ok: true`, no warnings.
 - [ ] **Step 4:** Write `sheets.mjs` and `build.mjs`. Each sheet is HTML on `packages/ui/ui.css` in the screen's and the hub's stable-class markup, with `@font-face` rules from `modules/theming/fonts/<pair>/`. Render with `--render` in `mcr.microsoft.com/playwright:v1.64.1-noble`, as `docs/design/theme-studio/build.mjs` does. The sheets:
   - `00-overview-1920.png`: all eight presets in the gallery order, each with its schemes as small screens.
-  - `NN-<id>-screen-1920.png` for each new preset: three 1920×1080 frames stacked (a hero, the same hero stepped down to a rail, and an announcement at the lively level).
-  - `NN-<id>-hub-1280.png` and `NN-<id>-phone-390.png` for each new preset: a hub page (now/next and the leaderboard) in the first scheme, and the same on the phone in the light scheme.
-  - `07-effects-1280.png`: each advanced preset's effects at none, calm and lively as three frames, with the period in words.
+  - `NN-<id>-hero-1920.png`, `NN-<id>-rail-1920.png` and `NN-<id>-announcement-1920.png` for each new preset, in the gallery's order: the hero in the first scheme, the everyday rail in the scheme of the other brightness, and an announcement at the lively level in the second scheme. (Ruling: one PNG per view, not three stacked, so that each render has its own caption.)
+  - `NN-<id>-hub-1280.png` and `NN-<id>-phone-390.png` for each new preset: a hub page in the first scheme.
+  - `06-effects-1280.png`: each advanced preset's hero at none, calm and lively, with the period in words.
 - [ ] **Step 5:** Check every PNG at full size for clipped text, overlap and pages wider than their sheet. Fix any defects before commit.
 - [ ] **Step 6:** Write `docs/design/themes.md`: what the PO decides (Q4, Q5 and the looks), the tables, and the Every mockup table with a caption for each render. Run `scripts/pack-page docs/design/themes.md --out $TMPDIR/themes.html`, then `scripts/pack-page --check HEAD`. Expected: all sheets match.
 - [ ] **Step 7:** Edit `docs/roadmap.md` as Q1 decides. With (a), add a `### Themes` section under Parallel tracks (Goal, In it, Builds on #784, Exit criteria: "the eight presets are in Pick a look, each scheme passes the contrast rules, and the shots show each new preset on the screen, the hub and the phone", Issues: #785), name it in the Order section's list of tracks, and add a Change log line `- 2026-11-<dd>: the Themes track … (#785)`.
@@ -154,6 +154,15 @@ Each scheme's `brand` is `{primary, accent, scheme}` from its colours: `scheme` 
 - [ ] **Step 3:** Change the `brand` line in `presetManifest`. Change the contract sentence to "its `brand` is the package's, with the scheme's `primary`, `accent` and `scheme`".
 - [ ] **Step 4:** Run the same test. Expected: PASS. Also run `test/preset-routes.test.ts` and `test/my-presets.test.ts`. Expected: PASS.
 - [ ] **Step 5:** Commit `fix(theming): applying a preset keeps its own font pair, corners and background`.
+
+### Task 1b: The contract's stable classes in the class check
+Found while building Part 0: `isStableClass` (`modules/theming/src/classes.ts`) does not have classes that contracts/theming.md (Stable classes) lists. These are `canccu-motion` with `--none`, `--calm`, `--lively` and `--party`; `canccu-motion-pack` with `--standard`, `--broadcast` and `--arcade`; `canccu-fx` with its five modifiers; `canccu-spotlight` with its five parts; `canccu-stage` with its elements and modifiers (`--kind-<key>` and `--phase-<phase>` are open); and `canccu-widget__art`. A theme's CSS on any of them gets a false `class_unstable` warning. Each looks' CSS hits it. Adding them is additive, so it is not a contract change.
+
+**Files:** Modify `modules/theming/src/classes.ts`. Test: `modules/theming/test/css.test.ts`.
+
+- [ ] **Step 1: Write the failing test** `it("takes the contract's motion and stage classes as stable")`. `checkCss("css/t.css", Buffer.from(".canccu-motion--lively .canccu-stage__glow::before { opacity: 0.5 } .canccu-motion-pack--arcade .canccu-spotlight--glow { opacity: 1 } .canccu-stage--kind-match .canccu-widget__art { opacity: 1 }"))` matches `{ok: true, warnings: []}`. Run it. Expected: FAIL (`class_unstable`).
+- [ ] **Step 2:** Add the classes to `STABLE`. Add the open stage modifiers as a regex next to `OPEN_MODIFIER`. Run `test/css.test.ts`. Expected: PASS.
+- [ ] **Step 3:** Commit `fix(theming): the contract's motion and stage classes count as stable`.
 
 ### Task 2: The preset rules test (D10)
 **Files:**
