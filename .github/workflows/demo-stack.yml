@@ -130,9 +130,9 @@ jobs:
     if: needs.plan.outputs.shards != '[]'
     runs-on: ubuntu-latest
     # The screens shard of one ran 22–28 min with the living strips and the stage's two (#787);
-    # it is now cut in two (#835), each part about half, but a full run's strips and the book's
-    # portrait and 4K shots still need the room. A hang still ends here.
-    timeout-minutes: 35
+    # it is now cut in two (#835), each part under 20 min, so 25 leaves room and a hang still
+    # ends here. It supersedes the 35- and 40-minute raises of #833 and #834.
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:

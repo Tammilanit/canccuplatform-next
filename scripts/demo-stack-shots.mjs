@@ -46,6 +46,7 @@ export function screensFor(paths) {
   let every = false;
   let strips = false;
   let touched = false;
+  let offTheme = false;
   const why = [];
   for (const path of paths) {
     const needs = needsOf(path);
@@ -55,6 +56,7 @@ export function screensFor(paths) {
     const strip = STRIP_FILE.test(basename(path).toLowerCase());
     if (strip) strips = true;
     const notes = [theme && `the ${theme} theme`, strip && "motion or transitions: the strips"];
+    if (!theme && (ofScreens(path, needs) || needs === "full")) offTheme = true;
     if (ofScreens(path, needs)) {
       touched = true;
       const hit = namedBy(wordOf(path), all);
@@ -69,6 +71,9 @@ export function screensFor(paths) {
     }
   }
   if (!touched) return null;
+  // Only a change limited to theme files narrows the run to those themes: any other changed
+  // path draws in the default theme, and some views exist only there.
+  if (offTheme) themes.add(DEFAULT_THEME);
   const choice = { themes: themes.size ? [...themes] : [DEFAULT_THEME], strips };
   // Whole attempts of the chosen themes and sizes; none when the views named are drawn only in
   // portrait or at 4K, which the book alone takes.

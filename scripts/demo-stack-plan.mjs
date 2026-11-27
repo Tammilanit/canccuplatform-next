@@ -32,7 +32,7 @@ const flags = ({ themes, strips, book, shots }) =>
     themes && `--themes ${themes.join(",")}`,
     strips && "--strips",
     book && "--book",
-    shots && `--shots ${shots.join(",")}`,
+    shots?.length && `--shots ${shots.join(",")}`,
   ]
     .filter(Boolean)
     .join(" ");

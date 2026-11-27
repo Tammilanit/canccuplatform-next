@@ -187,7 +187,8 @@ jobs:
             test -n "$GROUPS" || { echo "::notice::no screenshot group affected"; exit 0; }
             args=(--groups "$GROUPS")
             if [ "$SIDE" = head ]; then read -ra select <<< "$SELECT"; args+=("${select[@]}"); fi
-          elif [ "$SIDE" = head ]; then
+          elif [ "$SIDE" = head ] || grep -q -- --book scripts/demo-screenshots; then
+            # The base's tag may predate these options: then it gets none, as it needs.
             args=(--strips --book)
           fi
           scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots

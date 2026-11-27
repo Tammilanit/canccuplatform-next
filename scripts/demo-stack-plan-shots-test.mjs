@@ -125,6 +125,19 @@ export function shotChecks({ check, plan, summary }) {
     assert.ok(names.every((n) => n.startsWith("theming-terminal-screen-")), names.join(" "));
     assert.equal(pr("modules/theming/src/css.ts").select, "--themes default");
   });
+  check("a theme's files beside a widget's keep the default theme for the widget's views", () => {
+    const out = pr("events/demo/themes/terminal/css/base.css", "modules/screen/player/src/claims.css");
+    assert.match(out.select, /--themes (default,terminal|terminal,default)/);
+    assert.ok(listed(out).some((n) => /^theming-default-screen-claim-/.test(n)));
+  });
+  check("a select never ends with an option that has no value", () => {
+    const outs = [
+      pr("modules/screen/src/entrance.ts"),
+      pr("modules/screen/src/entrance.ts", "modules/agenda/src/index.ts"),
+    ];
+    for (const out of outs)
+      for (const s of out.shards) assert.doesNotMatch(s.select, /--(shots|themes|part)\s*$/, s.select);
+  });
   check("frame strips run only for motion or transitions", () => {
     const plain = listed(pr("modules/screen/player/src/player.ts"));
     assert.ok(plain.length > 20);
