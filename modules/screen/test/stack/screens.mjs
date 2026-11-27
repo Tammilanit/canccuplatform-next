@@ -39,6 +39,7 @@ import { untouched } from "./frame-shots.mjs";
 import { handStates, screenPages } from "./screen-pages.mjs";
 import {
   THEMES,
+  leanSkips,
   HD,
   sizesOf,
   UNTHEMED,
@@ -105,20 +106,22 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await attempt(nameOf(theme, "pulse", size), () =>
           withQuickVenueRail(demo, () => pulse(theme, size)),
         );
-        await attempt(nameOf(theme, "unassigned", size), async () => {
-          const { page, close } = await open(size, spare.cookie);
-          await page.goto(at("/screen/"));
-          await page.waitForSelector(".canccu-frame--unassigned");
-          await settle(page);
-          await shot(nameOf(theme, "unassigned", size), page);
-          await close();
-        });
-        await attempt(nameOf(theme, "archived", size), () =>
-          handed(theme, "archived", size, (s) => ({
-            ...s,
-            tenant: { ...s.tenant, status: "archived" },
-          })),
-        );
+        if (!leanSkips(theme, "unassigned"))
+          await attempt(nameOf(theme, "unassigned", size), async () => {
+            const { page, close } = await open(size, spare.cookie);
+            await page.goto(at("/screen/"));
+            await page.waitForSelector(".canccu-frame--unassigned");
+            await settle(page);
+            await shot(nameOf(theme, "unassigned", size), page);
+            await close();
+          });
+        if (!leanSkips(theme, "archived"))
+          await attempt(nameOf(theme, "archived", size), () =>
+            handed(theme, "archived", size, (s) => ({
+              ...s,
+              tenant: { ...s.tenant, status: "archived" },
+            })),
+          );
         if (theme === "default")
           for (const view of UNTHEMED)
             await attempt(nameOf(theme, view, size), () =>
@@ -128,7 +131,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       try {
         for (const size of landscapeOf(theme, check))
           for (const view of LAYOUTS)
-            await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
+            if (!leanSkips(theme, view))
+              await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
           layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
         );

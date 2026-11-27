@@ -6,6 +6,13 @@ import { MOTION_VIEWS, STAGE_VIEWS } from "./handed-stage.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
 export const THEMES = ["terminal", "level-up", "esports", "arcade", "default"];
+// The presets drawn in the same frames as the others and whose own looks the theming group's preset
+// shots take (demo-screenshots-presets.mjs): here only the Pulse and the Dashboard, so the screens
+// shard stays inside its 25 minutes (a full theme costs it about two more).
+export const LEAN_THEMES = ["esports", "arcade"];
+export const leanSkips = (theme, view) =>
+  LEAN_THEMES.includes(theme) &&
+  ["unassigned", "archived", "hero", "split", "ambient"].includes(view);
 export const HD = [
   [1920, 1080],
   [1080, 1920],
@@ -70,12 +77,12 @@ export function planned(check = false) {
   const out = [];
   for (const theme of THEMES) {
     for (const size of sizesOf(theme, check)) {
-      for (const view of THEMED) out.push(nameOf(theme, view, size));
+      for (const view of THEMED) if (!leanSkips(theme, view)) out.push(nameOf(theme, view, size));
       if (theme !== "default") continue;
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
     for (const size of landscapeOf(theme, check))
-      for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
+      for (const view of LAYOUTS) if (!leanSkips(theme, view)) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
     for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
       for (const size of annSizes(v, check)) out.push(nameOf(theme, v.view, size));
