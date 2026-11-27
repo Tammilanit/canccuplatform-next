@@ -269,6 +269,9 @@ services:
       <<: *fake-discord-app
       CANCCU_ADMIN_URL: http://session-stub:8080
       CANCCU_DISCORD_API_URL: http://fake-discord:8080/api/v10
+      # The bind's callback answers on the demo host, as on an IP-mode stack whose public origin
+      # is its one host, so the screenshots reach its result page.
+      CANCCU_PUBLIC_URL: http://demo.localhost
     depends_on:
       session-stub:
         condition: service_healthy

@@ -54,7 +54,7 @@ async def user_deleted(d: Deps, user_id: str) -> None:
 
 
 async def on_platform(d: Deps, event: Event) -> None:
-    """`events:tenants`: a deleted event or user."""
+    """The tenants module's platform events: a deleted event or user."""
     value = event.data.get("tenant_id") or event.data.get("user_id")
     if not isinstance(value, str):
         return
@@ -65,7 +65,7 @@ async def on_platform(d: Deps, event: Event) -> None:
 
 
 async def on_tenant(d: Deps, directory: Directory, event: Event) -> None:
-    """`t:<tenant>:events:tenants`: a status or flags change reaches the routers at once, and
+    """An event's own tenants events: a status or flags change reaches the routers at once, and
     the guild's commands follow (an archived event's are removed)."""
     tenant = event.tenant
     if tenant is None or event.type not in ("tenants.status.changed", "tenants.flags.changed"):

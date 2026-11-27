@@ -276,6 +276,13 @@ const SHOTS = [
     PHONE,
     { cookie: null, text: "Privacy" },
   ],
+  // The bind's result page (#761): a state that names no event, so no event to go back to.
+  ...[DESK, PHONE].map((viewport) => [
+    `bot-bind-expired${viewport === PHONE ? "-phone" : ""}`,
+    `/api/bot/install/callback?state=${"A".repeat(32)}&code=x`,
+    viewport,
+    { cookie: null, status: 400, text: "This link has run out" },
+  ]),
 ];
 
 // Only the groups this run takes; a fresh or stale code is a check-in page.

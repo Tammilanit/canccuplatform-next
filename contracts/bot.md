@@ -95,8 +95,17 @@ The binding (`Binding` in the OpenAPI file): `guild_id`, `guild_name`, `applicat
 - The flags and commands themselves are declared here by the port (step 6), additively. Each flag's default is in that list; until then the bot declares no flag.
 
 ## Privileged intents and data per event
-- Privileged intents (members, presence, message content) are set per application, not per guild (0013 item 16). The shared application holds the union the platform's features need; which ones is decided at the port.
-- Each feed of gateway data (presence, members, voice, messages) belongs to a feature flag. The client drops a feed for a guild whose event has that flag off, or that is bound to no event, **before** anything is stored, counted or emitted. The same holds on an own client.
+- Privileged intents (members, presence, message content) are set per application, not per guild (0013 item 16). The shared application holds the union the platform's features need: **presence and members**, never message content (step 6, D5). Every client asks for the intents `GUILDS`, `GUILD_MEMBERS` and `GUILD_PRESENCES` (privileged), `GUILD_VOICE_STATES` and `GUILD_MESSAGES` (not privileged), and never `MESSAGE_CONTENT`: nothing the platform does reads message text. An own application without the two privileged ones in its portal connects without them (Missing intents, above).
+- Each feed of gateway data belongs to a feature flag of the event, declared in [flags.yaml](flags.yaml), each on by default:
+
+  | Feed | Gateway events | Flag |
+  |---|---|---|
+  | Presence | `PRESENCE_UPDATE` | `bot.presence` |
+  | Members | `GUILD_MEMBER_ADD`, `GUILD_MEMBER_UPDATE`, `GUILD_MEMBER_REMOVE`, `GUILD_MEMBERS_CHUNK` | `bot.members` |
+  | Voice | `VOICE_STATE_UPDATE` | `bot.voice` |
+  | Messages | `MESSAGE_CREATE` (in a guild; never its text) | `bot.messages` |
+
+- The client drops a feed for a guild whose event has that flag off, that is archived, or that is bound to no event (or to another application), **before** anything is stored, counted or emitted. The same holds on an own client. A flag the event's context does not carry counts as off.
 - Members with the presence opt-out are left out of every presence feed ([tenants.md](tenants.md#privacy-and-retention), [events.md](events.md#provisional-events-version-1)).
 
 ## Who plays what
@@ -152,4 +161,4 @@ Consumers: admin (the event's bot status), notify (Discord DMs are possible only
 ```
 
 ## Not in this contract
-The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; its commands and their flags (among them the flags of the presence and voice feeds), the gateway data it reads and which privileged intents the shared application holds, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
+The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; its commands and their flags, what it keeps of each feed, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).

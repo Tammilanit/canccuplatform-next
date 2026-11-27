@@ -14,6 +14,8 @@ export const GROUPS = [
   "screen-studio",
   "moments",
   "pizza",
+  // The bot's one page so far: the bind's result on the sign-in host (#761).
+  "bot",
   // Not a surface: the dev server's demo content, seeded as setup/deploy does and then shot (#715).
   "dev-seed",
 ];
@@ -36,6 +38,7 @@ const PAGE_GROUPS = [
   ["/moments/", "moments"],
   ["/pizza/", "pizza"],
   ["/screen/", "screens"],
+  ["/api/bot/", "bot"],
 ];
 
 /** The group of a shot, from the path of the page it opens. */
@@ -57,7 +60,7 @@ export function groupOf(path) {
 export const SHARDS = [
   {
     shard: "pages",
-    groups: ["admin", "agenda", "notify", "theming", "moments"],
+    groups: ["admin", "agenda", "notify", "theming", "moments", "bot"],
   },
   { shard: "screens", groups: ["screens"] },
   { shard: "studio", groups: ["screen-studio"] },
@@ -105,6 +108,7 @@ const MAP = [
   ["modules/pizza/*", ["pizza"]],
   ["modules/screen-render/*", ["screens"]],
   ["modules/screen/*", ["screens", "screen-studio"]],
+  ["modules/bot/*", ["bot"]],
   ["modules/*", []],
 ];
 
