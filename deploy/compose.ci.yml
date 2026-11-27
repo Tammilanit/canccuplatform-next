@@ -10,16 +10,18 @@
 # - event-seed copies events/demo/ into the demo tenant's event folder of the files volume
 #   (/files/demo/admin/event), owned by the modules' user (65534, see files-init), before admin
 #   starts.
+# - fake-discord (canccu_kit.testing.discord) stands in for Discord: the bot's shared client
+#   connects to it, so the bot is healthy and its stack tests run without a real guild or token.
 # - session-stub stands in for Discord sign-in, which CI cannot run: the rights checks of admin,
-#   screen, theming, agenda, notify, moments, pizza and tenants ask it, not admin, for GET
+#   screen, theming, agenda, notify, moments, pizza, bot and tenants ask it, not admin, for GET
 #   /api/admin/session. The cookie canccu_session=demo-ci is a session with every admin right,
 #   screen's content, device (read, pair, write), ticker and zone rights (the push latency test
 #   pairs a screen and changes the ticker; the screenshots set the demo zones up and show the Screen
 #   studio; the Theme studio's screen preview reads a zone's screens to draw it with the draft's
 #   look), and the rights of the Theme studio (all three, as an event admin holds them), the agenda
-#   and the notify pages and the check-in code, and every Moments right (the moment latency check
-#   starts a crew spotlight; the screenshots show On air, Priorities and History), which
-#   scripts/demo-screenshots shows. Holding rights makes it a member for tenants, so the Screen
+#   and the notify pages and the check-in code, the bot's connection, and every Moments right
+#   (the moment latency check starts a crew spotlight; the screenshots show On air, Priorities and
+#   History), which scripts/demo-screenshots shows. Holding rights makes it a member for tenants, so the Screen
 #   studio's Content page reads the event's storage use; it holds no tenants right and is no event
 #   admin, so tenants takes no change from it. The cookie canccu_session=demo-no-role is the
 #   signed-in person without a role that scripts/demo-screenshots-front.sql adds to admin: the stub
@@ -123,7 +125,7 @@ services:
         	}
         	handle @demo {
         		header Content-Type application/json
-        		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+        		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write", "bot.connection.read"], "expires_at": "2099-01-01T00:00:00Z"}` 200
         	}
         	@event_admin {
         		path /api/admin/session
@@ -131,7 +133,7 @@ services:
         	}
         	handle @event_admin {
         		header Content-Type application/json
-        		respond `{"user": {"id": "u_demo_ea", "name": "Demo Event Admin"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write", "tenants.event.write", "tenants.venue_info.write", "tenants.flags.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+        		respond `{"user": {"id": "u_demo_ea", "name": "Demo Event Admin"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display", "moments.read", "moments.announce", "moments.take", "moments.scenes.take", "moments.emergency", "moments.settings.write", "pizza.order.open", "pizza.order.manage", "pizza.menu.write", "pizza.record.read", "admin.integrations.write", "bot.connection.read", "tenants.event.write", "tenants.venue_info.write", "tenants.flags.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
         	}
         	@no_role {
         		path /api/admin/session
@@ -236,6 +238,41 @@ services:
       CANCCU_ADMIN_URL: http://session-stub:8080
     depends_on:
       session-stub:
+        condition: service_healthy
+
+  # Discord for the stack tests (#121): canccu_kit.testing.discord as a container, REST and
+  # gateway, seeded with the shared application below and one guild. Fixed fake values, as the
+  # fake accepts nothing else and holds nothing real; a real install never runs it.
+  fake-discord:
+    build:
+      context: ..
+      dockerfile: packages/kit-py/Dockerfile.fake-discord
+    environment: &fake-discord-app
+      CANCCU_BOT_APPLICATION_ID: "100000000000000002"
+      CANCCU_BOT_TOKEN: fake-shared-bot-token-for-the-ci-stack-only-never-a-real-one
+      CANCCU_BOT_CLIENT_SECRET: fake-shared-client-secret-ci-only
+      CANCCU_FAKE_DISCORD_GATEWAY_URL: ws://fake-discord:8080/gateway
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
+      start_period: 60s
+      start_interval: 2s
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  bot:
+    environment:
+      <<: *fake-discord-app
+      CANCCU_ADMIN_URL: http://session-stub:8080
+      CANCCU_DISCORD_API_URL: http://fake-discord:8080/api/v10
+    depends_on:
+      session-stub:
+        condition: service_healthy
+      fake-discord:
         condition: service_healthy
 
   pizza:
