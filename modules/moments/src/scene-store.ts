@@ -7,6 +7,8 @@
 import type { Event, Outbox, SqlClient } from "@canccu/kit";
 import { CREW_WHY, pickScene, heartbeatOf } from "./scene-eval.js";
 import type { AgendaItem, SceneFacts } from "./scene-eval.js";
+import { heldHype, hypeOf } from "./hype.js";
+import type { SentHype } from "./hype.js";
 import { PRESETS, crewMinutes, sceneEvent } from "./scenes.js";
 import type { Scene } from "./scenes.js";
 import { knownZones, lockSettings } from "./store.js";
@@ -176,6 +178,15 @@ const canonical = (v: unknown): string =>
       : x,
   );
 
+/** The hype last sent to a zone, or null for a zone sent none yet (before #787). */
+function sentHype(sent: unknown): SentHype | null {
+  const s = obj(sent);
+  const since = Date.parse(String(s.hype_band_since));
+  const hype = obj(s.hype);
+  if (Number.isNaN(since) || typeof hype.level !== "number") return null;
+  return { hype: hype as unknown as SentHype["hype"], band_since: since };
+}
+
 /**
  * Decides every zone's scene now and sends `moments.scene.changed` (in the outbox, in this
  * transaction) for each zone whose scene or heartbeat changed. Serialised per event, so two
@@ -210,9 +221,13 @@ export async function evaluateScenes(
     const picked = pickScene(scenes, facts, zone, current);
     const key = picked?.scene.key ?? null;
     const scene = sceneEvent(picked?.scene ?? null, zone);
+    // The hype goes with the scene (#787 D12), so a screen gets both in one event.
+    const hype = heldHype(sentHype(st?.sent), hypeOf(facts.items, zone, facts.now), facts.now);
     const sent = {
       scene,
       heartbeat_bpm: heartbeatOf(picked?.scene.then.stage_mood ?? null, facts),
+      hype: hype.hype,
+      hype_band_since: new Date(hype.band_since).toISOString(),
     };
     if (st !== undefined && st.scene_key === key && canonical(st.sent) === canonical(sent))
       continue;
@@ -235,6 +250,7 @@ export async function evaluateScenes(
         since: since.toISOString(),
         why,
         heartbeat_bpm: sent.heartbeat_bpm,
+        hype: sent.hype,
         actor_user_id: o.actor ?? null,
       },
       { version: 1 },

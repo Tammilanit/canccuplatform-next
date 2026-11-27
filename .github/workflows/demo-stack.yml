@@ -116,8 +116,8 @@ jobs:
     needs: plan
     if: needs.plan.outputs.shards != '[]'
     runs-on: ubuntu-latest
-    # The screens shard of a full run takes 22 to 26 minutes (every theme's views, #787), so 25 cut
-    # it off while it was still shooting; a hang still ends here, only later.
+    # With the stage's two strips (#787) the screens shard of a full run takes 22 to 28 minutes, so
+    # 25 cut it off at its last shots; a hang still ends here, only later.
     timeout-minutes: 40
     strategy:
       fail-fast: false
