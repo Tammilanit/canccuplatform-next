@@ -291,6 +291,11 @@ export function onlyScreen(request: FastifyRequest): void {
     throw new ServiceForbidden(`module ${String(request.service)} may not call this`);
 }
 
+/** The bot reads the current theme too, for its embeds' colour (contracts/theming.md, L8). */
+function onlyScreenOrBot(request: FastifyRequest): void {
+  if (request.service !== "bot") onlyScreen(request);
+}
+
 /**
  * For the screen module's server, which draws the event's screens: the current theme in every
  * info-page mode, and a pinned revision (contracts/screen.md, Widgets and Pins).
@@ -301,7 +306,7 @@ export function internalRoutes(app: FastifyInstance, deps: InternalDeps): void {
   app.get<{ Querystring: { tenant_id?: string } }>(
     "/internal/theming/current",
     async (request, reply) => {
-      onlyScreen(request);
+      onlyScreenOrBot(request);
       const tenant = request.query.tenant_id;
       if (tenant === undefined || !isTenantId(tenant)) {
         throw invalidRequest("A tenant_id is required.");
