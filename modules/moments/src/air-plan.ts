@@ -89,8 +89,12 @@ const onAir = (s: SlotIn) =>
  */
 const waiting = (s: SlotIn) => !onAir(s) || (s.granted === "pass" && !s.placed);
 const routine = (s: SlotIn) => s.rule_id !== null && ROUTINE_RULES.has(s.rule_id);
-/** The role its chain goes on to after the hero; null where the chain ends there. */
-const afterHero = (s: SlotIn): string | null => s.chain[s.chain.indexOf("hero") + 1] ?? null;
+/**
+ * The roles its chain goes on to after the hero, smaller boxes only: an Important's chain lists
+ * `full` after `hero` for a layout with no hero, and stepping "down" into a takeover would be up.
+ */
+const afterHero = (s: SlotIn): string[] =>
+  s.chain.slice(s.chain.indexOf("hero") + 1).filter((r) => r !== "full");
 /**
  * Keeps the hero until it ends (#787 D7, the PO's Q6): a stream, a person's action, a story round,
  * and a moment with steps, which plays as one piece and never waits in the rail either.
@@ -235,7 +239,7 @@ export function planZone(
     holder !== null &&
     cut === undefined &&
     !staysOn(holder) &&
-    afterHero(holder) !== null &&
+    afterHero(holder).length > 0 &&
     !condensedHolder(holder) &&
     playedNow(holder, now) - holder.tenure_from_ms >=
       Math.min(air.min_on_air_ms, holder.budget_ms ?? Infinity)
@@ -298,7 +302,7 @@ export function planZone(
   for (const s of live) {
     const o = out.get(s.moment_id);
     if (o?.granted !== "down") continue;
-    const rest = s.chain.slice(s.chain.indexOf("hero") + 1);
+    const rest = afterHero(s);
     o.regions = rest[0] === "rail" && room !== undefined && rest.length > 1 ? rest.slice(1) : rest;
   }
   return {

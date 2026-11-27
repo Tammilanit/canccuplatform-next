@@ -84,9 +84,13 @@ const claim = (id, role, start, over) => ({
   ...over,
 });
 
+/**
+ * Sheet 05's result in words short enough for portrait's rail (329 px at 1080 × 1920): the PO's
+ * floors (title 6 %, body 3.5 % of the screen's height) fit a one-line title and body there.
+ */
 const RESULT = {
-  title: "Semi-final 1: Team Aurora wins",
-  body: "Team Aurora meets the winner of semi-final 2 in the final at 22:15",
+  title: "Aurora beat Nova",
+  body: "2 – 1 · final at 22:15",
   level: "info",
   icon: "trophy",
   updated: false,

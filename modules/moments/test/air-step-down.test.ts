@@ -75,6 +75,16 @@ describe("hero first, then a smaller box", () => {
     });
   });
 
+  it("steps an Important down past the full screen, never up into it", () => {
+    const important = result({ chain: ["hero", "full", "rail", "ticker"] });
+    expect(of(planZone(90_000, held, [important], DEFAULT_AIR), "result")).toMatchObject({
+      granted: "down",
+      regions: ["rail", "ticker"],
+    });
+    const only = result({ chain: ["hero", "full"] });
+    expect(planZone(100_000, held, [only], DEFAULT_AIR).zone.holder).toBe("result");
+  });
+
   it("counts its own budget when that is under the floor", () => {
     const short = result({ budget_ms: 60_000 });
     expect(planZone(60_000, held, [short], DEFAULT_AIR).ends).toEqual([
