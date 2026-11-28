@@ -173,10 +173,14 @@ export const unitsOf = (columns) => (columns / 12) * (1600 / 9);
 /** The last 24 hours online (sheet 10's "Online · 24 h"). */
 const ONLINE = hoursFrom(19, [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218]); // prettier-ignore
 
+/** The last 24 hours of chat (mockup 16's "Chat"): each hour's messages in the server. */
+const CHAT = hoursFrom(19, [64, 41, 22, 9, 4, 2, 1, 3, 8, 17, 30, 42, 51, 58, 63, 77, 92, 104, 126, 118, 97, 88, 90, 112]); // prettier-ignore
+
 /** A widget as its box `area` draws it: the activity graph's scale and hours by its width. */
 function inBox(w, area) {
   if (w.widget !== "activity_graph") return w;
-  return { ...w, view: { ...w.view, ...graphOf(ONLINE, unitsOf(area.columns)) } };
+  const hours = w.view.metric === "messages" ? CHAT : ONLINE;
+  return { ...w, view: { ...w.view, ...graphOf(hours, unitsOf(area.columns)) } };
 }
 
 /** Sample statistics as the bot's data will bring them (#389), with sheet 10's trend arrows. */
@@ -194,6 +198,17 @@ const SAMPLE = {
       { game_id: "g_2", name: "Demo Racer", players: 23, trend: "up" },
       { game_id: "g_3", name: "Demo Quest", players: 17, trend: "down" },
     ],
+    // The games not listed and the activities no game of the catalogue matches (mockup 12).
+    others: { players: 11 },
+  },
+  // The busy public voice rooms (mockup 12's Voice rooms), from `bot.voice.counted`.
+  voice_rooms: {
+    rooms: [
+      { name: "Lobby", member_count: 14 },
+      { name: "Match 3 · Team A", member_count: 5 },
+      { name: "Match 3 · Team B", member_count: 5 },
+      { name: "Lobby 2", member_count: 4 },
+    ],
   },
   // The last 24 hours by the hour (sheet 10's "Online · 24 h").
   activity_graph: {
@@ -203,9 +218,13 @@ const SAMPLE = {
     // Its scale and named hours come from graph.ts by its box's width (inBox).
   },
 }; // prettier-ignore
-/** `voice` waits for the bot's per-room counts (`voice_rooms`), so `online` takes its cells. */
-const STATISTICS = ["online", "top_games", "right_now"];
-const GIVEN = { online: { column: 5, row: 2, columns: 8, rows: 5 } };
+/** Chat on the activity graph (mockup 16): the hour's totals and the busiest hour. */
+const CHAT_GRAPH = {
+  metric: "messages",
+  label: "Chat · 24 h",
+  peak: { count: 126, at: "2026-03-14T13:00:00Z", time_text: "13:00" },
+};
+const STATISTICS = ["online", "voice", "top_games", "right_now"];
 
 /** The zone's `stats` regions given the sample counts: Portrait's Right now, Ambient's line. */
 export function withCounts(s) {
@@ -225,7 +244,7 @@ export function withOneScreen(s) {
  * Dashboard with its statistics: the server leaves the four boxes out while their source is not
  * there (contracts/screen.md, Boxes waiting for their source), so they come back here at the
  * layout's areas, with the hero and the rail at theirs, as the server composes them once the
- * statistics reach it; the voice rooms still wait.
+ * statistics reach it.
  */
 export function withStats(s) {
   const placed = new Map(s.layout.regions.map((r) => [r.id, r]));
@@ -233,7 +252,7 @@ export function withStats(s) {
   if (rail === undefined || !STATISTICS.every((id) => placed.has(id)))
     throw new Error("the demo zone is not on the Dashboard");
   const boxes = STATISTICS.map((id) => {
-    const area = GIVEN[id] ?? placed.get(id).area;
+    const area = placed.get(id).area;
     const widgets = placed.get(id).widgets.map((w) => ({
       widget: w.widget,
       template: null,
@@ -253,6 +272,31 @@ export function withStats(s) {
   const at = regions.findIndex((r) => r.id === "rail");
   return { ...s, regions: [...regions.slice(0, at), ...boxes, ...regions.slice(at)] };
 }
+
+/**
+ * Dashboard with chat on its graph (mockup 16): the online box draws `metric: messages`, each bar
+ * an hour's messages, beside the other statistics.
+ */
+export function withChat(s) {
+  const stats = withStats(s);
+  const chat = (r, w) =>
+    w.widget === "activity_graph" ? inBox({ ...w, view: { ...w.view, ...CHAT_GRAPH } }, r.area) : w;
+  return {
+    ...stats,
+    regions: stats.regions.map((r) =>
+      r.id === "online" ? { ...r, widgets: r.widgets.map((w) => chat(r, w)) } : r,
+    ),
+  };
+}
+
+/** The Dashboard views handed sample statistics, each with what it is handed (screens.mjs). */
+export const DASHBOARD_HANDS = {
+  dashboard: withStats,
+  "dashboard-chat": withChat,
+  "dashboard-showcase": (s) => withShowcase(withStats(s)),
+  "dashboard-coming-hours": (s) => withComingHours(withStats(s)),
+  "dashboard-showcase-small": (s) => withSmallShowcase(withStats(s)),
+};
 
 /**
  * Dashboard during a showcase (contracts/screen.md, The hero role and the showcase): a spotlight in
