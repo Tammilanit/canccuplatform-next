@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import type { Page } from "playwright-core";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { html, raw } from "../src/html.js";
 import type { Html } from "../src/html.js";
 import { shellPage } from "../src/shell.js";
@@ -66,6 +66,18 @@ const shown = (page: Page, sel: string): Promise<string> =>
     );
 
 describe.skipIf(browser === undefined)("tooltips (#782)", () => {
+  // Chromium's first page, its first parse of ui.css and its first key and touch input cost
+  // seconds on a cold, loaded runner (#863). Pay them here, under a budget of their own, so no
+  // test's 5 s timeout carries them.
+  beforeAll(async () => {
+    const desk = await render(1280, false);
+    await desk.locator(".canccu-tip__info").focus();
+    await desk.keyboard.press("Tab");
+    await desk.close();
+    const phone = await render(390, true);
+    await phone.locator(".canccu-tip__info").tap();
+    await phone.close();
+  }, 60_000);
   afterAll(async () => browser?.close());
 
   it("open by keyboard focus and close by Esc at 1280 px", async () => {
