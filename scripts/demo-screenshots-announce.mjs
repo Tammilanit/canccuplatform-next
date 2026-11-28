@@ -9,7 +9,7 @@
 // Every announcement sent here is withdrawn and every screen revoked.
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { saveZone } from "../modules/screen/test/stack/fixture.mjs";
-import { moments, placed } from "./demo-screenshots-moments.mjs";
+import { clearAir, moments, placed } from "./demo-screenshots-moments.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
@@ -148,6 +148,20 @@ export function announceListed(at) {
   );
 }
 
+/** Withdrawn, or the run fails here: one left on air holds its zones' hero for its 15 minutes, and
+ * the shots after it wait on a zone it holds (#845). */
+async function withdraw(id) {
+  const r = await moments(
+    "POST",
+    `/api/moments/announcements/${id}/withdraw`,
+    {},
+  );
+  if (r.status !== 200)
+    throw new Error(
+      `withdrawing ${id}: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+    );
+}
+
 async function send(body) {
   const r = await moments("POST", "/api/moments/announcements", body);
   if (r.status !== 201)
@@ -161,6 +175,8 @@ export async function announceShots({ demo, shot, fail }) {
   const screens = [];
   let hidden = false;
   try {
+    // Each one sent waits to be placed: nothing an earlier group left may hold a zone (#845).
+    await clearAir();
     for (const zone of ["main", "entrance"]) {
       const paired = await demo.pair(`Announcement shots ${zone}`, zone);
       const sse = demo.stream(paired.cookie);
@@ -243,16 +259,14 @@ export async function announceShots({ demo, shot, fail }) {
         },
       ],
     ]) {
-      for (const id of sent.splice(0))
-        await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+      for (const id of sent.splice(0)) await withdraw(id);
       sent.push(await send({ ...body, duration_seconds: 900 }));
       for (const [name, path, viewport, o] of list)
         await shot(name, path, viewport, SESSION, o);
     }
     for (const [name, path, viewport, o] of LEVEL_PAGES)
       await shot(name, path, viewport, SESSION, o);
-    for (const id of sent.splice(0))
-      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const id of sent.splice(0)) await withdraw(id);
     for (const body of LEVELS)
       sent.push(
         await send({
@@ -264,16 +278,14 @@ export async function announceShots({ demo, shot, fail }) {
     for (const [name, path, viewport, o] of FRONT_PAGES)
       await shot(name, path, viewport, SESSION, o);
     const last = sent.splice(0);
-    for (const id of last)
-      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const id of last) await withdraw(id);
     for (const [name, path, viewport, o] of WITHDRAWN_PAGES)
       await shot(name, `${path}${last[0]}`, viewport, SESSION, o);
   } catch (err) {
     fail(`announce: ${firstLine(err)}`);
   } finally {
     try {
-      for (const id of sent)
-        await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+      for (const id of sent) await withdraw(id);
       if (hidden) await saveZone(demo, "entrance", { regions: hidden.regions });
       for (const { paired, sse } of screens) {
         sse.close();

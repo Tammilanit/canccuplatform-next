@@ -73,11 +73,28 @@ export function poolDb(pool: pg.Pool): Db {
       client.release();
     }
   };
+  // The tick passes main first and skips a held zone, then waits for zones in key order, as a
+  // crew action does: no one lock order holds for both, so Postgres may end one as a deadlock's
+  // victim. Its transaction rolled back whole (its after-commit work never ran), so it runs again;
+  // the other one has gone on by then. A crew end lost this way left a moment on air (#845).
+  const retried = async <T>(fn: (c: SqlClient) => Promise<T>, tenant: string | null) => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await run(fn, tenant);
+      } catch (err) {
+        if (attempt >= DEADLOCK_TRIES || (err as { code?: unknown }).code !== DEADLOCK) throw err;
+      }
+    }
+  };
   return {
-    tenant: (fn) => run(fn, requireTenant()),
-    global: (fn) => run(fn, null),
+    tenant: (fn) => retried(fn, requireTenant()),
+    global: (fn) => retried(fn, null),
   };
 }
+
+/** Postgres' `deadlock_detected`. */
+const DEADLOCK = "40P01";
+const DEADLOCK_TRIES = 3;
 
 /**
  * `fn` in a savepoint of the open transaction: its fault rolls back its own writes only, and the

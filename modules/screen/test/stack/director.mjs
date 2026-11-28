@@ -66,7 +66,9 @@ export function withDirector(view) {
             { widgets: [f.photo, f.today], indicator: "line" };
     return {
       ...s,
-      regions: s.regions.map((r) => {
+      // No claim the stack holds (a moment an earlier shot left) covers the Director (#845).
+      regions: s.regions.map((held) => {
+        const r = { ...held, claim: null };
         if (r.role === "hero")
           return { ...r, ...hero, rotation: "director", order: hero.widgets.map((_, i) => i) };
         // Both turn every 6 s, so the choreographer has two changes to space.
@@ -86,8 +88,29 @@ async function untilTurn(page, periodS, offsetMs) {
 }
 
 /**
- * The strip's frames. `director-line`: one frame in each 6 s turn, 2 s in, so each feature shows
- * with its line part filled. `director-ring`: the surge holds the hero, its ring 5 s fuller in the
+ * The hero's next feature as drawn, once it is one not in `seen`: its widget type. The
+ * choreographer holds a turn up to 3 s past the clock's when another box just turned
+ * (player/src/pacing.ts), so frames on the clock's turns missed "Today in numbers" (#845).
+ */
+async function nextFeature(page, seen) {
+  const drawn = await page.waitForFunction(
+    (seen) => {
+      const shown = [...document.querySelectorAll(".canccu-region--hero > .canccu-widget.canccu-is-active")]
+        .filter((w) => !w.classList.contains("canccu-slot--in") && !w.classList.contains("canccu-slot--out"))
+        .at(-1);
+      const type = [...(shown?.classList ?? [])].find((c) => c.startsWith("canccu-widget--"));
+      return type !== undefined && !seen.includes(type) && type;
+    },
+    seen,
+    { timeout: 30_000 },
+  ); // prettier-ignore
+  return drawn.jsonValue();
+}
+
+/**
+ * The strip's frames. `director-line`: one frame in each feature's turn as the hero draws it, 2 s
+ * in, so each feature shows with its line part filled; the first from a turn that starts while
+ * the page watches. `director-ring`: the surge holds the hero, its ring 5 s fuller in the
  * second frame. `choreographer`: just before both turn, after the hero turned, after the rail did.
  * The first two take each frame once every fade has settled; the choreographer's show the turns.
  */
@@ -108,10 +131,14 @@ export async function directorStrip(page, view, shoot) {
   }
   if (view === "director-line") {
     await page.waitForSelector(".canccu-region--hero .canccu-rotation__bar");
-    await untilTurn(page, 6, 2000);
+    // What is drawn now is left out once, so the first frame too is 2 s into its turn.
+    let drawn = await nextFeature(page, []);
+    const shot = [];
     for (const n of [1, 2, 3]) {
+      drawn = await nextFeature(page, [drawn, ...shot]);
+      shot.push(drawn);
+      await page.waitForTimeout(2000);
       await frame(n);
-      if (n < 3) await page.waitForTimeout(6000);
     }
     // The line's turn passes "Today in numbers", whose graph must show its scale (#523).
     if (graphs === 0) throw new Error("director-line: no frame drew a graph");

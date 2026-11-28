@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# The book's shots that wait on the live player (#845), back to back in the book's order, round
+# after round on one running stack: the Director's line strip (the screens), the storyboards
+# (Studio → Moments, right after the announcements, whose lost withdraw once held the main hall's
+# hero for 15 minutes) and Pizza is here on the hall's screen (the Food shots). Each round is
+# scripts/demo-screenshots on those groups in check mode, the screens taking only the strip, so
+# what the book's order leaves for the next shot is there as in the full run. A shot that passes
+# one round and fails the next is a flake this run shows. Prints each round's FAIL lines and a
+# line per round; exits 1 when a round failed or one of the three shots was not taken.
+# Usage: live-player-shots [--dry-run] [--rounds N] [BASE_URL] [OUT_DIR]
+#   N defaults to 3; BASE_URL and the stack's compose command as for scripts/demo-screenshots
+#   (CANCCU_DEMO_COMPOSE); each round's log is OUT_DIR/round-<i>/log.txt (OUT_DIR default
+#   live-player-shots). A round takes about 10 minutes.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+
+usage() { echo "usage: live-player-shots [--dry-run] [--rounds N] [BASE_URL] [OUT_DIR]" >&2; exit 2; }
+dry=0 rounds=3
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) dry=1; shift ;;
+    --rounds) [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || usage; rounds=$2; shift 2 ;;
+    -*) usage ;;
+    *) break ;;
+  esac
+done
+[ $# -le 2 ] || usage
+BASE=${1:-http://127.0.0.1}
+OUT=${2:-live-player-shots}
+
+STRIP=theming-default-screen-director-line-1920x1080
+# One shot of each wait, as the run prints it once taken.
+TAKEN=("$STRIP-f3.png" stories-screen-doors-open.png pizza-screen-food-here.png)
+shoot=(scripts/demo-screenshots --groups screens,moments,pizza --shots "$STRIP" --strips --check "$BASE")
+
+if [ "$dry" = 1 ]; then
+  echo "$rounds rounds, each:"
+  echo "  ${shoot[*]} $OUT/round-<i>"
+  echo "  then each of these taken: ${TAKEN[*]}"
+  exit 0
+fi
+
+failed=0
+for i in $(seq 1 "$rounds"); do
+  dir=$OUT/round-$i
+  rm -rf "$dir" && mkdir -p "$dir" || exit 2
+  "${shoot[@]}" "$dir" > "$dir/log.txt" 2>&1
+  status=$?
+  grep -E '^(FAIL|error:) ' "$dir/log.txt"
+  for name in "${TAKEN[@]}"; do
+    grep -q "^ok   $name" "$dir/log.txt" || { echo "FAIL $name: not taken (see $dir/log.txt)"; status=1; }
+  done
+  if [ "$status" = 0 ]; then echo "round $i: ok"; else echo "round $i: FAIL"; failed=1; fi
+done
+exit "$failed"
