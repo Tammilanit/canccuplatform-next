@@ -47,6 +47,31 @@ describe("the hub and the counts", () => {
     ]);
   });
 
+  it("keeps the public voice rooms of bot.voice.counted and the hours of bot.messages.counted", async () => {
+    const at = new Date(T0).toISOString();
+    const rooms = [{ channel_id: "c1", name: "Lobby", member_count: 14 }];
+    hub.handleEvent(event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms }));
+    hub.handleEvent(
+      event("bot", "bot.messages.counted", { counted_at: at, interval_seconds: 3600, messages: 9 }),
+    );
+    await settle();
+    const voice = await withTenant("alpha", () => kv.get(tenantKey("screen", "voice", "counted")));
+    expect(JSON.parse(voice ?? "null")).toEqual({
+      at: T0,
+      interval_seconds: 60,
+      rooms: [{ name: "Lobby", member_count: 14 }],
+    });
+    const hours = await withTenant("alpha", () =>
+      kv.live(tenantKey("screen", "messages", "counts"), T0),
+    );
+    expect(hours.map((m) => JSON.parse(m) as unknown)).toEqual([{ at: T0, messages: 9 }]);
+  });
+
+  it("marks players per game to be read again on bot.presence.counted", async () => {
+    const stale = () => withTenant("alpha", () => kv.get(tenantKey("screen", "playing", "stale")));
+    expect(await stale()).toBe("1");
+  });
+
   it("marks the arrival count to be read again on an arrival check-in only", async () => {
     const stale = () =>
       withTenant("alpha", () => kv.get(tenantKey("screen", "checkins", "arrival", "stale")));
