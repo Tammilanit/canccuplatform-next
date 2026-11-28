@@ -67,6 +67,8 @@ class FakeGuild:
     """Registered commands per application id."""
     nicks: dict[str, str] = field(default_factory=dict)
     """Each bot's own nickname in the guild, by application id."""
+    bot_roles: dict[str, list[str]] = field(default_factory=dict)
+    """The roles each bot holds in the guild, by application id."""
 
     def as_payload(self) -> dict[str, Any]:
         """The guild as GUILD_CREATE carries it."""
@@ -99,3 +101,4 @@ class ScriptedFailure:
     global_: bool
     retry_after: float
     times: int
+    method: str | None = None

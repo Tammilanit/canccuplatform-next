@@ -39,11 +39,17 @@ async def test_a_deleted_event_leaves_no_row_route_or_secret(env: Env) -> None:
         "ev-b",
         app_id=(await env.fetch(None, "SELECT application_id FROM bot_application_routes"))[0][0],
     )
+    await env.sql(
+        "ev-a",
+        "INSERT INTO bot_purposes (purpose, target_id, updated_at)"
+        " VALUES ('crew', '100000000000000777', now())",
+    )
     await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-a"))
     await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-b"))
     for tenant in ("ev-a", "ev-b"):
         assert await env.fetch(tenant, "SELECT 1 FROM bot_bindings") == []
         assert await env.fetch(tenant, "SELECT 1 FROM bot_connections") == []
+        assert await env.fetch(tenant, "SELECT 1 FROM bot_purposes") == []
         assert env.events(tenant) == []
     assert await env.fetch(None, "SELECT 1 FROM bot_guild_routes") == []
     assert await env.fetch(None, "SELECT 1 FROM bot_application_routes") == []

@@ -106,3 +106,18 @@ async def test_without_the_role_on_both_events_it_is_403(env: Env) -> None:
     env.contexts["ev-b"]["status"] = "archived"
     r = await clone(env)
     assert (r.status_code, r.json()["error"]["code"]) == (403, "missing_right")
+
+
+async def test_the_purposes_move_with_the_binding(env: Env) -> None:
+    env.series.admin_of = {"ev-a", "ev-b"}
+    env.contexts["ev-b"]["status"] = "archived"
+    await bound(env, "ev-b")
+    await env.sql(
+        "ev-b",
+        "INSERT INTO bot_purposes (purpose, target_id, updated_at)"
+        " VALUES ('announcements', '100000000000000777', now())",
+    )
+    assert (await clone(env)).status_code == 200
+    assert await env.fetch("ev-b", "SELECT 1 FROM bot_purposes") == []
+    [row] = await env.fetch("ev-a", "SELECT purpose, target_id FROM bot_purposes")
+    assert tuple(row) == ("announcements", "100000000000000777")

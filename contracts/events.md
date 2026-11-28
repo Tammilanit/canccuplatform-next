@@ -62,6 +62,7 @@ Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). T
 | `bot.client.changed` | The event's Discord client changed status (ready, rate limited, paused, failed) | admin, notify (whether a DM can go out) |
 | `bot.guild.bound` | A Discord guild was bound to the event | admin, notify |
 | `bot.guild.unbound` | The event's guild binding ended | admin, notify |
+| `bot.purposes.changed` | The event's guild purposes were picked, cleared or created | — (the bot's own posts follow them, #122) |
 
 ## Games
 Emitter: `games`. Audience: event-wide, `public`. Payloads: [games.md](games.md#events-version-1).

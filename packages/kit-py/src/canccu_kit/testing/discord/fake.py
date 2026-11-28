@@ -89,7 +89,13 @@ class FakeDiscord:
         self, name: str, *, bots: list[str] | None = None, owner_id: str | None = None
     ) -> FakeGuild:
         guild_id = self.snowflake()
-        everyone = {"id": guild_id, "name": "@everyone", "position": 0, "permissions": "0"}
+        everyone = {
+            "id": guild_id,
+            "name": "@everyone",
+            "position": 0,
+            "permissions": "0",
+            "managed": False,
+        }
         owner = owner_id or self.snowflake()
         guild = FakeGuild(guild_id, name, owner, set(bots or []), roles={guild_id: everyone})
         self.guilds[guild.id] = guild
@@ -119,15 +125,44 @@ class FakeDiscord:
         self.codes[code] = FakeGrant(application_id, user_id, guild_id)
         return code
 
-    def add_channel(self, guild_id: str, name: str, *, type: int = 0) -> str:
+    def add_channel(
+        self,
+        guild_id: str,
+        name: str,
+        *,
+        type: int = 0,
+        overwrites: list[dict[str, Any]] | None = None,
+        parent_id: str | None = None,
+    ) -> str:
         channel_id = self.snowflake()
         self.guilds[guild_id].channels[channel_id] = {
             "id": channel_id,
             "guild_id": guild_id,
             "name": name,
             "type": type,
+            "parent_id": parent_id,
+            "position": len(self.guilds[guild_id].channels),
+            "permission_overwrites": list(overwrites or []),
         }
         return channel_id
+
+    def add_role(
+        self, guild_id: str, name: str, *, permissions: int = 0, managed: bool = False
+    ) -> str:
+        """A role on top of the guild's others, as an integration's own role sits."""
+        roles = self.guilds[guild_id].roles
+        role_id = self.snowflake()
+        roles[role_id] = {
+            "id": role_id,
+            "name": name,
+            "position": max(r["position"] for r in roles.values()) + 1,
+            "permissions": str(permissions),
+            "managed": managed,
+        }
+        return role_id
+
+    def give_bot_role(self, guild_id: str, application_id: str, role_id: str) -> None:
+        self.guilds[guild_id].bot_roles.setdefault(application_id, []).append(role_id)
 
     def fail_next(
         self,
@@ -137,9 +172,11 @@ class FakeDiscord:
         global_: bool = False,
         retry_after: float = 1.0,
         times: int = 1,
+        method: str | None = None,
     ) -> None:
-        """Answer the next `times` requests (to `path` only, when given) with `status`."""
-        self.failures.append(ScriptedFailure(status, path, global_, retry_after, times))
+        """Answer the next `times` requests (to `path` and with `method` only, when given) with
+        `status`."""
+        self.failures.append(ScriptedFailure(status, path, global_, retry_after, times, method))
 
     def application_of(self, token: str) -> FakeApplication | None:
         return next((a for a in self.applications.values() if a.token == token), None)
@@ -150,13 +187,14 @@ class FakeDiscord:
                 return guild, guild.channels[channel_id]
         return None
 
-    def take_failure(self, path: str) -> ScriptedFailure | None:
+    def take_failure(self, path: str, method: str = "GET") -> ScriptedFailure | None:
         for failure in self.failures:
-            if failure.path is None or failure.path == path:
-                failure.times -= 1
-                if failure.times <= 0:
-                    self.failures.remove(failure)
-                return failure
+            if failure.path not in (None, path) or failure.method not in (None, method):
+                continue
+            failure.times -= 1
+            if failure.times <= 0:
+                self.failures.remove(failure)
+            return failure
         return None
 
     def spend(self, app_id: str, route: str, major: str) -> tuple[int, float]:

@@ -14,7 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import oauth
+from . import oauth, setup
 from .model import FakeApplication, FakeRequest
 
 if TYPE_CHECKING:
@@ -127,6 +127,7 @@ ROUTES: list[tuple[str, str, Handler]] = [
     ("POST", "/interactions/{interaction_id}/{token}/callback", answer_interaction),
     ("PATCH", "/webhooks/{application_id}/{token}/messages/@original", edit_original),
     ("PATCH", "/guilds/{guild_id}/members/@me", set_own_nick),
+    *setup.ROUTES,
 ]
 _COMPILED = [
     (method, template, re.compile("^" + re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", template) + "$"), h)
@@ -205,7 +206,7 @@ async def _answer(
 ) -> Response:
     if app is None:
         return _error(401, "401: Unauthorized", 0)
-    failure = fake.take_failure(path)
+    failure = fake.take_failure(path, method)
     if failure is not None:
         return _scripted(failure.status, failure.global_, failure.retry_after)
     for route_method, template, pattern, handler in _COMPILED:

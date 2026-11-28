@@ -1,6 +1,6 @@
 # Bot contract
 
-The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. It also fixes the **who-plays-what read API**, which serves the names behind the bot's presence counts, and the **run-of-show posts** the bot makes on the agenda's `discord_channel`. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
+The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. It also fixes the **who-plays-what read API**, which serves the names behind the bot's presence counts, the **run-of-show posts** the bot makes on the agenda's `discord_channel`, and the guild's **purposes** with the **setup check**. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
 
 **Machine-readable API: [bot.openapi.yaml](bot.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
@@ -19,6 +19,7 @@ The Discord side of the platform. The `bot` module is one module with a pool of 
 | bot guild routes | global | Guild id → tenant id and application id. Read before a tenant is set, to route a gateway event or an interaction to its event. A plain tenant reference, nothing else (0013 item 6) |
 | bot application routes | global | Own application id → tenant id. Keeps each own application to one event |
 | bot provider secrets | per tenant | An outside provider's bearer secret, encrypted (Provider secrets) |
+| bot purposes | per tenant | Each purpose's channel or role id in the event's guild (Purposes) |
 
 The two route tables are added to the kit's allow-list of global tables ([tenants.md](tenants.md#tables-global-and-per-tenant)) when the module is built. They hold no secret and no tenant data beyond the reference, like hostnames. Everything else the bot stores is per tenant under row-level security.
 
@@ -114,6 +115,43 @@ An outside provider that wants a bearer secret (the standalone Finals app, [fina
 - `PUT /api/bot/providers/{provider}/secret` with `{"secret"}` (1–512 characters) sets it; `DELETE` clears it (also on an archived event). Both 204, the event-admin role itself; an archived event's `PUT` is 409 `event_archived`. `provider` is lowercase `snake_case`, at most 32 characters (otherwise 404).
 - Write-only: no read answers it. It is encrypted with the platform secrets key, bound to the event and the provider, and is never in a reply, a log or an event. Audited (`bot.provider_secret.set`, `bot.provider_secret.cleared`) without the value. A deleted event's secrets go with it.
 
+## Purposes
+What the bot uses a channel or a role of the event's guild for (step 6, link 5; mockup 03 of the [step 6 brief](../docs/briefs/step-6-bot.md)). A fixed catalogue, each purpose a channel, a category or a role, under its feature's flag, with a template to create it from:
+
+| Purpose | Kind | Flag | Template | The bot needs there |
+|---|---|---|---|---|
+| `announcements` | channel | — | `announcements`; @everyone may not send | View channel, Send messages, Embed links |
+| `now_and_next` | channel | — | `now-and-next`; @everyone may not send | as above, and Pin messages |
+| `food` | channel | `pizza.enabled` | `food`; @everyone may not send | as above, and Pin messages |
+| `photos` | channel | `screen.photos` | `photos` | View channel, Read message history |
+| `crew` | channel | — | `crew`; only the crew role sees it | View channel, Send messages, Embed links |
+| `tournaments` | channel | `tournament.enabled` | `tournaments`; @everyone may not send | View channel, Send messages, Embed links |
+| `match_voice` | category | `tournament.enabled` | `Match voice` | View channel, Manage channels, Move members |
+| `crew_role` | role | — | `Crew` | (role order, below) |
+| `attendee_role` | role | — | `Attendee` | (role order, below) |
+
+- **Flags:** a purpose whose flag is off for the event is `not_on`. `tournament.enabled` is the tournament module's (step 7); until it declares it in [flags.yaml](flags.yaml), no event carries it, and a flag the event's context does not carry counts as off.
+- **State, read live:** `GET /api/bot/guild/purposes` reads the guild's channels and roles from Discord on each call and answers every purpose `bound`, `missing` (none picked, or the picked one was deleted in Discord: its id stays, E3) or `not_on`. Only the ids are kept, per event; names come from Discord. A purpose's posts go nowhere while it is `missing` (#122).
+- **Pick:** `PUT /api/bot/guild/purposes/{purpose}` with `{"target_id"}`, a channel of the purpose's kind (a text or announcement channel, or a category) or a role that is neither `@everyone` nor an integration's own; `null` clears it. `GET /api/bot/guild/channels` and `/roles` are the pick lists, read live.
+- **Create what is missing:** `POST /api/bot/guild/purposes/create-missing` makes each purpose that is on and `missing` from its template and binds it: roles first (no permissions of their own), then channels, whose overwrites let the crew role into `crew` and give the bot what it needs there. Discord lets the bot manage only roles below its own, so while a bound role sits at or above the bot's highest role, no role is made, only channels, and the check names the fix (E6). Without Manage roles no role is made, without Manage channels no channel. The answer says what was made and why the rest was not.
+- **With the binding:** the purposes belong to the guild: an unbind forgets them, a clone moves them with the binding, a deleted event deletes them.
+- **Who:** reading needs `bot.connection.read`, under the event's admin-access rule; picking and creating need the event-admin role itself. Both are audited (`bot.purpose.changed`, `bot.purposes.created`) and emit `bot.purposes.changed`. An archived event's guild is read no more: these paths answer 409 `event_archived`. Discord not answering is 503 `discord_unavailable`.
+
+## The setup check
+`GET /api/bot/guild/check` answers, for every feature that is on, what the bot needs in the guild, whether it has it, and one whole sentence that fixes it (mockup 04). `POST` runs it again; `GET` shows the last result for the bound guild (kept a week), or runs it when there is none. Right `bot.connection.read`.
+
+| Feature | Flag | Rows |
+|---|---|---|
+| `announcements`, `now_and_next`, `food`, `photos`, `crew` | as their purpose | the purpose has a channel; the bot's permissions in it |
+| `tournaments` | `tournament.enabled` | the same for `tournaments` and `match_voice` |
+| `presence` (who plays what) | `bot.presence` | the application's Presence intent |
+| `roles` (rights from roles) | `bot.members` | the application's Server members intent; the bot's role above `crew_role` and `attendee_role` |
+
+- **A row** is `{need, where, ok, missing, fix, fix_action}`: `need` is `purpose`, `permission`, `intent` or `role_order`; `where` names the channel, category, role or application; `missing` lists the permissions the bot lacks there, as Discord names them; `fix` is a whole sentence ("Give the bot “Pin messages” in #food.", "Move the bot's role above Crew in Server settings → Roles."), null when the row is ok. A feature that is off is `not_on` with no rows; otherwise `ok` or `gaps`.
+- **Permissions** are computed as Discord does: @everyone and the bot's roles on the server, Administrator holding everything, then the channel's overwrites for @everyone, for the bot's roles and for the bot itself.
+- **Intents** come from the application's flags on Discord (full or limited both count). For the shared bot the fix asks the platform's operator; for an own application it names the switch in the Developer Portal.
+- **Fixes the bot makes itself** carry `fix_action`: `create_missing` (above), or `allow_in_channel`, when a channel takes from the bot's role what the role holds on the server and the bot holds Manage roles. `POST /api/bot/guild/check/fix` with `{"feature"}` (the event-admin role itself) then gives the bot that permission in its own overwrite in the channel, which outranks its role's, audits it (`bot.check.fixed`) and answers the check run again. A permission the role lacks on the server is a fix in words only: Discord refuses an overwrite granting more than the bot holds.
+
 ## Privileged intents and data per event
 - Privileged intents (members, presence, message content) are set per application, not per guild (0013 item 16). The shared application holds the union the platform's features need: **presence and members**, never message content (step 6, D5). Every client asks for the intents `GUILDS`, `GUILD_MEMBERS` and `GUILD_PRESENCES` (privileged), `GUILD_VOICE_STATES` and `GUILD_MESSAGES` (not privileged), and never `MESSAGE_CONTENT`: nothing the platform does reads message text. An own application without the two privileged ones in its portal connects without them (Missing intents, above).
 - Each feed of gateway data belongs to a feature flag of the event, declared in [flags.yaml](flags.yaml), each on by default:
@@ -159,7 +197,7 @@ The bot's part of clone-the-last-event ([tenants.md](tenants.md#series-and-clone
 - Audited in both events; emits `bot.connection.changed` and `bot.guild.unbound` (`reason: moved`) on the source's stream and `bot.connection.changed` and `bot.guild.bound` on the new event's.
 
 ## Rights
-`bot.connection.read` (see the connection, the client's status and the binding), `bot.presence.read` (read who plays what without being a member of the event). Writing the connection, binding, unbinding, syncing commands, cloning and a provider's secret need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
+`bot.connection.read` (see the connection, the client's status and the binding, the purposes, the pick lists and the check), `bot.presence.read` (read who plays what without being a member of the event). Writing the connection, binding, unbinding, syncing commands, picking and creating purposes, the check's fixes, cloning and a provider's secret need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
 
 ## Events (version 1)
 Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catalog: [events.md](events.md#bot-connections). On the event's stream `t:<tenant>:events:bot`, with `tenant` set. Events carry ids, never a token, a client secret or a person's Discord id.
@@ -170,8 +208,9 @@ Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catal
 | `bot.client.changed` | The event's client changed status: ready, rate limited, paused, failed, or back. A change of the shared client is emitted for every event on it. Debounced: at most once a minute per event, the last status winning | system | `status`, `error_code` (or `null`), `since` |
 | `bot.guild.bound` | A guild was bound to the event, by the install flow or a clone | system | `guild_id`, `guild_name`, `application_id`, `actor_user_id` |
 | `bot.guild.unbound` | The event's guild binding ended | system | `guild_id`, `reason` (`unbound`, `bot_removed`, `superadmin`, `moved`), `actor_user_id` (`null` for `bot_removed`) |
+| `bot.purposes.changed` | Purposes were picked, cleared or created (Purposes) | system | `purposes` (purpose → channel or role id, or `null` when cleared), `actor_user_id` |
 
-Consumers: admin (the event's bot status), notify (Discord DMs are possible only while a guild is bound and the client is ready, [notify.md](notify.md)).
+Consumers: admin (the event's bot status), notify (Discord DMs are possible only while a guild is bound and the client is ready, [notify.md](notify.md)). `bot.purposes.changed` has none outside the bot yet: its posts (#122) follow it.
 
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e90", "type": "bot.guild.bound", "version": 1,
@@ -181,4 +220,4 @@ Consumers: admin (the event's bot status), notify (Discord DMs are possible only
 ```
 
 ## Not in this contract
-The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; the commands and their flags (#122 and the Finals track, on the framework above), what it keeps of each feed, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
+The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; the commands and their flags (#122 and the Finals track, on the framework above), what it keeps of each feed, role-to-rights sync, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).

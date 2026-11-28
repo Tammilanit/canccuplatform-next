@@ -22,6 +22,8 @@ tags:
     description: Binding the event's Discord server through the OAuth bot-install flow, and its slash commands.
   - name: presence
     description: Who plays which game and who is in which voice channel, live; the names behind the bus's counts.
+  - name: setup
+    description: The guild's purposes, the pick lists, creating what is missing, and the check with its fixes.
   - name: clone
     description: Moving the connection and binding from the last event of a series.
   - name: providers
@@ -273,6 +275,261 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /api/bot/guild/purposes:
+    get:
+      tags: [setup]
+      operationId: getPurposes
+      summary: The purposes and what serves each in the guild
+      description: |
+        Right `bot.connection.read`, under the event's admin-access rule. Every purpose of the catalogue, in its
+        order, with its state read live from Discord: `bound` (its channel or role is in the guild), `missing`
+        (none picked, or the picked one was deleted in Discord: `target_id` stays, `target_name` is null) or
+        `not_on` (its feature's flag is off). 404 `not_found` without a binding; 409 `event_archived`;
+        503 `discord_unavailable`.
+      responses:
+        "200":
+          description: The purposes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purposes"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/purposes/{purpose}:
+    parameters:
+      - name: purpose
+        in: path
+        required: true
+        description: A purpose of the catalogue (contracts/bot.md, Purposes); any other is 404.
+        schema:
+          $ref: "#/components/schemas/PurposeName"
+    put:
+      tags: [setup]
+      operationId: setPurpose
+      summary: Pick the channel or role that serves a purpose, or clear it
+      description: |
+        The event-admin role itself. `target_id` must be a channel of the purpose's kind in the guild (a text or
+        announcement channel, or a category), or a role that is neither `@everyone` nor managed by an
+        integration; otherwise 400 `target_invalid`. `null` clears it. Audited (`bot.purpose.changed`); emits
+        `bot.purposes.changed`. 409 `event_archived`; 503 `discord_unavailable`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurposeUpdate"
+      responses:
+        "200":
+          description: The purpose as it is now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purpose"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/purposes/create-missing:
+    post:
+      tags: [setup]
+      operationId: createMissingPurposes
+      summary: Create every missing channel and role from its template
+      description: |
+        The event-admin role itself. Each purpose that is on and `missing` gets a new channel or role from its
+        template and is bound to it: roles first, then channels. Roles are made only while the bot holds Manage
+        roles and its role is above every bound role (`role_order`, E6); channels only while it holds Manage
+        channels (`missing_permission`); one Discord refuses is `discord_refused`. Audited
+        (`bot.purposes.created`); emits `bot.purposes.changed` when anything was made. 409 `event_archived`;
+        503 `discord_unavailable`.
+      responses:
+        "200":
+          description: What was made, what was not and why, and the purposes now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMissingResult"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/channels:
+    get:
+      tags: [setup]
+      operationId: listGuildChannels
+      summary: The guild's channels, for the pick lists
+      description: |
+        Right `bot.connection.read`. Read live from Discord, in the guild's order. 404 `not_found` without a
+        binding; 409 `event_archived`; 503 `discord_unavailable`.
+      responses:
+        "200":
+          description: The channels.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [channels]
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GuildChannel"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/roles:
+    get:
+      tags: [setup]
+      operationId: listGuildRoles
+      summary: The guild's roles, for the pick lists
+      description: |
+        Right `bot.connection.read`. Read live from Discord, highest first, without `@everyone`. 404 `not_found`
+        without a binding; 409 `event_archived`; 503 `discord_unavailable`.
+      responses:
+        "200":
+          description: The roles.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [roles]
+                properties:
+                  roles:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GuildRole"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/check:
+    get:
+      tags: [setup]
+      operationId: getCheck
+      summary: The last check of the guild
+      description: |
+        Right `bot.connection.read`. The last result for the bound guild (kept a week), or a new one when there
+        is none. 404 `not_found` without a binding; 409 `event_archived`; 503 `discord_unavailable`.
+      responses:
+        "200":
+          description: The check.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Check"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+    post:
+      tags: [setup]
+      operationId: runCheck
+      summary: Run the check again
+      description: Right `bot.connection.read`; reads Discord and changes nothing there. As the `GET`, run now.
+      responses:
+        "200":
+          description: The check.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Check"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
+  /api/bot/guild/check/fix:
+    post:
+      tags: [setup]
+      operationId: fixCheck
+      summary: Make the fixes the bot can make itself for one feature
+      description: |
+        The event-admin role itself. For each of the feature's rows with `fix_action: allow_in_channel`, the bot
+        allows itself, in its own overwrite in that channel, what the channel took from its role. Audited
+        (`bot.check.fixed`) when anything changed; answers the check run again. An unknown feature is 400
+        `invalid_request`; 409 `event_archived`; 503 `discord_unavailable`. A row is offered only where the bot can
+        view the channel and holds Manage roles there; when Discord refuses every change, 502 `discord_refused`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [feature]
+              properties:
+                feature:
+                  $ref: "#/components/schemas/CheckFeatureName"
+      responses:
+        "200":
+          description: The check after the fixes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Check"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "502":
+          description: "`discord_refused`: Discord refused every change the bot tried."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
+        "503":
+          $ref: "#/components/responses/DiscordUnavailable"
   /api/bot/providers/{provider}/secret:
     parameters:
       - name: provider
@@ -450,8 +707,9 @@ components:
     BadRequest:
       description: |
         `invalid_request` (a field is missing or invalid), `token_invalid` (Discord refused the bot token),
-        `application_mismatch` (the token belongs to another application) or `client_secret_invalid` (Discord
-        refused the client secret).
+        `application_mismatch` (the token belongs to another application), `client_secret_invalid` (Discord
+        refused the client secret) or `target_invalid` (not a channel or role of the guild that can serve the
+        purpose).
       content:
         application/json:
           schema:
@@ -475,6 +733,12 @@ components:
       description: |
         `version_conflict` (stale `revision`), `application_reserved`, `application_taken`, `guild_bound`,
         `connection_incomplete`, `source_live`, `already_connected` or `event_archived` (the event is read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    DiscordUnavailable:
+      description: "`discord_unavailable`: Discord did not answer, or the bot can no longer read the guild."
       content:
         application/json:
           schema:
@@ -757,6 +1021,177 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+    PurposeName:
+      type: string
+      enum: [announcements, now_and_next, food, photos, crew, tournaments, match_voice, crew_role, attendee_role]
+    Purpose:
+      type: object
+      required: [purpose, kind, flag, state, target_id, target_name, template_name]
+      properties:
+        purpose:
+          $ref: "#/components/schemas/PurposeName"
+        kind:
+          type: string
+          enum: [channel, category, role]
+        flag:
+          type: [string, "null"]
+          description: The feature flag it serves; null when every event uses it.
+          examples: [pizza.enabled]
+        state:
+          type: string
+          enum: [bound, missing, not_on]
+        target_id:
+          description: The picked channel or role; kept when it was deleted in Discord (`missing`).
+          oneOf:
+            - $ref: "#/components/schemas/Snowflake"
+            - type: "null"
+        target_name:
+          type: [string, "null"]
+          description: Its name in Discord now; null unless `bound`.
+        template_name:
+          type: string
+          description: The name "Create what is missing" gives it.
+          examples: [now-and-next]
+    Purposes:
+      type: object
+      required: [purposes]
+      properties:
+        purposes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Purpose"
+    PurposeUpdate:
+      type: object
+      additionalProperties: false
+      required: [target_id]
+      properties:
+        target_id:
+          oneOf:
+            - $ref: "#/components/schemas/Snowflake"
+            - type: "null"
+    CreateMissingResult:
+      type: object
+      required: [created, skipped, purposes]
+      properties:
+        created:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurposeName"
+        skipped:
+          type: array
+          items:
+            type: object
+            required: [purpose, reason]
+            properties:
+              purpose:
+                $ref: "#/components/schemas/PurposeName"
+              reason:
+                type: string
+                enum: [missing_permission, role_order, discord_refused]
+        purposes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Purpose"
+    GuildChannel:
+      type: object
+      required: [id, name, type, parent_id, position]
+      properties:
+        id:
+          $ref: "#/components/schemas/Snowflake"
+        name:
+          type: string
+        type:
+          type: integer
+          description: Discord's channel type (0 text, 2 voice, 4 category, 5 announcement, …).
+        parent_id:
+          oneOf:
+            - $ref: "#/components/schemas/Snowflake"
+            - type: "null"
+        position:
+          type: [integer, "null"]
+    GuildRole:
+      type: object
+      required: [id, name, position, managed]
+      properties:
+        id:
+          $ref: "#/components/schemas/Snowflake"
+        name:
+          type: string
+        position:
+          type: integer
+        managed:
+          type: boolean
+          description: Held by an integration (a bot's own role); such a role cannot serve a purpose.
+    CheckFeatureName:
+      type: string
+      enum: [announcements, now_and_next, food, photos, crew, tournaments, presence, roles]
+    CheckRow:
+      type: object
+      required: [need, where, ok, missing, fix, fix_action]
+      properties:
+        need:
+          type: string
+          enum: [purpose, permission, intent, role_order]
+        where:
+          type: object
+          required: [type, id, name]
+          properties:
+            type:
+              type: string
+              enum: [channel, category, role, application]
+            id:
+              oneOf:
+                - $ref: "#/components/schemas/Snowflake"
+                - type: "null"
+            name:
+              type: [string, "null"]
+              description: The channel's or role's name in Discord, or the intent's name.
+        ok:
+          type: boolean
+        missing:
+          type: array
+          description: For a `permission` row, the permissions the bot lacks there, as Discord names them.
+          items:
+            type: string
+          examples: [["Pin messages"]]
+        fix:
+          type: [string, "null"]
+          description: One whole sentence that fixes the row; null when it is ok.
+        fix_action:
+          type: [string, "null"]
+          enum: [create_missing, allow_in_channel, null]
+          description: |
+            Set when the bot can fix the row itself: `create_missing` through `POST
+            /api/bot/guild/purposes/create-missing`, `allow_in_channel` through `POST /api/bot/guild/check/fix`.
+    Check:
+      type: object
+      required: [checked_at, gaps, features]
+      properties:
+        checked_at:
+          type: string
+          format: date-time
+        gaps:
+          type: integer
+          minimum: 0
+          description: The rows that are not ok, over every feature.
+        features:
+          type: array
+          items:
+            type: object
+            required: [feature, flag, state, rows]
+            properties:
+              feature:
+                $ref: "#/components/schemas/CheckFeatureName"
+              flag:
+                type: [string, "null"]
+              state:
+                type: string
+                enum: [ok, gaps, not_on]
+              rows:
+                type: array
+                description: Empty when the feature is not on.
+                items:
+                  $ref: "#/components/schemas/CheckRow"
   securitySchemes:
     session:
       type: apiKey

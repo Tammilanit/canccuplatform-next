@@ -27,9 +27,12 @@ async def _switch(conn: Any, tenant: str) -> None:
     await conn.execute(f"SELECT set_config('{TENANT_SETTING}', $1, true)", tenant)
 
 
-async def _take(d: Deps, conn: Any, source: str, target: str) -> tuple[Any, Any, dict[str, str]]:
+async def _take(
+    d: Deps, conn: Any, source: str, target: str
+) -> tuple[Any, Any, dict[str, str], list[Any]]:
     """The source's own connection (with its credentials sealed again for the target) and its
-    binding, both removed from the source; the source's events go on its stream."""
+    binding with its purposes, all removed from the source; the source's events go on its
+    stream."""
     row = await conn.fetchrow("SELECT * FROM bot_connections WHERE mode = 'own' FOR UPDATE")
     bound = await conn.fetchrow("SELECT * FROM bot_bindings FOR UPDATE")
     sealed: dict[str, str] = {}
@@ -44,9 +47,12 @@ async def _take(d: Deps, conn: Any, source: str, target: str) -> tuple[Any, Any,
             " client_secret = NULL, key_version = NULL, updated_at = NULL, updated_by = NULL,"
             " revision = revision + 1"
         )
+    purposes: list[Any] = []
     if bound is not None:
+        purposes = list(await conn.fetch("SELECT purpose, target_id, updated_at FROM bot_purposes"))
+        await conn.execute("DELETE FROM bot_purposes")
         await conn.execute("DELETE FROM bot_bindings")
-    return row, bound, sealed
+    return row, bound, sealed, purposes
 
 
 async def _emit(
@@ -67,7 +73,7 @@ async def move(d: Deps, source: str, target: str, actor: str | None) -> tuple[bo
     """(moved_connection, moved_binding); 409 `already_connected` when the target has its own."""
     with tenant_scope(source):
         async with d.db.tenant(source) as conn:
-            row, bound, sealed = await _take(d, conn, source, target)
+            row, bound, sealed, purposes = await _take(d, conn, source, target)
             if row is not None:
                 await _emit(d, conn, "shared", None, row["revision"] + 1, actor)
             if bound is not None:
@@ -76,6 +82,14 @@ async def move(d: Deps, source: str, target: str, actor: str | None) -> tuple[bo
             await _switch(conn, target)
             with tenant_scope(target):
                 await _give(d, conn, target, row, bound, sealed, actor)
+                for p in purposes:  # they name the guild's channels, so they go with it
+                    await conn.execute(
+                        "INSERT INTO bot_purposes (purpose, target_id, updated_at)"
+                        " VALUES ($1, $2, $3)",
+                        p["purpose"],
+                        p["target_id"],
+                        p["updated_at"],
+                    )
     for tenant in (source, target):
         await d.outbox.flush(tenant)
     return row is not None, bound is not None
