@@ -1,0 +1,233 @@
+# Preset "Cozy LAN" (#785, plan docs/plans/issue-785.md D4–D7, D12): warm, soft and rounded, for small
+# or family events. A simple theme: the platform's Fredoka and Nunito pair, the really round `pill`
+# corners and the warm `hearth` glow rising from the bottom are its signature; no CSS of its own.
+schema_version: 1
+name: Cozy LAN
+description: "Warm, soft, rounded: small or family events"
+mode: simple
+tokens:
+  colors:
+    background: "#1d1612"
+    surface: "#2a201a"
+    border: "#5a4636"
+    text: "#fff4e8"
+    text_muted: "#d8c2ac"
+    primary: "#f0a35e"
+    primary_text: "#1d1612"
+    accent: "#8fc7a0"
+    status_ok: "#86d6a0"
+    status_degraded: "#f2c94c"
+    status_down: "#ff7a6b"
+  motion_style:
+    pack: standard
+brand:
+  primary: "#f0a35e"
+  accent: "#8fc7a0"
+  scheme: dark
+  font_pair: fredoka-nunito
+  roundness: pill
+  backdrop:
+    looks: [hearth, particles]
+  box_opacity: 0.9
+images:
+  logo: images/logo.svg
+# Level up's layouts (D7), without its backdrop embed: the stage draws the background.
+layouts:
+  - id: main
+    name: Main hall
+    aspect: "16:9"
+    grid:
+      columns: 24
+      rows: 12
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 4, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: food
+        area: { column: 5, row: 1, columns: 13, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: food_status
+      - id: clock
+        area: { column: 18, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: now
+        area: { column: 1, row: 3, columns: 9, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 10, row: 3, columns: 8, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: countdown
+        area: { column: 18, row: 3, columns: 7, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: spotlight
+        area: { column: 18, row: 7, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+          - widget: qr
+      - id: ticker
+        area: { column: 1, row: 12, columns: 24, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+  - id: portrait
+    name: Lobby (portrait)
+    aspect: "9:16"
+    grid:
+      columns: 12
+      rows: 24
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 5, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: clock
+        area: { column: 6, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: countdown
+        area: { column: 1, row: 3, columns: 12, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: now
+        area: { column: 1, row: 7, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 1, row: 13, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: spotlight
+        area: { column: 1, row: 19, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+      - id: side
+        area: { column: 8, row: 19, columns: 5, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: qr
+          - widget: food_status
+      - id: ticker
+        area: { column: 1, row: 24, columns: 12, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets; plan D5); the first is the colours above.
+schemes:
+  - id: fireside
+    name: Fireside
+    kind: dark
+    brand:
+      primary: "#f0a35e"
+      accent: "#8fc7a0"
+      scheme: dark
+    colors:
+      background: "#1d1612"
+      surface: "#2a201a"
+      border: "#5a4636"
+      text: "#fff4e8"
+      text_muted: "#d8c2ac"
+      primary: "#f0a35e"
+      primary_text: "#1d1612"
+      accent: "#8fc7a0"
+      status_ok: "#86d6a0"
+      status_degraded: "#f2c94c"
+      status_down: "#ff7a6b"
+  - id: meadow
+    name: Meadow
+    kind: accent
+    brand:
+      primary: "#8fd19e"
+      accent: "#f0a35e"
+      scheme: dark
+    colors:
+      background: "#121a15"
+      surface: "#1c2720"
+      border: "#3e5646"
+      text: "#f0f8f0"
+      text_muted: "#b8ccbc"
+      primary: "#8fd19e"
+      primary_text: "#121a15"
+      accent: "#f0a35e"
+      status_ok: "#86d6a0"
+      status_degraded: "#f2c94c"
+      status_down: "#ff7a6b"
+  - id: linen
+    name: Linen
+    kind: light
+    brand:
+      primary: "#a24f12"
+      accent: "#2f6b4a"
+      scheme: light
+    colors:
+      background: "#faf4ec"
+      surface: "#fffdf9"
+      border: "#e3d4c0"
+      text: "#3a2a1e"
+      text_muted: "#6b5444"
+      primary: "#a24f12"
+      primary_text: "#ffffff"
+      accent: "#2f6b4a"
+      status_ok: "#2f6b4a"
+      status_degraded: "#7a5600"
+      status_down: "#b3261e"
+  - id: blossom
+    name: Blossom
+    kind: light
+    brand:
+      primary: "#b03a5b"
+      accent: "#2f6b6b"
+      scheme: light
+    colors:
+      background: "#fbf1f2"
+      surface: "#fffafa"
+      border: "#ecc9cf"
+      text: "#3b2228"
+      text_muted: "#6e4a52"
+      primary: "#b03a5b"
+      primary_text: "#ffffff"
+      accent: "#2f6b6b"
+      status_ok: "#2f6b4a"
+      status_degraded: "#7a5600"
+      status_down: "#b3261e"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#ffb36b"
+      accent: "#9fe0b4"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#14100c"
+      border: "#ffd9b0"
+      text: "#ffffff"
+      text_muted: "#f3e6d8"
+      primary: "#ffb36b"
+      primary_text: "#000000"
+      accent: "#9fe0b4"
+      status_ok: "#86d6a0"
+      status_degraded: "#f2c94c"
+      status_down: "#ff8a7a"

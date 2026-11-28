@@ -66,8 +66,11 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     const { presets } = res.json<Listed>();
     expect(presets.map((p) => p.id)).toEqual([
       "default",
+      "daylight",
+      "cozy-lan",
       "esports",
       "level-up",
+      "synthwave",
       "arcade",
       "terminal",
     ]);
@@ -182,6 +185,41 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     });
     expect(after.manifest.preset).toEqual({ id: "esports", scheme: "studio" });
   });
+
+  it("keeps Cozy LAN's simple mode, pill corners and hearth under its light scheme (#785 D12)", async () => {
+    const before = await eventDraft();
+    const res = await apply({ preset: "cozy-lan", scheme: "linen", draft_version: before.draft_version });
+    expect(res.statusCode).toBe(200);
+    const after = res.json<Draft>();
+    expect(after.mode).toBe("simple");
+    expect(after.manifest.images?.logo).toBe("images/logo.svg");
+    expect(after.manifest.brand).toMatchObject({
+      font_pair: "fredoka-nunito",
+      roundness: "pill",
+      backdrop: { looks: ["hearth", "particles"] },
+      logo_plate: PLATE,
+      scheme: "light",
+    });
+  }); // prettier-ignore
+
+  it("applies each of Part 2's presets in each scheme with its files passing every check", async () => {
+    await eventDraft();
+    for (const [preset, schemes] of [
+      ["synthwave", ["sunset", "miami", "outrun", "vapor", "contrast"]],
+      ["cozy-lan", ["fireside", "meadow", "linen", "blossom", "contrast"]],
+      ["daylight", ["morning", "sand", "mint", "dusk", "contrast"]],
+    ] as const) {
+      for (const scheme of schemes) {
+        const before = await draftNow();
+        const res = await apply({ preset, scheme, draft_version: before.draft_version });
+        expect(res.statusCode, `${preset} · ${scheme}`).toBe(200);
+        const { problems } = res.json<{ problems: { code: string }[] }>();
+        // The test's widget list has no announcements, which Level up's layouts show (D7).
+        const own = problems.filter((p) => p.code !== "widget_unknown");
+        expect(own, `${preset} · ${scheme}`).toEqual([]);
+      }
+    }
+  }); // prettier-ignore
 
   it("refuses a preset with embeds to a session without the embeds right", async () => {
     const before = await eventDraft();

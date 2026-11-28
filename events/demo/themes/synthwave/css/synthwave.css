@@ -1,0 +1,146 @@
+/* Synthwave (#785, plan D6, D13): pink and purple neon, a striped sun on the horizon, a grid that
+   never stops; the pack's accepted look (docs/design/themes/looks/synthwave.css). Stable classes
+   and t-synth- names only; every rule that does more than colour is scoped to the screen, so hub
+   and phone pages stay plain.
+   Build note 1 of the pack's accept: the boxes reach down to the ticker as in the other presets
+   (Level up's layouts, no horizon band), and the sun and the grid show through them at their
+   opacity (0.8, D11). The sun is one disc with its stripes cut into its lower half.
+   Motion: the grid advances all the time at calm, lively and party, faster with each level, by
+   transform only; at none, and so under reduced motion, it stands still. */
+
+/* The sun and the grid hang on the stage's glow layer, whose box is the screen grown by 20 % on
+   every side (the platform's stage.css): a screen point at (x vw, y vh) sits at (x + 20, y + 20) in
+   it. They hide under the event's own picture as the glows do (stage.css), and under a game's art
+   and its scrim. The layer shows whichever look the cycle holds, so the grid never stops; its
+   brightness still follows the hype, as the glows' does (stage-looks.css). */
+.canccu-surface--screen .canccu-stage:not(.canccu-stage--backdrop) .canccu-stage__glow {
+  opacity: calc(0.55 + 0.45 * var(--canccu-hype, 0.5));
+}
+
+/* The horizon is at 66 vh. The disc stands on it, the accent at its top and the primary at the
+   horizon; its lower half is cut by stripes that thicken towards the horizon, like the posters of
+   the period. */
+.canccu-surface--screen .canccu-stage__glow::after {
+  content: "";
+  position: absolute;
+  top: 34vh;
+  left: calc(92vw - 26vh);
+  width: 52vh;
+  height: 52vh;
+  border-radius: 50%;
+  opacity: 0.92;
+  background: linear-gradient(180deg, var(--canccu-color-accent), var(--canccu-color-primary));
+  -webkit-mask: linear-gradient(
+    180deg,
+    #000 0 54%,
+    transparent 54% 58%,
+    #000 58% 66%,
+    transparent 66% 71%,
+    #000 71% 79%,
+    transparent 79% 86%,
+    #000 86% 92%,
+    transparent 92% 100%
+  );
+  mask: linear-gradient(
+    180deg,
+    #000 0 54%,
+    transparent 54% 58%,
+    #000 58% 66%,
+    transparent 66% 71%,
+    #000 71% 79%,
+    transparent 79% 86%,
+    #000 86% 92%,
+    transparent 92% 100%
+  );
+}
+
+/* The grid: lines in the accent colour from the horizon down, tilted back to it, fading in just
+   below it. */
+.canccu-surface--screen .canccu-stage__glow::before {
+  content: "";
+  position: absolute;
+  top: 86vh;
+  left: -30vw;
+  right: -30vw;
+  height: 90vh;
+  opacity: 0.7;
+  transform: perspective(60vh) rotateX(62deg);
+  transform-origin: 50% 0;
+  -webkit-mask: linear-gradient(180deg, transparent 0, #000 14%);
+  mask: linear-gradient(180deg, transparent 0, #000 14%);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--canccu-color-accent) 85%, transparent) 0 3px,
+      transparent 3px 8vh
+    ),
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--canccu-color-accent) 85%, transparent) 0 3px,
+      transparent 3px 8vh
+    );
+}
+
+/* One cell a turn, so the loop has no seam: 8 s a cell at calm, 3.5 s at lively, 1.6 s at party
+   (the event's heat, D13). */
+.canccu-motion--calm.canccu-surface--screen .canccu-stage__glow::before {
+  animation: t-synth-grid 8s linear infinite;
+}
+.canccu-motion--lively.canccu-surface--screen .canccu-stage__glow::before {
+  animation: t-synth-grid 3.5s linear infinite;
+}
+.canccu-motion--party.canccu-surface--screen .canccu-stage__glow::before {
+  animation: t-synth-grid 1.6s linear infinite;
+}
+@keyframes t-synth-grid {
+  from {
+    transform: perspective(60vh) rotateX(62deg) translateY(0);
+  }
+  to {
+    transform: perspective(60vh) rotateX(62deg) translateY(8vh);
+  }
+}
+
+/* Neon edges: a static glow in the primary colour around a box that lets the sun and the grid
+   show through at its opacity (D11); the contrast rule checks the text over the sun's colours. */
+.canccu-surface--screen .canccu-widget {
+  border: 2px solid color-mix(in srgb, var(--canccu-color-primary) 75%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--canccu-color-primary) 30%, transparent),
+    0 0 28px color-mix(in srgb, var(--canccu-color-primary) 35%, transparent);
+}
+
+.canccu-surface--screen .canccu-widget:not(.canccu-widget--announcement) .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--canccu-color-primary) 55%, transparent);
+}
+
+/* The announcement (#780): a big neon frame, the headline in the heading face with a glow. Its
+   size and floors across a hall stay the platform's, as in the other presets. */
+.canccu-surface--screen .canccu-widget--announcement {
+  border-width: 3px;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--canccu-color-primary) 35%, transparent),
+    0 0 64px color-mix(in srgb, var(--canccu-color-primary) 45%, transparent);
+}
+.canccu-surface--screen .canccu-widget--announcement .canccu-widget__title {
+  font-family: var(--canccu-font-heading);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--canccu-color-accent) 55%, transparent);
+}
+
+/* Big numbers in the heading face, with the glow of the sun's two colours. */
+.canccu-surface--screen .canccu-widget--countdown .canccu-widget__body,
+.canccu-surface--screen .canccu-widget--clock {
+  font-family: var(--canccu-font-heading);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--canccu-color-accent) 45%, transparent);
+}
+
+.canccu-surface--screen .canccu-widget--ticker {
+  border-width: 2px 0 0;
+  box-shadow: 0 -6px 24px color-mix(in srgb, var(--canccu-color-accent) 30%, transparent);
+}
