@@ -16,6 +16,7 @@ admin admin_roles       the owner and admins of today's single sign-in; per tena
 admin admin_sessions    sign-in sessions, hashed; each is bound to one tenant with #52
 admin admin_sign_in_flows OAuth flows in progress, hashed; no event data
 admin admin_first_run   the one-time first-run code, hashed; no event data
+admin admin_acting_tokens acting tokens of commands in Discord, hashed; each row names its tenant and admin answers it only there; per tenant with #52
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)
 screen screen_migrations which migration files ran (created by runMigrations before the files); no event data
 screen screen_pin_tenants the events whose pin holds anything, a plain tenant reference, so the tick and the bundle retention find them without a tenant set

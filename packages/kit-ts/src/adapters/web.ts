@@ -7,7 +7,7 @@ import { UnknownHost } from "../resolve.js";
 import type { TenantResolver } from "../resolve.js";
 import { withTenant } from "../tenant.js";
 import type { Logger } from "../log.js";
-import type { RightsChecker, Session } from "../rights.js";
+import { ACTING_HEADER, type RightsChecker, type Session } from "../rights.js";
 import { SERVICE_HEADER, serviceHasRight } from "../service.js";
 import type { ServiceIdentity } from "../service.js";
 import { canonicalPath, checkOrigin } from "../web-security.js";
@@ -53,12 +53,14 @@ export function withRight(
 ): FetchHandler {
   return async (request) => {
     const token = request.headers.get(SERVICE_HEADER);
-    if (options.service !== undefined && token !== null) {
+    // An acting token is the person's call, carried by the bot: never the bot's own rights.
+    const acting = request.headers.has(ACTING_HEADER);
+    if (options.service !== undefined && token !== null && !acting) {
       const caller = options.service.verify(token);
       if (!serviceHasRight(caller, right)) throw new MissingRight(`needs right ${right}`);
       return handler(request, null, caller);
     }
-    const session = await checker.check(request.headers.get("cookie"), right);
+    const session = await checker.checkHeaders((name) => request.headers.get(name), right);
     return handler(request, session, null);
   };
 }

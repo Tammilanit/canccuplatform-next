@@ -96,6 +96,26 @@ async def answer_interaction(
     return Response(status_code=204)
 
 
+async def edit_original(
+    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
+) -> Response:
+    """An interaction's answer edited: what the person sees now."""
+    if p["application_id"] != app.id:
+        return _error(404, "Unknown Webhook", 10015)
+    fake.interaction_edits.append((p["token"], body))
+    return JSONResponse({**(body or {}), "id": fake.snowflake()})
+
+
+async def set_own_nick(
+    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
+) -> Response:
+    guild = fake.guilds.get(p["guild_id"])
+    if guild is None or app.id not in guild.bots:
+        return _error(403, "Missing Access", 50001)
+    guild.nicks[app.id] = str((body or {}).get("nick") or "")
+    return JSONResponse({"nick": guild.nicks[app.id]})
+
+
 ROUTES: list[tuple[str, str, Handler]] = [
     ("GET", "/users/@me", users_me),
     ("GET", "/oauth2/applications/@me", application_me),
@@ -105,6 +125,8 @@ ROUTES: list[tuple[str, str, Handler]] = [
     ("DELETE", "/users/@me/guilds/{guild_id}", leave_guild),
     ("PUT", "/applications/{application_id}/guilds/{guild_id}/commands", put_commands),
     ("POST", "/interactions/{interaction_id}/{token}/callback", answer_interaction),
+    ("PATCH", "/webhooks/{application_id}/{token}/messages/@original", edit_original),
+    ("PATCH", "/guilds/{guild_id}/members/@me", set_own_nick),
 ]
 _COMPILED = [
     (method, template, re.compile("^" + re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", template) + "$"), h)

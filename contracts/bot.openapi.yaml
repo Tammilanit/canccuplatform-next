@@ -24,6 +24,8 @@ tags:
     description: Who plays which game and who is in which voice channel, live; the names behind the bus's counts.
   - name: clone
     description: Moving the connection and binding from the last event of a series.
+  - name: providers
+    description: An outside provider's bearer secret per event, for the commands that call it.
   - name: superadmin
     description: On the superadmin hostname only.
 security:
@@ -271,6 +273,62 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /api/bot/providers/{provider}/secret:
+    parameters:
+      - name: provider
+        in: path
+        required: true
+        description: An outside provider, lowercase `snake_case`, at most 32 characters; any other is 404.
+        schema:
+          type: string
+          pattern: "^[a-z][a-z0-9_]{0,31}$"
+    put:
+      tags: [providers]
+      operationId: putProviderSecret
+      summary: Set an outside provider's bearer secret for the event
+      description: |
+        The event-admin role itself (bot.md, Provider secrets). Write-only: encrypted, bound to the event and the
+        provider, never answered, logged or emitted; audited without the value. 409 `event_archived`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [secret]
+              properties:
+                secret:
+                  type: string
+                  minLength: 1
+                  maxLength: 512
+                  writeOnly: true
+      responses:
+        "204":
+          description: Set.
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [providers]
+      operationId: deleteProviderSecret
+      summary: Clear an outside provider's bearer secret
+      description: The event-admin role itself, also on an archived event. 204 whether or not one was set.
+      responses:
+        "204":
+          description: Cleared.
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/bot/presence/playing:
     get:
       tags: [presence]

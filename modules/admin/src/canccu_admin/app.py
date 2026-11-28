@@ -35,7 +35,7 @@ from .forms import from_form, typed
 from .health import HealthWatch
 from .health_view import health_body, health_live
 from .home_page import home_route
-from .internal_people import people_route
+from .internal_people import internal_routes
 from .pages import (
     BASE,
     MODULE_ICONS,
@@ -367,7 +367,7 @@ def create_app(
             Route("/internal/admin/settings/{module}", internal_patch_settings, methods=["PATCH"]),
             Route("/internal/admin/profile/theme", internal_profile_theme, methods=["GET"]),
             Route("/internal/admin/profile/logo", internal_profile_logo, methods=["GET"]),
-            people_route(auth.users),
+            *internal_routes(auth, resolver),
             Route("/api/admin/profile", get_profile, methods=["GET"]),
             Route("/api/admin/profile", put_profile, methods=["PUT"]),
             Route("/api/admin/health/note", health_note, methods=["GET"]),

@@ -318,6 +318,109 @@ paths:
           $ref: "#/components/responses/ServiceUnauthenticated"
         "403":
           $ref: "#/components/responses/ServiceForbidden"
+  /internal/admin/acting-tokens:
+    post:
+      tags: [internal]
+      operationId: mintActingToken
+      summary: A minute-long token for a command in Discord to act as its person
+      description: |
+        The acting token (admin.md, The acting token). Only the bot may call it, with its service identity
+        and the bot-admin key in `x-canccu-bot-admin-key` (`CANCCU_BOT_ADMIN_KEY`, held by the admin and bot
+        containers only); any other caller, or a missing or wrong key, is 403 `service_forbidden`. The token
+        is for this tenant, the user whose Discord id is given, and one module; admin keeps only its SHA-256.
+        Internal network only.
+      security:
+        - {}
+      parameters:
+        - $ref: "#/components/parameters/TenantIdQuery"
+        - name: x-canccu-bot-admin-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [discord_user_id, module]
+              properties:
+                discord_user_id:
+                  type: string
+                  pattern: "^[0-9]{1,20}$"
+                module:
+                  type: string
+                  description: The module whose command is running; the token carries only that module's rights.
+      responses:
+        "201":
+          description: The token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, expires_at]
+                properties:
+                  token:
+                    type: string
+                    description: Sent to the module in `x-canccu-acting`, beside the bot's service identity.
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: 60 seconds after the mint; a token is never refreshed.
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          description: |
+            `service_forbidden` (not the bot, or no bot-admin key), or `not_a_member` (the person is no member of
+            the event).
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
+        "404":
+          description: "`no_account` (no user with that Discord id), or `not_found` (no such tenant)."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
+  /internal/admin/acting-session:
+    get:
+      tags: [internal]
+      operationId: getActingSession
+      summary: The session an acting token stands for, to the module it names
+      description: |
+        What `GET /api/admin/session` answers for a cookie, for an acting token in `x-canccu-acting` (admin.md,
+        The acting token): the person, their rights cut to the token's module, the token's `expires_at`, and
+        `superadmin` false. The calling module, by its service identity, must be the token's module, and
+        `tenant_id` its tenant; otherwise, and for an unknown or expired token or a person removed since,
+        401 `not_signed_in`. The kit calls it; never cached. Internal network only.
+      security:
+        - {}
+      parameters:
+        - $ref: "#/components/parameters/TenantIdQuery"
+        - name: x-canccu-acting
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          description: "`not_signed_in`, or `service_unauthenticated` without a valid service identity."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
   /api/admin/session:
     get:
       tags: [session]
@@ -614,6 +717,14 @@ components:
         over HTTPS the cookie is `__Host-canccu_session` (Secure, Path=/, no Domain); plain-http stacks keep this name
         (contracts/admin.md, Session and rights).
   parameters:
+    TenantIdQuery:
+      name: tenant_id
+      in: query
+      required: true
+      description: The tenant the calling module serves, set by its kit, never from a client's input.
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
     Provider:
       name: provider
       in: path

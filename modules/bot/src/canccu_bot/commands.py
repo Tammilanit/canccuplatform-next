@@ -1,10 +1,14 @@
 """The guild's slash commands (contracts/bot.md, Slash commands per guild): exactly the commands
 whose flags are on for the event, written per guild in one bulk overwrite, and none for an
-archived event. The commands themselves and the framework that answers them come with link 3;
-until then the set is empty, so a bound guild shows no command of this platform."""
+archived event. A set is written only when its hash differs from the one last written to that
+guild (O4 of the step 6 plan), so a deploy or a flag change that leaves a guild's set as it was
+costs nothing of Discord's daily limit on command writes. The framework (interactions.py) answers
+them; #122 and the Finals track add the commands, so until then the set is empty."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from typing import Any
 
@@ -13,17 +17,22 @@ from canccu_kit.access import TenantContext
 from . import store
 from .deps import Deps
 from .discord_api import DiscordRefused
+from .framework import Command
 
 log = logging.getLogger("canccu_bot.commands")
 
-CATALOGUE: list[tuple[str, dict[str, Any]]] = []
-"""(feature flag, the command as Discord takes it)."""
+COMMANDS: tuple[Command, ...] = ()
+"""The platform's commands, each under its feature flag: #122 and the Finals track add them."""
 
 
-def wanted(ctx: TenantContext) -> list[dict[str, Any]]:
+def wanted(d: Deps, ctx: TenantContext) -> list[dict[str, Any]]:
     if ctx["status"] == "archived":
         return []
-    return [command for flag, command in CATALOGUE if ctx["flags"].get(flag, False)]
+    return [c.payload() for c in d.commands if ctx["flags"].get(c.flag, False)]
+
+
+def digest(commands: list[dict[str, Any]]) -> str:
+    return hashlib.sha256(json.dumps(commands, sort_keys=True).encode()).hexdigest()
 
 
 def _error_code(status: int) -> str:
@@ -34,21 +43,28 @@ def _error_code(status: int) -> str:
     return "discord_unavailable"
 
 
-async def register(d: Deps, ctx: TenantContext) -> None:
+async def register(d: Deps, ctx: TenantContext, *, force: bool = False) -> None:
     """Write the event's set to its guild and record the outcome on the binding. A failure stays
     on this guild's binding (`failed` with its code) and never stops another guild's."""
     tenant = ctx["tenant_id"]
     async with d.db.tenant(tenant) as conn:
-        bound = await store.binding(conn)
+        bound = await conn.fetchrow(
+            "SELECT guild_id, application_id, commands_status, commands_hash FROM bot_bindings"
+        )
         if bound is None:
             return
         token = await store.bot_token(d.shared, d.secrets, conn, tenant, bound["application_id"])
-    commands = wanted(ctx)
+    commands = wanted(d, ctx)
+    written = digest(commands)
     path = f"/applications/{bound['application_id']}/guilds/{bound['guild_id']}/commands"
     error: str | None = None
+    # `force`: the admin's sync, for a guild whose commands someone removed by hand.
+    unchanged = (
+        not force and bound["commands_hash"] == written and bound["commands_status"] != "failed"
+    )
     if token is None:
         error = "token_invalid"
-    else:
+    elif not unchanged:
         try:
             response = await d.discord.as_bot(token, "PUT", path, commands)
             if response.status_code >= 300:
@@ -59,16 +75,20 @@ async def register(d: Deps, ctx: TenantContext) -> None:
     if error:
         log.warning("registering the commands of guild %s failed: %s", bound["guild_id"], error)
     async with d.db.tenant(tenant) as conn:
+        # A failed write forgets the hash, so the next one writes again whatever the set.
         await conn.execute(
             "UPDATE bot_bindings SET commands_status = $1, commands_error_code = $2,"
             " commands_flags_version = CASE WHEN $2::text IS NULL THEN $3"
             "   ELSE commands_flags_version END,"
-            " commands_registered_at = CASE WHEN $2::text IS NULL THEN $4"
-            "   ELSE commands_registered_at END"
+            " commands_registered_at = CASE WHEN $2::text IS NULL AND NOT $6 THEN $4"
+            "   ELSE commands_registered_at END,"
+            " commands_hash = CASE WHEN $2::text IS NULL THEN $7 END"
             " WHERE guild_id = $5",
             status,
             error,
             ctx["flags_version"],
             d.now(),
             bound["guild_id"],
+            unchanged,
+            written,
         )

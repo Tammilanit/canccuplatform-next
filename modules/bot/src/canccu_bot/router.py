@@ -20,7 +20,9 @@ from canccu_kit import tenant_scope
 from canccu_kit.access import TenantContext
 
 from .deps import Deps
+from .guard import guarded
 from .guild import unbind
+from .texts import text
 
 log = logging.getLogger("canccu_bot.router")
 
@@ -44,9 +46,6 @@ LEAVE_AFTER_S = 15 * 60
 FRESH_S = 10.0
 """How long a route or an event's flags are read from memory; the pool's tick is as long."""
 
-NOT_CONNECTED = "This server is not connected to an event on this platform."
-OUTSIDE = "Use the bot's commands in your event's Discord server."
-ENDED = "This event has ended; the bot does nothing more here."
 EPHEMERAL = 64
 
 Handler = Callable[[str, dict[str, Any]], Awaitable[None]]
@@ -183,9 +182,11 @@ class Router:
             await unbind(self._d, tenant, "bot_removed", None)
             self._directory.forget()
 
-    async def _answer(self, data: dict[str, Any], text: str) -> None:
+    async def _answer(self, data: dict[str, Any], key: str) -> None:
+        """A short private answer in the person's language (texts.py)."""
         path = f"/interactions/{data.get('id')}/{data.get('token')}/callback"
-        body = {"type": 4, "data": {"content": text, "flags": EPHEMERAL}}
+        content = text(key, data.get("locale"))
+        body = {"type": 4, "data": guarded({"content": content, "flags": EPHEMERAL})}
         try:
             await self.rest.request("POST", path, json=body)
         except Exception:
@@ -198,15 +199,15 @@ class Router:
             # cannot tell which event a person means.
             tenant = None if self.shared else await self._directory.own_event(self.application_id)
             if tenant is None:
-                await self._answer(data, OUTSIDE)
+                await self._answer(data, "outside")
                 return
         else:
             tenant = await self._ours(str(guild_id))
             if tenant is None:
-                await self._answer(data, NOT_CONNECTED)
+                await self._answer(data, "not_connected")
                 return
         if await self._live(tenant) is None:
-            await self._answer(data, ENDED)
+            await self._answer(data, "ended")
             return
         await self._run("interaction", tenant, "INTERACTION_CREATE", data)
 

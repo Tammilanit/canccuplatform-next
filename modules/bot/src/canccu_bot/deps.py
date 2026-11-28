@@ -9,6 +9,7 @@ from typing import Any
 
 from canccu_kit import Outbox, SecretBox
 
+from .components import ComponentKeys
 from .config import Hosts, SharedApp
 from .db import Db
 from .discord_api import DiscordApi
@@ -38,3 +39,12 @@ class Deps:
     series: Any
     """access.SeriesReader, or a test's fake."""
     now: Callable[[], datetime] = field(default=lambda: datetime.now(UTC))
+    commands: tuple[Any, ...] = ()
+    """The framework's commands (framework.Command), each under its feature flag."""
+    components: ComponentKeys | None = None
+    acting: Any = None
+    """acting.ActingClient: a command acting in a module as its person."""
+    look: Any = None
+    """look.EventLook: the event's name and colour."""
+    http: Any = None
+    """An httpx.AsyncClient for outside providers (providers.py)."""

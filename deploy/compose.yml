@@ -276,6 +276,9 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: admin
+      # The second key of the acting token's mint (contracts/admin.md, The acting token): only the
+      # admin and bot containers hold it. The placeholder runs only while the version is dev.
+      CANCCU_BOT_ADMIN_KEY: ${CANCCU_BOT_ADMIN_KEY:-canccu-local-only-bot-admin-key-change-me}
       CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       # Settings and the profile are per tenant, resolved from the request's hostname.
       CANCCU_TENANTS_URL: http://tenants:8080
@@ -436,6 +439,9 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: bot
+      # The second key of the acting token's mint (contracts/admin.md, The acting token): only the
+      # admin and bot containers hold it. The placeholder runs only while the version is dev.
+      CANCCU_BOT_ADMIN_KEY: ${CANCCU_BOT_ADMIN_KEY:-canccu-local-only-bot-admin-key-change-me}
       CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       # Seals an event's own bot token and client secret (contracts/bot.md, Secrets). The
       # placeholder runs only while the version is dev; the kit refuses it on a release.

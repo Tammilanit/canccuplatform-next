@@ -56,10 +56,12 @@ else
   fi
 fi
 
-# Notify does not start without these (modules/notify/README.md, Environment). Only an empty or
+# Notify does not start without these (modules/notify/README.md, Environment), and without the
+# bot-admin key no command in Discord acts for anyone (contracts/admin.md). Only an empty or
 # missing value is filled, never a set one: a new secrets key loses the stored secrets, and a new
 # VAPID key every phone's push subscription.
 newsecretskey() { k=$(openssl rand -base64 32) || return 1; echo "1:$k"; }
+newbotadminkey() { openssl rand -hex 32; }
 fillsecret() {  # <name> <generator>
   [ -e "$env" ] && grep -qE "^$1=.+" "$env" && return 0
   step "generate $1 in $env"
@@ -73,6 +75,7 @@ fillsecret() {  # <name> <generator>
 }
 fillsecret CANCCU_SECRETS_KEY newsecretskey
 fillsecret CANCCU_NOTIFY_VAPID_PRIVATE_KEY newvapidkey
+fillsecret CANCCU_BOT_ADMIN_KEY newbotadminkey
 
 if [ "$boot" = 1 ]; then
   # The units bake in this path and read deploy/.env only, so validate exactly that, first:

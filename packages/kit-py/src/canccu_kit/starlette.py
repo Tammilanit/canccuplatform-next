@@ -25,7 +25,7 @@ from .context import CORRELATION_HEADER, correlation
 from .errors import KitError, MissingRight, code_for_status, internal_error_body
 from .health import Health
 from .resolve import TenantResolver, UnknownHost
-from .rights import RightsChecker, Session
+from .rights import ACTING_HEADER, RightsChecker, Session
 from .service import SERVICE_HEADER, ServiceIdentity, service_has_right
 from .tenant import tenant_scope
 from .web_security import check_origin
@@ -63,14 +63,16 @@ def right_dependency(
 
     async def dependency(request: Request) -> Session | None:
         signed = request.headers.get(SERVICE_HEADER)
-        if service is not None and signed is not None:
+        # An acting token is the person's call, carried by the bot: never the bot's own rights.
+        acting = request.headers.get(ACTING_HEADER) is not None
+        if service is not None and signed is not None and not acting:
             caller = service.verify(signed)
             if not service_has_right(caller, right):
                 raise MissingRight(f"needs right {right}")
             request.state.service = caller
             request.state.session = None
             return None
-        session = await checker.check(request.headers.get("cookie"), right)
+        session = await checker.check_headers(request.headers, right)
         request.state.session = session
         return session
 

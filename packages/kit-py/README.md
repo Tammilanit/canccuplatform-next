@@ -49,7 +49,11 @@ with tenant_scope("demo"):
 # rights.forget_session(session_id) drops one session at once (admin calls it on sign-out)
 # rights.require_superadmin(cookie) is the session only when admin says `superadmin: true`
 # (a module's superadmin paths, answered on the superadmin hostname only)
-rights = RightsChecker(admin)
+# With `service`, a request carrying an acting token (x-canccu-acting) beside the bot's service
+# identity is the person's, for the tenant in scope: rights.from_headers(request.headers) and
+# require_right take it (contracts/admin.md, The acting token); never cached, and refused
+# without the bot's identity, so a copied token opens nothing from a browser
+rights = RightsChecker(admin, service=service)
 
 
 async def on_admin_event(event):

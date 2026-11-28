@@ -30,7 +30,8 @@ if [ "$docker_ok" = 1 ]; then
   hasnt "install keeps a .env with its own password" "POSTGRES_PASSWORD"
   has "install fills an empty secrets key" "would generate CANCCU_SECRETS_KEY"
   has "install fills an empty VAPID key" "would generate CANCCU_NOTIFY_VAPID_PRIVATE_KEY"
-  exits "install --dry-run, .env with the notify secrets" 0 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCANCCU_SECRETS_KEY=1:k\nCANCCU_NOTIFY_VAPID_PRIVATE_KEY=k\n')" setup/install --dry-run
+  has "install fills an empty bot-admin key" "would generate CANCCU_BOT_ADMIN_KEY"
+  exits "install --dry-run, .env with the generated secrets" 0 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCANCCU_SECRETS_KEY=1:k\nCANCCU_NOTIFY_VAPID_PRIVATE_KEY=k\nCANCCU_BOT_ADMIN_KEY=k\n')" setup/install --dry-run
   hasnt "install never replaces a set secret" "would generate"
   if docker volume inspect canccuplatform_postgres-data >/dev/null 2>&1; then
     exits "install --boot refuses the example password on an initialised database" 2 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCANCCU_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot

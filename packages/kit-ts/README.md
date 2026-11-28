@@ -52,8 +52,11 @@ await withTenant("demo", async () => {
   const rotation = settings.get("rotation_seconds", 10);
 });
 
-// Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s
-const rights = new RightsChecker(admin);
+// Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s.
+// With `service`, an acting token (x-canccu-acting) beside the bot's service identity is the
+// person's, for the tenant in scope: rights.fromHeaders(name => …), requireRight and withRight
+// take it (contracts/admin.md, The acting token); never cached, refused without the bot's identity
+const rights = new RightsChecker(admin, { service });
 // Superadmin paths: 403 missing_right unless admin's `superadmin` is true (a missing field is
 // false); answer them only on the superadmin hostname as well (contracts/admin.md)
 const session = await rights.requireSuperadmin(request.headers.cookie);

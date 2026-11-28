@@ -104,3 +104,32 @@ async def test_an_interaction_answer_is_kept() -> None:
         )
     assert r.status_code == 204
     assert fake.interaction_answers == [("100000000000000009", body)]
+
+
+async def test_an_answers_edit_and_the_bots_nickname_are_kept() -> None:
+    fake = FakeDiscord()
+    app = fake.add_application("Own Bot")
+    other = fake.add_application("Other Bot")
+    guild = fake.add_guild("Demo Community", bots=[app.id])
+    auth = {"Authorization": f"Bot {app.token}"}
+    async with fake.http_client() as http:
+        edit = await http.patch(
+            f"{API}/webhooks/{app.id}/tok-1/messages/@original",
+            json={"content": "Hi"},
+            headers=auth,
+        )
+        foreign = await http.patch(
+            f"{API}/webhooks/{other.id}/tok-1/messages/@original", json={}, headers=auth
+        )
+        nick = await http.patch(
+            f"{API}/guilds/{guild.id}/members/@me", json={"nick": "Demo Event"}, headers=auth
+        )
+        outside = await http.patch(
+            f"{API}/guilds/{guild.id}/members/@me",
+            json={"nick": "x"},
+            headers={"Authorization": f"Bot {other.token}"},
+        )
+    assert (edit.status_code, foreign.status_code) == (200, 404)
+    assert fake.interaction_edits == [("tok-1", {"content": "Hi"})]
+    assert (nick.status_code, outside.status_code) == (200, 403)
+    assert guild.nicks == {app.id: "Demo Event"}

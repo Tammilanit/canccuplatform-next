@@ -139,7 +139,7 @@ async def sync_commands(request: Request) -> Response:
         )
     if bound is None:
         raise not_found()
-    in_background(commands.register(d, ctx))
+    in_background(commands.register(d, ctx, force=True))
     return JSONResponse(binding_view(bound), status_code=202)
 
 

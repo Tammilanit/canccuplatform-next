@@ -91,13 +91,19 @@ describe.skipIf(!DATABASE_URL)("GET /internal/theming/current", () => {
     expect((await internal("?tenant_id=archived")).statusCode).toBe(200);
   });
 
-  it("needs the screen module's identity, a valid tenant_id and a known event", async () => {
+  it("gives the bot the same answer, for its embeds' colour in every mode (L8)", async () => {
+    const bot = await internal("?tenant_id=closed", caller("bot"));
+    expect(bot.statusCode).toBe(200);
+    expect(bot.json()).toEqual((await internal("?tenant_id=closed")).json());
+  });
+
+  it("needs the screen or bot module's identity, a valid tenant_id and a known event", async () => {
     const anon = await internal("?tenant_id=alpha", {});
     expect(anon.statusCode).toBe(401);
     expect(code(anon)).toBe("service_unauthenticated");
-    const bot = await internal("?tenant_id=alpha", caller("bot"));
-    expect(bot.statusCode).toBe(403);
-    expect(code(bot)).toBe("service_forbidden");
+    const pizza = await internal("?tenant_id=alpha", caller("pizza"));
+    expect(pizza.statusCode).toBe(403);
+    expect(code(pizza)).toBe("service_forbidden");
     for (const query of ["", "?tenant_id=", "?tenant_id=Not%20An%20Id"]) {
       const res = await internal(query);
       expect(res.statusCode).toBe(400);

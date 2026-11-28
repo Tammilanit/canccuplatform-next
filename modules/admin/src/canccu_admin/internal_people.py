@@ -9,10 +9,13 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from canccu_kit import KitError, ServiceForbidden, is_tenant_id, tenant_scope
+from canccu_kit import KitError, ServiceForbidden, TenantResolver, is_tenant_id, tenant_scope
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
+
+from .acting import acting_routes
+from .auth import Auth
 
 Users = Callable[[], Awaitable[list[tuple[Any, str | None]]]]
 
@@ -30,3 +33,10 @@ def people_route(users: Users) -> Route:
         return JSONResponse({"user_ids": ids})
 
     return Route("/internal/admin/people/with-role", with_role, methods=["GET"])
+
+
+def internal_routes(auth: Auth, resolver: TenantResolver) -> list[Route]:
+    """Admin's internal paths about people: the role holders, and the acting tokens when this
+    stack mints them."""
+    acting = [] if auth.acting is None else acting_routes(auth.acting, resolver)
+    return [people_route(auth.users), *acting]

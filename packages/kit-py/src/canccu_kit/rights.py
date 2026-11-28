@@ -1,19 +1,29 @@
-"""Rights check through GET /api/admin/session, cached for at most 30 s (contracts/admin.md)."""
+"""Rights check through GET /api/admin/session, cached for at most 30 s (contracts/admin.md).
+
+A command in Discord acts for its person with an acting token (contracts/admin.md, The acting
+token): `from_headers` takes it only beside the bot's service identity, which a browser cannot
+make, so a token copied out of a log opens nothing on its own."""
 
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 
 from .access import parse_time
 from .admin import AdminClient
 from .bus import Event
 from .errors import MissingRight, NotSignedIn
+from .service import SERVICE_HEADER, ServiceIdentity
+from .tenant import current_tenant
 
 SESSION_COOKIE = "canccu_session"
 CACHE_SECONDS = 30.0
+ACTING_HEADER = "x-canccu-acting"
+ACTING_CALLER = "bot"
+"""The only module that may bring an acting token: the bot gains no rights of its own (D2)."""
 
 
 @dataclass(frozen=True)
@@ -48,8 +58,12 @@ class RightsChecker:
         *,
         clock: Callable[[], float] = time.monotonic,
         wall_clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        service: ServiceIdentity | None = None,
     ) -> None:
+        """`service`: this module's own identity, which checks the bot's header and signs the
+        call to admin; without it no acting token is taken."""
         self._admin = admin
+        self._service = service
         self._clock = clock
         self._wall = wall_clock
         self._cache: dict[str, tuple[float, Session]] = {}
@@ -90,18 +104,51 @@ class RightsChecker:
         if cached is not None:
             return cached
         response = await self._admin.request("GET", "/api/admin/session", session_id=session_id)
+        session = self._parse(response)
+        self._remember(session_id, session)
+        return session
+
+    def _parse(self, response: Any) -> Session:
         if response.status_code == 401:
             raise NotSignedIn("sign in first")
         self._admin.raise_for_error(response)
         body = response.json()
-        session = Session(
+        return Session(
             user_id=str(body["user"]["id"]),
             user_name=str(body["user"]["name"]),
             rights=frozenset(str(r) for r in body["rights"]),
             expires_at=parse_time(str(body["expires_at"])),
             superadmin=body.get("superadmin") is True,
         )
-        self._remember(session_id, session)
+
+    async def acting(self, service_header: str | None, token: str) -> Session:
+        """The person an acting token stands for, in the tenant in scope; raises
+        ServiceUnauthenticated or ServiceForbidden when the bot did not send it, NotSignedIn for a
+        token admin refuses. Never cached: a token lives a minute and names one module."""
+        tenant = current_tenant()
+        if self._service is None or tenant is None:
+            raise NotSignedIn("sign in first")
+        self._service.require(service_header, [ACTING_CALLER])
+        response = await self._admin.request(
+            "GET",
+            "/internal/admin/acting-session",
+            params={"tenant_id": tenant},
+            headers={**self._service.headers("admin"), ACTING_HEADER: token},
+        )
+        return self._parse(response)
+
+    async def from_headers(self, headers: Mapping[str, str]) -> Session:
+        """The session a request stands for: its acting token when it carries one, else its
+        cookie's."""
+        token = headers.get(ACTING_HEADER)
+        if token is not None:
+            return await self.acting(headers.get(SERVICE_HEADER), token)
+        return await self.session(headers.get("cookie"))
+
+    async def check_headers(self, headers: Mapping[str, str], right: str) -> Session:
+        session = await self.from_headers(headers)
+        if not session.has(right):
+            raise MissingRight(f"needs right {right}")
         return session
 
     async def check(self, cookie_header: str | None, right: str) -> Session:
