@@ -138,7 +138,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
             if (!leanSkips(theme, view))
               await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         for (const view of ["dashboard-showcase", "dashboard-chat"])
-          await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, "dashboard", HD[0], view));
+          await attempt(nameOf(theme, view, HD[0]), () =>
+            layoutShot(theme, "dashboard", HD[0], view),
+          );
         if (theme === "default")
           for (const [view, id] of DEFAULT_LAYOUT_VIEWS)
             await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
