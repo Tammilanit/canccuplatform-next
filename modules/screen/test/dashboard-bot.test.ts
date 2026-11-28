@@ -69,4 +69,12 @@ describe.skipIf(!DATABASE_URL)("the Dashboard fed by the bot", () => {
     // Counts only: no Discord id or channel reaches a screen.
     expect(JSON.stringify(await regions())).not.toContain("30000000000000001");
   });
+
+  it("gives the hub's view of the zone the same players per game", async () => {
+    const now = (await call(h, "GET", "/api/screen/now?zone=hall", { host: "alpha.test" })).json<{
+      regions: Region[];
+    }>();
+    const playing = now.regions.flatMap((r) => r.widgets).find((w) => w.widget === "now_playing");
+    expect(playing?.view).toMatchObject({ empty: false, others: { players: 11 } });
+  });
 });

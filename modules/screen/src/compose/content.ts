@@ -168,8 +168,11 @@ export async function contentFacts(
     facts.voice = voice.view;
     if (voice.changesAt !== null) changes.push(voice.changesAt);
   }
-  if (used.has("now_playing"))
-    facts.playing = await readNowPlaying(deps.kv, deps.sources, ctx.tenant_id, nowMs);
+  if (used.has("now_playing")) {
+    const playing = await readNowPlaying(deps.kv, deps.sources, ctx.tenant_id, nowMs);
+    facts.playing = playing.view;
+    if (playing.changesAt !== null) changes.push(playing.changesAt);
+  }
   const future = changes.filter((t) => Number.isFinite(t) && t > nowMs);
   return { facts, changesAt: future.length === 0 ? null : Math.min(...future) };
 }

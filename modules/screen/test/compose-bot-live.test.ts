@@ -176,7 +176,7 @@ describe("now playing", () => {
     const { sources, reads } = reading({
       playing: { available: true, as_of: "", games: [game("g_1", "Demo Arena", 3)] },
     });
-    const first = await inTenant(() => readNowPlaying(kv, sources, "alpha", T0));
+    const first = (await inTenant(() => readNowPlaying(kv, sources, "alpha", T0))).view;
     expect(first).toMatchObject({ games: [{ game_id: "g_1", players: 3 }] });
     await playingMoved(kv, "alpha");
     await inTenant(() => readNowPlaying(kv, sources, "alpha", T0 + 10_000));
@@ -193,7 +193,43 @@ describe("now playing", () => {
   it("is empty while the bot says it is not available", async () => {
     const kv = new MemoryKv(() => clock.now);
     const { sources } = reading({ playing: { available: false, as_of: null, games: [] } });
-    expect(await inTenant(() => readNowPlaying(kv, sources, "alpha", T0))).toBeNull();
+    expect((await inTenant(() => readNowPlaying(kv, sources, "alpha", T0))).view).toBeNull();
+  });
+
+  it("asks for its own rebuild: the re-read at two minutes, then the drop at five", async () => {
+    const kv = new MemoryKv(() => clock.now);
+    let up = true;
+    const sources: Sources = {
+      ...noSources,
+      botPlaying: () =>
+        Promise.resolve(
+          up ? { available: true, as_of: "", games: [game("g_1", "Demo Arena", 3)] } : null,
+        ),
+    };
+    const at = (ms: number) => inTenant(() => readNowPlaying(kv, sources, "alpha", ms));
+    expect((await at(T0)).changesAt).toBe(T0 + 2 * MIN);
+    up = false;
+    // The bot stopped answering: the re-read finds nothing, the last answer still draws ...
+    const reread = await at(T0 + 2 * MIN);
+    expect(reread.view).not.toBeNull();
+    expect(reread.changesAt).toBe(T0 + 4 * MIN);
+    expect((await at(T0 + 4 * MIN)).changesAt).toBe(T0 + 5 * MIN + 1);
+    // ... until five minutes after the last answer, when the box empties.
+    const dropped = await at(T0 + 5 * MIN + 1);
+    expect(dropped.view).toBeNull();
+    expect(dropped.changesAt).toBeNull();
+  });
+});
+
+describe("voice rooms fallback", () => {
+  it("asks for a rebuild at the next re-read and at the drop of its answer", async () => {
+    const kv = new MemoryKv(() => clock.now);
+    const { sources } = reading({
+      voice: { available: true, as_of: "", channels: [room("Lobby", 4)] },
+    });
+    const r = await inTenant(() => readVoice(kv, sources, "alpha", T0));
+    expect(r.view).not.toBeNull();
+    expect(r.changesAt).toBe(T0 + 30_000);
   });
 });
 

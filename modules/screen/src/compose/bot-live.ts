@@ -93,7 +93,7 @@ async function keptRead<T>(
   read: () => Promise<T | null>,
   due: (kept: Kept<T>) => boolean,
   nowMs: number,
-): Promise<{ answer: T | null; fresh: boolean }> {
+): Promise<{ answer: T | null; fresh: boolean; kept: Kept<T> | null }> {
   const raw = await kv.get(key);
   let kept = raw === null ? null : (JSON.parse(raw) as Kept<T>);
   const fresh = kept === null || (nowMs - kept.read_at >= BOT_REREAD_MS && due(kept));
@@ -105,8 +105,29 @@ async function keptRead<T>(
         : { answer, read_at: nowMs, answered_at: nowMs };
     await kv.set(key, JSON.stringify(kept), KEPT_TTL_MS);
   }
-  if (kept === null || nowMs - kept.answered_at > ANSWER_KEEP_MS) return { answer: null, fresh };
-  return { answer: kept.answer, fresh: fresh && kept.answered_at === nowMs };
+  if (kept === null || nowMs - kept.answered_at > ANSWER_KEEP_MS)
+    return { answer: null, fresh, kept };
+  return { answer: kept.answer, fresh: fresh && kept.answered_at === nowMs, kept };
+}
+
+/**
+ * When a kept answer must be looked at again with no event to say so: its re-read (`rereadMs`
+ * after the last read) or its drop (5 minutes after the last answer), whichever comes first.
+ * Zones rebuild only on events and these times, so without it a stopped feed or a down bot would
+ * leave the last answer drawn.
+ */
+function keptChangesAt(
+  kept: Kept<unknown> | null,
+  drawn: boolean,
+  nowMs: number,
+  rereadMs: number,
+): number | null {
+  // Nothing drawn: nothing to re-read or drop; the next count or event builds the zone again.
+  if (kept === null || !drawn) return null;
+  const drop = kept.answered_at + ANSWER_KEEP_MS + 1;
+  const times = [kept.read_at + rereadMs, drop];
+  const next = Math.min(...times);
+  return next > nowMs ? next : nowMs + BOT_REREAD_MS;
 }
 
 /**
@@ -126,7 +147,7 @@ export async function readVoice(
   const until =
     counted === null ? 0 : counted.at + LIVE_INTERVALS * counted.interval_seconds * 1000;
   if (counted !== null && nowMs <= until) return { view: voiceView(counted.rooms), changesAt: until + 1 }; // prettier-ignore
-  const { answer } = await keptRead<BotVoice>(
+  const { answer, kept } = await keptRead<BotVoice>(
     kv,
     voiceReadKey(),
     () => sources.botVoice(tenant),
@@ -134,7 +155,10 @@ export async function readVoice(
     nowMs,
   );
   const rooms = answer?.available === true ? (roomsOf(answer.channels) ?? []) : [];
-  return { view: voiceView(rooms), changesAt: null };
+  return {
+    view: voiceView(rooms),
+    changesAt: keptChangesAt(kept, answer !== null, nowMs, BOT_REREAD_MS),
+  };
 }
 
 /** `bot.presence.counted`: players per game are read again at the next build. */
@@ -188,9 +212,9 @@ export async function readNowPlaying(
   sources: Sources,
   tenant: string,
   nowMs: number,
-): Promise<Record<string, unknown> | null> {
+): Promise<{ view: Record<string, unknown> | null; changesAt: number | null }> {
   const stale = (await kv.get(playingStaleKey())) !== null;
-  const { answer, fresh } = await keptRead<BotPlaying>(
+  const { answer, fresh, kept } = await keptRead<BotPlaying>(
     kv,
     playingReadKey(),
     async () => {
@@ -201,11 +225,12 @@ export async function readNowPlaying(
     (kept) => stale || nowMs - kept.read_at >= BOT_KEEP_MS,
     nowMs,
   );
-  if (answer === null || !answer.available) return null;
+  const changesAt = keptChangesAt(kept, answer !== null, nowMs, BOT_KEEP_MS);
+  if (answer === null || !answer.available) return { view: null, changesAt };
   if (fresh) {
     const games = Object.fromEntries(answer.games.map((g) => [g.game_id ?? "", g.player_count]));
     await kv.addExpiring(playingHistoryKey(), JSON.stringify({ at: nowMs, games }), nowMs + HISTORY_MS); // prettier-ignore
   }
   const history = (await kv.live(playingHistoryKey(), nowMs)).map((m) => JSON.parse(m) as PlayingCount); // prettier-ignore
-  return playingView(answer.games, history, nowMs);
+  return { view: playingView(answer.games, history, nowMs), changesAt };
 }
