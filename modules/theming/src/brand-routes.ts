@@ -7,8 +7,7 @@ import { KitError, requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { generateColors } from "./brand.js";
-import { minBoxOpacity } from "./contrast.js";
-import { nextBrand } from "./brand-edit.js";
+import { saveBrand, withColors } from "./brand-save.js";
 import type { Brand } from "./brand.js";
 import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
@@ -19,7 +18,6 @@ import { WRITE, actorOf, assertWritable, invalidRequest, needs, versionConflict 
 import { draftEmbedNames, removeDraftFolders } from "./package-files.js";
 import { brandInputError, modeSwitchError } from "./schema.js";
 import type { BrandEdit } from "./schema.js";
-import { fillTokens } from "./tokens.js";
 import { writingFiles } from "./stored.js";
 import type { Unused } from "./stored.js";
 
@@ -53,12 +51,6 @@ async function isDraftImage(c: SqlClient, path: string): Promise<boolean> {
     [path],
   );
   return rows.length > 0;
-}
-
-/** The colours generated from `brand`, with the theme's other tokens kept. */
-function withColors(manifest: Manifest, brand: Brand): Manifest {
-  const tokens = isObject(manifest.tokens) ? manifest.tokens : {};
-  return { ...manifest, tokens: { ...tokens, colors: generateColors(brand).colors } };
 }
 
 /**
@@ -101,52 +93,6 @@ function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   return withColors(out, brand);
 }
 
-/**
- * A pair or corners the organiser picks now must show: a preset's own font and radius tokens sit
- * over the brand's choices (tokens.ts), so they go when a different choice is made (the mirror of
- * draft-routes.ts, where a token edit takes the choice away).
- */
-function withoutOverriddenChoices(
-  manifest: Manifest,
-  before: Record<string, unknown>,
-  input: BrandEdit,
-): Manifest {
-  if (!isObject(manifest.tokens)) return manifest;
-  const tokens = { ...manifest.tokens };
-  const without = (group: unknown, keys: string[]): Record<string, unknown> | undefined => {
-    if (!isObject(group)) return undefined;
-    const rest = Object.fromEntries(Object.entries(group).filter(([k]) => !keys.includes(k)));
-    return Object.keys(rest).length > 0 ? rest : undefined;
-  };
-  const pair = typeof input.font_pair === "string" && input.font_pair !== before.font_pair;
-  if (pair) {
-    const fonts = without(tokens.fonts, ["heading", "display", "body"]);
-    if (fonts === undefined) delete tokens.fonts;
-    else tokens.fonts = fonts;
-  }
-  const corners = input.roundness !== undefined && input.roundness !== before.roundness;
-  if (corners) {
-    const sizes = without(tokens.sizes, ["radius"]);
-    if (sizes === undefined) delete tokens.sizes;
-    else tokens.sizes = sizes;
-  }
-  return { ...manifest, tokens };
-}
-
-/**
- * A box opacity under what the colours allow is raised to it (plan issue-785 D11), so the stored
- * value is the one the screens draw (tokens.ts raises on generation too); true when it was.
- */
-export function raiseBoxOpacity(manifest: Manifest): boolean {
-  const brand = manifest.brand as Brand;
-  if (brand.box_opacity === undefined) return false;
-  // The filled set, as tokens.ts judges it: a partial `tokens.colors` must not force 1.
-  const min = minBoxOpacity(fillTokens(isObject(manifest.tokens) ? manifest.tokens : {}).colors);
-  if (brand.box_opacity >= min) return false;
-  brand.box_opacity = min;
-  return true;
-}
-
 export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -166,37 +112,19 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     const box = { raised: false };
     const row = await deps.db.tenant((c) =>
       editDraft(c, deps.files, input.draft_version, actorOf(request), async (m) => {
-        const brand = nextBrand(isObject(m.brand) ? m.brand : undefined, input);
-        const picture = {
+        for (const [role, path] of Object.entries({
           logo: input.logo,
           icon: input.icon,
           "backdrop.image": input.backdrop?.image,
           "backdrop.video": input.backdrop?.video,
-        };
-        for (const [role, path] of Object.entries(picture)) {
+        })) {
           if (path !== undefined && !(await isDraftImage(c, path))) {
             throw invalidRequest(`${role} must name a file already in the draft.`);
           }
         }
-        // The logo and icon are the theme's only ones, so the body names them on every save.
-        const images = isObject(m.images) ? { ...m.images } : {};
-        delete images.logo;
-        delete images.icon;
-        if (input.logo !== undefined) images.logo = input.logo;
-        if (input.icon !== undefined) images.icon = input.icon;
-        const next: Manifest = { ...m, brand };
-        if (Object.keys(images).length > 0) next.images = images;
-        else delete next.images;
-        // A scheme's hand-set colours (presets.ts) stay until the organiser changes what the
-        // colours come from; the page sends the whole brand on every change, the corners too.
-        const before = isObject(m.brand) ? m.brand : {};
-        const tokens = isObject(m.tokens) ? m.tokens : {};
-        const same = (["primary", "accent", "scheme"] as const).every(
-          (k) => before[k] === brand[k],
-        );
-        const colored = same && isObject(tokens.colors) ? next : withColors(next, brand);
-        box.raised = raiseBoxOpacity(colored);
-        return withoutOverriddenChoices(colored, before, input);
+        const saved = saveBrand(m, input);
+        box.raised = saved.raised;
+        return saved.manifest;
       }),
     );
     return {

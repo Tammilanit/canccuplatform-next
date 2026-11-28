@@ -10,6 +10,7 @@ import { parse, walk } from "css-tree";
 import type { CssNode, Declaration } from "css-tree";
 import { describe, expect, it } from "vitest";
 import { checkCss } from "../src/css.js";
+import { checkSvg } from "../src/svg.js";
 import { BOX_OPACITY, boxContrastFailures, contrastRatio } from "../src/contrast.js";
 import { FONT_PAIRS } from "../src/font-pairs.js";
 import { PRESETS, schemeColors } from "../src/presets.js";
@@ -119,6 +120,15 @@ describe("every preset", () => {
     for (const p of presets) {
       const pair = brandOf(p).font_pair;
       if (pair !== undefined) expect(FONT_PAIRS.has(pair), `${p.id}: ${pair}`).toBe(true);
+    }
+  });
+
+  it("has a logo that passes the upload's SVG check (plan issue-785 D15)", () => {
+    for (const p of PRESETS.values()) {
+      const images = (p.manifest.images ?? {}) as Record<string, string>;
+      const logo = images.logo;
+      if (logo === undefined) continue;
+      expect(checkSvg(readFileSync(join(p.dir, logo), "utf8")), p.id).toEqual({ ok: true });
     }
   });
 

@@ -1,0 +1,233 @@
+# Preset "Daylight" (#785, plan docs/plans/issue-785.md D4–D7, D12): a light scheme for daytime or
+# bright venues. A simple theme: the platform's Space Grotesk and Inter pair, soft corners and the
+# `sky` background, a gradient with a soft sun, are its signature; no CSS of its own.
+schema_version: 1
+name: Daylight
+description: "Light and calm: daytime or bright venues"
+mode: simple
+tokens:
+  colors:
+    background: "#f6f8fb"
+    surface: "#ffffff"
+    border: "#cfd6e2"
+    text: "#111827"
+    text_muted: "#4b5563"
+    primary: "#0b63ce"
+    primary_text: "#ffffff"
+    accent: "#b4235a"
+    status_ok: "#1a7f4b"
+    status_degraded: "#8a6100"
+    status_down: "#c2283d"
+  motion_style:
+    pack: standard
+brand:
+  primary: "#0b63ce"
+  accent: "#b4235a"
+  scheme: light
+  font_pair: space-inter
+  roundness: soft
+  backdrop:
+    looks: [sky, waves]
+  box_opacity: 0.9
+images:
+  logo: images/logo.svg
+# Level up's layouts (D7), without its backdrop embed: the stage draws the background.
+layouts:
+  - id: main
+    name: Main hall
+    aspect: "16:9"
+    grid:
+      columns: 24
+      rows: 12
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 4, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: food
+        area: { column: 5, row: 1, columns: 13, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: food_status
+      - id: clock
+        area: { column: 18, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: now
+        area: { column: 1, row: 3, columns: 9, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 10, row: 3, columns: 8, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: countdown
+        area: { column: 18, row: 3, columns: 7, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: spotlight
+        area: { column: 18, row: 7, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+          - widget: qr
+      - id: ticker
+        area: { column: 1, row: 12, columns: 24, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+  - id: portrait
+    name: Lobby (portrait)
+    aspect: "9:16"
+    grid:
+      columns: 12
+      rows: 24
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 5, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: clock
+        area: { column: 6, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: countdown
+        area: { column: 1, row: 3, columns: 12, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: now
+        area: { column: 1, row: 7, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 1, row: 13, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: spotlight
+        area: { column: 1, row: 19, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+      - id: side
+        area: { column: 8, row: 19, columns: 5, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: qr
+          - widget: food_status
+      - id: ticker
+        area: { column: 1, row: 24, columns: 12, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets; plan D5); the first is the colours above.
+schemes:
+  - id: morning
+    name: Morning
+    kind: light
+    brand:
+      primary: "#0b63ce"
+      accent: "#b4235a"
+      scheme: light
+    colors:
+      background: "#f6f8fb"
+      surface: "#ffffff"
+      border: "#cfd6e2"
+      text: "#111827"
+      text_muted: "#4b5563"
+      primary: "#0b63ce"
+      primary_text: "#ffffff"
+      accent: "#b4235a"
+      status_ok: "#1a7f4b"
+      status_degraded: "#8a6100"
+      status_down: "#c2283d"
+  - id: sand
+    name: Sand
+    kind: light
+    brand:
+      primary: "#9a4a00"
+      accent: "#00707a"
+      scheme: light
+    colors:
+      background: "#faf6ef"
+      surface: "#ffffff"
+      border: "#e2d6c2"
+      text: "#1f1a12"
+      text_muted: "#5a4e3c"
+      primary: "#9a4a00"
+      primary_text: "#ffffff"
+      accent: "#00707a"
+      status_ok: "#1a7f4b"
+      status_degraded: "#8a6100"
+      status_down: "#c2283d"
+  - id: mint
+    name: Mint
+    kind: light
+    brand:
+      primary: "#00745a"
+      accent: "#6a3fc8"
+      scheme: light
+    colors:
+      background: "#f2faf6"
+      surface: "#ffffff"
+      border: "#c4ded1"
+      text: "#0f1f18"
+      text_muted: "#435a50"
+      primary: "#00745a"
+      primary_text: "#ffffff"
+      accent: "#6a3fc8"
+      status_ok: "#1a7f4b"
+      status_degraded: "#8a6100"
+      status_down: "#c2283d"
+  - id: dusk
+    name: Dusk
+    kind: dark
+    brand:
+      primary: "#6fb0ff"
+      accent: "#ff8fb1"
+      scheme: dark
+    colors:
+      background: "#141821"
+      surface: "#1d2330"
+      border: "#3a4458"
+      text: "#f3f5fa"
+      text_muted: "#b0b8c8"
+      primary: "#6fb0ff"
+      primary_text: "#141821"
+      accent: "#ff8fb1"
+      status_ok: "#4ee39a"
+      status_degraded: "#ffd25e"
+      status_down: "#ff6b6b"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#0040a0"
+      accent: "#a0003a"
+      scheme: light
+    colors:
+      background: "#ffffff"
+      surface: "#ffffff"
+      border: "#000000"
+      text: "#000000"
+      text_muted: "#1a1a1a"
+      primary: "#0040a0"
+      primary_text: "#ffffff"
+      accent: "#a0003a"
+      status_ok: "#006b2e"
+      status_degraded: "#6b4a00"
+      status_down: "#a00018"

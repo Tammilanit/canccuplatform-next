@@ -5,7 +5,8 @@
  */
 import type { Level } from "./motion.js";
 
-export const LOOKS = ["glows", "gradient", "particles", "waves"] as const;
+/** The looks the stage draws; a theme names its own (theming's plan issue-785 D12 adds two). */
+export const LOOKS = ["glows", "gradient", "particles", "waves", "hearth", "sky"] as const;
 /** A crossfade from one look to the next; its pace never changes with the hype or the level. */
 export const LOOK_FADE_MS = 40_000;
 /**

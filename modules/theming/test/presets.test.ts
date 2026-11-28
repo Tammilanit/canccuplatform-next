@@ -4,11 +4,21 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { contrastFailures } from "../src/contrast.js";
 import { generateColors } from "../src/brand.js";
-import { PRESETS, schemeColors } from "../src/presets.js";
+import { PRESETS, presetManifest, schemeColors } from "../src/presets.js";
 
 describe("the presets", () => {
   it("are the demo themes the image holds, in the gallery's order", () => {
-    expect([...PRESETS.keys()]).toEqual(["default", "esports", "level-up", "arcade", "terminal"]);
+    // From neutral to bold (plan issue-785 D2).
+    expect([...PRESETS.keys()]).toEqual([
+      "default",
+      "daylight",
+      "cozy-lan",
+      "esports",
+      "level-up",
+      "synthwave",
+      "arcade",
+      "terminal",
+    ]);
     expect(PRESETS.get("level-up")?.name).toBe("Level up");
   });
 
@@ -46,6 +56,51 @@ describe("the presets", () => {
       box_opacity: 0.9,
     });
     expect(esports?.manifest.tokens).toMatchObject({ motion_style: { pack: "broadcast" } });
+  });
+
+  it("hold Synthwave with its five schemes, its pair, soft corners and see-through boxes", () => {
+    const synthwave = PRESETS.get("synthwave");
+    expect(synthwave?.schemes.map((s) => s.id)).toEqual([
+      "sunset",
+      "miami",
+      "outrun",
+      "vapor",
+      "contrast",
+    ]);
+    expect(synthwave?.manifest.mode).toBe("advanced");
+    expect(synthwave?.manifest.css).toEqual(["css/synthwave.css"]);
+    expect(synthwave?.manifest.brand).toMatchObject({
+      font_pair: "audiowide-titillium",
+      roundness: "soft",
+      backdrop: { looks: ["glows", "gradient"], game_art: false },
+      box_opacity: 0.8,
+    });
+    expect(synthwave?.manifest.tokens).toMatchObject({ motion_style: { pack: "standard" } });
+  });
+
+  it.each([
+    ["cozy-lan", ["fireside", "meadow", "linen", "blossom", "contrast"], "fredoka-nunito", "pill", ["hearth", "particles"]],
+    ["daylight", ["morning", "sand", "mint", "dusk", "contrast"], "space-inter", "soft", ["sky", "waves"]],
+  ])("hold %s as a simple theme: brand, pair, corners and background, no files of its own", (id, schemes, pair, roundness, looks) => {
+    const preset = PRESETS.get(id);
+    const m = preset?.manifest ?? {};
+    expect(preset?.schemes.map((s) => s.id)).toEqual(schemes);
+    expect(m.mode).toBe("simple");
+    for (const part of ["css", "fonts", "templates", "embeds"]) expect(m, part).not.toHaveProperty(part);
+    expect(m.brand).toMatchObject({ font_pair: pair, roundness, backdrop: { looks }, box_opacity: 0.9 });
+    expect(m.tokens).toEqual({ colors: schemeColors(preset?.schemes[0] ?? schemes[0] as never), motion_style: { pack: "standard" } });
+  }); // prettier-ignore
+
+  it("keep a simple preset's pair, corners and background under any of its schemes (D3)", () => {
+    const cozy = PRESETS.get("cozy-lan");
+    const linen = cozy?.schemes.find((s) => s.id === "linen");
+    if (cozy === undefined || linen === undefined) throw new Error("no Cozy LAN · Linen");
+    expect(presetManifest(cozy, linen, { images: {}, brand: {} }).brand).toMatchObject({
+      font_pair: "fredoka-nunito",
+      roundness: "pill",
+      backdrop: { looks: ["hearth", "particles"] },
+      scheme: "light",
+    });
   });
 
   it("say they hold embeds exactly when their package has an embeds folder", () => {

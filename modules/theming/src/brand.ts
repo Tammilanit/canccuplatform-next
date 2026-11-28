@@ -8,11 +8,19 @@ import { contrastRatio } from "./contrast.js";
 import { FONT_PAIRS, pairFonts } from "./font-pairs.js";
 import type { LogoPlate } from "./logo-plate.js";
 
-/** The radius each roundness generates (plan issue-784 D7); `soft` is the platform's default. */
-export const ROUNDNESS = { square: "0", soft: "0.5rem", round: "1rem" } as const;
+/**
+ * The radius each roundness generates (plan issue-784 D7); `soft` is the platform's default, and
+ * `pill` the really round corners of the Cozy LAN preset (plan issue-785 D12).
+ */
+export const ROUNDNESS = { square: "0", soft: "0.5rem", round: "1rem", pill: "2.5rem" } as const;
 
-/** The looks of the screen's background cycle (plan issue-784 D8, #787's D10). */
-export const LOOKS = ["glows", "gradient", "particles", "waves"] as const;
+/**
+ * The looks of the screen's background cycle (plan issue-784 D8, #787's D10), with the hearth and
+ * the sky the simple presets' signatures bring (plan issue-785 D12).
+ */
+export const LOOKS = ["glows", "gradient", "particles", "waves", "hearth", "sky"] as const;
+/** The cycle of a theme that names none: the four looks from before D12, so no theme changes. */
+export const DEFAULT_LOOKS = ["glows", "gradient", "particles", "waves"] as const;
 
 export interface Backdrop {
   looks?: (typeof LOOKS)[number][];

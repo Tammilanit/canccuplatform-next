@@ -94,7 +94,7 @@ const brandInputCheck = ajv.compile({
     font_pair: {
       oneOf: [{ type: "string", pattern: "^[a-z0-9][a-z0-9-]{0,39}$" }, { type: "null" }],
     },
-    roundness: { enum: ["square", "soft", "round"] },
+    roundness: { enum: ["square", "soft", "round", "pill"] },
     backdrop: { $ref: def("backdrop") },
     box_opacity: { $ref: def("box_opacity") },
   },

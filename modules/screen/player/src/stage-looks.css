@@ -22,7 +22,9 @@
   .canccu-stage--look-glows .canccu-stage__glow,
   .canccu-stage--look-gradient .canccu-stage__gradient,
   .canccu-stage--look-particles .canccu-stage__particles,
-  .canccu-stage--look-waves .canccu-stage__waves {
+  .canccu-stage--look-waves .canccu-stage__waves,
+  .canccu-stage--look-hearth .canccu-stage__hearth,
+  .canccu-stage--look-sky .canccu-stage__sky {
     opacity: calc(0.55 + 0.45 * var(--canccu-hype, 0.5));
   }
 
@@ -73,6 +75,43 @@
 
   body.canccu-motion--party .canccu-stage__waves {
     animation: canccu-drift 20s ease-in-out infinite;
+  }
+
+  /*
+   * The hearth: a warm glow rising from the bottom in the primary, a touch of the accent beside it
+   * (theming's plan issue-785 D12, the Cozy LAN preset's signature). Still, at every level.
+   */
+  .canccu-stage__hearth {
+    background-image:
+      radial-gradient(
+        ellipse 80% 55% at 50% 100%,
+        color-mix(in srgb, var(--canccu-color-primary) 42%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 40% 40% at 16% 96%,
+        color-mix(in srgb, var(--canccu-color-accent) 24%, transparent),
+        transparent
+      );
+  }
+
+  /*
+   * The sky: a gradient from the primary to the accent's tint, with a soft sun in the accent (D12,
+   * the Daylight preset's signature). Still, at every level.
+   */
+  .canccu-stage__sky {
+    background-image:
+      radial-gradient(
+        circle 26vh at 84% 16%,
+        color-mix(in srgb, var(--canccu-color-accent) 55%, transparent),
+        transparent 72%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--canccu-color-primary) 26%, transparent),
+        transparent 52%,
+        color-mix(in srgb, var(--canccu-color-accent) 22%, transparent)
+      );
   }
 
   /* Rising points; stage.ts draws more of them the louder the hype, none at none. */

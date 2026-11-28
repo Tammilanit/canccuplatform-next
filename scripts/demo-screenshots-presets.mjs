@@ -8,10 +8,13 @@ import { DESK, PHONE } from "./demo-screenshots-shot.mjs";
 const HD = { width: 1920, height: 1080 };
 const PREVIEW = "/theming/studio/preview/";
 
-/** Each new preset: its id, its first scheme and its light scheme. */
+/** Each new preset: its id, its first scheme and its scheme of the other brightness (Daylight's dark). */
 const NEW_PRESETS = [
   ["esports", "arena", "studio"],
   ["arcade", "cabinet", "handheld"],
+  ["synthwave", "sunset", "vapor"],
+  ["cozy-lan", "fireside", "linen"],
+  ["daylight", "morning", "dusk"],
 ];
 
 export const PRESET_LOOKS = NEW_PRESETS.flatMap(([preset, first, light]) => [

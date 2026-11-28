@@ -1,0 +1,238 @@
+# Preset "Synthwave" (#785, plan docs/plans/issue-785.md D5–D8, D13): pink and purple neon, a striped
+# sun on the horizon and a grid that never stops. The platform's Audiowide and Titillium pair (its
+# slashed zero), soft corners and see-through boxes, so the sun and the grid show through them. Its
+# CSS is screen-only, so hub and phone pages get the colours, the pair and the corners.
+schema_version: 1
+name: Synthwave
+description: "Pink and purple neon, a grid to the horizon: the 80s"
+mode: advanced
+tokens:
+  colors:
+    background: "#120724"
+    surface: "#1f0d3a"
+    border: "#4a2a7a"
+    text: "#fbefff"
+    text_muted: "#c9b3e6"
+    primary: "#ff4fd8"
+    primary_text: "#120724"
+    accent: "#22e4ff"
+    status_ok: "#4cf2a7"
+    status_degraded: "#ffd166"
+    status_down: "#ff5c8a"
+  motion_style:
+    pack: standard
+brand:
+  primary: "#ff4fd8"
+  accent: "#22e4ff"
+  scheme: dark
+  font_pair: audiowide-titillium
+  roundness: soft
+  # The game's art left off: it would cover the sun and the grid, which the PO asked to see (D13).
+  backdrop:
+    looks: [glows, gradient]
+    game_art: false
+  box_opacity: 0.8
+images:
+  logo: images/logo.svg
+css:
+  - css/synthwave.css
+# Level up's layouts (D7), without its backdrop embed: the stage draws the background.
+layouts:
+  - id: main
+    name: Main hall
+    aspect: "16:9"
+    grid:
+      columns: 24
+      rows: 12
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 4, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: food
+        area: { column: 5, row: 1, columns: 13, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: food_status
+      - id: clock
+        area: { column: 18, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: now
+        area: { column: 1, row: 3, columns: 9, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 10, row: 3, columns: 8, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: countdown
+        area: { column: 18, row: 3, columns: 7, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: spotlight
+        area: { column: 18, row: 7, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+          - widget: qr
+      - id: ticker
+        area: { column: 1, row: 12, columns: 24, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+  - id: portrait
+    name: Lobby (portrait)
+    aspect: "9:16"
+    grid:
+      columns: 12
+      rows: 24
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 5, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: clock
+        area: { column: 6, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+      - id: countdown
+        area: { column: 1, row: 3, columns: 12, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: now
+        area: { column: 1, row: 7, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 1, row: 13, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+      - id: spotlight
+        area: { column: 1, row: 19, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+      - id: side
+        area: { column: 8, row: 19, columns: 5, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: qr
+          - widget: food_status
+      - id: ticker
+        area: { column: 1, row: 24, columns: 12, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets; plan D5); the first is the colours above.
+schemes:
+  - id: sunset
+    name: Sunset grid
+    kind: dark
+    brand:
+      primary: "#ff4fd8"
+      accent: "#22e4ff"
+      scheme: dark
+    colors:
+      background: "#120724"
+      surface: "#1f0d3a"
+      border: "#4a2a7a"
+      text: "#fbefff"
+      text_muted: "#c9b3e6"
+      primary: "#ff4fd8"
+      primary_text: "#120724"
+      accent: "#22e4ff"
+      status_ok: "#4cf2a7"
+      status_degraded: "#ffd166"
+      status_down: "#ff5c8a"
+  - id: miami
+    name: Night drive
+    kind: accent
+    brand:
+      primary: "#22e4ff"
+      accent: "#ff4fd8"
+      scheme: dark
+    colors:
+      background: "#081226"
+      surface: "#0f1f3d"
+      border: "#2b4a7a"
+      text: "#eef6ff"
+      text_muted: "#a9c1e0"
+      primary: "#22e4ff"
+      primary_text: "#081226"
+      accent: "#ff4fd8"
+      status_ok: "#4cf2a7"
+      status_degraded: "#ffd166"
+      status_down: "#ff5c8a"
+  - id: outrun
+    name: Afterglow
+    kind: accent
+    brand:
+      primary: "#ff7a3c"
+      accent: "#ff4fd8"
+      scheme: dark
+    colors:
+      background: "#170612"
+      surface: "#2a0b22"
+      border: "#5c2550"
+      text: "#fff0f6"
+      text_muted: "#e0b0c8"
+      primary: "#ff7a3c"
+      primary_text: "#170612"
+      accent: "#ff4fd8"
+      status_ok: "#4cf2a7"
+      status_degraded: "#ffd166"
+      status_down: "#ff6b8b"
+  - id: vapor
+    name: Vapor
+    kind: light
+    brand:
+      primary: "#b0189a"
+      accent: "#0077a8"
+      scheme: light
+    colors:
+      background: "#fbf2ff"
+      surface: "#ffffff"
+      border: "#dcc2f0"
+      text: "#2a0e45"
+      text_muted: "#5e3f80"
+      primary: "#b0189a"
+      primary_text: "#ffffff"
+      accent: "#0077a8"
+      status_ok: "#137a4a"
+      status_degraded: "#8a6100"
+      status_down: "#c2185b"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#ff6fe0"
+      accent: "#3ff0ff"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#0e0618"
+      border: "#ff9ff0"
+      text: "#ffffff"
+      text_muted: "#f0e0ff"
+      primary: "#ff6fe0"
+      primary_text: "#000000"
+      accent: "#3ff0ff"
+      status_ok: "#4cf2a7"
+      status_degraded: "#ffd166"
+      status_down: "#ff7a9c"

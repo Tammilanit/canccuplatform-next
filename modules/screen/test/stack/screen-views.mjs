@@ -5,11 +5,22 @@ import { ANNOUNCE_THEMES, ANNOUNCE_VIEWS } from "./announce-levels.mjs";
 import { MOTION_VIEWS, STAGE_VIEWS } from "./handed-stage.mjs";
 import { LIVING_STRIPS, LIVING_THEMES } from "./living.mjs";
 
-export const THEMES = ["terminal", "level-up", "esports", "arcade", "default"];
+export const THEMES = [
+  "terminal",
+  "level-up",
+  "esports",
+  "arcade",
+  "synthwave",
+  "cozy-lan",
+  "daylight",
+  "default",
+];
 // The presets drawn in the same frames as the others and whose own looks the theming group's preset
 // shots take (demo-screenshots-presets.mjs): here only the Pulse and the Dashboard, so the screens
-// shard stays inside its 25 minutes (a full theme costs it about two more).
-export const LEAN_THEMES = ["esports", "arcade"];
+// shard stays inside its limit (a full theme costs it about two minutes more). The Theme studio's
+// preview has no stage, so only these show Synthwave's sun and grid and the simple presets' hearth
+// and sky (plan issue-785 D12, D13).
+export const LEAN_THEMES = ["esports", "arcade", "synthwave", "cozy-lan", "daylight"];
 export const leanSkips = (theme, view) =>
   LEAN_THEMES.includes(theme) &&
   ["unassigned", "archived", "hero", "split", "ambient"].includes(view);

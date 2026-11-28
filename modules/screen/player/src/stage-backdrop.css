@@ -5,10 +5,12 @@
  * stage.css, so a theme's layer restyles them.
  */
 @layer canccu-base {
+  /* It comes and goes with the scrim over it (stage.css, 2 s), so the bare picture never shows. */
   .canccu-stage__backdrop {
     background-position: center;
     background-size: cover;
     opacity: 0;
+    transition: opacity 2s ease;
   }
 
   .canccu-stage--backdrop .canccu-stage__backdrop {

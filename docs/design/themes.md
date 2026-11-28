@@ -1,5 +1,7 @@
 # Themes: the preset pack for the PO (#785, part 0)
 
+**Status:** built. Part 1 shipped Esports and Arcade with the box transparency (D11); Part 2 ships Synthwave, Cozy LAN and Daylight with the `pill` corners and the `hearth` and `sky` looks (D12). The eight presets are in Pick a look.
+
 ## The PO's decisions of 2026-11-27, and what this revision does with them
 - **Q4: keep all 25 schemes as they are.** Done: no scheme changed.
 - **Q5: (a).** Cozy LAN and Daylight stay simple, with no CSS of their own, and each now has a clear signature through the platform: Cozy LAN very round corners (a new roundness, `pill`) and a warm hearth glow (a new background look); Daylight a sky gradient with a soft sun (a new background look). Plan D12.

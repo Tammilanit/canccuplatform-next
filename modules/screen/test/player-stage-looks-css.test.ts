@@ -25,6 +25,16 @@ describe("stage-looks.css", () => {
     }
   });
 
+  it("draws the hearth and the sky still, each under its own look class (plan issue-785 D12)", () => {
+    for (const look of ["hearth", "sky"]) {
+      const rule =
+        new RegExp(`^ *\\.canccu-stage__${look} \\{([^}]*)\\}`, "m").exec(css)?.[1] ?? "";
+      expect(rule, look).toMatch(/background-image:/);
+      expect(rule, look).not.toMatch(/animation|transform/);
+      expect(css).toContain(`.canccu-stage--look-${look} .canccu-stage__${look}`);
+    }
+  });
+
   it("fades from one look to the next over 40 s at every level", () => {
     expect(css).toMatch(
       /\.canccu-stage__look > \* \{\s*opacity: 0;[\s\S]*?transition: opacity var\(--canccu-look-fade, 40s\)/,

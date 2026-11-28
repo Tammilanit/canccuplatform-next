@@ -209,8 +209,8 @@
           "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
         },
         "roundness": {
-          "description": "Corner roundness: the `radius` token `0`, `0.5rem` (the default) or `1rem`.",
-          "enum": ["square", "soft", "round"]
+          "description": "Corner roundness: the `radius` token `0`, `0.5rem` (the default), `1rem` or `2.5rem` (`pill`, really round).",
+          "enum": ["square", "soft", "round", "pill"]
         },
         "backdrop": {
           "$ref": "#/$defs/backdrop"
@@ -245,7 +245,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "enum": ["glows", "gradient", "particles", "waves"] },
+          "items": { "enum": ["glows", "gradient", "particles", "waves", "hearth", "sky"] },
           "default": ["glows", "gradient", "particles", "waves"]
         },
         "game_art": { "type": "boolean", "default": true },

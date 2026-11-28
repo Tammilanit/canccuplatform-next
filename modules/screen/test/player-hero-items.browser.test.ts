@@ -49,7 +49,12 @@ const NAMES = [
   "Karaoke",
 ];
 /** Five items an hour apart from the state's next half hour, with an order closing in 20 minutes. */
-function timeline(nowMs: number, kind: "landscape" | "portrait", area: { columns: number }) {
+function timeline(
+  nowMs: number,
+  kind: "landscape" | "portrait",
+  area: { columns: number },
+  closesMs = nowMs + 20 * 60_000,
+) {
   const layout = STATES[kind].layout;
   const first = Math.ceil(nowMs / 1_800_000) * 1_800_000;
   const at = (ms: number) => new Date(ms).toISOString();
@@ -65,7 +70,7 @@ function timeline(nowMs: number, kind: "landscape" | "portrait", area: { columns
     status: "scheduled",
     zone: null,
   })) as AgendaItem[];
-  const order = { id: "po_1", state: "open", closes_at: at(nowMs + 20 * 60_000) } as FoodOrder;
+  const order = { id: "po_1", state: "open", closes_at: at(closesMs) } as FoodOrder;
   const facts = {
     now: new Date(nowMs),
     timeZone: "UTC",
@@ -208,4 +213,69 @@ describe.skipIf(browser === undefined)("the coming hours' now pill", { timeout: 
           expect(judgePage(await page.evaluate(collectSamples))).toEqual([]);
           await page.close();
         });
+});
+
+/*
+ * The now line under the items: it ran through a block's text (Dinner's "02:30" in Part 1's
+ * Esports and Arcade shots of #785). Where it crosses a block or a label, the block or the label
+ * is what shows on top, never the line.
+ */
+describe.skipIf(browser === undefined)("the coming hours' now line", { timeout: 60_000 }, () => {
+  for (const [kind, size] of SIZES)
+    for (const area of AREAS)
+      it(`passes under the blocks and labels, ${kind} ${size.join("×")}, ${String(area.columns)} columns wide`, async () => {
+        if (browser === undefined || code === undefined) throw new Error("no browser");
+        const state = structuredClone(STATES[kind]);
+        const hero = state.regions.find((r) => r.id === "hero");
+        if (hero === undefined) throw new Error("the fixture has no hero");
+        const t = Date.parse(state.time);
+        const first = Math.ceil(t / 1_800_000) * 1_800_000;
+        // The order closes just after the line, so its end-aligned label grows left across it.
+        const view = timeline(t, kind, area, first + 20 * 60_000) as Record<string, unknown>;
+        hero.area = area;
+        hero.rotation = "director";
+        hero.order = [0];
+        hero.widgets = [
+          {
+            widget: "agenda_timeline",
+            template: null,
+            embed: null,
+            dwell_seconds: 45,
+            stale_after_seconds: null,
+            view: { qr: null, stale: false, empty: false, ...view },
+          },
+        ];
+        // A quarter of an hour into the first item: the line crosses its block and its label.
+        const page = await screenPage(browser, code, size, first + 15 * 60_000, "");
+        await draw(page, state);
+        await tick(page, 0);
+        const crossings = await page.evaluate(() => {
+          const line = document.querySelector(".canccu-widget__now");
+          if (line === null) return null;
+          // The screen takes no pointer, and elementsFromPoint skips what takes none: probe with it on.
+          const probe = document.createElement("style");
+          probe.textContent = "* { pointer-events: auto !important; }";
+          document.head.append(probe);
+          const r = line.getBoundingClientRect();
+          const x = r.left + r.width / 2;
+          const out: { part: string; onTop: boolean }[] = [];
+          for (const el of document.querySelectorAll(
+            ".canccu-widget__block, .canccu-widget__name, .canccu-widget__mark",
+          )) {
+            const b = el.getBoundingClientRect();
+            if (b.width === 0 || x <= b.left + 1 || x >= b.right - 1) continue;
+            if (b.bottom <= r.top || b.top >= r.bottom) continue;
+            // Top first: the item (or its label's text) must come before the line.
+            const stack = document.elementsFromPoint(x, b.top + b.height / 2);
+            const line = stack.findIndex((e) => e.closest(".canccu-widget__now") !== null);
+            const item = stack.findIndex((e) => e === el || el.contains(e));
+            out.push({ part: el.className, onTop: line === -1 || (item !== -1 && item < line) });
+          }
+          return out;
+        });
+        expect(crossings, "no now line drawn").not.toBeNull();
+        expect(crossings?.length, "the line crosses no item").toBeGreaterThan(0);
+        for (const c of crossings ?? []) expect(c.onTop, c.part).toBe(true);
+        await page.close();
+      });
 });
