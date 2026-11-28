@@ -48,6 +48,10 @@ class FakeDiscord:
         self.applications: dict[str, FakeApplication] = {}
         self.guilds: dict[str, FakeGuild] = {}
         self.messages: dict[str, list[dict[str, Any]]] = {}
+        self.pins: dict[str, list[str]] = {}
+        """Per channel, the pinned messages' ids."""
+        self.dm_channels: dict[str, str] = {}
+        """A direct-message channel's id → the person it reaches."""
         self.requests: list[FakeRequest] = []
         self.failures: list[ScriptedFailure] = []
         self.users: dict[str, FakeUser] = {}
@@ -62,6 +66,21 @@ class FakeDiscord:
 
     def snowflake(self) -> str:
         return str(next(self._ids))
+
+    def delete_message(self, channel_id: str, message_id: str) -> None:
+        """Someone in the guild deleted the message."""
+        kept = [m for m in self.messages.get(channel_id, []) if m["id"] != message_id]
+        self.messages[channel_id] = kept
+        self.unpin(channel_id, message_id)
+
+    def unpin(self, channel_id: str, message_id: str) -> None:
+        """Someone in the guild unpinned the message."""
+        self.pins[channel_id] = [m for m in self.pins.get(channel_id, []) if m != message_id]
+
+    def dms(self, user_id: str) -> list[dict[str, Any]]:
+        """The direct messages the person got, in order."""
+        channels = [c for c, u in self.dm_channels.items() if u == user_id]
+        return [m for c in channels for m in self.messages.get(c, [])]
 
     def add_application(
         self,

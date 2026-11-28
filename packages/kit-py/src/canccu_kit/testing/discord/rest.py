@@ -14,7 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import oauth, setup
+from . import messages, oauth, setup
 from .model import FakeApplication, FakeRequest
 
 if TYPE_CHECKING:
@@ -45,30 +45,6 @@ async def gateway_bot(
 ) -> Response:
     limit = {"total": 1000, "remaining": 1000, "reset_after": 0, "max_concurrency": 1}
     return JSONResponse({"url": fake.gateway_url, "shards": 1, "session_start_limit": limit})
-
-
-async def create_message(
-    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
-) -> Response:
-    found = fake.channel(p["channel_id"])
-    if found is None or app.id not in found[0].bots:
-        return _error(404 if found is None else 403, "Unknown Channel", 10003)
-    message = {**(body or {}), "id": fake.snowflake(), "channel_id": p["channel_id"]}
-    message["author"] = {"id": app.bot_user_id, "username": app.name, "bot": True}
-    fake.messages.setdefault(p["channel_id"], []).append(message)
-    return JSONResponse(message)
-
-
-async def edit_message(
-    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
-) -> Response:
-    found = fake.channel(p["channel_id"])
-    messages = fake.messages.get(p["channel_id"], [])
-    message = next((m for m in messages if m["id"] == p["message_id"]), None)
-    if found is None or message is None or message["author"]["id"] != app.bot_user_id:
-        return _error(404, "Unknown Message", 10008)
-    message.update(body or {})
-    return JSONResponse(message)
 
 
 async def get_guild(
@@ -132,8 +108,7 @@ ROUTES: list[tuple[str, str, Handler]] = [
     ("GET", "/users/@me", users_me),
     ("GET", "/oauth2/applications/@me", application_me),
     ("GET", "/gateway/bot", gateway_bot),
-    ("POST", "/channels/{channel_id}/messages", create_message),
-    ("PATCH", "/channels/{channel_id}/messages/{message_id}", edit_message),
+    *messages.ROUTES,
     ("GET", "/guilds/{guild_id}", get_guild),
     ("DELETE", "/users/@me/guilds/{guild_id}", leave_guild),
     ("PUT", "/applications/{application_id}/guilds/{guild_id}/commands", put_commands),
