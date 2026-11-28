@@ -19,7 +19,7 @@ from typing import Any
 from canccu_kit import current_tenant
 from canccu_kit.access import TenantContext
 
-from . import providers
+from . import attachments, providers
 from .deps import Deps
 from .framework import (
     BUTTON_STYLES,
@@ -35,6 +35,7 @@ from .framework import (
     Unreachable,
 )
 from .guard import guarded
+from .notes import Notes
 from .texts import pick, text
 
 log = logging.getLogger("canccu_bot.interactions")
@@ -62,11 +63,23 @@ def caller_of(data: dict[str, Any]) -> Caller:
 
 def _options(data: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
     options = (data.get("data") or {}).get("options") or []
+    prefix = ""
+    if options and options[0].get("type") == 2:  # a group holds its subcommand
+        prefix = f"{options[0]['name']} "
+        options = options[0].get("options") or []
     if options and options[0].get("type") == 1:  # a subcommand holds the real options
-        return str(options[0]["name"]), {
+        return prefix + str(options[0]["name"]), {
             o["name"]: o.get("value") for o in options[0].get("options") or []
         }
     return None, {o["name"]: o.get("value") for o in options}
+
+
+def _target(data: dict[str, Any]) -> dict[str, Any] | None:
+    """A message command's message, from what Discord resolved for it."""
+    body = data.get("data") or {}
+    messages = (body.get("resolved") or {}).get("messages") or {}
+    found = messages.get(str(body.get("target_id") or ""))
+    return found if isinstance(found, dict) else None
 
 
 def _values(data: dict[str, Any]) -> dict[str, str]:
@@ -76,6 +89,10 @@ def _values(data: dict[str, Any]) -> dict[str, str]:
         for row in rows
         for c in row.get("components") or []
     }
+
+
+async def _opened(form: Form | Awaitable[Form]) -> Form:
+    return form if isinstance(form, Form) else await form
 
 
 class Interactions:
@@ -96,6 +113,7 @@ class Interactions:
         self._deadline = deadline_s
         self._sleep = sleep
         self._commands: dict[str, Command] = {c.name: c for c in d.commands}
+        self._by_key: dict[str, Command] = {c.component_key: c for c in d.commands}
         self._expiring: set[asyncio.Task[None]] = set()
         self._running: set[asyncio.Task[None]] = set()
 
@@ -145,23 +163,32 @@ class Interactions:
         name = look.name if look is not None and look.name else text("this_event", locale)
         return name, None if look is None else look.color
 
-    def _usable(self, ctx: TenantContext, name: str | None) -> Command | None:
-        command = self._commands.get(name or "")
-        if command is None or not ctx["flags"].get(command.flag, False):
-            return None
-        return command
+    def _usable(self, ctx: TenantContext, command: Command | None) -> Command | None:
+        if command is None or command.flag is None:
+            return command
+        return command if ctx["flags"].get(command.flag, False) else None
 
     async def _command(self, ctx: TenantContext, data: dict[str, Any]) -> None:
         name = str((data.get("data") or {}).get("name") or "")
-        command = self._usable(ctx, name)
+        known = self._commands.get(name)
+        command = self._usable(ctx, known)
         locale = data.get("locale")
         if command is None:
             event, _ = await self._event_name(ctx, locale)
-            await self._say(ctx, data, text("feature_off", locale, command=name, event=event))
+            shown = known.shown if known is not None else f"/{name}"
+            await self._say(ctx, data, text("feature_off", locale, command=shown, event=event))
+            return
+        if command.form is not None:  # a form opens at once: Discord takes none after a deferral
+            context = await self._context_for(ctx, data, command, None, {})
+            form = await _opened(command.form(context, None))
+            await self._callback(ctx, data, self._form(ctx, command, form))
+            return
+        run = command.run
+        if run is None:
             return
         await self._callback(ctx, data, {"type": DEFERRED_MESSAGE, "data": {"flags": EPHEMERAL}})
         sub, options = _options(data)
-        await self._run(ctx, data, command, sub, options, lambda c: command.run(c))
+        await self._run(ctx, data, command, sub, options, run)
 
     async def _component(self, ctx: TenantContext, data: dict[str, Any]) -> None:
         custom_id = str((data.get("data") or {}).get("custom_id") or "")
@@ -169,20 +196,22 @@ class Interactions:
         found = None
         if self._d.components is not None:
             found = self._d.components.read(custom_id, ctx["tenant_id"], self._d.now())
-        known = None if found is None else self._commands.get(found.command)
+        known = None if found is None else self._by_key.get(found.command)
         if found is None or known is None or known.on_component is None:
             await self._say(ctx, data, text("old_component", locale))
             return
-        command = self._usable(ctx, found.command)
+        command = self._usable(ctx, known)
         if command is None or command.on_component is None:
             event, _ = await self._event_name(ctx, locale)
-            await self._say(ctx, data, text("feature_off", locale, command=known.name, event=event))
+            said = text("feature_off", locale, command=known.shown, event=event)
+            await self._say(ctx, data, said)
             return
         handle = command.on_component
         opener = command.forms.get(found.step) if data.get("type") == COMPONENT else None
         if opener is not None:  # a form opens at once: Discord takes no modal after a deferral
             context = await self._context_for(ctx, data, command, None, {})
-            await self._callback(ctx, data, self._form(ctx, command, opener(context, found)))
+            form = await _opened(opener(context, found))
+            await self._callback(ctx, data, self._form(ctx, command, form))
             return
         await self._callback(ctx, data, {"type": DEFERRED_UPDATE})
         values = _values(data)
@@ -221,10 +250,35 @@ class Interactions:
         def component(step: str, args: str) -> str:
             if d.components is None:
                 raise RuntimeError("components need the bot's component key")
-            return d.components.make(tenant, command.name, step, args, d.now())
+            return d.components.make(tenant, command.component_key, step, args, d.now())
+
+        host = ctx["primary_hostname"]
+
+        def page(path: str) -> str | None:
+            return None if host is None else d.hosts.event_url(host, path)
+
+        async def download(attachment: dict[str, Any]) -> bytes:
+            if d.http is None:
+                raise Unreachable()
+            return await attachments.download(d.http, attachment)
 
         return Context(
-            caller, tenant, event, str(data["id"]), sub, options, act, provider, component
+            caller=caller,
+            tenant=tenant,
+            event_name=event,
+            interaction_id=str(data["id"]),
+            subcommand=sub,
+            options=options,
+            act=act,
+            provider=provider,
+            component=component,
+            page=page,
+            hosts=() if host is None else (host,),
+            time_zone=ctx["time_zone"],
+            target=_target(data) if command.menu else None,
+            notes=Notes(d.keys, tenant),
+            download=download,
+            now=d.now,
         )
 
     async def _run(
@@ -247,9 +301,9 @@ class Interactions:
         except NoRight as exc:
             named = command.right_names.get(exc.right)
             reply = Reply(
-                text("no_right", locale, right=pick(named, locale), command=command.name)
+                text("no_right", locale, right=pick(named, locale), command=command.shown)
                 if named
-                else text("no_right_unnamed", locale, command=command.name)
+                else text("no_right_unnamed", locale, command=command.shown)
             )
         except Unreachable:
             reply = Reply(text("unreachable", locale, event=context.event_name))
@@ -263,7 +317,7 @@ class Interactions:
 
     def _sign_in(self, ctx: TenantContext, command: Command, context: Context) -> Reply:
         locale = context.caller.locale
-        said = text("sign_in", locale, event=context.event_name, command=command.name)
+        said = text("sign_in", locale, event=context.event_name, command=command.shown)
         host = ctx["primary_hostname"]
         if host is None:
             return Reply(said)
@@ -272,7 +326,7 @@ class Interactions:
 
     def _form(self, ctx: TenantContext, command: Command, form: Form) -> dict[str, Any]:
         custom_id = self._d.components.make(  # type: ignore[union-attr]
-            ctx["tenant_id"], command.name, form.step, form.args, self._d.now()
+            ctx["tenant_id"], command.component_key, form.step, form.args, self._d.now()
         )
         rows = [
             {
@@ -282,7 +336,7 @@ class Interactions:
                         "type": 4,
                         "custom_id": f.id,
                         "label": f.label,
-                        "style": 1,
+                        "style": 2 if f.long else 1,
                         "value": f.value,
                         "max_length": f.max_length,
                         "required": f.required,
@@ -309,7 +363,7 @@ class Interactions:
                 button |= {"style": BUTTON_STYLES["link"], "url": b.url}
             else:
                 button["custom_id"] = self._d.components.make(  # type: ignore[union-attr]
-                    ctx["tenant_id"], command.name, b.step, b.args, self._d.now()
+                    ctx["tenant_id"], command.component_key, b.step, b.args, self._d.now()
                 )
             buttons.append(button)
         rows = [{"type": 1, "components": buttons[i : i + 5]} for i in range(0, len(buttons), 5)]
@@ -344,7 +398,7 @@ class Interactions:
         if left >= EXPIRY_MAX_S:
             return
         await self._sleep(max(left, 0.0))
-        said = text("link_expired", data.get("locale"), command=command.name)
+        said = text("link_expired", data.get("locale"), command=command.shown)
         path = f"/webhooks/{self._application_id}/{data['token']}/messages/@original"
         body = guarded({"content": said, "embeds": [], "components": [], "flags": EPHEMERAL})
         try:

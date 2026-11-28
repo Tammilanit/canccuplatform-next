@@ -51,6 +51,7 @@ async def _take(
     if bound is not None:
         purposes = list(await conn.fetch("SELECT purpose, target_id, updated_at FROM bot_purposes"))
         await conn.execute("DELETE FROM bot_purposes")
+        await conn.execute("DELETE FROM bot_posts")  # the source's announcements, not the new one's
         await conn.execute("DELETE FROM bot_bindings")
     return row, bound, sealed, purposes
 

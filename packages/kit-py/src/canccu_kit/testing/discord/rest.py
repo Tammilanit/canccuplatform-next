@@ -59,6 +59,18 @@ async def create_message(
     return JSONResponse(message)
 
 
+async def edit_message(
+    fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
+) -> Response:
+    found = fake.channel(p["channel_id"])
+    messages = fake.messages.get(p["channel_id"], [])
+    message = next((m for m in messages if m["id"] == p["message_id"]), None)
+    if found is None or message is None or message["author"]["id"] != app.bot_user_id:
+        return _error(404, "Unknown Message", 10008)
+    message.update(body or {})
+    return JSONResponse(message)
+
+
 async def get_guild(
     fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
 ) -> Response:
@@ -121,6 +133,7 @@ ROUTES: list[tuple[str, str, Handler]] = [
     ("GET", "/oauth2/applications/@me", application_me),
     ("GET", "/gateway/bot", gateway_bot),
     ("POST", "/channels/{channel_id}/messages", create_message),
+    ("PATCH", "/channels/{channel_id}/messages/{message_id}", edit_message),
     ("GET", "/guilds/{guild_id}", get_guild),
     ("DELETE", "/users/@me/guilds/{guild_id}", leave_guild),
     ("PUT", "/applications/{application_id}/guilds/{guild_id}/commands", put_commands),

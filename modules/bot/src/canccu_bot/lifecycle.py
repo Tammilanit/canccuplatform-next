@@ -31,6 +31,7 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
         for table in (
             "bot_bindings",
             "bot_purposes",
+            "bot_posts",
             "bot_connections",
             "bot_provider_secrets",
             "bot_outbox",

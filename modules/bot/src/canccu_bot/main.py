@@ -23,6 +23,7 @@ from canccu_kit import (
     RightsChecker,
     SecretBox,
     ServiceIdentity,
+    SettingsClient,
     TenantResolver,
     ValkeyStreamStore,
     bot_admin_key_from_env,
@@ -33,7 +34,7 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import commands, lifecycle, store
+from . import commands, lifecycle, posts, store
 from .access import SeriesReader, TenantsAudit, UsersReader
 from .acting import ActingClient, module_url
 from .app import create_app
@@ -123,6 +124,7 @@ async def serve() -> None:
         acting=ActingClient(config.admin_url, identity, bot_admin_key, outside),
         look=EventLook(tenants_url, module_url("theming"), identity, outside),
         http=outside,
+        settings=SettingsClient(AdminClient(config.admin_url), config.module, service=identity),
     )
     directory = Directory(d)
 
@@ -137,9 +139,14 @@ async def serve() -> None:
         resolver.handle_event(event)  # a status change (archived) reaches the next request
         await lifecycle.on_tenant(d, directory, event)
 
+    async def on_moments(event: Event) -> None:
+        await posts.on_moments(d, event)
+
     bus.subscribe(["admin"], on_admin)
     bus.subscribe(["tenants"], on_platform)
     bus.subscribe_tenants(["tenants"], on_tenant)
+    bus.subscribe_tenants(["admin"], d.settings.handle_event)
+    bus.subscribe_tenants(["moments"], on_moments)
 
     events = ClientEvents(bus, lambda app_id: store.tenants_served(db, app_id))
     reports: set[asyncio.Task[None]] = set()
@@ -197,6 +204,7 @@ async def serve() -> None:
     )
     running = asyncio.create_task(pool.run())
     sending = asyncio.create_task(d.outbox.run())  # what a write's own flush left
+    registering = asyncio.create_task(commands.register_all(d))
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -227,6 +235,7 @@ async def serve() -> None:
         await pool.close()  # hands the leases over at once instead of after 30 s
         running.cancel()
         sending.cancel()
+        registering.cancel()
         await events.close()
         await keys.close()
 

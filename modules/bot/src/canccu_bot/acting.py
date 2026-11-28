@@ -15,7 +15,7 @@ from typing import Any
 import httpx
 from canccu_kit import ACTING_HEADER, ServiceIdentity, parse_error_body
 
-from .framework import NeedsSignIn, NoRight, Refused, Unreachable
+from .framework import NeedsSignIn, NoRight, Refused, Unreachable, Upload
 
 log = logging.getLogger("canccu_bot.acting")
 
@@ -87,7 +87,8 @@ class ActingClient:
         json: Any,
         idempotency_key: str,
     ) -> Any:
-        """The module's JSON answer; raises NeedsSignIn, NoRight, Refused or Unreachable."""
+        """The module's JSON answer; raises NeedsSignIn, NoRight, Refused or Unreachable. `json`
+        may be an `Upload`, sent as a multipart form."""
         if host is None:  # the module finds its event by the hostname alone
             raise Unreachable()
         token = await self._token(tenant, discord_user_id, module)
@@ -97,9 +98,13 @@ class ActingClient:
             IDEMPOTENCY_HEADER: idempotency_key,
             "host": host,
         }
+        body: dict[str, Any] = {"json": json}
+        if isinstance(json, Upload):
+            file = (json.filename, json.file, json.content_type)
+            body = {"data": json.fields, "files": {"file": file}}
         try:
             response = await self._http.request(
-                method, self._url_of(module) + path, json=json, headers=headers
+                method, self._url_of(module) + path, headers=headers, **body
             )
         except httpx.HTTPError as exc:
             raise Unreachable() from exc

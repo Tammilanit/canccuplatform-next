@@ -48,3 +48,5 @@ class Deps:
     """look.EventLook: the event's name and colour."""
     http: Any = None
     """An httpx.AsyncClient for outside providers (providers.py)."""
+    settings: Any = None
+    """The kit's SettingsClient for the bot's own settings (`announce_role`), or a test's fake."""
