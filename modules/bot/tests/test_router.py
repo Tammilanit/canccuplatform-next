@@ -70,6 +70,47 @@ async def test_a_feed_reaches_its_event_only_with_its_flag_on(env: Env) -> None:
     assert [(t, e) for t, e, _ in seen.seen] == [("ev-a", "PRESENCE_UPDATE")]
 
 
+async def test_a_guild_snapshot_carries_only_the_feeds_that_are_on(env: Env) -> None:
+    """GUILD_CREATE holds members, presences and voice states: each part is dropped before the
+    handler when its feed's flag is off, like the feed's own events."""
+    await bind(env)
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen})
+    env.contexts["ev-a"]["flags"] = {"bot.presence": True, "bot.members": False}
+    snapshot = {
+        "id": GUILD,
+        "member_count": 3,
+        "channels": [{"id": "c1"}],
+        "members": [{"user": {"id": "1"}}],
+        "presences": [{"user": {"id": "1"}, "status": "online"}],
+        "voice_states": [{"user_id": "1", "channel_id": "c1"}],
+    }
+    await r.dispatch("GUILD_CREATE", snapshot)
+    [(tenant, event, data)] = seen.seen
+    assert (tenant, event) == ("ev-a", "GUILD_CREATE")
+    assert data["presences"] and data["channels"] and data["member_count"] == 3
+    assert "members" not in data and "voice_states" not in data
+
+
+async def test_channel_and_role_changes_reach_the_guild_handler(env: Env) -> None:
+    await bind(env)
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen})
+    for event in ("CHANNEL_CREATE", "CHANNEL_UPDATE", "CHANNEL_DELETE", "THREAD_CREATE"):
+        await r.dispatch(event, {"guild_id": GUILD, "id": "c1"})
+    await r.dispatch("GUILD_ROLE_UPDATE", {"guild_id": GUILD, "role": {"id": GUILD}})
+    await r.dispatch("CHANNEL_CREATE", {"guild_id": "100000000000000999", "id": "c2"})
+    assert len(seen.seen) == 5
+
+
+async def test_an_unbound_guilds_snapshot_reaches_no_handler(env: Env) -> None:
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen})
+    await r.dispatch("GUILD_CREATE", {"id": GUILD, "members": []})
+    assert seen.seen == []
+    r.close()
+
+
 async def test_a_flag_the_event_does_not_carry_is_off(env: Env) -> None:
     await bind(env)
     seen = Recorder()
