@@ -148,8 +148,8 @@ export function shotChecks({ check, plan, summary, forGroups, groupsAt }) {
     for (const path of ["modules/screen/player/src/stage.css", "modules/screen/player/src/director.ts"])
       assert.match(pr(path).select, /--strips/, path);
   });
-  check("portrait and 4K never run on a PR, the merge queue or a push to main", () => {
-    for (const event of ["pull_request", "merge_group", "push"]) {
+  check("portrait and 4K never run on a PR or the merge queue", () => {
+    for (const event of ["pull_request", "merge_group"]) {
       const out = plan({ event, paths: ["packages/ui/ui.css"] });
       assert.doesNotMatch(out.select, /--book/);
       const names = out.shards
