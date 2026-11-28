@@ -1,6 +1,7 @@
 -- What the front-door screenshots (scripts/demo-screenshots-front.mjs) need and the CI stack has
 -- no API for: people who signed in (admin's sign-in needs Discord, which CI cannot run), a session
--- without a role, events before, after and away from their venue, and the archived one's item.
+-- without a role, events before, after and away from their venue, the archived one's item, and
+-- the demo event bound to a Discord server (psql's `bot_guild`).
 -- Run by scripts/demo-screenshots as the database superuser, after the first pass, on the CI
 -- stack only.
 -- Superuser writes bypass RLS, so `tenant_id` is given, as deploy/compose.ci.yml's seed does.
@@ -85,4 +86,17 @@ INSERT INTO agenda_items (tenant_id, id, title, kind, starts_at, ends_at, planne
           now() - interval '30 days' + interval '2 hours', now() - interval '30 days' + interval '3 hours',
           'public')
   ON CONFLICT DO NOTHING;
+-- The Discord page's bound views (#765): the demo event bound to the guild scripts/demo-screenshots
+-- made in the fake Discord, as a finished install binds it; the install's own checks need the
+-- person's Discord id, which tenants serves once #150 lands. Bound yesterday, its commands written
+-- an hour later. A run again binds the new guild in place of the last.
+DELETE FROM bot_purposes WHERE tenant_id = 'demo';
+DELETE FROM bot_guild_routes WHERE tenant_id = 'demo';
+INSERT INTO bot_bindings (tenant_id, guild_id, guild_name, application_id, bound_by, bound_at,
+                          commands_status, commands_registered_at)
+  VALUES ('demo', :'bot_guild', 'Demo Community', '100000000000000002', 'demo-ci',
+          now() - interval '1 day', 'registered', now() - interval '23 hours')
+  ON CONFLICT (tenant_id) DO UPDATE SET guild_id = EXCLUDED.guild_id;
+INSERT INTO bot_guild_routes (guild_id, tenant_id, application_id)
+  VALUES (:'bot_guild', 'demo', '100000000000000002');
 COMMIT;

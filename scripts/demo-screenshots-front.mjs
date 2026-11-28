@@ -14,6 +14,7 @@ import {
   event,
   expect,
 } from "../modules/screen/test/stack/client.mjs";
+import { discordShots } from "./demo-screenshots-discord.mjs";
 import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 
 const { values: opts } = parseArgs({
@@ -276,6 +277,7 @@ const SHOTS = [
     PHONE,
     { cookie: null, text: "Privacy" },
   ],
+  ...discordShots({ DESK, PHONE, ARCHIVED, EVENT_ADMIN }),
   // The bind's result page (#761): a state that names no event, so no event to go back to.
   ...[DESK, PHONE].map((viewport) => [
     `bot-bind-expired${viewport === PHONE ? "-phone" : ""}`,

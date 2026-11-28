@@ -73,7 +73,7 @@ fi
 paths=(
   /api/hello/health /api/admin/health /api/admin/session /api/tenants/health /api/tenants/current
   /api/screen/health /api/screen/x /screen/ /screen/x /api/theming/health /api/theming/x /theming/x
-  /api/bot/health /api/bot/x
+  /api/bot/health /api/bot/x /bot/
   /api/agenda/health /api/agenda/x /agenda/ /api/notify/health /api/notify/x /notify/admin/topics
   /api/pizza/health /api/pizza/x /pizza/ /api/moments/health /api/moments/x /moments/on-air
   /admin/screen/devices /admin/ /

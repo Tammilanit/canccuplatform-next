@@ -113,6 +113,13 @@ MENU: dict[str, Any] = {
                     "rights": ["admin.rights.write"],
                 },
                 {
+                    "id": "discord",
+                    "label": "Discord",
+                    "href": "/bot/",
+                    "icon": "chat",
+                    "rights": ["bot.connection.read"],
+                },
+                {
                     "id": "integrations",
                     "label": "Integrations",
                     "href": "/pizza/integrations",

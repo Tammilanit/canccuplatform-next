@@ -48,3 +48,26 @@ def test_a_bot_identifies_over_the_websocket_and_shows_in_sessions() -> None:
 def test_without_the_environment_there_is_no_application() -> None:
     fake, _ = create_server({})
     assert fake.applications == {}
+
+
+def test_a_guild_is_made_with_the_bot_in_it_and_its_own_role() -> None:
+    """The Discord page's screenshots (#765) bind a guild the shared bot joined after it
+    identified, so it never left it as a guild no event chose."""
+    fake, app = create_server(ENV)
+    with TestClient(app) as client:
+        r = client.post(
+            "/_fake/guilds",
+            json={
+                "name": "Demo Server",
+                "application_id": "100000000000000002",
+                "bot_permissions": 1 << 10,
+                "channels": ["general"],
+            },
+        )
+        guild = fake.guilds[r.json()["guild_id"]]
+        assert guild.name == "Demo Server" and "100000000000000002" in guild.bots
+        [role] = guild.bot_roles["100000000000000002"]
+        assert (guild.roles[role]["permissions"], guild.roles[role]["managed"]) == ("1024", True)
+        assert [c["name"] for c in guild.channels.values()] == ["general"]
+        bad = client.post("/_fake/guilds", json={"name": "x", "application_id": "nope"})
+        assert bad.status_code == 404

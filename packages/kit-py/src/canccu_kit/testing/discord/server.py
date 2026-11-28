@@ -72,6 +72,26 @@ def create_server(env: Mapping[str, str]) -> tuple[FakeDiscord, Starlette]:
         sent = await fake.gateway.dispatch(str(body["application_id"]), str(body["t"]), body["d"])
         return JSONResponse({"sent": sent})
 
+    async def add_guild(request: Request) -> Response:
+        """A guild the application's bot joins now, with its own role holding `bot_permissions`
+        and the named text channels: a guild added after the bot identified, as one a bind adds,
+        so the bot never sees it as one no event chose and leaves it."""
+        body = await request.json()
+        app_id = str(body.get("application_id"))
+        if app_id not in fake.applications:
+            return JSONResponse({"error": "no such application"}, status_code=404)
+        guild = fake.add_guild(str(body["name"]), bots=[app_id])
+        role = fake.add_role(
+            guild.id,
+            fake.applications[app_id].name,
+            permissions=int(body.get("bot_permissions", 0)),
+            managed=True,
+        )
+        fake.give_bot_role(guild.id, app_id, role)
+        for name in body.get("channels", []):
+            fake.add_channel(guild.id, str(name))
+        return JSONResponse({"guild_id": guild.id})
+
     async def health(request: Request) -> Response:
         return JSONResponse({"status": "ok"})
 
@@ -80,6 +100,7 @@ def create_server(env: Mapping[str, str]) -> tuple[FakeDiscord, Starlette]:
         WebSocketRoute("/gateway", gateway),
         Route("/_fake/sessions", sessions),
         Route("/_fake/dispatch", dispatch, methods=["POST"]),
+        Route("/_fake/guilds", add_guild, methods=["POST"]),
         Route("/health", health),
     ]
     return fake, Starlette(routes=routes)

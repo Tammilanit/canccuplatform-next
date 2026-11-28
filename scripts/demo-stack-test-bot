@@ -18,4 +18,17 @@ if want bot; then
     return 1
   }
   check "${TESTS[38]}" bot_ready
+  # shellcheck disable=SC2329
+  discord_page() {
+    call GET /bot/ -H "cookie: $COOKIE"
+    status_is 200 && grep -q "Which bot speaks for" "$TMP/body" || return 1
+    call GET "/bot?x=1" -D "$TMP/headers"
+    status_is 308 && grep -qiF "location: /bot/?x=1"$'\r' "$TMP/headers" || return 1
+    local p
+    for p in /bot/api/bot/connection /bot/health /bot/internal/x; do
+      call GET "$p"
+      status_is 404 || return 1
+    done
+  }
+  check "${TESTS[39]}" discord_page
 fi

@@ -8,6 +8,7 @@ guild is the event's own application's) but serves the guild no more."""
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from typing import Any
@@ -29,6 +30,16 @@ SNOWFLAKE = re.compile(r"^[0-9]{17,20}$")
 _tasks: set[asyncio.Task[None]] = set()
 
 
+ENDED_TTL_MS = 30 * 24 * 3600 * 1000
+
+
+def ended_key(tenant: str) -> str:
+    """How the event's last binding ended, for the Discord page: a server that removed the bot
+    unbinds itself (`bot_removed`), and the page says so in words rather than just "not
+    connected" (mockup 15). No row keeps it: the binding is gone."""
+    return f"bot:ended:{tenant}"
+
+
 def not_found(what: str = "no guild is bound") -> KitError:
     return KitError(what, status=404, code="not_found")
 
@@ -41,7 +52,7 @@ async def unbind(
     with tenant_scope(tenant):
         async with d.db.tenant(tenant) as conn:
             bound = await conn.fetchrow(
-                "SELECT guild_id, application_id FROM bot_bindings FOR UPDATE"
+                "SELECT guild_id, guild_name, application_id FROM bot_bindings FOR UPDATE"
             )
             if bound is None:
                 return False
@@ -61,6 +72,13 @@ async def unbind(
     await audit(d, tenant, actor, "bot.guild.unbound", {"reason": reason}, "guild", guild, why)
     if reason != "bot_removed" and token is not None:
         await leave(d, token, app_id, guild)
+    # Last, and never fatal: the note only feeds the page, the audit and the leave must not wait
+    # on Valkey.
+    note = {"reason": reason, "guild_name": bound["guild_name"], "at": d.now().isoformat()}
+    try:
+        await d.keys.put(ended_key(tenant), json.dumps(note), ENDED_TTL_MS)
+    except Exception:
+        log.warning("the unbind note for %s was not kept", tenant, exc_info=True)
     return True
 
 

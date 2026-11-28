@@ -154,3 +154,16 @@ async def test_sync_is_404_without_a_binding_and_409_when_archived(env: Env) -> 
         env.contexts["ev-a"]["status"] = "archived"
         r = await c.post("/api/bot/guild/commands/sync", headers=env.admin())
     assert (r.status_code, r.json()["error"]["code"]) == (409, "event_archived")
+
+
+async def test_a_failing_key_store_neither_skips_the_audit_nor_keeps_the_bot_in(env: Env) -> None:
+    guild = await bound(env)
+
+    async def broken(*_: object) -> None:
+        raise ConnectionError("valkey is down")
+
+    env.keys.put = broken  # type: ignore[assignment]
+    async with env.client() as c:
+        assert (await c.delete("/api/bot/guild", headers=env.admin())).status_code == 204
+    assert env.audit.entries[0]["action"] == "bot.guild.unbound"
+    assert SHARED_ID not in guild.bots

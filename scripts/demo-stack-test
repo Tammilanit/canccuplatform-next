@@ -75,6 +75,7 @@ TESTS=(
   "an upgrade from a stack older than a module's rights brings up this commit's CI session stub"
   "a final's card holds the hero its floor while Pizza is here waits in the rail, then comes back with its time left"
   "the bot's shared client is ready on the fake Discord, and the event's connection names it"
+  "the Discord page answers under /bot/, its bare prefix redirects and the bot's own paths stay hidden"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -82,7 +83,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform "pizza notify" "pizza screen notify" platform moments bot
+  moments moments platform "pizza notify" "pizza screen notify" platform moments bot bot
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -213,28 +214,8 @@ if want screen; then
   check "${TESTS[19]}" serves_upload_back
 fi
 
-if want agenda notify; then
-  # shellcheck disable=SC2329
-  redirects_to() {
-    call GET "$1" -D "$TMP/headers"
-    status_is 308 && grep -qiF "location: $2"$'\r' "$TMP/headers"
-  }
-  # shellcheck disable=SC2329
-  bare_prefixes_redirect() {
-    redirects_to "/agenda?day=2026-11-10" "/agenda/?day=2026-11-10" && redirects_to /agenda /agenda/ &&
-      redirects_to "/notify?x=1" "/notify/admin/topics?x=1" && redirects_to /notify/ /notify/admin/topics
-  }
-  check "${TESTS[20]}" bare_prefixes_redirect
-  # shellcheck disable=SC2329
-  hidden_under_prefix() {
-    local p
-    for p in /agenda/api/agenda/now /agenda/health /notify/api/notify/topic-types /notify/health; do
-      call GET "$p"
-      status_is 404 || return 1
-    done
-  }
-  check "${TESTS[21]}" hidden_under_prefix
-fi
+# shellcheck source=scripts/demo-stack-test-prefixes
+. scripts/demo-stack-test-prefixes
 
 # The stack tests of screen (modules/screen/test/stack/) run in the screen container against
 # screen itself, since a device stream opens only from the demo venue's addresses (the loopback
