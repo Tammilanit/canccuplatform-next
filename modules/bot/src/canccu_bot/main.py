@@ -41,14 +41,17 @@ from .checks import discord_checks
 from .client import DiscordClient
 from .components import ComponentKeys
 from .config import DiscordConfig, Hosts, discord_config
+from .counting import Counting
 from .db import Db
 from .deps import Deps
 from .discord_api import DiscordApi
+from .feeds import Feeds
 from .interactions import Interactions
 from .lease import ValkeyKeys
+from .live import ValkeyLive
 from .look import EventLook
 from .pool import Pool
-from .router import INTENTS, Directory, Router
+from .router import INTENTS, Directory, Handler, Router
 from .status import ClientEvents, StatusBoard
 from .transport import connect_gateway
 
@@ -88,6 +91,7 @@ async def serve() -> None:
     bus = Bus(streams, config.module)
     keys = ValkeyKeys.from_url(config.valkey_url)
     board = StatusBoard(keys)
+    live = ValkeyLive.from_url(config.valkey_url)
     rights = RightsChecker(AdminClient(config.admin_url))
     hosts = Hosts(
         signin=os.environ.get("CANCCU_SIGNIN_HOSTNAME") or None,
@@ -123,6 +127,7 @@ async def serve() -> None:
         acting=ActingClient(config.admin_url, identity, bot_admin_key, outside),
         look=EventLook(tenants_url, module_url("theming"), identity, outside),
         http=outside,
+        live=live,
     )
     directory = Directory(d)
 
@@ -157,15 +162,21 @@ async def serve() -> None:
         task.add_done_callback(reports.discard)
 
     async def open_client(application_id: str, token: str) -> DiscordClient:
-        # The feeds have no handler yet: the presence, members, voice and message feeds are
-        # routed and gated by their flags here, and stored by the links that read them.
         holder: list[DiscordClient] = []
         interactions = Interactions(d, application_id, directory.context, lambda: holder[0].rest)
-        router = Router(d, application_id, directory, handlers={"interaction": interactions})
+        feeds = Feeds(live, directory.context, d.hidden)
+        handlers: dict[str, Handler] = {"interaction": interactions, **feeds.handlers()}
+        router = Router(d, application_id, directory, handlers=handlers)
+        # The counts run beside the client, so its lease keeps them in one container.
+        ready = lambda: holder[0].status["status"] == "ready"  # noqa: E731
+        counting = asyncio.create_task(
+            Counting(d, feeds, directory, application_id, ready=ready).run()
+        )
 
         def stop() -> None:
             router.close()
             interactions.close()
+            counting.cancel()
 
         client = DiscordClient(
             application_id,
@@ -229,6 +240,7 @@ async def serve() -> None:
         sending.cancel()
         await events.close()
         await keys.close()
+        await live.close()
 
 
 def main() -> None:

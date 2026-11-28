@@ -9,6 +9,7 @@ bot was away) credits nothing, the same cap at its tightest. An hour keeps avera
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -98,7 +99,7 @@ def top_games(rows: list[tuple[str | None, str, int]]) -> list[dict[str, Any]]:
         minutes[app] += n
         if app is not None:
             names.setdefault(app, Counter())[name] += n
-    out = [
+    out: list[dict[str, Any]] = [
         {
             "application_id": app,
             "name": None if app is None else names[app].most_common(1)[0][0],
@@ -109,3 +110,18 @@ def top_games(rows: list[tuple[str | None, str, int]]) -> list[dict[str, Any]]:
     ]
     out.sort(key=lambda g: (-g["player_hours"], g["name"] is None, g["name"] or ""))
     return out[:TOP_GAMES]
+
+
+def minute_of_row(row: Any) -> Minute:
+    """A `bot_counts_minute` row."""
+    activities = row["activities"]
+    return Minute(
+        minute=row["minute"],
+        members=row["members"],
+        online=row["online"],
+        idle=row["idle"],
+        dnd=row["dnd"],
+        in_voice=row["in_voice"],
+        messages=row["messages"],
+        activities=None if activities is None else json.loads(activities),
+    )

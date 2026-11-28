@@ -212,3 +212,33 @@ async def test_a_guild_that_removes_the_bot_ends_its_binding(env: Env) -> None:
         "actor_user_id": None,
     }
     assert env.audit.entries[-1]["actor_user_id"] is None
+
+
+async def test_the_guild_snapshot_and_channel_changes_reach_a_bound_event(env: Env) -> None:
+    """The counts' guild data (channels, roles, the snapshot) is no feed: it needs no flag, but
+    only a bound, live event gets it."""
+    await bind(env)
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen})
+    await r.dispatch("GUILD_CREATE", {"id": GUILD, "channels": []})
+    await r.dispatch("CHANNEL_UPDATE", {"guild_id": GUILD, "id": "10"})
+    await r.dispatch("THREAD_DELETE", {"guild_id": GUILD, "id": "20"})
+    await r.dispatch("GUILD_ROLE_UPDATE", {"guild_id": GUILD, "role": {"id": GUILD}})
+    await r.dispatch("CHANNEL_UPDATE", {"guild_id": "100000000000000999", "id": "10"})
+    assert [(t, e) for t, e, _ in seen.seen] == [
+        ("ev-a", "GUILD_CREATE"),
+        ("ev-a", "CHANNEL_UPDATE"),
+        ("ev-a", "THREAD_DELETE"),
+        ("ev-a", "GUILD_ROLE_UPDATE"),
+    ]
+    r.close()
+
+
+async def test_an_archived_event_gets_no_guild_snapshot(env: Env) -> None:
+    await bind(env)
+    env.contexts["ev-a"]["status"] = "archived"
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen})
+    await r.dispatch("GUILD_CREATE", {"id": GUILD})
+    assert seen.seen == []
+    r.close()

@@ -42,6 +42,18 @@ FEEDS = {
 }
 """Each feed of gateway data and the flag it belongs to."""
 
+GUILD_DATA = (
+    "CHANNEL_CREATE",
+    "CHANNEL_UPDATE",
+    "CHANNEL_DELETE",
+    "THREAD_CREATE",
+    "THREAD_UPDATE",
+    "THREAD_DELETE",
+    "GUILD_ROLE_UPDATE",
+)
+"""The guild's own data the counts read (which channels everyone can read, feeds.py): no person's
+data, so no feed flag, but only for a bound, live event, as GUILD_CREATE's snapshot."""
+
 LEAVE_AFTER_S = 15 * 60
 FRESH_S = 10.0
 """How long a route or an event's flags are read from memory; the pool's tick is as long."""
@@ -120,7 +132,8 @@ class Router:
         self.application_id = application_id
         self._directory = directory
         self._handlers = handlers or {}
-        """By feed flag, and `interaction` for a command's handler (step 6, link 3)."""
+        """By feed flag, `interaction` for a command's handler (step 6, link 3) and `guild` for
+        GUILD_CREATE's snapshot and GUILD_DATA (#122)."""
         self._sleep = sleep
         self.rest: Any = None
         """The client's RestClient, set once the client exists."""
@@ -133,6 +146,9 @@ class Router:
     async def dispatch(self, event: str, data: dict[str, Any]) -> None:
         if event == "GUILD_CREATE":
             await self._guild_seen(str(data.get("id")))
+            await self._guild_data(str(data.get("id")), event, data)
+        elif event in GUILD_DATA:
+            await self._guild_data(str(data.get("guild_id")), event, data)
         elif event == "GUILD_DELETE":
             await self._guild_gone(str(data.get("id")), data.get("unavailable") is True)
         elif event == "INTERACTION_CREATE":
@@ -210,6 +226,11 @@ class Router:
             await self._answer(data, "ended")
             return
         await self._run("interaction", tenant, "INTERACTION_CREATE", data)
+
+    async def _guild_data(self, guild_id: str, event: str, data: dict[str, Any]) -> None:
+        tenant = await self._ours(guild_id)
+        if tenant is not None and await self._live(tenant) is not None:
+            await self._run("guild", tenant, event, data)
 
     async def _feed(self, event: str, data: dict[str, Any]) -> None:
         guild_id = data.get("guild_id")

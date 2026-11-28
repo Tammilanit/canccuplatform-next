@@ -62,7 +62,7 @@ class ValkeyLive:
         async with self._client.pipeline(transaction=True) as pipe:
             pipe.delete(key)
             if mapping:
-                pipe.hset(key, mapping=mapping)  # type: ignore[arg-type]
+                pipe.hset(key, mapping=mapping)
             await pipe.execute()
 
     async def hset(self, key: str, field_: str, value: str) -> None:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -14,6 +14,7 @@ from .config import Hosts, SharedApp
 from .db import Db
 from .discord_api import DiscordApi
 from .lease import KeyStore
+from .privacy import hidden_discord_ids
 from .status import StatusBoard
 
 
@@ -48,3 +49,7 @@ class Deps:
     """look.EventLook: the event's name and colour."""
     http: Any = None
     """An httpx.AsyncClient for outside providers (providers.py)."""
+    live: Any = None
+    """live.LiveStore: the live state and the minute's counters in Valkey."""
+    hidden: Callable[[str], Awaitable[frozenset[str]]] = hidden_discord_ids
+    """The opt-out filter's seam (privacy.py)."""

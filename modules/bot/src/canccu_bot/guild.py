@@ -17,7 +17,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import commands, store
+from . import commands, live, store
 from .access import deps, event_admin
 from .connection import binding_view
 from .deps import Deps
@@ -57,6 +57,8 @@ async def unbind(
             data = {"guild_id": guild, "reason": reason, "actor_user_id": actor}
             await d.outbox.add(conn, "bot.guild.unbound", data, version=1)
         await d.outbox.flush(tenant)
+    if d.live is not None:  # the guild's presence is no longer the event's
+        await live.clear(d.live, tenant)
     await audit(d, tenant, actor, "bot.guild.unbound", {"reason": reason}, "guild", guild, why)
     if reason != "bot_removed" and token is not None:
         await leave(d, token, app_id, guild)

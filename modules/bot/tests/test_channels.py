@@ -4,6 +4,8 @@ channel."""
 
 from __future__ import annotations
 
+from typing import Any
+
 from fakes import MemoryLive
 
 from canccu_bot.channels import ChannelCache
@@ -13,7 +15,9 @@ GUILD = "100000000000000001"
 VIEW = 1 << 10
 
 
-def channel(cid: str, *, kind: int = 0, deny: int = 0, allow: int = 0, **more: object) -> dict:
+def channel(
+    cid: str, *, kind: int = 0, deny: int = 0, allow: int = 0, **more: object
+) -> dict[str, Any]:
     overwrites = [{"id": GUILD, "type": 0, "allow": str(allow), "deny": str(deny)}]
     return {
         "id": cid,
@@ -24,7 +28,9 @@ def channel(cid: str, *, kind: int = 0, deny: int = 0, allow: int = 0, **more: o
     }
 
 
-def guild(*channels: dict, everyone: int = VIEW, threads: list[dict] | None = None) -> dict:
+def guild(
+    *channels: dict[str, Any], everyone: int = VIEW, threads: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     return {
         "id": GUILD,
         "roles": [{"id": GUILD, "permissions": str(everyone)}],

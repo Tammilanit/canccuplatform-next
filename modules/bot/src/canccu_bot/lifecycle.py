@@ -9,8 +9,10 @@ import logging
 
 from canccu_kit import Event, is_tenant_id
 
-from . import commands, store
+from . import commands, live, store
+from .counting import flushed_key
 from .deps import Deps
+from .feeds import drop_off
 from .guild import leave
 from .look import set_nickname
 from .router import Directory
@@ -34,10 +36,16 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
             "bot_connections",
             "bot_provider_secrets",
             "bot_outbox",
+            "bot_counts_minute",
+            "bot_counts_hour",
+            "bot_activity_hour",
         ):
             await conn.execute(f"DELETE FROM {table}")
         for table in ("bot_guild_routes", "bot_application_routes", "bot_outbox_tenants"):
             await conn.execute(f"DELETE FROM {table} WHERE tenant_id = $1", tenant)
+    if d.live is not None:
+        await live.clear(d.live, tenant)
+        await d.live.delete(flushed_key(tenant))
     if bound is not None and token is not None:
         await leave(d, token, bound["application_id"], bound["guild_id"])
 
@@ -83,8 +91,13 @@ async def on_tenant(d: Deps, directory: Directory, event: Event) -> None:
     directory.forget(tenant)
     if event.type == "tenants.status.changed" and event.data.get("to") != "archived":
         return
+    if event.type == "tenants.status.changed" and d.live is not None:
+        # Presence data goes at archiving; the anonymous counts stay with the event.
+        await live.clear(d.live, tenant)
     ctx = await d.tenants.by_id(tenant)
     if ctx is not None:
+        if event.type == "tenants.flags.changed" and d.live is not None:
+            await drop_off(d.live, tenant, ctx["flags"])
         await commands.register(d, ctx)
 
 

@@ -41,7 +41,8 @@ class MessageCounter:
 
     async def seen(self, data: dict[str, Any], channels: Channels, hidden: frozenset[str]) -> bool:
         """MESSAGE_CREATE: counted or dropped."""
-        author = data.get("author") if isinstance(data.get("author"), dict) else {}
+        found = data.get("author")
+        author: dict[str, Any] = found if isinstance(found, dict) else {}
         if (
             data.get("webhook_id") is not None
             or author.get("bot")

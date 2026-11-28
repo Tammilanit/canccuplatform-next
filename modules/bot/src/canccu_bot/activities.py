@@ -37,7 +37,7 @@ def count_activities(found: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
             if key not in seen:
                 seen.add(key)
                 players[key] += 1
-    out = [
+    out: list[dict[str, Any]] = [
         {
             "application_id": apps[key],
             "name": names[key].most_common(1)[0][0],

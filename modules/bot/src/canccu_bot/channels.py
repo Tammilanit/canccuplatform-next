@@ -90,7 +90,9 @@ class ChannelCache:
         for channel in [*(guild.get("channels") or []), *(guild.get("threads") or [])]:
             if isinstance(channel, dict) and channel.get("id") is not None:
                 mapping[str(channel["id"])] = _record(channel, guild_id)
-        everyone = next((r for r in guild.get("roles") or [] if str(r.get("id")) == guild_id), {})
+        everyone: dict[str, Any] = next(
+            (r for r in guild.get("roles") or [] if str(r.get("id")) == guild_id), {}
+        )
         mapping[EVERYONE] = str(everyone.get("permissions") or "0")
         await self._store.replace(self._key, mapping)
         await self._store.hset(self._guild_key, "guild_id", guild_id)

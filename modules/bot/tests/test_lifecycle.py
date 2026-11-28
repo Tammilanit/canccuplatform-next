@@ -7,9 +7,12 @@ from __future__ import annotations
 from canccu_kit import Event
 from canccu_kit.testing import tenant_event
 from conftest import SHARED_ID, Env
+from fakes import MemoryLive
 from test_guild import bound
 
+from canccu_bot.guild import unbind
 from canccu_bot.lifecycle import on_platform, on_tenant
+from canccu_bot.live import live_key
 from canccu_bot.router import Directory
 
 
@@ -86,3 +89,61 @@ async def test_a_flags_change_registers_the_commands_again(env: Env) -> None:
         "ev-a", "SELECT commands_status, commands_flags_version FROM bot_bindings"
     )
     assert tuple(row) == ("registered", 4)
+
+
+async def live_state(env: Env, tenant: str = "ev-a") -> MemoryLive:
+    live = MemoryLive()
+    env.deps.live = live
+    for part in ("presence", "voice", "members", "bots", "guild", "channels"):
+        await live.hset(live_key(tenant, part), "1", "x")
+    return live
+
+
+async def counts(env: Env, tenant: str = "ev-a") -> None:
+    await env.sql(tenant, "INSERT INTO bot_counts_minute (minute, online) VALUES (now(), 3)")
+    await env.sql(
+        tenant, "INSERT INTO bot_counts_hour (hour, minutes, online) VALUES (now(), 60, 3)"
+    )
+    await env.sql(
+        tenant,
+        "INSERT INTO bot_activity_hour (hour, activity_key, name, player_minutes)"
+        " VALUES (now(), 'app:77', 'Racing League', 9)",
+    )
+
+
+async def test_archiving_drops_the_live_state_and_keeps_the_counts(env: Env) -> None:
+    """Retention (contracts/bot.md, Counts): presence goes, anonymous counts stay."""
+    await bound(env)
+    live = await live_state(env)
+    await counts(env)
+    env.contexts["ev-a"]["status"] = "archived"
+    event = tenant_event("ev-a", "tenants.status.changed", {"from": "live", "to": "archived"})
+    await on_tenant(env.deps, Directory(env.deps), event)
+    assert live.values == {}
+    for table in ("bot_counts_minute", "bot_counts_hour", "bot_activity_hour"):
+        assert len(await env.fetch("ev-a", f"SELECT 1 FROM {table}")) == 1
+
+
+async def test_a_deleted_event_leaves_no_count_and_no_live_state(env: Env) -> None:
+    live = await live_state(env)
+    await counts(env)
+    await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-a"))
+    assert live.values == {}
+    for table in ("bot_counts_minute", "bot_counts_hour", "bot_activity_hour"):
+        assert await env.fetch("ev-a", f"SELECT 1 FROM {table}") == []
+
+
+async def test_a_feed_switched_off_drops_its_live_part_at_once(env: Env) -> None:
+    await bound(env)
+    live = await live_state(env)
+    env.contexts["ev-a"]["flags"] = {"bot.presence": False, "bot.members": True, "bot.voice": True}
+    await on_tenant(env.deps, Directory(env.deps), tenant_event("ev-a", "tenants.flags.changed"))
+    assert live_key("ev-a", "presence") not in live.values
+    assert live_key("ev-a", "voice") in live.values
+
+
+async def test_an_unbind_drops_the_live_state_of_the_guild(env: Env) -> None:
+    await bound(env)
+    live = await live_state(env)
+    assert await unbind(env.deps, "ev-a", "bot_removed", None)
+    assert live.values == {}
