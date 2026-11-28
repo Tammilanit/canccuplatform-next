@@ -304,7 +304,11 @@
     color: var(--canccu-ink-muted);
   }
   .bot-tabmenu__item[aria-current="page"] {
-    background: color-mix(in srgb, var(--canccu-color-primary) 18%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--canccu-color-primary) 18%,
+      transparent
+    );
   }
   /* The check on a phone: the gaps first, the ready ones in one line (mockup 04 B). */
   .bot-check--ok {

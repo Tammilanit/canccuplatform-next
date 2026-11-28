@@ -75,11 +75,11 @@ Six links, all high, each one issue and one package; the contract part of each t
 | 1. Clients | A, B, C, G: the module on the stack, the fake Discord, the REST and gateway clients, the pool with its lease, `GET /api/bot/connection` (shared mode), health | 4,500 | — |
 | 2. Connection and guild | D, E, F; C7's intents and the four feed flags | 3,900 | 1 (B11 seams, or #52 and #150) |
 | 3. Commands | H, I, J; C1, C7's framework rules; the "not connected" reply's final wording (the product owner's remark on mockup 07) | 4,000 | 2 |
-| 4. Rights from roles | K; C2, C3, C4 | 2,500 | 3, #223 (answer 3), and #150's event-admin role in place of the B11 seam (#150 lands before #223) |
+| 4. Rights from roles | K; C2, C3, C4; the page's role-mappings part (the Roles and rights tab, C4's mapping UI) | 2,500 | 3, #223 (answer 3), and #150's event-admin role in place of the B11 seam (#150 lands before #223); on the Go-public track (the product owner, 2026-11-28) |
 | 5. Setup API | L; C5, C6 | 2,000 | 2; parallel with 3 |
-| 6. The Discord page | M, N; C8; the "Always on" row (the product owner's remark on mockup 06); `docs/design/widgets.md` saying `in_voice` (the third remark) | 3,300 | 3, 4, 5 |
+| 6. The Discord page | M, N without the role mappings (they go with link 4); C8; the "Always on" row (the product owner's remark on mockup 06); `docs/design/widgets.md` saying `in_voice` (the third remark) | 3,300 | 3, 5 |
 
-The issue's criteria map as: the module, the pool, routing, queues, clone, unbind, deletion, health, the lease and the fake Discord → 1 and 2; the command framework, `/finals` needs, the guard, the acting token, nickname and colour → 3; rights from roles → 4; intents → 2 (the feeds) and 3 (the flag checks); events → 1, 2 and 4; clone carries the purposes → 5; the Discord page, Playwright and screenshots → 6; contract parts → each link. #122 and #125 wait for links 1–3 (the framework and the fake Discord), not for the page.
+The issue's criteria map as: the module, the pool, routing, queues, clone, unbind, deletion, health, the lease and the fake Discord → 1 and 2; the command framework, `/finals` needs, the guard, the acting token, nickname and colour → 3; rights from roles and the page's role mappings → 4 (moved to the Go-public track on 2026-11-28, after #150 and #223); intents → 2 (the feeds) and 3 (the flag checks); events → 1, 2 and 4; clone carries the purposes → 5; the Discord page, Playwright and screenshots → 6; contract parts → each link. #122 and #125 wait for links 1–3 (the framework and the fake Discord), not for the page.
 
 ## Answers (the lead, on the plan PR)
 1. **Split:** six links, as above. The dispatcher's normal flow splits #121 into them.
