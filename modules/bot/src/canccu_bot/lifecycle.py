@@ -20,9 +20,9 @@ log = logging.getLogger("canccu_bot.lifecycle")
 
 
 async def tenant_deleted(d: Deps, tenant: str) -> None:
-    """The event's connection, binding, routes, secrets, counts and live state go, and nothing
-    is emitted: the event's streams go with it. Its own client closes on the pool's next tick,
-    its route gone; the shared bot leaves the guild."""
+    """The event's connection, binding, routes, secrets, counts, legacy import and live state go,
+    and nothing is emitted: the event's streams go with it. Its own client closes on the pool's
+    next tick, its route gone; the shared bot leaves the guild."""
     async with d.db.tenant(tenant) as conn:
         bound = await conn.fetchrow("SELECT guild_id, application_id FROM bot_bindings")
         token = None
@@ -32,6 +32,7 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
         for table in (
             "bot_bindings",
             "bot_purposes",
+            "bot_legacy",
             "bot_posts",
             "bot_connections",
             "bot_provider_secrets",

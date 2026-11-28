@@ -23,9 +23,7 @@ async def session(fake: FakeDiscord, token: str, *, status: str | None = None) -
 
 
 async def own_presence(fake: FakeDiscord, ws: Any, guild_id: str, user_id: str) -> Any:
-    await ws.send(
-        {"op": 8, "d": {"guild_id": guild_id, "user_ids": [user_id], "presences": True}}
-    )
+    await ws.send({"op": 8, "d": {"guild_id": guild_id, "user_ids": [user_id], "presences": True}})
     async with asyncio.timeout(2):
         while True:
             message = await ws.recv()

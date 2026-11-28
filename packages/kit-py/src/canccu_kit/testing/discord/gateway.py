@@ -177,8 +177,8 @@ class FakeGateway:
             await conn.close(4014, "Disallowed intent(s).")
             return None
         shard = list(d.get("shard") or [0, 1])
-        presence = d.get("presence") if isinstance(d.get("presence"), dict) else {}
-        status = str(presence.get("status") or "online")
+        presence = d.get("presence")
+        status = str(presence.get("status") or "online") if isinstance(presence, dict) else "online"
         session = Session(secrets.token_hex(16), app.id, intents, shard, conn=conn, status=status)
         self.sessions[session.id] = session
         ours = [g for g in self.guilds().values() if app.id in g.bots]

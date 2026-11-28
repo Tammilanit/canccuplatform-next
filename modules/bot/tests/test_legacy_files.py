@@ -98,15 +98,15 @@ def test_a_missing_token_or_a_bad_id_names_the_key_only(tmp_path: Path) -> None:
 
 def test_unreadable_files_are_named(tmp_path: Path) -> None:
     env, state = scrubbed(tmp_path)
-    with pytest.raises(LegacyFileError, match="nowhere.env"):
+    with pytest.raises(LegacyFileError, match=r"nowhere\.env"):
         read(tmp_path / "nowhere.env", state)
     with pytest.raises(LegacyFileError, match="not a directory"):
         read(env, tmp_path / "nowhere")
     (state / "finals_cards.json").write_text("{broken")
-    with pytest.raises(LegacyFileError, match="finals_cards.json"):
+    with pytest.raises(LegacyFileError, match=r"finals_cards\.json"):
         read(env, state)
     (state / "finals_cards.json").write_text("[1, 2]")
-    with pytest.raises(LegacyFileError, match="finals_cards.json"):
+    with pytest.raises(LegacyFileError, match=r"finals_cards\.json"):
         read(env, state)
 
 

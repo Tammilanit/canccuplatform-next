@@ -1,4 +1,4 @@
-"""The legacy bot import (#125, D9–D11) on a scrubbed copy of the legacy files against the fake
+"""The legacy bot import (#125, D9 to D11) on a scrubbed copy of the legacy files against the fake
 Discord: the dry run's report, the import, a second run that changes nothing, and the refusal
 while the legacy bot still holds its gateway session."""
 
@@ -64,6 +64,10 @@ async def legacy_running(env: Env, app: FakeApplication) -> Any:
     return ws
 
 
+def files_of(root: Path) -> dict[Path, bytes]:
+    return {p: p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
 async def rows(env: Env) -> dict[str, list[dict[str, Any]]]:
     queries = {
         "connections": "SELECT * FROM bot_connections",
@@ -91,7 +95,7 @@ async def test_the_dry_run_reports_every_kind_and_writes_nothing(env: Env, tmp_p
         "tournaments → Tournaments · alerts → Crew",
         f'"Demo Admin" → role {w.ids["role"]}: waits for #763 (Discord roles to platform rights)',
         "game threshold 4 → Games surge_threshold (its default: nothing to set)",
-        "ticker TTL 1800 → the platform's default (the legacy /ticker is not ported)",
+        "ticker TTL 1800 → default (the new /ticker sets each line's end)",
         "watcher: 3 announced, 2 started, 1 champion · finals card · 2 finals channels",
         "polls (dropped, 0010): MAX_POLL_OPTIONS, MIN_POLL_DURATION, POLL_RESULT_DISPLAY_SECONDS",
         "the finals provider's bearer (the operator sets it in Finals, D10): FINALS_PROVIDER_TOKEN",
@@ -164,7 +168,7 @@ async def test_the_import_is_emitted_and_audited_without_a_value(env: Env, tmp_p
         },
     }
     actions = [(e["action"], e["actor_user_id"], e["reason"]) for e in env.audit.entries]
-    assert actions == [("bot.legacy.imported", None, "the legacy bot import (#125)")]
+    assert actions == [("bot.legacy.imported", None, "the legacy bot import")]
     assert env.audit.entries[0]["changes"] == {
         "bot_application": 1,
         "channels": 2,
@@ -189,10 +193,9 @@ async def test_a_second_run_changes_nothing(env: Env, tmp_path: Path) -> None:
 
 async def test_the_legacy_files_are_left_as_they_were(env: Env, tmp_path: Path) -> None:
     w = world(env, tmp_path)
-    files = sorted(p for p in tmp_path.rglob("*") if p.is_file())
-    before = {p: p.read_bytes() for p in files}
+    before = files_of(tmp_path)
     await run(env, w, dry_run=False)
-    assert {p: p.read_bytes() for p in sorted(tmp_path.rglob("*")) if p.is_file()} == before
+    assert files_of(tmp_path) == before
 
 
 async def test_a_changed_legacy_value_changes_only_its_row(env: Env, tmp_path: Path) -> None:
