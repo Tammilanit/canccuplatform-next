@@ -59,6 +59,13 @@ describe("the look cycle", () => {
     expect(lookAt("main", ["waves"], T0, "lively").from).toBeNull();
   });
 
+  it("plays the hearth and the sky a theme names, and never one it does not (plan issue-785 D12)", () => {
+    const looks = changes("main", ["hearth", "sky"], T0, 60 * MIN).map((c) => c.look);
+    expect(new Set(looks)).toEqual(new Set(["hearth", "sky"]));
+    expect(lookAt("main", ["hearth"], T0, "none").look).toBe("hearth");
+    for (const c of changes("main", ALL, T0, 2 * 60 * MIN)) expect(["hearth", "sky"]).not.toContain(c.look);
+  }); // prettier-ignore
+
   it("leaves the particles out at none", () => {
     const looks = changes("main", ["particles", "waves", "gradient"], T0, 2 * 60 * MIN);
     expect(looks.some((c) => c.look === "particles")).toBe(true);
@@ -115,6 +122,19 @@ describe("the living stage", () => {
     expect(el.querySelector(".canccu-stage__particles")?.parentElement?.className).toBe(
       "canccu-stage__look",
     );
+  });
+
+  it("has a layer for each look, the hearth and the sky too", () => {
+    const el = draw({ backdrop: { looks: ["sky"] } });
+    const look = el.querySelector(".canccu-stage__look") as HTMLElement;
+    expect([...look.children].map((c) => c.className)).toEqual([
+      "canccu-stage__gradient",
+      "canccu-stage__particles",
+      "canccu-stage__waves",
+      "canccu-stage__hearth",
+      "canccu-stage__sky",
+    ]);
+    expect(el.classList).toContain("canccu-stage--look-sky");
   });
 
   it("wears the look of the zone's cycle, the time of day and the hype", () => {
