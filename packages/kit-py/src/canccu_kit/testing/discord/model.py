@@ -69,6 +69,10 @@ class FakeGuild:
     """Each bot's own nickname in the guild, by application id."""
     bot_roles: dict[str, list[str]] = field(default_factory=dict)
     """The roles each bot holds in the guild, by application id."""
+    presences: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """Members' presences (status, activities) by user id, as GUILD_CREATE carries them."""
+    voice_states: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """Who is in which voice channel, by user id."""
 
     def as_payload(self) -> dict[str, Any]:
         """The guild as GUILD_CREATE carries it."""
@@ -80,6 +84,8 @@ class FakeGuild:
             "roles": list(self.roles.values()),
             "members": list(self.members.values()),
             "member_count": len(self.members),
+            "presences": list(self.presences.values()),
+            "voice_states": list(self.voice_states.values()),
         }
 
 

@@ -257,3 +257,18 @@ async def test_heartbeats_go_unanswered_when_told() -> None:
     await asyncio.sleep(0.01)  # the gateway has read the heartbeat
     await fake.gateway.dispatch(app.id, "GUILD_UPDATE", {"id": "1"})
     assert (await ws.recv())["t"] == "GUILD_UPDATE"
+
+
+async def test_guild_create_carries_presences_and_voice_states() -> None:
+    """A guild's presences and voice states, set up as data, come with its snapshot (#122)."""
+    fake = FakeDiscord()
+    app = fake.add_application("Demo Bot")
+    guild = fake.add_guild("G", bots=[app.id])
+    person = fake.add_user("someone")
+    fake.add_member(guild.id, person.id)
+    guild.presences[person.id] = {"user": {"id": person.id}, "status": "online", "activities": []}
+    guild.voice_states[person.id] = {"user_id": person.id, "channel_id": "100000000000000099"}
+    ws, _ = await identify(fake, app.token)
+    created = (await ws.recv())["d"]
+    assert created["presences"] == [guild.presences[person.id]]
+    assert created["voice_states"] == [guild.voice_states[person.id]]
