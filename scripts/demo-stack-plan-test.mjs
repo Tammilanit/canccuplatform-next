@@ -230,11 +230,27 @@ export function selftest({ plan, format, summary, changedPaths, forGroups, group
     check(`${event} is the full run whatever changed`, () =>
       assert.deepEqual(core(plan({ event, paths: ["docs/ci.md"] })), FULL_RUN),
     );
-  check("a push to main runs what its changes affect, as its PR did", () => {
-    assert.deepEqual(core(plan({ event: "push", paths: ["docs/ci.md"] })).tier, "docs");
-    assert.deepEqual(
-      core(plan({ event: "push", paths: ["modules/agenda/x.py"] })),
-      pr("modules/agenda/x.py"),
+  // The merge queue has just checked the same tree (#861).
+  check("a push to main runs its changes' API tests and soak, but no screenshot", () => {
+    const push = (...paths) => plan({ event: "push", paths });
+    assert.equal(push("docs/ci.md").tier, "docs");
+    assert.deepEqual(core(push("modules/agenda/x.py")), {
+      ...pr("modules/agenda/x.py"),
+      shards: [],
+    });
+    assert.deepEqual(core(push("modules/screen/src/zones.ts")), {
+      ...pr("modules/screen/src/zones.ts"),
+      shards: [],
+    });
+    assert.deepEqual(core(push("packages/ui/ui.css")), { ...FULL, shards: [] });
+    const out = push("modules/screen/player/src/motion.css", "modules/agenda/x.py");
+    assert.equal(out.groups, "");
+    assert.equal(out.select, "");
+    assert.match(out.why.join("\n"), /merge queue/);
+    assert.match(summary("push", out), /No screenshot shard/);
+    assert.match(
+      format(out),
+      /^tier=module\napi=agenda,screen\nsoak=true\ncheck=false\nrun=affected\ngroups=\nselect=\nshards=\[\]$/,
     );
   });
   check("the merge queue checks the shots but captures none", () => {

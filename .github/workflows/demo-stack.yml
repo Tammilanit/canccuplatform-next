@@ -2,8 +2,10 @@ name: Demo stack
 
 # Tiered (#461, #835, docs/ci.md#tiers): a pull request, a merge-queue entry and a push to main run
 # what their changed paths need, the screens only the views they affect at 1920×1080 in one theme;
-# the nightly run and a manual run take every view in every theme, and a manual run with
-# `book=true` (the screenshot book at a checkpoint) portrait and one 4K shot per layout too.
+# a push to main takes no screenshot, since the queue has just checked the same tree (#861), but
+# still runs its API tests, which write the image cache, and the soak. The nightly run and a
+# manual run take every view in every theme, and a manual run with `book=true` (the screenshot
+# book at a checkpoint) portrait and one 4K shot per layout too.
 on:
   pull_request:
   merge_group:

@@ -8,8 +8,9 @@
 //          with --known-at, only the groups the scripts at REV know (the weekly run's step tag)
 //        node demo-stack-plan.mjs --self-test
 // The changed paths are `git diff --name-only --no-renames REV HEAD`, read for a pull request, a
-// merge queue entry and a push to main: each runs what its changes affect. The nightly run and a
-// manual run are the full run; a manual run with --book is the screenshot book.
+// merge queue entry and a push to main: each runs what its changes affect, but a push to main
+// takes no screenshot (#861). The nightly run and a manual run are the full run; a manual run with
+// --book is the screenshot book.
 import { appendFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { parseArgs } from "node:util";
@@ -58,7 +59,9 @@ const inOrder = (wanted) => GROUPS.filter((g) => wanted.has(g)).join(",");
  * The run an event and its changed paths need. `api` is the module list scripts/demo-stack-test
  * takes (`all`, or the modules whose tests cover the changed ones: its platform smoke runs
  * whatever the list). The soak guards the player's memory over a day, so it runs for screen and
- * on a full tier. `check`: the merge queue writes no PNG of a page and no artifact. `select` is
+ * on a full tier. `check`: the merge queue writes no PNG of a page and no artifact. A push to
+ * main takes no shot at all: the merge queue has just checked the same tree, and nothing reads
+ * the push run's PNGs (#861); its API tests still write the image cache. `select` is
  * the screen shots' choice every shard hands scripts/demo-screenshots, `groups` every group of
  * the run (the weekly run's one stack), `why` a line for each decision.
  */
@@ -101,6 +104,22 @@ export function plan({ event, paths, book = false }) {
       why: ["only docs changed"],
     };
   const full = needs.includes("full");
+  const modules = [...new Set(code.map(moduleOf))].sort();
+  const tier = {
+    tier: full ? "full" : "module",
+    api: full ? "all" : [...new Set(modules.map(apiOf))].sort().join(","),
+    soak: full || modules.includes("screen"),
+    check,
+    run: "affected",
+  };
+  if (event === "push")
+    return {
+      ...tier,
+      groups: "",
+      select: "",
+      shards: [],
+      why: ["push to main: no screenshot, the merge queue checked the same tree"],
+    };
   const wanted = new Set(full ? GROUPS : needs.filter(Array.isArray).flat());
   const screens = screensFor(paths);
   const why = code.map((path) => {
@@ -114,13 +133,8 @@ export function plan({ event, paths, book = false }) {
     why.push("screens: the views named are drawn only in portrait or at 4K, which the book takes");
   }
   const select = screens ? flags({ ...screens, book: false }) : "";
-  const modules = [...new Set(code.map(moduleOf))].sort();
   return {
-    tier: full ? "full" : "module",
-    api: full ? "all" : [...new Set(modules.map(apiOf))].sort().join(","),
-    soak: full || modules.includes("screen"),
-    check,
-    run: "affected",
+    ...tier,
     groups: inOrder(wanted),
     select,
     shards: shardsFor(wanted, select, 1),
