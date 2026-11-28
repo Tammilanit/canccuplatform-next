@@ -49,37 +49,58 @@ export const BOX_OPACITY = 0.9;
 
 /** What the stage draws behind a box: its background, and the primary and accent of its glows. */
 const GROUNDS = ["background", "primary", "accent"] as const;
+/**
+ * The least scrim the stage lays over a picture, a video or art (contracts/theming.md, The two
+ * backgrounds: 0.55–1): the theme's background at it over pure white and over pure black is the
+ * lightest and the darkest any media can make the ground under a box. Judged always, not only for
+ * a theme with its own picture: the game's art and a box's art may come with any theme.
+ */
+const MEDIA_SCRIM = 0.55;
 const ON_BOX: readonly (readonly [string, number])[] = RULES.filter(
   ([, bg]) => bg === "surface",
 ).map(([fg, , min]) => [fg, min] as const);
 
-/** `top` at `alpha` over `ground`, as `color-mix(in srgb, …)` draws it. */
+/** A token's own alpha: that of `#rrggbbaa`, else 1. */
+const alphaOf = (hex: string): number =>
+  hex.length === 9 ? parseInt(hex.slice(7, 9), 16) / 255 : 1;
+
+/**
+ * `top` at `alpha` over `ground`, as `color-mix(in srgb, …)` draws it: a `#rrggbbaa` top's own
+ * alpha multiplies in, since the mix keeps it.
+ */
 function over(top: string, ground: string, alpha: number): string {
+  const a = alpha * alphaOf(top);
   const mix = [1, 3, 5].map((at) => {
-    const c = parseInt(top.slice(at, at + 2), 16) * alpha;
-    return Math.round(c + parseInt(ground.slice(at, at + 2), 16) * (1 - alpha));
+    const c = parseInt(top.slice(at, at + 2), 16) * a;
+    return Math.round(c + parseInt(ground.slice(at, at + 2), 16) * (1 - a));
   });
   return `#${mix.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /**
  * The contrast rules on a box of `surface` at `opacity`, checked over each colour the stage may
- * draw behind it (the worst point of the screen), as `"<token> on the box over <token>"`.
+ * draw behind it (the worst point of the screen), as `"<token> on the box over <ground>"`.
  */
 export function boxContrastFailures(
   colors: Readonly<Record<string, string>>,
   opacity: number,
 ): string[] {
+  const surface = colors.surface;
+  const background = colors.background;
+  if (surface === undefined) return [];
+  const grounds: [string, string | undefined][] = GROUNDS.map((g) => [g, colors[g]]);
+  if (background !== undefined) {
+    grounds.push(["light media", over(background, "#ffffff", MEDIA_SCRIM)]);
+    grounds.push(["dark media", over(background, "#000000", MEDIA_SCRIM)]);
+  }
   const failures: string[] = [];
-  for (const ground of GROUNDS) {
-    const g = colors[ground];
-    const surface = colors.surface;
-    if (g === undefined || surface === undefined) continue;
+  for (const [name, g] of grounds) {
+    if (g === undefined) continue;
     const box = over(surface, g, opacity);
     for (const [fg, min] of ON_BOX) {
       const a = colors[fg];
       if (a === undefined || contrastRatio(a, box) < min)
-        failures.push(`${fg} on the box over ${ground}`);
+        failures.push(`${fg} on the box over ${name}`);
     }
   }
   return failures;

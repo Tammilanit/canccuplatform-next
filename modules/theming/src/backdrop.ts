@@ -4,7 +4,7 @@
  * the organiser's own picture (and the video over it) its served address and the scrim that keeps
  * the text readable on it.
  */
-import { LOOKS } from "./brand.js";
+import { DEFAULT_LOOKS } from "./brand.js";
 import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import { contrastRatio } from "./contrast.js";
@@ -78,7 +78,7 @@ export function backdropView(
   const flag = (v: unknown): boolean => v !== false;
   const looks = Array.isArray(b.looks)
     ? b.looks.filter((l): l is string => typeof l === "string")
-    : [...LOOKS];
+    : [...DEFAULT_LOOKS];
   return {
     looks,
     game_art: flag(b.game_art),

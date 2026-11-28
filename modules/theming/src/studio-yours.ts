@@ -325,6 +325,7 @@ export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): 
             ["square", "Square"],
             ["soft", "Soft"],
             ["round", "Round"],
+            ["pill", "Pill"],
           ],
           roundnessOf(brand, draft),
         ),

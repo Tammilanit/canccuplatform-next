@@ -5,7 +5,7 @@
  */
 import { attrs, html, icon } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
-import { LOOKS } from "./brand.js";
+import { DEFAULT_LOOKS, LOOKS } from "./brand.js";
 import type { Backdrop, Brand } from "./brand.js";
 import { boxOpacityFor } from "./contrast.js";
 
@@ -26,6 +26,8 @@ const LOOK_NAMES: Record<(typeof LOOKS)[number], string> = {
   gradient: "Gradient",
   particles: "Particles",
   waves: "Waves",
+  hearth: "Hearth",
+  sky: "Sky",
 };
 const SWITCHES: [keyof Backdrop, string, string][] = [
   [
@@ -69,7 +71,7 @@ export function backgroundSection(
   colors: Readonly<Record<string, string>>,
 ): Html {
   const b: Backdrop = brand?.backdrop ?? {};
-  const looks = new Set(b.looks ?? LOOKS);
+  const looks = new Set<string>(b.looks ?? DEFAULT_LOOKS);
   // Prettier would close these lone inputs with an end tag repeating the attributes.
   // prettier-ignore
   const tiles = LOOKS.map((look) => html`<label${attrs({ class: `canccu-studio-look canccu-studio-look--${look}` })}><input${attrs({ type: "checkbox", name: "looks", value: look, checked: looks.has(look) })}><span>${LOOK_NAMES[look]}</span></label>`);

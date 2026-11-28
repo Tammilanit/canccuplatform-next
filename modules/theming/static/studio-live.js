@@ -12,7 +12,7 @@
   const LIVE = "canccu-theme-live";
   const root = document.querySelector(".canccu-studio");
   if (root === null) return;
-  const RADIUS = { square: "0", soft: "0.5rem", round: "1rem" };
+  const RADIUS = { square: "0", soft: "0.5rem", round: "1rem", pill: "2.5rem" };
   const PLATES = { light: "#f7f7f8", dark: "#121317", surface: "var(--canccu-color-surface)" };
   const PADDING = { small: "0.08", medium: "0.15", large: "0.25" };
   /** Every value posted, so a frame that loads later gets them too (Review focus 5). */

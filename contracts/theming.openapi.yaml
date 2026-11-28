@@ -1175,7 +1175,7 @@ components:
           type: [string, "null"]
         roundness:
           type: string
-          enum: [square, soft, round]
+          enum: [square, soft, round, pill]
         backdrop:
           description: The screen's background; its `image` must be an image already in the draft (else 400).
           $ref: "theme.schema.json#/$defs/backdrop"
@@ -1361,7 +1361,7 @@ components:
               type: array
               items:
                 type: string
-                enum: [glows, gradient, particles, waves]
+                enum: [glows, gradient, particles, waves, hearth, sky]
             game_art:
               type: boolean
             daylight:

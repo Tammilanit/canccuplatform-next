@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { generateColors } from "../src/brand.js";
-import { raiseBoxOpacity } from "../src/brand-routes.js";
+import { raiseBoxOpacity } from "../src/brand-save.js";
 import { BOX_OPACITY, boxContrastFailures, minBoxOpacity } from "../src/contrast.js";
 import { PRESETS, schemeColors } from "../src/presets.js";
 import { fillTokens, manifestCss, manifestTokens, tokensCss } from "../src/tokens.js";
@@ -24,6 +24,25 @@ describe("boxContrastFailures", () => {
   it("names the pair and the ground that fail when the box is too see-through", () => {
     const colors = { ...COLORS, surface: "#000000", text: "#ffffff", primary: "#ffffff" };
     expect(boxContrastFailures(colors, 0.5)).toContain("text on the box over primary");
+  });
+
+  it("holds over a picture, a video or art: white and black under the scrim's least 0.55", () => {
+    // Over the theme's own colours a half-solid box reads; over a light picture it does not.
+    const black = { background: "#000000", primary: "#000000", accent: "#000000" };
+    const colors = { ...COLORS, ...black, surface: "#202020", text_muted: "#a0a0a0" };
+    const failures = boxContrastFailures(colors, 0.5);
+    expect(failures).toContain("text_muted on the box over light media");
+    expect(failures.filter((f) => !f.endsWith("media"))).toEqual([]);
+    expect(minBoxOpacity(colors)).toBeGreaterThan(0.5);
+  });
+
+  it("counts a #rrggbbaa surface's own alpha", () => {
+    const half = { ...COLORS, surface: `${COLORS.surface}80` };
+    expect(boxContrastFailures(half, 1)).toEqual(boxContrastFailures(COLORS, 128 / 255));
+    expect(minBoxOpacity({ ...COLORS, surface: `${COLORS.surface}ff` })).toBe(
+      minBoxOpacity(COLORS),
+    );
+    expect(minBoxOpacity(half)).toBe(1);
   });
 });
 
