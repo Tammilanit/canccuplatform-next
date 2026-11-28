@@ -8,13 +8,14 @@ import asyncio
 import time
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 
 from conftest import API, NOW, SHARED_ID, Env
 from fakes import connector
 
 from canccu_bot.client import DiscordClient
 from canccu_bot.feeds import Feeds
-from canccu_bot.router import FEEDS, INTENTS, Directory, Router
+from canccu_bot.router import FEEDS, INTENTS, Directory, Handler, Router
 
 MEMBERS = 2000
 UPDATES = 500 * 10
@@ -43,12 +44,12 @@ async def test_two_thousand_members_and_a_burst_of_updates(env: Env) -> None:
     feeds = Feeds(env.deps, SHARED_ID, directory)
     handled = 0
 
-    async def counting(event: str, data: dict[str, object]) -> None:
+    async def counting(event: str, data: dict[str, Any]) -> None:
         nonlocal handled
         await feeds.on(event, data)
         handled += 1
 
-    handlers = dict.fromkeys([*set(FEEDS.values()), "guild"], counting)
+    handlers: dict[str, Handler] = dict.fromkeys([*set(FEEDS.values()), "guild"], counting)
     router = Router(env.deps, SHARED_ID, directory, handlers=handlers)
     client = DiscordClient(
         SHARED_ID,
@@ -81,3 +82,5 @@ async def test_two_thousand_members_and_a_burst_of_updates(env: Env) -> None:
     await feeds.tick()
     [row] = await env.fetch("ev-a", "SELECT members, online, idle, dnd FROM bot_counts_minute")
     assert tuple(row) == (MEMBERS, online, MEMBERS // 4, MEMBERS // 4)
+    # And the live state was written behind: everyone not offline, by Discord id.
+    assert len(await env.keys.hash_read("bot:live:ev-a:presence")) == MEMBERS * 3 // 4

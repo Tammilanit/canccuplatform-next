@@ -113,4 +113,3 @@ async def test_a_platform_hostname_names_no_event(env: Env) -> None:
     async with env.client("signin.example.test") as c:
         r = await c.get("/api/bot/stats")
     assert r.status_code == 404
-

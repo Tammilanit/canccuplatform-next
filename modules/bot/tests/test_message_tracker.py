@@ -80,7 +80,8 @@ def test_an_unknown_channel_does_not_count() -> None:
 
 def test_bots_webhooks_system_messages_and_hidden_people_do_not_count() -> None:
     c = server()
-    assert not counts(message(author="9", **{"author": {"id": "9", "bot": True}}), c, frozenset())
+    bot = {**message(), "author": {"id": "9", "bot": True}}
+    assert not counts(bot, c, frozenset())
     assert not counts(message(webhook_id="w1"), c, frozenset())
     assert not counts(message(type=7), c, frozenset())  # "joined the server"
     assert not counts(message(author="2"), c, frozenset({"2"}))

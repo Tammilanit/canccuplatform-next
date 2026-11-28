@@ -40,7 +40,8 @@ SUPERADMIN = "super.example.test"
 HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b", "r.example.test": "ev-r"}
 TABLES = (
     "bot_connections, bot_bindings, bot_guild_routes, bot_application_routes, bot_outbox,"
-    " bot_outbox_tenants, bot_provider_secrets, bot_purposes"
+    " bot_outbox_tenants, bot_provider_secrets, bot_purposes, bot_counts_minute, bot_counts_hour,"
+    " bot_activity_hour"
 )
 ADMIN = "admin.rights.write"
 

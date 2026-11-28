@@ -63,9 +63,7 @@ def message(author: str, channel: str = "general") -> dict[str, Any]:
 @pytest.fixture
 async def feeds(env: Env) -> Feeds:
     env.contexts["ev-a"]["flags"] = dict.fromkeys(FLAGS, True)
-    await env.platform_sql(
-        "INSERT INTO bot_guild_routes VALUES ($1, 'ev-a', $2)", GUILD, SHARED_ID
-    )
+    await env.platform_sql("INSERT INTO bot_guild_routes VALUES ($1, 'ev-a', $2)", GUILD, SHARED_ID)
     env.deps.now = lambda: T0
     env.keys.now_ms = int(T0.timestamp() * 1000)
     return new_feeds(env)
@@ -227,16 +225,14 @@ async def test_minutes_missed_while_down_keep_their_messages(env: Env, feeds: Fe
     ]
 
 
-async def test_archiving_drops_the_live_state_and_keeps_the_counts(
-    env: Env, feeds: Feeds
-) -> None:
+async def test_archiving_drops_the_live_state_and_keeps_the_counts(env: Env, feeds: Feeds) -> None:
     await feed(feeds, "GUILD_CREATE", snapshot())
     await at(env, feeds, T0 + timedelta(seconds=61))
     await feeds.flush()
     assert any(k.startswith("bot:live:ev-a:") for k in env.keys.values)
     env.contexts["ev-a"]["status"] = "archived"
     event = tenant_event("ev-a", "tenants.status.changed", {"from": "live", "to": "archived"})
-    await lifecycle.on_tenant(env.deps, Directory(env.deps), event)
+    await lifecycle.on_tenant(env.deps, feeds.directory, event)  # the container's one directory
     assert not any(k.startswith("bot:live:ev-a:") for k in env.keys.values)
     await at(env, feeds, T0 + timedelta(seconds=125))
     assert not any(k.startswith("bot:live:ev-a:") for k in env.keys.values)

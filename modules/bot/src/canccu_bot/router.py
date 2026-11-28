@@ -42,6 +42,28 @@ FEEDS = {
 }
 """Each feed of gateway data and the flag it belongs to."""
 
+SNAPSHOT_PARTS = {
+    "members": "bot.members",
+    "presences": "bot.presence",
+    "voice_states": "bot.voice",
+}
+"""The parts of GUILD_CREATE that are feeds' data, each under its feed's flag."""
+
+GUILD_EVENTS = frozenset(
+    {
+        "CHANNEL_CREATE",
+        "CHANNEL_UPDATE",
+        "CHANNEL_DELETE",
+        "THREAD_CREATE",
+        "THREAD_UPDATE",
+        "THREAD_DELETE",
+        "GUILD_ROLE_CREATE",
+        "GUILD_ROLE_UPDATE",
+    }
+)
+"""The guild's channels and its @everyone role, which say what everyone can see (D4): no feed's
+data, so under no flag; the `guild` handler gets them with the snapshot's channels."""
+
 LEAVE_AFTER_S = 15 * 60
 FRESH_S = 10.0
 """How long a route or an event's flags are read from memory; the pool's tick is as long."""
@@ -133,12 +155,15 @@ class Router:
     async def dispatch(self, event: str, data: dict[str, Any]) -> None:
         if event == "GUILD_CREATE":
             await self._guild_seen(str(data.get("id")))
+            await self._snapshot(data)
         elif event == "GUILD_DELETE":
             await self._guild_gone(str(data.get("id")), data.get("unavailable") is True)
         elif event == "INTERACTION_CREATE":
             await self._interaction(data)
         elif event in FEEDS:
             await self._feed(event, data)
+        elif event in GUILD_EVENTS:
+            await self._guild_event(event, data)
 
     async def _ours(self, guild_id: str, *, fresh: bool = False) -> str | None:
         """The event of a guild bound for this application."""
@@ -224,6 +249,26 @@ class Router:
         if ctx is None or not ctx["flags"].get(flag, False):
             return
         await self._run(flag, tenant, event, data)
+
+    async def _snapshot(self, data: dict[str, Any]) -> None:
+        """The guild's snapshot, each feed's part dropped before the handler when its flag is
+        off, like the feed's own events."""
+        tenant = await self._ours(str(data.get("id")))
+        ctx = None if tenant is None else await self._live(tenant)
+        if tenant is None or ctx is None:
+            return
+        kept = {
+            k: v
+            for k, v in data.items()
+            if k not in SNAPSHOT_PARTS or ctx["flags"].get(SNAPSHOT_PARTS[k], False)
+        }
+        await self._run("guild", tenant, "GUILD_CREATE", kept)
+
+    async def _guild_event(self, event: str, data: dict[str, Any]) -> None:
+        guild_id = data.get("guild_id")
+        tenant = None if guild_id is None else await self._ours(str(guild_id))
+        if tenant is not None and await self._live(tenant) is not None:
+            await self._run("guild", tenant, event, data)
 
     async def _run(self, key: str, tenant: str, event: str, data: dict[str, Any]) -> None:
         handler = self._handlers.get(key)
