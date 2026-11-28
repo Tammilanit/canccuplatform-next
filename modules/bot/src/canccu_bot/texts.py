@@ -23,24 +23,24 @@ TEXTS: dict[str, dict[str, str]] = {
         "fi": "Tämä tapahtuma on päättynyt; botti ei tee täällä enää mitään.",
     },
     "feature_off": {
-        "en": "/{command} is not on at {event}. Ask the crew; the command goes away within a"
+        "en": "{command} is not on at {event}. Ask the crew; the command goes away within a"
         " minute.",
-        "fi": "/{command} ei ole käytössä tapahtumassa {event}. Kysy crew'lta; komento poistuu"
+        "fi": "{command} ei ole käytössä tapahtumassa {event}. Kysy crew'lta; komento poistuu"
         " minuutin kuluessa.",
     },
     "sign_in": {
-        "en": "Sign in to {event} once to use /{command}. Then your roles bring the rights.",
-        "fi": "Kirjaudu kerran tapahtumaan {event} käyttääksesi komentoa /{command}. Sen jälkeen"
+        "en": "Sign in to {event} once to use {command}. Then your roles bring the rights.",
+        "fi": "Kirjaudu kerran tapahtumaan {event} käyttääksesi komentoa {command}. Sen jälkeen"
         " roolisi tuovat oikeudet.",
     },
     "sign_in_button": {"en": "Sign in", "fi": "Kirjaudu"},
     "no_right": {
-        "en": "You need the {right} right for /{command}. Ask an event admin.",
-        "fi": "Tarvitset {right}-oikeuden komentoon /{command}. Kysy tapahtuman ylläpitäjältä.",
+        "en": "You need the {right} right for {command}. Ask an event admin.",
+        "fi": "Tarvitset {right}-oikeuden komentoon {command}. Kysy tapahtuman ylläpitäjältä.",
     },
     "no_right_unnamed": {
-        "en": "/{command} needs a right you do not have yet. Ask an event admin.",
-        "fi": "/{command} vaatii oikeuden, jota sinulla ei vielä ole. Kysy tapahtuman"
+        "en": "{command} needs a right you do not have yet. Ask an event admin.",
+        "fi": "{command} vaatii oikeuden, jota sinulla ei vielä ole. Kysy tapahtuman"
         " ylläpitäjältä.",
     },
     "too_slow": {
@@ -60,8 +60,8 @@ TEXTS: dict[str, dict[str, str]] = {
         "fi": "Tämä painike on vanha. Suorita komento uudelleen.",
     },
     "link_expired": {
-        "en": "This link has expired. Run /{command} again.",
-        "fi": "Tämä linkki on vanhentunut. Suorita /{command} uudelleen.",
+        "en": "This link has expired. Run {command} again.",
+        "fi": "Tämä linkki on vanhentunut. Suorita {command} uudelleen.",
     },
     "this_event": {"en": "this event", "fi": "tämä tapahtuma"},
 }

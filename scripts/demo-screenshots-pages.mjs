@@ -31,7 +31,7 @@ export const PAGES = [
   // Every part's Settings form at both widths (#732): each kind of control is in one of them.
   // Screen's desktop form is SETTINGS_STATES' first shot. Food's is its own Settings tab (#747),
   // which the pizza group shoots.
-  ...["admin", "agenda", "games", "notify", "screen"].flatMap(
+  ...["admin", "agenda", "bot", "games", "notify", "screen"].flatMap(
     (part) => [
       ...(part === "screen"
         ? []

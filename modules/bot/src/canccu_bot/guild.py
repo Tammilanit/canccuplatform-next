@@ -49,6 +49,7 @@ async def unbind(
             token = await store.bot_token(d.shared, d.secrets, conn, tenant, app_id)
             await conn.execute("DELETE FROM bot_bindings")
             await conn.execute("DELETE FROM bot_purposes")  # they name the guild's channels
+            await conn.execute("DELETE FROM bot_posts")  # and its messages
             await conn.execute(
                 "DELETE FROM bot_guild_routes WHERE guild_id = $1 AND tenant_id = $2",
                 guild,

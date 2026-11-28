@@ -1,0 +1,13 @@
+settings:
+  - key: announce_role
+    type: string
+    label: Role an urgent announcement mentions
+    short: Urgent role
+    help: "The id of one role of the event's Discord server (copy it in Discord). Empty: nobody is pinged. Never @everyone."
+    example: "100000000000000701"
+    default: ""
+groups:
+  - id: announcements
+    label: Announcements in Discord
+    description: The bot posts each announcement sent to Discord in the announcements channel.
+    keys: [announce_role]

@@ -175,7 +175,9 @@ def submit(custom_id: str, values: dict[str, str]) -> dict[str, Any]:
         {"type": 1, "components": [{"type": 4, "custom_id": k, "value": v}]}
         for k, v in values.items()
     ]
-    return {**member(), "type": 5, "data": {"custom_id": custom_id, "components": rows}}
+    # Discord adds `message` to a form opened from a button (all of these are).
+    sent = {**member(), "type": 5, "data": {"custom_id": custom_id, "components": rows}}
+    return {**sent, "message": {"id": "m1"}}
 
 
 async def run(w: World, data: dict[str, Any], interactions: Interactions | None = None) -> None:

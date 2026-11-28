@@ -50,6 +50,8 @@ class Deps:
     """look.EventLook: the event's name and colour."""
     http: Any = None
     """An httpx.AsyncClient for outside providers (providers.py)."""
+    settings: Any = None
+    """The kit's SettingsClient for the bot's own settings (`announce_role`), or a test's fake."""
     hidden: Callable[[str], Awaitable[frozenset[str]]] = hidden_discord_ids
     """privacy.hidden_discord_ids: who every count leaves out."""
     catalogue: Callable[[str], Awaitable[list[dict[str, Any]]]] = games_catalogue

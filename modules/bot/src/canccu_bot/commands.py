@@ -3,7 +3,7 @@ whose flags are on for the event, written per guild in one bulk overwrite, and n
 archived event. A set is written only when its hash differs from the one last written to that
 guild (O4 of the step 6 plan), so a deploy or a flag change that leaves a guild's set as it was
 costs nothing of Discord's daily limit on command writes. The framework (interactions.py) answers
-them; #122 and the Finals track add the commands, so until then the set is empty."""
+them; #122 adds the event's own commands here, the Finals track `/finals`."""
 
 from __future__ import annotations
 
@@ -15,20 +15,34 @@ from typing import Any
 from canccu_kit.access import TenantContext
 
 from . import store
+from .announce import ANNOUNCE
 from .deps import Deps
 from .discord_api import DiscordRefused
+from .doors import FOOD, HUB, NOW, PRIVACY
 from .framework import Command
+from .photos import REMOVE, SEND
+from .ticker import TICKER_COMMAND
 
 log = logging.getLogger("canccu_bot.commands")
 
-COMMANDS: tuple[Command, ...] = ()
-"""The platform's commands, each under its feature flag: #122 and the Finals track add them."""
+COMMANDS: tuple[Command, ...] = (
+    FOOD,
+    NOW,
+    HUB,
+    PRIVACY,
+    ANNOUNCE,
+    TICKER_COMMAND,
+    SEND,
+    REMOVE,
+)
+"""The platform's commands, each under its feature flag or always on (contracts/bot.md,
+Commands); the Finals track adds `/finals`."""
 
 
 def wanted(d: Deps, ctx: TenantContext) -> list[dict[str, Any]]:
     if ctx["status"] == "archived":
         return []
-    return [c.payload() for c in d.commands if ctx["flags"].get(c.flag, False)]
+    return [c.payload() for c in d.commands if c.flag is None or ctx["flags"].get(c.flag, False)]
 
 
 def digest(commands: list[dict[str, Any]]) -> str:
@@ -92,3 +106,18 @@ async def register(d: Deps, ctx: TenantContext, *, force: bool = False) -> None:
             unchanged,
             written,
         )
+
+
+async def register_all(d: Deps) -> None:
+    """Every bound guild's set, at start: a version that changes the commands reaches the guilds
+    bound before it. The hash keeps an unchanged set from being written again, so a restart or a
+    second container costs nothing of Discord's daily limit."""
+    async with d.db.platform() as conn:
+        rows = await conn.fetch("SELECT DISTINCT tenant_id FROM bot_guild_routes")
+    for row in rows:
+        try:
+            ctx = await d.tenants.by_id(row["tenant_id"])
+            if ctx is not None:
+                await register(d, ctx)
+        except Exception:
+            log.exception("registering the commands of event %s failed", row["tenant_id"])

@@ -61,6 +61,24 @@ async def test_a_message_is_kept_on_its_channel() -> None:
     assert fake.requests[0].body == {"content": "hi"}
 
 
+async def test_a_bot_edits_only_its_own_message() -> None:
+    fake = FakeDiscord()
+    app, other = fake.add_application("Demo Bot"), fake.add_application("Other Bot")
+    channel = fake.add_channel(fake.add_guild("G", bots=[app.id, other.id]).id, "general")
+    url = f"{API}/channels/{channel}/messages"
+    async with fake.http_client() as http:
+        posted = (await http.post(url, headers=bot(app.token), json={"content": "a"})).json()
+        mine = await http.patch(
+            f"{url}/{posted['id']}", headers=bot(app.token), json={"content": "b"}
+        )
+        theirs = await http.patch(
+            f"{url}/{posted['id']}", headers=bot(other.token), json={"content": "c"}
+        )
+        unknown = await http.patch(f"{url}/1", headers=bot(app.token), json={"content": "d"})
+    assert (mine.status_code, theirs.status_code, unknown.status_code) == (200, 404, 404)
+    assert fake.messages[channel][0]["content"] == "b"
+
+
 async def test_a_bucket_answers_its_headers_and_429_when_spent() -> None:
     fake = FakeDiscord(bucket_limit=2, bucket_window_s=60)
     app = fake.add_application("Demo Bot")
