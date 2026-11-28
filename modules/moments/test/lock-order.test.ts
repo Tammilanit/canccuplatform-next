@@ -104,6 +104,42 @@ run("a crew action's lock order", () => {
     );
   });
 
+  /**
+   * The tick passes main first and skips a held zone, so it can hold main and then wait for
+   * entrance (its sound pump goes in key order), while a crew end holds entrance and waits for
+   * main: Postgres ends one of them. The end must still happen (#845: a withdrawn announcement
+   * answered 500 and stayed on air for its 15 minutes).
+   */
+  it("a crew end that deadlocks with the tick is retried and ends the moment", async () => {
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('entrance')`));
+    const started = await w.tx("demo", (c) => w.engine.request(c, spot, w.at(0)));
+    if (started.status !== "started") throw new Error("not started");
+    const id = started.moment.id;
+    let mainHeld = (): void => undefined;
+    const mainIsHeld = new Promise<void>((r) => (mainHeld = r));
+    let crewGoes = (): void => undefined;
+    const crewWent = new Promise<void>((r) => (crewGoes = r));
+    const tick = w.tx("demo", async (c) => {
+      await lockZone(c, "main", "skip");
+      mainHeld();
+      await crewWent;
+      // The crew end has taken entrance by now and waits for main.
+      await new Promise((r) => setTimeout(r, 300));
+      await lockZone(c, "entrance", "wait");
+    });
+    await mainIsHeld;
+    const crew = w.tx("demo", async (c) => {
+      const m = await lockMoment(c, id);
+      if (m !== null) await w.engine.end(c, m, "cleared", null, w.at(1));
+    });
+    crewGoes();
+    await Promise.all([tick, crew]);
+    const { rows } = await w.tx("demo", (c) =>
+      c.query(`SELECT ended_at FROM moments WHERE id = $1`, [id]),
+    );
+    expect(rows[0]?.ended_at).not.toBeNull();
+  });
+
   it("a rule's renewal waits for the zone before it locks the moment", async () => {
     const req = { ...spot, dedupe_key: "k" };
     const started = await w.tx("demo", (c) => w.engine.request(c, req, w.at(0)));
