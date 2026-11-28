@@ -9,7 +9,7 @@
 // Every announcement sent here is withdrawn and every screen revoked.
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { saveZone } from "../modules/screen/test/stack/fixture.mjs";
-import { moments, placed } from "./demo-screenshots-moments.mjs";
+import { clearAir, moments, placed } from "./demo-screenshots-moments.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
@@ -175,6 +175,8 @@ export async function announceShots({ demo, shot, fail }) {
   const screens = [];
   let hidden = false;
   try {
+    // Each one sent waits to be placed: nothing an earlier group left may hold a zone (#845).
+    await clearAir();
     for (const zone of ["main", "entrance"]) {
       const paired = await demo.pair(`Announcement shots ${zone}`, zone);
       const sse = demo.stream(paired.cookie);

@@ -294,6 +294,8 @@ export async function momentsShots({ demo, shot, fail }) {
   let emergency = false;
   let peak = false;
   try {
+    // The spotlights wait to be placed: nothing an earlier group left may hold a zone (#845).
+    await clearAir();
     for (const zone of ["main", "entrance"]) {
       const paired = await demo.pair(`Moments shots ${zone}`, zone);
       const sse = demo.stream(paired.cookie);

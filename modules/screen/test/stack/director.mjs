@@ -66,7 +66,9 @@ export function withDirector(view) {
             { widgets: [f.photo, f.today], indicator: "line" };
     return {
       ...s,
-      regions: s.regions.map((r) => {
+      // No claim the stack holds (a moment an earlier shot left) covers the Director (#845).
+      regions: s.regions.map((held) => {
+        const r = { ...held, claim: null };
         if (r.role === "hero")
           return { ...r, ...hero, rotation: "director", order: hero.widgets.map((_, i) => i) };
         // Both turn every 6 s, so the choreographer has two changes to space.
