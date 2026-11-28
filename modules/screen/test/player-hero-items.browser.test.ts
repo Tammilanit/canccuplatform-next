@@ -49,7 +49,12 @@ const NAMES = [
   "Karaoke",
 ];
 /** Five items an hour apart from the state's next half hour, with an order closing in 20 minutes. */
-function timeline(nowMs: number, kind: "landscape" | "portrait", area: { columns: number }) {
+function timeline(
+  nowMs: number,
+  kind: "landscape" | "portrait",
+  area: { columns: number },
+  closesMs = nowMs + 20 * 60_000,
+) {
   const layout = STATES[kind].layout;
   const first = Math.ceil(nowMs / 1_800_000) * 1_800_000;
   const at = (ms: number) => new Date(ms).toISOString();
@@ -65,7 +70,7 @@ function timeline(nowMs: number, kind: "landscape" | "portrait", area: { columns
     status: "scheduled",
     zone: null,
   })) as AgendaItem[];
-  const order = { id: "po_1", state: "open", closes_at: at(nowMs + 20 * 60_000) } as FoodOrder;
+  const order = { id: "po_1", state: "open", closes_at: at(closesMs) } as FoodOrder;
   const facts = {
     now: new Date(nowMs),
     timeZone: "UTC",
@@ -224,7 +229,9 @@ describe.skipIf(browser === undefined)("the coming hours' now line", { timeout: 
         const hero = state.regions.find((r) => r.id === "hero");
         if (hero === undefined) throw new Error("the fixture has no hero");
         const t = Date.parse(state.time);
-        const view = timeline(t, kind, area) as Record<string, unknown>;
+        const first = Math.ceil(t / 1_800_000) * 1_800_000;
+        // The order closes just after the line, so its end-aligned label grows left across it.
+        const view = timeline(t, kind, area, first + 20 * 60_000) as Record<string, unknown>;
         hero.area = area;
         hero.rotation = "director";
         hero.order = [0];
@@ -239,7 +246,6 @@ describe.skipIf(browser === undefined)("the coming hours' now line", { timeout: 
           },
         ];
         // A quarter of an hour into the first item: the line crosses its block and its label.
-        const first = Math.ceil(t / 1_800_000) * 1_800_000;
         const page = await screenPage(browser, code, size, first + 15 * 60_000, "");
         await draw(page, state);
         await tick(page, 0);
@@ -254,7 +260,7 @@ describe.skipIf(browser === undefined)("the coming hours' now line", { timeout: 
           const x = r.left + r.width / 2;
           const out: { part: string; onTop: boolean }[] = [];
           for (const el of document.querySelectorAll(
-            ".canccu-widget__block, .canccu-widget__name",
+            ".canccu-widget__block, .canccu-widget__name, .canccu-widget__mark",
           )) {
             const b = el.getBoundingClientRect();
             if (b.width === 0 || x <= b.left + 1 || x >= b.right - 1) continue;

@@ -135,6 +135,8 @@
     width: max-content;
     margin: 0;
     padding-left: calc(1.4 * var(--canccu-u));
+    /* Over the now line, like the blocks: its label is never cut by the line. */
+    z-index: 1;
     color: var(--canccu-color-accent);
     font-size: max(2.6vmin, min(calc(2.6 * var(--canccu-u)), 3.6cqh));
     white-space: nowrap;
@@ -224,7 +226,7 @@
     bottom: calc(1.4 * var(--canccu-u) + 1.2em);
     /* Its own width off the run, so at the line's end it still stands inside the track. */
     left: calc(var(--canccu-progress, 0) * (100% - var(--canccu-now-width)));
-    /* Under the blocks and their labels (z-index 1): it never cuts through an item's text. */
+    /* Under the blocks, spans and marks (z-index 1): it never cuts through an item's text. */
     z-index: 0;
     width: var(--canccu-now-width);
     margin: 0;
