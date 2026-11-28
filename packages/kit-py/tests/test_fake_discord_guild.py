@@ -66,7 +66,8 @@ async def test_the_bot_member_carries_its_roles_and_an_overwrite_can_be_set() ->
     fake = FakeDiscord()
     app = fake.add_application("Demo Bot")
     guild = fake.add_guild("Demo Community", bots=[app.id])
-    role = fake.add_role(guild.id, "Demo Bot", permissions=1 << 28)
+    # Manage roles, and View channel: the fake refuses an overwrite in a channel the bot cannot see.
+    role = fake.add_role(guild.id, "Demo Bot", permissions=(1 << 28) | (1 << 10))
     fake.give_bot_role(guild.id, app.id, role)
     food = fake.add_channel(guild.id, "food")
     allow = {"type": 1, "allow": str(1 << 51), "deny": "0"}
