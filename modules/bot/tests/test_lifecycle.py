@@ -44,6 +44,11 @@ async def test_a_deleted_event_leaves_no_row_route_or_secret(env: Env) -> None:
         "INSERT INTO bot_purposes (purpose, target_id, updated_at)"
         " VALUES ('crew', '100000000000000777', now())",
     )
+    await env.sql(
+        "ev-a",
+        "INSERT INTO bot_legacy (kind, key, value, imported_at)"
+        " VALUES ('finals', 'finals_cards.json', '{}', now())",
+    )
     # How an earlier binding ended, which the Discord page shows, goes with the event too.
     await env.keys.put("bot:ended:ev-a", '{"reason": "bot_removed"}', 60_000)
     await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-a"))
@@ -53,6 +58,7 @@ async def test_a_deleted_event_leaves_no_row_route_or_secret(env: Env) -> None:
         assert await env.fetch(tenant, "SELECT 1 FROM bot_bindings") == []
         assert await env.fetch(tenant, "SELECT 1 FROM bot_connections") == []
         assert await env.fetch(tenant, "SELECT 1 FROM bot_purposes") == []
+        assert await env.fetch(tenant, "SELECT 1 FROM bot_legacy") == []
         assert env.events(tenant) == []
     assert await env.fetch(None, "SELECT 1 FROM bot_guild_routes") == []
     assert await env.fetch(None, "SELECT 1 FROM bot_application_routes") == []

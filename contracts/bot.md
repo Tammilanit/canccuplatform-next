@@ -20,6 +20,7 @@ The Discord side of the platform. The `bot` module is one module with a pool of 
 | bot application routes | global | Own application id → tenant id. Keeps each own application to one event |
 | bot provider secrets | per tenant | An outside provider's bearer secret, encrypted (Provider secrets) |
 | bot purposes | per tenant | Each purpose's channel or role id in the event's guild (Purposes) |
+| bot legacy | per tenant | What the one-time legacy bot import brought that has no other home yet: the finals state and channels (for the Finals module) and the two legacy settings, keyed by their legacy names (additive, #125; the module's README, The switch) |
 
 The two route tables are added to the kit's allow-list of global tables ([tenants.md](tenants.md#tables-global-and-per-tenant)) when the module is built. They hold no secret and no tenant data beyond the reference, like hostnames. Everything else the bot stores is per tenant under row-level security.
 
