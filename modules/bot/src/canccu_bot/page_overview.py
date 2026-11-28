@@ -104,7 +104,7 @@ def _activity_card(view: View, o: Overview) -> str:
     if view.ctx["flags"].get("bot.presence") is not True:
         return _card("Activity", "", "Who plays what is off", "Nothing is counted.")
     if o.counted is None:
-        return _card("Activity", "warn", "Waiting for a count", "The first comes within a minute.")
+        return _card("Activity", "", "Waiting for a count", "The first comes within a minute.")
     when = time_words(o.counted["minute"], view.zone, o.now)
     return _card("Activity", "ok", f"Counting · {o.counted['online']} online", f"Last count {when}")
 
@@ -200,10 +200,10 @@ def history(view: View, o: Overview) -> str:
         for at, kind, text in lines
     )
     return (
-        '<h2 class="bot-h2">What happened</h2>'
+        '<section><h2 class="bot-h2">What happened</h2>'
         f'<ul class="canccu-history bot-history">{items}</ul>'
         '<p class="canccu-muted canccu-small">Never shown: tokens, Discord ids, who set off a '
-        "rate limit, or anyone who hid their activity.</p>"
+        "rate limit, or anyone who hid their activity.</p></section>"
     )
 
 
@@ -219,10 +219,12 @@ def _ended_words(ended: dict[str, Any]) -> str:
 def edge(view: View, o: Overview | None, conn: dict[str, Any] | None) -> str:
     """The one state that needs a look first, in words with its next step (mockup 15)."""
     if view.archived:
-        text = (
-            "The bot reads nothing more; its commands are gone. The server stays for the next "
-            "event of the series, which takes it over when it is cloned."
-        )
+        text = "The bot reads nothing more for it, and an ended event takes no new server."
+        if conn is not None and conn["guild"] is not None:
+            text = (
+                "The bot reads nothing more; its commands are gone. The server stays for the "
+                "next event of the series, which takes it over when it is cloned."
+            )
         return ui.notice("info", f"{view.name} is archived", text)
     if conn is None:
         return ""

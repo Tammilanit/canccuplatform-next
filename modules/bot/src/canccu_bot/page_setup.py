@@ -141,7 +141,10 @@ def choose_bot(view: View, conn: dict[str, Any] | None, no_shared: bool) -> str:
         anchor="own",
     )
     question = f"Which bot speaks for {view.name}?"
-    return f'<h2 class="bot-h2">{esc(question)}</h2><div class="canccu-grid">{shared}{own}</div>'
+    return (
+        f'<section><h2 class="bot-h2">{esc(question)}</h2>'
+        f'<div class="canccu-grid">{shared}{own}</div></section>'
+    )
 
 
 def add_to_server(view: View, conn: dict[str, Any] | None) -> str:
@@ -151,9 +154,8 @@ def add_to_server(view: View, conn: dict[str, Any] | None) -> str:
     head = '<h2 class="bot-h2" id="add">Step 2 · Add it to your server</h2>'
     if guild is not None:
         text = f"Added to {guild['guild_name']}. Next: channels and roles."
-        return head + ui.notice(
-            "ok", text, "", link(f"{BASE}/channels?setup=1", "Continue", "primary")
-        )
+        go = link(f"{BASE}/channels?setup=1", "Continue", "primary")
+        return f"<section>{head}{ui.notice('ok', text, '', go)}</section>"
     lead = (
         '<p class="bot-lead">Discord opens and asks which server. You need Manage Server there; '
         "the bot gets only the permissions your features need (step 4 lists them). You come back "
@@ -166,12 +168,13 @@ def add_to_server(view: View, conn: dict[str, Any] | None) -> str:
         )
     elif not view.admin:
         actions = '<p class="canccu-muted">Ask an event admin to connect it.</p>'
-    none_yet = link(NEW_SERVER, "I have no server yet", "ghost")
+    none_yet = link(NEW_SERVER, "I have no server yet")
     about = (
         '<section class="canccu-card bot-about"><h3 class="canccu-card__title">'
         f"What the bot will do in your server</h3><p>{esc(WHAT_IT_DOES)}</p></section>"
     )
-    return f'{head}{lead}<div class="canccu-cluster">{actions}{none_yet}</div>{about}'
+    step = f'{head}{lead}<div class="canccu-cluster">{actions}{none_yet}</div>'
+    return f"<section>{step}</section>{about}"
 
 
 def bind_result(outcome: str | None, conn: dict[str, Any] | None) -> str:

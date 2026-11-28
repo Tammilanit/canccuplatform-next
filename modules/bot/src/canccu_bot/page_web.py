@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -92,6 +93,7 @@ class View:
     event: ui.EventInfo | None
     admin: bool
     """The event-admin role (access.is_event_admin): the page offers its changes."""
+    now: datetime
 
     @property
     def archived(self) -> bool:
@@ -123,7 +125,7 @@ async def view_of(request: Request) -> View:
     if not session.has(READ):
         raise MissingRight(f"needs right {READ}")
     check_admin_access(ctx, client_ip(request), tailscale_cidrs())
-    return View(ctx, session, request.state.bot_event, is_event_admin(session))
+    return View(ctx, session, request.state.bot_event, is_event_admin(session), d.now())
 
 
 def form(api: str, method: str, done: str, body: str, *, cls: str = "", confirm: str = "") -> str:

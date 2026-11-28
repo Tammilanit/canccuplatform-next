@@ -2,7 +2,7 @@
    ui.css's own .canccu-grid (design amendment 3); rows here are flex, so no grid of a fixed count. */
 
 .bot-h2 {
-  margin: 1.75rem 0 0.75rem;
+  margin: 0.5rem 0 0.75rem;
   font-size: var(--canccu-text-lg);
   font-weight: 600;
 }

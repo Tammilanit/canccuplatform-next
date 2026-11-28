@@ -207,7 +207,7 @@ def check(view: View, result: dict[str, Any], setup: bool) -> str:
     """Check (mockup 04): a row per feature, only the gaps coloured; on a phone the gaps first
     and the ready ones in one line."""
     gaps = result["gaps"]
-    when = time_words(result["checked_at"], view.zone, result["checked_at"])
+    when = time_words(result["checked_at"], view.zone, view.now)
     title = f"{gaps} thing{'s' if gaps != 1 else ''} to fix" if gaps else "Everything ready"
     ico = "warn" if gaps else "check-circle"
     again = form(

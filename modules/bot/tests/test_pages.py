@@ -68,6 +68,13 @@ async def test_an_unbound_event_shows_the_guided_setup(env: Env) -> None:
     assert "Roles and rights" not in text and "rights" not in text.split("<main", 1)[1].lower()
 
 
+async def test_the_menu_opens_discord_under_admin_for_the_read_right(env: Env) -> None:
+    """C8 of docs/plans/issue-121.md: the shell's Discord item, marked as the page open."""
+    r = await page(env, "/", env.reader())
+    item = r.text.split('href="/bot/"', 1)[1].split("</a>", 1)[0]
+    assert "Discord" in item and 'aria-current="page"' in item
+
+
 async def test_a_reader_sees_the_state_but_no_action(env: Env) -> None:
     r = await page(env, "/", env.reader())
     assert r.status_code == 200
@@ -173,6 +180,22 @@ async def test_an_archived_event_says_the_bot_reads_nothing_more(env: Env) -> No
     # Unbinding still works on an archived event (contracts/bot.md, Archived events).
     assert 'data-bot-method="DELETE"' in r.text
     assert "/api/bot/guild/commands/sync" not in r.text
+
+
+async def test_an_archived_event_with_no_server_offers_no_setup(env: Env) -> None:
+    env.contexts["ev-a"]["status"] = "archived"
+    r = await page(env, "/")
+    assert "takes no new server" in r.text and "Which bot speaks for" not in r.text
+
+
+async def test_a_time_on_another_day_names_its_day(env: Env) -> None:
+    await bound(env)
+    await env.sql(
+        "ev-a",
+        "UPDATE bot_bindings SET commands_status = 'registered',"
+        " commands_registered_at = '2026-11-26T15:11:00Z'",
+    )
+    assert "at Thu 15:11" in (await page(env, "/commands")).text
 
 
 async def test_discord_down_and_a_missing_intent_are_named(env: Env) -> None:

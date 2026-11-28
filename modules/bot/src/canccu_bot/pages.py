@@ -61,6 +61,10 @@ async def start(request: Request) -> Response:
     conn, no_shared = await _connection(d)
     outcome = request.query_params.get("bind")
     ended = await _ended(d, view.ctx["tenant_id"])
+    unbound = conn is None or conn["guild"] is None
+    if unbound and view.archived:  # an ended event takes no new server: nothing to set up
+        body = answer_notice(request) + edge(view, None, conn)
+        return render(request, view, body, description=SETUP_ABOUT)
     if conn is None or conn["guild"] is None or outcome is not None:
         stub = None
         if conn is not None:

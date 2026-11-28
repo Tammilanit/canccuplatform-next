@@ -66,11 +66,12 @@ def _switch(view: View, flag: str, on: bool, label: str) -> str:
 
 
 def _row(lead: str, label: str, what: str, by: str, flag: str = "") -> str:
+    """One feature's row; `lead` and `what` are HTML."""
     data = f' data-flag="{esc(flag)}"' if flag else ""
     return (
         f'<li class="bot-command"{data}><div class="bot-command__lead">{lead}</div>'
         f'<p class="bot-command__name">{esc(label)}</p>'
-        f'<p class="bot-command__what"><code>{esc(what)}</code></p>'
+        f'<p class="bot-command__what">{what}</p>'
         f'<p class="bot-command__who canccu-muted canccu-small">{esc(by)}</p></li>'
     )
 
@@ -83,7 +84,7 @@ def rows(view: View, commands: tuple[Command, ...]) -> str:
             by_flag.setdefault(c.flag, []).append(c)
     for flag in NO_COMMAND:
         by_flag.setdefault(flag, [])
-    chip = ui.status_chip("plain", "Always on", "No switch: on wherever the server is connected.")
+    chip = ui.status_chip("plain", "Always", "No switch: on wherever the server is connected.")
     names = " · ".join(shown(c) for c in always)
     out = [
         f'<li class="bot-command bot-command--always"><div class="bot-command__lead">{chip}</div>'
@@ -95,7 +96,9 @@ def rows(view: View, commands: tuple[Command, ...]) -> str:
     for flag, group in by_flag.items():
         label = LABELS.get(flag, flag)
         on = view.ctx["flags"].get(flag) is True
-        what = " · ".join(shown(c) for c in group) or NO_COMMAND.get(flag, "")
+        what = f"<code>{esc(' · '.join(shown(c) for c in group))}</code>"
+        if not group:
+            what = esc(NO_COMMAND.get(flag, ""))
         by = who(group) if group else "—"
         out.append(_row(_switch(view, flag, on, label), label, what, by, flag))
     return f'<ul class="bot-commands">{"".join(out)}</ul>'
@@ -118,7 +121,7 @@ def head(view: View, binding: dict[str, Any], counts: tuple[int, int]) -> str:
     else:
         words = commands_words(counts)
         if state["registered_at"] and state["status"] == "registered":
-            at = time_words(state["registered_at"], view.zone, state["registered_at"])
+            at = time_words(state["registered_at"], view.zone, view.now)
             line = f"Registered in {binding['guild_name']} at {at} · {words}"
         else:
             line = f"Being registered in {binding['guild_name']} · {words}"

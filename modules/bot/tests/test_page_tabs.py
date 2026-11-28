@@ -96,7 +96,7 @@ async def test_commands_lists_what_is_always_on_and_why(env: Env) -> None:
     r = await page(env, "/commands", headers)
     assert r.status_code == 200
     assert page_problems(r.text) == []
-    always = r.text.split("Always on", 2)[2].split("</li>", 1)[0]
+    always = r.text.split("Always on", 1)[1].split("</li>", 1)[0]
     for name in ("/now", "/hub", "/privacy", "/announce", "/ticker"):
         assert name in always
     assert "no feature switch" in always

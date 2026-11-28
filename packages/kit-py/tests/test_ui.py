@@ -66,13 +66,6 @@ def test_menu_lists_only_pages_the_rights_open() -> None:
     ]
 
 
-def test_the_discord_page_opens_with_the_bots_read_right() -> None:
-    """#765: the Discord page under Admin, for whoever reads the bot's connection."""
-    admin = menu_for(Viewer("bot.connection.read"))[-1]
-    assert admin["label"] == "Admin"
-    assert [(i["id"], i["href"]) for i in admin["items"]] == [("discord", "/bot/")]
-
-
 def test_home_opens_to_whoever_may_open_another_page() -> None:
     """#782: the admin home leads the menu, for any role that opens any other page."""
     first = menu_for(Viewer("moments.announce"))[0]["items"][0]
