@@ -170,7 +170,14 @@ class Interactions:
             form = await _opened(opener(context, found))
             await self._callback(ctx, data, self._form(ctx, command, form))
             return
-        await self._callback(ctx, data, {"type": DEFERRED_UPDATE})
+        if data.get("type") == MODAL_SUBMIT and "message" not in data:
+            # A form opened by a slash command has no message to update: Discord takes only a
+            # new (deferred) message as its answer.
+            await self._callback(
+                ctx, data, {"type": DEFERRED_MESSAGE, "data": {"flags": EPHEMERAL}}
+            )
+        else:
+            await self._callback(ctx, data, {"type": DEFERRED_UPDATE})
         values = form_values(data)
         await self._run(ctx, data, command, None, {}, lambda c: handle(c, found, values))
 

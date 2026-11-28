@@ -174,9 +174,16 @@ async def on_component(c: Context, component: Component, values: dict[str, str])
         if c.notes is not None:
             await c.notes.put("draft", draft_id, kept, DRAFT_TTL_S)
         return await _preview(c, draft_id, kept)
-    sent = await c.act("moments", "POST", "/api/moments/announcements", _input(kept)) or {}
-    if c.notes is not None:
-        await c.notes.drop("draft", draft_id)
+    # Claim the draft before sending: a second click on "Send now" then finds none and sends
+    # nothing, where each click's own idempotency key would let Moments create two.
+    if c.notes is not None and await c.notes.take("draft", draft_id) is None:
+        return Reply(say(c, "gone"))
+    try:
+        sent = await c.act("moments", "POST", "/api/moments/announcements", _input(kept)) or {}
+    except BaseException:
+        if c.notes is not None:
+            await c.notes.put("draft", draft_id, kept, DRAFT_TTL_S)
+        raise
     title = str(sent.get("title") or kept["title"])
     return Reply(say(c, "sent", event=c.event_name, title=title), buttons=_composer(c))
 

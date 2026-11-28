@@ -183,12 +183,16 @@ def click(custom_id: str, **who: Any) -> dict[str, Any]:
     return {**person(**who), "type": 3, "data": {"custom_id": custom_id, "component_type": 2}}
 
 
-def submit(custom_id: str, values: dict[str, str], **who: Any) -> dict[str, Any]:
+def submit(
+    custom_id: str, values: dict[str, str], *, message: bool = False, **who: Any
+) -> dict[str, Any]:
+    """`message`: the form was opened from a button, so the submit carries that message."""
     rows = [
         {"type": 1, "components": [{"type": 4, "custom_id": k, "value": v}]}
         for k, v in values.items()
     ]
-    return {**person(**who), "type": 5, "data": {"custom_id": custom_id, "components": rows}}
+    sent = {**person(**who), "type": 5, "data": {"custom_id": custom_id, "components": rows}}
+    return {**sent, "message": {"id": "m1"}} if message else sent
 
 
 def buttons(shown: dict[str, Any]) -> dict[str, dict[str, Any]]:

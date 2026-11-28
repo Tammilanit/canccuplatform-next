@@ -27,3 +27,8 @@ class Notes:
 
     async def drop(self, kind: str, key: str) -> None:
         await self._keys.take(self._key(kind, key))
+
+    async def take(self, kind: str, key: str) -> Any:
+        """Read and delete in one step, so two racing clicks cannot both use one note."""
+        raw = await self._keys.take(self._key(kind, key))
+        return None if raw is None else json.loads(raw)

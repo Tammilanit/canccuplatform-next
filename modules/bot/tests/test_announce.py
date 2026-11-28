@@ -136,3 +136,25 @@ async def test_moments_refusing_the_text_says_how_to_fix_it(world: World) -> Non
     world.outside.on("moments", "POST", PREVIEW, RIGHT, lambda r: httpx.Response(400, json=refused))
     await write(world, user=CREW)
     assert world.shown["content"].startswith("Moments did not take that text")
+
+
+async def test_the_forms_submit_is_acknowledged_by_where_it_was_opened(world: World) -> None:
+    await world.run(slash("announce", user=CREW))
+    form = world.answers[-1]["data"]["custom_id"]
+    values = {"title": "T", "body": "B"}
+    await world.run(submit(form, values, user=CREW))
+    assert world.answers[-1]["type"] == 5  # from a command: a new private message
+    shown = world.shown
+    await world.run(click(buttons(shown)["Back"]["custom_id"], user=CREW))
+    back = world.answers[-1]["data"]["custom_id"]
+    await world.run(submit(back, values, message=True, user=CREW))
+    assert world.answers[-1]["type"] == 6  # from a button: the same message updates
+
+
+async def test_two_send_now_clicks_send_one_announcement(world: World) -> None:
+    shown = await write(world, user=CREW)
+    send = buttons(shown)["Send now"]["custom_id"]
+    await world.run(click(send, user=CREW))
+    await world.run(click(send, user=CREW))
+    assert len(world.outside.bodies("moments", "POST", SEND)) == 1
+    assert world.shown["content"] == "This draft is old. Run /announce again."
