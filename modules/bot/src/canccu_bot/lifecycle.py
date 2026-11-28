@@ -12,6 +12,7 @@ from canccu_kit import Event, is_tenant_id
 from . import commands, store
 from .deps import Deps
 from .guild import leave
+from .live import live_keys
 from .look import set_nickname
 from .router import Directory
 
@@ -19,9 +20,9 @@ log = logging.getLogger("canccu_bot.lifecycle")
 
 
 async def tenant_deleted(d: Deps, tenant: str) -> None:
-    """The event's connection, binding, routes and secrets go, and nothing is emitted: the
-    event's streams go with it. Its own client closes on the pool's next tick, its route gone;
-    the shared bot leaves the guild."""
+    """The event's connection, binding, routes, secrets, counts and live state go, and nothing
+    is emitted: the event's streams go with it. Its own client closes on the pool's next tick,
+    its route gone; the shared bot leaves the guild."""
     async with d.db.tenant(tenant) as conn:
         bound = await conn.fetchrow("SELECT guild_id, application_id FROM bot_bindings")
         token = None
@@ -35,10 +36,14 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
             "bot_connections",
             "bot_provider_secrets",
             "bot_outbox",
+            "bot_counts_minute",
+            "bot_counts_hour",
+            "bot_activity_hour",
         ):
             await conn.execute(f"DELETE FROM {table}")
         for table in ("bot_guild_routes", "bot_application_routes", "bot_outbox_tenants"):
             await conn.execute(f"DELETE FROM {table} WHERE tenant_id = $1", tenant)
+    await d.keys.delete(*live_keys(tenant))
     if bound is not None and token is not None:
         await leave(d, token, bound["application_id"], bound["guild_id"])
 
@@ -84,6 +89,10 @@ async def on_tenant(d: Deps, directory: Directory, event: Event) -> None:
     directory.forget(tenant)
     if event.type == "tenants.status.changed" and event.data.get("to") != "archived":
         return
+    if event.type == "tenants.status.changed":
+        # The live state is presence data: it goes at archiving; the counts stay
+        # (contracts/bot.md, Counts). The client's feeds drop their copy at the next minute.
+        await d.keys.delete(*live_keys(tenant))
     ctx = await d.tenants.by_id(tenant)
     if ctx is not None:
         await commands.register(d, ctx)

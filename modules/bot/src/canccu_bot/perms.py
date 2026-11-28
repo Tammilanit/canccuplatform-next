@@ -37,7 +37,7 @@ def names(bits: int) -> list[str]:
     return [name for bit, name in sorted(_NAMES.items()) if bits & bit]
 
 
-def _int(value: Any) -> int:
+def bits_of(value: Any) -> int:
     try:
         return int(value or 0)
     except (TypeError, ValueError):
@@ -46,9 +46,9 @@ def _int(value: Any) -> int:
 
 def base(guild_id: str, roles: Mapping[str, Mapping[str, Any]], held: Iterable[str]) -> int:
     """The server-wide permissions: @everyone's (its role id is the guild's) and the held roles'."""
-    bits = _int(roles.get(guild_id, {}).get("permissions"))
+    bits = bits_of(roles.get(guild_id, {}).get("permissions"))
     for role_id in held:
-        bits |= _int(roles.get(role_id, {}).get("permissions"))
+        bits |= bits_of(roles.get(role_id, {}).get("permissions"))
     return ALL if bits & ADMINISTRATOR else bits
 
 
@@ -67,20 +67,20 @@ def in_channel(
     by_id = {str(o.get("id")): o for o in overwrites}
     everyone = by_id.get(guild_id)
     if everyone is not None:
-        bits = (bits & ~_int(everyone.get("deny"))) | _int(everyone.get("allow"))
+        bits = (bits & ~bits_of(everyone.get("deny"))) | bits_of(everyone.get("allow"))
     allow = deny = 0
     for role_id in held:
         found = by_id.get(role_id)
         if found is not None and found.get("type") == 0:
-            allow |= _int(found.get("allow"))
-            deny |= _int(found.get("deny"))
+            allow |= bits_of(found.get("allow"))
+            deny |= bits_of(found.get("deny"))
     bits = (bits & ~deny) | allow
     mine = by_id.get(user_id)
     if mine is not None and mine.get("type") == 1:
-        bits = (bits & ~_int(mine.get("deny"))) | _int(mine.get("allow"))
+        bits = (bits & ~bits_of(mine.get("deny"))) | bits_of(mine.get("allow"))
     return bits
 
 
 def top_position(roles: Mapping[str, Mapping[str, Any]], held: Iterable[str]) -> int:
     """The bot's place in the role order: Discord lets it manage only roles below this."""
-    return max((_int(roles.get(r, {}).get("position")) for r in held), default=0)
+    return max((bits_of(roles.get(r, {}).get("position")) for r in held), default=0)

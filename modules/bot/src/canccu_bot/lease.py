@@ -4,6 +4,7 @@ container answers for clients another one holds."""
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import Protocol
 
 import valkey.asyncio as valkey
@@ -48,6 +49,20 @@ class KeyStore(Protocol):
         containers."""
         ...
 
+    async def hash_write(
+        self, key: str, values: dict[str, str], gone: Collection[str], ttl_ms: int
+    ) -> None:
+        """Set and delete fields of a hash and give it `ttl_ms` more, in one round trip."""
+        ...
+
+    async def hash_read(self, key: str) -> dict[str, str]: ...
+
+    async def delete(self, *keys: str) -> None: ...
+
+    async def incr(self, key: str, ttl_ms: int) -> int:
+        """Count one up; a new counter runs out after `ttl_ms`."""
+        ...
+
 
 class ValkeyKeys:
     def __init__(self, client: valkey.Valkey) -> None:
@@ -76,6 +91,32 @@ class ValkeyKeys:
     async def take(self, key: str) -> str | None:
         value = await self._client.getdel(key)
         return None if value is None else str(value)
+
+    async def hash_write(
+        self, key: str, values: dict[str, str], gone: Collection[str], ttl_ms: int
+    ) -> None:
+        async with self._client.pipeline(transaction=True) as pipe:
+            if gone:
+                pipe.hdel(key, *gone)
+            if values:
+                pipe.hset(key, mapping=values)
+            pipe.pexpire(key, ttl_ms)
+            await pipe.execute()
+
+    async def hash_read(self, key: str) -> dict[str, str]:
+        found = await self._client.hgetall(key)  # type: ignore[misc]
+        return {str(k): str(v) for k, v in found.items()}
+
+    async def delete(self, *keys: str) -> None:
+        if keys:
+            await self._client.delete(*keys)
+
+    async def incr(self, key: str, ttl_ms: int) -> int:
+        async with self._client.pipeline(transaction=True) as pipe:
+            pipe.incr(key)
+            pipe.pexpire(key, ttl_ms, nx=True)
+            count, _ = await pipe.execute()
+        return int(count)
 
     async def close(self) -> None:
         await self._client.aclose()

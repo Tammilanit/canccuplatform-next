@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
 from canccu_kit import Outbox, SecretBox
 
+from .catalogue import games_catalogue
 from .components import ComponentKeys
 from .config import Hosts, SharedApp
 from .db import Db
 from .discord_api import DiscordApi
 from .lease import KeyStore
+from .privacy import hidden_discord_ids
 from .status import StatusBoard
 
 
@@ -50,3 +52,7 @@ class Deps:
     """An httpx.AsyncClient for outside providers (providers.py)."""
     settings: Any = None
     """The kit's SettingsClient for the bot's own settings (`announce_role`), or a test's fake."""
+    hidden: Callable[[str], Awaitable[frozenset[str]]] = hidden_discord_ids
+    """privacy.hidden_discord_ids: who every count leaves out."""
+    catalogue: Callable[[str], Awaitable[list[dict[str, Any]]]] = games_catalogue
+    """catalogue.games_catalogue: the event's games, for the stats' top games."""

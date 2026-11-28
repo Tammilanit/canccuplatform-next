@@ -45,11 +45,12 @@ from .config import DiscordConfig, Hosts, discord_config
 from .db import Db
 from .deps import Deps
 from .discord_api import DiscordApi
+from .feeds import Feeds
 from .interactions import Interactions
 from .lease import ValkeyKeys
 from .look import EventLook
 from .pool import Pool
-from .router import INTENTS, Directory, Router
+from .router import FEEDS, INTENTS, Directory, Router
 from .status import ClientEvents, StatusBoard
 from .transport import connect_gateway
 
@@ -163,16 +164,24 @@ async def serve() -> None:
         reports.add(task)
         task.add_done_callback(reports.discard)
 
+    closing: set[asyncio.Task[None]] = set()
+
     async def open_client(application_id: str, token: str) -> DiscordClient:
-        # The feeds have no handler yet: the presence, members, voice and message feeds are
-        # routed and gated by their flags here, and stored by the links that read them.
         holder: list[DiscordClient] = []
         interactions = Interactions(d, application_id, directory.context, lambda: holder[0].rest)
-        router = Router(d, application_id, directory, handlers={"interaction": interactions})
+        # The feeds and the guild's channels, routed and gated by their flags (router.py).
+        feeds = Feeds(d, application_id, directory)
+        handlers = {key: feeds.on for key in (*set(FEEDS.values()), "guild")}
+        router = Router(
+            d, application_id, directory, handlers={**handlers, "interaction": interactions}
+        )
 
         def stop() -> None:
             router.close()
             interactions.close()
+            task = asyncio.create_task(feeds.close())
+            closing.add(task)
+            task.add_done_callback(closing.discard)
 
         client = DiscordClient(
             application_id,
@@ -187,6 +196,10 @@ async def serve() -> None:
         )
         holder.append(client)
         router.rest = client.rest
+        feeds.rest = client.rest
+        feeds.request_members = client.request_members
+        feeds.in_guild = router.guilds.__contains__
+        feeds.start()
         return client
 
     async def wanted() -> dict[str, str]:
@@ -233,6 +246,7 @@ async def serve() -> None:
         await server.serve()
     finally:
         await pool.close()  # hands the leases over at once instead of after 30 s
+        await asyncio.gather(*closing, return_exceptions=True)  # the feeds' last write behind
         running.cancel()
         sending.cancel()
         registering.cancel()

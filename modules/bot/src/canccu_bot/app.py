@@ -18,6 +18,7 @@ from . import (
     providers,
     purposes,
     setup_check,
+    stats,
     templates,
 )
 from .deps import Deps
@@ -34,6 +35,7 @@ def create_app(d: Deps, health: Health, resolver: TenantResolver) -> Starlette:
         *templates.ROUTES,
         *purposes.ROUTES,
         *setup_check.ROUTES,
+        *stats.ROUTES,
     ]
     app = Starlette(routes=routes)
     app.state.deps = d
