@@ -264,3 +264,31 @@ async def test_the_boards_items_go_through_the_guard(w: World) -> None:
     assert "evil.example.net" not in raw(board) and "bad.test" not in raw(board)
     assert f"https://{HOST}/agenda/" in raw(board)  # the event's own link stays
     assert board["allowed_mentions"] == {"parse": []}
+
+
+async def test_a_pin_that_hits_a_temporary_error_does_not_post_the_board_again(w: World) -> None:
+    from canccu_bot.rest import RestError
+
+    real, down = w.editor.rest.request, [True]
+
+    async def request(method: str, path: str, **kw: object) -> object:
+        if method == "PUT" and "/pins/" in path and down[0]:
+            raise RestError(429, "rate_limited")
+        return await real(method, path, **kw)
+
+    w.editor.rest.request = request
+    for _ in range(3):
+        await w.editor.tick()
+    [board] = w.board()  # one board, not one per tick
+    assert w.pinned() == []
+    down[0] = False
+    await w.editor.tick()
+    assert [m["id"] for m in w.board()] == [board["id"]]
+    assert w.pinned() == [board["id"]]
+
+
+async def test_without_a_food_channel_the_board_leaves_the_food_line_out(w: World) -> None:
+    await w.env.sql("ev-a", "DELETE FROM bot_purposes WHERE purpose = 'food'")
+    await w.order_event("opened")  # not recorded: there is no channel to show it in
+    await w.editor.tick()
+    assert "Food" not in text(w.board()[0])

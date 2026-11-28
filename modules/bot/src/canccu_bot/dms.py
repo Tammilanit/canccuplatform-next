@@ -75,22 +75,23 @@ class Dms:
         if client.status["status"] != "ready":
             log.info("a DM of %s dropped: the client is %s", tenant, client.status["status"])
             return
-        queue = self._queues.setdefault(tenant, deque())
-        if len(queue) >= self._cap:
-            log.warning("a DM of %s dropped: its queue is full", tenant)
-            return
         look = None if self._d.look is None else await self._d.look.of(ctx)
         host = ctx["primary_hostname"]
 
         def page(path: str) -> str | None:
             return None if host is None else self._d.hosts.event_url(host, path)
 
-        queue.append((app_id, user, message(ctx, event.data, look and look.color, page)))
+        body = message(ctx, event.data, look and look.color, page)
+        # No await from here to the task check: _drain may not pop the queue in between.
+        queue = self._queues.setdefault(tenant, deque())
+        if len(queue) >= self._cap:
+            log.warning("a DM of %s dropped: its queue is full", tenant)
+            return
+        queue.append((app_id, user, body))
         if tenant not in self._tasks:
-            self._tasks[tenant] = asyncio.create_task(self._drain(tenant))
+            self._tasks[tenant] = asyncio.create_task(self._drain(tenant, queue))
 
-    async def _drain(self, tenant: str) -> None:
-        queue = self._queues[tenant]
+    async def _drain(self, tenant: str, queue: deque[tuple[str, str, dict[str, Any]]]) -> None:
         try:
             while queue:
                 app_id, user, body = queue[0]
@@ -101,7 +102,7 @@ class Dms:
                 queue.popleft()
         finally:
             self._tasks.pop(tenant, None)
-            if not queue:
+            if not queue and self._queues.get(tenant) is queue:
                 self._queues.pop(tenant, None)
 
     async def _send(self, tenant: str, app_id: str, user: str, body: dict[str, Any]) -> None:

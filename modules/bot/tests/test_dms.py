@@ -169,3 +169,27 @@ async def test_an_archived_event_sends_nothing(mail: Mail) -> None:
     await mail.ask(mail.member, "ended")
     await mail.dms.settle()
     assert mail.got(mail.member) == []
+
+
+async def test_a_dm_asked_while_the_last_one_finishes_is_still_sent(mail: Mail) -> None:
+    """The look is read before the queue is taken: a drain ending meanwhile cannot lose the DM
+    or leave a dead task that stops every later one."""
+    gate = asyncio.Event()
+    inner = mail.dms._d.look
+
+    class Slow:
+        async def of(self, ctx: Any) -> Any:
+            await gate.wait()
+            return await inner.of(ctx)
+
+    await mail.ask(mail.member, "first")
+    mail.dms._d.look = Slow()
+    second = asyncio.create_task(mail.ask(mail.member, "second"))
+    await asyncio.sleep(0)
+    await mail.dms.settle()  # the first one's drain ends, popping its queue
+    gate.set()
+    await second
+    mail.dms._d.look = inner
+    await mail.ask(mail.member, "third")
+    await asyncio.wait_for(mail.dms.settle(), 5)
+    assert mail.got(mail.member) == ["first", "second", "third"]

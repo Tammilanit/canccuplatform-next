@@ -189,14 +189,24 @@ class Editor:
             if r.edited_at is not None and (last is None or r.edited_at > last):
                 edited[r.channel_id] = r.edited_at
         look = None if self._d.look is None else await self._d.look.of(ctx)
+        async with self._d.db.tenant(tenant) as conn:
+            food_bound = (
+                await conn.fetchval("SELECT true FROM bot_purposes WHERE purpose = 'food' LIMIT 1")
+                is True
+            )
         orders = [r.state for r in rows if r.kind == food.KIND and r.state is not None]
         for row in due:
-            body = await self._body(ctx, row, look, orders)
+            body = await self._body(ctx, row, look, orders, food_bound)
             if body is not None:
                 await self._show(tenant, row, body, edited)
 
     async def _body(
-        self, ctx: TenantContext, row: _Row, look: Any, orders: list[dict[str, Any]]
+        self,
+        ctx: TenantContext,
+        row: _Row,
+        look: Any,
+        orders: list[dict[str, Any]],
+        food_bound: bool,
     ) -> dict[str, Any] | None:
         color = None if look is None else look.color
         if row.kind == food.KIND:
@@ -209,7 +219,9 @@ class Editor:
         agenda = None if self._d.agenda is None else await self._d.agenda.now(ctx["tenant_id"])
         if agenda is None:
             return None  # the agenda did not answer: the board waits rather than say nothing
-        food_on = ctx["flags"].get("pizza.enabled", False)
+        # Orders are recorded only while a food channel is picked: without one the board would
+        # say "nothing open" over an open order, so it leaves the food line out.
+        food_on = ctx["flags"].get("pizza.enabled", False) and food_bound
         name = None if look is None else look.name
         return board.message(ctx, agenda, orders if food_on else None, name, color, self._d.now())
 
@@ -276,7 +288,13 @@ class Editor:
             return None
         message_id = str(posted["id"])
         if row.kind == board.KIND:
-            await self._pin(tenant, row.channel_id, message_id)
+            try:
+                await self._pin(tenant, row.channel_id, message_id)
+            except _NotNow:
+                # The board is posted: keep its id, so the next tick checks the pin (verify)
+                # rather than post another board.
+                await self._record(tenant, row, message_id, _hash(body), None, verify=True)
+                raise
         return message_id
 
     async def _pin(self, tenant: str, channel_id: str, message_id: str) -> None:
@@ -294,12 +312,13 @@ class Editor:
         edited_at: datetime | None,
         *,
         keep_version: bool = False,
+        verify: bool = False,
     ) -> None:
         """What was shown, as of the version read: a change recorded meanwhile stays due."""
         async with self._d.db.tenant(tenant) as conn:
             await conn.execute(
                 "UPDATE bot_posts SET message_id = $1, shown_hash = $2,"
-                " edited_at = coalesce($3, edited_at), verify = false,"
+                " edited_at = coalesce($3, edited_at), verify = $8,"
                 " shown_version = CASE WHEN $4 THEN shown_version ELSE $5 END"
                 " WHERE kind = $6 AND key = $7",
                 message_id,
@@ -309,6 +328,7 @@ class Editor:
                 row.version,
                 row.kind,
                 row.key,
+                verify,
             )
 
     async def run(self, sleep: Callable[[float], Awaitable[None]] = asyncio.sleep) -> None:
