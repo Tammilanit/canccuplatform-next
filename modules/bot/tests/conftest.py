@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Bus, Health, Outbox, SecretBox, TenantResolver
+from canccu_kit import Bus, Health, Outbox, SecretBox, ServiceIdentity, TenantResolver
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import MissingRight, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
@@ -201,5 +201,5 @@ async def env(db: Db) -> Env:
         series=series,
         now=lambda: NOW,
     )
-    app = create_app(deps, Health("bot", "dev", {}), tenants)
+    app = create_app(deps, Health("bot", "dev", {}), tenants, ServiceIdentity("bot", b"k" * 32))
     return Env(db, rights, keys, deps, app, fake, streams, contexts, audit, users, series)

@@ -115,7 +115,7 @@ class Feeds:
                 if served is None or live.guild_id not in (None, served[0]):
                     await self._forget(tenant)
                 else:
-                    await live.flush(self._d.keys)
+                    await live.flush(self._d.keys, self._d.now())
             except Exception:
                 log.exception("writing the live state of %s failed", tenant)
 
@@ -150,7 +150,7 @@ class Feeds:
         await counts.record(
             self._d, tenant, live.snapshot(await self._d.hidden(tenant)), flags, now
         )
-        await live.flush(self._d.keys)
+        await live.flush(self._d.keys, self._d.now())
         await counts.fold(self._d, tenant, now)
 
     async def _seed(self, tenant: str, guild: str, live: GuildLive, flags: dict[str, bool]) -> None:
