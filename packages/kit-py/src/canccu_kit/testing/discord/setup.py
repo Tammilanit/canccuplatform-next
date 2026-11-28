@@ -112,12 +112,38 @@ async def member(fake: FakeDiscord, app: FakeApplication, p: dict[str, str], bod
     return _error(404, "Unknown Member", 10007)
 
 
+def _can_view(guild: FakeGuild, channel: dict[str, Any], app: FakeApplication) -> bool:
+    """View channel for the bot in a channel, by Discord's order (everyone, roles, member)."""
+    view, admin = 1 << 10, 1 << 3
+    held = guild.bot_roles.get(app.id, [])
+    bits = int(guild.roles[guild.id]["permissions"])
+    for role in held:
+        bits |= int(guild.roles.get(role, {}).get("permissions") or 0)
+    if bits & admin:
+        return True
+    by_id = {o["id"]: o for o in channel.get("permission_overwrites") or []}
+    if guild.id in by_id:
+        bits = (bits & ~int(by_id[guild.id]["deny"])) | int(by_id[guild.id]["allow"])
+    allow = deny = 0
+    for role in held:
+        if role in by_id:
+            allow |= int(by_id[role]["allow"])
+            deny |= int(by_id[role]["deny"])
+    bits = (bits & ~deny) | allow
+    if app.bot_user_id in by_id:
+        mine = by_id[app.bot_user_id]
+        bits = (bits & ~int(mine["deny"])) | int(mine["allow"])
+    return bool(bits & view)
+
+
 async def put_overwrite(
     fake: FakeDiscord, app: FakeApplication, p: dict[str, str], body: Any
 ) -> Response:
     found = fake.channel(p["channel_id"])
     if found is None or app.id not in found[0].bots:
         return _error(404 if found is None else 403, "Unknown Channel", 10003)
+    if not _can_view(found[0], found[1], app):
+        return _missing()  # Discord strips every permission in a channel the bot cannot view
     overwrites = [o for o in found[1]["permission_overwrites"] if o["id"] != p["overwrite_id"]]
     overwrites.append({"id": p["overwrite_id"], **(body or {})})
     found[1]["permission_overwrites"] = overwrites

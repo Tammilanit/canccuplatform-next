@@ -492,7 +492,8 @@ paths:
         The event-admin role itself. For each of the feature's rows with `fix_action: allow_in_channel`, the bot
         allows itself, in its own overwrite in that channel, what the channel took from its role. Audited
         (`bot.check.fixed`) when anything changed; answers the check run again. An unknown feature is 400
-        `invalid_request`; 409 `event_archived`; 503 `discord_unavailable`.
+        `invalid_request`; 409 `event_archived`; 503 `discord_unavailable`. A row is offered only where the bot can
+        view the channel and holds Manage roles there; when Discord refuses every change, 502 `discord_refused`.
       requestBody:
         required: true
         content:
@@ -521,6 +522,12 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "502":
+          description: "`discord_refused`: Discord refused every change the bot tried."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
         "503":
           $ref: "#/components/responses/DiscordUnavailable"
   /api/bot/providers/{provider}/secret:

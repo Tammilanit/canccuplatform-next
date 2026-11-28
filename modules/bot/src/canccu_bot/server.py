@@ -85,7 +85,9 @@ async def read(d: Deps, ctx: TenantContext) -> Server:
         raise unavailable()  # the bot is out of the guild: its binding ends on GUILD_DELETE
     server.bot_user_id = str(me.get("id"))
     member = await server.call(d, "GET", f"{guild}/members/{server.bot_user_id}")
+    if member is None:
+        raise unavailable()  # not "holds no roles": every permission would be computed wrong
     server.channels = {str(c["id"]): c for c in channels}
     server.roles = {str(r["id"]): r for r in roles}
-    server.held = [str(r) for r in (member or {}).get("roles", [])]
+    server.held = [str(r) for r in member.get("roles", [])]
     return server

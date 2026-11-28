@@ -20,7 +20,7 @@ from .access import deps, event_admin
 from .client import iso
 from .deps import Deps
 from .guild import audit
-from .perms import MANAGE_CHANNELS, MANAGE_ROLES, names
+from .perms import MANAGE_CHANNELS, MANAGE_ROLES, VIEW_CHANNEL, names
 from .purposes import BY_NAME, Purpose, exists, reader, stored
 
 KEPT_MS = 7 * 24 * 3600 * 1000
@@ -94,7 +94,11 @@ def self_fixable(purpose: Purpose, server: live.Server, target: str) -> int:
     the server (Discord refuses an overwrite granting more), and only with Manage roles."""
     lacking = purpose.needs & ~server.in_channel(target)
     base = server.base()
-    return lacking if lacking and not lacking & ~base and base & MANAGE_ROLES else 0
+    if not lacking or lacking & ~base or not base & MANAGE_ROLES:
+        return 0
+    # Discord strips every permission in a channel the bot cannot view, so it could not write there.
+    here = server.in_channel(target)
+    return lacking if here & VIEW_CHANNEL and here & MANAGE_ROLES else 0
 
 
 def _in_channel(purpose: Purpose, server: live.Server, target: str) -> Any:
@@ -136,7 +140,9 @@ def _role_order(server: live.Server, target: str) -> Any:
 async def compute(d: Deps, ctx: TenantContext, server: live.Server) -> dict[str, Any]:
     bound = await stored(d, ctx["tenant_id"])
     app = await server.call(d, "GET", "/applications/@me")
-    flags = int((app or {}).get("flags") or 0)
+    if app is None:
+        raise live.unavailable()  # not "no intents": the check is kept for a week
+    flags = int(app.get("flags") or 0)
     shared = d.shared is not None and server.application_id == d.shared.application_id
     features: list[dict[str, Any]] = []
     for feature in FEATURES:
@@ -195,7 +201,8 @@ async def post_fix(request: Request) -> Response:
         raise KitError("feature: one of the check's features", status=400, code="invalid_request")
     server = await live.read(d, ctx)
     bound = await stored(d, ctx["tenant_id"])
-    fixed = []
+    fixed: list[str] = []
+    refused: list[str] = []
     for purpose in (BY_NAME[p] for p in BY_FEATURE[name].purposes):
         channel = bound.get(purpose.name)
         if channel is None or not exists(purpose, server, channel):
@@ -213,9 +220,13 @@ async def post_fix(request: Request) -> Response:
         body = {"type": 1, "allow": str(allow), "deny": str(deny)}
         if await server.call(d, "PUT", path, body) is not None:
             fixed.append(channel)
+        else:
+            refused.append(channel)
     if fixed:
         changes = {"feature": name, "channels": fixed}
         await audit(d, ctx["tenant_id"], session.user_id, "bot.check.fixed", changes, "guild")
+    elif refused:
+        raise KitError("Discord refused the change", status=502, code="discord_refused")
     return JSONResponse(await run(d, ctx, await live.read(d, ctx)))
 
 

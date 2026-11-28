@@ -10,7 +10,7 @@ from canccu_kit.testing.discord import Intents
 from conftest import SHARED_ID, Env
 from test_purposes import EVERYDAY, MANAGER, create, put, server
 
-from canccu_bot.perms import PIN_MESSAGES
+from canccu_bot.perms import PIN_MESSAGES, VIEW_CHANNEL
 
 ON = {"bot.presence": True, "bot.members": True, "pizza.enabled": True}
 
@@ -142,3 +142,47 @@ async def test_fixing_needs_the_event_admin_role_and_a_known_feature(env: Env) -
         assert r.status_code == 403
         r = await c.post("/api/bot/guild/check/fix", json={"feature": "x"}, headers=env.admin())
         assert (r.status_code, r.json()["error"]["code"]) == (400, "invalid_request")
+
+
+async def test_a_channel_the_bot_cannot_view_is_a_fix_in_words_and_a_refused_fix_is_502(
+    env: Env,
+) -> None:
+    guild = await server(env)
+    env.contexts["ev-a"]["flags"] = ON
+    hidden = [{"id": guild.id, "type": 0, "allow": "0", "deny": str(VIEW_CHANNEL)}]
+    crew = env.discord.add_channel(guild.id, "crew", overwrites=hidden)
+    await put(env, "food", crew)
+    [row] = feature(await run(env), "food")["rows"]
+    assert row["ok"] is False
+    assert row["fix_action"] is None
+    async with env.client() as c:
+        r = await c.post("/api/bot/guild/check/fix", json={"feature": "food"}, headers=env.admin())
+    assert r.status_code == 200  # nothing was offered, so nothing was tried
+    assert "bot.check.fixed" not in [e["action"] for e in env.audit.entries]
+
+
+async def test_a_refused_overwrite_is_502_and_not_audited(env: Env) -> None:
+    guild = await server(env)
+    env.contexts["ev-a"]["flags"] = ON
+    bot_role = guild.bot_roles[SHARED_ID][0]
+    no_pin = [{"id": bot_role, "type": 0, "allow": "0", "deny": str(PIN_MESSAGES)}]
+    await put(env, "food", env.discord.add_channel(guild.id, "food", overwrites=no_pin))
+    env.discord.fail_next(403, method="PUT")
+    async with env.client() as c:
+        r = await c.post("/api/bot/guild/check/fix", json={"feature": "food"}, headers=env.admin())
+    assert r.status_code == 502
+    assert "bot.check.fixed" not in [e["action"] for e in env.audit.entries]
+
+
+async def test_the_check_is_503_when_the_bots_member_or_application_cannot_be_read(
+    env: Env,
+) -> None:
+    guild = await server(env)
+    env.contexts["ev-a"]["flags"] = ON
+    bot_user = env.discord.applications[SHARED_ID].bot_user_id
+    for path in (f"/guilds/{guild.id}/members/{bot_user}", "/applications/@me"):
+        env.discord.fail_next(429, path=path)
+        async with env.client() as c:
+            r = await c.post("/api/bot/guild/check", headers=env.reader())
+        assert r.status_code == 503, path
+        assert await env.keys.get(f"bot:check:ev-a:{guild.id}") is None
