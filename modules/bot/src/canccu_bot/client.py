@@ -149,6 +149,13 @@ class DiscordClient:
         except Exception:
             log.exception("status listener failed")
 
+    async def request_members(self, guild_id: str) -> bool:
+        """Op 8 on the shard that holds the guild (Discord: `(guild_id >> 22) % shards`)."""
+        if not self._shards:
+            return False
+        shard = self._shards[(int(guild_id) >> 22) % len(self._shards)]
+        return await shard.request_members(guild_id)
+
     async def stop(self) -> None:
         self._on_stop()
         for shard in self._shards:

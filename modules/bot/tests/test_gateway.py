@@ -210,3 +210,37 @@ async def test_the_url_asks_for_version_10_json(fake: FakeDiscord) -> None:
     await run.until(lambda: run.shard.status == "ready", "ready")
     assert dialled == [f"{fake.gateway_url}?v=10&encoding=json"]
     await run.stop()
+
+
+async def test_members_are_requested_only_with_the_members_intent(fake: FakeDiscord) -> None:
+    """Op 8 asks for every member of a guild (and their presences with that intent); without the
+    members intent Discord refuses a full list, so nothing is sent."""
+    app = fake.add_application("Demo Bot")
+    guild = fake.add_guild("G", bots=[app.id])
+    sent: list[dict[str, Any]] = []
+    dial = connector(fake)
+
+    async def recording(url: str) -> Any:
+        ws = await dial(url)
+        real = ws.send
+
+        async def send(payload: dict[str, Any]) -> None:
+            sent.append(payload)
+            await real(payload)
+
+        ws.send = send  # type: ignore[method-assign]
+        return ws
+
+    both = Intents.GUILDS | Intents.GUILD_MEMBERS | Intents.GUILD_PRESENCES
+    run = Run(fake, app.token, both, connector=recording)
+    await run.until(lambda: run.shard.status == "ready", "ready")
+    assert await run.shard.request_members(guild.id) is True
+    [asked] = [p["d"] for p in sent if p["op"] == 8]
+    assert asked == {"guild_id": guild.id, "query": "", "limit": 0, "presences": True}
+    await run.stop()
+    sent.clear()
+    run = Run(fake, app.token, Intents.GUILDS, connector=recording)
+    await run.until(lambda: run.shard.status == "ready", "ready")
+    assert await run.shard.request_members(guild.id) is False
+    assert [p for p in sent if p["op"] == 8] == []
+    await run.stop()

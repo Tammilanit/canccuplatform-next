@@ -42,8 +42,16 @@ class Tracked:
         self._gone.clear()
 
     def changes(self) -> tuple[dict[str, str], frozenset[str]]:
-        """What to write and what to delete since the last call."""
-        out = ({k: self.values[k] for k in self._changed}, frozenset(self._gone))
-        self._changed.clear()
-        self._gone.clear()
-        return out
+        """What to write and what to delete since the last write that succeeded."""
+        return {k: self.values[k] for k in self._changed}, frozenset(self._gone)
+
+    def written(self, values: dict[str, str], gone: frozenset[str]) -> None:
+        """The write of `changes()` succeeded. Only then is it done: a failed or cancelled write
+        leaves it pending, so Valkey never misses a delta for good. A key that changed again
+        while the write ran stays pending too."""
+        for key, value in values.items():
+            if self.values.get(key) == value:
+                self._changed.discard(key)
+        for key in gone:
+            if key not in self.values:
+                self._gone.discard(key)

@@ -189,6 +189,9 @@ async def serve() -> None:
         )
         holder.append(client)
         router.rest = client.rest
+        feeds.rest = client.rest
+        feeds.request_members = client.request_members
+        feeds.in_guild = router.guilds.__contains__
         feeds.start()
         return client
 

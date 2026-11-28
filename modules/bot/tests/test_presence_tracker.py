@@ -86,3 +86,15 @@ def test_the_state_round_trips_through_its_slices() -> None:
     for mine, theirs in zip(t.slices().values(), copy.slices().values(), strict=True):
         theirs.load(dict(mine.values))
     assert copy.count(frozenset()) == t.count(frozenset())
+
+
+def test_a_bot_stays_known_when_the_members_feed_goes_off() -> None:
+    """The bot set is apart from the members feed: clearing that feed keeps every bot out."""
+    t = PresenceTracker()
+    t.member("GUILD_MEMBERS_CHUNK", {"guild_id": "g", "members": [member("9", bot=True)]})
+    t.seen_bots(["8"])
+    t.members.clear()
+    t.presence({"user": {"id": "9"}, "status": "online"})
+    t.presence({"user": {"id": "8"}, "status": "online"})
+    t.presence({"user": {"id": "1"}, "status": "online"})
+    assert t.count(frozenset())["online"] == 1

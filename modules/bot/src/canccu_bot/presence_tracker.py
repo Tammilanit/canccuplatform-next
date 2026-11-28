@@ -26,20 +26,45 @@ def is_bot(data: dict[str, Any]) -> bool:
     return isinstance(user, dict) and user.get("bot") is True
 
 
+def named_bots(data: dict[str, Any]) -> list[str]:
+    """The bots a gateway event names: a member's or a presence's user, a voice state's member,
+    or a snapshot's or members chunk's member list. A presence update's user is partial, so it
+    rarely says; the members and voice states do."""
+    found = []
+    for m in [data, data.get("member"), *(data.get("members") or [])]:
+        uid = user_id(m) if isinstance(m, dict) and is_bot(m) else None
+        if uid is not None:
+            found.append(uid)
+    return found
+
+
 class PresenceTracker:
     def __init__(self) -> None:
         self.members = Tracked()
-        """Discord id → `bot` or `member`: every member the gateway named."""
+        """Discord id → `bot` or `member`: every member the members feed named."""
+        self.bots_seen = Tracked()
+        """Discord id → `bot`: every bot the gateway named, whatever the feeds' flags (the router
+        passes them on from a feed it drops), so a bot is never counted even when the members
+        feed is off. Bots are no people; this slice is cleared by no flag."""
         self.statuses = Tracked()
         """Discord id → `online`, `idle` or `dnd`; offline is absent."""
         self.guild_count = Tracked()
         """Discord's own member count of the guild, bots included."""
 
     def slices(self) -> dict[str, Tracked]:
-        return {"members": self.members, "presence": self.statuses, "guild": self.guild_count}
+        return {
+            "members": self.members,
+            "bots": self.bots_seen,
+            "presence": self.statuses,
+            "guild": self.guild_count,
+        }
 
     def bots(self) -> frozenset[str]:
-        return frozenset(k for k, v in self.members.values.items() if v == "bot")
+        return frozenset(self.bots_seen.values)
+
+    def seen_bots(self, ids: list[str]) -> None:
+        for uid in ids:
+            self.bots_seen.set(str(uid), "bot")
 
     def guild(self, data: dict[str, Any]) -> None:
         if isinstance(data.get("member_count"), int):
@@ -57,6 +82,8 @@ class PresenceTracker:
         uid = user_id(data)
         if uid is not None:
             self.members.set(uid, "bot" if is_bot(data) else "member")
+            if is_bot(data):
+                self.bots_seen.set(uid, "bot")
 
     def member(self, event: str, data: dict[str, Any]) -> None:
         if event == "GUILD_MEMBERS_CHUNK":
@@ -69,6 +96,7 @@ class PresenceTracker:
         known = self.members.get(uid) is not None
         if event == "GUILD_MEMBER_REMOVE":
             self.members.drop(uid)
+            self.bots_seen.drop(uid)
             self.statuses.drop(uid)
             self._move_count(-1)
             return
@@ -86,7 +114,7 @@ class PresenceTracker:
         if uid is None:
             return
         if is_bot(data):
-            self.members.set(uid, "bot")
+            self.bots_seen.set(uid, "bot")
         status = data.get("status")
         if status in STATUSES:
             self.statuses.set(uid, str(status))

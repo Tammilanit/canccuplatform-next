@@ -92,6 +92,36 @@ async def test_a_guild_snapshot_carries_only_the_feeds_that_are_on(env: Env) -> 
     assert "members" not in data and "voice_states" not in data
 
 
+async def test_a_dropped_feed_still_names_its_bots(env: Env) -> None:
+    """Bots are no people and no feed's data: a member event or a voice state of a bot reaches
+    the counts as its id alone when its feed is off, so no count ever takes the bot in; a
+    person's event is dropped whole, and a members chunk loses its parts like the snapshot."""
+    await bind(env)
+    seen = Recorder()
+    r, _ = router(env, handlers={"guild": seen, "bot.presence": seen})
+    env.contexts["ev-a"]["flags"] = {"bot.presence": True}
+    bot = {"id": "9", "bot": True}
+    await r.dispatch("GUILD_MEMBER_ADD", {"guild_id": GUILD, "user": bot, "nick": "x"})
+    await r.dispatch("GUILD_MEMBER_ADD", {"guild_id": GUILD, "user": {"id": "1"}})
+    voice = {"guild_id": GUILD, "user_id": "8", "channel_id": "v1"}
+    await r.dispatch("VOICE_STATE_UPDATE", {**voice, "member": {"user": {"id": "8", "bot": True}}})
+    await r.dispatch("GUILD_MEMBER_REMOVE", {"guild_id": GUILD, "user": bot})
+    chunk = {
+        "guild_id": GUILD,
+        "members": [{"user": {"id": "1"}}, {"user": {"id": "7", "bot": True}}],
+        "presences": [{"user": {"id": "1"}, "status": "online"}],
+    }
+    await r.dispatch("GUILD_MEMBERS_CHUNK", chunk)
+    assert [(e, d) for _, e, d in seen.seen] == [
+        ("BOTS_SEEN", {"bots": ["9"]}),
+        ("BOTS_SEEN", {"bots": ["8"]}),
+        (
+            "GUILD_MEMBERS_CHUNK",
+            {"guild_id": GUILD, "presences": chunk["presences"], "bots": ["7"]},
+        ),
+    ]
+
+
 async def test_channel_and_role_changes_reach_the_guild_handler(env: Env) -> None:
     await bind(env)
     seen = Recorder()

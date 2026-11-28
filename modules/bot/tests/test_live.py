@@ -92,3 +92,31 @@ async def test_nothing_of_a_person_but_their_discord_id_is_kept() -> None:
     live.apply("GUILD_CREATE", data)
     await live.flush(keys)
     assert "secret" not in repr(keys.values)
+
+
+async def test_a_failed_write_keeps_what_it_did_not_write() -> None:
+    """A Valkey error or a cancel mid-flush loses no delta: the next flush writes it."""
+    keys = MemoryKeys()
+    live = GuildLive("ev-a")
+    live.apply("GUILD_CREATE", snapshot())
+    await live.flush(keys)
+    live.apply("PRESENCE_UPDATE", {"user": {"id": "3"}, "status": "dnd", "activities": []})
+    live.apply("VOICE_STATE_UPDATE", {"user_id": "1", "channel_id": None})
+    real = keys.hash_write
+
+    async def down(key: str, *args: Any) -> None:
+        if key.endswith(":presence"):  # the slice that holds a delta
+            raise ConnectionError("valkey went away")
+        await real(key, *args)
+
+    keys.hash_write = down  # type: ignore[method-assign,assignment]
+    try:
+        await live.flush(keys)
+    except ConnectionError:
+        pass
+    keys.hash_write = real  # type: ignore[method-assign]
+    await live.flush(keys)
+    again = GuildLive("ev-a")
+    await again.load(keys)
+    assert counted(again) == counted(live)
+    assert counted(again)["dnd"] == 1 and counted(again)["in_voice"] == 0

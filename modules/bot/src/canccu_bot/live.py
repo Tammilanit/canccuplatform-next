@@ -20,7 +20,7 @@ LIVE_TTL_MS = 24 * 3600 * 1000
 """A safety net only: every flush gives the hashes this long again, so the state of a client
 that stopped for good (its guild unbound while no container held it) runs out by itself."""
 
-SLICES = ("members", "presence", "guild", "playing", "voice", "channels")
+SLICES = ("members", "bots", "presence", "guild", "playing", "voice", "channels")
 
 
 def live_key(tenant: str, name: str) -> str:
@@ -50,11 +50,19 @@ class GuildLive:
         return out
 
     def apply(self, event: str, data: dict[str, Any]) -> None:
+        # The bots the router kept from parts and feeds it dropped (router.py, `bots`).
+        self.presence.seen_bots(data.get("bots") or [])
         if event == "GUILD_CREATE":
             self.channels.guild(data)
             self.presence.guild(data)
             self.activities.guild(data)
             self.voice.guild(data)
+        elif event == "GUILD_MEMBERS_CHUNK":
+            # The answer to a members request (op 8): its presences hold only who is not offline.
+            self.presence.member(event, data)
+            for p in data.get("presences") or []:
+                self.presence.presence(p)
+                self.activities.presence(p)
         elif event == "PRESENCE_UPDATE":
             self.presence.presence(data)
             self.activities.presence(data)
@@ -94,6 +102,7 @@ class GuildLive:
         for name, tracked in self._slices().items():
             values, gone = tracked.changes()
             await keys.hash_write(live_key(self.tenant, name), values, gone, LIVE_TTL_MS)
+            tracked.written(values, gone)
 
     async def load(self, keys: KeyStore) -> None:
         for name, tracked in self._slices().items():

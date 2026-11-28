@@ -1,5 +1,5 @@
 """`GET /api/bot/stats` (D7): the hourly series and the top games by player-hours, counts only,
-so any caller of the event reads it, a guest included."""
+so a member of the event reads it, and a guest as the info-page mode allows."""
 
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ async def test_hours_reach_back_at_most_72(env: Env) -> None:
     async with env.client() as c:
         r = await c.get("/api/bot/stats", params={"hours": 48})
         assert [h["hour"] for h in r.json()["hours"]] == ["2026-11-26T04:00:00Z"]
-        for bad in ("0", "73", "x"):
+        for bad in ("0", "73", "x", "\u00b2"):  # "²" is a digit to isdigit(), not to int()
             r = await c.get("/api/bot/stats", params={"hours": bad})
             assert r.status_code == 400 and r.json()["error"]["code"] == "invalid_request"
 
@@ -113,3 +113,27 @@ async def test_a_platform_hostname_names_no_event(env: Env) -> None:
     async with env.client("signin.example.test") as c:
         r = await c.get("/api/bot/stats")
     assert r.status_code == 404
+
+
+async def test_a_guest_reads_only_as_the_info_page_mode_allows(env: Env) -> None:
+    """contracts/tenants.md, Info pages: a draft event gives guests nothing, `sign_in` lets no
+    guest in, `venue_only` only from the venue's addresses; a member reads in every mode."""
+    ctx = env.contexts["ev-a"]
+    member = env.rights.sign_in("u_member")
+
+    async def status(headers: dict[str, str] | None = None) -> tuple[int, str | None]:
+        async with env.client() as c:
+            r = await c.get("/api/bot/stats", headers=headers or {})
+        return r.status_code, r.json().get("error", {}).get("code")
+
+    closed = (403, "info_pages_closed")
+    ctx["status"] = "draft"
+    assert await status() == closed
+    assert (await status(member))[0] == 200
+    ctx["status"], ctx["info_page_mode"] = "live", "sign_in"
+    assert await status() == closed
+    assert (await status(member))[0] == 200
+    ctx["info_page_mode"] = "venue_only"
+    assert await status() == closed  # the test client is 198.51.100.7, off the venue
+    ctx["venue"] = {"id": "v1", "name": "Hall", "addresses": ["198.51.100.0/24"]}
+    assert (await status())[0] == 200
