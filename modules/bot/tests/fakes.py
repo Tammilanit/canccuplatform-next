@@ -126,3 +126,75 @@ class FakeSeries:
 
     async def admin_of_both(self, host: str, cookie: str | None, source: str, target: str) -> bool:
         return {source, target} <= self.admin_of
+
+
+@dataclass
+class MemoryLive:
+    """The live state's Valkey (live.LiveStore) in memory: hashes and counters, with expiry on a
+    clock the test moves."""
+
+    now_ms: int = 0
+    values: dict[str, Any] = field(default_factory=dict)
+    expires: dict[str, int] = field(default_factory=dict)
+
+    def _gone(self, key: str) -> None:
+        at = self.expires.get(key)
+        if at is not None and at <= self.now_ms:
+            self.values.pop(key, None)
+            self.expires.pop(key, None)
+
+    def _hash(self, key: str) -> dict[str, str]:
+        self._gone(key)
+        found: dict[str, str] = self.values.setdefault(key, {})
+        return found
+
+    async def replace(self, key: str, mapping: dict[str, str]) -> None:
+        self.values.pop(key, None)
+        if mapping:
+            self.values[key] = dict(mapping)
+
+    async def hset(self, key: str, field_: str, value: str) -> None:
+        self._hash(key)[field_] = value
+
+    async def hdel(self, key: str, *fields: str) -> None:
+        found = self._hash(key)
+        for f in fields:
+            found.pop(f, None)
+        if not found:
+            self.values.pop(key, None)
+
+    async def hgetall(self, key: str) -> dict[str, str]:
+        self._gone(key)
+        return dict(self.values.get(key) or {})
+
+    async def hincr(self, key: str, field_: str, by: int) -> int:
+        found = self._hash(key)
+        found[field_] = str(int(found.get(field_, "0")) + by)
+        return int(found[field_])
+
+    async def incr(self, key: str, ttl_ms: int) -> int:
+        self._gone(key)
+        value = int(self.values.get(key, "0")) + 1
+        self.values[key] = str(value)
+        self.expires.setdefault(key, self.now_ms + ttl_ms)
+        return value
+
+    async def mget(self, keys: list[str]) -> list[str | None]:
+        out: list[str | None] = []
+        for key in keys:
+            self._gone(key)
+            value = self.values.get(key)
+            out.append(value if isinstance(value, str) else None)
+        return out
+
+    async def get(self, key: str) -> str | None:
+        return (await self.mget([key]))[0]
+
+    async def put(self, key: str, value: str, ttl_ms: int) -> None:
+        self.values[key] = value
+        self.expires[key] = self.now_ms + ttl_ms
+
+    async def delete(self, *keys: str) -> None:
+        for key in keys:
+            self.values.pop(key, None)
+            self.expires.pop(key, None)
