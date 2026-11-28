@@ -69,11 +69,16 @@ async def unbind(
             data = {"guild_id": guild, "reason": reason, "actor_user_id": actor}
             await d.outbox.add(conn, "bot.guild.unbound", data, version=1)
         await d.outbox.flush(tenant)
-    note = {"reason": reason, "guild_name": bound["guild_name"], "at": d.now().isoformat()}
-    await d.keys.put(ended_key(tenant), json.dumps(note), ENDED_TTL_MS)
     await audit(d, tenant, actor, "bot.guild.unbound", {"reason": reason}, "guild", guild, why)
     if reason != "bot_removed" and token is not None:
         await leave(d, token, app_id, guild)
+    # Last, and never fatal: the note only feeds the page, the audit and the leave must not wait
+    # on Valkey.
+    note = {"reason": reason, "guild_name": bound["guild_name"], "at": d.now().isoformat()}
+    try:
+        await d.keys.put(ended_key(tenant), json.dumps(note), ENDED_TTL_MS)
+    except Exception:
+        log.warning("the unbind note for %s was not kept", tenant, exc_info=True)
     return True
 
 

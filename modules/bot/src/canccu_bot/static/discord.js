@@ -32,6 +32,17 @@ function withError(code) {
   return url.pathname + url.search + url.hash;
 }
 
+// A target that differs from this page only by its #fragment is no navigation: the browser
+// would stay, and the page would stay as it was, its buttons disabled. Reload it instead.
+function open(target) {
+  const to = new URL(target, location.href);
+  if (to.pathname === location.pathname && to.search === location.search) {
+    location.reload();
+  } else {
+    location.assign(to.href);
+  }
+}
+
 async function send(form) {
   const method = form.dataset.botMethod;
   const body = bodyOf(form);
@@ -44,14 +55,15 @@ async function send(form) {
   try {
     res = await fetch(form.dataset.botApi, init);
   } catch {
-    location.assign(withError("unreachable"));
+    open(withError("unreachable"));
     return;
   }
   const answer = await res.json().catch(() => ({}));
   if (!res.ok) {
-    // Caddy answers 502 for a part that is down: to the organiser, that is no answer.
-    const code = res.status >= 502 ? "unreachable" : answer?.error?.code;
-    location.assign(withError(code || "refused"));
+    // The API's own error code wins, 5xx included; a 5xx without one is Caddy's, for a part
+    // that is down, and to the organiser that is no answer.
+    const code = answer?.error?.code || (res.status >= 500 ? "unreachable" : "refused");
+    open(withError(code));
     return;
   }
   // The bind's answer: Discord's install page, beside the API the module is set up with.
@@ -60,7 +72,7 @@ async function send(form) {
     location.assign(next);
     return;
   }
-  location.assign(form.dataset.botDone);
+  open(form.dataset.botDone);
 }
 
 document.addEventListener("submit", (event) => {

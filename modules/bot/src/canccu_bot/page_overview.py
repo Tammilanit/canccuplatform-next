@@ -238,7 +238,8 @@ def edge(view: View, o: Overview | None, conn: dict[str, Any] | None) -> str:
         action = link(f"{BASE}/setup#own", "Paste a new token", "primary") if fix else ""
         return ui.notice("down", "The bot stopped: Discord refused its token", text, action)
     if o is not None and o.ended is not None and conn["guild"] is None:
-        return _ended_notice(view, o)
+        if notice := _ended_notice(view, o):
+            return notice
     if client.get("error_code") == "discord_unavailable":
         since = time_words(client["since"], view.zone, o.now if o else client["since"])
         text = (

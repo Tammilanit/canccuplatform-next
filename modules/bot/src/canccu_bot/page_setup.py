@@ -120,7 +120,7 @@ def choose_bot(view: View, conn: dict[str, Any] | None, no_shared: bool) -> str:
     own_extra = ""
     if own_now and conn is not None and conn["credentials"]:
         changed = conn["credentials"]["updated_at"]
-        when = f", changed {time_words(changed, view.zone, changed)}" if changed else ""
+        when = f", changed {time_words(changed, view.zone, view.now)}" if changed else ""
         own_extra = f'<p class="canccu-muted">Token and secret are set{esc(when)}.</p>'
     if view.writes:
         own_extra += _own_form(view, conn)

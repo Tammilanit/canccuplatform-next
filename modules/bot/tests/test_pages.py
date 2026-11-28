@@ -221,3 +221,24 @@ async def test_the_static_files_are_served_and_nothing_else(env: Env) -> None:
     assert css.status_code == 200 and css.headers["content-type"].startswith("text/css")
     assert js.status_code == 200 and "text/javascript" in js.headers["content-type"]
     assert other.status_code == 404
+
+
+async def test_discord_down_is_named_after_an_unbind_too(env: Env) -> None:
+    await bound(env)
+    assert await unbind(env.deps, "ev-a", "unbound", "u_org")
+    await ready(env, status="connecting", error_code="discord_unavailable")
+    assert "Discord has not answered since" in (await page(env, "/")).text
+
+
+async def test_credentials_changed_on_another_day_name_the_day(env: Env) -> None:
+    box = env.deps.secrets
+    await env.sql(
+        "ev-a",
+        "INSERT INTO bot_connections (mode, application_id, bot_token, client_secret,"
+        " key_version, updated_at, updated_by, revision)"
+        " VALUES ('own', $1, $2, $3, 1, '2026-11-26T15:11:00Z', 'u_org', 3)",
+        OWN,
+        box.seal("t", f"bot:token:ev-a:{OWN}"),
+        box.seal("s", f"bot:secret:ev-a:{OWN}"),
+    )
+    assert "changed Thu 15:11" in (await page(env, "/setup")).text
