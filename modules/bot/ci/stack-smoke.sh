@@ -23,3 +23,8 @@ for call in "PUT /api/bot/connection" "POST /api/bot/guild/bind" "DELETE /api/bo
     -H 'content-type: application/json' -d '{}' "$base$path"); echo "$call $code"
   [ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
 done
+echo "-- the stats are counts only: a guest reads them; hours from 1 to 72"
+curl -fsS "$base/api/bot/stats" | tee "$t/r.json"; echo
+jq -e '(.hours | type == "array") and (.top_games | type == "array")' "$t/r.json"
+code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/bot/stats?hours=73"); echo "$code"
+[ "$code" = 400 ] && jq -e '.error.code == "invalid_request"' "$t/r.json"
