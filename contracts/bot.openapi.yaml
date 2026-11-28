@@ -22,6 +22,8 @@ tags:
     description: Binding the event's Discord server through the OAuth bot-install flow, and its slash commands.
   - name: presence
     description: Who plays which game and who is in which voice channel, live; the names behind the bus's counts.
+  - name: counts
+    description: The hourly counts of presence, voice, games and chat activity; never who.
   - name: setup
     description: The guild's purposes, the pick lists, creating what is missing, and the check with its fixes.
   - name: clone
@@ -638,6 +640,40 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/bot/stats:
+    get:
+      tags: [counts]
+      operationId: getStats
+      summary: The hourly counts and the top games
+      security:
+        - {}
+        - session: []
+      description: |
+        Counts only, so anyone the event's info pages let in, a guest included (otherwise 403
+        `info_pages_closed`, contracts/tenants.md, Info page mode). The last `hours` whole UTC hours, oldest
+        first, with the hour in progress folded from its minutes; `top_games` are the ten activities with the
+        most player-hours in the same window (contracts/bot.md, Counts).
+      parameters:
+        - name: hours
+          in: query
+          required: false
+          description: How many whole hours back, the hour in progress included.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 72
+            default: 24
+      responses:
+        "200":
+          description: The counts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/bot/clone:
     post:
       tags: [clone]
@@ -718,7 +754,8 @@ components:
       description: |
         `missing_right` (the right is missing, or the call needs the event-admin role itself), `not_a_member`
         (who-plays-what for a signed-in user who is not a member of the event and lacks the right), `mfa_required`
-        (a superadmin without Discord two-factor) or `admin_access_restricted` (contracts/tenants.md, Admin access).
+        (a superadmin without Discord two-factor), `admin_access_restricted` (contracts/tenants.md, Admin access)
+        or `info_pages_closed` (the counts for a guest the event's info pages do not let in).
       content:
         application/json:
           schema:
@@ -1012,6 +1049,65 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/Player"
+    Stats:
+      type: object
+      required: [hours, top_games, as_of]
+      additionalProperties: false
+      properties:
+        hours:
+          type: array
+          description: Only hours with a count; a count is `null` when its feed was off or the client away all hour.
+          items:
+            type: object
+            required: [hour, members, online, idle, dnd, in_voice, online_peak, in_voice_peak, messages]
+            additionalProperties: false
+            properties:
+              hour:
+                type: string
+                format: date-time
+                description: The hour's start (UTC).
+              members:
+                type: [number, "null"]
+                description: The average of the hour's counted minutes, as are `online`, `idle`, `dnd` and `in_voice`.
+              online:
+                type: [number, "null"]
+              idle:
+                type: [number, "null"]
+              dnd:
+                type: [number, "null"]
+              in_voice:
+                type: [number, "null"]
+              online_peak:
+                type: [integer, "null"]
+              in_voice_peak:
+                type: [integer, "null"]
+              messages:
+                type: [integer, "null"]
+                description: The hour's total of messages in the channels everyone can read.
+        top_games:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required: [application_id, name, player_hours]
+            additionalProperties: false
+            properties:
+              application_id:
+                description: The game's Discord application; `null` for the one entry adding up every activity without one.
+                oneOf:
+                  - $ref: "#/components/schemas/Snowflake"
+                  - type: "null"
+              name:
+                type: [string, "null"]
+                maxLength: 100
+                description: The name Discord gives the application; `null` with `application_id` (a typed name is never shown).
+              player_hours:
+                type: number
+                minimum: 0
+        as_of:
+          type: [string, "null"]
+          format: date-time
+          description: The end of the last minute counted; `null` with no count at all.
     Reason:
       type: object
       required: [reason]

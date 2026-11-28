@@ -54,7 +54,7 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own. `agenda.item.changed` and `agenda.item.delayed` also carry `announce`: on `false` no consumer announces the change ([agenda.md](agenda.md#notification-channels)).
 
 ## Bot connections
-Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). The bot's other events (presence, activities, voice channels) are still provisional: see [Bot](#bot) below.
+Emitter: `bot`. Audience: system, except where a row says otherwise. Payloads: [bot.md](bot.md#events-version-1). The bot's voice-channel events for matches are still provisional: see [Bot](#bot) below.
 
 | Type | Meaning | Consumers |
 |---|---|---|
@@ -63,6 +63,10 @@ Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). T
 | `bot.guild.bound` | A Discord guild was bound to the event | admin, notify |
 | `bot.guild.unbound` | The event's guild binding ended | admin, notify |
 | `bot.purposes.changed` | The event's guild purposes were picked, cleared or created | — (the bot's own posts follow them, #122) |
+| `bot.presence.counted` | Members, online, idle, do not disturb and in voice, each minute; counts only. Audience: event-wide, `public` | screen (stats), moments |
+| `bot.activities.counted` | Players per "playing" activity, each minute; counts only ([games.md](games.md#surges)) | games (surges) |
+| `bot.voice.counted` | The public voice rooms with people in them, by name and count, each minute. Audience: event-wide, `public` | screen (`voice_rooms`, #122 link 2a) |
+| `bot.messages.counted` | Messages in the channels everyone can read, each whole hour; no text, author or channel. Audience: event-wide, `public` | screen (`activity_graph`'s `messages`, #122 link 2a) |
 
 ## Games
 Emitter: `games`. Audience: event-wide, `public`. Payloads: [games.md](games.md#events-version-1).
@@ -75,7 +79,7 @@ Emitter: `games`. Audience: event-wide, `public`. Payloads: [games.md](games.md#
 | `games.surge.started` | Players on one game reached the event's threshold | notify (`game` topic), screen (hot-game banner), bot |
 | `games.surge.ended` | A surge ended | screen |
 
-Games consumes `bot.activities.counted`, outlined under [Bot](#bot) ([games.md](games.md#surges)).
+Games consumes `bot.activities.counted` ([Bot connections](#bot-connections), [games.md](games.md#surges)).
 
 ## Notify
 Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-version-1).
@@ -302,8 +306,6 @@ Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord,
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
-| `bot.activities.counted` | The guild members' "playing" activities, counted every interval: counts only, never who ([games.md](games.md#surges)) | system | games (surges) | `counted_at` (string, time), `interval_seconds` (integer), `activities` (list of object: `application_id` (string or null), `name` (string), `players` (integer)) |
-| `bot.presence.counted` | Members online and in voice, counted every interval | event-wide, `public` (counts only) | screen (stats), moments | `counted_at` (string, time), `interval_seconds` (integer), `members` (integer), `online` (integer), `idle` (integer), `dnd` (integer), `in_voice` (integer) |
 | `bot.voice_channels.created` | The bot created the voice channels a match asked for (once per match) | system | tournament (keeps the ids), screen (shows the channel names) | `ref` (object: `module` (string), `id` (string): `tournament` and the match id), `channels` (list of object: `channel_id` (string), `name` (string), `team_id` (string or null)) |
 | `bot.voice_channels.removed` | The bot disconnected everyone and deleted the channels: the acknowledgement of cleanup | system | tournament | `ref` (object), `channel_ids` (list of string), `reason` (string: `finished`, `cancelled`, `backstop`) |
 | `bot.voice_roster.captured` | Who stayed in a match's voice channels and for how long, answering `tournament.scoring.started` (presence data) | system | tournament (fills in placements) | `ref` (object), `captured_at` (string, time), `channels` (list of object: `channel_id` (string), `team_id` (string or null), `members` (list of Person, each with `dwell_seconds` (integer))) |

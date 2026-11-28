@@ -54,7 +54,7 @@ Following is a Notify follow on the `game` topic, `PUT /api/notify/me/follows/ga
 ## Surges
 A surge is the moment many people at the event start the same game. It feeds the `game` topic in Notify (people who follow the game) and the screen's hot-game banner.
 
-- **Input:** the bot module reports the "playing" activities of the event's Discord members as counts per activity (application id, name, players), every interval; the bot contract fixes the event (provisional: `bot.activities.counted`). Counts only, never who: members with the presence opt-out ([tenants.md](tenants.md#privacy-and-retention)) are not counted at all.
+- **Input:** the bot module reports the "playing" activities of the event's Discord members as counts per activity (application id, name, players), each minute, as `bot.activities.counted` ([bot.md](bot.md#counts)). Counts only, never who: members with the presence opt-out ([tenants.md](tenants.md#privacy-and-retention)) are not counted at all.
 - The module matches each activity to a game and adds up the players per game.
 - **Start:** when a game's players reach `surge_threshold` and the game is not cooling down, the module emits `games.surge.started` and the game's cool-down of `surge_cooldown_minutes` begins: no new surge for that game until it ends.
 - **End:** when the players stay below the threshold for two intervals in a row, the module emits `games.surge.ended`.

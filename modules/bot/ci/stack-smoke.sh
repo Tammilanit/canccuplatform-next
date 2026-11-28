@@ -23,3 +23,13 @@ for call in "PUT /api/bot/connection" "POST /api/bot/guild/bind" "DELETE /api/bo
     -H 'content-type: application/json' -d '{}' "$base$path"); echo "$call $code"
   [ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
 done
+echo "-- the counts answer a guest (counts only), or say the event's info pages are closed"
+code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/bot/stats"); echo "$code"
+case "$code" in
+  200) jq -e '(.hours | type == "array") and (.top_games | type == "array")' "$t/r.json" ;;
+  403) jq -e '.error.code == "info_pages_closed"' "$t/r.json" ;;
+  *) exit 1 ;;
+esac
+echo "-- the counts' window is 1 to 72 hours"
+code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/bot/stats?hours=73"); echo "$code"
+[ "$code" = 400 ] && jq -e '.error.code == "invalid_request"' "$t/r.json"
