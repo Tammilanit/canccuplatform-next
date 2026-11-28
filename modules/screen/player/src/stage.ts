@@ -48,7 +48,7 @@ const LAYERS = [
   "scrim",
 ] as const;
 /** The looks drawn in the look layer; `glows` is the stage's own glow layer, as before #787. */
-const LOOK_PARTS = ["gradient", "particles", "waves"] as const;
+const LOOK_PARTS = ["gradient", "particles", "waves", "hearth", "sky"] as const;
 /** The Theme studio's posted scene chip (theming's plan issue-784 D21), as a hype. */
 const POSTED_HYPE: Record<string, number> = { quiet: 0.1, building: 0.6, live: 1 };
 const HYPE_PHASES = new Set(["quiet", "building", "live", "after"]);
@@ -141,7 +141,12 @@ function setImage(layer: HTMLElement, url: string): void {
  */
 function setVideo(layer: HTMLElement, url: string | null, poster: string | undefined): void {
   const playing = layer.querySelector("video");
-  if (playing !== null && playing.getAttribute("src") === url) return;
+  if (playing !== null && playing.getAttribute("src") === url) {
+    // A new picture under the same video: the video plays on, with the new picture as its poster.
+    if (poster === undefined) playing.removeAttribute("poster");
+    else if (playing.getAttribute("poster") !== poster) playing.setAttribute("poster", poster);
+    return;
+  }
   playing?.remove();
   if (url === null) return;
   const video = layer.ownerDocument.createElement("video");
@@ -187,16 +192,22 @@ function hypeOf(
   return { level: Math.min(1, Math.max(0, level)), phase };
 }
 
-/** The game's art while the hype builds or is live, where the theme lets it and has no own picture. */
+/**
+ * The game's art while the hype builds or is live, where the theme lets it and has no own picture.
+ * It reads the zone's hype (or the Studio's posted chip) itself: a theme that keeps the stage from
+ * moving with the hype (`backdrop.hype: false`) still shows the art its `game_art` asks for.
+ */
 function gameOf(
   stage: StageView | undefined,
   backdrop: BackdropView | undefined,
-  hype: { phase: string } | null,
+  life: StageLife,
+  posted: string | undefined,
 ): { url: string; scrim: number } | null {
   const url = stage?.game?.url;
   const scrim = stage?.game?.scrim;
   if (backdrop?.game_art === false || pictureOf(backdrop) !== null) return null;
-  if (hype?.phase !== "building" && hype?.phase !== "live") return null;
+  const phase = hypeOf(life, { hype: true }, posted)?.phase;
+  if (phase !== "building" && phase !== "live") return null;
   if (typeof url !== "string" || !ART_URL.test(url) || typeof scrim !== "number") return null;
   return { url, scrim: Math.min(1, Math.max(0.55, scrim)) };
 }
@@ -252,7 +263,7 @@ export class StageLayer {
     }
     const hype = hypeOf(life, backdrop, posted.canccuScene);
     if (hype !== null) classes.push(`canccu-stage--hype-${hype.phase}`);
-    const game = gameOf(stage, backdrop, hype);
+    const game = gameOf(stage, backdrop, life, posted.canccuScene);
     if (game !== null) classes.push("canccu-stage--game");
     const name = classes.join(" ");
     if (el.className !== name) el.className = name;

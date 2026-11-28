@@ -27,7 +27,8 @@ describe("stage-looks.css", () => {
 
   it("draws the hearth and the sky still, each under its own look class (plan issue-785 D12)", () => {
     for (const look of ["hearth", "sky"]) {
-      const rule = new RegExp(`\\.canccu-stage__${look} \\{([^}]*)\\}`).exec(css)?.[1] ?? "";
+      const rule =
+        new RegExp(`^ *\\.canccu-stage__${look} \\{([^}]*)\\}`, "m").exec(css)?.[1] ?? "";
       expect(rule, look).toMatch(/background-image:/);
       expect(rule, look).not.toMatch(/animation|transform/);
       expect(css).toContain(`.canccu-stage--look-${look} .canccu-stage__${look}`);

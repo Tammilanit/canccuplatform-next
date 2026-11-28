@@ -4,13 +4,12 @@
 // out or restarted, game art read from the theme-filtered hype). One table: for each layer and
 // change, whether the layer shows, the value it reads, that its element is not restarted, and the
 // fade its CSS gives it.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { lookAt } from "../src/stage-look.js";
-import { StageLayer } from "../src/stage.js";
-import type { BackdropView, StageLife, StageView } from "../src/stage.js";
-import type { Level } from "../src/motion.js";
+import { readFileSync } from "node:fs";
+import { lookAt } from "../player/src/stage-look.js";
+import { StageLayer } from "../player/src/stage.js";
+import type { BackdropView, StageLife, StageView } from "../player/src/stage.js";
+import type { Level } from "../player/src/motion.js";
 
 const T0 = Date.parse("2026-03-14T21:10:30Z");
 const LOOKS = ["particles", "glows"];
@@ -185,8 +184,7 @@ describe("each stage layer through each change", () => {
 });
 
 const css = ["stage.css", "stage-looks.css", "stage-backdrop.css"]
-  // A path, not a URL: under happy-dom `URL` is the page's, which node:fs does not take.
-  .map((f) => readFileSync(join(import.meta.dirname, "../src", f), "utf8"))
+  .map((f) => readFileSync(`${import.meta.dirname}/../player/src/${f}`, "utf8"))
   .join("\n")
   .replace(/\/\*[\s\S]*?\*\//g, "");
 
