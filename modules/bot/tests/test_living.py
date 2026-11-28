@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 from conftest import Env
-from living_world import HOLDER_DISCORD_ID, World, item, raw, text, world
+from living_world import HOLDER_DISCORD_ID, HOST, World, item, raw, text, world
 
 from canccu_bot.guild import unbind
 
@@ -253,3 +253,14 @@ async def test_the_living_messages_go_with_the_binding(w: World) -> None:
     await w.editor.tick()
     await unbind(w.d, "ev-a", "unbound", "u_org")
     assert await w.env.fetch("ev-a", "SELECT 1 FROM bot_posts") == []
+
+
+async def test_the_boards_items_go_through_the_guard(w: World) -> None:
+    said = "@everyone https://evil.example.net/x"
+    w.agenda.current = [item(said, "2026-11-27T09:00:00Z", "www.bad.test")]
+    w.agenda.next = [item("Match 2", "2026-11-27T10:30:00Z", f"https://{HOST}/agenda/ {said}")]
+    await w.editor.tick()
+    [board] = w.board()
+    assert "evil.example.net" not in raw(board) and "bad.test" not in raw(board)
+    assert f"https://{HOST}/agenda/" in raw(board)  # the event's own link stays
+    assert board["allowed_mentions"] == {"parse": []}
