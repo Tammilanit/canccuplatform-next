@@ -14,7 +14,7 @@ export const GROUPS = [
   "screen-studio",
   "moments",
   "pizza",
-  // The bot's one page so far: the bind's result on the sign-in host (#761).
+  // The bot's pages: the Discord page (#765) and the bind's result on the sign-in host (#761).
   "bot",
   // Not a surface: the dev server's demo content, seeded as setup/deploy does and then shot (#715).
   "dev-seed",
@@ -39,6 +39,7 @@ const PAGE_GROUPS = [
   ["/pizza/", "pizza"],
   ["/screen/", "screens"],
   ["/api/bot/", "bot"],
+  ["/bot/", "bot"],
 ];
 
 /** The group of a shot, from the path of the page it opens. */

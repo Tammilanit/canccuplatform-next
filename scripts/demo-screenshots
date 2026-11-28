@@ -88,7 +88,7 @@ if [ "$dry" = 1 ]; then
     for part in "${SEEDS[@]}"; do echo "  $part${flag:+ $flag}"; done
     printf '%s\n' "$listed"
   fi
-  echo "then, after scripts/demo-screenshots-front.sql seeds people and three more events:"
+  echo "then, after scripts/demo-screenshots-front.sql seeds people, three more events and a Discord server:"
   exec node scripts/demo-screenshots-front.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT"
 fi
 
@@ -168,8 +168,21 @@ fi
 if ! takes demo-screenshots-front.mjs '\.png '; then exit "$status"; fi
 # The second pass needs people, a session without a role and events before, after and away from
 # their venue, which no API of the CI stack makes; the first pass shows People with nobody else.
+# The Discord page's bound views (#765) need a guild the shared bot is in: one the fake Discord
+# makes now, after the bot identified, so the bot never leaves it as a guild no event chose. Its
+# own role lacks Pin messages, so the check has gaps to show.
+make_guild='import json, urllib.request as u
+body = {"name": "Demo Community", "application_id": "100000000000000002",
+        "bot_permissions": 268520464, "channels": ["general"]}
+ask = u.Request("http://127.0.0.1:8080/_fake/guilds", json.dumps(body).encode(),
+                {"content-type": "application/json"})
+print(json.load(u.urlopen(ask))["guild_id"])'
+if ! bot_guild=$("${COMPOSE[@]}" exec -T fake-discord python -I -c "$make_guild"); then
+  echo "error: the fake Discord made no guild for the Discord page's screenshots" >&2
+  exit 1
+fi
 if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=1 -q \
-  < scripts/demo-screenshots-front.sql; then
+  -v bot_guild="$bot_guild" < scripts/demo-screenshots-front.sql; then
   echo "error: could not seed the front-door screenshots" >&2
   exit 1
 fi
