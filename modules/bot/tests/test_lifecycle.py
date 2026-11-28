@@ -44,8 +44,11 @@ async def test_a_deleted_event_leaves_no_row_route_or_secret(env: Env) -> None:
         "INSERT INTO bot_purposes (purpose, target_id, updated_at)"
         " VALUES ('crew', '100000000000000777', now())",
     )
+    # How an earlier binding ended, which the Discord page shows, goes with the event too.
+    await env.keys.put("bot:ended:ev-a", '{"reason": "bot_removed"}', 60_000)
     await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-a"))
     await on_platform(env.deps, platform_event("tenants.tenant.deleted", tenant_id="ev-b"))
+    assert await env.keys.get("bot:ended:ev-a") is None
     for tenant in ("ev-a", "ev-b"):
         assert await env.fetch(tenant, "SELECT 1 FROM bot_bindings") == []
         assert await env.fetch(tenant, "SELECT 1 FROM bot_connections") == []

@@ -11,7 +11,7 @@ from canccu_kit import Event, is_tenant_id
 
 from . import commands, store
 from .deps import Deps
-from .guild import leave
+from .guild import ended_key, leave
 from .live import live_keys
 from .look import set_nickname
 from .router import Directory
@@ -43,7 +43,7 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
             await conn.execute(f"DELETE FROM {table}")
         for table in ("bot_guild_routes", "bot_application_routes", "bot_outbox_tenants"):
             await conn.execute(f"DELETE FROM {table} WHERE tenant_id = $1", tenant)
-    await d.keys.delete(*live_keys(tenant))
+    await d.keys.delete(*live_keys(tenant), ended_key(tenant))
     if bound is not None and token is not None:
         await leave(d, token, bound["application_id"], bound["guild_id"])
 

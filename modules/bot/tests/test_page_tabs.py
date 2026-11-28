@@ -10,6 +10,7 @@ from canccu_kit.page_check import page_problems
 from conftest import SHARED_ID, Env
 from test_purposes import EVERYDAY, MANAGER, put, server
 
+from canccu_bot.commands import COMMANDS
 from canccu_bot.perms import PIN_MESSAGES
 
 
@@ -86,6 +87,7 @@ async def test_a_gap_the_bot_fixes_itself_has_fix_it(env: Env) -> None:
 
 
 async def test_commands_lists_what_is_always_on_and_why(env: Env) -> None:
+    env.deps.commands = COMMANDS
     await server(env, permissions=EVERYDAY)
     env.contexts["ev-a"]["flags"] = {"pizza.enabled": True, "screen.photos": False}
     headers = env.rights.sign_in(
@@ -107,6 +109,7 @@ async def test_commands_lists_what_is_always_on_and_why(env: Env) -> None:
 
 
 async def test_without_the_flags_right_the_switch_is_a_word(env: Env) -> None:
+    env.deps.commands = COMMANDS
     await server(env, permissions=EVERYDAY)
     env.contexts["ev-a"]["flags"] = {"pizza.enabled": True}
     r = await page(env, "/commands")

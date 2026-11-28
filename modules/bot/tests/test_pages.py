@@ -5,6 +5,7 @@ the page under /bot/ and strips the prefix, so the paths here are the module's o
 
 from __future__ import annotations
 
+import html
 import json
 from typing import Any
 
@@ -20,6 +21,11 @@ OWN = "100000000000000077"
 async def page(env: Env, path: str, headers: dict[str, str] | None = None) -> Any:
     async with env.client() as c:
         return await c.get(path, headers=headers or env.admin())
+
+
+def words(r: Any) -> str:
+    """The page's text as read: the markup escapes an apostrophe."""
+    return str(html.unescape(r.text))
 
 
 async def ready(env: Env, app_id: str = SHARED_ID, **status: Any) -> None:
@@ -54,7 +60,7 @@ async def test_an_unbound_event_shows_the_guided_setup(env: Env) -> None:
     text = r.text
     for step in ("Choose the bot", "Add it to your server", "Channels and roles", "Check"):
         assert step in text
-    assert "The platform's bot" in text and "Your own Discord application" in text
+    assert "The platform's bot" in words(r) and "Your own Discord application" in text
     # Each write goes through the contract's API, the one place its rights and audit live.
     assert 'data-bot-api="/api/bot/guild/bind"' in text
     assert 'data-bot-api="/api/bot/connection"' in text
@@ -99,7 +105,7 @@ async def test_a_bound_event_shows_six_cards_and_four_tabs(env: Env) -> None:
     assert page_problems(r.text) == []
     for card in ("Bot", "Server", "Commands", "Activity", "Posts and DMs", "Check"):
         assert f'<p class="canccu-overline">{card}</p>' in r.text
-    assert "The platform's bot · Ready" in r.text and "Demo Community" in r.text
+    assert "The platform's bot · Ready" in words(r) and "Demo Community" in r.text
     tabs = r.text.split('class="canccu-tabs"', 1)[1].split("</nav>", 1)[0]
     assert [t in tabs for t in ("Overview", "Channels", "Commands", "Check")] == [True] * 4
     assert "Roles" not in tabs  # rights from roles wait for #763
