@@ -112,6 +112,8 @@ class Session:
     seq: int = 0
     buffer: list[dict[str, Any]] = field(default_factory=list)
     conn: Transport | None = None
+    status: str = "online"
+    """The presence it identified with; an `invisible` one leaves its bot user offline."""
 
 
 @dataclass
@@ -157,6 +159,8 @@ class FakeGateway:
                     session = await self._identify(conn, d)
                 elif op == 6 and isinstance(d, dict):
                     session = await self._resume(conn, d)
+                elif op == 8 and isinstance(d, dict) and session is not None:
+                    await self._members(session, d)
         except GatewayClosed:
             pass
         finally:
@@ -173,7 +177,9 @@ class FakeGateway:
             await conn.close(4014, "Disallowed intent(s).")
             return None
         shard = list(d.get("shard") or [0, 1])
-        session = Session(secrets.token_hex(16), app.id, intents, shard, conn=conn)
+        presence = d.get("presence") if isinstance(d.get("presence"), dict) else {}
+        status = str(presence.get("status") or "online")
+        session = Session(secrets.token_hex(16), app.id, intents, shard, conn=conn, status=status)
         self.sessions[session.id] = session
         ours = [g for g in self.guilds().values() if app.id in g.bots]
         await self._send(
@@ -206,6 +212,45 @@ class FakeGateway:
                 await self._raw(conn, session.application_id, missed)
         await self._send(session, "RESUMED", {})
         return session
+
+    async def _members(self, session: Session, d: dict[str, Any]) -> None:
+        """Op 8 by `user_ids`: the guild's members among them in one chunk. Only bot users have a
+        presence here, folded from their application's live sessions as Discord folds a user's
+        clients: online while any of them is not invisible."""
+        guild = self.guilds().get(str(d.get("guild_id")))
+        if guild is None:
+            return
+        wanted = d.get("user_ids") or []
+        wanted = [str(u) for u in ([wanted] if isinstance(wanted, str | int) else wanted)]
+        bots = {a.bot_user_id: a for a in self.applications().values() if a.id in guild.bots}
+        members: list[dict[str, Any]] = []
+        presences: list[dict[str, Any]] = []
+        for user_id in wanted:
+            app = bots.get(user_id)
+            if app is not None:
+                user = {"id": user_id, "username": app.name, "bot": True}
+                members.append({"user": user, "roles": list(guild.bot_roles.get(app.id, []))})
+                if d.get("presences") and self._shown(app.id):
+                    presences.append({"user": {"id": user_id}, "status": "online"})
+            elif user_id in guild.members:
+                members.append(guild.members[user_id])
+        found = {str(m["user"]["id"]) for m in members}
+        chunk = {
+            "guild_id": guild.id,
+            "members": members,
+            "chunk_index": 0,
+            "chunk_count": 1,
+            "not_found": [u for u in wanted if u not in found],
+        }
+        if d.get("presences"):
+            chunk["presences"] = presences
+        await self._send(session, "GUILD_MEMBERS_CHUNK", chunk)
+
+    def _shown(self, application_id: str) -> bool:
+        return any(
+            s.application_id == application_id and s.conn is not None and s.status != "invisible"
+            for s in self.sessions.values()
+        )
 
     async def dispatch(
         self, application_id: str, event: str, data: dict[str, Any], *, guild_id: str | None = None
