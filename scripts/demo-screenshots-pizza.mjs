@@ -16,6 +16,7 @@ import {
   expect,
 } from "../modules/screen/test/stack/client.mjs";
 import { roomReady } from "../modules/screen/test/stack/food.mjs";
+import { clearAir } from "./demo-screenshots-moments.mjs";
 import { PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 import { BOX, EVEN, ORDER, PAID, PIZZERIA, PLAYERS, RECEIPT, SHOTS } from "./demo-screenshots-pizza-list.mjs";
 
@@ -178,6 +179,8 @@ export async function pizzaShots({ shot, fail }) {
   let receipt = "";
   let even = "";
   try {
+    // The order's moments take main's hero in turn: nothing an earlier group left may hold it (#845).
+    await clearAir();
     await orderingOpen();
     await readerOn();
     // The screens' default zones (the main one shows the food box) exist once Studio reads them.

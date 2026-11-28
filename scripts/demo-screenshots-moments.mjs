@@ -79,8 +79,51 @@ export async function placed(id, zones) {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error(
-    `Screen did not place ${id} on ${zones.join(", ")} within ${PLACED_MS / 1000} s`,
+    `Screen did not place ${id} on ${zones.join(", ")} within ${PLACED_MS / 1000} s${await heldBy(zones)}`,
   );
+}
+
+/** What holds each of `zones` in Moments' queue, so a wait that ran out names its cause. */
+async function heldBy(zones) {
+  const { body } = await moments("GET", "/api/moments/moments");
+  const held = zones.flatMap((zone) => {
+    const holder = body?.queues?.find((q) => q.zone_key === zone)?.holder;
+    if (!holder) return [];
+    const m = body?.moments?.find((x) => x.id === holder);
+    return [
+      `${zone} held by ${m ? `"${m.content?.title ?? m.kind}" (${m.class})` : holder}`,
+    ];
+  });
+  return held.length > 0 ? `: ${held.join(", ")}` : "";
+}
+
+/**
+ * Nothing on air, for shots that wait for what they start to take a zone: a moment an earlier
+ * group left behind (an end it lost, #845) would hold the hero for its whole time. Each ends as
+ * the crew ends it: an emergency through Emergency, a rule's moment zone by zone.
+ */
+export async function clearAir() {
+  const { body } = await moments("GET", "/api/moments/moments");
+  for (const m of body?.moments ?? []) {
+    const end = `/api/moments/moments/${m.id}/end`;
+    const calls =
+      m.class === "emergency"
+        ? [["/api/moments/emergency/end", { all_clear: false }]]
+        : m.origin === "crew"
+          ? [[end, {}]]
+          : (m.zones.length > 0 ? m.zones : body.zones).map((zone) => [
+              end,
+              { zone_key: zone },
+            ]);
+    for (const [path, call] of calls) {
+      const r = await moments("POST", path, call);
+      // 409: it ended meanwhile, or with its zone before.
+      if (r.status >= 300 && r.status !== 409)
+        throw new Error(
+          `ending ${m.id}: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+        );
+    }
+  }
 }
 
 /** The moment `id` waits in `zone`'s queue (#777): another holds its hero. */

@@ -12,7 +12,12 @@
 // portrait entrance, R17 Doors open), at 1080p and 4K, with a crew photo spotlight.
 import { readFileSync } from "node:fs";
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
-import { image, moments, placed } from "./demo-screenshots-moments.mjs";
+import {
+  clearAir,
+  image,
+  moments,
+  placed,
+} from "./demo-screenshots-moments.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 import { placeStories } from "./demo-screenshots-fire-inputs.mjs";
 
@@ -598,6 +603,8 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
   const add = made(demo);
   let screenOn = null;
   try {
+    // Each round waits for main's hero: nothing an earlier group left may hold it (#845).
+    await clearAir();
     const paired = await demo.pair("Storyboard shots main", "main");
     const sse = demo.stream(paired.cookie);
     screenOn = { paired, sse };

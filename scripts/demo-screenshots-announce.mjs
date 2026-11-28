@@ -148,6 +148,20 @@ export function announceListed(at) {
   );
 }
 
+/** Withdrawn, or the run fails here: one left on air holds its zones' hero for its 15 minutes, and
+ * the shots after it wait on a zone it holds (#845). */
+async function withdraw(id) {
+  const r = await moments(
+    "POST",
+    `/api/moments/announcements/${id}/withdraw`,
+    {},
+  );
+  if (r.status !== 200)
+    throw new Error(
+      `withdrawing ${id}: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+    );
+}
+
 async function send(body) {
   const r = await moments("POST", "/api/moments/announcements", body);
   if (r.status !== 201)
@@ -243,16 +257,14 @@ export async function announceShots({ demo, shot, fail }) {
         },
       ],
     ]) {
-      for (const id of sent.splice(0))
-        await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+      for (const id of sent.splice(0)) await withdraw(id);
       sent.push(await send({ ...body, duration_seconds: 900 }));
       for (const [name, path, viewport, o] of list)
         await shot(name, path, viewport, SESSION, o);
     }
     for (const [name, path, viewport, o] of LEVEL_PAGES)
       await shot(name, path, viewport, SESSION, o);
-    for (const id of sent.splice(0))
-      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const id of sent.splice(0)) await withdraw(id);
     for (const body of LEVELS)
       sent.push(
         await send({
@@ -264,16 +276,14 @@ export async function announceShots({ demo, shot, fail }) {
     for (const [name, path, viewport, o] of FRONT_PAGES)
       await shot(name, path, viewport, SESSION, o);
     const last = sent.splice(0);
-    for (const id of last)
-      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const id of last) await withdraw(id);
     for (const [name, path, viewport, o] of WITHDRAWN_PAGES)
       await shot(name, `${path}${last[0]}`, viewport, SESSION, o);
   } catch (err) {
     fail(`announce: ${firstLine(err)}`);
   } finally {
     try {
-      for (const id of sent)
-        await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+      for (const id of sent) await withdraw(id);
       if (hidden) await saveZone(demo, "entrance", { regions: hidden.regions });
       for (const { paired, sse } of screens) {
         sse.close();
