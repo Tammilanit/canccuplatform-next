@@ -34,10 +34,11 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import commands, lifecycle, posts, store
+from . import commands, food, lifecycle, posts, run_of_show, store
 from .access import SeriesReader, TenantsAudit, UsersReader
 from .acting import ActingClient, module_url
 from .app import create_app
+from .board import AgendaNow
 from .checks import discord_checks
 from .client import DiscordClient
 from .components import ComponentKeys
@@ -45,9 +46,11 @@ from .config import DiscordConfig, Hosts, discord_config
 from .db import Db
 from .deps import Deps
 from .discord_api import DiscordApi
+from .dms import Dms
 from .feeds import Feeds
 from .interactions import Interactions
 from .lease import ValkeyKeys
+from .living import Editor
 from .look import EventLook
 from .pool import Pool
 from .router import FEEDS, INTENTS, Directory, Router
@@ -126,6 +129,7 @@ async def serve() -> None:
         look=EventLook(tenants_url, module_url("theming"), identity, outside),
         http=outside,
         settings=SettingsClient(AdminClient(config.admin_url), config.module, service=identity),
+        agenda=AgendaNow(module_url("agenda"), identity, outside),
     )
     directory = Directory(d)
 
@@ -148,6 +152,18 @@ async def serve() -> None:
     bus.subscribe_tenants(["tenants"], on_tenant)
     bus.subscribe_tenants(["admin"], d.settings.handle_event)
     bus.subscribe_tenants(["moments"], on_moments)
+    dms = Dms(d)
+
+    async def on_agenda(event: Event) -> None:
+        await run_of_show.on_agenda(d, event)
+
+    async def on_pizza(event: Event) -> None:
+        await food.on_pizza(d, event)
+
+    # One subscription each, so a slow one never holds the others' events.
+    bus.subscribe_tenants(["agenda"], on_agenda)
+    bus.subscribe_tenants(["pizza"], on_pizza)
+    bus.subscribe_tenants(["notify"], dms.on_notify)
 
     events = ClientEvents(bus, lambda app_id: store.tenants_served(db, app_id))
     reports: set[asyncio.Task[None]] = set()
@@ -171,6 +187,7 @@ async def serve() -> None:
         interactions = Interactions(d, application_id, directory.context, lambda: holder[0].rest)
         # The feeds and the guild's channels, routed and gated by their flags (router.py).
         feeds = Feeds(d, application_id, directory)
+        editor = Editor(d, application_id, directory)
         handlers = {key: feeds.on for key in (*set(FEEDS.values()), "guild")}
         router = Router(
             d, application_id, directory, handlers={**handlers, "interaction": interactions}
@@ -179,9 +196,16 @@ async def serve() -> None:
         def stop() -> None:
             router.close()
             interactions.close()
-            task = asyncio.create_task(feeds.close())
-            closing.add(task)
-            task.add_done_callback(closing.discard)
+            for task in (asyncio.create_task(feeds.close()), asyncio.create_task(editor.close())):
+                closing.add(task)
+                task.add_done_callback(closing.discard)
+
+        async def dispatch(event: str, data: dict[str, Any]) -> None:
+            await router.dispatch(event, data)
+            try:
+                await editor.on_gateway(event, data)
+            except Exception:
+                log.exception("checking the living messages after %s failed", event)
 
         client = DiscordClient(
             application_id,
@@ -191,7 +215,7 @@ async def serve() -> None:
             connector=connect_gateway,
             intents=INTENTS,
             on_status=on_status,
-            on_dispatch=router.dispatch,
+            on_dispatch=dispatch,
             on_stop=stop,
         )
         holder.append(client)
@@ -200,6 +224,9 @@ async def serve() -> None:
         feeds.request_members = client.request_members
         feeds.in_guild = router.guilds.__contains__
         feeds.start()
+        editor.rest = client.rest
+        editor.ready = lambda: client.status["status"] == "ready"
+        editor.start()
         return client
 
     async def wanted() -> dict[str, str]:
@@ -215,6 +242,7 @@ async def serve() -> None:
         wanted=wanted,
         open_client=open_client,
     )
+    d.held = pool.client
     running = asyncio.create_task(pool.run())
     sending = asyncio.create_task(d.outbox.run())  # what a write's own flush left
     registering = asyncio.create_task(commands.register_all(d))
@@ -247,6 +275,7 @@ async def serve() -> None:
     finally:
         await pool.close()  # hands the leases over at once instead of after 30 s
         await asyncio.gather(*closing, return_exceptions=True)  # the feeds' last write behind
+        await dms.close()
         running.cancel()
         sending.cancel()
         registering.cancel()

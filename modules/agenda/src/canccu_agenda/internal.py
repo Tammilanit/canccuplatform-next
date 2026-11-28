@@ -40,14 +40,18 @@ async def all_items(request: Request) -> Response:
     return JSONResponse({"agenda_version": state["agenda_version"], "items": items})
 
 
+NOW_READERS = frozenset({"screen", "bot"})
+"""The event's screens and its Discord board (#852): what the hall and the server show agree."""
+
+
 async def screen_now(request: Request) -> Response:
-    """Now and next as a guest sees them, for the event's screens whatever the info-page mode
-    (contracts/agenda.md, Reading): the screen module's container is no venue address and has no
-    session, so the guest read refuses it in `venue_only` and `sign_in`. Skipping that gate is
-    safe only because the answer is `public` items alone, what a guest gets where the gate is open.
-    """
+    """Now and next as a guest sees them, for the event's screens and its Discord board whatever
+    the info-page mode (contracts/agenda.md, Reading): neither module's container is a venue
+    address or has a session, so the guest read refuses them in `venue_only` and `sign_in`.
+    Skipping that gate is safe only because the answer is `public` items alone, what a guest gets
+    where the gate is open."""
     caller = request.state.service
-    if caller != "screen":
+    if caller not in NOW_READERS:
         raise ServiceForbidden(f"module {caller} may not read the screens' now and next")
     tenant_id = await _known_event(request)
     zone = request.query_params.get("zone")
