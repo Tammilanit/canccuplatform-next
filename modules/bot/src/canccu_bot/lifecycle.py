@@ -28,7 +28,13 @@ async def tenant_deleted(d: Deps, tenant: str) -> None:
         if bound is not None:
             app_id = bound["application_id"]
             token = await store.bot_token(d.shared, d.secrets, conn, tenant, app_id)
-        for table in ("bot_bindings", "bot_connections", "bot_provider_secrets", "bot_outbox"):
+        for table in (
+            "bot_bindings",
+            "bot_purposes",
+            "bot_connections",
+            "bot_provider_secrets",
+            "bot_outbox",
+        ):
             await conn.execute(f"DELETE FROM {table}")
         for table in ("bot_guild_routes", "bot_application_routes", "bot_outbox_tenants"):
             await conn.execute(f"DELETE FROM {table} WHERE tenant_id = $1", tenant)
