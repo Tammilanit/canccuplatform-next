@@ -176,10 +176,6 @@ export function timelineFields(
       const place = places[n];
       if (place === undefined) return [];
       const startsText = o.time(i.starts_at);
-      // The block is at least as wide as its label's own width, and the label stays inside it
-      // (wrapping, or ending in an ellipsis): a short item still says its name, in its block.
-      const first = Math.min(r.col, r.labelCol);
-      const last = Math.max(r.last, r.labelLast);
       return [
         {
           name: i.title,
@@ -190,11 +186,13 @@ export function timelineFields(
           starts_text: startsText,
           range_text:
             i.ends_at === null ? startsText : `${startsText ?? ""}–${o.time(i.ends_at) ?? ""}`,
-          col: first,
-          cols: last - first + 1,
+          // The block is the item's real span: it shows when the item runs. The label has its own
+          // room (label_col, label_cols), which may run past a short block but never into another.
+          col: r.col,
+          cols: r.last - r.col + 1,
           row: place.lane,
-          label_col: first,
-          label_cols: last - first + 1,
+          label_col: place.labelCol,
+          label_cols: place.labelCols,
           align: place.labelCol < r.col ? "end" : "start",
         },
       ];

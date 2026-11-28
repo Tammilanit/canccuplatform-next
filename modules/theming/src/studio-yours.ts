@@ -329,7 +329,7 @@ export function yoursView(state: StudioState, draft: DraftRow, info: LogoInfo): 
           roundnessOf(brand, draft),
         ),
       )}
-      ${backgroundSection(brand)}
+      ${backgroundSection(brand, colors)}
     </form>
     ${ownFont(draft)}
     <div data-refresh="check">${checkView(state.problems, coloursDetails(brand, colors))}</div>

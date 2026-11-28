@@ -109,6 +109,10 @@
     /* No opacity: fading the text drops it under the 4.5:1 the check holds it to. */
     color: inherit;
     white-space: nowrap;
+    /* Inside the label's room: a range wider than it ends in an ellipsis, never over a neighbour. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* The sheet's blocks say what and when; the run of show beside them says where. */

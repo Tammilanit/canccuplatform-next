@@ -7,7 +7,7 @@ import { attrs, html, icon } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { LOOKS } from "./brand.js";
 import type { Backdrop, Brand } from "./brand.js";
-import { BOX_OPACITY } from "./contrast.js";
+import { boxOpacityFor } from "./contrast.js";
 
 export const field = (label: string, body: Html, hint = ""): Html =>
   html`<fieldset class="canccu-field canccu-studio-choice">
@@ -46,22 +46,28 @@ export const seeThrough = (opacity: number): string =>
   opacity >= 1 ? "Solid" : `${Math.round((1 - opacity) * 100)}% see-through`;
 
 /** The screen's boxes over the background (D11): the server raises a value the colours cannot take. */
-function boxSlider(brand: Brand | undefined): Html {
-  const value = brand?.box_opacity ?? BOX_OPACITY;
+function boxSlider(brand: Brand | undefined, colors: Readonly<Record<string, string>>): Html {
+  // As the screens draw it: raised to what the colours allow (a part the page redraws after a save).
+  const value = boxOpacityFor(colors, brand?.box_opacity);
   // prettier-ignore
   const range = html`<input${attrs({ id: "canccu-studio-box-opacity", class: "canccu-studio-control__range", type: "range", name: "box_opacity", min: 0.5, max: 1, step: 0.05, value })}>`;
-  return field(
-    "Box transparency",
-    html`<span class="canccu-studio-control__slide"
-      >${range}<output class="canccu-small" for="canccu-studio-box-opacity"
-        >${seeThrough(value)}</output
-      ></span
-    >`,
-    "How much of the background shows through the screen's boxes. Text always stays readable: where your colours need it, the boxes stay more solid.",
-  );
+  return html`<div data-refresh="box-opacity">
+    ${field(
+      "Box transparency",
+      html`<span class="canccu-studio-control__slide"
+        >${range}<output class="canccu-small" for="canccu-studio-box-opacity"
+          >${seeThrough(value)}</output
+        ></span
+      >`,
+      "How much of the background shows through the screen's boxes. Text always stays readable: where your colours need it, the boxes stay more solid.",
+    )}
+  </div>`;
 }
 
-export function backgroundSection(brand: Brand | undefined): Html {
+export function backgroundSection(
+  brand: Brand | undefined,
+  colors: Readonly<Record<string, string>>,
+): Html {
   const b: Backdrop = brand?.backdrop ?? {};
   const looks = new Set(b.looks ?? LOOKS);
   // Prettier would close these lone inputs with an end tag repeating the attributes.
@@ -75,7 +81,7 @@ export function backgroundSection(brand: Brand | undefined): Html {
     "Screen background",
     "Alive, never busy: it changes slowly between the looks you leave on, at random, with a long fade every few minutes.",
     html`${field("Looks in the cycle", html`<div class="canccu-studio-looks">${tiles}</div>`)}
-      ${switches}${image}${boxSlider(brand)}
+      ${switches}${image}${boxSlider(brand, colors)}
       <p class="canccu-small canccu-muted canccu-studio-note">
         ${icon("info")}<span
           >How much the screens move is set for each screen zone in

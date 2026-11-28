@@ -93,8 +93,8 @@ describe("the coming hours (`agenda_timeline`)", () => {
       row: 2,
       align: "start",
     });
-    // Begun before the line: it starts at the line's edge, in the first lane, as wide as its label.
-    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 5, row: 1 });
+    // Begun before the line: it starts at the line's edge, in the first lane.
+    expect((view.items as Record<string, unknown>[])[0]).toMatchObject({ col: 1, cols: 3, row: 1 });
     expect([view.from_text, view.to_text]).toEqual(["18:00", "00:00"]);
   });
 
@@ -143,9 +143,8 @@ describe("the coming hours (`agenda_timeline`)", () => {
       align: string;
     }[];
     expect(items.map((i) => i.row)).toEqual([1, 2, 3, 1]);
-    // No end: its start alone, in a box as wide as its label needs.
-    expect(items[3]).toMatchObject({ range_text: "21:30" });
-    expect(items[3]?.cols).toBeGreaterThan(1);
+    // No end: one column (its real span, however wide its label's room) and its start alone.
+    expect(items[3]).toMatchObject({ cols: 1, range_text: "21:30" });
   });
 
   it("reaches a late block's label back from the line's end", () => {
@@ -161,12 +160,10 @@ describe("the coming hours (`agenda_timeline`)", () => {
       label_col: number;
       label_cols: number;
     }[];
-    // The box reaches back from the line's end with its label, and the label is the box's own.
-    expect(late).toMatchObject({ align: "end" });
-    expect((late?.col ?? 0) + (late?.cols ?? 0) - 1).toBe(36);
-    expect(late?.col).toBeLessThan(35);
-    expect(late?.label_col).toBe(late?.col);
-    expect(late?.label_cols).toBe(late?.cols);
+    // The block stays at the item's real start; only its label reaches back from the line's end.
+    expect(late).toMatchObject({ col: 35, cols: 1, align: "end" });
+    expect((late?.label_col ?? 0) + (late?.label_cols ?? 0) - 1).toBe(36);
+    expect(late?.label_col).toBeLessThan(35);
   });
 
   it("keeps every label clear of the other blocks of its lane, and leaves out one with no room", () => {
