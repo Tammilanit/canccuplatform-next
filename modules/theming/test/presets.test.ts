@@ -72,7 +72,7 @@ describe("the presets", () => {
     expect(synthwave?.manifest.brand).toMatchObject({
       font_pair: "audiowide-titillium",
       roundness: "soft",
-      backdrop: { looks: ["glows", "gradient"] },
+      backdrop: { looks: ["glows", "gradient"], game_art: false },
       box_opacity: 0.8,
     });
     expect(synthwave?.manifest.tokens).toMatchObject({ motion_style: { pack: "standard" } });

@@ -28,7 +28,6 @@
   width: 52vh;
   height: 52vh;
   border-radius: 50%;
-  opacity: 0.92;
   background: linear-gradient(180deg, var(--canccu-color-accent), var(--canccu-color-primary));
   -webkit-mask: linear-gradient(
     180deg,
@@ -63,7 +62,7 @@
   left: -30vw;
   right: -30vw;
   height: 90vh;
-  opacity: 0.7;
+  opacity: 0.85;
   transform: perspective(60vh) rotateX(62deg);
   transform-origin: 50% 0;
   -webkit-mask: linear-gradient(180deg, transparent 0, #000 14%);
@@ -138,6 +137,13 @@
   font-family: var(--canccu-font-heading);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 18px color-mix(in srgb, var(--canccu-color-accent) 45%, transparent);
+}
+
+/* Titillium's text reaches past its line boxes, so a statistic wrapped to a second row of a
+   Dashboard box met the first one (the stack's check that statistics never run together): the rows
+   stand further apart. */
+.canccu-surface--screen .canccu-widget--stats ul {
+  row-gap: calc(2.4 * var(--canccu-u));
 }
 
 .canccu-surface--screen .canccu-widget--ticker {

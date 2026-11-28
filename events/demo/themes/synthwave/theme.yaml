@@ -27,8 +27,10 @@ brand:
   scheme: dark
   font_pair: audiowide-titillium
   roundness: soft
+  # The game's art left off: it would cover the sun and the grid, which the PO asked to see (D13).
   backdrop:
     looks: [glows, gradient]
+    game_art: false
   box_opacity: 0.8
 images:
   logo: images/logo.svg
