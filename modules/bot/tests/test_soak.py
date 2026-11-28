@@ -109,8 +109,8 @@ async def test_2000_members_and_a_burst_of_updates_are_counted_right(env: Env) -
             statuses.count("idle"),
             statuses.count("dnd"),
         )
-        playing = sum(1 for _, p in expected.values() if p)
-        assert f'"players": {playing}' in row["activities"]
+        players = sum(1 for _, p in expected.values() if p)
+        assert f'"players": {players}' in row["activities"]
     finally:
         await client.stop()
         router.close()
