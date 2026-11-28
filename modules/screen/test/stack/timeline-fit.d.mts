@@ -7,4 +7,5 @@ interface Extent {
 }
 export function touchingNext(boxes: Extent[], gap?: number): number[];
 export function outsideBlock(pairs: { name: string; block: Extent; text: Extent }[]): string[];
+export function timelineComposed(state: unknown): boolean;
 export function timelineFits(page: unknown): Promise<void>;

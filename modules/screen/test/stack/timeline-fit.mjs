@@ -27,8 +27,37 @@ export function outsideBlock(pairs) {
  */
 const TURN_WAIT_MS = 120_000;
 
-/** Run on the page being checked: it waits for the coming hours' own turn, then looks at them. */
+/**
+ * Whether `state` gives the coming hours a turn in a hero's rotation: a hero whose `order` points
+ * at an `agenda_timeline` with something in it. Late at night the window to midnight is empty,
+ * compose leaves the box out of the order (src/compose/build.ts, skip_empty), and there is
+ * nothing to wait for.
+ */
+export function timelineComposed(state) {
+  return (state?.regions ?? []).some(
+    (r) =>
+      r.role === "hero" &&
+      (r.order ?? []).some((i) => {
+        const w = r.widgets?.[i];
+        return w?.widget === "agenda_timeline" && w.view?.empty !== true;
+      }),
+  );
+}
+
+/**
+ * Run on the page being checked: when compose gave the coming hours a turn, it waits for that
+ * turn, then looks at them. The state is fetched from the page, so a view's handed state counts.
+ */
 export async function timelineFits(page) {
+  const state = await page.evaluate(async (path) => {
+    const r = await fetch(path, { credentials: "same-origin" });
+    return r.ok ? r.json() : null;
+  }, "/api/screen/device/state");
+  if (state === null) throw new Error("the screen's state could not be read for the coming hours");
+  if (!timelineComposed(state)) {
+    console.log("no timeline composed");
+    return;
+  }
   await page
     .waitForSelector(".canccu-widget--agenda_timeline .canccu-widget__tick", {
       timeout: TURN_WAIT_MS,
