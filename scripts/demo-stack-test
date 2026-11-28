@@ -76,6 +76,7 @@ TESTS=(
   "a final's card holds the hero its floor while Pizza is here waits in the rail, then comes back with its time left"
   "the bot's shared client is ready on the fake Discord, and the event's connection names it"
   "the Discord page answers under /bot/, its bare prefix redirects and the bot's own paths stay hidden"
+  "a pizza and an agenda event reach the fake Discord as a food order's message and an edited board"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -83,7 +84,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments platform "pizza notify" "pizza screen notify" platform moments bot bot
+  moments moments platform "pizza notify" "pizza screen notify" platform moments bot bot bot
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.

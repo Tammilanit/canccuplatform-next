@@ -38,16 +38,16 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 
 | Type | Meaning | Consumers |
 |---|---|---|
-| `agenda.item.added` | An item was added | screen, notify (quiet hours), moments (scenes) |
-| `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours), moments (scenes) |
-| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)), moments (scenes) |
-| `agenda.item.cancelled` | An item was cancelled | screen, notify, moments (scenes) |
-| `agenda.item.removed` | An item was removed | screen, notify (quiet hours), moments (scenes) |
+| `agenda.item.added` | An item was added | screen, notify (quiet hours), moments (scenes) |, bot (the now-and-next board, #852)
+| `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours), moments (scenes) |, bot (the now-and-next board, #852)
+| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)), moments (scenes) |, bot (the now-and-next board, #852)
+| `agenda.item.cancelled` | An item was cancelled | screen, notify, moments (scenes) |, bot (the now-and-next board, #852)
+| `agenda.item.removed` | An item was removed | screen, notify (quiet hours), moments (scenes) |, bot (the now-and-next board, #852)
 | `agenda.item.announced` | An organiser announced an item now, with an optional message | notify (`schedule`), bot (a post in the event's channel, on `discord_channel`) |
-| `agenda.item.started` | An item's start was reached | screen, moments |
-| `agenda.item.ended` | An item's end was reached | screen |
+| `agenda.item.started` | An item's start was reached | screen, moments |, bot (the now-and-next board, #852)
+| `agenda.item.ended` | An item's end was reached | screen |, bot (the now-and-next board, #852)
 | `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, screen, notify |
-| `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours), moments (scenes) |
+| `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours), moments (scenes) |, bot (the now-and-next board, #852)
 | `agenda.kind.saved` | A kind of the event's kind list was added or changed. Audience: event-wide, `public` | screen, bot, notify (re-read items whose defaults changed) |
 | `agenda.kind.removed` | A kind was removed. Audience: event-wide, `public` | screen, bot |
 
@@ -191,7 +191,7 @@ An **Order**:
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
 | `pizza.order.opened` | A group order opened: people can add pizzas | event-wide, `public` | notify (`food`), screen, moments, bot (channel post) | `order` (Order), `actor_user_id` |
-| `pizza.order.closing` | The open order closes soon: the last call. Once per order, the pizza setting `last_call_minutes` (5 by default) before `closes_at`; not sent for an order closed earlier. Added for Moments' Pizza last call story (#602); the pizza module emits it from step 5 | event-wide, `public` | moments | `order` (Order), `closes_at` (string, time): when the order is due to close |
+| `pizza.order.closing` | The open order closes soon: the last call. Once per order, the pizza setting `last_call_minutes` (5 by default) before `closes_at`; not sent for an order closed earlier. Added for Moments' Pizza last call story (#602); the pizza module emits it from step 5 | event-wide, `public` | moments, bot (the food order's message, #852) | `order` (Order), `closes_at` (string, time): when the order is due to close |
 | `pizza.order.claimed` | Someone became the holder (a claim, or a take-over of an order nobody held) | event-wide, `public` | screen, bot | `order` (Order), `previous_holder` (Person or null), `actor_user_id` |
 | `pizza.order.released` | The holder let go of the order, an admin released it, or it timed out | event-wide, `public` | screen, bot | `order` (Order), `previous_holder` (Person), `reason` (string: `released`, `forced`, `timeout`), `actor_user_id` |
 | `pizza.order.closed` | No more pizzas: the holder calls the pizzeria | event-wide, `public` | notify (`food`), screen, moments, bot | `order` (Order), `actor_user_id` |
@@ -200,10 +200,10 @@ An **Order**:
 | `pizza.order.reverted` | A step was undone: placed back to closed, or arrived back to placed | event-wide, `public` | screen, bot | `order` (Order), `from_state` (string), `actor_user_id` |
 | `pizza.order.arrived` | The holder marked the pizzas arrived | personal (`user_ids`); `order` itself is event-wide, `public` | notify (`food`, personal part), screen, moments, bot | `order` (Order), `user_ids` (list of string), `people` (list of Person): everyone with a pizza in the order |
 | `pizza.order.cancelled` | The order was cancelled, also a stale one from an earlier day | event-wide, `public` (`order`); personal (`user_ids`, `people`): everyone with a pizza in it | screen, bot | `order` (Order), `reason` (string: `cancelled`, `stale`), `user_ids` (list of string), `people` (list of Person): everyone with a pizza in it, `actor_user_id` |
-| `pizza.item.added` | A person added a pizza to the open order | personal (`user_id`) | screen (counts) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id`; added: `order_seq` (integer), `by_owner` (boolean: the person did it themselves) |
-| `pizza.item.removed` | A pizza was taken out of the order, by its owner or the holder | personal (`user_id`) | screen (counts), notify (`food`: when someone else removed it) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id`; added: `order_seq` (integer), `by_owner` (boolean: the person did it themselves) |
-| `pizza.order.done` | Added (D3): everyone got theirs, the holder's Done, or the timer | event-wide, `public` | screen, moments | `order` (Order), `reason` (string: `handed_out`, `holder`, `timer`), `actor_user_id` |
-| `pizza.order.changed` | Added: the close time, note, pizzeria, estimate, call-in time or pickup was edited, or a privacy delete took the holder or the payer away (`changed`: `holder`, `payer`; actor null) | event-wide, `public` | screen | `order` (Order), `changed` (list of field names), `actor_user_id` |
+| `pizza.item.added` | A person added a pizza to the open order | personal (`user_id`) | screen (counts), bot (the order's pizza count, #852) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id`; added: `order_seq` (integer), `by_owner` (boolean: the person did it themselves) |
+| `pizza.item.removed` | A pizza was taken out of the order, by its owner or the holder | personal (`user_id`) | screen (counts), notify (`food`: when someone else removed it), bot (the order's pizza count, #852) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id`; added: `order_seq` (integer), `by_owner` (boolean: the person did it themselves) |
+| `pizza.order.done` | Added (D3): everyone got theirs, the holder's Done, or the timer | event-wide, `public` | screen, moments, bot (the food order's message, #852) | `order` (Order), `reason` (string: `handed_out`, `holder`, `timer`), `actor_user_id` |
+| `pizza.order.changed` | Added: the close time, note, pizzeria, estimate, call-in time or pickup was edited, or a privacy delete took the holder or the payer away (`changed`: `holder`, `payer`; actor null) | event-wide, `public` | screen, bot (the food order's message, #852) | `order` (Order), `changed` (list of field names), `actor_user_id` |
 | `pizza.item.changed` | Added: someone else changed a person's pizza (U14) | personal (`user_id`) | notify (`food`) | as `pizza.item.added` |
 | `pizza.share.ready` | Added (#703): the people in an order can settle their share; no amounts | personal (`user_ids`); `order` event-wide | notify (`food`) | `order` (Order), `user_ids` (list of string), `settle_to` (string: `payer`, `organiser`), `payer` (Person or null), `actor_user_id` |
 | `pizza.share.changed` | Added (#703): after that, amounts moved or whom or how they pay changed; no amounts or details | personal (`user_ids`); `order` event-wide | notify (`food`) | as `pizza.share.ready`, and `reason` (string: `amount`, `pay_to`) |

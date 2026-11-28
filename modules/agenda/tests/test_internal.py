@@ -85,7 +85,22 @@ async def test_screens_read_now_without_a_zone_and_in_every_status(env: Env) -> 
         assert [i["id"] for i in r.json()["next"]] == [cafe["id"]]
 
 
-async def test_now_is_for_the_screen_module_only(env: Env) -> None:
+async def test_the_bot_reads_the_same_now_and_next_for_its_board(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        show = await add(c, h, title="Show", starts_at=at(60))
+        await add(c, h, title="Brief", visibility="crew", starts_at=at(60))
+    env.contexts["ev-a"]["info_page_mode"] = "sign_in"
+    bot = ServiceIdentity("bot", KEY).headers("agenda")
+    async with env.internal() as c:
+        r = await c.get(NOW_URL, params={"tenant_id": "ev-a"}, headers=bot)
+        screen = SCREEN.headers("agenda")
+        screens = await c.get(NOW_URL, params={"tenant_id": "ev-a"}, headers=screen)
+    assert r.status_code == 200 and r.json() == screens.json()
+    assert [i["id"] for i in r.json()["next"]] == [show["id"]]
+
+
+async def test_now_is_for_the_screen_and_bot_modules_only(env: Env) -> None:
     ev_a = {"tenant_id": "ev-a"}
     async with env.internal() as c:
         assert (await c.get(NOW_URL, params=ev_a)).status_code == 401

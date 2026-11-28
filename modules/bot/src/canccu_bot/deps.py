@@ -52,6 +52,11 @@ class Deps:
     """An httpx.AsyncClient for outside providers (providers.py)."""
     settings: Any = None
     """The kit's SettingsClient for the bot's own settings (`announce_role`), or a test's fake."""
+    agenda: Any = None
+    """board.AgendaNow: the run of show's now and next for the board, or a test's fake."""
+    held: Callable[[str], Any] = lambda application_id: None
+    """The client this container holds for an application (pool.Pool.client), or None: the
+    run-of-show posts and the DMs go through its queue."""
     hidden: Callable[[str], Awaitable[frozenset[str]]] = hidden_discord_ids
     """privacy.hidden_discord_ids: who every count leaves out."""
     catalogue: Callable[[str], Awaitable[list[dict[str, Any]]]] = games_catalogue

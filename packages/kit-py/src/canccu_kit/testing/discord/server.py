@@ -88,9 +88,14 @@ def create_server(env: Mapping[str, str]) -> tuple[FakeDiscord, Starlette]:
             managed=True,
         )
         fake.give_bot_role(guild.id, app_id, role)
-        for name in body.get("channels", []):
-            fake.add_channel(guild.id, str(name))
-        return JSONResponse({"guild_id": guild.id})
+        channels = {str(n): fake.add_channel(guild.id, str(n)) for n in body.get("channels", [])}
+        return JSONResponse({"guild_id": guild.id, "channels": channels})
+
+    async def messages(request: Request) -> Response:
+        """What the bot posted, edited and pinned in a channel, for the stack's checks."""
+        channel = request.query_params.get("channel_id", "")
+        found = {"messages": fake.messages.get(channel, []), "pins": fake.pins.get(channel, [])}
+        return JSONResponse(found)
 
     async def health(request: Request) -> Response:
         return JSONResponse({"status": "ok"})
@@ -101,6 +106,7 @@ def create_server(env: Mapping[str, str]) -> tuple[FakeDiscord, Starlette]:
         Route("/_fake/sessions", sessions),
         Route("/_fake/dispatch", dispatch, methods=["POST"]),
         Route("/_fake/guilds", add_guild, methods=["POST"]),
+        Route("/_fake/messages", messages),
         Route("/health", health),
     ]
     return fake, Starlette(routes=routes)

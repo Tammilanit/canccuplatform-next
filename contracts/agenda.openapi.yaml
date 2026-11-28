@@ -475,14 +475,15 @@ paths:
     get:
       tags: [internal]
       operationId: getNowInternal
-      summary: Now and next of an event's public items, for the screens
+      summary: Now and next of an event's public items, for the screens and the bot's board
       description: |
         The same answer as `GET /api/agenda/now` gives a guest whom the info-page mode lets in: `public` items
         only, never `attendees` or `crew` ones, with the same fields. It ignores the info-page mode, so an event
         in mode `venue_only` or `sign_in` still shows its run-of-show on its own screens: the screen module's
-        server reads it for the event's screens (contracts/screen.md, Widgets: `agenda_now`, `countdown`). Every
-        status of the event. No session: the kit's service identity (`x-canccu-service`, contracts/README.md,
-        Conventions); only the screen module may call it. Internal network only.
+        server reads it for the event's screens (contracts/screen.md, Widgets: `agenda_now`, `countdown`), and the
+        bot for the event's pinned now-and-next board in Discord (added, #852; contracts/bot.md, Living
+        messages). Every status of the event. No session: the kit's service identity (`x-canccu-service`,
+        contracts/README.md, Conventions); only the screen and bot modules may call it. Internal network only.
       security:
         - {}
       parameters:
