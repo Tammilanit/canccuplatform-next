@@ -100,26 +100,6 @@
 		import proxy bot:8080
 	}
 
-	# The Discord page (#765), as the run of show's pages below: the module's own paths start at /.
-	@bot-pages path /bot /bot/*
-	handle @bot-pages {
-		# Not a second way into /api/bot/ above, nor into the bot's health or internal paths.
-		@bot-hidden path /bot/internal/* /bot/api/* /bot/health
-		handle @bot-hidden {
-			respond "not found" 404
-		}
-
-		@bot-bare path /bot
-		handle @bot-bare {
-			redir * /bot/{?query} 308
-		}
-
-		handle {
-			uri strip_prefix /bot
-			import proxy bot:8080
-		}
-	}
-
 	# The agenda contract's paths are /api/agenda/... too.
 	handle /api/agenda/health {
 		rewrite * /health
@@ -255,6 +235,28 @@
 		handle {
 			uri strip_prefix /moments
 			import proxy moments:8080
+		}
+	}
+
+	# The Discord page (#765), in one block as for agenda; the module's own paths start at /. Here,
+	# after the other pages' blocks: between two top-level path routes it changed how Caddy sorts
+	# them, and /api/notify/* came before /api/notify/health.
+	@bot-pages path /bot /bot/*
+	handle @bot-pages {
+		# Not a second way into /api/bot/ above, nor into the bot's health or internal paths.
+		@bot-hidden path /bot/internal/* /bot/api/* /bot/health
+		handle @bot-hidden {
+			respond "not found" 404
+		}
+
+		@bot-bare path /bot
+		handle @bot-bare {
+			redir * /bot/{?query} 308
+		}
+
+		handle {
+			uri strip_prefix /bot
+			import proxy bot:8080
 		}
 	}
 
