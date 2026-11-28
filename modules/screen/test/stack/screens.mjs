@@ -23,15 +23,13 @@ import { withFoodClaim } from "./food.mjs";
 import { MOTION_VIEWS, STAGE_VIEWS, withHeroArt, withMotion, withStage } from "./handed-stage.mjs";
 import {
   CLAIM_OF,
+  DASHBOARD_HANDS,
   withComingHours,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
   withPhoto,
   withHeroShowcase,
-  withShowcase,
-  withSmallShowcase,
-  withStats,
   withTakeover,
   holdStream,
   stillOnline,
@@ -139,9 +137,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           for (const view of LAYOUTS)
             if (!leanSkips(theme, view))
               await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
-        await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
-          layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
-        );
+        for (const view of ["dashboard-showcase", "dashboard-chat"])
+          await attempt(nameOf(theme, view, HD[0]), () =>
+            layoutShot(theme, "dashboard", HD[0], view),
+          );
         if (theme === "default")
           for (const [view, id] of DEFAULT_LAYOUT_VIEWS)
             await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
@@ -274,13 +273,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
      */
     async function layoutShot(theme, id, size, view = id) {
       await saveZone(demo, "main", { layout_id: id });
-      if (view === "dashboard") return handed(theme, view, size, withStats);
-      if (view === "dashboard-showcase")
-        return handed(theme, view, size, (s) => withShowcase(withStats(s)));
-      if (view === "dashboard-coming-hours")
-        return handed(theme, view, size, (s) => withComingHours(withStats(s)));
-      if (view === "dashboard-showcase-small")
-        return handed(theme, view, size, (s) => withSmallShowcase(withStats(s)));
+      if (DASHBOARD_HANDS[view] !== undefined)
+        return handed(theme, view, size, DASHBOARD_HANDS[view]);
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
       if (view === "ambient-online") return handed(theme, view, size, withCounts);
       if (view === "ambient-showcase") return handed(theme, view, size, withHeroShowcase);
@@ -348,7 +342,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       else await layout(page, size);
       // A showcase pauses Right now, the Dashboard's one `stats` box (#447): no numbers to keep apart.
       if (view.startsWith("dashboard") && view !== "dashboard-showcase") await statsApart(page);
-      if (view === "dashboard") await graphsScaled(page);
+      if (view === "dashboard" || view === "dashboard-chat") await graphsScaled(page);
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });

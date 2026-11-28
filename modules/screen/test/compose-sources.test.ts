@@ -31,7 +31,7 @@ describe("the sources' reads", () => {
     server = createServer((request, response) => {
       const header = request.headers["x-canccu-service"];
       const module =
-        /^\/internal\/(agenda|theming|notify)\//.exec(request.url ?? "")?.[1] ?? "tenants";
+        /^\/internal\/(agenda|theming|notify|bot)\//.exec(request.url ?? "")?.[1] ?? "tenants";
       let caller: string | null;
       try {
         caller = audience(module).verify(typeof header === "string" ? header : null);
@@ -67,6 +67,10 @@ describe("the sources' reads", () => {
           valid_until: "2026-01-01T12:01:00Z",
           rotates_at: "2026-01-01T12:00:30Z",
         });
+      } else if (request.url?.startsWith("/internal/bot/presence/playing")) {
+        json(200, { available: true, as_of: null, games: [{ game_id: null, name: null, player_count: 4 }] }); // prettier-ignore
+      } else if (request.url?.startsWith("/internal/bot/presence/voice")) {
+        json(200, { available: false, as_of: null, channels: [] });
       } else if (request.url?.startsWith("/internal/theming/current")) {
         json(200, { revision: 3, tokens_css_url: "/t.css", css_url: null, logo_url: null });
       } else {
@@ -81,7 +85,7 @@ describe("the sources' reads", () => {
   });
 
   const sources = () =>
-    httpSources({ agenda: base, tenants: base, theming: base, notify: base }, screen, {
+    httpSources({ agenda: base, tenants: base, theming: base, notify: base, bot: base }, screen, {
       warn: (...args: unknown[]) => warnings.push(args),
     });
 
@@ -167,6 +171,17 @@ describe("the sources' reads", () => {
     });
   });
 
+  it("reads the bot's counts as a module, signed for the bot", async () => {
+    const playing = await sources().botPlaying("alpha");
+    expect(playing?.games).toEqual([{ game_id: null, name: null, player_count: 4 }]);
+    expect(seen.at(-1)).toMatchObject({
+      path: "/internal/bot/presence/playing?tenant_id=alpha",
+      caller: "screen",
+    });
+    expect(await sources().botVoice("alpha")).toEqual({ available: false, as_of: null, channels: [] }); // prettier-ignore
+    expect(seen.at(-1)).toMatchObject({ path: "/internal/bot/presence/voice?tenant_id=alpha", caller: "screen" }); // prettier-ignore
+  });
+
   it("answers null on a refusal and says so in the log", async () => {
     const before = warnings.length;
     expect(await sources().agendaNow("closed", "main")).toBeNull();
@@ -175,7 +190,7 @@ describe("the sources' reads", () => {
 
   it("answers null when the module is unreachable", async () => {
     const down = httpSources(
-      { agenda: "http://127.0.0.1:1", tenants: base, theming: base, notify: base },
+      { agenda: "http://127.0.0.1:1", tenants: base, theming: base, notify: base, bot: base },
       screen,
     );
     expect(await down.agendaNow("alpha", "main")).toBeNull();

@@ -42,6 +42,9 @@ export interface ZoneFacts {
   checkin?: CheckinCode | null;
   /** The `stats` view-model's fields (src/compose/stats.ts); null: nothing counted yet. */
   stats?: Record<string, unknown> | null;
+  /** The `voice_rooms` and `now_playing` view-models' fields (bot-live.ts); null: none to show. */
+  voice?: Record<string, unknown> | null;
+  playing?: Record<string, unknown> | null;
   /** The theme's embeds (contracts/theming.md, Embeds). */
   embeds?: { name: string; frame_url: string }[];
   /** The zone's day phase (Motion and burn-in drift): "Today in numbers" plays at wind-down. */
@@ -320,6 +323,10 @@ function fields(
       return facts.photos?.[wallKey(wallSettings(props))] ?? null;
     case "stats":
       return facts.stats ?? null;
+    case "voice_rooms":
+      return facts.voice ?? null;
+    case "now_playing":
+      return facts.playing ?? null;
     case "food_status":
       return facts.food === undefined ? null : foodView(facts.food.orders, facts, facts.food.names);
     case "checkin_qr":

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Bot API
-  version: 1.0.0
+  version: 1.1.0
   summary: An event's Discord connection, its guild binding, the command registration, its counts, and who plays what.
   description: |
     Machine-readable part of the bot contract (connections, and the who-plays-what read API). Prose, the client pool, isolation, secrets and
@@ -32,6 +32,8 @@ tags:
     description: An outside provider's bearer secret per event, for the commands that call it.
   - name: superadmin
     description: On the superadmin hostname only.
+  - name: internal
+    description: Module paths on the stack's internal network; the edge Caddy never routes them.
 security:
   - session: []
 paths:
@@ -640,6 +642,63 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /internal/bot/presence/playing:
+    get:
+      tags: [internal]
+      operationId: getPlayingCountsInternal
+      summary: Players per game now, counts only, for the screens
+      description: |
+        The live state of `getPlaying` as counts: per game of the event's catalogue its `player_count`, never who
+        (contracts/bot.md, For the screens). Activities of a hidden game are left out entirely; unmatched activities
+        form one entry with `game_id: null` and `name: null`. Bots and users with the presence opt-out are counted
+        nowhere. `available: false` with an empty list when no guild is bound, the client is not ready, the presence
+        feed's flag is off or the event is archived. No session: the kit's service identity (`x-canccu-service`,
+        contracts/README.md, Conventions); only the screen module may call it (403 `service_forbidden`). Internal
+        network only.
+      security:
+        - {}
+      parameters:
+        - $ref: "#/components/parameters/InternalTenant"
+      responses:
+        "200":
+          description: The players per game now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayingCounts"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
+        "404":
+          $ref: "common.openapi.yaml#/components/responses/NotFound"
+  /internal/bot/presence/voice:
+    get:
+      tags: [internal]
+      operationId: getVoiceCountsInternal
+      summary: People per public voice room now, counts only, for the screens
+      description: |
+        The live state of `getVoice` as counts: the voice channels every member of the guild can see with people in
+        them, each with its `member_count`, busiest first, never who (contracts/bot.md, For the screens).
+        `available: false` as for `getPlayingCountsInternal`, with the voice feed's flag. Only the screen module may
+        call it. Internal network only.
+      security:
+        - {}
+      parameters:
+        - $ref: "#/components/parameters/InternalTenant"
+      responses:
+        "200":
+          description: The public voice rooms now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceCounts"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
+        "404":
+          $ref: "common.openapi.yaml#/components/responses/NotFound"
   /api/bot/stats:
     get:
       tags: [counts]
@@ -785,6 +844,27 @@ components:
         application/json:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceForbidden:
+      description: "`service_forbidden`: the calling module may not call this internal path."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+  parameters:
+    InternalTenant:
+      name: tenant_id
+      in: query
+      required: true
+      description: The tenant the calling module serves, set by its kit, never from a client's input.
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
   schemas:
     Snowflake:
       type: string
@@ -1054,6 +1134,64 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/Player"
+    PlayingCounts:
+      type: object
+      required: [available, as_of, games]
+      additionalProperties: false
+      properties:
+        available:
+          type: boolean
+          description: "`false`: no guild bound, the client not ready, the presence feed's flag off or the event archived; `games` is then empty."
+        as_of:
+          type: [string, "null"]
+          format: date-time
+          description: When the bot last wrote the live state; `null` when not available.
+        games:
+          type: array
+          description: Most players first; among equals the unmatched entry last, then by name.
+          items:
+            type: object
+            required: [game_id, name, player_count]
+            additionalProperties: false
+            properties:
+              game_id:
+                type: [string, "null"]
+                description: The game in the event's catalogue; `null` for the one entry grouping every unmatched activity.
+              name:
+                type: [string, "null"]
+                description: The game's name; `null` for the unmatched entry (activity names are never shown).
+              player_count:
+                type: integer
+                minimum: 1
+                description: The people playing it, each once, without bots and opted-out users.
+    VoiceCounts:
+      type: object
+      required: [available, as_of, channels]
+      additionalProperties: false
+      properties:
+        available:
+          type: boolean
+          description: As for `PlayingCounts`, with the voice feed's flag; `channels` is then empty.
+        as_of:
+          type: [string, "null"]
+          format: date-time
+        channels:
+          type: array
+          description: Busiest first, then by name; only channels every member of the guild can see.
+          items:
+            type: object
+            required: [channel_id, name, member_count]
+            additionalProperties: false
+            properties:
+              channel_id:
+                $ref: "#/components/schemas/Snowflake"
+              name:
+                type: string
+                maxLength: 100
+              member_count:
+                type: integer
+                minimum: 1
+                description: The people in it, without bots and opted-out users.
     Stats:
       type: object
       required: [hours, top_games]

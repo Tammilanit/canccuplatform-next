@@ -89,4 +89,35 @@ describe("the hub's rebuilds", () => {
     );
     expect(await built()).toEqual(["lobby", "stage"]);
   });
+
+  it("rebuilds now playing on the presence count, the voice rooms and chat on their own", async () => {
+    records = {
+      stage: { counts: ["playing"] },
+      foyer: { counts: ["voice"] },
+      lobby: { counts: ["messages"] },
+    };
+    const at = new Date(T0).toISOString();
+    hub.handleEvent(
+      event("bot", "bot.presence.counted", {
+        counted_at: at,
+        interval_seconds: 60,
+        members: 400,
+        online: 212,
+        idle: 0,
+        dnd: 0,
+        in_voice: 36,
+      }),
+    );
+    expect(await built()).toEqual(["stage"]);
+    builds = [];
+    hub.handleEvent(
+      event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms: [] }),
+    );
+    expect(await built()).toEqual(["foyer"]);
+    builds = [];
+    hub.handleEvent(
+      event("bot", "bot.messages.counted", { counted_at: at, interval_seconds: 3600, messages: 3 }),
+    );
+    expect(await built()).toEqual(["lobby"]);
+  });
 });

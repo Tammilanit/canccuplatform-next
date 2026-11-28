@@ -210,6 +210,14 @@ The bus carries presence as counts only ([events.md](events.md#people-in-events)
 - **Live only:** the bot keeps the current state per event in Valkey, updated from the gateway as it changes, and no history; it is presence data, dropped when the event is archived. The answer's `as_of` says when it was last updated.
 - **Not available:** with no guild bound, the client not ready, or the event's feature flag for the presence or voice feed off ([Privileged intents and data per event](#privileged-intents-and-data-per-event)), the answer is 200 with `available: false` and empty lists, so a board shows "not available" rather than "nobody plays".
 
+### For the screens
+The screen module's server reads the same live state as counts, as a module on behalf of the event's screens (additive, #851; [screen.md](screen.md#widgets): `now_playing`, `voice_rooms`). Counts only, never who: no user id, name or Discord id, so these paths need no viewer's rights.
+
+- `GET /internal/bot/presence/playing?tenant_id=` → `PlayingCounts`: per game of the event's catalogue, `game_id`, `name` and `player_count`, most players first; the activities of a hidden game are left out entirely, and those that match no game form one entry with `game_id: null` and `name: null`, as in `GET /api/bot/presence/playing`. A person counts once per game, however many of their activities match it.
+- `GET /internal/bot/presence/voice?tenant_id=` → `VoiceCounts`: per public voice room with people in it, `channel_id`, `name` and `member_count`, busiest first; a private room is never listed.
+- Bots and everyone the opt-out leaves out are counted nowhere, from the next read (Counts, Who is left out). `as_of` is when the client last wrote the live state; `available: false` with an empty list as for the public paths, and also for an archived event; a client that is `connecting`, `paused` or `failed` is not ready (a `rate_limited` one still follows the gateway).
+- Only the screen module may call them (the kit's service identity; any other module gets 403 `service_forbidden`); an unknown `tenant_id` is 404 `not_found`. Internal network only. The named lists come with the opt-out's source (#122's link 2b).
+
 ## Run-of-show posts
 The agenda's channel `discord_channel` is the bot's: a post in the event's Discord channel ([agenda.md](agenda.md#notification-channels)). Notify never posts there ([notify.md](notify.md#delivery-rules)).
 

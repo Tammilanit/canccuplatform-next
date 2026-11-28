@@ -196,6 +196,7 @@ async function main(): Promise<void> {
       tenants: tenantsUrl,
       theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
       notify: process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080",
+      bot: process.env.CANCCU_BOT_URL ?? "http://bot:8080",
     },
     service,
     log,
