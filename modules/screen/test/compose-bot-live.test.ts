@@ -10,7 +10,7 @@ import {
   keepVoice,
   playingMoved,
   playingView,
-  readPlaying,
+  readNowPlaying,
   readVoice,
   voiceOf,
   voiceView,
@@ -46,7 +46,11 @@ const inTenant = <T>(fn: () => Promise<T>) => withTenant("alpha", fn);
 
 describe("voice rooms", () => {
   it("reads bot.voice.counted and refuses anything else", () => {
-    const data = { counted_at: "2026-03-14T18:00:00Z", interval_seconds: 60, rooms: [room("Lobby", 14)] };
+    const data = {
+      counted_at: "2026-03-14T18:00:00Z",
+      interval_seconds: 60,
+      rooms: [room("Lobby", 14)],
+    };
     expect(voiceOf(data)).toEqual({
       at: T0,
       interval_seconds: 60,
@@ -57,7 +61,10 @@ describe("voice rooms", () => {
   });
 
   it("shows at most six rooms, busiest first, by name and count only", () => {
-    const rooms = ["A", "B", "C", "D", "E", "F", "G"].map((n, i) => ({ name: n, member_count: i + 1 }));
+    const rooms = ["A", "B", "C", "D", "E", "F", "G"].map((n, i) => ({
+      name: n,
+      member_count: i + 1,
+    }));
     expect(voiceView(rooms)).toEqual({
       rooms: [
         { name: "G", member_count: 7 },
@@ -153,7 +160,11 @@ describe("now playing", () => {
       at: T0 - (20 - i) * MIN,
       games: { g_1: i < 10 ? 10 : 20, g_2: 9 },
     }));
-    const view = playingView([game("g_1", "Demo Arena", 20), game("g_2", "Space Racer", 9)], history, T0);
+    const view = playingView(
+      [game("g_1", "Demo Arena", 20), game("g_2", "Space Racer", 9)],
+      history,
+      T0,
+    );
     expect(view?.games).toEqual([
       { game_id: "g_1", name: "Demo Arena", players: 20, trend: "up" },
       { game_id: "g_2", name: "Space Racer", players: 9, trend: "flat" },
@@ -165,24 +176,24 @@ describe("now playing", () => {
     const { sources, reads } = reading({
       playing: { available: true, as_of: "", games: [game("g_1", "Demo Arena", 3)] },
     });
-    const first = await inTenant(() => readPlaying(kv, sources, "alpha", T0));
+    const first = await inTenant(() => readNowPlaying(kv, sources, "alpha", T0));
     expect(first).toMatchObject({ games: [{ game_id: "g_1", players: 3 }] });
     await playingMoved(kv, "alpha");
-    await inTenant(() => readPlaying(kv, sources, "alpha", T0 + 10_000));
+    await inTenant(() => readNowPlaying(kv, sources, "alpha", T0 + 10_000));
     expect(reads.playing).toBe(1);
-    await inTenant(() => readPlaying(kv, sources, "alpha", T0 + 31_000));
+    await inTenant(() => readNowPlaying(kv, sources, "alpha", T0 + 31_000));
     expect(reads.playing).toBe(2);
     // No count came since: the kept answer holds until it is two minutes old.
-    await inTenant(() => readPlaying(kv, sources, "alpha", T0 + 2 * MIN));
+    await inTenant(() => readNowPlaying(kv, sources, "alpha", T0 + 2 * MIN));
     expect(reads.playing).toBe(2);
-    await inTenant(() => readPlaying(kv, sources, "alpha", T0 + 31_000 + 2 * MIN));
+    await inTenant(() => readNowPlaying(kv, sources, "alpha", T0 + 31_000 + 2 * MIN));
     expect(reads.playing).toBe(3);
   });
 
   it("is empty while the bot says it is not available", async () => {
     const kv = new MemoryKv(() => clock.now);
     const { sources } = reading({ playing: { available: false, as_of: null, games: [] } });
-    expect(await inTenant(() => readPlaying(kv, sources, "alpha", T0))).toBeNull();
+    expect(await inTenant(() => readNowPlaying(kv, sources, "alpha", T0))).toBeNull();
   });
 });
 

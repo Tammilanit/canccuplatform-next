@@ -47,7 +47,7 @@ export interface ZoneRecord {
 }
 
 /** The counts kept from other modules' events (compose/stats.ts). */
-export type CountSource = "presence" | "checkins";
+export type CountSource = "presence" | "checkins" | "messages" | "voice" | "playing";
 
 /** Where the zone's claims went; absent in a record stored before claims: none. */
 export interface ZoneRecordView {

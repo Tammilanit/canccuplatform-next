@@ -156,14 +156,16 @@
   }
 
   .canccu-widget__stat .canccu-widget__big,
-  .canccu-widget--now_playing .canccu-widget__meta {
+  .canccu-widget--now_playing .canccu-widget__meta,
+  .canccu-widget--voice_rooms .canccu-widget__meta {
     display: flex;
     align-items: baseline;
     gap: calc(1 * var(--canccu-u));
     white-space: nowrap;
   }
 
-  .canccu-widget--now_playing .canccu-widget__meta {
+  .canccu-widget--now_playing .canccu-widget__meta,
+  .canccu-widget--voice_rooms .canccu-widget__meta {
     font-weight: 700;
     color: var(--canccu-color-text);
     font-variant-numeric: tabular-nums;
@@ -171,6 +173,11 @@
 
   .canccu-widget--now_playing .canccu-widget__row:first-child .canccu-widget__name {
     color: var(--canccu-color-primary);
+  }
+
+  /* The rest of the games, after the named ones: a line that steps back, also when it is alone. */
+  .canccu-widget--now_playing .canccu-widget__row.canccu-widget__row--others .canccu-widget__name {
+    color: var(--canccu-color-text-muted);
   }
 
   .canccu-widget__trend {
@@ -228,7 +235,8 @@
     }
 
     .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__kicker,
-    .canccu-layout--dashboard .canccu-region > .canccu-widget--now_playing .canccu-widget__title {
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--now_playing .canccu-widget__title,
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--voice_rooms .canccu-widget__title {
       display: none;
     }
   }

@@ -110,7 +110,9 @@ describe("the hub's rebuilds", () => {
     );
     expect(await built()).toEqual(["stage"]);
     builds = [];
-    hub.handleEvent(event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms: [] }));
+    hub.handleEvent(
+      event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms: [] }),
+    );
     expect(await built()).toEqual(["foyer"]);
     builds = [];
     hub.handleEvent(

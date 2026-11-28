@@ -1,4 +1,13 @@
-/** Which events of the tenant streams make the hub (hub.ts) rebuild, recheck or end streams. */
+/**
+ * Which events of the tenant streams make the hub (hub.ts) rebuild, recheck or end streams, and
+ * the counts it keeps from them.
+ */
+import type { Event } from "@canccu/kit";
+import { keepVoice, playingMoved, voiceOf } from "../compose/bot-live.js";
+import { keepMessages, messagesOf } from "../compose/messages.js";
+import { checkinsMoved, keepPresence, presenceOf } from "../compose/stats.js";
+import type { Kv } from "../kv.js";
+import type { CountSource } from "./store.js";
 
 /** Events after which a zone may draw something else. */
 const REBUILDS = [
@@ -40,4 +49,33 @@ export const ENDS = new Set([
 
 export function rebuilds(type: string): boolean {
   return REBUILDS.some((p) => (p.endsWith(".") ? type.startsWith(p) : type === p));
+}
+
+/** Keeps what the event counted; the counts that moved, none for an event that is no count. */
+export async function keepCount(kv: Kv, tenant: string, event: Event): Promise<CountSource[]> {
+  if (event.type === "bot.presence.counted") {
+    const count = presenceOf(event.data);
+    if (count === null) return [];
+    await keepPresence(kv, tenant, count);
+    // Players per game come with the presence feed: the bot's minute moved them too.
+    await playingMoved(kv, tenant);
+    return ["presence", "playing"];
+  }
+  if (event.type === "bot.voice.counted") {
+    const count = voiceOf(event.data);
+    if (count === null) return [];
+    await keepVoice(kv, tenant, count);
+    return ["voice"];
+  }
+  if (event.type === "bot.messages.counted") {
+    const count = messagesOf(event.data);
+    if (count === null) return [];
+    await keepMessages(kv, tenant, count);
+    return ["messages"];
+  }
+  if (event.type === "notify.checkin.recorded" && event.data.purpose === "arrival") {
+    await checkinsMoved(kv, tenant);
+    return ["checkins"];
+  }
+  return [];
 }

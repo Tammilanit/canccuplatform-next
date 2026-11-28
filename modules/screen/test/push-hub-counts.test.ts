@@ -50,7 +50,9 @@ describe("the hub and the counts", () => {
   it("keeps the public voice rooms of bot.voice.counted and the hours of bot.messages.counted", async () => {
     const at = new Date(T0).toISOString();
     const rooms = [{ channel_id: "c1", name: "Lobby", member_count: 14 }];
-    hub.handleEvent(event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms }));
+    hub.handleEvent(
+      event("bot", "bot.voice.counted", { counted_at: at, interval_seconds: 60, rooms }),
+    );
     hub.handleEvent(
       event("bot", "bot.messages.counted", { counted_at: at, interval_seconds: 3600, messages: 9 }),
     );
