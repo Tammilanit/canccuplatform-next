@@ -51,13 +51,18 @@
     row-gap: min(calc(2 * var(--canccu-u)), 2.4cqh);
   }
 
-  /* An item's box: as long as it runs, the height of its label. */
+  /*
+   * An item's box: as long as it runs, the height of its label. Over the now line (#785, Part 1's
+   * shots: it ran through a block's text), so its ground is solid: the kind's tint on the box's
+   * surface, where the see-through box (`--canccu-box-opacity`) would have let the line show.
+   */
   .canccu-widget--agenda_timeline .canccu-widget__block {
     --canccu-line-kind: var(--canccu-color-accent);
+    z-index: 1;
     align-self: stretch;
     border-left: calc(0.6 * var(--canccu-u)) solid var(--canccu-line-kind);
     border-radius: var(--canccu-card-radius);
-    background: color-mix(in srgb, var(--canccu-line-kind) 22%, transparent);
+    background: color-mix(in srgb, var(--canccu-line-kind) 22%, var(--canccu-color-surface));
   }
 
   /* The starter kinds' colours, as the stage's (stage.css); a theme styles any other. */
@@ -219,7 +224,8 @@
     bottom: calc(1.4 * var(--canccu-u) + 1.2em);
     /* Its own width off the run, so at the line's end it still stands inside the track. */
     left: calc(var(--canccu-progress, 0) * (100% - var(--canccu-now-width)));
-    z-index: 2;
+    /* Under the blocks and their labels (z-index 1): it never cuts through an item's text. */
+    z-index: 0;
     width: var(--canccu-now-width);
     margin: 0;
     background: var(--canccu-color-text, #fff);
