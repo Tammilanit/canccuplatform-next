@@ -4,7 +4,8 @@ name: Weekly
 # push. Each part is a job; each failed part files one `regression` issue (the report job), or
 # comments on the one still open. A pull request that changes this run or its scripts runs a
 # short form of it, to show every part works: a day of soak, one file mutated, and findings of
-# the audit and the accessibility check reported without failing; it files nothing.
+# the audit and the accessibility check reported without failing; it files nothing. Its screens
+# and screen-diff run only when it changes the comparison itself (the scope job, #861).
 on:
   schedule:
     - cron: "43 3 * * 0"
@@ -135,13 +136,36 @@ jobs:
           path: compose.log
           retention-days: 30
 
+  # Whether a pull request takes the screens below: only when it changes the comparison itself
+  # (.github/scripts/weekly-scope.mjs, #861); its demo-stack shots cover the screenshot scripts
+  # and the screen stack tests. The merge commit's first parent is the base it merges into.
+  scope:
+    name: scope
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      screens: ${{ steps.scope.outputs.screens }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Does this pull request change the weekly comparison?
+        id: scope
+        run: node .github/scripts/weekly-scope.mjs --base HEAD^1 | tee -a "$GITHUB_OUTPUT"
+
   # Every screenshot, once at the last step tag and once at this commit, each on a stack of its own
   # version; screen-diff compares them. On Sunday this commit takes the screenshot book (every view
-  # in every theme, the strips, portrait and one 4K shot per layout); a pull request takes only the
-  # shots its changes affect, as its demo-stack run does (#835), and the tag's own scripts know
-  # only the groups.
+  # in every theme, the strips, portrait and one 4K shot per layout); a pull request that changes
+  # the comparison takes only the shots its changes affect, as its demo-stack run does (#835), and
+  # the tag's own scripts know only the groups. A scheduled or by-hand run skips the scope, and
+  # !cancelled() runs the screens all the same.
   screens:
     name: screens (${{ matrix.side }})
+    needs: scope
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.scope.outputs.screens == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -227,7 +251,8 @@ jobs:
   screen-diff:
     name: screen-diff
     needs: screens
-    if: always() && needs.screens.result != 'cancelled'
+    # always() alone would run it after screens a pull request skips, with no shots to compare.
+    if: always() && needs.screens.result != 'cancelled' && needs.screens.result != 'skipped'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

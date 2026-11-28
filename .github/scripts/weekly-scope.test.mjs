@@ -54,9 +54,10 @@ test("a pull request that changes the comparison starts the weekly run", () => {
   }
 });
 
-// A job's block of weekly.yml: from its `  <name>:` line to the next job.
+// A job's block of weekly.yml: from its `  <name>:` line to the next line at the jobs' indent (the
+// next job, or the comment over it).
 const job = (name) => {
-  const m = new RegExp(`\\n  ${name}:\\n((?:(?:    .*)?\\n)+?)(?=  [\\w-]+:\\n|$)`).exec(WEEKLY);
+  const m = new RegExp(`\\n  ${name}:\\n((?:(?:    .*)?\\n)+)`).exec(WEEKLY);
   assert.ok(m, `weekly.yml has the job ${name}`);
   return m[1];
 };
