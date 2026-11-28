@@ -44,8 +44,11 @@ export function highlightChangeAt(items: readonly AgendaItem[], nowMs: number): 
 export interface Presence {
   online: Hour[];
   in_voice: Hour[];
+  /** Absent from facts built before chat was counted: none. */
+  messages?: Hour[];
   online_peak?: unknown;
   in_voice_peak?: unknown;
+  messages_peak?: unknown;
 }
 
 /** What the features read of a zone's facts. */
@@ -90,18 +93,19 @@ export function todayFields(
 const METRICS = {
   online: { label: "Online · 24 h", peak: "online_peak" },
   in_voice: { label: "In voice · 24 h", peak: "in_voice_peak" },
+  messages: { label: "Chat · 24 h", peak: "messages_peak" },
 } as const;
 
 /**
- * The activity graph (`props.metric`: `online`, the default, or `in_voice`) of the last 24 hours,
- * in a box `unitsWide` units wide.
+ * The activity graph (`props.metric`: `online`, the default, `in_voice` or `messages`) of the last
+ * 24 hours, in a box `unitsWide` units wide. Each bar of `messages` is its hour's total.
  */
 export function graphFields(
   metric: unknown,
   facts: FeatureFacts,
   unitsWide: number,
 ): Record<string, unknown> | null {
-  const key = metric === "in_voice" ? "in_voice" : "online";
+  const key = metric === "in_voice" || metric === "messages" ? metric : "online";
   const hours = facts.presence?.[key] ?? [];
   if (hours.length < GRAPH_MIN_HOURS) return null;
   const peak = facts.presence?.[METRICS[key].peak];

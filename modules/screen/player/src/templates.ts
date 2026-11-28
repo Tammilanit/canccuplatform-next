@@ -190,8 +190,31 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
           el("span", "meta", [f("players"), trend("trend")]),
         ]),
       ),
+      // The games not listed and the activities that match no game: counted, never named.
+      sec(
+        "others",
+        el(
+          "li",
+          null,
+          [el("strong", "name", [t("Other games")]), el("span", "meta", [f("players")])],
+          { class: [t("canccu-widget__row canccu-widget__row--others")] },
+        ),
+      ),
     ]),
     QR,
+  ],
+  // Mockup 12's Voice rooms: the busy public rooms, by name with their count.
+  voice_rooms: [
+    el("p", "title", [t("Voice rooms")]),
+    el("ul", "body", [
+      sec(
+        "rooms",
+        el("li", "row", [
+          el("strong", "name", [f("name")]),
+          el("span", "meta", [f("member_count")]),
+        ]),
+      ),
+    ]),
   ],
   bracket: [
     FROM_CREW,

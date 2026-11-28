@@ -1,6 +1,7 @@
 /**
- * The reads behind the content widgets (`playlist`, `photo`, `checkin_qr`), `stats` and the graphs:
- * the zone's stored playback state with the event's content, the photos, notify's code and the counts. The
+ * The reads behind the content widgets (`playlist`, `photo`, `checkin_qr`), the statistics and the
+ * graphs: the zone's stored playback state with the event's content, the photos, notify's code, the
+ * counts and the bot's live counts (`voice_rooms`, `now_playing`). The
  * choices themselves are the pure `playlistNow`, `photoWall` and `statsView`.
  */
 import type { SqlClient, TenantContext } from "@canccu/kit";
@@ -17,6 +18,8 @@ import type { AssetFile, PlayingInput } from "./playing.js";
 import { photoWall, wallKey, wallSettings } from "./photos.js";
 import type { PhotoRow } from "./photos.js";
 import type { Layout, Props, WidgetEntry } from "./layouts.js";
+import { readNowPlaying, readVoice } from "./bot-live.js";
+import { readMessages } from "./messages.js";
 import { presenceFacts, readCounts, readStats } from "./stats.js";
 import type { Sources } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
@@ -150,13 +153,25 @@ export async function contentFacts(
   const graphs = used.has("activity_graph") || used.has("today_numbers");
   if (used.has("stats") || graphs) {
     const counts = await readCounts(deps.kv, nowMs);
-    if (graphs) facts.presence = presenceFacts(counts, ctx.time_zone, nowMs);
+    // Chat only for the activity graph: "Today in numbers" draws the online hours alone.
+    const chat = used.has("activity_graph") ? await readMessages(deps.kv, nowMs) : [];
+    if (graphs) facts.presence = presenceFacts(counts, ctx.time_zone, nowMs, chat);
     if (used.has("stats")) {
       const { kv, sources } = deps;
       const stats = await readStats(kv, sources, ctx.tenant_id, ctx.time_zone, nowMs, counts);
       facts.stats = stats.view;
       if (stats.changesAt !== null) changes.push(stats.changesAt);
     }
+  }
+  if (used.has("voice_rooms")) {
+    const voice = await readVoice(deps.kv, deps.sources, ctx.tenant_id, nowMs);
+    facts.voice = voice.view;
+    if (voice.changesAt !== null) changes.push(voice.changesAt);
+  }
+  if (used.has("now_playing")) {
+    const playing = await readNowPlaying(deps.kv, deps.sources, ctx.tenant_id, nowMs);
+    facts.playing = playing.view;
+    if (playing.changesAt !== null) changes.push(playing.changesAt);
   }
   const future = changes.filter((t) => Number.isFinite(t) && t > nowMs);
   return { facts, changesAt: future.length === 0 ? null : Math.min(...future) };

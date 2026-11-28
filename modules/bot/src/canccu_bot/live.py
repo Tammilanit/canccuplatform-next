@@ -6,6 +6,7 @@ feed's flag goes off (contracts/bot.md, Counts)."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from .activity_tracker import ActivityTracker
@@ -21,6 +22,8 @@ LIVE_TTL_MS = 24 * 3600 * 1000
 that stopped for good (its guild unbound while no container held it) runs out by itself."""
 
 SLICES = ("members", "bots", "presence", "guild", "playing", "voice", "channels")
+AS_OF = "as_of"
+"""When the holder last wrote the state behind: the module paths' `as_of` (presence_paths.py)."""
 
 
 def live_key(tenant: str, name: str) -> str:
@@ -28,7 +31,7 @@ def live_key(tenant: str, name: str) -> str:
 
 
 def live_keys(tenant: str) -> list[str]:
-    return [live_key(tenant, name) for name in SLICES]
+    return [live_key(tenant, name) for name in (*SLICES, AS_OF)]
 
 
 class GuildLive:
@@ -98,11 +101,13 @@ class GuildLive:
             "activities": self.activities.count(hidden, bots),
         }
 
-    async def flush(self, keys: KeyStore) -> None:
+    async def flush(self, keys: KeyStore, at: datetime | None = None) -> None:
         for name, tracked in self._slices().items():
             values, gone = tracked.changes()
             await keys.hash_write(live_key(self.tenant, name), values, gone, LIVE_TTL_MS)
             tracked.written(values, gone)
+        if at is not None:
+            await keys.put(live_key(self.tenant, AS_OF), at.isoformat(), LIVE_TTL_MS)
 
     async def load(self, keys: KeyStore) -> None:
         for name, tracked in self._slices().items():

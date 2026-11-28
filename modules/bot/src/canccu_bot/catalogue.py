@@ -37,3 +37,11 @@ def match(
         if _key(name) in {_key(a) for a in aliases}:
             return g
     return None
+
+
+def is_hidden(name: str, application_id: str | None, games: Iterable[dict[str, Any]]) -> bool:
+    """Whether the activity's identifiers belong to a game a moderator hid: such an activity is
+    left out entirely, never counted as unmatched, so the game never comes back by its name
+    (contracts/bot.md, Who plays what)."""
+    hidden = [{**g, "status": "active"} for g in games if g.get("status") == "hidden"]
+    return match(name, application_id, hidden) is not None

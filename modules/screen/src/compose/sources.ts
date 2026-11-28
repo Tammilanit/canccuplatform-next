@@ -37,6 +37,20 @@ export interface EventPublic {
   name: string;
 }
 
+/** The bot's players per game, counts only (contracts/bot.md, For the screens). */
+export interface BotPlaying {
+  available: boolean;
+  as_of: string | null;
+  games: { game_id: string | null; name: string | null; player_count: number }[];
+}
+
+/** The bot's public voice rooms with people in them, counts only. */
+export interface BotVoice {
+  available: boolean;
+  as_of: string | null;
+  channels: { channel_id: string; name: string; member_count: number }[];
+}
+
 /** Every read answers `null` when its module is down or refuses, so a screen never goes blank. */
 export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
@@ -63,6 +77,8 @@ export interface Sources {
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
   /** How many members have checked in for `purpose` (contracts/notify.md). */
   checkinCount(tenantId: string, purpose: string): Promise<number | null>;
+  botPlaying(tenantId: string): Promise<BotPlaying | null>;
+  botVoice(tenantId: string): Promise<BotVoice | null>;
 }
 
 export interface SourceUrls {
@@ -70,6 +86,7 @@ export interface SourceUrls {
   tenants: string;
   theming: string;
   notify: string;
+  bot: string;
 }
 
 const READ_TIMEOUT_MS = 1500;
@@ -264,6 +281,22 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       const n = body?.count;
       return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : null;
     },
+    botPlaying: async (tenantId) => {
+      const body = (await read(
+        urls.bot,
+        `/internal/bot/presence/playing?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("bot"),
+      )) as BotPlaying | null;
+      return body === null || !Array.isArray(body.games) ? null : body;
+    },
+    botVoice: async (tenantId) => {
+      const body = (await read(
+        urls.bot,
+        `/internal/bot/presence/voice?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("bot"),
+      )) as BotVoice | null;
+      return body === null || !Array.isArray(body.channels) ? null : body;
+    },
     event: async (host) => {
       const body = (await read(urls.tenants, "/api/tenants/current", {
         host,
@@ -284,4 +317,6 @@ export const noSources: Sources = {
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
   checkinCount: () => Promise.resolve(null),
+  botPlaying: () => Promise.resolve(null),
+  botVoice: () => Promise.resolve(null),
 };

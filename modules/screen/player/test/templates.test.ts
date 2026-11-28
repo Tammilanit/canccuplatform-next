@@ -14,7 +14,7 @@ const draw = (nodes: readonly TreeNode[], view: Record<string, unknown>): HTMLEl
 const TYPES = [
   "clock", "agenda_now", "countdown", "hot_game", "now_playing", "bracket", "leaderboard", "photo",
   "announcement", "ticker", "food_status", "qr", "checkin_qr", "venue_info", "stats",
-  "match_called", "winner_card", "sting", "logo",
+  "match_called", "winner_card", "sting", "logo", "voice_rooms", "activity_graph",
 ]; // prettier-ignore
 
 describe("the player's default templates", () => {
@@ -168,6 +168,28 @@ describe("the player's default templates", () => {
     expect(rows.map((r) => r.querySelector(".canccu-widget__trend")?.className ?? null)).toEqual([
       "canccu-widget__trend canccu-widget__trend--flat",
       null,
+    ]);
+    // The games not listed and the activities that match no game: counted, never named.
+    const others = draw(DEFAULT_TEMPLATES.now_playing ?? [], {
+      available: true,
+      games: [{ game_id: "g_1", name: "Demo Game", players: 41 }],
+      others: { players: 11 },
+    });
+    const last = [...others.querySelectorAll(".canccu-widget__row")].at(-1);
+    expect(last?.className).toBe("canccu-widget__row canccu-widget__row--others");
+    expect(last?.textContent).toBe("Other games11");
+    expect(draw(DEFAULT_TEMPLATES.now_playing ?? [], { games: [] }).querySelector(".canccu-widget__row--others")).toBeNull(); // prettier-ignore
+    // The busy voice rooms, each by name with its count (mockup 12).
+    const voice = draw(DEFAULT_TEMPLATES.voice_rooms ?? [], {
+      rooms: [
+        { name: "Lobby", member_count: 14 },
+        { name: "Match 3 · Team A", member_count: 5 },
+      ],
+    });
+    expect(voice.querySelector(".canccu-widget__title")?.textContent).toBe("Voice rooms");
+    expect([...voice.querySelectorAll(".canccu-widget__row")].map((r) => r.textContent)).toEqual([
+      "Lobby14",
+      "Match 3 · Team A5",
     ]);
     // A value that is not a direction never adds a class of its own.
     const odd = draw(DEFAULT_TEMPLATES.stats ?? [], { online: 1, online_trend: "up x" });

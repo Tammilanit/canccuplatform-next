@@ -73,6 +73,9 @@ export const NEW_VIEWS = {
   "photo-pop": ".canccu-widget__pop img",
   "ambient-online": ".canccu-region--online .canccu-widget__still",
   "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
+  // Mockups 12 and 16 (#851): the busy voice rooms, and chat on the graph with its busiest hour.
+  dashboard: ".canccu-region--voice .canccu-widget__row",
+  "dashboard-chat": ".canccu-region--online .canccu-widget--activity_graph .canccu-widget__peak",
 };
 
 /** The surge's strip (sheet 15): before the tint, while it holds with its art, after it ended. */
@@ -96,6 +99,7 @@ export function planned() {
     for (const size of landscapeOf(theme))
       for (const view of LAYOUTS) if (!leanSkips(theme, view)) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
+    out.push(nameOf(theme, "dashboard-chat", HD[0]));
     for (const v of ANNOUNCE_THEMES.includes(theme) ? ANNOUNCE_VIEWS : [])
       for (const size of v.sizes) out.push(nameOf(theme, v.view, size));
     if (LIVING_THEMES.includes(theme))

@@ -97,7 +97,7 @@ async def test_a_name_change_renames_the_bot(env: Env) -> None:
 
 async def test_a_bind_names_the_bot_after_the_event(env: Env) -> None:
     env.contexts["ev-a"]["primary_hostname"] = HOST
-    env.app.state.deps = replace(env.deps, look=look(Outside()))
+    env.deps.look = look(Outside())
     user, guild = organiser(env)
     await bind(env, user, guild)
     assert guild.nicks[SHARED_ID] == "Demo Event"

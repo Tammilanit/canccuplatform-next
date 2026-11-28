@@ -28,7 +28,7 @@ const BROWSER = Object.fromEntries(
 );
 
 export default tseslint.config(
-  // The render smoke runs inside the built image against dist/, and the stack tests in the stack
+  // The render and bot smokes run inside the built image against dist/, and the stack tests in the stack
   // (test/stack/client.mjs), both outside the TypeScript project.
   {
     ignores: [
@@ -36,6 +36,7 @@ export default tseslint.config(
       "node_modules/",
       "eslint.config.js",
       "test/render-smoke.mjs",
+      "test/bot-smoke.mjs",
       "test/stack/*.mjs",
     ],
   },

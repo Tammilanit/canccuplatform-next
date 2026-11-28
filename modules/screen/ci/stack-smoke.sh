@@ -8,6 +8,9 @@ t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 echo "-- screen renders a PDF through its read-only render-socket mount (test/render-smoke.mjs)"
 docker compose "${compose[@]}" exec -T screen node --input-type=module < modules/screen/test/render-smoke.mjs
 
+echo "-- screen reads the bot's counts for its screens as a module (test/bot-smoke.mjs)"
+docker compose "${compose[@]}" exec -T screen node --input-type=module < modules/screen/test/bot-smoke.mjs
+
 echo "-- the kiosk page comes through Caddy with the event page CSP and names its bundle"
 curl -fsS -D "$t/h.txt" -o "$t/page.html" "$base/screen/"
 grep -qi "^content-security-policy: default-src 'none'; script-src 'self';" "$t/h.txt"

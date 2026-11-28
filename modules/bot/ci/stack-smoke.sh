@@ -28,3 +28,6 @@ curl -fsS "$base/api/bot/stats" | tee "$t/r.json"; echo
 jq -e '(.hours | type == "array") and (.top_games | type == "array")' "$t/r.json"
 code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/bot/stats?hours=73"); echo "$code"
 [ "$code" = 400 ] && jq -e '.error.code == "invalid_request"' "$t/r.json"
+echo "-- the module paths for the screens are not routed through the edge"
+code=$(curl -sS -o /dev/null -w '%{http_code}' "$base/internal/bot/presence/playing?tenant_id=demo"); echo "$code"
+[ "$code" = 404 ]

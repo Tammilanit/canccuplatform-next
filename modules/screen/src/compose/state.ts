@@ -276,11 +276,12 @@ export async function composeZone(
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only
-  // `stats` of them (NOW_TYPES).
+  // `stats` and `now_playing` of them (NOW_TYPES).
   const entries = entriesOf(Object.values(views), read.zone);
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
-  if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
+  if (!withContent)
+    for (const type of used) if (type !== "stats" && type !== "now_playing") used.delete(type);
   // "Today in numbers" is empty outside wind-down: its counts would move every Pulse zone's
   // version at each count for nothing.
   if (facts.phase !== "wind_down") used.delete("today_numbers");

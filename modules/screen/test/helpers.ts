@@ -268,6 +268,8 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
       checkinCount: (_tenantId, purpose) => answer(fake.countReads, purpose, fake.checkins),
+      botPlaying: (tenantId) => answer(fake.tenants, tenantId, fake.playing),
+      botVoice: (tenantId) => answer(fake.tenants, tenantId, fake.voice),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.

@@ -7,12 +7,11 @@
  */
 import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Event, Logger } from "@canccu/kit";
-import { checkinsMoved, keepPresence, presenceOf } from "../compose/stats.js";
 import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
 import type { CountSource } from "./store.js";
 import type { Feed, StreamDeps } from "./feed.js";
-import { ENDS, RECHECKS, rebuilds } from "./hub-events.js";
+import { ENDS, RECHECKS, keepCount, rebuilds } from "./hub-events.js";
 
 export const COALESCE_MS = 100;
 /**
@@ -126,32 +125,24 @@ export class PushHub {
   }
 
   /**
-   * The `stats` widget's counts (src/compose/stats.ts): kept, or marked to be read again, by every
-   * container, also one without a stream of the event, so a peak is never missed; then the zones
-   * shown here are rebuilt, and only those that show `stats` move.
+   * The counts the statistics read (src/compose/stats.ts, bot-live.ts, messages.ts): kept, or
+   * marked to be read again, by every container, also one without a stream of the event, so a peak
+   * is never missed; then the zones shown here are rebuilt, and only those that read a count that
+   * moved.
    */
   private async countsMoved(tenant: string, event: Event): Promise<void> {
-    let moved: CountSource;
+    let moved: CountSource[];
     try {
-      if (event.type === "bot.presence.counted") {
-        const count = presenceOf(event.data);
-        if (count === null) return;
-        await keepPresence(this.deps.kv, tenant, count);
-        moved = "presence";
-      } else if (event.type === "notify.checkin.recorded" && event.data.purpose === "arrival") {
-        await checkinsMoved(this.deps.kv, tenant);
-        moved = "checkins";
-      } else {
-        return;
-      }
+      moved = await keepCount(this.deps.kv, tenant, event);
     } catch (err) {
       this.deps.log?.warn({ err, tenant_id: tenant, type: event.type }, "keeping a count failed");
       return;
     }
+    if (moved.length === 0) return;
     // Door bursts bring many of these: a zone whose last build read no such count is left alone.
     for (const key of this.zonesOf(tenant)) {
       const record = await withTenant(tenant, () => this.deps.zones.read(key)).catch(() => null);
-      if (record?.counts === undefined || record.counts.includes(moved)) {
+      if (record?.counts === undefined || record.counts.some((c) => moved.includes(c))) {
         this.schedule(tenant, key);
       }
     }

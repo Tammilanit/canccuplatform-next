@@ -1,6 +1,6 @@
 // What the fake agenda, tenants, theming and notify answer the composed state (helpers.ts,
 // `h.sources`), and which reads were made of them.
-import type { DraftTheme, ThemeNow } from "../src/compose/sources.js";
+import type { BotPlaying, BotVoice, DraftTheme, ThemeNow } from "../src/compose/sources.js";
 import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 
 export interface FakeSources {
@@ -31,6 +31,9 @@ export interface FakeSources {
   checkins: number | null;
   /** The purposes the count was read for. */
   countReads: string[];
+  /** The bot's players per game and voice rooms (its module paths); null is "down". */
+  playing: BotPlaying | null;
+  voice: BotVoice | null;
 }
 
 /** Every source down or empty, and nothing read yet. */
@@ -52,5 +55,7 @@ export function emptySources(): FakeSources {
     checkinReads: [],
     checkins: null,
     countReads: [],
+    playing: null,
+    voice: null,
   };
 }

@@ -7,6 +7,7 @@
 import { tenantKey, withTenant } from "@canccu/kit";
 import type { Kv } from "../kv.js";
 import type { Hour } from "./graph.js";
+import type { MessagesCount } from "./messages.js";
 import type { CountSource } from "../push/store.js";
 import type { Presence } from "./features.js";
 import type { Sources } from "./sources.js";
@@ -68,21 +69,26 @@ export async function checkinsMoved(kv: Kv, tenant: string): Promise<void> {
 
 type Trend = "up" | "down" | "flat";
 
-const average = (counts: readonly PresenceCount[], pick: (c: PresenceCount) => number): number =>
+/** Anything counted at a moment: the bot's presence counts, players per game, an hour's chat. */
+interface Counted {
+  at: number;
+}
+
+const average = <T extends Counted>(counts: readonly T[], pick: (c: T) => number): number =>
   counts.reduce((sum, c) => sum + pick(c), 0) / counts.length;
 
 /**
  * The last 10 minutes against the 10 before (widgets.md): turning only on a change of 3 % and of
  * at least 2. Read on the whole minute, so an arrow holds at least 60 s; absent under 20 minutes.
  */
-export function trendOf(
-  counts: readonly PresenceCount[],
-  pick: (c: PresenceCount) => number,
+export function trendOf<T extends Counted>(
+  counts: readonly T[],
+  pick: (c: T) => number,
   nowMs: number,
 ): Trend | undefined {
   const at = Math.floor(nowMs / TREND_HOLD_MS) * TREND_HOLD_MS;
   const seen = counts.filter((c) => c.at <= at);
-  if (seen.length === 0 || (seen[0] as PresenceCount).at > at - 2 * TREND_WINDOW_MS) return;
+  if (seen.length === 0 || (seen[0] as T).at > at - 2 * TREND_WINDOW_MS) return;
   const recent = seen.filter((c) => c.at > at - TREND_WINDOW_MS);
   const before = seen.filter(
     (c) => c.at <= at - TREND_WINDOW_MS && c.at > at - 2 * TREND_WINDOW_MS,
@@ -96,12 +102,12 @@ export function trendOf(
 }
 
 /** The highest count of the last 24 hours and when it was first reached. */
-export function peakOf(
-  counts: readonly PresenceCount[],
-  pick: (c: PresenceCount) => number,
+export function peakOf<T extends Counted>(
+  counts: readonly T[],
+  pick: (c: T) => number,
   timeZone: string,
 ): { count: number; at: string; time_text: string } | undefined {
-  let best: PresenceCount | undefined;
+  let best: T | undefined;
   for (const c of counts) if (best === undefined || pick(c) > pick(best)) best = c;
   if (best === undefined) return;
   const time_text = new Intl.DateTimeFormat("en-GB", {
@@ -128,9 +134,9 @@ function offsetAt(parts: Intl.DateTimeFormat, ms: number): number {
  * UTC, a UTC hour would start at :30 or :45 there. Each graph sizes its bars against its own scale
  * (graph.ts).
  */
-export function hourlyOf(
-  counts: readonly PresenceCount[],
-  pick: (c: PresenceCount) => number,
+export function hourlyOf<T extends Counted>(
+  counts: readonly T[],
+  pick: (c: T) => number,
   timeZone: string,
   nowMs: number,
 ): Hour[] {
@@ -256,22 +262,31 @@ export async function readCounts(kv: Kv, nowMs: number): Promise<PresenceCount[]
   });
 }
 
-/** The graphs' hours and the day's peaks (`ZoneFacts.presence`), from the kept counts. */
+/**
+ * The graphs' hours and the day's peaks (`ZoneFacts.presence`), from the kept counts and the kept
+ * hours of chat. An hour of chat is one count, its total, so its bar is that total: the bot's
+ * hours start on UTC's hour, and each falls into one hour of the event's clock.
+ */
 export function presenceFacts(
   counts: readonly PresenceCount[],
   timeZone: string,
   nowMs: number,
+  chat: readonly MessagesCount[] = [],
 ): Presence {
   const online = (c: PresenceCount) => c.online;
   const inVoice = (c: PresenceCount) => c.in_voice;
+  const messages = (c: MessagesCount) => c.messages;
   const kept = counts.filter((c) => c.at > nowMs - DAY_MS);
+  const hours = chat.filter((c) => c.at > nowMs - DAY_MS);
   const peaks = {
     online_peak: peakOf(kept, online, timeZone),
     in_voice_peak: peakOf(kept, inVoice, timeZone),
+    messages_peak: peakOf(hours, messages, timeZone),
   };
   return {
     online: hourlyOf(kept, online, timeZone, nowMs),
     in_voice: hourlyOf(kept, inVoice, timeZone, nowMs),
+    messages: hourlyOf(hours, messages, timeZone, nowMs),
     // An absent field, never an undefined one: the fingerprint reads the same JSON.
     ...Object.fromEntries(Object.entries(peaks).filter(([, v]) => v !== undefined)),
   };
@@ -303,13 +318,18 @@ function liveUntil(counts: readonly PresenceCount[], nowMs: number): number | nu
 }
 
 /**
- * The counts the zone's widget types read: the graphs read the bot's, `stats` both. "Today in
- * numbers" counts only at wind-down; the phase's change rebuilds the zone anyway.
+ * The counts the zone's widget types read: the graphs read the bot's presence and chat, `stats`
+ * the presence and the check-ins, the voice rooms and now playing their own. "Today in numbers"
+ * counts only at wind-down; the phase's change rebuilds the zone anyway.
  */
 export function countsOf(used: ReadonlySet<string>): CountSource[] {
   const presence = ["stats", "activity_graph", "today_numbers"].some((t) => used.has(t));
-  return [
-    ...(presence ? ["presence" as const] : []),
-    ...(used.has("stats") ? ["checkins" as const] : []),
+  const reads: [boolean, CountSource][] = [
+    [presence, "presence"],
+    [used.has("stats"), "checkins"],
+    [used.has("activity_graph"), "messages"],
+    [used.has("voice_rooms"), "voice"],
+    [used.has("now_playing"), "playing"],
   ];
+  return reads.filter(([read]) => read).map(([, source]) => source);
 }
