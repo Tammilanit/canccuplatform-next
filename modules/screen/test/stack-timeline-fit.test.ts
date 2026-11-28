@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  outsideBlock,
-  timelineComposed,
-  timelineFits,
-  touchingNext,
-} from "./stack/timeline-fit.mjs";
+import { outsideBlock, timelineFits, touchingNext } from "./stack/timeline-fit.mjs";
 
 const box = (left: number, right: number, top = 0, bottom = 10) => ({ left, right, top, bottom });
 
@@ -26,48 +21,23 @@ describe("the coming hours' fit check", () => {
   });
 });
 
-const line = (empty = false) => ({ widget: "agenda_timeline", view: { empty } });
-const hero = (widgets: object[], order: number[]) => ({ role: "hero", widgets, order });
-const stats = { widget: "stats", view: { empty: false } };
-
-/** A page that answers the state fetch with `state`; its wait for the turn fails, as an unseen box does. */
-function pageWith(state: unknown) {
-  return {
-    evaluate: vi.fn(() => Promise.resolve(state)),
-    waitForSelector: vi.fn(() => Promise.reject(new Error("timeout"))),
-  };
-}
-
-describe("whether compose gave the coming hours a turn", () => {
-  it("finds the coming hours in a hero's order", () => {
-    expect(timelineComposed({ regions: [hero([stats, line()], [0, 1])] })).toBe(true);
-  });
-
-  it("finds none in an empty window, out of the order, or outside a hero", () => {
-    expect(timelineComposed({ regions: [hero([stats, line(true)], [0, 1])] })).toBe(false);
-    expect(timelineComposed({ regions: [hero([stats, line()], [0])] })).toBe(false);
-    expect(timelineComposed({ regions: [{ ...hero([line()], [0]), role: "rail" }] })).toBe(false);
-    expect(timelineComposed({ regions: [] })).toBe(false);
-  });
-});
-
 describe("the coming hours' check on a page", () => {
-  it("skips at once, without waiting, when compose sent no timeline", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
-    const page = pageWith({ regions: [hero([stats, line(true)], [0])] });
-    await expect(timelineFits(page)).resolves.toBeUndefined();
-    expect(page.waitForSelector).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledWith("no timeline composed");
-    log.mockRestore();
-  });
-
-  it("waits for a composed timeline's turn and fails when it never shows", async () => {
-    const page = pageWith({ regions: [hero([stats, line()], [0, 1])] });
+  it("fails when the line never shows, as a check that looked at nothing", async () => {
+    const page = {
+      evaluate: vi.fn(),
+      waitForSelector: vi.fn(() => Promise.reject(new Error("timeout"))),
+    };
     await expect(timelineFits(page)).rejects.toThrow("never showed");
-    expect(page.waitForSelector).toHaveBeenCalledOnce();
+    expect(page.evaluate).not.toHaveBeenCalled();
   });
 
-  it("fails when the state cannot be read", async () => {
-    await expect(timelineFits(pageWith(null))).rejects.toThrow("could not be read");
+  // A tick is 0 px wide, so a wait for a visible one never ends (#785).
+  it("waits for the ticks to be there, not to be visible", async () => {
+    const page = {
+      evaluate: vi.fn(() => Promise.resolve(null)),
+      waitForSelector: vi.fn(() => Promise.resolve()),
+    };
+    await expect(timelineFits(page)).rejects.toThrow("left the page");
+    expect(page.waitForSelector).toHaveBeenCalledWith(expect.any(String), { state: "attached" });
   });
 });

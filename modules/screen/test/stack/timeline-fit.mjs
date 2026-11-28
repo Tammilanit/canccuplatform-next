@@ -21,51 +21,17 @@ export function outsideBlock(pairs) {
 }
 
 /**
- * The hero rotates through boxes on its own clock, so the box's own turn comes within one lap of
- * it; two laps' worth of waiting is long enough, and a page that never shows it fails (a check
- * that passes without looking proves nothing).
- */
-const TURN_WAIT_MS = 120_000;
-
-/**
- * Whether `state` gives the coming hours a turn in a hero's rotation: a hero whose `order` points
- * at an `agenda_timeline` with something in it. Late at night the window to midnight is empty,
- * compose leaves the box out of the order (src/compose/build.ts, skip_empty), and there is
- * nothing to wait for.
- */
-export function timelineComposed(state) {
-  return (state?.regions ?? []).some(
-    (r) =>
-      r.role === "hero" &&
-      (r.order ?? []).some((i) => {
-        const w = r.widgets?.[i];
-        return w?.widget === "agenda_timeline" && w.view?.empty !== true;
-      }),
-  );
-}
-
-/**
- * Run on the page being checked: when compose gave the coming hours a turn, it waits for that
- * turn, then looks at them. The state is fetched from the page, so a view's handed state counts.
+ * Run on a page whose hero holds the coming hours (handed.mjs, `withComingHours`), so the line is
+ * there at any hour: a page without it fails, since a check that passes without looking proves
+ * nothing.
  */
 export async function timelineFits(page) {
-  const state = await page.evaluate(async (path) => {
-    const r = await fetch(path, { credentials: "same-origin" });
-    return r.ok ? r.json() : null;
-  }, "/api/screen/device/state");
-  if (state === null) throw new Error("the screen's state could not be read for the coming hours");
-  if (!timelineComposed(state)) {
-    console.log("no timeline composed");
-    return;
-  }
+  // Attached, not visible: a tick is 0 px wide and its time runs out of it (timeline.css), so
+  // Playwright never counts it as visible.
   await page
-    .waitForSelector(".canccu-widget--agenda_timeline .canccu-widget__tick", {
-      timeout: TURN_WAIT_MS,
-    })
+    .waitForSelector(".canccu-widget--agenda_timeline .canccu-widget__tick", { state: "attached" })
     .catch(() => {
-      throw new Error(
-        `the coming hours never showed in ${String(TURN_WAIT_MS / 1000)} s: nothing was checked`,
-      );
+      throw new Error("the coming hours never showed: nothing was checked");
     });
   const found = await page.evaluate(() => {
     const widget = document.querySelector(".canccu-widget--agenda_timeline");

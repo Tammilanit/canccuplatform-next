@@ -44,6 +44,8 @@ export const FOOD_SIZES = [...HD, UHD[0]];
 export const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
 /** The default theme's other views of those layouts at 1080p: each view and its layout. */
 export const DEFAULT_LAYOUT_VIEWS = [
+  // The Dashboard's narrow hero held on the coming hours (handed.mjs, withComingHours).
+  ["dashboard-coming-hours", "dashboard"],
   ["dashboard-showcase-small", "dashboard"],
   ["dashboard-waiting", "dashboard"],
   ["ambient-takeover", "ambient"],
@@ -79,6 +81,7 @@ export function planned() {
       if (theme !== "default") continue;
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
+    out.push(nameOf(theme, "coming-hours", HD[0]));
     for (const size of landscapeOf(theme))
       for (const view of LAYOUTS) if (!leanSkips(theme, view)) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));

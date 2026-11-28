@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { withHeroShowcase, withPhoto, withShowcase, withSmallShowcase } from "./stack/handed.mjs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  withComingHours,
+  withHeroShowcase,
+  withPhoto,
+  withShowcase,
+  withSmallShowcase,
+} from "./stack/handed.mjs";
 
 const region = (id: string, widgets: string[], order: number[]) => ({
   id,
@@ -87,5 +93,48 @@ describe("withPhoto", () => {
   it("leaves the other boxes as they are", () => {
     const before = pulse();
     expect(withPhoto(before).regions[1]).toBe(before.regions[1]);
+  });
+});
+
+describe("withComingHours", () => {
+  afterEach(() => vi.useRealTimers());
+  const pulse = () => ({
+    tenant: { time_zone: "UTC" },
+    zone: { key: "main" },
+    regions: [
+      { ...region("hero", ["countdown", "agenda_timeline"], [0]), role: "hero", area: { columns: 12 } },
+      { ...region("rail", ["agenda_now"], [0]), role: "rail" },
+    ],
+  }); // prettier-ignore
+
+  // Late at night the server's own line is empty and out of the order (the reason for the view).
+  it.each(["2026-03-14T18:05:00Z", "2026-03-14T23:50:00Z", "2026-03-15T00:20:00Z"])(
+    "holds the hero on a line with blocks at %s",
+    (now) => {
+      vi.useFakeTimers({ now: Date.parse(now) });
+      const hero = withComingHours(pulse()).regions.find((r) => r.id === "hero");
+      const shown = hero?.widgets[hero.order[0] ?? -1];
+      expect(hero?.order).toHaveLength(1);
+      expect(hero?.claim).toBeNull();
+      expect(shown?.widget).toBe("agenda_timeline");
+      expect(shown?.view).toMatchObject({ empty: false });
+      expect((shown?.view as { items: unknown[] }).items.length).toBeGreaterThan(1);
+    },
+  );
+
+  it("draws the line for the hero's width: a narrow hero holds fewer hours", () => {
+    vi.useFakeTimers({ now: Date.parse("2026-03-14T15:05:00Z") });
+    const hoursAt = (columns: number) => {
+      const s = pulse();
+      s.regions[0] = { ...s.regions[0], area: { columns } } as (typeof s.regions)[0];
+      const hero = withComingHours(s).regions[0];
+      return (hero?.widgets.at(-1)?.view as { hours: number }).hours;
+    };
+    expect(hoursAt(4)).toBeLessThan(hoursAt(12));
+  });
+
+  it("leaves the other boxes as they are", () => {
+    const before = pulse();
+    expect(withComingHours(before).regions[1]).toBe(before.regions[1]);
   });
 });

@@ -228,7 +228,7 @@ test("--changed picks the screen shots a changed file is named for, and says wha
   const views = (out) => [...new Set(out.shots.map((s) => s.name.replace(/^theming-.+?-screen-|-\d+x\d+.*$/g, "")))].sort();
   // The announcement drawn on the Dashboard is a dashboard view too.
   assert.deepEqual(views(run(["modules/screen/player/src/dashboard.css"])), [
-    "ann-important-dashboard", "dashboard", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
+    "ann-important-dashboard", "dashboard", "dashboard-coming-hours", "dashboard-showcase", "dashboard-showcase-small", "dashboard-waiting",
   ]);
   assert.deepEqual(views(run(["modules/screen/test/stack/living.mjs"])), [
     "living-day", "living-food", "living-hype", "living-rotation", "living-slideshow", "living-stepdown",

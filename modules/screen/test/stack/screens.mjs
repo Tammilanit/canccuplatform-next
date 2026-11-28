@@ -13,7 +13,6 @@
 // A run takes only the views `only` names, as chosen (screen-views.mjs `chosen`, docs/ci.md#tiers).
 import { cleanUp } from "./cleanup.mjs";
 import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
-import { timelineFits } from "./timeline-fit.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
@@ -24,6 +23,7 @@ import { withFoodClaim } from "./food.mjs";
 import { MOTION_VIEWS, STAGE_VIEWS, withHeroArt, withMotion, withStage } from "./handed-stage.mjs";
 import {
   CLAIM_OF,
+  withComingHours,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
@@ -130,6 +130,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
               untouched({ demo, open, at, shot, cookie: main.cookie }, view, size),
             );
       }
+      // The coming hours' axis and labels in this theme's font (#785), on a hero held on them.
+      await attempt(nameOf(theme, "coming-hours", HD[0]), () =>
+        handed(theme, "coming-hours", HD[0], withComingHours),
+      );
       try {
         for (const size of landscapeOf(theme))
           for (const view of LAYOUTS)
@@ -229,7 +233,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await tickerFitted(page, theme === "default" && size === HD[0]);
       await agendaSettled(page);
       await panelFilled(page);
-      await timelineFits(page);
       if (theme === "default") await venueOnOneLine(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
@@ -274,6 +277,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       if (view === "dashboard") return handed(theme, view, size, withStats);
       if (view === "dashboard-showcase")
         return handed(theme, view, size, (s) => withShowcase(withStats(s)));
+      if (view === "dashboard-coming-hours")
+        return handed(theme, view, size, (s) => withComingHours(withStats(s)));
       if (view === "dashboard-showcase-small")
         return handed(theme, view, size, (s) => withSmallShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
