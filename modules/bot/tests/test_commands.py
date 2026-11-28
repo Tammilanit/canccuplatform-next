@@ -87,3 +87,13 @@ async def test_an_admins_sync_writes_even_an_unchanged_set(env: Env) -> None:
     await commands.register(d, env.contexts["ev-a"], force=True)
     assert writes(env, guild.id) == 2
     assert [c["name"] for c in guild.commands[SHARED_ID]] == ["trial"]
+
+
+async def test_at_start_every_bound_guild_gets_the_current_set(env: Env) -> None:
+    guild = await bound(env)
+    env.contexts["ev-a"]["flags"] = {FLAG: True}
+    d = replace(env.deps, commands=(TRIAL,))
+    await commands.register_all(d)
+    assert [c["name"] for c in guild.commands[SHARED_ID]] == ["trial"]
+    await commands.register_all(d)  # a second container, or a restart: nothing changed
+    assert writes(env, guild.id) == 1

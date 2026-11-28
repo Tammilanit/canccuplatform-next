@@ -12,7 +12,7 @@ from crew import CREW, STRANGER, World, buttons, make_world, slash
 from test_framework import HOST
 
 ORDERS = "/api/pizza/orders"
-OPEN = {
+OPEN: dict[str, Any] = {
     "id": "o3",
     "seq": 3,
     "state": "open",

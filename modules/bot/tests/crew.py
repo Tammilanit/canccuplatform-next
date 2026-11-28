@@ -88,7 +88,11 @@ class World:
             commands=COMMANDS,
             components=ComponentKeys.from_service_key(KEY),
             acting=ActingClient(
-                "http://admin", ServiceIdentity("bot", KEY), BOT_ADMIN, http, lambda m: f"http://{m}"
+                "http://admin",
+                ServiceIdentity("bot", KEY),
+                BOT_ADMIN,
+                http,
+                lambda m: f"http://{m}",
             ),
             look=FakeLook(),
             http=http,

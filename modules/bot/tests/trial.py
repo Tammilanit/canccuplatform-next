@@ -54,9 +54,9 @@ async def on_component(c: Context, component: Component, values: dict[str, str])
     return Reply(f"Registered as {name}.")
 
 
-def name_form(c: Context, component: Component) -> Form:
+def name_form(c: Context, component: Component | None) -> Form:
     field = Field("name", "Your name", value=c.caller.nickname[:18], max_length=18)
-    return Form("named", "Register with a name", (field,), args=component.args)
+    return Form("named", "Register with a name", (field,), args=component.args if component else "")
 
 
 TRIAL = Command(

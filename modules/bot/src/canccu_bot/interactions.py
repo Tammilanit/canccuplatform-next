@@ -24,7 +24,6 @@ from .deps import Deps
 from .framework import (
     BUTTON_STYLES,
     Button,
-    Caller,
     Command,
     Context,
     Form,
@@ -36,6 +35,7 @@ from .framework import (
 )
 from .guard import guarded
 from .notes import Notes
+from .payloads import caller_of, command_options, form_values, target_of
 from .texts import pick, text
 
 log = logging.getLogger("canccu_bot.interactions")
@@ -46,49 +46,6 @@ EPHEMERAL = 64
 DEADLINE_S = 10.0
 EXPIRY_MAX_S = 15 * 60
 """Discord lets the bot edit a private answer for 15 minutes: a later expiry cannot be shown."""
-
-
-def caller_of(data: dict[str, Any]) -> Caller:
-    member = data.get("member") or {}
-    user = member.get("user") or data.get("user") or {}
-    name = member.get("nick") or user.get("global_name") or user.get("username") or ""
-    return Caller(
-        user_id=str(user.get("id", "")),
-        nickname=str(name),
-        role_ids=tuple(str(r) for r in member.get("roles") or ()),
-        guild_id=data.get("guild_id"),
-        locale=data.get("locale"),
-    )
-
-
-def _options(data: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
-    options = (data.get("data") or {}).get("options") or []
-    prefix = ""
-    if options and options[0].get("type") == 2:  # a group holds its subcommand
-        prefix = f"{options[0]['name']} "
-        options = options[0].get("options") or []
-    if options and options[0].get("type") == 1:  # a subcommand holds the real options
-        return prefix + str(options[0]["name"]), {
-            o["name"]: o.get("value") for o in options[0].get("options") or []
-        }
-    return None, {o["name"]: o.get("value") for o in options}
-
-
-def _target(data: dict[str, Any]) -> dict[str, Any] | None:
-    """A message command's message, from what Discord resolved for it."""
-    body = data.get("data") or {}
-    messages = (body.get("resolved") or {}).get("messages") or {}
-    found = messages.get(str(body.get("target_id") or ""))
-    return found if isinstance(found, dict) else None
-
-
-def _values(data: dict[str, Any]) -> dict[str, str]:
-    rows = (data.get("data") or {}).get("components") or []
-    return {
-        str(c["custom_id"]): str(c.get("value") or "")
-        for row in rows
-        for c in row.get("components") or []
-    }
 
 
 async def _opened(form: Form | Awaitable[Form]) -> Form:
@@ -187,7 +144,7 @@ class Interactions:
         if run is None:
             return
         await self._callback(ctx, data, {"type": DEFERRED_MESSAGE, "data": {"flags": EPHEMERAL}})
-        sub, options = _options(data)
+        sub, options = command_options(data)
         await self._run(ctx, data, command, sub, options, run)
 
     async def _component(self, ctx: TenantContext, data: dict[str, Any]) -> None:
@@ -214,7 +171,7 @@ class Interactions:
             await self._callback(ctx, data, self._form(ctx, command, form))
             return
         await self._callback(ctx, data, {"type": DEFERRED_UPDATE})
-        values = _values(data)
+        values = form_values(data)
         await self._run(ctx, data, command, None, {}, lambda c: handle(c, found, values))
 
     async def _context_for(
@@ -275,7 +232,7 @@ class Interactions:
             page=page,
             hosts=() if host is None else (host,),
             time_zone=ctx["time_zone"],
-            target=_target(data) if command.menu else None,
+            target=target_of(data) if command.menu else None,
             notes=Notes(d.keys, tenant),
             download=download,
             now=d.now,
