@@ -64,3 +64,21 @@ async def test_a_bind_state_is_taken_once_by_racing_callbacks(keys: ValkeyKeys) 
     await keys.put(key, '{"tenant": "ev-a"}', 30_000)
     taken = await asyncio.gather(*(keys.take(key) for _ in range(5)))
     assert sorted(taken, key=str) == [None, None, None, None, '{"tenant": "ev-a"}']
+
+
+async def test_a_hash_is_written_behind_read_back_and_deleted(keys: ValkeyKeys) -> None:
+    key = f"bot:live:test-{uuid.uuid4()}:presence"
+    await keys.hash_write(key, {"1": "online", "2": "idle"}, set(), 60_000)
+    await keys.hash_write(key, {"3": "dnd"}, {"1"}, 60_000)
+    assert await keys.hash_read(key) == {"2": "idle", "3": "dnd"}
+    await keys.delete(key)
+    assert await keys.hash_read(key) == {}
+
+
+async def test_a_counter_counts_and_runs_out(keys: ValkeyKeys) -> None:
+    key = f"bot:count:test-{uuid.uuid4()}"
+    assert await keys.incr(key, 50) == 1
+    assert await keys.incr(key, 50) == 2
+    assert await keys.get(key) == "2"
+    await asyncio.sleep(0.1)
+    assert await keys.get(key) is None

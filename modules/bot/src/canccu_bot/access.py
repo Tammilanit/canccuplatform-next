@@ -36,6 +36,13 @@ def archived() -> KitError:
     return KitError("the event is archived and read-only", status=409, code="event_archived")
 
 
+def is_member(session: Session) -> bool:
+    """Seam: whether the signed-in user belongs to the event. Until the tenants membership API
+    lands (#150), every valid session on the event's hostname counts, as in agenda's `is_member`:
+    sessions are bound to one event, and today only organisers and crew have one."""
+    return True
+
+
 def is_event_admin(session: Session) -> bool:
     """Seam: the event-admin role is "holds `admin.rights.write`" until #150 serves the role
     itself. Today only the owner holds it, so it fails closed: no granted right reaches a bot

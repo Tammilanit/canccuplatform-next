@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -81,6 +83,30 @@ class MemoryKeys:
         value = self._live(key)
         self.values.pop(key, None)
         return value
+
+    async def hash_write(
+        self, key: str, values: dict[str, str], gone: Collection[str], ttl_ms: int
+    ) -> None:
+        found = json.loads(self._live(key) or "{}")
+        found = {k: v for k, v in {**found, **values}.items() if k not in gone or k in values}
+        if found:
+            self.values[key] = (json.dumps(found), self.now_ms + ttl_ms)
+        else:  # as Valkey: a hash with no field left is no key
+            self.values.pop(key, None)
+
+    async def hash_read(self, key: str) -> dict[str, str]:
+        found: dict[str, str] = json.loads(self._live(key) or "{}")
+        return found
+
+    async def delete(self, *keys: str) -> None:
+        for key in keys:
+            self.values.pop(key, None)
+
+    async def incr(self, key: str, ttl_ms: int) -> int:
+        found = self.values.get(key) if self._live(key) is not None else None
+        count = 1 if found is None else int(found[0]) + 1
+        self.values[key] = (str(count), self.now_ms + ttl_ms if found is None else found[1])
+        return count
 
 
 @dataclass

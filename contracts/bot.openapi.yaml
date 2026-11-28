@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Bot API
   version: 1.0.0
-  summary: An event's Discord connection, its guild binding, the command registration, and who plays what.
+  summary: An event's Discord connection, its guild binding, the command registration, its counts, and who plays what.
   description: |
     Machine-readable part of the bot contract (connections, and the who-plays-what read API). Prose, the client pool, isolation, secrets and
     events: contracts/bot.md. Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
@@ -22,6 +22,8 @@ tags:
     description: Binding the event's Discord server through the OAuth bot-install flow, and its slash commands.
   - name: presence
     description: Who plays which game and who is in which voice channel, live; the names behind the bus's counts.
+  - name: counts
+    description: The event's counts per hour (online, in voice, messages) and its top games, never who.
   - name: setup
     description: The guild's purposes, the pick lists, creating what is missing, and the check with its fixes.
   - name: clone
@@ -638,6 +640,46 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/bot/stats:
+    get:
+      tags: [counts]
+      operationId: getStats
+      summary: The event's hourly counts and top games
+      description: |
+        A member of the event, and a guest as the info-page mode allows (contracts/tenants.md: nothing in a draft
+        event or in `sign_in` mode, only from the venue in `venue_only`): counts only, never who. The hours already folded
+        (an hour is folded in the minute after it ends) from the last `hours` hours, oldest first; an hour with no
+        count is left out. `top_games` adds up player-minutes per game of the event's catalogue, matched as in
+        contracts/games.md (The catalogue), at most 10, most player-hours first; an activity that matches no active
+        game is never named. Everyone the opt-out filter leaves out was never counted (contracts/bot.md, Counts).
+      security: []
+      parameters:
+        - name: hours
+          in: query
+          required: false
+          description: How many hours back from the start of the current hour.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 72
+            default: 24
+      responses:
+        "200":
+          description: The series and the top games.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "403":
+          description: "`info_pages_closed`: a guest the event's info-page mode keeps out."
+          content:
+            application/json:
+              schema:
+                $ref: "common.openapi.yaml#/components/schemas/Error"
+        "404":
+          $ref: "common.openapi.yaml#/components/responses/NotFound"
   /api/bot/clone:
     post:
       tags: [clone]
@@ -1012,6 +1054,55 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/Player"
+    Stats:
+      type: object
+      required: [hours, top_games]
+      additionalProperties: false
+      properties:
+        hours:
+          type: array
+          items:
+            type: object
+            required: [hour, online, online_max, in_voice, messages]
+            additionalProperties: false
+            properties:
+              hour:
+                type: string
+                format: date-time
+                description: The hour's start.
+              online:
+                type: [number, "null"]
+                minimum: 0
+                description: Members online, the average of the hour's minutes; `null` while the presence feed was off.
+              online_max:
+                type: [integer, "null"]
+                minimum: 0
+                description: The most members online in one minute of the hour.
+              in_voice:
+                type: [number, "null"]
+                minimum: 0
+                description: Members in voice, the average of the hour's minutes; `null` while the voice feed was off.
+              messages:
+                type: [integer, "null"]
+                minimum: 0
+                description: Messages in the hour, in channels everyone can read; `null` while the messages feed was off.
+        top_games:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required: [game_id, name, player_hours]
+            additionalProperties: false
+            properties:
+              game_id:
+                type: string
+              name:
+                type: string
+                description: The game's name in the catalogue, never an activity's.
+              player_hours:
+                type: number
+                minimum: 0
+                description: Player-minutes over the hours asked for, divided by 60 and rounded to two decimals.
     Reason:
       type: object
       required: [reason]

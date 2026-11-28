@@ -12,7 +12,8 @@ from typing import Any, Literal, Protocol
 
 log = logging.getLogger("canccu_bot.gateway")
 
-PRIVILEGED = (1 << 1) | (1 << 8) | (1 << 15)
+MEMBERS_INTENT, PRESENCES_INTENT = 1 << 1, 1 << 8
+PRIVILEGED = MEMBERS_INTENT | PRESENCES_INTENT | (1 << 15)
 """Members, presences and message content: Discord refuses them unless the application enabled
 them in its developer portal."""
 
@@ -214,6 +215,17 @@ class GatewayShard:
         except Exception:
             # One guild's bad data or a handler's bug never stops the client.
             log.exception("handler for %s failed", event)
+
+    async def request_members(self, guild_id: str) -> bool:
+        """Op 8 for every member of the guild, with their presences when the presence intent is
+        on. False without the members intent (Discord refuses a full list without it) or before
+        the session is ready."""
+        if self._ws is None or self.status != "ready" or not self.intents & MEMBERS_INTENT:
+            return False
+        presences = bool(self.intents & PRESENCES_INTENT)
+        d = {"guild_id": guild_id, "query": "", "limit": 0, "presences": presences}
+        await self._ws.send({"op": 8, "d": d})
+        return True
 
     async def stop(self) -> None:
         self._stopped = True

@@ -54,7 +54,7 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own. `agenda.item.changed` and `agenda.item.delayed` also carry `announce`: on `false` no consumer announces the change ([agenda.md](agenda.md#notification-channels)).
 
 ## Bot connections
-Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). The bot's other events (presence, activities, voice channels) are still provisional: see [Bot](#bot) below.
+Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). Its counted events are adopted by bot.md too ([Bot](#bot) below); the voice-channel events are still provisional.
 
 | Type | Meaning | Consumers |
 |---|---|---|
@@ -302,8 +302,10 @@ Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord,
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
-| `bot.activities.counted` | The guild members' "playing" activities, counted every interval: counts only, never who ([games.md](games.md#surges)) | system | games (surges) | `counted_at` (string, time), `interval_seconds` (integer), `activities` (list of object: `application_id` (string or null), `name` (string), `players` (integer)) |
-| `bot.presence.counted` | Members online and in voice, counted every interval | event-wide, `public` (counts only) | screen (stats), moments | `counted_at` (string, time), `interval_seconds` (integer), `members` (integer), `online` (integer), `idle` (integer), `dnd` (integer), `in_voice` (integer) |
+| `bot.activities.counted` | The guild members' "playing" activities, counted every minute: counts only, never who ([games.md](games.md#surges)). **Adopted by [bot.md](bot.md#counts)** | system | games (surges) | `counted_at` (string, time), `interval_seconds` (integer), `activities` (list of object: `application_id` (string or null), `name` (string), `players` (integer)) |
+| `bot.presence.counted` | Members online and in voice, counted every minute. **Adopted by [bot.md](bot.md#counts)** | event-wide, `public` (counts only) | screen (stats), moments | `counted_at` (string, time), `interval_seconds` (integer), `members` (integer), `online` (integer), `idle` (integer), `dnd` (integer), `in_voice` (integer) |
+| `bot.voice.counted` | The public voice rooms with people in them, counted every minute: counts only, never who. **Added by [bot.md](bot.md#counts)** | event-wide, `public` (counts only) | screen (`voice_rooms`) | `counted_at` (string, time), `interval_seconds` (integer), `rooms` (list of object: `channel_id` (string), `name` (string), `member_count` (integer)) |
+| `bot.messages.counted` | The messages of one hour in the channels everyone can read, once the hour ends: a count only, never who or what. **Added by [bot.md](bot.md#counts)** | event-wide, `public` (counts only) | screen (chat activity) | `counted_at` (string, time: the hour's start), `interval_seconds` (integer, 3600), `messages` (integer) |
 | `bot.voice_channels.created` | The bot created the voice channels a match asked for (once per match) | system | tournament (keeps the ids), screen (shows the channel names) | `ref` (object: `module` (string), `id` (string): `tournament` and the match id), `channels` (list of object: `channel_id` (string), `name` (string), `team_id` (string or null)) |
 | `bot.voice_channels.removed` | The bot disconnected everyone and deleted the channels: the acknowledgement of cleanup | system | tournament | `ref` (object), `channel_ids` (list of string), `reason` (string: `finished`, `cancelled`, `backstop`) |
 | `bot.voice_roster.captured` | Who stayed in a match's voice channels and for how long, answering `tournament.scoring.started` (presence data) | system | tournament (fills in placements) | `ref` (object), `captured_at` (string, time), `channels` (list of object: `channel_id` (string), `team_id` (string or null), `members` (list of Person, each with `dwell_seconds` (integer))) |
