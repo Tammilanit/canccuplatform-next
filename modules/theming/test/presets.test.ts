@@ -8,8 +8,44 @@ import { PRESETS, schemeColors } from "../src/presets.js";
 
 describe("the presets", () => {
   it("are the demo themes the image holds, in the gallery's order", () => {
-    expect([...PRESETS.keys()]).toEqual(["default", "terminal", "level-up"]);
+    expect([...PRESETS.keys()]).toEqual(["default", "esports", "level-up", "arcade", "terminal"]);
     expect(PRESETS.get("level-up")?.name).toBe("Level up");
+  });
+
+  it("hold Arcade with its five schemes, its pixel pair and fully opaque boxes", () => {
+    const arcade = PRESETS.get("arcade");
+    expect(arcade?.schemes.map((s) => s.id)).toEqual([
+      "cabinet",
+      "player-two",
+      "green-screen",
+      "handheld",
+      "contrast",
+    ]);
+    expect(arcade?.manifest.brand).toMatchObject({
+      font_pair: "press-jersey",
+      roundness: "square",
+      backdrop: { looks: ["particles", "glows"] },
+      box_opacity: 1,
+    });
+    expect(arcade?.manifest.tokens).toMatchObject({ motion_style: { pack: "arcade" } });
+  });
+
+  it("hold Esports with its five schemes, its pair, square corners and broadcast motion", () => {
+    const esports = PRESETS.get("esports");
+    expect(esports?.schemes.map((s) => s.id)).toEqual([
+      "arena",
+      "red-side",
+      "gold",
+      "studio",
+      "contrast",
+    ]);
+    expect(esports?.manifest.brand).toMatchObject({
+      font_pair: "saira",
+      roundness: "square",
+      backdrop: { looks: ["gradient", "glows"] },
+      box_opacity: 0.9,
+    });
+    expect(esports?.manifest.tokens).toMatchObject({ motion_style: { pack: "broadcast" } });
   });
 
   it("say they hold embeds exactly when their package has an embeds folder", () => {

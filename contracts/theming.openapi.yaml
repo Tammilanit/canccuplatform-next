@@ -1179,6 +1179,9 @@ components:
         backdrop:
           description: The screen's background; its `image` must be an image already in the draft (else 400).
           $ref: "theme.schema.json#/$defs/backdrop"
+        box_opacity:
+          description: How solid the screen's boxes are; raised to the lowest value at which the brand's colours still pass over the background, and then named in `adjusted`.
+          $ref: "theme.schema.json#/$defs/box_opacity"
     BrandResult:
       type: object
       required: [draft, adjusted]
@@ -1186,7 +1189,7 @@ components:
         draft:
           $ref: "#/components/schemas/Draft"
         adjusted:
-          description: Colour tokens shaded away from the given colours to meet the contrast rules.
+          description: Colour tokens shaded away from the given colours to meet the contrast rules, and `box_opacity` when it was raised to meet them.
           type: array
           items:
             type: string

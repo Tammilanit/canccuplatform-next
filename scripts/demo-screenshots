@@ -109,9 +109,10 @@ MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
 cp scripts/demo-screenshots*.mjs "$work/scripts/" \
   && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
-# The graphs handed to the page take their scale and hours from the server's own rule (#527).
+# The graphs handed to the page take their scale and hours from the server's own rule (#527), and
+# the coming hours their columns and lanes (#785); timeline.ts imports only types.
 mkdir -p "$work/modules/screen/src/compose" \
-  && cp modules/screen/src/compose/graph.ts "$work/modules/screen/src/compose/" || exit 2
+  && cp modules/screen/src/compose/graph.ts modules/screen/src/compose/timeline.ts "$work/modules/screen/src/compose/" || exit 2
 # The Theme studio's draft takes the demo logo, and the black one for the plate shots, as an organiser would upload them.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" \
   && mkdir -p "$work/events/demo/images" && cp events/demo/images/logo-black.svg "$work/events/demo/images/" || exit 2

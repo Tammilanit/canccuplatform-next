@@ -139,3 +139,22 @@ describe("the screen's stylesheet", () => {
     expect(pop).toBe(`0 0 ${band ?? ""}`);
   });
 });
+
+describe("the box's background on older kiosks", () => {
+  const screen = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const supports = /@supports\s*\(background:\s*color-mix\([^)]*\)\)\s*\{/.exec(screen);
+
+  it("keeps the plain surface background outside the color-mix @supports block", () => {
+    expect(supports).not.toBeNull();
+    const at = supports?.index ?? 0;
+    const before = screen.slice(0, at);
+    const inside = screen.slice(at);
+    // The widget's own rule paints the surface plainly, so a browser without color-mix() draws it.
+    expect(before).toMatch(
+      /\.canccu-region > \.canccu-widget \{[^}]*background:\s*var\(--canccu-color-surface\);/,
+    );
+    // The var()-bearing color-mix() declaration is only inside the block, never outside it.
+    expect(before).not.toMatch(/background:\s*color-mix\(/);
+    expect(inside).toMatch(/background:\s*color-mix\([^;]*--canccu-box-opacity/);
+  });
+});

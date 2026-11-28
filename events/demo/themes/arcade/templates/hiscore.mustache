@@ -1,0 +1,15 @@
+{{! The standings as a high-score table (contracts/screen.md, leaderboard: title, rows with rank,
+    name and points), dotted leaders between name and score. Rows that do not fit the box wrap out
+    of sight whole (arcade.css). }}
+{{#from_crew}}<p class="canccu-widget__kicker">From the crew</p>{{/from_crew}}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<ol class="t-arcade-hiscore">
+  {{#rows}}
+  <li class="t-arcade-hiscore__row">
+    <span class="t-arcade-hiscore__rank">{{rank}}</span>
+    <span class="t-arcade-hiscore__name">{{name}}</span>
+    <span class="t-arcade-hiscore__dots" aria-hidden="true"></span>
+    <span class="t-arcade-hiscore__score">{{points}}</span>
+  </li>
+  {{/rows}}
+</ol>

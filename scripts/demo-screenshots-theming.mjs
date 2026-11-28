@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import { SESSION, expect } from "../modules/screen/test/stack/client.mjs";
 import { DESK, PHONE } from "./demo-screenshots-shot.mjs";
+import { presetShots } from "./demo-screenshots-presets.mjs";
 
 const SCREEN_PREVIEW = "iframe[data-screen-preview]";
 // The synthetic black mark on transparent (docs/plans/issue-784.md D20).
@@ -250,6 +251,7 @@ export async function draftShots({ demo, shot }) {
       });
     }
     version = await plateShots({ demo, shot }, version);
+    version = await presetShots({ demo, shot }, version);
   } finally {
     if (mine !== undefined) {
       const dropped = await demo.call("DELETE", `/api/theming/presets/${mine}`);

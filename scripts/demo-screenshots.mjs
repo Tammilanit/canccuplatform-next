@@ -118,6 +118,7 @@ import {
   draftShots,
   themingListed,
 } from "./demo-screenshots-theming.mjs";
+import { PRESET_LOOKS, presetsListed } from "./demo-screenshots-presets.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -166,7 +167,8 @@ only(AGENDA_DOWN, ([, path]) => groupOf(path));
 only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
 only(SETTINGS_STATES, () => "admin");
 only(OTHERS, ([, path]) => groupOf(path));
-for (const list of [STUDIO, DRAFT, LIGHT, PLATES]) only(list, () => "theming");
+for (const list of [STUDIO, DRAFT, LIGHT, PLATES, PRESET_LOOKS])
+  only(list, () => "theming");
 for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED])
   only(list, () => "agenda");
 // The pages' screens at 4K and in portrait are the book's (#835), as the screens' own sizes are.
@@ -186,6 +188,7 @@ if (opts["dry-run"]) {
     ...troubleListed(at),
     ...pagesListed(at),
     ...themingListed(at),
+    ...presetsListed(at),
     ...agendaListed(at),
     ...(want("moments")
       ? [

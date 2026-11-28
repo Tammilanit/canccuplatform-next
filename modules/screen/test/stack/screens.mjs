@@ -23,6 +23,7 @@ import { withFoodClaim } from "./food.mjs";
 import { MOTION_VIEWS, STAGE_VIEWS, withHeroArt, withMotion, withStage } from "./handed-stage.mjs";
 import {
   CLAIM_OF,
+  withComingHours,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
@@ -40,6 +41,7 @@ import { untouched } from "./frame-shots.mjs";
 import { handStates, screenPages } from "./screen-pages.mjs";
 import {
   THEMES,
+  leanSkips,
   HD,
   sizesOf,
   UNTHEMED,
@@ -106,30 +108,37 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await attempt(nameOf(theme, "pulse", size), () =>
           withQuickVenueRail(demo, () => pulse(theme, size)),
         );
-        await attempt(nameOf(theme, "unassigned", size), async () => {
-          const { page, close } = await open(size, spare.cookie);
-          await page.goto(at("/screen/"));
-          await page.waitForSelector(".canccu-frame--unassigned");
-          await settle(page);
-          await shot(nameOf(theme, "unassigned", size), page);
-          await close();
-        });
-        await attempt(nameOf(theme, "archived", size), () =>
-          handed(theme, "archived", size, (s) => ({
-            ...s,
-            tenant: { ...s.tenant, status: "archived" },
-          })),
-        );
+        if (!leanSkips(theme, "unassigned"))
+          await attempt(nameOf(theme, "unassigned", size), async () => {
+            const { page, close } = await open(size, spare.cookie);
+            await page.goto(at("/screen/"));
+            await page.waitForSelector(".canccu-frame--unassigned");
+            await settle(page);
+            await shot(nameOf(theme, "unassigned", size), page);
+            await close();
+          });
+        if (!leanSkips(theme, "archived"))
+          await attempt(nameOf(theme, "archived", size), () =>
+            handed(theme, "archived", size, (s) => ({
+              ...s,
+              tenant: { ...s.tenant, status: "archived" },
+            })),
+          );
         if (theme === "default")
           for (const view of UNTHEMED)
             await attempt(nameOf(theme, view, size), () =>
               untouched({ demo, open, at, shot, cookie: main.cookie }, view, size),
             );
       }
+      // The coming hours' axis and labels in this theme's font (#785), on a hero held on them.
+      await attempt(nameOf(theme, "coming-hours", HD[0]), () =>
+        handed(theme, "coming-hours", HD[0], withComingHours),
+      );
       try {
         for (const size of landscapeOf(theme))
           for (const view of LAYOUTS)
-            await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
+            if (!leanSkips(theme, view))
+              await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
           layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
         );
@@ -268,6 +277,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       if (view === "dashboard") return handed(theme, view, size, withStats);
       if (view === "dashboard-showcase")
         return handed(theme, view, size, (s) => withShowcase(withStats(s)));
+      if (view === "dashboard-coming-hours")
+        return handed(theme, view, size, (s) => withComingHours(withStats(s)));
       if (view === "dashboard-showcase-small")
         return handed(theme, view, size, (s) => withSmallShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);

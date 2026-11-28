@@ -67,3 +67,25 @@ export function placeDay(now) {
   }));
   return [...today, ...tomorrow];
 }
+
+/**
+ * TODAY's items at their own times from the quarter hour before `now`, never squeezed before
+ * midnight, as the module read gives them to compose: the coming hours' view (handed.mjs,
+ * `withComingHours`) draws its line from them, so it shows blocks at any hour, past midnight too.
+ */
+export function aroundNow(now) {
+  const quarter = Math.floor(now / (15 * MIN)) * 15 * MIN;
+  const at = (minutes) => new Date(quarter + minutes * MIN).toISOString();
+  return TODAY.map(([title, kind, start, end, location], n) => ({
+    id: `ai_${String(n)}`,
+    title,
+    kind,
+    starts_at: at(start),
+    ends_at: at(end),
+    delay_minutes: 0,
+    location,
+    visibility: "public",
+    status: "scheduled",
+    zone: null,
+  }));
+}

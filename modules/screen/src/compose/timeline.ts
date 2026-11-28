@@ -186,6 +186,8 @@ export function timelineFields(
           starts_text: startsText,
           range_text:
             i.ends_at === null ? startsText : `${startsText ?? ""}–${o.time(i.ends_at) ?? ""}`,
+          // The block is the item's real span: it shows when the item runs. The label has its own
+          // room (label_col, label_cols), which may run past a short block but never into another.
           col: r.col,
           cols: r.last - r.col + 1,
           row: place.lane,

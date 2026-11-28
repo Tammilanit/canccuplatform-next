@@ -1,0 +1,247 @@
+# Preset "Arcade" (#785, plan docs/plans/issue-785.md D5–D8, D14): pixel type, CRT glow, chunky
+# colours. The platform's Press Start 2P / Jersey 10 pair, square corners, the arcade motion pack,
+# scanlines and a vignette over the screen, a high-score table and big pixel digits. Its boxes are
+# fully opaque, as the screens of the era were. It evokes a period; it copies no game's art or words.
+schema_version: 1
+name: Arcade
+description: "Pixel type, CRT glow, chunky colours"
+mode: advanced
+tokens:
+  colors:
+    background: "#0b0b1a"
+    surface: "#16163a"
+    border: "#3a3a8a"
+    text: "#ffffff"
+    text_muted: "#c4c4f0"
+    primary: "#ffd400"
+    primary_text: "#0b0b1a"
+    accent: "#ff3df0"
+    status_ok: "#38f27a"
+    status_degraded: "#ffd400"
+    status_down: "#ff4d4d"
+  motion_style:
+    pack: arcade
+brand:
+  primary: "#ffd400"
+  accent: "#ff3df0"
+  scheme: dark
+  font_pair: press-jersey
+  roundness: square
+  backdrop:
+    looks: [particles, glows]
+  box_opacity: 1
+images:
+  logo: images/logo.svg
+css:
+  - css/arcade.css
+templates:
+  hiscore:
+    widget: leaderboard
+    file: templates/hiscore.mustache
+  arcade_clock:
+    widget: clock
+    file: templates/clock.mustache
+# Level up's layouts (D7), without its backdrop embed: the stage draws the background.
+layouts:
+  - id: main
+    name: Main hall
+    aspect: "16:9"
+    grid:
+      columns: 24
+      rows: 12
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 4, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: food
+        area: { column: 5, row: 1, columns: 13, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: food_status
+      - id: clock
+        area: { column: 18, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+            template: arcade_clock
+      - id: now
+        area: { column: 1, row: 3, columns: 9, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 10, row: 3, columns: 8, rows: 9 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+            template: hiscore
+      - id: countdown
+        area: { column: 18, row: 3, columns: 7, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: spotlight
+        area: { column: 18, row: 7, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+          - widget: qr
+      - id: ticker
+        area: { column: 1, row: 12, columns: 24, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+  - id: portrait
+    name: Lobby (portrait)
+    aspect: "9:16"
+    grid:
+      columns: 12
+      rows: 24
+    regions:
+      - id: brand
+        area: { column: 1, row: 1, columns: 5, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: logo
+      - id: clock
+        area: { column: 6, row: 1, columns: 7, rows: 2 }
+        layer: 1
+        widgets:
+          - widget: clock
+            template: arcade_clock
+      - id: countdown
+        area: { column: 1, row: 3, columns: 12, rows: 4 }
+        layer: 1
+        widgets:
+          - widget: countdown
+      - id: now
+        area: { column: 1, row: 7, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+      - id: ladder
+        area: { column: 1, row: 13, columns: 12, rows: 6 }
+        layer: 1
+        widgets:
+          - widget: leaderboard
+            template: hiscore
+      - id: spotlight
+        area: { column: 1, row: 19, columns: 7, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: announcements
+          - widget: hot_game
+      - id: side
+        area: { column: 8, row: 19, columns: 5, rows: 5 }
+        layer: 1
+        rotate_seconds: 20
+        widgets:
+          - widget: qr
+          - widget: food_status
+      - id: ticker
+        area: { column: 1, row: 24, columns: 12, rows: 1 }
+        layer: 1
+        widgets:
+          - widget: ticker
+# The preset's colour schemes (contracts/theming.md, Presets; plan D5); the first is the colours above.
+schemes:
+  - id: cabinet
+    name: Cabinet
+    kind: dark
+    brand:
+      primary: "#ffd400"
+      accent: "#ff3df0"
+      scheme: dark
+    colors:
+      background: "#0b0b1a"
+      surface: "#16163a"
+      border: "#3a3a8a"
+      text: "#ffffff"
+      text_muted: "#c4c4f0"
+      primary: "#ffd400"
+      primary_text: "#0b0b1a"
+      accent: "#ff3df0"
+      status_ok: "#38f27a"
+      status_degraded: "#ffd400"
+      status_down: "#ff4d4d"
+  - id: player-two
+    name: Player two
+    kind: accent
+    brand:
+      primary: "#3df0ff"
+      accent: "#ff9a1f"
+      scheme: dark
+    colors:
+      background: "#0b0b1a"
+      surface: "#16163a"
+      border: "#3a3a8a"
+      text: "#ffffff"
+      text_muted: "#c4c4f0"
+      primary: "#3df0ff"
+      primary_text: "#0b0b1a"
+      accent: "#ff9a1f"
+      status_ok: "#38f27a"
+      status_degraded: "#ffd400"
+      status_down: "#ff4d4d"
+  - id: green-screen
+    name: Green screen
+    kind: accent
+    brand:
+      primary: "#7dff6a"
+      accent: "#ffd400"
+      scheme: dark
+    colors:
+      background: "#060c06"
+      surface: "#0d1a0d"
+      border: "#2f5a2f"
+      text: "#e8ffe8"
+      text_muted: "#9fd49f"
+      primary: "#7dff6a"
+      primary_text: "#060c06"
+      accent: "#ffd400"
+      status_ok: "#7dff6a"
+      status_degraded: "#ffd400"
+      status_down: "#ff5c5c"
+  - id: handheld
+    name: Handheld
+    kind: light
+    brand:
+      primary: "#3b5c00"
+      accent: "#8a1f5c"
+      scheme: light
+    colors:
+      background: "#e8f0d0"
+      surface: "#f6fae8"
+      border: "#a8b880"
+      text: "#1f2a10"
+      text_muted: "#4a5a2a"
+      primary: "#3b5c00"
+      primary_text: "#ffffff"
+      accent: "#8a1f5c"
+      status_ok: "#2e6a10"
+      status_degraded: "#7a5a00"
+      status_down: "#b3261e"
+  - id: contrast
+    name: High contrast
+    kind: contrast
+    brand:
+      primary: "#ffff00"
+      accent: "#00ffff"
+      scheme: dark
+    colors:
+      background: "#000000"
+      surface: "#000000"
+      border: "#ffffff"
+      text: "#ffffff"
+      text_muted: "#ffffff"
+      primary: "#ffff00"
+      primary_text: "#000000"
+      accent: "#00ffff"
+      status_ok: "#00ff66"
+      status_degraded: "#ffff00"
+      status_down: "#ff5555"

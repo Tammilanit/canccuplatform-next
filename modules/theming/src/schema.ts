@@ -96,6 +96,7 @@ const brandInputCheck = ajv.compile({
     },
     roundness: { enum: ["square", "soft", "round"] },
     backdrop: { $ref: def("backdrop") },
+    box_opacity: { $ref: def("box_opacity") },
   },
 });
 
@@ -204,6 +205,7 @@ export interface BrandEdit {
   font_pair?: string | null;
   roundness?: Brand["roundness"];
   backdrop?: Backdrop;
+  box_opacity?: number;
 }
 
 export function brandInputError(body: unknown): string | undefined {

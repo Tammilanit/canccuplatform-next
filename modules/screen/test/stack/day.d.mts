@@ -9,3 +9,15 @@ export interface PlacedItem {
   delay: number;
 }
 export function placeDay(now: number): PlacedItem[];
+export function aroundNow(now: number): {
+  id: string;
+  title: string;
+  kind: string;
+  starts_at: string;
+  ends_at: string;
+  delay_minutes: number;
+  location: string;
+  visibility: string;
+  status: string;
+  zone: null;
+}[];

@@ -1,0 +1,13 @@
+{{! The standings as a broadcast scoreboard (contracts/screen.md, leaderboard: title, rows with
+    rank, name and points). Rows that do not fit the box wrap out of sight whole (esports.css). }}
+{{#from_crew}}<p class="canccu-widget__kicker">From the crew</p>{{/from_crew}}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<ol class="t-esports-score">
+  {{#rows}}
+  <li class="t-esports-score__row">
+    <span class="t-esports-score__rank">{{rank}}</span>
+    <span class="t-esports-score__name">{{name}}</span>
+    <span class="t-esports-score__points">{{points}}</span>
+  </li>
+  {{/rows}}
+</ol>

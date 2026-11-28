@@ -111,6 +111,23 @@
   }
 
   /*
+   * The theme's box opacity lets the stage show through (plan issue-785 D11): a plain alpha,
+   * never a backdrop filter, which TV hardware cannot afford. Theming raises it to what the
+   * colours allow; a sheet without it (an old revision) keeps the box opaque. Only where
+   * `color-mix()` exists: a declaration holding `var()` cannot be dropped at parse time, so on an
+   * older kiosk it would turn the box transparent. There the plain background above stays.
+   */
+  @supports (background: color-mix(in srgb, red 50%, transparent)) {
+    .canccu-region > .canccu-widget {
+      background: color-mix(
+        in srgb,
+        var(--canccu-color-surface) calc(var(--canccu-box-opacity, 1) * 100%),
+        transparent
+      );
+    }
+  }
+
+  /*
    * Two slots, load then fade, never a cut (#787 D5): about 1.2 s with the motion pack's move at
    * `calm` and above, an opacity crossfade of 400 ms alone at `none` and under reduced motion.
    */

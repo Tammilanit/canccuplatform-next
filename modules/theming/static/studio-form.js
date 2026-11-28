@@ -14,6 +14,7 @@
     const looks = [...form.querySelectorAll('input[name="looks"]:checked')].map((el) => el.value);
     const on = (name) => form.querySelector(`input[name="${name}"]`)?.checked !== false;
     const image = form.elements.namedItem("backdrop_image")?.value;
+    const box = form.elements.namedItem("box_opacity")?.value;
     return {
       logo_plate: {
         kind: checked(form, "plate_kind") ?? "none",
@@ -32,8 +33,19 @@
         hype: on("hype"),
         ...(image ? { image } : {}),
       },
+      ...(box ? { box_opacity: Number(box) } : {}),
     };
   };
+
+  /* The box transparency's label follows its slider (studio-yours-background.ts, seeThrough). */
+  document.addEventListener("input", (event) => {
+    const el = event.target;
+    if (el.name !== "box_opacity") return;
+    const shown = el.parentElement?.querySelector("output");
+    const value = Number(el.value);
+    if (shown)
+      shown.textContent = value >= 1 ? "Solid" : `${Math.round((1 - value) * 100)}% see-through`;
+  });
 
   /* A colour's swatch and its hex field show the same colour. */
   const hexOf = (swatch) => swatch.form?.elements.namedItem(swatch.dataset.hexFor);

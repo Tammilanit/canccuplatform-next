@@ -9,6 +9,7 @@ import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from
 import { KitError, MissingRight, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import { attrs, cssVar, errorView, errorTitle, html, shellPage } from "@canccu/ui";
 import { fillTokens } from "./tokens.js";
+import { boxOpacityFor } from "./contrast.js";
 import type { Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
@@ -23,7 +24,7 @@ import { galleryView } from "./studio-gallery.js";
 import { ownWork } from "./own-work.js";
 import { yoursView } from "./studio-yours.js";
 import { logoInfo } from "./logo-info.js";
-import { STUDIO, draftFileUrl, studioState } from "./studio-views.js";
+import { STUDIO, brandOf, draftFileUrl, studioState } from "./studio-views.js";
 import type { StudioState } from "./studio-views.js";
 import { FONT_PAIRS, pairFontFaces } from "./font-pairs.js";
 import type { Html } from "@canccu/ui";
@@ -107,18 +108,17 @@ function depthBody(
   own: boolean,
 ): Html {
   const m = state.draft?.manifest;
-  // The colours as saved, which the live preview posts after each save (static/studio-live.js).
+  // The colours and box opacity as saved, which the live preview posts after each save
+  // (static/studio-live.js): the opacity raised as the screens draw it, so it overrides a value the
+  // slider asked for and the colours cannot take.
+  const colors = m === undefined ? undefined : fillTokens(m.tokens ?? {}).colors;
   const vars =
-    m === undefined
+    colors === undefined
       ? undefined
-      : JSON.stringify(
-          Object.fromEntries(
-            Object.entries(fillTokens(m.tokens ?? {}).colors).map(([k, v]) => [
-              cssVar("color", k),
-              v,
-            ]),
-          ),
-        );
+      : JSON.stringify({
+          ...Object.fromEntries(Object.entries(colors).map(([k, v]) => [cssVar("color", k), v])),
+          "--canccu-box-opacity": boxOpacityFor(colors, brandOf(state)?.box_opacity),
+        });
   return html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version, "data-save-state": "saved", "data-own-work": own ? "1" : undefined, "data-vars": vars })}>
     ${frame.where}${frame.extra}
     <div class="canccu-studio-depth">${controls}${previewColumn(state)}</div>

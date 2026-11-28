@@ -143,7 +143,7 @@ describe("the coming hours (`agenda_timeline`)", () => {
       align: string;
     }[];
     expect(items.map((i) => i.row)).toEqual([1, 2, 3, 1]);
-    // No end: one column and its start alone.
+    // No end: one column (its real span, however wide its label's room) and its start alone.
     expect(items[3]).toMatchObject({ cols: 1, range_text: "21:30" });
   });
 
@@ -156,10 +156,12 @@ describe("the coming hours (`agenda_timeline`)", () => {
     const [late] = view.items as {
       align: string;
       col: number;
+      cols: number;
       label_col: number;
       label_cols: number;
     }[];
-    expect(late).toMatchObject({ col: 35, align: "end" });
+    // The block stays at the item's real start; only its label reaches back from the line's end.
+    expect(late).toMatchObject({ col: 35, cols: 1, align: "end" });
     expect((late?.label_col ?? 0) + (late?.label_cols ?? 0) - 1).toBe(36);
     expect(late?.label_col).toBeLessThan(35);
   });

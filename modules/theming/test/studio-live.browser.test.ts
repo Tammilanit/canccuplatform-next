@@ -8,6 +8,9 @@
 import { readFile } from "node:fs/promises";
 import type { Frame, Page, Route } from "playwright-core";
 import { describe, expect, it } from "vitest";
+import { generateColors } from "../src/brand.js";
+import { minBoxOpacity } from "../src/contrast.js";
+import { seeThrough } from "../src/studio-yours-background.js";
 import { png } from "./drafting.js";
 import { browser, studioSuite } from "./studio-page.js";
 
@@ -176,6 +179,45 @@ describe.skipIf(browser === undefined)("the live preview in Chromium", { timeout
     holding = false;
     await Promise.all(held.map((r) => r.continue()));
     await expect.poll(() => publish.isDisabled()).toBe(false);
+  });
+
+  it("saves the box transparency and shows it on the screen frame before the save answers", async () => {
+    await eventDraft();
+    const page = await open("/theming/studio/yours");
+    const before = (await draft()).draft_version;
+    await page.locator('input[name="box_opacity"]').fill("1");
+    const screen = await frame(page, SCREEN);
+    await expect.poll(() => cssVar(screen, "--canccu-box-opacity")).toBe("1");
+    await savedAfter(page, before);
+    expect((await draft()).manifest.brand).toMatchObject({ box_opacity: 1 });
+  });
+
+  it("shows the raised box transparency the screens draw, in the frame and on the slider", async () => {
+    await eventDraft();
+    // Colours whose boxes need more than 0.5 of solid (box-opacity.test.ts).
+    const brand = { primary: "#ff4fd8", accent: "#22e4ff", scheme: "dark" as const };
+    const min = minBoxOpacity(generateColors(brand).colors);
+    expect(min).toBeGreaterThan(0.5);
+    const put = await api("PUT", "/api/theming/draft/brand", {
+      ...brand,
+      box_opacity: 1,
+      draft_version: (await draft()).draft_version,
+    });
+    expect(put.status).toBe(200);
+    const page = await open("/theming/studio/yours");
+    const slider = page.locator('input[name="box_opacity"]');
+    const screen = await frame(page, SCREEN);
+    const before = (await draft()).draft_version;
+    await slider.fill("0.5");
+    await expect.poll(() => cssVar(screen, "--canccu-box-opacity")).toBe("0.5");
+    await savedAfter(page, before);
+    expect((await draft()).manifest.brand).toMatchObject({ box_opacity: min });
+    // The save raised it: the frame and the slider show what the screens draw, not what was asked.
+    await expect.poll(() => cssVar(screen, "--canccu-box-opacity")).toBe(String(min));
+    await expect.poll(() => slider.inputValue()).toBe(String(min));
+    await expect
+      .poll(() => page.locator('output[for="canccu-studio-box-opacity"]').textContent())
+      .toBe(seeThrough(min));
   });
 
   it("keeps the screen frame in place over a save: the page never reloads it", async () => {

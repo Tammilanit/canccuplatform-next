@@ -1,0 +1,23 @@
+{
+  "name": "Arcade",
+  "heading": {
+    "family": "Press Start 2P",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "press-start-2p-400.woff2",
+        "size_adjust": 70
+      }
+    ]
+  },
+  "body": {
+    "family": "Jersey 10",
+    "faces": [
+      {
+        "weight": 400,
+        "file": "jersey-10-400.woff2",
+        "size_adjust": 130
+      }
+    ]
+  }
+}

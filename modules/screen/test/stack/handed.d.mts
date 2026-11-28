@@ -11,3 +11,10 @@ export function withShowcase<S extends { regions: Region[] }>(s: S): S;
 export function withHeroShowcase<S extends { regions: Region[] }>(s: S): S;
 export function withSmallShowcase<S extends { regions: Region[] }>(s: S): S;
 export function withPhoto<S extends { regions: Region[] }>(s: S, featured?: boolean): S;
+export function withComingHours<
+  S extends {
+    tenant: { time_zone: string };
+    zone?: { key: string };
+    regions: (Region & { area?: { columns: number } })[];
+  },
+>(s: S): S;

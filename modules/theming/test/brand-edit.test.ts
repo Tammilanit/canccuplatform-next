@@ -47,6 +47,7 @@ const STORED: Required<Brand> = {
   font_pair: "space-inter",
   roundness: "round",
   backdrop: STORED_BACKDROP,
+  box_opacity: 0.75,
 };
 
 /** The Theme studio's kit form: the colours, and nothing else of the brand. */
@@ -104,6 +105,7 @@ describe("nextBrand: the brand a save stores", () => {
       font_pair: "bebas-source",
       roundness: "square",
       backdrop: { looks: ["glows"] },
+      box_opacity: 0.6,
     };
     expect(nextBrand(STORED, body)).toEqual(without(body, "draft_version"));
   });

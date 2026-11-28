@@ -43,3 +43,56 @@ export function contrastFailures(colors: Readonly<Record<string, string>>): stri
   }
   return failures;
 }
+
+/** The platform's box opacity (plan issue-785 D11): a subtle transparency, the background shows through. */
+export const BOX_OPACITY = 0.9;
+
+/** What the stage draws behind a box: its background, and the primary and accent of its glows. */
+const GROUNDS = ["background", "primary", "accent"] as const;
+const ON_BOX: readonly (readonly [string, number])[] = RULES.filter(
+  ([, bg]) => bg === "surface",
+).map(([fg, , min]) => [fg, min] as const);
+
+/** `top` at `alpha` over `ground`, as `color-mix(in srgb, …)` draws it. */
+function over(top: string, ground: string, alpha: number): string {
+  const mix = [1, 3, 5].map((at) => {
+    const c = parseInt(top.slice(at, at + 2), 16) * alpha;
+    return Math.round(c + parseInt(ground.slice(at, at + 2), 16) * (1 - alpha));
+  });
+  return `#${mix.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * The contrast rules on a box of `surface` at `opacity`, checked over each colour the stage may
+ * draw behind it (the worst point of the screen), as `"<token> on the box over <token>"`.
+ */
+export function boxContrastFailures(
+  colors: Readonly<Record<string, string>>,
+  opacity: number,
+): string[] {
+  const failures: string[] = [];
+  for (const ground of GROUNDS) {
+    const g = colors[ground];
+    const surface = colors.surface;
+    if (g === undefined || surface === undefined) continue;
+    const box = over(surface, g, opacity);
+    for (const [fg, min] of ON_BOX) {
+      const a = colors[fg];
+      if (a === undefined || contrastRatio(a, box) < min)
+        failures.push(`${fg} on the box over ${ground}`);
+    }
+  }
+  return failures;
+}
+
+/** The lowest opacity, in steps of 0.05 from 0.5, at which the boxes pass; 1 when only opaque does. */
+export function minBoxOpacity(colors: Readonly<Record<string, string>>): number {
+  for (let step = 10; step < 20; step++) {
+    if (boxContrastFailures(colors, step / 20).length === 0) return step / 20;
+  }
+  return 1;
+}
+
+/** The opacity a theme's boxes get: its own (else the platform's), never under what its colours allow. */
+export const boxOpacityFor = (colors: Readonly<Record<string, string>>, own: unknown): number =>
+  Math.max(typeof own === "number" ? own : BOX_OPACITY, minBoxOpacity(colors));

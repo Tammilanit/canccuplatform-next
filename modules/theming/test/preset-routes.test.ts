@@ -64,7 +64,13 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     const res = await get(t.h, "/api/theming/presets", { session: "admin" });
     expect(res.statusCode).toBe(200);
     const { presets } = res.json<Listed>();
-    expect(presets.map((p) => p.id)).toEqual(["default", "terminal", "level-up"]);
+    expect(presets.map((p) => p.id)).toEqual([
+      "default",
+      "esports",
+      "level-up",
+      "arcade",
+      "terminal",
+    ]);
     const levelUp = presets.find((p) => p.id === "level-up");
     expect(levelUp?.embeds).toBe(true);
     expect(presets.find((p) => p.id === "default")?.embeds).toBe(false);
@@ -153,6 +159,28 @@ describe.skipIf(!DATABASE_URL)("the presets' paths", () => {
     expect(recoloured.json<{ draft: Draft }>().draft.manifest.tokens.colors).not.toEqual(
       applied.manifest.tokens.colors,
     );
+  });
+
+  it("keeps Esports' pair, corners, background and boxes under its light scheme, and the event's logo", async () => {
+    const before = await eventDraft();
+    const res = await apply({
+      preset: "esports",
+      scheme: "studio",
+      draft_version: before.draft_version,
+    });
+    expect(res.statusCode).toBe(200);
+    const after = res.json<Draft>();
+    expect(after.manifest.images?.logo).toBe("images/logo.svg");
+    expect(after.manifest.brand).toMatchObject({
+      font_pair: "saira",
+      roundness: "square",
+      backdrop: { looks: ["gradient", "glows"] },
+      box_opacity: 0.9,
+      logo_plate: PLATE,
+      primary: "#0050c8",
+      scheme: "light",
+    });
+    expect(after.manifest.preset).toEqual({ id: "esports", scheme: "studio" });
   });
 
   it("refuses a preset with embeds to a session without the embeds right", async () => {

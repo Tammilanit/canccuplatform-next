@@ -2,6 +2,7 @@
 // preview-shots.mjs): what a mark, a band and a box must keep free, and the hero's panel full
 // (#520), checked before the shot.
 import { foodFits } from "./food.mjs";
+import { timelineFits } from "./timeline-fit.mjs";
 
 /** The indexes of the rectangles in `others` that `rect` overlaps by more than a pixel each way. */
 export function overlapping(rect, others) {
@@ -256,6 +257,9 @@ export const CLEAR_CHECKS = {
   "photo-pop": popKeepsBand,
   "portrait-right-now": rightNowFits,
   "claim-hero": surgingSince,
+  // Pinned on the coming hours (handed.mjs, withComingHours), so they are drawn at any hour.
+  "coming-hours": timelineFits,
+  "dashboard-coming-hours": timelineFits,
   "dashboard-showcase": panelFilled,
   "dashboard-showcase-small": showcaseWhole,
   "portrait-showcase": showcaseLarge,

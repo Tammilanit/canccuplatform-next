@@ -57,7 +57,8 @@ describe("tokens", () => {
     expect(css).toContain("  --canccu-font-display: system-ui, sans-serif;\n");
     expect(css).toContain("  --canccu-safe-inset: 48px;\n");
     expect(css).toContain("  --canccu-motion-speed: 1;\n  --canccu-motion-intensity: 1;\n");
-    expect(css.match(/--canccu-/g)).toHaveLength(11 + 4 + 4 + 2);
+    expect(css).toContain("  --canccu-box-opacity: 0.9;\n");
+    expect(css.match(/--canccu-/g)).toHaveLength(11 + 4 + 4 + 2 + 1);
   });
 
   it("writes the motion style's factors (contracts/theming.md, Motion vocabulary)", () => {

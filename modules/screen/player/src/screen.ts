@@ -24,6 +24,7 @@ import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers, speedOf } from "./ticker.js";
 import { fitAnnouncements } from "./fit.js";
+import { fitTimelineAxis } from "./timeline-fit.js";
 import type { Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
 import { heldShown, joinedShown, turnIndexOf, turnShown } from "./turns.js";
@@ -224,6 +225,7 @@ export class Screen {
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now, speedOf(state.ticker));
     fitAnnouncements(this.root);
+    fitTimelineAxis(this.root);
     animateAnnouncements(this.root, now, level);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);

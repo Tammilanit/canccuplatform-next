@@ -11,6 +11,12 @@ import { notFound } from "./http.js";
 export interface Face {
   weight: number;
   file: string;
+  /**
+   * A face whose glyphs set small or wide for their size (Jersey 10, Press Start 2P; plan
+   * issue-785 D14) scales them, in percent, so a page's sizes read and fit in it as in the other
+   * pairs, hub and phone included.
+   */
+  size_adjust?: number;
 }
 
 export interface FamilyFaces {
@@ -62,7 +68,7 @@ export function pairFontFaces(pair: FontPair): string[] {
   return [pair.heading, pair.body].flatMap((f) =>
     f.faces.map(
       (face) =>
-        `@font-face { font-family: "${f.family}"; font-weight: ${face.weight}; font-display: swap; src: url("${fileUrl(pair, face)}") format("woff2"); }`,
+        `@font-face { font-family: "${f.family}"; font-weight: ${face.weight}; font-display: swap; ${face.size_adjust === undefined ? "" : `size-adjust: ${face.size_adjust}%; `}src: url("${fileUrl(pair, face)}") format("woff2"); }`,
     ),
   );
 }

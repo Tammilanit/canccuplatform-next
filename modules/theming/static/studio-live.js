@@ -69,6 +69,8 @@
       };
     }
     if (el.name === "roundness") return { "--canccu-radius": RADIUS[el.value] ?? "0.5rem" };
+    // The value as asked: the save answers with it raised where the colours need it.
+    if (el.name === "box_opacity") return { "--canccu-box-opacity": el.value };
     if (el.name === "font_pair") {
       const { heading, body } = el.dataset;
       const stack = (f) => (f === undefined ? null : family(f));
@@ -136,6 +138,8 @@
     for (const el of document.querySelectorAll("[data-refresh]")) {
       // A file picked and not yet sent stays: the save 400 ms on reads it from this input.
       if (hasFile(el)) continue;
+      // A slider still held keeps the value under the hand; its own change saves and refreshes.
+      if (el.querySelector("input[type=range]:active") !== null) continue;
       const part = doc.querySelector(`[data-refresh="${CSS.escape(el.dataset.refresh)}"]`);
       if (part !== null) el.replaceWith(document.importNode(part, true));
     }

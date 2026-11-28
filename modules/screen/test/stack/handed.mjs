@@ -3,6 +3,8 @@
 // a gap in the run of show, a Dashboard with statistics and its showcase. Each changes the server's real state, so the
 // frame around it is the real one.
 import { graphOf } from "../../src/compose/graph.ts";
+import { timelineFields } from "../../src/compose/timeline.ts";
+import { aroundNow } from "./day.mjs";
 
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 export const claim = (role, template, content) => ({
@@ -125,6 +127,36 @@ export function withHeroItemOnly(s) {
       if (r.role === "hero") return { ...r, order: [at] };
       return r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r;
     }),
+  };
+}
+
+/**
+ * The hero on the coming hours alone (#785), composed by src/compose/timeline.ts for the hero's
+ * width from the fixture's run of show placed around now (day.mjs, `aroundNow`). The server's own
+ * line is empty late at night, and in the hero's rotation it waits its turn; held here, the axis
+ * and label check (timeline-fit.mjs) looks at a timeline whatever the hour.
+ */
+export function withComingHours(s) {
+  const hero = s.regions.find((r) => r.role === "hero");
+  if (hero === undefined) throw new Error("the demo zone has no hero for the coming hours");
+  const now = Date.now();
+  const time = (iso) =>
+    new Intl.DateTimeFormat("en-GB", { timeZone: s.tenant.time_zone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(Date.parse(iso)); // prettier-ignore
+  const fields = timelineFields(aroundNow(now), {
+    nowMs: now,
+    timeZone: s.tenant.time_zone,
+    zoneKey: s.zone?.key,
+    unitsWide: unitsOf(hero.area.columns),
+    orders: [],
+    time,
+  });
+  if (fields === null) throw new Error("the fixture's run of show left the coming hours empty");
+  const line = { widget: "agenda_timeline", template: null, embed: null, dwell_seconds: 3600, stale_after_seconds: null, view: { ...fields, qr: null, stale: false, empty: false } }; // prettier-ignore
+  return {
+    ...s,
+    regions: s.regions.map((r) =>
+      r === hero ? { ...r, claim: null, order: [r.widgets.length], widgets: [...r.widgets, line] } : r,
+    ), // prettier-ignore
   };
 }
 

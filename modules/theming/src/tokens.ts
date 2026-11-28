@@ -12,7 +12,7 @@ import { brandTokens } from "./brand.js";
 import type { Brand } from "./brand.js";
 import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
-import { contrastFailures } from "./contrast.js";
+import { boxOpacityFor, contrastFailures } from "./contrast.js";
 import { FONT_PAIRS, pairFontFaces } from "./font-pairs.js";
 import { plateOf, plateVars } from "./logo-plate.js";
 
@@ -86,6 +86,7 @@ export function manifestCss(manifest: Manifest, tokens: ThemeTokens): string {
     tokens,
     pair === undefined ? [] : pairFontFaces(pair),
     plateVars(plateOf(manifest)),
+    brandOf(manifest).box_opacity,
   );
 }
 
@@ -116,12 +117,14 @@ export function fontValue(token: string, family: string): string {
 
 /**
  * A `:root` block of every token, then the `@font-face` rules; tokens must be filled. The motion
- * factors are always there, at their defaults when the theme sets no `motion_style`.
+ * factors and the box opacity are always there, at their defaults when the theme sets none; the
+ * opacity is raised to what the colours allow, so text on a screen's box reads over any ground.
  */
 export function tokensCss(
   tokens: Tokens & { motion_style?: unknown },
   fontFaces: readonly string[] = [],
   extraVars: readonly string[] = [],
+  boxOpacity?: number,
 ): string {
   const style = motionStyleOf(tokens.motion_style);
   const lines = [
@@ -130,6 +133,7 @@ export function tokensCss(
     ...Object.entries(tokens.sizes).map(([n, v]) => `  ${cssVar("size", n)}: ${v};`),
     `  --canccu-motion-speed: ${SPEED_FACTOR[style.speed]};`,
     `  --canccu-motion-intensity: ${INTENSITY_FACTOR[style.intensity]};`,
+    `  --canccu-box-opacity: ${boxOpacityFor(tokens.colors, boxOpacity)};`,
     ...extraVars,
   ];
   return [`:root {\n${lines.join("\n")}\n}\n`, ...fontFaces].join("\n");
