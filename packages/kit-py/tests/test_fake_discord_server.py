@@ -71,3 +71,21 @@ def test_a_guild_is_made_with_the_bot_in_it_and_its_own_role() -> None:
         assert [c["name"] for c in guild.channels.values()] == ["general"]
         bad = client.post("/_fake/guilds", json={"name": "x", "application_id": "nope"})
         assert bad.status_code == 404
+
+
+def test_a_stack_test_reads_a_channels_messages_and_pins() -> None:
+    """The bot's living-messages stack test (#852) finds its channels by name and reads what the
+    bot posted, edited and pinned there."""
+    fake, app = create_server(ENV)
+    with TestClient(app) as client:
+        body = {"name": "Living", "application_id": "100000000000000002", "channels": ["food"]}
+        made = client.post("/_fake/guilds", json=body).json()
+        food = made["channels"]["food"]
+        fake.messages[food] = [{"id": "1", "content": "x", "edited_timestamp": None}]
+        fake.pins[food] = ["1"]
+        r = client.get("/_fake/messages", params={"channel_id": food})
+        assert r.json() == {"messages": fake.messages[food], "pins": ["1"]}
+        assert client.get("/_fake/messages", params={"channel_id": "9"}).json() == {
+            "messages": [],
+            "pins": [],
+        }

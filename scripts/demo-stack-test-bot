@@ -31,4 +31,85 @@ if want bot; then
     done
   }
   check "${TESTS[39]}" discord_page
+  # The living messages (#852): the demo event bound to a guild the fake Discord makes now, with
+  # its now-and-next and food channels picked; a pizza order and an agenda item put straight on
+  # their streams, as pizza and the agenda send them; the bot's editor posts the order and edits
+  # the pinned board within its minute. The binding goes again afterwards, as the stack was.
+  # shellcheck disable=SC2329
+  living_messages() {
+    local made guild board food run ok=1
+    made=$("${COMPOSE[@]}" exec -T fake-discord python -I -c 'import json, urllib.request as u
+body = {"name": "Living Server", "application_id": "100000000000000002",
+        "bot_permissions": 268528656, "channels": ["now-and-next", "food"]}
+ask = u.Request("http://127.0.0.1:8080/_fake/guilds", json.dumps(body).encode(),
+                {"content-type": "application/json"})
+made = json.load(u.urlopen(ask))
+print(made["guild_id"], made["channels"]["now-and-next"], made["channels"]["food"])') || return 1
+    read -r guild board food <<< "$made"
+    living_sql "DELETE FROM bot_posts WHERE tenant_id = 'demo';
+DELETE FROM bot_purposes WHERE tenant_id = 'demo';
+DELETE FROM bot_guild_routes WHERE tenant_id = 'demo';
+INSERT INTO bot_bindings (tenant_id, guild_id, guild_name, application_id, bound_by)
+  VALUES ('demo', '$guild', 'Living Server', '100000000000000002', 'demo-ci')
+  ON CONFLICT (tenant_id) DO UPDATE SET guild_id = EXCLUDED.guild_id,
+    application_id = EXCLUDED.application_id;
+INSERT INTO bot_guild_routes (guild_id, tenant_id, application_id)
+  VALUES ('$guild', 'demo', '100000000000000002');
+INSERT INTO bot_purposes (tenant_id, purpose, target_id, updated_at)
+  VALUES ('demo', 'now_and_next', '$board', now()), ('demo', 'food', '$food', now());" || return 1
+    run=$(date +%s)
+    living_wait "$board" '(.pins | length) == 1 and (.messages | length) == 1' || ok=0
+    if [ "$ok" = 1 ]; then
+      living_xadd pizza pizza.order.opened "{\"order\": {\"id\": \"po_living_$run\", \"seq\": 9,
+        \"state\": \"open\", \"pizzeria\": {\"id\": \"pz_s\", \"name\": \"Stack Pizzeria\"},
+        \"target_at\": \"2030-01-01T18:00:00Z\", \"closes_at\": \"2030-01-01T18:00:00Z\",
+        \"holder\": null, \"pizza_count\": 2, \"people_count\": 2, \"revision\": 1},
+        \"actor_user_id\": null}" &&
+        living_xadd agenda agenda.item.started "{\"item\": {\"id\": \"it_living_$run\",
+          \"title\": \"Stack check\", \"visibility\": \"public\"}}" || ok=0
+    fi
+    [ "$ok" = 1 ] && living_wait "$food" '.messages[0].embeds[0].title == "Order 9 · Stack Pizzeria"
+      and (.messages[0].embeds[0].description | test("2 pizzas"))' || ok=0
+    [ "$ok" = 1 ] && living_wait "$board" '(.messages | length) == 1
+      and .messages[0].edited_timestamp != null and .pins == [.messages[0].id]
+      and (.messages[0].embeds[0].description | test("Food · order 9 open until"))' || ok=0
+    # The order's other consumers (screen's food box, Moments) let it go again.
+    living_xadd pizza pizza.order.cancelled "{\"order\": {\"id\": \"po_living_$run\",
+      \"seq\": 9, \"state\": \"cancelled\", \"pizzeria\": {\"id\": \"pz_s\",
+      \"name\": \"Stack Pizzeria\"}, \"target_at\": \"2030-01-01T18:00:00Z\",
+      \"holder\": null, \"pizza_count\": 2, \"people_count\": 2, \"revision\": 2},
+      \"reason\": \"cancelled\", \"user_ids\": [], \"people\": [], \"actor_user_id\": null}" ||
+      ok=0
+    living_sql "DELETE FROM bot_posts WHERE tenant_id = 'demo';
+DELETE FROM bot_purposes WHERE tenant_id = 'demo';
+DELETE FROM bot_guild_routes WHERE tenant_id = 'demo';
+DELETE FROM bot_bindings WHERE tenant_id = 'demo';" || ok=0
+    [ "$ok" = 1 ]
+  }
+  living_sql() {
+    "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=1 -q \
+      -c "BEGIN; $1 COMMIT;" > "$TMP/body"
+  }
+  # living_xadd MODULE TYPE DATA: an event on the demo event's stream, in the kit's envelope.
+  living_xadd() {
+    local event
+    event=$(jq -cn --arg id "$(cat /proc/sys/kernel/random/uuid)" --arg module "$1" \
+      --arg type "$2" --argjson data "$3" \
+      '{id: $id, type: $type, version: 1, time: (now | todate), source: $module, tenant: "demo",
+        data: $data}') || return 1
+    "${COMPOSE[@]}" exec -T valkey valkey-cli XADD "t:demo:events:$1" '*' event "$event" \
+      > "$TMP/body"
+  }
+  # living_wait CHANNEL JQ: until what the fake Discord holds of the channel matches (90 s).
+  living_wait() {
+    local _
+    for _ in $(seq 1 90); do
+      "${COMPOSE[@]}" exec -T fake-discord python -I -c "import urllib.request as u
+print(u.urlopen('http://127.0.0.1:8080/_fake/messages?channel_id=$1').read().decode())" \
+        > "$TMP/body" 2>/dev/null && jq -e "$2" "$TMP/body" > /dev/null && return 0
+      sleep 1
+    done
+    return 1
+  }
+  check "${TESTS[40]}" living_messages
 fi
