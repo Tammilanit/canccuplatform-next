@@ -103,30 +103,43 @@ async def sent(d: Deps, ctx: TenantContext, data: dict[str, Any]) -> None:
             d.now(),
         )
         token = await store.bot_token(d.shared, d.secrets, conn, tenant, bound["application_id"])
-    if claimed is None or token is None:
+    if claimed is None:
         return
-    expires = hhmm(data.get("expires_at"), ctx["time_zone"])
-    on_screens = (data.get("channels") or {}).get("screen") and expires
-    footer = f"{FROM_CREW} · on the screens until {expires}" if on_screens else FROM_CREW
-    role = await _role(d, bound["guild_id"], data.get("level") == "urgent")
-    title, text = str(data.get("title") or ""), str(data.get("body") or "")
-    post = body(ctx, title, text, footer, await _color(d, ctx), role)
     try:
-        response = await _send(d, token, "POST", f"/channels/{channel}/messages", post)
-    except PostFailed:
-        await _release(d, tenant, key)
+        message_id = await _post(d, ctx, bound["guild_id"], channel, token, data)
+    except Exception:
+        await _release(d, tenant, key)  # not posted: the bus's next delivery posts it
         raise
-    if response.status_code >= 300:  # the channel is gone, or the bot may not post there
-        log.warning("posting announcement %s failed: %s", key, response.status_code)
+    if message_id is None:
         await _release(d, tenant, key)
         return
     async with d.db.tenant(tenant) as conn:
         await conn.execute(
             "UPDATE bot_posts SET message_id = $1 WHERE kind = $2 AND key = $3",
-            str(response.json()["id"]),
+            message_id,
             KIND,
             key,
         )
+
+
+async def _post(
+    d: Deps, ctx: TenantContext, guild_id: str, channel: str, token: str | None, data: Any
+) -> str | None:
+    """The new message's id; None when Discord refuses it for good (the channel is gone, or the
+    bot may not post there) or the event's token does not open."""
+    if token is None:
+        return None
+    expires = hhmm(data.get("expires_at"), ctx["time_zone"])
+    on_screens = (data.get("channels") or {}).get("screen") and expires
+    footer = f"{FROM_CREW} · on the screens until {expires}" if on_screens else FROM_CREW
+    role = await _role(d, guild_id, data.get("level") == "urgent")
+    title, text = str(data.get("title") or ""), str(data.get("body") or "")
+    post = body(ctx, title, text, footer, await _color(d, ctx), role)
+    response = await _send(d, token, "POST", f"/channels/{channel}/messages", post)
+    if response.status_code >= 300:
+        log.warning("posting announcement %s failed: %s", data.get("id"), response.status_code)
+        return None
+    return str(response.json()["id"])
 
 
 async def _release(d: Deps, tenant: str, key: str) -> None:

@@ -171,3 +171,12 @@ async def test_the_commands_follow_the_events_flags(world: World) -> None:
         "Send to the screen",
         "Remove from the screen",
     ]
+
+
+async def test_run_of_show_words_in_now_ping_nobody_and_link_nowhere(world: World) -> None:
+    item = {"title": "@everyone https://evil.example.net/x", "location": "www.bad.test"}
+    answer = {"time": "x", "agenda_version": 4, "current": [item], "next": []}
+    world.outside.on("agenda", "GET", "/api/agenda/now", None, answer)
+    await world.run(slash("now"))
+    assert world.shown["allowed_mentions"] == {"parse": []}
+    assert "evil.example.net" not in world.text and "bad.test" not in world.text

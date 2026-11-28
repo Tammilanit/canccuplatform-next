@@ -38,9 +38,11 @@ SENT: dict[str, Any] = {
 @dataclass
 class FakeSettings:
     values: dict[str, Any] = field(default_factory=dict)
+    down: bool = False
 
     async def ensure(self) -> None:
-        return None
+        if self.down:
+            raise RuntimeError("admin is not answering")
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.values.get(key, default)
@@ -153,6 +155,15 @@ async def test_a_failure_for_now_is_released_and_raised_for_the_bus(server: Serv
     with pytest.raises(posts.PostFailed):
         await server.deliver("sent", SENT)
     await server.deliver("sent", SENT)  # the bus's next try
+    assert len(server.messages) == 1
+
+
+async def test_a_setting_not_read_now_releases_the_post_for_the_next_try(server: Server) -> None:
+    server.d.settings.down = True
+    with pytest.raises(RuntimeError):
+        await server.deliver("sent", {**SENT, "level": "urgent", "urgent": True})
+    server.d.settings.down = False
+    await server.deliver("sent", {**SENT, "level": "urgent", "urgent": True})
     assert len(server.messages) == 1
 
 
